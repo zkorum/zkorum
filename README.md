@@ -42,7 +42,7 @@ This Verifiable Presentation is hashed and sent to a TimeStamp Authority, which 
 It is not permissioned, it is just a public custom libp2p node.
 
 Blockchain is unnecessary, we don't need absolute persistence over time.
-Most of the time, survey/polls/votes/discussions will not be particularly critical. Nobody will care *that* much and will be OK to trust ZKorum because the chances that ZKorum get corrupted to manipulate data are close to 0. If we use a blockchain, all those unimportant things will be forever publicly persisted in someone else' computer. This is a waste (think shitcoin/shitNFT transaction history). And if users want to delete their data, for whatever reasons, they can't!
+Most of the time, survey/polls/votes/discussions will not be particularly critical. Nobody will care *that* much and users will be OK to trust ZKorum because the chances that ZKorum get corrupted to manipulate data are close to 0. If we use a blockchain, all those unimportant things will be forever publicly persisted in someone else' computer. This is a waste (think shitcoin/shitNFT transaction history). And if users want to delete their data, for whatever reasons, they can't!
 
 With our solution, when users do care about keeping ZKorum in check because this is a high-stake vote/poll, users will naturally have incentive to run this libp2p node or pay someone to do so, and keep persistence of the verifiable data.
 
