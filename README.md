@@ -49,5 +49,5 @@ With our solution, when users do care about keeping ZKorum in check because this
 Now how to gather these data and achieve consensus? Here comes the idea of "server federation".
 
 It is up to the community to agree on which authorities to trust to gather consensus - not the technology. There can be 1, 2, 100 or a million parties involved in this authority: this is a governance matter.
-If the consensus authority refuses some data, at least third-parties can gather prove that the consensus authority has censored and challenge them.
+If the consensus authority refuses some data, at least third-parties can challenge the consensus authority by gathering the censored verifiable data and presenting it to the public, effectively proving that censorship occured!
 We don't believe in technology replacing human governance. But we can make the process of achieving consensus from multiple sources easier.
