@@ -7,7 +7,7 @@
 Many things will be used - all off-chain. It is work-in-progress. But to summarize:
 - when you cast your response, you use a classic http request that calls ZKorum from the frontend
 - on reception, ZKorum verifies the validity of the reponse, then sends its hash to a TSA server such as https://freetsa.org/index_en.php to timestamp it, and then broadcast the response + the timestamp to a dedicated topic of a custom libp2p node. The broadcasted response is anonymized. Imagine if you responsed to a questionnaire containing an open question, and you wrote "I like cat a lot". The Verifiable Presentation will contain a CID of "I like cat a lot", not the content itself. It helps for GDPR compliance - enabling data to be deleted on request from users if necessary.
-- the libp2p node is also ran in the frontend. Your "confirmation" for your response is when you see your response being broadcasted in the node.
+- the libp2p node is also run in the frontend. Your "confirmation" for your response is when you see your response being broadcasted in the node.
 - anyone can launch the libp2p node, listen to the relevant topic, and keep track of the list of response for a specific proposal - effectively verifying that ZKorum is not censoring responses.
 
 The above is what will be available for the MVP.
