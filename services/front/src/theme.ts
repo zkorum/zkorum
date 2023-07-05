@@ -1,6 +1,16 @@
 import { createTheme } from "@mui/material/styles";
 import { red } from "@mui/material/colors";
 
+const background = {
+  paper: "#fff",
+  default: "#fff",
+};
+
+const text = {
+  // https://mui.com/material-ui/customization/default-theme/?expand-path=$.palette#explore
+  primary: "rgba(0,0,0,0.87)",
+};
+
 // Create a theme instance.
 const theme = createTheme({
   palette: {
@@ -13,12 +23,20 @@ const theme = createTheme({
     error: {
       main: red.A400,
     },
+    text: {
+      primary: text.primary,
+    },
+    background: {
+      paper: background.paper,
+      default: background.default,
+    },
   },
   components: {
     MuiAppBar: {
       styleOverrides: {
         colorPrimary: {
-          background: "linear-gradient(0deg, #00275b, #00204a) no-repeat",
+          backgroundColor: background.default,
+          color: text.primary,
         },
       },
     },

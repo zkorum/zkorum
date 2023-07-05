@@ -2,25 +2,40 @@ import * as React from "react";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import HomeIcon from "@mui/icons-material/Home";
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import SettingsIcon from "@mui/icons-material/Settings";
 import BadgeIcon from "@mui/icons-material/Badge";
 import GroupsIcon from "@mui/icons-material/Groups";
-import SettingsIcon from "@mui/icons-material/Settings";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
+import useScrollTrigger from "@mui/material/useScrollTrigger";
+import { SxProps } from "@mui/material/styles";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 
 enum Nav {
   Home = "Home",
   Credentials = "Credentials",
   Communities = "Communities",
-  Notifications = "Notifications",
   Settings = "Settings",
+  Post = "Post",
 }
 
 export function BottomNavbar() {
+  const trigger = useScrollTrigger();
   const [value, setValue] = React.useState<Nav>(Nav.Home);
+  const [isHidden, setIsHidden] = React.useState<boolean>(false);
   const navigate = useNavigate();
+
+  // To place the add icon
+  // https://github.com/mui/material-ui/issues/15662#issuecomment-492771975
+
+  React.useEffect(() => {
+    if (trigger) {
+      setIsHidden(true);
+    } else {
+      setIsHidden(false);
+    }
+  }, [trigger]);
 
   React.useEffect(() => {
     switch (value) {
@@ -33,11 +48,11 @@ export function BottomNavbar() {
       case Nav.Communities:
         navigate("/communities");
         break;
-      case Nav.Notifications:
-        navigate("/notifications");
-        break;
       case Nav.Settings:
         navigate("/settings");
+        break;
+      case Nav.Post:
+        // TODO => make a dialog
         break;
     }
   }, [value, navigate]);
@@ -46,8 +61,17 @@ export function BottomNavbar() {
     setValue(newValue);
   };
 
+  const showBottomNavbar: SxProps = {
+    pb: 7,
+  };
+
+  const hideBottomNavbar: SxProps = {
+    pb: 7,
+    visibility: "hidden",
+  };
+
   return (
-    <Box sx={{ pb: 7 }}>
+    <Box sx={isHidden ? hideBottomNavbar : showBottomNavbar}>
       <Paper
         sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
         elevation={3}
@@ -66,15 +90,15 @@ export function BottomNavbar() {
             sx={{ minWidth: "60px" }}
           />
           <BottomNavigationAction
-            label={Nav.Communities}
-            value={Nav.Communities}
-            icon={<GroupsIcon />}
+            label={Nav.Post}
+            value={Nav.Post}
+            icon={<AddCircleOutlineIcon />}
             sx={{ minWidth: "60px" }}
           />
           <BottomNavigationAction
-            label={Nav.Notifications}
-            value={Nav.Notifications}
-            icon={<NotificationsIcon />}
+            label={Nav.Communities}
+            value={Nav.Communities}
+            icon={<GroupsIcon />}
             sx={{ minWidth: "60px" }}
           />
           <BottomNavigationAction

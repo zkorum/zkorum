@@ -8,16 +8,23 @@ import { ErrorPage } from "./components/error/ErrorPage";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Box, CssBaseline } from "@mui/material";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
+import { LoginDialog } from "./components/auth/LoginDialog";
 
 const routes = [
   {
     path: "/",
-    element: <DashboardLayout />,
+    element: <LoginDialog />,
     errorElement: <ErrorPage />,
     children: [
       {
         path: "/",
-        element: <Dashboard />,
+        element: <DashboardLayout />,
+        children: [
+          {
+            path: "/",
+            element: <Dashboard />,
+          },
+        ],
       },
     ],
   },

@@ -1,40 +1,28 @@
-import * as React from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import useScrollTrigger from "@mui/material/useScrollTrigger";
-import Slide from "@mui/material/Slide";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
-import { ReactComponent as ZKorumIcon } from "../assets/logo.svg";
-import SvgIcon from "@mui/material/SvgIcon";
-import Box from "@mui/material/Box";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import { HideOnScroll } from "./HideOnScroll";
+import Button from "@mui/material/Button";
+import { openModal } from "../reducers/session";
+import { useAppDispatch } from "../hooks";
+import IconButton from "@mui/material/IconButton";
+import Badge from "@mui/material/Badge";
+import { useNavigate } from "react-router-dom";
+// import { ReactComponent as ZKorumIcon } from "../assets/logo.svg";
+// import SvgIcon from "@mui/material/SvgIcon";
 
-interface Props {
-  children: React.ReactElement;
-}
-
-function HideOnScroll(props: Props) {
-  // Note that you normally won't need to set the window ref as useScrollTrigger
-  // will default to window.
-  // This is only being set here because the demo is in an iframe.
-  const trigger = useScrollTrigger();
-  const { children } = props;
-
-  return (
-    <Slide appear={false} direction="down" in={!trigger}>
-      {children}
-    </Slide>
-  );
-}
-
-function CustomIcon() {
-  return <ZKorumIcon style={{ height: "36px" }} />;
-}
-
+// function CustomIcon() {
+//   return <ZKorumIcon style={{ height: "36px" }} />;
+// }
+//
 export function Topbar() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   return (
     <>
-      <HideOnScroll>
+      <HideOnScroll direction={"down"}>
         <AppBar>
           <Container maxWidth="xl">
             <Toolbar disableGutters>
@@ -45,7 +33,7 @@ export function Topbar() {
                   justifyContent="flex-start"
                   alignItems="center"
                 >
-                  Help
+                  <Button onClick={() => dispatch(openModal())}>Log in</Button>
                 </Grid>
                 <Grid
                   xs
@@ -53,7 +41,7 @@ export function Topbar() {
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <SvgIcon component={CustomIcon} />
+                  Search bar
                 </Grid>
                 <Grid
                   xs
@@ -61,7 +49,23 @@ export function Topbar() {
                   justifyContent="flex-end"
                   alignItems="center"
                 >
-                  Persona
+                  <IconButton
+                    aria-label="notifications"
+                    onClick={() => navigate("/notifications")}
+                  >
+                    <Badge
+                      color="error"
+                      sx={{
+                        "& .MuiBadge-badge": {
+                          right: 2,
+                          top: 3,
+                        },
+                      }}
+                      // badgeContent={4}
+                    >
+                      <NotificationsIcon />
+                    </Badge>
+                  </IconButton>
                 </Grid>
               </Grid>
             </Toolbar>
