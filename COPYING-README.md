@@ -1,5 +1,5 @@
 - :package: This mono-repository contains a suite of services.
-- :balance_scale: The mono-repository is released under [AGPLv3 license](./COPYING). Note that the services themselves are released under their own license.
+- :balance_scale: The mono-repository is released under the [AGPLv3 license](./COPYING). Note that the services themselves are released under their own license.
 
 | Service                     | License                                                                                                | Docs                                                                           | Description               |
 | --------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------- |
