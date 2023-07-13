@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
-import { DialogContent, IconButton, TextField } from "@mui/material";
+import { DialogContent, IconButton, Input, TextField } from "@mui/material";
 import { closeModal } from "../../reducers/session";
 import { useAppDispatch } from "../../hooks";
 import Button from "@mui/material/Button";
@@ -14,7 +14,12 @@ import Checkbox from "@mui/material/Checkbox";
 import Link from "@mui/material/Link";
 import { ZKorumIcon } from "../../ZKorumIcon";
 
-export function LoginDialog() {
+interface SignupDialogProps {
+  handleLogin: (event: React.MouseEventHandler<HTMLAnchorElement>) => void;
+}
+
+export function SignupDialog(props: SignupDialogProps) {
+  const { handleLogin } = props;
   const isModalOpen = useAppSelector((state) => state.sessions.isModalOpen);
   const dispatch = useAppDispatch();
 
@@ -92,6 +97,19 @@ export function LoginDialog() {
               alignItems: "center",
             }}
           >
+            {/* <form onSubmit={handleSubmit(onSubmit)}> */}
+            {/*   <Controller */}
+            {/*     name="username" */}
+            {/*     control={control} */}
+            {/*     render={({ field }) => <Input {...field} />} */}
+            {/*   /> */}
+            {/*   <Controller */}
+            {/*     name="email" */}
+            {/*     control={control} */}
+            {/*     render={({ field }) => <Input {...field} />} */}
+            {/*   /> */}
+            {/*   <input type="submit" /> */}
+            {/* </form> */}
             <Box
               component="form"
               onSubmit={handleSubmit}
@@ -131,14 +149,9 @@ export function LoginDialog() {
                 Sign In
               </Button>
               <Grid container>
-                <Grid xs>
-                  <Link href="#" variant="body2">
-                    Forgot password?
-                  </Link>
-                </Grid>
                 <Grid>
-                  <Link href="#" variant="body2">
-                    {"Don't have an account? Sign Up"}
+                  <Link onClick={handleLogin} variant="body2">
+                    {"Already have an account? Sign In"}
                   </Link>
                 </Grid>
               </Grid>

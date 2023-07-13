@@ -1,10 +1,55 @@
 # ZKorum
 
+## Development
+
+### Prerequisite
+
+Install:
+
+- make
+- [pnpm](https://pnpm.io/)
+- [watchman](https://facebook.github.io/watchman/)
+- [docker](https://www.docker.com/)
+
+### Run in dev mode
+
+All the components run in watch mode.
+
+Open three terminals in the root directory, then run:
+
+Automatically generate frontend stub from backends and subsequent openapi changes:
+
+```
+make dev-generate
+```
+
+Frontend tab:
+
+```
+make dev-front
+```
+
+Backend tab:
+
+```
+make dev-back
+```
+
+... and start coding!
+
 ## Services
 
 ### Front
 
-A PWA
+A PWA.
+
+### Back
+
+A Nest JS application.
+
+### Interop
+
+We generate an openapi.json file from the backend, and then use [openapi-generator-cli](https://openapi-generator.tech/) to generate the corresponding front.
 
 ## FAQ
 
@@ -61,3 +106,13 @@ Now how to gather these data and achieve consensus? Here comes the idea of "serv
 It is up to the community to agree on which authorities to trust to gather consensus - not the technology. There can be 1, 2, 100 or a million parties involved in this authority: this is a governance matter.
 If the consensus authority refuses some data, at least third-parties can challenge the consensus authority by gathering the censored verifiable data and presenting it to the public, effectively proving that censorship occured!
 We don't believe in technology replacing human governance. But we can make the process of achieving consensus from multiple sources easier.
+
+## License
+
+- :package: This mono-repository contains a suite of services.
+- :balance_scale: The mono-repository is released under [LGPLv3 license](./LICENSE). Note, that the services contain their own licenses.
+
+| Package                     | License                                                                                                               | Docs                                                                           | Description                |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------- |
+| [`front`](./services/front) | [![License: MPL v2](https://img.shields.io/badge/License-MPL%20v2-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)   | [![documentation](https://img.shields.io/badge/readme-blue)](./services/front) | :bird: Frontend            |
+| [`back`](./services/back)   | [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) | [![documentation](https://img.shields.io/badge/readme-blue)](./services/back)  | ::thought_balloon: Backend |

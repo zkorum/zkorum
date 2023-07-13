@@ -8,12 +8,12 @@ import { ErrorPage } from "./components/error/ErrorPage";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Box, CssBaseline } from "@mui/material";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
-import { LoginDialog } from "./components/auth/LoginDialog";
+import { AuthDialog } from "./components/auth/AuthDialog";
 
 const routes = [
   {
     path: "/",
-    element: <LoginDialog />,
+    element: <AuthDialog />,
     errorElement: <ErrorPage />,
     children: [
       {
