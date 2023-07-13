@@ -3,7 +3,7 @@
 
 | Package                     | License                                                                                                | Docs                                                                           | Description               |
 | --------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------- |
-| [`front`](./services/front) | [![License: MPLv2](https://img.shields.io/badge/License-MPL%20v2-blue.svg)](./services/front/LICENSE)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/front) | :bird: Frontend           |
-| [`back`](./services/back)   | [![License: AGPLv3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/LICENSE) | [![documentation](https://img.shields.io/badge/readme-blue)](./services/back)  | :thought_balloon: Backend |
+| [`front`](./services/front) | [![License: MPLv2](https://img.shields.io/badge/License-MPL%20v2-blue.svg)](./services/front/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/front) | :bird: Frontend           |
+| [`back`](./services/back)   | [![License: AGPLv3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/COPYING) | [![documentation](https://img.shields.io/badge/readme-blue)](./services/back)  | :thought_balloon: Backend |
 
 Attribution information for ZKorum is contained in the [AUTHORS](AUTHORS) file.
