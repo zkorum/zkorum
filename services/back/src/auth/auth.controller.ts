@@ -1,17 +1,21 @@
-import { Body, Controller, Get } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
+import { ApiProperty, ApiOkResponse } from '@nestjs/swagger';
+import { BooleanResponse } from '../shared/dto';
 
 export class IsEmailAvailableDTO {
   @IsNotEmpty()
   @MaxLength(254)
   @IsEmail()
+  @ApiProperty()
   email: string;
 }
 
 export class IsUsernameAvailableDTO {
   @IsNotEmpty()
   @MaxLength(32)
+  @ApiProperty()
   username: string;
 }
 
@@ -19,12 +23,16 @@ export class IsUsernameAvailableDTO {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Get('isEmailAvailable')
-  isEmailAvailable(@Body() dto: IsEmailAvailableDTO) {
+  @Post('isEmailAvailable')
+  @ApiOkResponse({
+    description: 'Verification successful',
+    type: Boolean,
+  })
+  isEmailAvailable(@Body() dto: IsEmailAvailableDTO): Promise<boolean> {
     return this.authService.isEmailAvailable(dto);
   }
 
-  @Get('isUsernameAvailable')
+  @Post('isUsernameAvailable')
   isUsernameAvailable(@Body() dto: IsUsernameAvailableDTO) {
     return this.authService.isUsernameAvailable(dto);
   }

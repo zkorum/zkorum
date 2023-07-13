@@ -11,12 +11,13 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
+  app.enableCors();
 
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('ZKorum')
+    .setDescription('ZKorum API')
     .setVersion('1.0')
-    .addTag('cats')
+    .addTag('zkorum')
     .build();
   const document = SwaggerModule.createDocument(app, config);
 
