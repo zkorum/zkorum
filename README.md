@@ -109,10 +109,4 @@ We don't believe in technology replacing human governance. But we can make the p
 
 ## License
 
-- :package: This mono-repository contains a suite of services.
-- :balance_scale: The mono-repository is released under [AGPLv3 license](./LICENSE). Note, that the services contain their own licenses.
-
-| Package                     | License                                                                                                              | Docs                                                                           | Description               |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------- |
-| [`front`](./services/front) | [![License: MPLv2](https://img.shields.io/badge/License-MPL%20v2-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)   | [![documentation](https://img.shields.io/badge/readme-blue)](./services/front) | :bird: Frontend           |
-| [`back`](./services/back)   | [![License: AGPLv3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) | [![documentation](https://img.shields.io/badge/readme-blue)](./services/back)  | :thought_balloon: Backend |
+See [COPYING-README](COPYING-README.md)
