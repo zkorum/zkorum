@@ -5,6 +5,8 @@ import Link from "@mui/material/Link";
 import TextField from "@mui/material/TextField";
 import React from "react";
 import { z } from "zod";
+import { Configuration, DefaultApiFactory, DefaultApiFp } from "../../api";
+import { useFormControl } from "@mui/material/FormControl";
 
 interface RegisterProps {
   handleLogin: React.MouseEventHandler<HTMLAnchorElement> &
@@ -24,7 +26,7 @@ export function Register(props: RegisterProps) {
   // }
   //
   const [username, setUsername] = React.useState<string>("");
-  const [isUsernameValid, setIsUsernameValid] = React.useState<boolean>(false);
+  const [isUsernameValid, setIsUsernameValid] = React.useState<boolean>(true);
   const usernameSchema = z
     .string()
     .max(32)
@@ -47,9 +49,17 @@ export function Register(props: RegisterProps) {
   );
   const emailSchema = z.string().email().max(254);
 
+  React.useEffect(() => {
+    validateEmail();
+  }, [email]);
+
+  React.useEffect(() => {
+    validateUsername();
+  }, [username]);
+
   function validateUsername() {
     if (username === "") {
-      setIsUsernameValid(false);
+      setIsUsernameValid(true);
       setUsernameHelper(undefined);
       return;
     }
@@ -77,7 +87,23 @@ export function Register(props: RegisterProps) {
       setIsEmailValid(false);
       setEmailHelper(formatted._errors[0]);
     } else {
-      // TODO: check if email is already taken
+      DefaultApiFactory(
+        new Configuration({
+          basePath: "http://localhost:3000",
+        })
+      )
+        .authControllerIsEmailAvailable({ email: email })
+        .then((response) => {
+          if (response.data) {
+            setIsEmailValid(true);
+            setEmailHelper(undefined);
+          } else {
+            setIsEmailValid(false);
+            setEmailHelper(
+              "This email is already associated with an account, did you mean to login instead?"
+            );
+          }
+        });
       setIsEmailValid(true);
       setEmailHelper(undefined);
     }
@@ -105,18 +131,13 @@ export function Register(props: RegisterProps) {
           name="email"
           error={email !== "" && !isEmailValid}
           helperText={email !== "" && !isEmailValid ? emailHelper : null}
-          value={email}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setEmail(event.target.value);
-          }}
           onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
-            validateEmail();
+            setEmail(event.target.value);
           }}
           autoFocus
         />
         <TextField
           margin="normal"
-          required
           fullWidth
           name="username"
           label="Username"
@@ -126,12 +147,8 @@ export function Register(props: RegisterProps) {
           helperText={
             username !== "" && !isUsernameValid ? usernameHelper : null
           }
-          value={username}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setUsername(event.target.value);
-          }}
           onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
-            validateUsername();
+            setUsername(event.target.value);
           }}
         />
         <Button

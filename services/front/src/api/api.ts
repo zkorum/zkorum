@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Cats example
- * The cats API description
+ * ZKorum
+ * ZKorum API
  *
  * The version of the OpenAPI document: 1.0
  * 
@@ -23,6 +23,32 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
 
+/**
+ * 
+ * @export
+ * @interface IsEmailAvailableDTO
+ */
+export interface IsEmailAvailableDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof IsEmailAvailableDTO
+     */
+    'email': string;
+}
+/**
+ * 
+ * @export
+ * @interface IsUsernameAvailableDTO
+ */
+export interface IsUsernameAvailableDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof IsUsernameAvailableDTO
+     */
+    'username': string;
+}
 
 /**
  * DefaultApi - axios parameter creator
@@ -61,13 +87,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {object} body 
+         * @param {IsEmailAvailableDTO} isEmailAvailableDTO 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerIsEmailAvailable: async (body: object, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('authControllerIsEmailAvailable', 'body', body)
+        authControllerIsEmailAvailable: async (isEmailAvailableDTO: IsEmailAvailableDTO, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'isEmailAvailableDTO' is not null or undefined
+            assertParamExists('authControllerIsEmailAvailable', 'isEmailAvailableDTO', isEmailAvailableDTO)
             const localVarPath = `/auth/isEmailAvailable`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -76,7 +102,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -87,7 +113,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(isEmailAvailableDTO, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -96,13 +122,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {object} body 
+         * @param {IsUsernameAvailableDTO} isUsernameAvailableDTO 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerIsUsernameAvailable: async (body: object, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('authControllerIsUsernameAvailable', 'body', body)
+        authControllerIsUsernameAvailable: async (isUsernameAvailableDTO: IsUsernameAvailableDTO, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'isUsernameAvailableDTO' is not null or undefined
+            assertParamExists('authControllerIsUsernameAvailable', 'isUsernameAvailableDTO', isUsernameAvailableDTO)
             const localVarPath = `/auth/isUsernameAvailable`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -111,7 +137,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -122,7 +148,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(isUsernameAvailableDTO, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -150,22 +176,22 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {object} body 
+         * @param {IsEmailAvailableDTO} isEmailAvailableDTO 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authControllerIsEmailAvailable(body: object, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerIsEmailAvailable(body, options);
+        async authControllerIsEmailAvailable(isEmailAvailableDTO: IsEmailAvailableDTO, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerIsEmailAvailable(isEmailAvailableDTO, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {object} body 
+         * @param {IsUsernameAvailableDTO} isUsernameAvailableDTO 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authControllerIsUsernameAvailable(body: object, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerIsUsernameAvailable(body, options);
+        async authControllerIsUsernameAvailable(isUsernameAvailableDTO: IsUsernameAvailableDTO, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerIsUsernameAvailable(isUsernameAvailableDTO, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -188,21 +214,21 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {object} body 
+         * @param {IsEmailAvailableDTO} isEmailAvailableDTO 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerIsEmailAvailable(body: object, options?: any): AxiosPromise<void> {
-            return localVarFp.authControllerIsEmailAvailable(body, options).then((request) => request(axios, basePath));
+        authControllerIsEmailAvailable(isEmailAvailableDTO: IsEmailAvailableDTO, options?: any): AxiosPromise<boolean> {
+            return localVarFp.authControllerIsEmailAvailable(isEmailAvailableDTO, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {object} body 
+         * @param {IsUsernameAvailableDTO} isUsernameAvailableDTO 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerIsUsernameAvailable(body: object, options?: any): AxiosPromise<void> {
-            return localVarFp.authControllerIsUsernameAvailable(body, options).then((request) => request(axios, basePath));
+        authControllerIsUsernameAvailable(isUsernameAvailableDTO: IsUsernameAvailableDTO, options?: any): AxiosPromise<void> {
+            return localVarFp.authControllerIsUsernameAvailable(isUsernameAvailableDTO, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -226,24 +252,24 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {object} body 
+     * @param {IsEmailAvailableDTO} isEmailAvailableDTO 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authControllerIsEmailAvailable(body: object, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authControllerIsEmailAvailable(body, options).then((request) => request(this.axios, this.basePath));
+    public authControllerIsEmailAvailable(isEmailAvailableDTO: IsEmailAvailableDTO, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authControllerIsEmailAvailable(isEmailAvailableDTO, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {object} body 
+     * @param {IsUsernameAvailableDTO} isUsernameAvailableDTO 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authControllerIsUsernameAvailable(body: object, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authControllerIsUsernameAvailable(body, options).then((request) => request(this.axios, this.basePath));
+    public authControllerIsUsernameAvailable(isUsernameAvailableDTO: IsUsernameAvailableDTO, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authControllerIsUsernameAvailable(isUsernameAvailableDTO, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

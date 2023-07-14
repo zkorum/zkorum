@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Cats example
- * The cats API description
+ * ZKorum
+ * ZKorum API
  *
  * The version of the OpenAPI document: 1.0
  * 
