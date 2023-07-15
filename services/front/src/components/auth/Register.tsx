@@ -103,6 +103,10 @@ export function Register(props: RegisterProps) {
               "This email is already associated with an account, did you mean to login instead?"
             );
           }
+        })
+        .catch((e) => {
+          setIsEmailValid(false);
+          setEmailHelper("There was an error. Please try again later.");
         });
       setIsEmailValid(true);
       setEmailHelper(undefined);
@@ -110,7 +114,9 @@ export function Register(props: RegisterProps) {
   }
 
   function handleOnRegister() {
-    // go to next step => validate email address
+    if (!isEmailValid && !isUsernameValid) {
+      // go to next step => validate email address
+    }
   }
 
   return (
