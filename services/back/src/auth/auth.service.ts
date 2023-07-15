@@ -1,7 +1,46 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  Logger,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { IsEmailAvailableDTO, IsUsernameAvailableDTO } from './auth.controller';
+import { BooleanResponse } from '../shared/dto';
+
+@Injectable()
+export class AuthService {
+  constructor(private prisma: PrismaService) {}
+
+  private readonly logger = new Logger(AuthService.name);
+
+  async isEmailAvailable(dto: IsEmailAvailableDTO): Promise<boolean> {
+    const value = await this.prisma.email.findFirst({
+      where: { email: dto.email },
+    });
+    if (value === null) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  async isUsernameAvailable(dto: IsUsernameAvailableDTO): Promise<boolean> {
+    if (
+      blocklist.includes(dto.username) ||
+      ourOwnBlocklist.includes(dto.username)
+    ) {
+      return false;
+    }
+    try {
+      await this.prisma.user.findFirst({
+        where: { username: dto.username },
+      });
+      return false;
+    } catch (e) {
+      return true;
+    }
+  }
+}
 
 // Dangerous potential username
 const blocklist = [
@@ -939,36 +978,3 @@ const ourOwnBlocklist = [
   'discussion',
   'discussions',
 ];
-
-@Injectable()
-export class AuthService {
-  constructor(private prisma: PrismaService, private config: ConfigService) {}
-
-  async isEmailAvailable(dto: IsEmailAvailableDTO): Promise<boolean> {
-    try {
-      await this.prisma.email.findFirst({
-        where: { email: dto.email },
-      });
-      return false;
-    } catch (e) {
-      return true;
-    }
-  }
-
-  async isUsernameAvailable(dto: IsUsernameAvailableDTO): Promise<boolean> {
-    if (
-      blocklist.includes(dto.username) ||
-      ourOwnBlocklist.includes(dto.username)
-    ) {
-      return false;
-    }
-    try {
-      await this.prisma.user.findFirst({
-        where: { username: dto.username },
-      });
-      return false;
-    } catch (e) {
-      return true;
-    }
-  }
-}
