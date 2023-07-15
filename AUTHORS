@@ -3,10 +3,13 @@ ZKorum is written by:
 
 With help from many libraries and frameworks including:
 - Dock Crypto libraries
-- Veramo
-- libsodium
 - UCAN
+- libsodium
+- WebCrypto API
+- Typescript
 - React
 - Material UI
 - NestJS
+- Vite
+- pnpm
 ...
