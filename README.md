@@ -45,7 +45,7 @@ A PWA.
 
 ### Back
 
-A Nest JS application.
+A Fastify application.
 
 ### Interop
 

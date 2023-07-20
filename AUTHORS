@@ -9,7 +9,7 @@ With help from many libraries and frameworks including:
 - Typescript
 - React
 - Material UI
-- NestJS
+- Fastify
 - Vite
 - pnpm
 ...
