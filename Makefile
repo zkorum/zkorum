@@ -1,14 +1,20 @@
 all: dev
 
+# templates are used because of 
+# https://github.com/OpenAPITools/openapi-generator/pull/16125/files
+# https://stackoverflow.com/a/76330785/11046178
+# TODO: remove this patch when the PR will be merged
+# and change version to latest?
 generate:
 	docker run --rm \
-  -v ${PWD}:/local openapitools/openapi-generator-cli generate \
-  -i /local/services/back/swagger-spec.json \
+  -v ${PWD}:/local openapitools/openapi-generator-cli:v7.0.0-beta generate \
+  -i /local/services/back/openapi-zkorum.yml \
   -g typescript-axios \
+  -t /local/.openapi-generator/templates \
   -o /local/services/front/src/api
 
 dev-generate:
-	watchman-make -p 'services/back/swagger-spec.json' -t generate
+	watchman-make -p 'services/back/openapi-zkorum.yml' -t generate
 
 dev-front:
 	cd services/front && pnpm dev 

@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: ZKorum
+  description: ZKorum backend
+  version: 1.0.0
+components:
+  schemas: {}
+paths:
+  /auth/isEmailAvailable:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              format: email
+              maxLength: 254
+              minLength: 1
+              description: Email address
+        description: Email address
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: boolean
+servers: []

@@ -10,26 +10,17 @@ $ pnpm install
 
 ```bash
 # development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
+pnpm run start:dev
 
 # production mode
-$ pnpm run start:prod
+pnpm run build && pnpm run start
 ```
 
 ## Test
 
 ```bash
 # unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+pnpm run test
 ```
 
 ## License

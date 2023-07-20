@@ -2,7 +2,7 @@ TODO
 .vim/
 *.log
 emailrecovery
-.env
+.env*
 
 # ide
 .lvimrc

@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import React from "react";
 import { z } from "zod";
 import { Configuration, DefaultApiFactory, DefaultApiFp } from "../../api";
-import { useFormControl } from "@mui/material/FormControl";
+import customAxios from "../../interceptors";
 
 interface RegisterProps {
   handleLogin: React.MouseEventHandler<HTMLAnchorElement> &
@@ -51,6 +51,7 @@ export function Register(props: RegisterProps) {
 
   React.useEffect(() => {
     validateEmail();
+    console.log("import", import.meta.env.VITE_TEST);
   }, [email]);
 
   React.useEffect(() => {
@@ -87,12 +88,8 @@ export function Register(props: RegisterProps) {
       setIsEmailValid(false);
       setEmailHelper(formatted._errors[0]);
     } else {
-      DefaultApiFactory(
-        new Configuration({
-          basePath: "http://localhost:3000",
-        })
-      )
-        .authControllerIsEmailAvailable({ email: email })
+      DefaultApiFactory(undefined, undefined, customAxios)
+        .authIsEmailAvailablePost(email)
         .then((response) => {
           if (response.data) {
             setIsEmailValid(true);
