@@ -11,10 +11,10 @@ import {
   jsonSchemaTransform,
   ZodTypeProvider,
 } from "fastify-type-provider-zod";
-import { Dto } from "./dto.js";
 import { DrizzleFastifyLogger } from "./logger.js";
 import { z } from "zod";
 import cors from "@fastify/cors";
+import { Dto } from "./shared/dto.js";
 
 enum Environment {
   Development = "development",
@@ -102,6 +102,12 @@ server.after(() => {
     schema: { body: Dto.email, response: { 200: z.boolean() } },
     handler: async (request, _reply) => {
       return await Service.isEmailAvailable(db, request.body);
+    },
+  });
+  server.withTypeProvider<ZodTypeProvider>().post("/auth/isUsernameAvailable", {
+    schema: { body: Dto.username, response: { 200: z.boolean() } },
+    handler: async (request, _reply) => {
+      return await Service.isUsernameAvailable(db, request.body);
     },
   });
 });

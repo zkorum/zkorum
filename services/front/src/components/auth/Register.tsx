@@ -4,9 +4,9 @@ import Grid from "@mui/material/Grid";
 import Link from "@mui/material/Link";
 import TextField from "@mui/material/TextField";
 import React from "react";
-import { z } from "zod";
-import { Configuration, DefaultApiFactory, DefaultApiFp } from "../../api";
+import { DefaultApiFactory } from "../../api";
 import customAxios from "../../interceptors";
+import { Dto } from "../../shared/dto";
 
 interface RegisterProps {
   handleLogin: React.MouseEventHandler<HTMLAnchorElement> &
@@ -27,18 +27,6 @@ export function Register(props: RegisterProps) {
   //
   const [username, setUsername] = React.useState<string>("");
   const [isUsernameValid, setIsUsernameValid] = React.useState<boolean>(true);
-  const usernameSchema = z
-    .string()
-    .max(32)
-    .refine(
-      (val) => {
-        // @ts-ignore (validator is loaded using validator.min.js)
-        return validator.isAlphanumeric(val) && !validator.isInt(val);
-      },
-      {
-        message: "Username must only use alphanumerics characters",
-      }
-    );
   const [usernameHelper, setUsernameHelper] = React.useState<
     string | undefined
   >(undefined);
@@ -47,11 +35,9 @@ export function Register(props: RegisterProps) {
   const [emailHelper, setEmailHelper] = React.useState<string | undefined>(
     undefined
   );
-  const emailSchema = z.string().email().max(254);
 
   React.useEffect(() => {
     validateEmail();
-    console.log("import", import.meta.env.VITE_TEST);
   }, [email]);
 
   React.useEffect(() => {
@@ -64,15 +50,30 @@ export function Register(props: RegisterProps) {
       setUsernameHelper(undefined);
       return;
     }
-    const result = usernameSchema.safeParse(username);
+    const result = Dto.username.safeParse(username);
     if (!result.success) {
       const formatted = result.error.format();
       setIsUsernameValid(false);
       setUsernameHelper(formatted._errors[0]);
     } else {
       // TODO: check if username is already taken
-      setIsUsernameValid(true);
-      setUsernameHelper(undefined);
+      DefaultApiFactory(undefined, undefined, customAxios)
+        .authIsUsernameAvailablePost(username)
+        .then((response) => {
+          if (response.data) {
+            setIsUsernameValid(true);
+            setEmailHelper(undefined);
+          } else {
+            setIsUsernameValid(false);
+            setUsernameHelper(
+              "This username is already associated with an account, did you mean to login instead?"
+            );
+          }
+        })
+        .catch((e) => {
+          setIsEmailValid(false);
+          setEmailHelper("There was an error. Please try again later.");
+        });
     }
   }
 
@@ -82,7 +83,7 @@ export function Register(props: RegisterProps) {
       setEmailHelper(undefined);
       return;
     }
-    const result = emailSchema.safeParse(email);
+    const result = Dto.email.safeParse(email);
     if (!result.success) {
       const formatted = result.error.format();
       setIsEmailValid(false);
@@ -105,8 +106,6 @@ export function Register(props: RegisterProps) {
           setIsEmailValid(false);
           setEmailHelper("There was an error. Please try again later.");
         });
-      setIsEmailValid(true);
-      setEmailHelper(undefined);
     }
   }
 
@@ -135,7 +134,9 @@ export function Register(props: RegisterProps) {
           error={email !== "" && !isEmailValid}
           helperText={email !== "" && !isEmailValid ? emailHelper : null}
           onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
-            setEmail(event.target.value);
+            if (event.target.value !== email) {
+              setEmail(event.target.value);
+            }
           }}
           autoFocus
         />
@@ -151,7 +152,9 @@ export function Register(props: RegisterProps) {
             username !== "" && !isUsernameValid ? usernameHelper : null
           }
           onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
-            setUsername(event.target.value);
+            if (event.target.value !== username) {
+              setUsername(event.target.value);
+            }
           }}
         />
         <Button

@@ -13,6 +13,12 @@ generate:
   -t /local/.openapi-generator/templates \
   -o /local/services/front/src/api
 
+sync:
+	cd services/shared && pnpm run sync
+
+dev-sync:
+	watchman-make -p 'services/shared/src/**/*' -t sync
+
 dev-generate:
 	watchman-make -p 'services/back/openapi-zkorum.yml' -t generate
 

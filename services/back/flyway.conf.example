@@ -1,0 +1,3 @@
+flyway.url=jdbc:postgresql//localhost:5432/<db_name>?search_path=<schema>
+flyway.user=<db_user>
+flyway.password=<password>

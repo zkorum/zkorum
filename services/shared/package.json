@@ -1,0 +1,23 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "sync": "bash scripts/rsync_and_sed.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "validator": "^13.9.0",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.2",
+    "@types/validator": "^13.7.17",
+    "typescript": "^5.1.6"
+  }
+}

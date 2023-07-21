@@ -26,6 +26,9 @@ dependencies:
   postgres:
     specifier: ^3.3.5
     version: 3.3.5
+  validator:
+    specifier: ^13.9.0
+    version: 13.9.0
   zod:
     specifier: ^3.21.4
     version: 3.21.4
@@ -37,6 +40,9 @@ devDependencies:
   '@types/node':
     specifier: ^20.4.2
     version: 20.4.2
+  '@types/validator':
+    specifier: ^13.7.17
+    version: 13.7.17
   drizzle-kit:
     specifier: ^0.19.8
     version: 0.19.8
@@ -677,6 +683,10 @@ packages:
 
   /@types/node@20.4.2:
     resolution: {integrity: sha512-Dd0BYtWgnWJKwO1jkmTrzofjK2QXXcai0dmtzvIBhcA+RsG5h8R3xlyta0kGOZRNfL9GuRtb1knmPEhQrePCEw==}
+    dev: true
+
+  /@types/validator@13.7.17:
+    resolution: {integrity: sha512-aqayTNmeWrZcvnG2MG9eGYI6b7S5fl+yKgPs6bAjOTwPS316R5SxBGKvtSExfyoJU7pIeHJfsHI0Ji41RVMkvQ==}
     dev: true
 
   /abbrev@1.1.1:
@@ -2339,6 +2349,11 @@ packages:
   /v8-compile-cache-lib@3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
     dev: true
+
+  /validator@13.9.0:
+    resolution: {integrity: sha512-B+dGG8U3fdtM0/aNK4/X8CXq/EcxU2WPrPEkJGslb47qyHsxmbggTWK0yEA4qnYVNF+nxNlN88o14hIcPmSIEA==}
+    engines: {node: '>= 0.10'}
+    dev: false
 
   /wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}

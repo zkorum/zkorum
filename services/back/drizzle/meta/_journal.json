@@ -1,1 +1,13 @@
-{"version":"5","dialect":"pg","entries":[]}
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1689973205333,
+      "tag": "V0000__volatile_triathlon",
+      "breakpoints": true
+    }
+  ]
+}

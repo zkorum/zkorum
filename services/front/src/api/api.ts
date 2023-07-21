@@ -63,6 +63,39 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {string} [body] Username
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authIsUsernameAvailablePost: async (body?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/auth/isUsernameAvailable`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -81,6 +114,16 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          */
         async authIsEmailAvailablePost(body?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authIsEmailAvailablePost(body, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} [body] Username
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authIsUsernameAvailablePost(body?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authIsUsernameAvailablePost(body, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -102,6 +145,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         authIsEmailAvailablePost(body?: string, options?: any): AxiosPromise<boolean> {
             return localVarFp.authIsEmailAvailablePost(body, options).then((request) => request(axios, basePath));
         },
+        /**
+         * 
+         * @param {string} [body] Username
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authIsUsernameAvailablePost(body?: string, options?: any): AxiosPromise<boolean> {
+            return localVarFp.authIsUsernameAvailablePost(body, options).then((request) => request(axios, basePath));
+        },
     };
 };
 
@@ -121,6 +173,17 @@ export class DefaultApi extends BaseAPI {
      */
     public authIsEmailAvailablePost(body?: string, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).authIsEmailAvailablePost(body, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [body] Username
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public authIsUsernameAvailablePost(body?: string, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authIsUsernameAvailablePost(body, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

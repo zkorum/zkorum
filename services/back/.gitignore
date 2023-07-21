@@ -36,5 +36,6 @@ lerna-debug.log*
 
 # Env
 .env
+flyway.conf
 
 swagger-spec.json
