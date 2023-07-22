@@ -36,21 +36,13 @@ export function Register(props: RegisterProps) {
     undefined
   );
 
-  React.useEffect(() => {
-    validateEmail();
-  }, [email]);
-
-  React.useEffect(() => {
-    validateUsername();
-  }, [username]);
-
-  function validateUsername() {
-    if (username === "") {
+  function validateUsername(usernameToValidate: string) {
+    if (usernameToValidate === "") {
       setIsUsernameValid(true);
       setUsernameHelper(undefined);
       return;
     }
-    const result = Dto.username.safeParse(username);
+    const result = Dto.username.safeParse(usernameToValidate);
     if (!result.success) {
       const formatted = result.error.format();
       setIsUsernameValid(false);
@@ -58,7 +50,7 @@ export function Register(props: RegisterProps) {
     } else {
       // TODO: check if username is already taken
       DefaultApiFactory(undefined, undefined, customAxios)
-        .authIsUsernameAvailablePost(username)
+        .authIsUsernameAvailablePost(usernameToValidate)
         .then((response) => {
           if (response.data) {
             setIsUsernameValid(true);
@@ -77,20 +69,20 @@ export function Register(props: RegisterProps) {
     }
   }
 
-  function validateEmail() {
-    if (email === "") {
+  function validateEmail(emailToValidate: string) {
+    if (emailToValidate === "") {
       setIsEmailValid(false);
       setEmailHelper(undefined);
       return;
     }
-    const result = Dto.email.safeParse(email);
+    const result = Dto.email.safeParse(emailToValidate);
     if (!result.success) {
       const formatted = result.error.format();
       setIsEmailValid(false);
       setEmailHelper(formatted._errors[0]);
     } else {
       DefaultApiFactory(undefined, undefined, customAxios)
-        .authIsEmailAvailablePost(email)
+        .authIsEmailAvailablePost(emailToValidate)
         .then((response) => {
           if (response.data) {
             setIsEmailValid(true);
@@ -136,6 +128,7 @@ export function Register(props: RegisterProps) {
           onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
             if (event.target.value !== email) {
               setEmail(event.target.value);
+              validateEmail(event.target.value);
             }
           }}
           autoFocus
@@ -154,6 +147,7 @@ export function Register(props: RegisterProps) {
           onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
             if (event.target.value !== username) {
               setUsername(event.target.value);
+              validateUsername(event.target.value);
             }
           }}
         />
