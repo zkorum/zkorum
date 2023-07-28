@@ -42,4 +42,35 @@ paths:
             application/json:
               schema:
                 type: boolean
+  /auth/register:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                  minLength: 1
+                  description: Email address
+                username:
+                  type: string
+                  maxLength: 32
+                  description: Username
+                did:
+                  type: string
+                  maxLength: 254
+                  description: Decentralized Identifier with did:key method
+              required:
+                - email
+                - username
+                - did
+              additionalProperties: false
+        required: true
+      responses:
+        "200":
+          description: Default Response
 servers: []

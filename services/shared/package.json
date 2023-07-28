@@ -12,6 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "keystore-idb": "^0.15.5",
+    "one-webcrypto": "^1.0.3",
+    "tweetnacl": "^1.0.3",
+    "uint8arrays": "^4.0.4",
     "validator": "^13.9.0",
     "zod": "^3.21.4"
   },

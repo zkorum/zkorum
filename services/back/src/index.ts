@@ -1,7 +1,10 @@
-import fs from "fs";
 import "dotenv/config"; // this loads .env values in process.env
-import fastify from "fastify";
+import fs from "fs";
+import fastify, { FastifyRequest, FastifyReply } from "fastify";
+import fastifyAuth from "@fastify/auth";
+import fastifySensible from "@fastify/sensible";
 import fastifySwagger from "@fastify/swagger";
+import fastifyCors from "@fastify/cors";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { Service } from "./service.js";
@@ -13,8 +16,11 @@ import {
 } from "fastify-type-provider-zod";
 import { DrizzleFastifyLogger } from "./logger.js";
 import { z } from "zod";
-import cors from "@fastify/cors";
-import { Dto } from "./shared/dto.js";
+import { ZodType } from "./shared/types/zod.js";
+import { Dto } from "./dto.js";
+import * as ucans from "@ucans/ucans";
+import { httpUrlToResourcePointer, rootIssuer } from "./shared/ucan/ucan.js";
+import { base64 } from "./shared/common/index.js";
 
 enum Environment {
   Development = "development",
@@ -22,10 +28,14 @@ enum Environment {
   Staging = "staging",
 }
 
+const defaultPort = 8080;
+
 const configSchema = z.object({
   CONNECTION_STRING: z.string(),
-  PORT: z.number().default(8080),
+  PORT: z.number().default(defaultPort),
   NODE_ENV: z.nativeEnum(Environment).default(Environment.Development),
+  SERVER_URL: z.string().url().default(`http://localhost:${defaultPort}`),
+  SERVER_DID: ZodType.didWeb.default(`did:web:localhost%3A${defaultPort}`),
 });
 
 const config = configSchema.parse(process.env);
@@ -52,7 +62,9 @@ const server = fastify({
   logger: envToLogger(config.NODE_ENV),
 });
 
-server.register(cors, {
+server.register(fastifySensible);
+server.register(fastifyAuth);
+server.register(fastifyCors, {
   // put your options here
 });
 
@@ -97,17 +109,69 @@ const db = drizzle(client, {
   logger: new DrizzleFastifyLogger(server.log),
 });
 
+const { scheme, hierPart } = httpUrlToResourcePointer(config.SERVER_URL);
+
+// auth functions
+async function verifyUCAN(
+  request: FastifyRequest,
+  _reply: FastifyReply
+): Promise<string> {
+  const authHeader = request.headers.authorization;
+  const requestUrl = new URL(request.originalUrl);
+  if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
+    throw server.httpErrors.unauthorized();
+  } else {
+    const encodedUcan = authHeader.substring(7, authHeader.length);
+    const rootIssuerDid = rootIssuer(encodedUcan);
+    const result = await ucans.verify(encodedUcan, {
+      audience: config.SERVER_DID,
+      isRevoked: async (_ucan) => false, // TODO => handle this case
+      requiredCapabilities: [
+        {
+          capability: {
+            with: { scheme, hierPart },
+            can: {
+              namespace: `http/${request.method}`,
+              segments: [requestUrl.pathname],
+            },
+          },
+          rootIssuer: rootIssuerDid,
+        },
+      ],
+    });
+    if (!result.ok) {
+      throw server.httpErrors.createError(
+        401,
+        "Unauthorized",
+        new AggregateError(result.error)
+      );
+    } else {
+      return rootIssuerDid;
+    }
+  }
+}
+
 server.after(() => {
-  server.withTypeProvider<ZodTypeProvider>().post("/auth/isEmailAvailable", {
-    schema: { body: Dto.email, response: { 200: z.boolean() } },
+  server.withTypeProvider<ZodTypeProvider>().put("/auth/isEmailAvailable", {
+    schema: { body: ZodType.email, response: { 200: z.boolean() } },
     handler: async (request, _reply) => {
       return await Service.isEmailAvailable(db, request.body);
     },
   });
-  server.withTypeProvider<ZodTypeProvider>().post("/auth/isUsernameAvailable", {
-    schema: { body: Dto.username, response: { 200: z.boolean() } },
+  server.withTypeProvider<ZodTypeProvider>().put("/auth/isUsernameAvailable", {
+    schema: { body: ZodType.username, response: { 200: z.boolean() } },
     handler: async (request, _reply) => {
       return await Service.isUsernameAvailable(db, request.body);
+    },
+  });
+  server.withTypeProvider<ZodTypeProvider>().put("/auth/register", {
+    schema: {
+      body: Dto.registerRequestBody,
+    },
+    handler: async (request, reply) => {
+      const rootIssuerDid = await verifyUCAN(request, reply);
+      console.log("did", rootIssuerDid);
+      return await Service.register(db, request.body, rootIssuerDid);
     },
   });
 });
@@ -121,10 +185,11 @@ server.ready((e) => {
     const swaggerYaml = server.swagger({ yaml: true });
     fs.writeFileSync("./openapi-zkorum.yml", swaggerYaml);
   }
-  server.listen({ port: config.PORT }, (err) => {
-    if (err) {
-      server.log.error(err);
-      process.exit(1);
-    }
-  });
+});
+
+server.listen({ port: config.PORT }, (err) => {
+  if (err) {
+    server.log.error(err);
+    process.exit(1);
+  }
 });

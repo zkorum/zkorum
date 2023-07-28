@@ -23,6 +23,31 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
 
+/**
+ * 
+ * @export
+ * @interface AuthRegisterPostRequest
+ */
+export interface AuthRegisterPostRequest {
+    /**
+     * Email address
+     * @type {string}
+     * @memberof AuthRegisterPostRequest
+     */
+    'email': string;
+    /**
+     * Username
+     * @type {string}
+     * @memberof AuthRegisterPostRequest
+     */
+    'username': string;
+    /**
+     * Decentralized Identifier with did:key method
+     * @type {string}
+     * @memberof AuthRegisterPostRequest
+     */
+    'did': string;
+}
 
 /**
  * DefaultApi - axios parameter creator
@@ -96,6 +121,41 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {AuthRegisterPostRequest} authRegisterPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authRegisterPost: async (authRegisterPostRequest: AuthRegisterPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'authRegisterPostRequest' is not null or undefined
+            assertParamExists('authRegisterPost', 'authRegisterPostRequest', authRegisterPostRequest)
+            const localVarPath = `/auth/register`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(authRegisterPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -126,6 +186,16 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authIsUsernameAvailablePost(body, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @param {AuthRegisterPostRequest} authRegisterPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authRegisterPost(authRegisterPostRequest: AuthRegisterPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authRegisterPost(authRegisterPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -153,6 +223,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         authIsUsernameAvailablePost(body?: string, options?: any): AxiosPromise<boolean> {
             return localVarFp.authIsUsernameAvailablePost(body, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {AuthRegisterPostRequest} authRegisterPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authRegisterPost(authRegisterPostRequest: AuthRegisterPostRequest, options?: any): AxiosPromise<void> {
+            return localVarFp.authRegisterPost(authRegisterPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -184,6 +263,17 @@ export class DefaultApi extends BaseAPI {
      */
     public authIsUsernameAvailablePost(body?: string, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).authIsUsernameAvailablePost(body, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {AuthRegisterPostRequest} authRegisterPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public authRegisterPost(authRegisterPostRequest: AuthRegisterPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authRegisterPost(authRegisterPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

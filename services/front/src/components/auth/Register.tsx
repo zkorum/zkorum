@@ -3,10 +3,12 @@ import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import Link from "@mui/material/Link";
 import TextField from "@mui/material/TextField";
+import Snackbar from "@mui/material/Snackbar";
 import React from "react";
 import { DefaultApiFactory } from "../../api";
 import customAxios from "../../interceptors";
-import { Dto } from "../../shared/dto";
+import { ZodType } from "../../shared/types/zod";
+import { Alert } from "../shared/Alert";
 
 interface RegisterProps {
   handleLogin: React.MouseEventHandler<HTMLAnchorElement> &
@@ -16,15 +18,6 @@ interface RegisterProps {
 export function Register(props: RegisterProps) {
   const { handleLogin } = props;
 
-  // function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-  //   event.preventDefault();
-  //   const data = new FormData(event.currentTarget);
-  //   console.log({
-  //     email: data.get("email"),
-  //     password: data.get("password"),
-  //   });
-  // }
-  //
   const [username, setUsername] = React.useState<string>("");
   const [isUsernameValid, setIsUsernameValid] = React.useState<boolean>(true);
   const [usernameHelper, setUsernameHelper] = React.useState<
@@ -35,6 +28,17 @@ export function Register(props: RegisterProps) {
   const [emailHelper, setEmailHelper] = React.useState<string | undefined>(
     undefined
   );
+  const [openSnackbar, setOpenSnackbar] = React.useState(false);
+
+  function handleCloseSnackbar(
+    _event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+  }
 
   function validateUsername(usernameToValidate: string) {
     if (usernameToValidate === "") {
@@ -42,7 +46,7 @@ export function Register(props: RegisterProps) {
       setUsernameHelper(undefined);
       return;
     }
-    const result = Dto.username.safeParse(usernameToValidate);
+    const result = ZodType.username.safeParse(usernameToValidate);
     if (!result.success) {
       const formatted = result.error.format();
       setIsUsernameValid(false);
@@ -75,7 +79,7 @@ export function Register(props: RegisterProps) {
       setEmailHelper(undefined);
       return;
     }
-    const result = Dto.email.safeParse(emailToValidate);
+    const result = ZodType.email.safeParse(emailToValidate);
     if (!result.success) {
       const formatted = result.error.format();
       setIsEmailValid(false);
@@ -102,7 +106,17 @@ export function Register(props: RegisterProps) {
   }
 
   function handleOnRegister() {
-    if (!isEmailValid && !isUsernameValid) {
+    if (isEmailValid && isUsernameValid) {
+      // generate keys
+
+      // call register backend
+      DefaultApiFactory(undefined, undefined, customAxios)
+        .authRegisterPost({ email: email, username: username, did: "test" })
+        .then((response) => {})
+        .catch((e) => {
+          setOpenSnackbar(true);
+        });
+
       // go to next step => validate email address
     }
   }
@@ -161,6 +175,20 @@ export function Register(props: RegisterProps) {
         >
           Register
         </Button>
+        <Snackbar
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          open={openSnackbar}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity="error"
+            sx={{ width: "100%" }}
+          >
+            There was an error. Please try again later.
+          </Alert>
+        </Snackbar>
         <Grid container>
           <Grid>
             <Link component="button" onClick={handleLogin}>

@@ -6,6 +6,7 @@
 // https://github.com/Julien-R44/vite-plugin-validate-env
 interface ImportMetaEnv {
   readonly VITE_BACK_BASE_URL: string;
+  readonly VITE_BACK_DID: string;
   // more env variables...
 }
 

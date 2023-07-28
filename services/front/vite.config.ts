@@ -6,6 +6,18 @@ import { z } from "zod";
 
 export const configSchema = z.object({
   VITE_BACK_BASE_URL: z.string().url(),
+  VITE_BACK_DID: z
+    .string()
+    .describe("Decentralized Identifier with did:web method")
+    .max(254)
+    .refine(
+      (val) => {
+        return val.startsWith("did:web:");
+      },
+      {
+        message: "Please use did:web such as `did:web:api.example.com`",
+      }
+    ),
 });
 
 // https://vitejs.dev/config/
