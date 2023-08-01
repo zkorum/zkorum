@@ -1,36 +1,17 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { useAppSelector } from "../../hooks";
-import { Outlet } from "react-router-dom";
+import { DialogContent, IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
-import {
-  DialogContent,
-  IconButton,
-  Input,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { closeModal } from "../../reducers/session";
-import { useAppDispatch } from "../../hooks";
-import Button from "@mui/material/Button";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
-import Link from "@mui/material/Link";
-import { ZKorumIcon } from "../../ZKorumIcon";
 import React from "react";
+import { Outlet } from "react-router-dom";
+import { ZKorumIcon } from "../../ZKorumIcon";
+import { useAppDispatch, useAppSelector } from "../../hooks";
+import { closeModal } from "../../reducers/session";
 import { Login } from "./Login";
 import { Register } from "./Register";
 
-interface AuthDialogProps {
-  defaultIsRegisterDialog: boolean;
-}
-
-export function AuthDialog(
-  props: AuthDialogProps = { defaultIsRegisterDialog: false }
-) {
-  const { defaultIsRegisterDialog } = props;
+export function AuthDialog() {
   const [isRegisterDialog, setIsRegisterDialog] = React.useState<
     boolean | undefined
   >(undefined);
@@ -47,15 +28,6 @@ export function AuthDialog(
 
   function handleClose() {
     dispatch(closeModal());
-  }
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
   }
 
   return (

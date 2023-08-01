@@ -26,27 +26,27 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
 /**
  * 
  * @export
- * @interface AuthRegisterPostRequest
+ * @interface AuthRegisterPutRequest
  */
-export interface AuthRegisterPostRequest {
+export interface AuthRegisterPutRequest {
     /**
      * Email address
      * @type {string}
-     * @memberof AuthRegisterPostRequest
+     * @memberof AuthRegisterPutRequest
      */
     'email': string;
     /**
      * Username
      * @type {string}
-     * @memberof AuthRegisterPostRequest
+     * @memberof AuthRegisterPutRequest
      */
     'username': string;
     /**
      * Decentralized Identifier with did:key method
      * @type {string}
-     * @memberof AuthRegisterPostRequest
+     * @memberof AuthRegisterPutRequest
      */
-    'did': string;
+    'didExchange': string;
 }
 
 /**
@@ -61,7 +61,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authIsEmailAvailablePost: async (body?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        authIsEmailAvailablePut: async (body?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/auth/isEmailAvailable`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -70,7 +70,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -94,7 +94,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authIsUsernameAvailablePost: async (body?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        authIsUsernameAvailablePut: async (body?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/auth/isUsernameAvailable`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -103,7 +103,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -123,13 +123,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {AuthRegisterPostRequest} authRegisterPostRequest 
+         * @param {AuthRegisterPutRequest} authRegisterPutRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authRegisterPost: async (authRegisterPostRequest: AuthRegisterPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'authRegisterPostRequest' is not null or undefined
-            assertParamExists('authRegisterPost', 'authRegisterPostRequest', authRegisterPostRequest)
+        authRegisterPut: async (authRegisterPutRequest: AuthRegisterPutRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'authRegisterPutRequest' is not null or undefined
+            assertParamExists('authRegisterPut', 'authRegisterPutRequest', authRegisterPutRequest)
             const localVarPath = `/auth/register`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -138,7 +138,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -149,7 +149,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(authRegisterPostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(authRegisterPutRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -172,8 +172,8 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authIsEmailAvailablePost(body?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authIsEmailAvailablePost(body, options);
+        async authIsEmailAvailablePut(body?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authIsEmailAvailablePut(body, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -182,18 +182,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authIsUsernameAvailablePost(body?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authIsUsernameAvailablePost(body, options);
+        async authIsUsernameAvailablePut(body?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authIsUsernameAvailablePut(body, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {AuthRegisterPostRequest} authRegisterPostRequest 
+         * @param {AuthRegisterPutRequest} authRegisterPutRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authRegisterPost(authRegisterPostRequest: AuthRegisterPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authRegisterPost(authRegisterPostRequest, options);
+        async authRegisterPut(authRegisterPutRequest: AuthRegisterPutRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authRegisterPut(authRegisterPutRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -212,8 +212,8 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authIsEmailAvailablePost(body?: string, options?: any): AxiosPromise<boolean> {
-            return localVarFp.authIsEmailAvailablePost(body, options).then((request) => request(axios, basePath));
+        authIsEmailAvailablePut(body?: string, options?: any): AxiosPromise<boolean> {
+            return localVarFp.authIsEmailAvailablePut(body, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -221,17 +221,17 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authIsUsernameAvailablePost(body?: string, options?: any): AxiosPromise<boolean> {
-            return localVarFp.authIsUsernameAvailablePost(body, options).then((request) => request(axios, basePath));
+        authIsUsernameAvailablePut(body?: string, options?: any): AxiosPromise<boolean> {
+            return localVarFp.authIsUsernameAvailablePut(body, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {AuthRegisterPostRequest} authRegisterPostRequest 
+         * @param {AuthRegisterPutRequest} authRegisterPutRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authRegisterPost(authRegisterPostRequest: AuthRegisterPostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.authRegisterPost(authRegisterPostRequest, options).then((request) => request(axios, basePath));
+        authRegisterPut(authRegisterPutRequest: AuthRegisterPutRequest, options?: any): AxiosPromise<void> {
+            return localVarFp.authRegisterPut(authRegisterPutRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -250,8 +250,8 @@ export class DefaultApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authIsEmailAvailablePost(body?: string, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authIsEmailAvailablePost(body, options).then((request) => request(this.axios, this.basePath));
+    public authIsEmailAvailablePut(body?: string, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authIsEmailAvailablePut(body, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -261,19 +261,19 @@ export class DefaultApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authIsUsernameAvailablePost(body?: string, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authIsUsernameAvailablePost(body, options).then((request) => request(this.axios, this.basePath));
+    public authIsUsernameAvailablePut(body?: string, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authIsUsernameAvailablePut(body, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {AuthRegisterPostRequest} authRegisterPostRequest 
+     * @param {AuthRegisterPutRequest} authRegisterPutRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authRegisterPost(authRegisterPostRequest: AuthRegisterPostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authRegisterPost(authRegisterPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public authRegisterPut(authRegisterPutRequest: AuthRegisterPutRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authRegisterPut(authRegisterPutRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

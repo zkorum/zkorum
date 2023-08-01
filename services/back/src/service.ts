@@ -1,7 +1,7 @@
-import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { eq } from "drizzle-orm";
 import { emailTable, userTable } from "./schema.js";
-import { RegisterRequestBody } from "./dto.js";
+import { type RegisterRequestBody } from "./dto.js";
 
 // No need to validate data, it has been done in the controller level
 export class Service {

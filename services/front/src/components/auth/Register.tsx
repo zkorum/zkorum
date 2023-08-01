@@ -2,13 +2,14 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import Link from "@mui/material/Link";
-import TextField from "@mui/material/TextField";
 import Snackbar from "@mui/material/Snackbar";
+import TextField from "@mui/material/TextField";
 import React from "react";
 import { DefaultApiFactory } from "../../api";
 import customAxios from "../../interceptors";
 import { ZodType } from "../../shared/types/zod";
 import { Alert } from "../shared/Alert";
+import { register } from "../../auth/auth";
 
 interface RegisterProps {
   handleLogin: React.MouseEventHandler<HTMLAnchorElement> &
@@ -54,7 +55,7 @@ export function Register(props: RegisterProps) {
     } else {
       // TODO: check if username is already taken
       DefaultApiFactory(undefined, undefined, customAxios)
-        .authIsUsernameAvailablePost(usernameToValidate)
+        .authIsUsernameAvailablePut(usernameToValidate)
         .then((response) => {
           if (response.data) {
             setIsUsernameValid(true);
@@ -66,7 +67,7 @@ export function Register(props: RegisterProps) {
             );
           }
         })
-        .catch((e) => {
+        .catch(() => {
           setIsEmailValid(false);
           setEmailHelper("There was an error. Please try again later.");
         });
@@ -86,7 +87,7 @@ export function Register(props: RegisterProps) {
       setEmailHelper(formatted._errors[0]);
     } else {
       DefaultApiFactory(undefined, undefined, customAxios)
-        .authIsEmailAvailablePost(emailToValidate)
+        .authIsEmailAvailablePut(emailToValidate)
         .then((response) => {
           if (response.data) {
             setIsEmailValid(true);
@@ -98,7 +99,7 @@ export function Register(props: RegisterProps) {
             );
           }
         })
-        .catch((e) => {
+        .catch(() => {
           setIsEmailValid(false);
           setEmailHelper("There was an error. Please try again later.");
         });
@@ -107,17 +108,15 @@ export function Register(props: RegisterProps) {
 
   function handleOnRegister() {
     if (isEmailValid && isUsernameValid) {
-      // generate keys
-
-      // call register backend
-      DefaultApiFactory(undefined, undefined, customAxios)
-        .authRegisterPost({ email: email, username: username, did: "test" })
-        .then((response) => {})
+      // do register the user
+      register(username, email)
+        .then((_response) => {
+          // go to next step => validate email address
+        })
         .catch((e) => {
+          console.error(e);
           setOpenSnackbar(true);
         });
-
-      // go to next step => validate email address
     }
   }
 

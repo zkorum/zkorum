@@ -9,7 +9,7 @@ import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
-import { SxProps } from "@mui/material/styles";
+import { type SxProps } from "@mui/material/styles";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 
 enum Nav {
@@ -57,7 +57,7 @@ export function BottomNavbar() {
     }
   }, [value, navigate]);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: Nav) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: Nav) => {
     setValue(newValue);
   };
 

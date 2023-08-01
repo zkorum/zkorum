@@ -47,6 +47,6 @@ export function httpUrlToResourcePointer(url: URL | string): {
     urlVal = new URL(url);
   }
   const scheme = urlVal.protocol.slice(0, -1);
-  const hierPart = `//${urlVal.hostname}${urlVal.pathname};`;
+  const hierPart = `//${urlVal.hostname}${urlVal.pathname}`;
   return { scheme, hierPart };
 }

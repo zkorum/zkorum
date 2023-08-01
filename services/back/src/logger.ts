@@ -1,5 +1,5 @@
-import { Logger } from "drizzle-orm";
-import { FastifyBaseLogger as FastifyLogger } from "fastify";
+import { type Logger } from "drizzle-orm";
+import { type FastifyBaseLogger as FastifyLogger } from "fastify";
 
 export class DrizzleFastifyLogger implements Logger {
   logger: FastifyLogger;

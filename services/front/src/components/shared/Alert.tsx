@@ -1,4 +1,4 @@
-import MuiAlert, { AlertProps } from "@mui/material/Alert";
+import MuiAlert, { type AlertProps } from "@mui/material/Alert";
 import React from "react";
 
 export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(

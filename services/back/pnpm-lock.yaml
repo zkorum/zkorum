@@ -35,6 +35,9 @@ dependencies:
   keystore-idb:
     specifier: ^0.15.5
     version: 0.15.5
+  localforage:
+    specifier: ^1.10.0
+    version: 1.10.0
   one-webcrypto:
     specifier: ^1.0.3
     version: 1.0.3

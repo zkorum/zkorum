@@ -14,9 +14,9 @@ import rsaOperations from "keystore-idb/rsa/index.js";
 
 import * as typeChecks from "../../common/type-checks.js";
 import {
-  Implementation,
-  ImplementationOptions,
-  VerifyArgs,
+  type Implementation,
+  type ImplementationOptions,
+  type VerifyArgs,
 } from "../implementation.js";
 
 // AES
@@ -178,11 +178,11 @@ export async function ksExportSymmKey(
   return new Uint8Array(raw);
 }
 
-export function ksGetAlgorithm(ks: RSAKeyStore): Promise<string> {
+export function ksGetAlgorithm(_ks: RSAKeyStore): Promise<string> {
   return Promise.resolve("rsa");
 }
 
-export function ksGetUcanAlgorithm(ks: RSAKeyStore): Promise<string> {
+export function ksGetUcanAlgorithm(_ks: RSAKeyStore): Promise<string> {
   return Promise.resolve("RS256");
 }
 

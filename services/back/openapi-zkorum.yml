@@ -7,7 +7,7 @@ components:
   schemas: {}
 paths:
   /auth/isEmailAvailable:
-    post:
+    put:
       requestBody:
         content:
           application/json:
@@ -26,7 +26,7 @@ paths:
               schema:
                 type: boolean
   /auth/isUsernameAvailable:
-    post:
+    put:
       requestBody:
         content:
           application/json:
@@ -43,7 +43,7 @@ paths:
               schema:
                 type: boolean
   /auth/register:
-    post:
+    put:
       requestBody:
         content:
           application/json:
@@ -60,14 +60,14 @@ paths:
                   type: string
                   maxLength: 32
                   description: Username
-                did:
+                didExchange:
                   type: string
-                  maxLength: 254
+                  maxLength: 1000
                   description: Decentralized Identifier with did:key method
               required:
                 - email
                 - username
-                - did
+                - didExchange
               additionalProperties: false
         required: true
       responses:

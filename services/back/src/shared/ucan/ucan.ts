@@ -29,7 +29,7 @@ function extractPayload(
   level: number
 ): { iss: string; prf: string | null } {
   try {
-    return JSON.parse(base64.urlDecode(ucan.split(".")[1]));
+    return JSON.parse(base64.urlDecode(ucan));
   } catch (_) {
     throw new Error(
       `Invalid UCAN (${level} level${level === 1 ? "" : "s"} deep): \`${ucan}\``
@@ -48,6 +48,6 @@ export function httpUrlToResourcePointer(url: URL | string): {
     urlVal = new URL(url);
   }
   const scheme = urlVal.protocol.slice(0, -1);
-  const hierPart = `//${urlVal.hostname}`;
+  const hierPart = `//${urlVal.hostname}${urlVal.pathname}`;
   return { scheme, hierPart };
 }

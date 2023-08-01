@@ -9,7 +9,7 @@ import {
 
 export const userTable = pgTable("user", {
   id: serial("id").primaryKey(),
-  uid: char("uid", { length: 16 }).notNull(),
+  uid: char("uid", { length: 16 }).unique().notNull(),
   createdAt: date("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: date("updated_at", { mode: "date" }).defaultNow().notNull(),
   username: varchar("username", { length: 32 }).unique().notNull(),
@@ -25,7 +25,8 @@ export const emailTable = pgTable("email", {
 
 export const deviceTable = pgTable("device", {
   id: serial("id").primaryKey(),
-  did: varchar("did", { length: 254 }).unique().notNull(), // TODO: make sure of length
+  didWrite: varchar("did_write", { length: 1000 }).unique().notNull(), // TODO: make sure of length
+  didExchange: varchar("did_exchange", { length: 1000 }).unique().notNull(), // TODO: make sure of length
   userId: integer("user_id")
     .references(() => userTable.id)
     .notNull(),

@@ -1,2 +1,3 @@
 .lvimrc
 node_modules/
+dist/

@@ -36,6 +36,7 @@
     "fastify": "^4.19.2",
     "fastify-type-provider-zod": "^1.1.9",
     "keystore-idb": "^0.15.5",
+    "localforage": "^1.10.0",
     "one-webcrypto": "^1.0.3",
     "postgres": "^3.3.5",
     "tweetnacl": "^1.0.3",

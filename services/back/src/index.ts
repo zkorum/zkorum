@@ -1,6 +1,6 @@
 import "dotenv/config"; // this loads .env values in process.env
 import fs from "fs";
-import fastify, { FastifyRequest, FastifyReply } from "fastify";
+import fastify, { type FastifyRequest, type FastifyReply } from "fastify";
 import fastifyAuth from "@fastify/auth";
 import fastifySensible from "@fastify/sensible";
 import fastifySwagger from "@fastify/swagger";
@@ -12,15 +12,14 @@ import {
   serializerCompiler,
   validatorCompiler,
   jsonSchemaTransform,
-  ZodTypeProvider,
+  type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { DrizzleFastifyLogger } from "./logger.js";
 import { z } from "zod";
 import { ZodType } from "./shared/types/zod.js";
 import { Dto } from "./dto.js";
 import * as ucans from "@ucans/ucans";
-import { httpUrlToResourcePointer, rootIssuer } from "./shared/ucan/ucan.js";
-import { base64 } from "./shared/common/index.js";
+import { httpUrlToResourcePointer } from "./shared/ucan/ucan.js";
 
 enum Environment {
   Development = "development",
@@ -109,30 +108,36 @@ const db = drizzle(client, {
   logger: new DrizzleFastifyLogger(server.log),
 });
 
-const { scheme, hierPart } = httpUrlToResourcePointer(config.SERVER_URL);
-
 // auth functions
+// ! WARNING: will not work if there are queryParams. We only use JSON body requests.
 async function verifyUCAN(
   request: FastifyRequest,
   _reply: FastifyReply
 ): Promise<string> {
   const authHeader = request.headers.authorization;
-  const requestUrl = new URL(request.originalUrl);
   if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
     throw server.httpErrors.unauthorized();
   } else {
+    const { scheme, hierPart } = httpUrlToResourcePointer(
+      new URL(request.originalUrl, config.SERVER_URL)
+    );
     const encodedUcan = authHeader.substring(7, authHeader.length);
-    const rootIssuerDid = rootIssuer(encodedUcan);
+    const rootIssuerDid = ucans.parse(encodedUcan).payload.iss;
     const result = await ucans.verify(encodedUcan, {
       audience: config.SERVER_DID,
-      isRevoked: async (_ucan) => false, // TODO => handle this case
+      isRevoked: async (_ucan) => false, // all our UCAN are short-lived so the revocation feature is unnecessary
       requiredCapabilities: [
         {
           capability: {
+            // with: {
+            //   scheme: "wnfs",
+            //   hierPart: "//boris.fission.name/public/photos/",
+            // },
+            // can: { namespace: "wnfs", segments: ["OVERWRITE"] },
             with: { scheme, hierPart },
             can: {
-              namespace: `http/${request.method}`,
-              segments: [requestUrl.pathname],
+              namespace: `http`,
+              segments: [request.method],
             },
           },
           rootIssuer: rootIssuerDid,

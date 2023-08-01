@@ -26,7 +26,7 @@ export class ZodType {
   static didKey = z
     .string()
     .describe("Decentralized Identifier with did:key method")
-    .max(254)
+    .max(1000)
     .refine(
       (val) => {
         return validateDidKey(val);
@@ -38,7 +38,7 @@ export class ZodType {
   static didWeb = z
     .string()
     .describe("Decentralized Identifier with did:web method")
-    .max(254)
+    .max(1000)
     .refine(
       (val) => {
         return validateDidWeb(val);

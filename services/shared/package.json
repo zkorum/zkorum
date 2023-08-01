@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "keystore-idb": "^0.15.5",
+    "localforage": "^1.10.0",
     "one-webcrypto": "^1.0.3",
     "tweetnacl": "^1.0.3",
     "uint8arrays": "^4.0.4",
@@ -20,8 +21,9 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@types/node": "^20.4.2",
+    "@types/node": "^20.4.5",
     "@types/validator": "^13.7.17",
+    "typecript": "0.0.1-security",
     "typescript": "^5.1.6"
   }
 }

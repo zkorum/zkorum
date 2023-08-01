@@ -3,7 +3,9 @@ import { VitePWA } from "vite-plugin-pwa";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react-swc";
 import { z } from "zod";
+import checker from "vite-plugin-checker";
 
+// ! important - for typescript inference, report any new config variable in `vite-env.d.ts`
 export const configSchema = z.object({
   VITE_BACK_BASE_URL: z.string().url(),
   VITE_BACK_DID: z
@@ -28,6 +30,13 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE");
   configSchema.parse(env);
   return {
-    plugins: [react(), VitePWA({ registerType: "autoUpdate" }), svgr()],
+    plugins: [
+      react(),
+      VitePWA({ registerType: "autoUpdate" }),
+      svgr(),
+      checker({
+        typescript: true,
+      }),
+    ],
   };
 });

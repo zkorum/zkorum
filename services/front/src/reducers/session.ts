@@ -1,17 +1,15 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import * as Crypto from "../shared/crypto/implementation";
+import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 // import type { RootState } from "../../store";
 
 // Define a type for the slice state
 interface SessionState {
   isModalOpen: boolean;
-  sessions: { [username: string]: { crypto: Crypto.Implementation } };
+  sessions: { [username: string]: SessionData };
   // isLoggedIn: boolean;
 }
 
 interface SessionData {
-  crypto: Crypto.Implementation;
   status:
     | "register-crypto-added"
     | "register-email-validating"
@@ -22,7 +20,6 @@ interface SessionData {
 
 interface CryptoGenerated {
   username: string;
-  crypto: Crypto.Implementation;
 }
 
 // Define the initial state using that type
@@ -44,7 +41,9 @@ export const sessionSlice = createSlice({
       state.isModalOpen = false;
     },
     cryptoKeyAdded: (state, action: PayloadAction<CryptoGenerated>) => {
-      state.sessions[action.payload.username] = action.payload.crypto;
+      state.sessions[action.payload.username] = {
+        status: "register-crypto-added",
+      };
     },
   },
 });
