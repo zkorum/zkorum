@@ -38,9 +38,6 @@ dependencies:
   localforage:
     specifier: ^1.10.0
     version: 1.10.0
-  one-webcrypto:
-    specifier: ^1.0.3
-    version: 1.0.3
   postgres:
     specifier: ^3.3.5
     version: 3.3.5

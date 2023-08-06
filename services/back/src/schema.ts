@@ -9,10 +9,9 @@ import {
 
 export const userTable = pgTable("user", {
   id: serial("id").primaryKey(),
-  uid: char("uid", { length: 16 }).unique().notNull(),
+  uid: char("uid", { length: 16 }).unique().notNull(), // a crypto random number to use for anonymous verifiable credential
   createdAt: date("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: date("updated_at", { mode: "date" }).defaultNow().notNull(),
-  username: varchar("username", { length: 32 }).unique().notNull(),
 });
 
 export const emailTable = pgTable("email", {

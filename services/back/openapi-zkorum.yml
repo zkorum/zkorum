@@ -25,23 +25,6 @@ paths:
             application/json:
               schema:
                 type: boolean
-  /auth/isUsernameAvailable:
-    put:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-              maxLength: 32
-              description: Username
-        description: Username
-      responses:
-        "200":
-          description: Default Response
-          content:
-            application/json:
-              schema:
-                type: boolean
   /auth/register:
     put:
       requestBody:
@@ -56,17 +39,12 @@ paths:
                   maxLength: 254
                   minLength: 1
                   description: Email address
-                username:
-                  type: string
-                  maxLength: 32
-                  description: Username
                 didExchange:
                   type: string
                   maxLength: 1000
                   description: Decentralized Identifier with did:key method
               required:
                 - email
-                - username
                 - didExchange
               additionalProperties: false
         required: true

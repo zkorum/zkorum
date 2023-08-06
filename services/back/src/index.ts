@@ -19,7 +19,10 @@ import { z } from "zod";
 import { ZodType } from "./shared/types/zod.js";
 import { Dto } from "./dto.js";
 import * as ucans from "@ucans/ucans";
-import { httpUrlToResourcePointer } from "./shared/ucan/ucan.js";
+import {
+  httpMethodToAbility,
+  httpUrlToResourcePointer,
+} from "./shared/ucan/ucan.js";
 
 enum Environment {
   Development = "development",
@@ -135,10 +138,7 @@ async function verifyUCAN(
             // },
             // can: { namespace: "wnfs", segments: ["OVERWRITE"] },
             with: { scheme, hierPart },
-            can: {
-              namespace: `http`,
-              segments: [request.method],
-            },
+            can: httpMethodToAbility(request.method),
           },
           rootIssuer: rootIssuerDid,
         },
@@ -163,19 +163,36 @@ server.after(() => {
       return await Service.isEmailAvailable(db, request.body);
     },
   });
-  server.withTypeProvider<ZodTypeProvider>().put("/auth/isUsernameAvailable", {
-    schema: { body: ZodType.username, response: { 200: z.boolean() } },
-    handler: async (request, _reply) => {
-      return await Service.isUsernameAvailable(db, request.body);
-    },
-  });
   server.withTypeProvider<ZodTypeProvider>().put("/auth/register", {
     schema: {
       body: Dto.registerRequestBody,
     },
     handler: async (request, reply) => {
       const rootIssuerDid = await verifyUCAN(request, reply);
-      console.log("did", rootIssuerDid);
+
+      const isEmailAvailable = await Service.isEmailAvailable(
+        db,
+        request.body.email
+      );
+      if (!isEmailAvailable) {
+        throw server.httpErrors.conflict("email unavailable");
+      }
+
+      const isDidWriteAvailable = await Service.isDidWriteAvailable(
+        db,
+        rootIssuerDid
+      );
+      if (!isDidWriteAvailable) {
+        throw server.httpErrors.conflict("didWrite unavailable");
+      }
+
+      const isDidExchangeAvailable = await Service.isDidExchangeAvailable(
+        db,
+        request.body.didExchange
+      );
+      if (!isDidExchangeAvailable) {
+        throw server.httpErrors.conflict("didExchange unavailable");
+      }
       return await Service.register(db, request.body, rootIssuerDid);
     },
   });

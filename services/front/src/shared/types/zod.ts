@@ -9,19 +9,6 @@ export class ZodType {
     .max(254)
     .nonempty()
     .describe("Email address");
-  static username = z
-    .string()
-    .describe("Username")
-    .max(32)
-    .refine(
-      (val) => {
-        // @ts-ignore (validator is loaded using validator.min.js)
-        return validator.isAlphanumeric(val) && !validator.isInt(val);
-      },
-      {
-        message: "Username must only use alphanumerics characters",
-      }
-    );
   static didKey = z
     .string()
     .describe("Decentralized Identifier with did:key method")

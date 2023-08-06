@@ -6,7 +6,7 @@ import Snackbar from "@mui/material/Snackbar";
 import TextField from "@mui/material/TextField";
 import React from "react";
 import { DefaultApiFactory } from "../../api";
-import customAxios from "../../interceptors";
+import { ucanAxios } from "../../interceptors";
 import { ZodType } from "../../shared/types/zod";
 import { Alert } from "../shared/Alert";
 import { register } from "../../auth/auth";
@@ -19,11 +19,6 @@ interface RegisterProps {
 export function Register(props: RegisterProps) {
   const { handleLogin } = props;
 
-  const [username, setUsername] = React.useState<string>("");
-  const [isUsernameValid, setIsUsernameValid] = React.useState<boolean>(true);
-  const [usernameHelper, setUsernameHelper] = React.useState<
-    string | undefined
-  >(undefined);
   const [email, setEmail] = React.useState<string>("");
   const [isEmailValid, setIsEmailValid] = React.useState<boolean>(false);
   const [emailHelper, setEmailHelper] = React.useState<string | undefined>(
@@ -41,39 +36,6 @@ export function Register(props: RegisterProps) {
     setOpenSnackbar(false);
   }
 
-  function validateUsername(usernameToValidate: string) {
-    if (usernameToValidate === "") {
-      setIsUsernameValid(true);
-      setUsernameHelper(undefined);
-      return;
-    }
-    const result = ZodType.username.safeParse(usernameToValidate);
-    if (!result.success) {
-      const formatted = result.error.format();
-      setIsUsernameValid(false);
-      setUsernameHelper(formatted._errors[0]);
-    } else {
-      // TODO: check if username is already taken
-      DefaultApiFactory(undefined, undefined, customAxios)
-        .authIsUsernameAvailablePut(usernameToValidate)
-        .then((response) => {
-          if (response.data) {
-            setIsUsernameValid(true);
-            setEmailHelper(undefined);
-          } else {
-            setIsUsernameValid(false);
-            setUsernameHelper(
-              "This username is already associated with an account, did you mean to login instead?"
-            );
-          }
-        })
-        .catch(() => {
-          setIsEmailValid(false);
-          setEmailHelper("There was an error. Please try again later.");
-        });
-    }
-  }
-
   function validateEmail(emailToValidate: string) {
     if (emailToValidate === "") {
       setIsEmailValid(false);
@@ -86,7 +48,7 @@ export function Register(props: RegisterProps) {
       setIsEmailValid(false);
       setEmailHelper(formatted._errors[0]);
     } else {
-      DefaultApiFactory(undefined, undefined, customAxios)
+      DefaultApiFactory(undefined, undefined, ucanAxios)
         .authIsEmailAvailablePut(emailToValidate)
         .then((response) => {
           if (response.data) {
@@ -107,9 +69,9 @@ export function Register(props: RegisterProps) {
   }
 
   function handleOnRegister() {
-    if (isEmailValid && isUsernameValid) {
+    if (isEmailValid) {
       // do register the user
-      register(username, email)
+      register(email)
         .then((_response) => {
           // go to next step => validate email address
         })
@@ -146,31 +108,13 @@ export function Register(props: RegisterProps) {
           }}
           autoFocus
         />
-        <TextField
-          margin="normal"
-          fullWidth
-          name="username"
-          label="Username"
-          type="text"
-          id="username"
-          error={username !== "" && !isUsernameValid}
-          helperText={
-            username !== "" && !isUsernameValid ? usernameHelper : null
-          }
-          onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
-            if (event.target.value !== username) {
-              setUsername(event.target.value);
-              validateUsername(event.target.value);
-            }
-          }}
-        />
         <Button
           type="submit"
           fullWidth
           variant="contained"
           sx={{ mt: 3, mb: 2 }}
           onClick={handleOnRegister}
-          disabled={!isUsernameValid || !isEmailValid}
+          disabled={!isEmailValid}
         >
           Register
         </Button>

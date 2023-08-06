@@ -2,7 +2,6 @@
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7 https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
 import * as uint8arrays from "uint8arrays";
-import { webcrypto } from "one-webcrypto";
 import tweetnacl from "tweetnacl";
 
 import * as keystoreAES from "keystore-idb/aes/index.js";
@@ -11,12 +10,14 @@ import { HashAlg, SymmAlg, SymmKeyLength } from "keystore-idb/types.js";
 import { RSAKeyStore } from "keystore-idb/rsa/index.js";
 import rsaOperations from "keystore-idb/rsa/index.js";
 
-import * as typeChecks from "../../common/type-checks.js";
+import * as typeChecks from "../../../common/type-checks.js";
 import {
   type Implementation,
   type ImplementationOptions,
   type VerifyArgs,
 } from "../implementation.js";
+
+const webcrypto = window.crypto;
 
 // AES
 

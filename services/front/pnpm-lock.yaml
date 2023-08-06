@@ -38,9 +38,6 @@ dependencies:
   match-sorter:
     specifier: ^6.3.1
     version: 6.3.1
-  one-webcrypto:
-    specifier: ^1.0.3
-    version: 1.0.3
   react:
     specifier: ^18.2.0
     version: 18.2.0

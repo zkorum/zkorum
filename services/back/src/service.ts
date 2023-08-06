@@ -1,6 +1,6 @@
 import { type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { eq } from "drizzle-orm";
-import { emailTable, userTable } from "./schema.js";
+import { deviceTable, emailTable } from "./schema.js";
 import { type RegisterRequestBody } from "./dto.js";
 
 // No need to validate data, it has been done in the controller level
@@ -20,14 +20,14 @@ export class Service {
     }
   }
 
-  static async isUsernameAvailable(
+  static async isDidWriteAvailable(
     db: PostgresJsDatabase,
-    username: string
+    didWrite: string
   ): Promise<boolean> {
     const result = await db
       .select()
-      .from(userTable)
-      .where(eq(userTable.username, username));
+      .from(deviceTable)
+      .where(eq(deviceTable.didWrite, didWrite));
     if (result.length === 0) {
       return true;
     } else {
@@ -35,6 +35,22 @@ export class Service {
     }
   }
 
+  static async isDidExchangeAvailable(
+    db: PostgresJsDatabase,
+    didExchange: string
+  ): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(deviceTable)
+      .where(eq(deviceTable.didExchange, didExchange));
+    if (result.length === 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  // TODO
   static async register(
     _db: PostgresJsDatabase,
     _registerRequestBody: RegisterRequestBody,

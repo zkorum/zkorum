@@ -22,7 +22,7 @@
     "vote"
   ],
   "author": "Nicolas Gimenez",
-  "license": "MPL2",
+  "license": "GPLv3",
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
@@ -35,7 +35,6 @@
     "keystore-idb": "^0.15.5",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.1",
-    "one-webcrypto": "^1.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.1.1",

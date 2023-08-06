@@ -2,9 +2,19 @@
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
 import * as uint8arrays from "uint8arrays";
-import * as Crypto from "../crypto/implementation.js";
+import * as Crypto from "../implementation.js";
+import { arrbufs } from "../../../shared/common/index.js";
+import { BASE58_DID_PREFIX } from "../../../shared/did/util.js";
 
-import { BASE58_DID_PREFIX, hasPrefix } from "./util.js";
+/**
+ * Determines if an ArrayBuffer has a given indeterminate length-prefix.
+ */
+export const hasPrefix = (
+  prefixedKey: ArrayBuffer,
+  prefix: ArrayBuffer
+): boolean => {
+  return arrbufs.equal(prefix, prefixedKey.slice(0, prefix.byteLength));
+};
 
 /**
  * Convert a base64 public key to a DID (did:key).

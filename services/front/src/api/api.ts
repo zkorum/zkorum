@@ -36,12 +36,6 @@ export interface AuthRegisterPutRequest {
      */
     'email': string;
     /**
-     * Username
-     * @type {string}
-     * @memberof AuthRegisterPutRequest
-     */
-    'username': string;
-    /**
      * Decentralized Identifier with did:key method
      * @type {string}
      * @memberof AuthRegisterPutRequest
@@ -63,39 +57,6 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          */
         authIsEmailAvailablePut: async (body?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/auth/isEmailAvailable`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} [body] Username
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authIsUsernameAvailablePut: async (body?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/auth/isUsernameAvailable`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -178,16 +139,6 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {string} [body] Username
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async authIsUsernameAvailablePut(body?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authIsUsernameAvailablePut(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
          * @param {AuthRegisterPutRequest} authRegisterPutRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -217,15 +168,6 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {string} [body] Username
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authIsUsernameAvailablePut(body?: string, options?: any): AxiosPromise<boolean> {
-            return localVarFp.authIsUsernameAvailablePut(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @param {AuthRegisterPutRequest} authRegisterPutRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -252,17 +194,6 @@ export class DefaultApi extends BaseAPI {
      */
     public authIsEmailAvailablePut(body?: string, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).authIsEmailAvailablePut(body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} [body] Username
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public authIsUsernameAvailablePut(body?: string, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authIsUsernameAvailablePut(body, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
