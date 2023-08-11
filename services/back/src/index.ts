@@ -7,7 +7,7 @@ import fastifySwagger from "@fastify/swagger";
 import fastifyCors from "@fastify/cors";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { Service } from "./service.js";
+import { AuthenticateType, Service } from "./service.js";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -112,7 +112,9 @@ const db = drizzle(client, {
 });
 
 // auth functions
-// ! WARNING: will not work if there are queryParams. We only use JSON body requests.
+// TODO: store UCAN in ucan table at the end and check whether UCAN has already been seen in the ucan table on the first place - if yes, throw unauthorized error and log the potential replay attack attempt.
+// TODO: optionally check whether didWrite already exists in DB and is logged in - not necessary for "authenticate" endpoint for example
+// ! WARNING: will not work if there are queryParams. We only use POST requests and JSON body requests (JSON-RPC style).
 async function verifyUCAN(
   request: FastifyRequest,
   _reply: FastifyReply
@@ -128,15 +130,10 @@ async function verifyUCAN(
     const rootIssuerDid = ucans.parse(encodedUcan).payload.iss;
     const result = await ucans.verify(encodedUcan, {
       audience: config.SERVER_DID,
-      isRevoked: async (_ucan) => false, // all our UCAN are short-lived so the revocation feature is unnecessary
+      isRevoked: async (_ucan) => false, // users generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
       requiredCapabilities: [
         {
           capability: {
-            // with: {
-            //   scheme: "wnfs",
-            //   hierPart: "//boris.fission.name/public/photos/",
-            // },
-            // can: { namespace: "wnfs", segments: ["OVERWRITE"] },
             with: { scheme, hierPart },
             can: httpMethodToAbility(request.method),
           },
@@ -157,43 +154,80 @@ async function verifyUCAN(
 }
 
 server.after(() => {
-  server.withTypeProvider<ZodTypeProvider>().put("/auth/isEmailAvailable", {
-    schema: { body: ZodType.email, response: { 200: z.boolean() } },
+  server.withTypeProvider<ZodTypeProvider>().post("/auth/getUserId", {
+    schema: {
+      body: ZodType.email,
+      response: { 200: ZodType.userId },
+    },
     handler: async (request, _reply) => {
-      return await Service.isEmailAvailable(db, request.body);
+      // This endpoint is accessible without being logged in
+      // ==> TODO: rate-limit it (via IP Address)
+      return await Service.getUserId(db, request.body);
     },
   });
-  server.withTypeProvider<ZodTypeProvider>().put("/auth/register", {
+  server.withTypeProvider<ZodTypeProvider>().post("/auth/authenticate", {
     schema: {
-      body: Dto.registerRequestBody,
+      body: Dto.authenticateRequestBody,
+      response: { 200: Dto.authenticateResponse },
     },
     handler: async (request, reply) => {
-      const rootIssuerDid = await verifyUCAN(request, reply);
-
-      const isEmailAvailable = await Service.isEmailAvailable(
+      // This endpoint is accessible without being logged in
+      // => TODO: rate-limit it (via IP Address)
+      // this endpoint could be especially subject to attacks such as DoS or man-in-the-middle (to associate their own DID instead of the legitimate user's ones for example)
+      // => TODO: restrict this endpoint and the "validate email" endpoint to use same IP Address: the correct IP Address must part of the UCAN
+      // => TODO: allow email owners to report spam/attacks and to request blocking the IP Addresses that attempted access
+      // The web infrastructure is as it is and IP Addresses are the backbone over which our HTTP endpoints function, we can avoid storing/logging IP Addresses as much as possible, but we can't fix it magically
+      // As a social network (hopefully) subject to heavy traffic, the whole app will need to be protected via a privacy-preserving alternative to CAPTCHA anyway, such as Turnstile: https://developers.cloudflare.com/turnstile/
+      // => TODO: encourage users to use a mixnet such as Tor to preserve their privacy.
+      const didWrite = await verifyUCAN(request, reply);
+      const authenticateType = await Service.getAuthenticateType(
         db,
-        request.body.email
+        request.body,
+        didWrite,
+        server.httpErrors
       );
-      if (!isEmailAvailable) {
-        throw server.httpErrors.conflict("email unavailable");
+      switch (authenticateType) {
+        case AuthenticateType.REGISTER:
+          return await Service.registerAttempt(db, request.body, didWrite).then(
+            ({ codeId, codeExpiry }) => {
+              // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
+              return {
+                codeId: codeId,
+                codeExpiry: codeExpiry,
+              };
+            }
+          );
+        case AuthenticateType.LOGIN_KNOWN_DEVICE:
+          // TODO
+          return {
+            codeId: 0,
+            codeExpiry: new Date(),
+          };
+        case AuthenticateType.LOGIN_NEW_DEVICE:
+          // TODO
+          return {
+            codeId: 0,
+            codeExpiry: new Date(),
+          };
       }
+    },
+  });
 
-      const isDidWriteAvailable = await Service.isDidWriteAvailable(
+  // TODO: for now, there is no 2FA so when this returns true, it means the user has finished logging in/registering - but it will change
+  // TODO: for now there is no way to communicate "isTrusted", it's set to true automatically - but it will change
+  server.withTypeProvider<ZodTypeProvider>().post("/auth/validateOtp", {
+    schema: {
+      body: Dto.validateOtpReqBody,
+      response: { 200: z.boolean() },
+    },
+    handler: async (request, reply) => {
+      const didWrite = await verifyUCAN(request, reply);
+      return await Service.validateOtp(
         db,
-        rootIssuerDid
+        request.body.codeId,
+        request.body.code,
+        didWrite
       );
-      if (!isDidWriteAvailable) {
-        throw server.httpErrors.conflict("didWrite unavailable");
-      }
-
-      const isDidExchangeAvailable = await Service.isDidExchangeAvailable(
-        db,
-        request.body.didExchange
-      );
-      if (!isDidExchangeAvailable) {
-        throw server.httpErrors.conflict("didExchange unavailable");
-      }
-      return await Service.register(db, request.body, rootIssuerDid);
     },
   });
 });

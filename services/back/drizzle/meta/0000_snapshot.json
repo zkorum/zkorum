@@ -1,30 +1,92 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "ab82636f-3a89-4972-9163-00b9d1524bb9",
+  "id": "7351eb4a-db2e-4399-8ab2-388c2b595854",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
+    "auth_attempt": {
+      "name": "auth_attempt",
+      "schema": "",
+      "columns": {
+        "did_write": {
+          "name": "did_write",
+          "type": "varchar(1000)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "auth_type",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "device": {
       "name": "device",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
+        "did_write": {
+          "name": "did_write",
+          "type": "varchar(1000)",
           "primaryKey": true,
           "notNull": true
         },
-        "did": {
-          "name": "did",
-          "type": "varchar(254)",
+        "did_exchange": {
+          "name": "did_exchange",
+          "type": "varchar(1000)",
           "primaryKey": false,
           "notNull": true
         },
         "user_id": {
           "name": "user_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "is_trusted": {
+          "name": "is_trusted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session_expiry": {
+          "name": "session_expiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -45,11 +107,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "device_did_unique": {
-          "name": "device_did_unique",
+        "device_did_exchange_unique": {
+          "name": "device_did_exchange_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "did"
+            "did_exchange"
           ]
         }
       }
@@ -58,23 +120,37 @@
       "name": "email",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
         "email": {
           "name": "email",
           "type": "varchar(254)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "email_type",
           "primaryKey": false,
           "notNull": true
         },
         "user_id": {
           "name": "user_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -94,15 +170,473 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "email_email_unique": {
-          "name": "email_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+      "uniqueConstraints": {}
+    },
+    "login_known_device_attempt": {
+      "name": "login_known_device_attempt",
+      "schema": "",
+      "columns": {
+        "did_write": {
+          "name": "did_write",
+          "type": "varchar(1000)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "did_exchange": {
+          "name": "did_exchange",
+          "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_trusted": {
+          "name": "is_trusted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
-      }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "login_known_device_attempt_did_write_device_did_write_fk": {
+          "name": "login_known_device_attempt_did_write_device_did_write_fk",
+          "tableFrom": "login_known_device_attempt",
+          "tableTo": "device",
+          "columnsFrom": [
+            "did_write"
+          ],
+          "columnsTo": [
+            "did_write"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "login_known_device_attempt_email_email_email_fk": {
+          "name": "login_known_device_attempt_email_email_email_fk",
+          "tableFrom": "login_known_device_attempt",
+          "tableTo": "email",
+          "columnsFrom": [
+            "email"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "login_known_device_attempt_user_id_user_id_fk": {
+          "name": "login_known_device_attempt_user_id_user_id_fk",
+          "tableFrom": "login_known_device_attempt",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "login_known_device_attempt_did_exchange_device_did_exchange_fk": {
+          "name": "login_known_device_attempt_did_exchange_device_did_exchange_fk",
+          "tableFrom": "login_known_device_attempt",
+          "tableTo": "device",
+          "columnsFrom": [
+            "did_exchange"
+          ],
+          "columnsTo": [
+            "did_exchange"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "login_kd_otp_email": {
+      "name": "login_kd_otp_email",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "did_write": {
+          "name": "did_write",
+          "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "char(6)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code_expiry": {
+          "name": "code_expiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "login_kd_otp_email_did_write_login_known_device_attempt_did_write_fk": {
+          "name": "login_kd_otp_email_did_write_login_known_device_attempt_did_write_fk",
+          "tableFrom": "login_kd_otp_email",
+          "tableTo": "login_known_device_attempt",
+          "columnsFrom": [
+            "did_write"
+          ],
+          "columnsTo": [
+            "did_write"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "login_kd_otp_email_email_email_email_fk": {
+          "name": "login_kd_otp_email_email_email_email_fk",
+          "tableFrom": "login_kd_otp_email",
+          "tableTo": "email",
+          "columnsFrom": [
+            "email"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "login_new_device_attempt": {
+      "name": "login_new_device_attempt",
+      "schema": "",
+      "columns": {
+        "did_write": {
+          "name": "did_write",
+          "type": "varchar(1000)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "did_exchange": {
+          "name": "did_exchange",
+          "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_trusted": {
+          "name": "is_trusted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "login_new_device_attempt_email_email_email_fk": {
+          "name": "login_new_device_attempt_email_email_email_fk",
+          "tableFrom": "login_new_device_attempt",
+          "tableTo": "email",
+          "columnsFrom": [
+            "email"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "login_new_device_attempt_user_id_user_id_fk": {
+          "name": "login_new_device_attempt_user_id_user_id_fk",
+          "tableFrom": "login_new_device_attempt",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "login_nd_otp_email": {
+      "name": "login_nd_otp_email",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "did_write": {
+          "name": "did_write",
+          "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "char(6)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code_expiry": {
+          "name": "code_expiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "login_nd_otp_email_did_write_login_new_device_attempt_did_write_fk": {
+          "name": "login_nd_otp_email_did_write_login_new_device_attempt_did_write_fk",
+          "tableFrom": "login_nd_otp_email",
+          "tableTo": "login_new_device_attempt",
+          "columnsFrom": [
+            "did_write"
+          ],
+          "columnsTo": [
+            "did_write"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "login_nd_otp_email_email_email_email_fk": {
+          "name": "login_nd_otp_email_email_email_email_fk",
+          "tableFrom": "login_nd_otp_email",
+          "tableTo": "email",
+          "columnsFrom": [
+            "email"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "register_attempt": {
+      "name": "register_attempt",
+      "schema": "",
+      "columns": {
+        "did_write": {
+          "name": "did_write",
+          "type": "varchar(1000)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "did_exchange": {
+          "name": "did_exchange",
+          "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_trusted": {
+          "name": "is_trusted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "register_otp_email": {
+      "name": "register_otp_email",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "did_write": {
+          "name": "did_write",
+          "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "char(6)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code_expiry": {
+          "name": "code_expiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "register_otp_email_did_write_register_attempt_did_write_fk": {
+          "name": "register_otp_email_did_write_register_attempt_did_write_fk",
+          "tableFrom": "register_otp_email",
+          "tableTo": "register_attempt",
+          "columnsFrom": [
+            "did_write"
+          ],
+          "columnsTo": [
+            "did_write"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
     },
     "user": {
       "name": "user",
@@ -110,7 +644,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
           "notNull": true
         },
@@ -122,40 +656,52 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "date",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "date",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "username": {
-          "name": "username",
-          "type": "varchar(32)",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "user_username_unique": {
-          "name": "user_username_unique",
+        "user_uid_unique": {
+          "name": "user_uid_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "username"
+            "uid"
           ]
         }
       }
     }
   },
-  "enums": {},
+  "enums": {
+    "auth_type": {
+      "name": "auth_type",
+      "values": {
+        "register": "register",
+        "login_known_device": "login_known_device",
+        "login_new_device": "login_new_device"
+      }
+    },
+    "email_type": {
+      "name": "email_type",
+      "values": {
+        "primary": "primary",
+        "backup": "backup",
+        "secondary": "secondary",
+        "other": "other"
+      }
+    }
+  },
   "schemas": {},
   "_meta": {
     "schemas": {},

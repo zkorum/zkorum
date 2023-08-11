@@ -40,14 +40,13 @@
     "postgres": "^3.3.5",
     "tweetnacl": "^1.0.3",
     "uint8arrays": "^4.0.4",
-    "validator": "^13.9.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.7.0",
     "@types/node": "^20.4.2",
     "@types/validator": "^13.7.17",
-    "drizzle-kit": "^0.19.8",
+    "drizzle-kit": "^0.19.12",
     "nodemon": "^3.0.1",
     "pino-pretty": "^10.0.1",
     "ts-node": "^10.9.1",

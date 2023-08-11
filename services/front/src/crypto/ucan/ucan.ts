@@ -2,12 +2,12 @@ import * as Crypto from "./implementation.js";
 import * as BrowserCrypto from "./implementation/browser.js";
 
 export async function getOrGenerateCryptoKey(
-  email: string
+  userId: string
 ): Promise<Crypto.Implementation> {
   const newCryptoKey = await BrowserCrypto.implementation({
-    storeName: `${email}-zkorum`,
-    exchangeKeyName: `${email}-exchange-key`,
-    writeKeyName: `${email}-write-key`,
+    storeName: `${userId}-zkorum`,
+    exchangeKeyName: `${userId}-exchange-key`,
+    writeKeyName: `${userId}-write-key`,
   });
   return newCryptoKey;
 }

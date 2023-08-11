@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 # Provide the directory path as an argument to the script
 directory="$1"

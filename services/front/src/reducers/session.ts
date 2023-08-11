@@ -5,28 +5,33 @@ import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 // Define a type for the slice state
 interface SessionState {
   isModalOpen: boolean;
-  activeSessionEmail: string;
-  sessions: { [email: string]: SessionData };
+  activeSessionUserId: string;
+  sessions: { [userId: string]: SessionData };
   // isLoggedIn: boolean;
 }
 
 export interface SessionData {
-  status:
-    | "registering"
-    | "register-email-validating"
-    | "logging-email-validating"
-    | "logged-in"
-    | "logged-out";
+  email: string;
+  codeId?: number;
+  codeExpiry?: string;
+  status: "authenticating" | "validating" | "logged-in" | "logged-out";
 }
 
-interface RegisterProps {
+interface AuthenticateProps {
+  userId: string;
   email: string;
+}
+
+interface ValidateProps {
+  userId: string;
+  codeId: number;
+  codeExpiry: string;
 }
 
 // Define the initial state using that type
 const initialState: SessionState = {
   isModalOpen: false,
-  activeSessionEmail: "",
+  activeSessionUserId: "",
   sessions: {},
   // isLoggedIn: false,
 };
@@ -42,21 +47,25 @@ export const sessionSlice = createSlice({
     closeModal: (state) => {
       state.isModalOpen = false;
     },
-    registering: (state, action: PayloadAction<RegisterProps>) => {
-      if (!(action.payload.email in state.sessions)) {
-        state.sessions[action.payload.email] = {
-          status: "registering",
-        };
-        state.activeSessionEmail = action.payload.email;
-      } else {
-        // TODO: better approach to error handling
-        console.error("Trying to register username that already exist!");
-      }
+    authenticating: (state, action: PayloadAction<AuthenticateProps>) => {
+      state.sessions[action.payload.userId] = {
+        status: "authenticating",
+        email: action.payload.email,
+      };
+      state.activeSessionUserId = action.payload.userId;
+    },
+    validating: (state, action: PayloadAction<ValidateProps>) => {
+      state.sessions[action.payload.userId].status = "validating";
+      state.sessions[action.payload.userId].codeId = action.payload.codeId;
+      state.sessions[action.payload.userId].codeExpiry =
+        action.payload.codeExpiry;
+      state.activeSessionUserId = action.payload.userId;
     },
   },
 });
 
-export const { openModal, closeModal, registering } = sessionSlice.actions;
+export const { openModal, closeModal, authenticating, validating } =
+  sessionSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 // export const selectCount = (state: RootState) => state.counter.value;

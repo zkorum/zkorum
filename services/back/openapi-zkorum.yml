@@ -6,8 +6,8 @@ info:
 components:
   schemas: {}
 paths:
-  /auth/isEmailAvailable:
-    put:
+  /auth/getUserId:
+    post:
       requestBody:
         content:
           application/json:
@@ -24,9 +24,11 @@ paths:
           content:
             application/json:
               schema:
-                type: boolean
-  /auth/register:
-    put:
+                type: string
+                format: uuid
+                minLength: 1
+  /auth/authenticate:
+    post:
       requestBody:
         content:
           application/json:
@@ -39,16 +41,63 @@ paths:
                   maxLength: 254
                   minLength: 1
                   description: Email address
+                userId:
+                  type: string
+                  format: uuid
+                  minLength: 1
                 didExchange:
                   type: string
                   maxLength: 1000
                   description: Decentralized Identifier with did:key method
               required:
                 - email
+                - userId
                 - didExchange
               additionalProperties: false
         required: true
       responses:
         "200":
           description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  codeId:
+                    type: integer
+                    minimum: 0
+                  codeExpiry:
+                    type: string
+                    format: date-time
+                required:
+                  - codeId
+                  - codeExpiry
+                additionalProperties: false
+  /auth/validateOtp:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  maxLength: 6
+                  minLength: 1
+                codeId:
+                  type: integer
+                  minimum: 0
+              required:
+                - code
+                - codeId
+              additionalProperties: false
+        required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: boolean
 servers: []

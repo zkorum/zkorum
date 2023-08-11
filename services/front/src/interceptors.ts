@@ -10,6 +10,10 @@ import {
 import { getOrGenerateCryptoKey } from "./crypto/ucan/ucan.js";
 import { store } from "./store.js";
 
+export const noAuthAxios = axios.create({
+  baseURL: import.meta.env.VITE_BACK_BASE_URL,
+});
+
 export const ucanAxios = axios.create({
   baseURL: import.meta.env.VITE_BACK_BASE_URL,
 });
@@ -62,8 +66,8 @@ async function buildUcan(
 // Add UCAN to every request - if an active session exists
 ucanAxios.interceptors.request.use(
   async function (config) {
-    const username = store.getState().sessions.activeSessionEmail;
-    if (username === "") {
+    const userId = store.getState().sessions.activeSessionUserId;
+    if (userId === "") {
       console.log("No active session: not adding UCAN");
       return config;
     }
@@ -75,7 +79,7 @@ ucanAxios.interceptors.request.use(
       );
     }
 
-    const newCryptoKey = await getOrGenerateCryptoKey(username);
+    const newCryptoKey = await getOrGenerateCryptoKey(userId);
     const newUcan = await buildUcan(config.url, config.method, newCryptoKey);
     config.headers.Authorization = `Bearer ${newUcan}`;
     return config;
