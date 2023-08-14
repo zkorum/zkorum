@@ -31,12 +31,6 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
 export interface AuthAuthenticatePost200Response {
     /**
      * 
-     * @type {number}
-     * @memberof AuthAuthenticatePost200Response
-     */
-    'codeId': number;
-    /**
-     * 
      * @type {string}
      * @memberof AuthAuthenticatePost200Response
      */
@@ -70,21 +64,82 @@ export interface AuthAuthenticatePostRequest {
 /**
  * 
  * @export
+ * @interface AuthValidateOtpPost200Response
+ */
+export interface AuthValidateOtpPost200Response {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof AuthValidateOtpPost200Response
+     */
+    'success': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthValidateOtpPost200Response
+     */
+    'reason': AuthValidateOtpPost200ResponseReasonEnum;
+}
+
+export const AuthValidateOtpPost200ResponseReasonEnum = {
+    ExpiredCode: 'expired_code',
+    WrongGuess: 'wrong_guess'
+} as const;
+
+export type AuthValidateOtpPost200ResponseReasonEnum = typeof AuthValidateOtpPost200ResponseReasonEnum[keyof typeof AuthValidateOtpPost200ResponseReasonEnum];
+
+/**
+ * 
+ * @export
+ * @interface AuthValidateOtpPost200ResponseAnyOf
+ */
+export interface AuthValidateOtpPost200ResponseAnyOf {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof AuthValidateOtpPost200ResponseAnyOf
+     */
+    'success': boolean;
+}
+/**
+ * 
+ * @export
+ * @interface AuthValidateOtpPost200ResponseAnyOf1
+ */
+export interface AuthValidateOtpPost200ResponseAnyOf1 {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof AuthValidateOtpPost200ResponseAnyOf1
+     */
+    'success': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthValidateOtpPost200ResponseAnyOf1
+     */
+    'reason': AuthValidateOtpPost200ResponseAnyOf1ReasonEnum;
+}
+
+export const AuthValidateOtpPost200ResponseAnyOf1ReasonEnum = {
+    ExpiredCode: 'expired_code',
+    WrongGuess: 'wrong_guess'
+} as const;
+
+export type AuthValidateOtpPost200ResponseAnyOf1ReasonEnum = typeof AuthValidateOtpPost200ResponseAnyOf1ReasonEnum[keyof typeof AuthValidateOtpPost200ResponseAnyOf1ReasonEnum];
+
+/**
+ * 
+ * @export
  * @interface AuthValidateOtpPostRequest
  */
 export interface AuthValidateOtpPostRequest {
     /**
      * 
-     * @type {string}
-     * @memberof AuthValidateOtpPostRequest
-     */
-    'code': string;
-    /**
-     * 
      * @type {number}
      * @memberof AuthValidateOtpPostRequest
      */
-    'codeId': number;
+    'code': number;
 }
 
 /**
@@ -232,7 +287,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authValidateOtpPost(authValidateOtpPostRequest: AuthValidateOtpPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+        async authValidateOtpPost(authValidateOtpPostRequest: AuthValidateOtpPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthValidateOtpPost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authValidateOtpPost(authValidateOtpPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -270,7 +325,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authValidateOtpPost(authValidateOtpPostRequest: AuthValidateOtpPostRequest, options?: any): AxiosPromise<boolean> {
+        authValidateOtpPost(authValidateOtpPostRequest: AuthValidateOtpPostRequest, options?: any): AxiosPromise<AuthValidateOtpPost200Response> {
             return localVarFp.authValidateOtpPost(authValidateOtpPostRequest, options).then((request) => request(axios, basePath));
         },
     };

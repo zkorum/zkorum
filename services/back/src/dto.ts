@@ -9,15 +9,21 @@ export class Dto {
   });
   static validateOtpReqBody = z.object({
     code: ZodType.code,
-    codeId: ZodType.codeId,
   });
   static authenticateResponse = z.object({
-    codeId: ZodType.codeId,
     codeExpiry: z.date(),
   });
+  static validateOtpResponse = z.discriminatedUnion("success", [
+    z.object({ success: z.literal(true) }),
+    z.object({
+      success: z.literal(false),
+      reason: z.enum(["expired_code", "wrong_guess"]),
+    }),
+  ]);
 }
 
 export type AuthenticateRequestBody = z.infer<
   typeof Dto.authenticateRequestBody
 >;
+export type ValidateOtpResponse = z.infer<typeof Dto.validateOtpResponse>;
 export type ValidateEmailReqBody = z.infer<typeof Dto.validateOtpReqBody>;

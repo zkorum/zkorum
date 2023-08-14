@@ -1,14 +1,15 @@
 import { type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { and, eq, lte } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import {
   authAttemptTable,
   deviceTable,
   emailTable,
-  registerAttemptTable,
-  registerOtpEmailTable,
   userTable,
 } from "./schema.js";
-import { type AuthenticateRequestBody } from "./dto.js";
+import {
+  type AuthenticateRequestBody,
+  type ValidateOtpResponse,
+} from "./dto.js";
 import {
   generateOneTimeCode,
   generateRandomHex,
@@ -17,8 +18,6 @@ import {
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 
 export interface RegisterOtp {
-  codeId: number;
-  code: string;
   codeExpiry: Date;
 }
 
@@ -104,52 +103,77 @@ export class Service {
     }
   }
 
+  static async isLoggedIn(db: PostgresJsDatabase, didWrite: string) {
+    const resultDevice = await db
+      .select()
+      .from(deviceTable)
+      .where(
+        and(
+          eq(deviceTable.didWrite, didWrite),
+          gt(deviceTable.sessionExpiry, new Date())
+        )
+      );
+    if (resultDevice.length === 0) {
+      // device has never been registered OR device is logged-out
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   static async validateOtp(
     db: PostgresJsDatabase,
-    codeId: number,
-    code: string,
-    didWrite: string
-  ): Promise<boolean> {
-    return await db.transaction(async (tx) => {
-      const authAttemptResult = await tx
-        .select({ authType: authAttemptTable.type })
-        .from(authAttemptTable)
-        .where(eq(authAttemptTable.didWrite, didWrite));
-      if (authAttemptResult.length === 0) {
-        throw new Error(
-          `DID '${didWrite}' has not initiated a login/register process`
-        );
-      }
-      switch (authAttemptResult[0].authType) {
+    didWrite: string,
+    code: number,
+    httpErrors: HttpErrors
+  ): Promise<ValidateOtpResponse> {
+    // if user is already logged-in, it means either the auth attempt wasn't initiated OR the code was already validated
+    const isLoggedIn = await Service.isLoggedIn(db, didWrite);
+    if (isLoggedIn) {
+      throw httpErrors.conflict("Device is already logged-in");
+    }
+    const resultOtp = await db
+      .select({
+        authType: authAttemptTable.type,
+        code: authAttemptTable.code,
+        codeExpiry: authAttemptTable.codeExpiry,
+      })
+      .from(authAttemptTable)
+      .where(eq(authAttemptTable.didWrite, didWrite));
+    const now = new Date();
+    if (resultOtp.length === 0) {
+      throw httpErrors.badRequest(
+        "Device has never made an authentication attempt"
+      );
+    } else if (resultOtp[0].codeExpiry.getTime() <= now.getTime()) {
+      return {
+        success: false,
+        reason: "expired_code",
+      };
+    } else if (resultOtp[0].code !== code) {
+      return {
+        success: false,
+        reason: "wrong_guess",
+      };
+    } else {
+      switch (resultOtp[0].authType) {
         case "register":
-          const resultOtp = await tx
-            .select()
-            .from(registerOtpEmailTable)
-            .leftJoin(
-              registerAttemptTable,
-              eq(registerAttemptTable.didWrite, registerOtpEmailTable.didWrite)
-            )
-            .where(
-              and(
-                eq(registerOtpEmailTable.id, codeId),
-                eq(registerOtpEmailTable.code, code),
-                lte(registerOtpEmailTable.codeExpiry, new Date())
-              )
-            );
-          if (resultOtp.length === 0) {
-            return false;
-          } else {
-            await Service.register(db, didWrite);
-            return true;
-          }
+          await Service.register(db, didWrite);
+          return {
+            success: true,
+          };
         case "login_known_device":
-          //TODO
-          return false;
+          // TODO
+          return {
+            success: true,
+          };
         case "login_new_device":
-          //TODO
-          return false;
+          // TODO
+          return {
+            success: true,
+          };
       }
-    });
+    }
   }
 
   static async isEmailAvailable(
@@ -250,69 +274,55 @@ export class Service {
     codeExpiry.setHours(codeExpiry.getHours() + 1);
     // TODO: transaction to actually send the email + update DB && remove the logging below!
     console.log("Code:", oneTimeCode, codeExpiry);
-    const codeId = await db.transaction(async (tx) => {
-      await tx.insert(registerAttemptTable).values({
-        email: authenticateRequestBody.email,
-        userId: authenticateRequestBody.userId,
-        didWrite: didWrite,
-        didExchange: authenticateRequestBody.didExchange,
-        isTrusted: true, // authenticateRequestBody.isTrusted,
-      });
-      await tx.insert(authAttemptTable).values({
-        didWrite: didWrite,
-        type: "register",
-      });
-      const result = await tx
-        .insert(registerOtpEmailTable)
-        .values({
-          didWrite: didWrite,
-          code: oneTimeCode,
-          codeExpiry: codeExpiry,
-        })
-        .returning({ codeId: registerOtpEmailTable.id });
-      return result[0].codeId;
+    await db.insert(authAttemptTable).values({
+      didWrite: didWrite,
+      type: "register",
+      email: authenticateRequestBody.email,
+      userId: authenticateRequestBody.userId,
+      didExchange: authenticateRequestBody.didExchange,
+      code: oneTimeCode,
+      codeExpiry: codeExpiry,
     });
-    return { codeId: codeId, code: oneTimeCode, codeExpiry: codeExpiry };
+    return { codeExpiry: codeExpiry };
   }
 
-  // we assume the OTP was validated at this point
+  // ! WARN we assume the OTP was validated at this point
   static async register(db: PostgresJsDatabase, didWrite: string) {
     const uid = generateRandomHex();
     const in1000years = new Date();
     in1000years.setFullYear(in1000years.getFullYear() + 1000);
-    const in15minutes = new Date();
-    in15minutes.setMinutes(in15minutes.getMinutes() + 15);
     await db.transaction(async (tx) => {
-      const registerAttemptResult = await tx
+      const authAttemptResult = await tx
         .select({
-          email: registerAttemptTable.email,
-          userId: registerAttemptTable.userId,
-          didExchange: registerAttemptTable.didExchange,
-          isTrusted: registerAttemptTable.isTrusted,
+          email: authAttemptTable.email,
+          userId: authAttemptTable.userId,
+          didExchange: authAttemptTable.didExchange,
         })
-        .from(registerAttemptTable)
-        .where(eq(registerAttemptTable.didWrite, didWrite));
-      if (registerAttemptResult.length === 0) {
+        .from(authAttemptTable)
+        .where(
+          and(
+            eq(authAttemptTable.didWrite, didWrite),
+            eq(authAttemptTable.type, "register")
+          )
+        );
+      if (authAttemptResult.length === 0) {
         throw new Error(
           "No register attempt was initiated - cannot register the user"
         );
       }
       await tx
         .insert(userTable)
-        .values({ uid: uid, id: registerAttemptResult[0].userId });
+        .values({ uid: uid, id: authAttemptResult[0].userId });
       await tx.insert(deviceTable).values({
-        userId: registerAttemptResult[0].userId,
+        userId: authAttemptResult[0].userId,
         didWrite: didWrite,
-        didExchange: registerAttemptResult[0].didExchange,
-        isTrusted: registerAttemptResult[0].isTrusted,
-        sessionExpiry: registerAttemptResult[0].isTrusted
-          ? in1000years
-          : in15minutes,
+        didExchange: authAttemptResult[0].didExchange,
+        sessionExpiry: in1000years,
       });
       await tx.insert(emailTable).values({
-        userId: registerAttemptResult[0].userId,
+        userId: authAttemptResult[0].userId,
         type: "primary",
-        email: registerAttemptResult[0].email,
+        email: authAttemptResult[0].email,
       });
     });
   }

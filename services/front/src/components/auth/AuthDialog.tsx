@@ -8,10 +8,15 @@ import { ZKorumIcon } from "../../ZKorumIcon";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { closeModal } from "../../reducers/session";
 import { Authenticate } from "./Authenticate";
+import { OtpValidate } from "./OtpValidate";
 
 export function AuthDialog() {
   const isModalOpen = useAppSelector((state) => state.sessions.isModalOpen);
   const dispatch = useAppDispatch();
+  const pendingSession = useAppSelector((state) => {
+    const pendingSessionUserId = state.sessions.pendingSessionUserId;
+    return state.sessions.sessions[pendingSessionUserId];
+  });
 
   function handleClose() {
     dispatch(closeModal());
@@ -46,7 +51,11 @@ export function AuthDialog() {
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          <Authenticate />
+          {pendingSession?.status === "validating" ? (
+            <OtpValidate />
+          ) : (
+            <Authenticate />
+          )}
         </DialogContent>
       </Dialog>
       <Outlet />

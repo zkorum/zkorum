@@ -4,8 +4,9 @@ import * as DID from "../crypto/ucan/did/index.js";
 import {
   DefaultApiFactory,
   type AuthAuthenticatePost200Response,
+  type AuthValidateOtpPost200Response,
 } from "../api/api.js";
-import { noAuthAxios, ucanAxios } from "../interceptors.js";
+import { noAuthAxios, pendingSessionUcanAxios } from "../interceptors.js";
 import { getOrGenerateCryptoKey } from "../crypto/ucan/ucan.js";
 
 export async function authenticate(
@@ -25,7 +26,7 @@ export async function authenticate(
   const otpDetails = await DefaultApiFactory(
     undefined,
     undefined,
-    ucanAxios
+    pendingSessionUcanAxios
   ).authAuthenticatePost({
     userId: userId.data,
     email: email,
@@ -34,9 +35,21 @@ export async function authenticate(
   store.dispatch(
     validating({
       userId: userId.data,
-      codeId: otpDetails.data.codeId,
       codeExpiry: otpDetails.data.codeExpiry,
     })
   );
   return otpDetails.data;
+}
+
+export async function validateOtp(
+  code: number
+): Promise<AuthValidateOtpPost200Response> {
+  const validateOtpResult = await DefaultApiFactory(
+    undefined,
+    undefined,
+    pendingSessionUcanAxios
+  ).authValidateOtpPost({
+    code: code,
+  });
+  return validateOtpResult.data;
 }

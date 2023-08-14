@@ -11,9 +11,8 @@ export function generateRandomHex() {
 // Generate cryptographically random 6 digits code for email validation.
 // Standard practice, used by Ory for example.
 // Though Node's crypto functions - which are based on OpenSSL - aren't the most secure compared to libsodium, it's enough for this purpose as we also rate-limit the number of attempts.
-export function generateOneTimeCode() {
-  // if the generated number < 100 000, padStart adds 0 to the beginning of the string to match 6 digits
-  return crypto.randomInt(0, 999999).toString().padStart(6, "0");
+export function generateOneTimeCode(): number {
+  return crypto.randomInt(0, 999999);
 }
 
 export function generateUUID() {

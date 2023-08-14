@@ -189,10 +189,9 @@ server.after(() => {
       switch (authenticateType) {
         case AuthenticateType.REGISTER:
           return await Service.registerAttempt(db, request.body, didWrite).then(
-            ({ codeId, codeExpiry }) => {
+            ({ codeExpiry }) => {
               // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
               return {
-                codeId: codeId,
                 codeExpiry: codeExpiry,
               };
             }
@@ -200,13 +199,11 @@ server.after(() => {
         case AuthenticateType.LOGIN_KNOWN_DEVICE:
           // TODO
           return {
-            codeId: 0,
             codeExpiry: new Date(),
           };
         case AuthenticateType.LOGIN_NEW_DEVICE:
           // TODO
           return {
-            codeId: 0,
             codeExpiry: new Date(),
           };
       }
@@ -218,15 +215,15 @@ server.after(() => {
   server.withTypeProvider<ZodTypeProvider>().post("/auth/validateOtp", {
     schema: {
       body: Dto.validateOtpReqBody,
-      response: { 200: z.boolean() },
+      response: { 200: Dto.validateOtpResponse },
     },
     handler: async (request, reply) => {
       const didWrite = await verifyUCAN(request, reply);
       return await Service.validateOtp(
         db,
-        request.body.codeId,
+        didWrite,
         request.body.code,
-        didWrite
+        server.httpErrors
       );
     },
   });

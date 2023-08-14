@@ -63,14 +63,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  codeId:
-                    type: integer
-                    minimum: 0
                   codeExpiry:
                     type: string
                     format: date-time
                 required:
-                  - codeId
                   - codeExpiry
                 additionalProperties: false
   /auth/validateOtp:
@@ -82,15 +78,11 @@ paths:
               type: object
               properties:
                 code:
-                  type: string
-                  maxLength: 6
-                  minLength: 1
-                codeId:
-                  type: integer
+                  type: number
                   minimum: 0
+                  maximum: 999999
               required:
                 - code
-                - codeId
               additionalProperties: false
         required: true
       responses:
@@ -99,5 +91,29 @@ paths:
           content:
             application/json:
               schema:
-                type: boolean
+                anyOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        enum:
+                          - true
+                    required:
+                      - success
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        enum:
+                          - false
+                      reason:
+                        type: string
+                        enum:
+                          - expired_code
+                          - wrong_guess
+                    required:
+                      - success
+                      - reason
+                    additionalProperties: false
 servers: []

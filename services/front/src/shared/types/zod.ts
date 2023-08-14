@@ -33,7 +33,7 @@ export class ZodType {
         message: "Please use a valid DID formatted `did:web:...`",
       }
     );
-  static code = z.string().max(6).nonempty();
-  static codeId = z.number().int().nonnegative();
+  static code = z.coerce.number().int().nonnegative().lte(999999);
+  static digit = z.coerce.number().int().nonnegative().lte(9);
   static userId = z.string().uuid().nonempty();
 }

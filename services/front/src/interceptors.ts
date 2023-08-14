@@ -14,7 +14,11 @@ export const noAuthAxios = axios.create({
   baseURL: import.meta.env.VITE_BACK_BASE_URL,
 });
 
-export const ucanAxios = axios.create({
+export const activeSessionUcanAxios = axios.create({
+  baseURL: import.meta.env.VITE_BACK_BASE_URL,
+});
+
+export const pendingSessionUcanAxios = axios.create({
   baseURL: import.meta.env.VITE_BACK_BASE_URL,
 });
 
@@ -64,11 +68,38 @@ async function buildUcan(
 }
 
 // Add UCAN to every request - if an active session exists
-ucanAxios.interceptors.request.use(
+activeSessionUcanAxios.interceptors.request.use(
   async function (config) {
     const userId = store.getState().sessions.activeSessionUserId;
     if (userId === "") {
       console.log("No active session: not adding UCAN");
+      return config;
+    }
+
+    if (config.url === undefined || config.method === undefined) {
+      // TODO: better error handling
+      throw new Error(
+        `Cannot add UCAN because url==${config.url} or method==${config.method} is undefined, should not happen!`
+      );
+    }
+
+    const newCryptoKey = await getOrGenerateCryptoKey(userId);
+    const newUcan = await buildUcan(config.url, config.method, newCryptoKey);
+    config.headers.Authorization = `Bearer ${newUcan}`;
+    return config;
+  },
+  function (error) {
+    // Do something with request error
+    return Promise.reject(error);
+  }
+);
+
+// Add UCAN to every request - if an active session exists
+pendingSessionUcanAxios.interceptors.request.use(
+  async function (config) {
+    const userId = store.getState().sessions.pendingSessionUserId;
+    if (userId === "") {
+      console.log("No pending session: not adding UCAN");
       return config;
     }
 
