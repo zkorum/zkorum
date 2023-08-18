@@ -67,7 +67,7 @@ export function OtpVerify() {
       resetCountdown: resetNewCodeCoundown,
     },
   ] = useCountdown({
-    countStart: 5,
+    countStart: nextCodeSoonestTime,
     intervalMs: 1000,
   });
 
