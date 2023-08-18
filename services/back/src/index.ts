@@ -1,13 +1,13 @@
 import "dotenv/config"; // this loads .env values in process.env
 import fs from "fs";
-import fastify, { type FastifyRequest, type FastifyReply } from "fastify";
+import fastify, { type FastifyRequest } from "fastify";
 import fastifyAuth from "@fastify/auth";
 import fastifySensible from "@fastify/sensible";
 import fastifySwagger from "@fastify/swagger";
 import fastifyCors from "@fastify/cors";
-import { drizzle } from "drizzle-orm/postgres-js";
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { AuthenticateType, Service } from "./service.js";
+import { AuthService } from "./service/auth.js";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -34,10 +34,13 @@ const defaultPort = 8080;
 
 const configSchema = z.object({
   CONNECTION_STRING: z.string(),
-  PORT: z.number().default(defaultPort),
+  PORT: z.number().int().nonnegative().default(defaultPort),
   NODE_ENV: z.nativeEnum(Environment).default(Environment.Development),
   SERVER_URL: z.string().url().default(`http://localhost:${defaultPort}`),
   SERVER_DID: ZodType.didWeb.default(`did:web:localhost%3A${defaultPort}`),
+  EMAIL_OTP_MAX_ATTEMPT_AMOUNT: z.number().int().min(1).max(5).default(3),
+  THROTTLE_EMAIL_MINUTES_INTERVAL: z.number().int().min(3).default(3),
+  MINUTES_BEFORE_EMAIL_OTP_EXPIRY: z.number().int().min(3).max(60).default(10),
 });
 
 const config = configSchema.parse(process.env);
@@ -111,13 +114,17 @@ const db = drizzle(client, {
   logger: new DrizzleFastifyLogger(server.log),
 });
 
+interface OptionsVerifyUcan {
+  deviceMustBeLoggedIn: boolean;
+}
+
 // auth functions
 // TODO: store UCAN in ucan table at the end and check whether UCAN has already been seen in the ucan table on the first place - if yes, throw unauthorized error and log the potential replay attack attempt.
-// TODO: optionally check whether didWrite already exists in DB and is logged in - not necessary for "authenticate" endpoint for example
 // ! WARNING: will not work if there are queryParams. We only use POST requests and JSON body requests (JSON-RPC style).
 async function verifyUCAN(
+  db: PostgresJsDatabase,
   request: FastifyRequest,
-  _reply: FastifyReply
+  options: OptionsVerifyUcan = { deviceMustBeLoggedIn: true }
 ): Promise<string> {
   const authHeader = request.headers.authorization;
   if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
@@ -130,7 +137,7 @@ async function verifyUCAN(
     const rootIssuerDid = ucans.parse(encodedUcan).payload.iss;
     const result = await ucans.verify(encodedUcan, {
       audience: config.SERVER_DID,
-      isRevoked: async (_ucan) => false, // users generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
+      isRevoked: async (_ucan) => false, // users' generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
       requiredCapabilities: [
         {
           capability: {
@@ -147,6 +154,13 @@ async function verifyUCAN(
         "Unauthorized",
         new AggregateError(result.error)
       );
+    } else if (options.deviceMustBeLoggedIn) {
+      const isLoggedIn = await AuthService.isLoggedIn(db, rootIssuerDid);
+      if (isLoggedIn) {
+        return rootIssuerDid;
+      } else {
+        throw server.httpErrors.unauthorized();
+      }
     } else {
       return rootIssuerDid;
     }
@@ -154,6 +168,8 @@ async function verifyUCAN(
 }
 
 server.after(() => {
+  // This endpoint is accessible without being logged in
+  // TODO protect this endpoint from DDoS
   server.withTypeProvider<ZodTypeProvider>().post("/auth/getUserId", {
     schema: {
       body: ZodType.email,
@@ -162,7 +178,7 @@ server.after(() => {
     handler: async (request, _reply) => {
       // This endpoint is accessible without being logged in
       // ==> TODO: rate-limit it (via IP Address)
-      return await Service.getUserId(db, request.body);
+      return await AuthService.getUserId(db, request.body);
     },
   });
   server.withTypeProvider<ZodTypeProvider>().post("/auth/authenticate", {
@@ -170,61 +186,65 @@ server.after(() => {
       body: Dto.authenticateRequestBody,
       response: { 200: Dto.authenticateResponse },
     },
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       // This endpoint is accessible without being logged in
-      // => TODO: rate-limit it (via IP Address)
-      // this endpoint could be especially subject to attacks such as DoS or man-in-the-middle (to associate their own DID instead of the legitimate user's ones for example)
-      // => TODO: restrict this endpoint and the "validate email" endpoint to use same IP Address: the correct IP Address must part of the UCAN
+      // this endpoint could be especially subject to attacks such as DDoS or man-in-the-middle (to associate their own DID instead of the legitimate user's ones for example)
+      // => TODO: restrict this endpoint and the "verifyOtp" endpoint to use same IP Address: the correct IP Address must part of the UCAN
       // => TODO: allow email owners to report spam/attacks and to request blocking the IP Addresses that attempted access
       // The web infrastructure is as it is and IP Addresses are the backbone over which our HTTP endpoints function, we can avoid storing/logging IP Addresses as much as possible, but we can't fix it magically
       // As a social network (hopefully) subject to heavy traffic, the whole app will need to be protected via a privacy-preserving alternative to CAPTCHA anyway, such as Turnstile: https://developers.cloudflare.com/turnstile/
       // => TODO: encourage users to use a mixnet such as Tor to preserve their privacy.
-      const didWrite = await verifyUCAN(request, reply);
-      const authenticateType = await Service.getAuthenticateType(
+      const didWrite = await verifyUCAN(db, request, {
+        deviceMustBeLoggedIn: false,
+      });
+      const authenticateType = await AuthService.getAuthenticateType(
         db,
         request.body,
         didWrite,
         server.httpErrors
       );
-      switch (authenticateType) {
-        case AuthenticateType.REGISTER:
-          return await Service.registerAttempt(db, request.body, didWrite).then(
-            ({ codeExpiry }) => {
-              // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
-              return {
-                codeExpiry: codeExpiry,
-              };
-            }
-          );
-        case AuthenticateType.LOGIN_KNOWN_DEVICE:
-          // TODO
-          return {
-            codeExpiry: new Date(),
-          };
-        case AuthenticateType.LOGIN_NEW_DEVICE:
-          // TODO
-          return {
-            codeExpiry: new Date(),
-          };
-      }
+      return await AuthService.authenticateAttempt(
+        db,
+        authenticateType,
+        request.body,
+        config.MINUTES_BEFORE_EMAIL_OTP_EXPIRY,
+        didWrite,
+        config.THROTTLE_EMAIL_MINUTES_INTERVAL,
+        server.httpErrors
+      ).then(({ codeExpiry, nextCodeSoonestTime }) => {
+        // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
+        return {
+          codeExpiry: codeExpiry,
+          nextCodeSoonestTime: nextCodeSoonestTime,
+        };
+      });
     },
   });
 
   // TODO: for now, there is no 2FA so when this returns true, it means the user has finished logging in/registering - but it will change
   // TODO: for now there is no way to communicate "isTrusted", it's set to true automatically - but it will change
-  server.withTypeProvider<ZodTypeProvider>().post("/auth/validateOtp", {
+  server.withTypeProvider<ZodTypeProvider>().post("/auth/verifyOtp", {
     schema: {
-      body: Dto.validateOtpReqBody,
-      response: { 200: Dto.validateOtpResponse },
+      body: Dto.verifyOtpReqBody,
+      response: { 200: Dto.verifyOtpResponse },
     },
-    handler: async (request, reply) => {
-      const didWrite = await verifyUCAN(request, reply);
-      return await Service.validateOtp(
+    handler: async (request, _reply) => {
+      const didWrite = await verifyUCAN(db, request, {
+        deviceMustBeLoggedIn: false,
+      });
+      return await AuthService.verifyOtp(
         db,
+        config.EMAIL_OTP_MAX_ATTEMPT_AMOUNT,
         didWrite,
         request.body.code,
         server.httpErrors
       );
+    },
+  });
+  server.withTypeProvider<ZodTypeProvider>().post("/auth/logout", {
+    handler: async (request, _reply) => {
+      const didWrite = await verifyUCAN(db, request);
+      await AuthService.logout(db, didWrite);
     },
   });
 });

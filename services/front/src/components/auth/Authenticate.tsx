@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 import TextField from "@mui/material/TextField";
 import React from "react";
@@ -10,6 +9,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
 import Typography from "@mui/material/Typography";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 export function Authenticate() {
   const [isTrusted, setIsTrusted] = React.useState<boolean>(false);
@@ -17,7 +17,9 @@ export function Authenticate() {
 
   const [isEmailValid, setIsEmailValid] = React.useState<boolean>(false);
   const [emailHelper, setEmailHelper] = React.useState<string>(" "); // we must have a helper set to not change form height: https://stackoverflow.com/questions/72510035/error-message-affects-the-height-of-the-text-field-helpertext-material-ui
-  const [openSnackbar, setOpenSnackbar] = React.useState(false);
+  const [openSnackbar, setOpenSnackbar] = React.useState<boolean>(false);
+  const [isAuthenticating, setIsAuthenticating] =
+    React.useState<boolean>(false);
 
   function handleCloseSnackbar(
     _event?: React.SyntheticEvent | Event,
@@ -47,17 +49,19 @@ export function Authenticate() {
   }
 
   function handleOnAuthenticate() {
-    if (isEmailValid) {
-      // do register the user
-      authenticate(email)
-        .then((_response) => {
-          // go to next step => validate email address
-        })
-        .catch((e) => {
-          console.error(e);
-          setOpenSnackbar(true);
-        });
-    }
+    setIsAuthenticating(true);
+    // do register the user
+    authenticate(email, false)
+      .then((_response) => {
+        // go to next step => validate email address => automatic on store update
+      })
+      .catch((e) => {
+        console.error(e);
+        setOpenSnackbar(true);
+      })
+      .finally(() => {
+        setIsAuthenticating(false);
+      });
   }
 
   return (
@@ -99,15 +103,16 @@ export function Authenticate() {
               <Typography>Trust this device and stay logged in</Typography>
             }
           />
-          <Button
+          <LoadingButton
             fullWidth
+            loading={isAuthenticating}
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
             onClick={handleOnAuthenticate}
             disabled={!isEmailValid || !isTrusted}
           >
             Register / Log in
-          </Button>
+          </LoadingButton>
           <Snackbar
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             open={openSnackbar}
@@ -119,7 +124,7 @@ export function Authenticate() {
               severity="error"
               sx={{ width: "100%" }}
             >
-              There was an error. Please try again later.
+              There was an error. Please try again later or contact ZKorum.
             </Alert>
           </Snackbar>
         </Box>

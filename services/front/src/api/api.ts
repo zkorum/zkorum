@@ -35,6 +35,12 @@ export interface AuthAuthenticatePost200Response {
      * @memberof AuthAuthenticatePost200Response
      */
     'codeExpiry': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost200Response
+     */
+    'nextCodeSoonestTime': string;
 }
 /**
  * 
@@ -60,84 +66,92 @@ export interface AuthAuthenticatePostRequest {
      * @memberof AuthAuthenticatePostRequest
      */
     'didExchange': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof AuthAuthenticatePostRequest
+     */
+    'isRequestingNewCode': boolean;
 }
 /**
  * 
  * @export
- * @interface AuthValidateOtpPost200Response
+ * @interface AuthVerifyOtpPost200Response
  */
-export interface AuthValidateOtpPost200Response {
+export interface AuthVerifyOtpPost200Response {
     /**
      * 
      * @type {boolean}
-     * @memberof AuthValidateOtpPost200Response
+     * @memberof AuthVerifyOtpPost200Response
      */
     'success': boolean;
     /**
      * 
      * @type {string}
-     * @memberof AuthValidateOtpPost200Response
+     * @memberof AuthVerifyOtpPost200Response
      */
-    'reason': AuthValidateOtpPost200ResponseReasonEnum;
+    'reason': AuthVerifyOtpPost200ResponseReasonEnum;
 }
 
-export const AuthValidateOtpPost200ResponseReasonEnum = {
+export const AuthVerifyOtpPost200ResponseReasonEnum = {
     ExpiredCode: 'expired_code',
-    WrongGuess: 'wrong_guess'
+    WrongGuess: 'wrong_guess',
+    TooManyWrongGuess: 'too_many_wrong_guess'
 } as const;
 
-export type AuthValidateOtpPost200ResponseReasonEnum = typeof AuthValidateOtpPost200ResponseReasonEnum[keyof typeof AuthValidateOtpPost200ResponseReasonEnum];
+export type AuthVerifyOtpPost200ResponseReasonEnum = typeof AuthVerifyOtpPost200ResponseReasonEnum[keyof typeof AuthVerifyOtpPost200ResponseReasonEnum];
 
 /**
  * 
  * @export
- * @interface AuthValidateOtpPost200ResponseAnyOf
+ * @interface AuthVerifyOtpPost200ResponseAnyOf
  */
-export interface AuthValidateOtpPost200ResponseAnyOf {
+export interface AuthVerifyOtpPost200ResponseAnyOf {
     /**
      * 
      * @type {boolean}
-     * @memberof AuthValidateOtpPost200ResponseAnyOf
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf
      */
     'success': boolean;
 }
 /**
  * 
  * @export
- * @interface AuthValidateOtpPost200ResponseAnyOf1
+ * @interface AuthVerifyOtpPost200ResponseAnyOf1
  */
-export interface AuthValidateOtpPost200ResponseAnyOf1 {
+export interface AuthVerifyOtpPost200ResponseAnyOf1 {
     /**
      * 
      * @type {boolean}
-     * @memberof AuthValidateOtpPost200ResponseAnyOf1
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf1
      */
     'success': boolean;
     /**
      * 
      * @type {string}
-     * @memberof AuthValidateOtpPost200ResponseAnyOf1
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf1
      */
-    'reason': AuthValidateOtpPost200ResponseAnyOf1ReasonEnum;
+    'reason': AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum;
 }
 
-export const AuthValidateOtpPost200ResponseAnyOf1ReasonEnum = {
+export const AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = {
     ExpiredCode: 'expired_code',
-    WrongGuess: 'wrong_guess'
+    WrongGuess: 'wrong_guess',
+    TooManyWrongGuess: 'too_many_wrong_guess'
 } as const;
 
-export type AuthValidateOtpPost200ResponseAnyOf1ReasonEnum = typeof AuthValidateOtpPost200ResponseAnyOf1ReasonEnum[keyof typeof AuthValidateOtpPost200ResponseAnyOf1ReasonEnum];
+export type AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = typeof AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum[keyof typeof AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum];
 
 /**
  * 
  * @export
- * @interface AuthValidateOtpPostRequest
+ * @interface AuthVerifyOtpPostRequest
  */
-export interface AuthValidateOtpPostRequest {
+export interface AuthVerifyOtpPostRequest {
     /**
      * 
      * @type {number}
-     * @memberof AuthValidateOtpPostRequest
+     * @memberof AuthVerifyOtpPostRequest
      */
     'code': number;
 }
@@ -218,14 +232,43 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {AuthValidateOtpPostRequest} authValidateOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authValidateOtpPost: async (authValidateOtpPostRequest: AuthValidateOtpPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'authValidateOtpPostRequest' is not null or undefined
-            assertParamExists('authValidateOtpPost', 'authValidateOtpPostRequest', authValidateOtpPostRequest)
-            const localVarPath = `/auth/validateOtp`;
+        authLogoutPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/auth/logout`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authVerifyOtpPost: async (authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'authVerifyOtpPostRequest' is not null or undefined
+            assertParamExists('authVerifyOtpPost', 'authVerifyOtpPostRequest', authVerifyOtpPostRequest)
+            const localVarPath = `/auth/verifyOtp`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -244,7 +287,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(authValidateOtpPostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(authVerifyOtpPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -283,12 +326,21 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {AuthValidateOtpPostRequest} authValidateOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authValidateOtpPost(authValidateOtpPostRequest: AuthValidateOtpPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthValidateOtpPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authValidateOtpPost(authValidateOtpPostRequest, options);
+        async authLogoutPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authLogoutPost(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthVerifyOtpPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authVerifyOtpPost(authVerifyOtpPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -321,12 +373,20 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {AuthValidateOtpPostRequest} authValidateOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authValidateOtpPost(authValidateOtpPostRequest: AuthValidateOtpPostRequest, options?: any): AxiosPromise<AuthValidateOtpPost200Response> {
-            return localVarFp.authValidateOtpPost(authValidateOtpPostRequest, options).then((request) => request(axios, basePath));
+        authLogoutPost(options?: any): AxiosPromise<void> {
+            return localVarFp.authLogoutPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: any): AxiosPromise<AuthVerifyOtpPost200Response> {
+            return localVarFp.authVerifyOtpPost(authVerifyOtpPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -362,13 +422,23 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {AuthValidateOtpPostRequest} authValidateOtpPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authValidateOtpPost(authValidateOtpPostRequest: AuthValidateOtpPostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authValidateOtpPost(authValidateOtpPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public authLogoutPost(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authLogoutPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authVerifyOtpPost(authVerifyOtpPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -17,7 +17,7 @@ import {
 // The "at least one" conditon is not enforced directly in the SQL model yet. It is done in the application code.
 export const userTable = pgTable("user", {
   id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
-  uid: char("uid", { length: 16 }).unique().notNull(), // @see generateRandomHex() - crypto random hex number for anonymous credential - should be kept secret. We cannot use the already existing UUID because it is not secured across the stack the same way and UUID is too long (36 bytes) to be used by the Dock crypto-wasm-ts library that we use for ZKP and anonymous credentials
+  uid: char("uid", { length: 32 }).unique().notNull(), // @see generateRandomHex() - crypto random hex number for anonymous credential - should be kept secret. We cannot use the already existing UUID because it is not secured across the stack the same way and UUID is too long (36 bytes) to be used by the Dock crypto-wasm-ts library that we use for ZKP and anonymous credentials
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -64,6 +64,8 @@ export const deviceTable = pgTable("device", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// this contains a tuple that cannot easily be mapped to enum AuthenticateType
+// TODO: use zod or something to maintain one set of type only
 export const authType = pgEnum("auth_type", [
   "register",
   "login_known_device",
@@ -81,6 +83,16 @@ export const authAttemptTable = pgTable("auth_attempt", {
   didExchange: varchar("did_exchange", { length: 1000 }).notNull(), // TODO: make sure of length
   code: integer("code").notNull(), // one-time password sent to the email ("otp")
   codeExpiry: timestamp("code_expiry").notNull(),
+  guessAttemptAmount: integer("guess_attempt_amount").default(0).notNull(),
+  lastEmailSentAt: timestamp("last_email_sent_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// This table serves as a transitory table betweeen getUserId() request and authenticate() request.
+// At the very first REGISTER attempt action for this email, we generate and store the userId for the email. This is necessary to ensure the same behavior between LOGIN_KNOWN_DEVICE and REGISTER.
+// TODO: cron job to regularly purge this table after authAttempt table has been filled once
+export const userIdEmailTable = pgTable("user_id_email", {
+  email: varchar("email", { length: 254 }).primaryKey(),
+  userId: uuid("user_id").unique().notNull(), // two emails cannot have the same UUID in this case, because this table is filled only for brand new REGISTER action
 });

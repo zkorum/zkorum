@@ -15,6 +15,10 @@ export function generateOneTimeCode(): number {
   return crypto.randomInt(0, 999999);
 }
 
+export function codeToString(code: number): string {
+  return code.toString().padStart(6, "0");
+}
+
 export function generateUUID() {
   return crypto.webcrypto.randomUUID();
 }

@@ -8,7 +8,7 @@ import { ZKorumIcon } from "../../ZKorumIcon";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { closeModal } from "../../reducers/session";
 import { Authenticate } from "./Authenticate";
-import { OtpValidate } from "./OtpValidate";
+import { OtpVerify } from "./OtpVerify";
 
 export function AuthDialog() {
   const isModalOpen = useAppSelector((state) => state.sessions.isModalOpen);
@@ -51,8 +51,8 @@ export function AuthDialog() {
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          {pendingSession?.status === "validating" ? (
-            <OtpValidate />
+          {pendingSession?.status === "verifying" ? (
+            <OtpVerify />
           ) : (
             <Authenticate />
           )}

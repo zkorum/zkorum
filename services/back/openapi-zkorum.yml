@@ -49,10 +49,13 @@ paths:
                   type: string
                   maxLength: 1000
                   description: Decentralized Identifier with did:key method
+                isRequestingNewCode:
+                  type: boolean
               required:
                 - email
                 - userId
                 - didExchange
+                - isRequestingNewCode
               additionalProperties: false
         required: true
       responses:
@@ -66,10 +69,14 @@ paths:
                   codeExpiry:
                     type: string
                     format: date-time
+                  nextCodeSoonestTime:
+                    type: string
+                    format: date-time
                 required:
                   - codeExpiry
+                  - nextCodeSoonestTime
                 additionalProperties: false
-  /auth/validateOtp:
+  /auth/verifyOtp:
     post:
       requestBody:
         content:
@@ -112,8 +119,14 @@ paths:
                         enum:
                           - expired_code
                           - wrong_guess
+                          - too_many_wrong_guess
                     required:
                       - success
                       - reason
                     additionalProperties: false
+  /auth/logout:
+    post:
+      responses:
+        "200":
+          description: Default Response
 servers: []
