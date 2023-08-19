@@ -1,12 +1,15 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { DialogContent, IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
 import { Outlet } from "react-router-dom";
 import { ZKorumIcon } from "../../ZKorumIcon";
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { closeModal } from "../../reducers/session";
+import { closeAuthModal } from "../../reducers/session";
 import { Authenticate } from "./Authenticate";
 import { OtpVerify } from "./OtpVerify";
 
@@ -19,7 +22,7 @@ export function AuthDialog() {
   });
 
   function handleClose() {
-    dispatch(closeModal());
+    dispatch(closeAuthModal());
   }
 
   return (
@@ -34,7 +37,14 @@ export function AuthDialog() {
             }}
           >
             <Box>
-              <ZKorumIcon iconBackgroundColor={"dark"} />
+              <Grid container direction="column" alignItems="center">
+                <Grid>
+                  <ZKorumIcon iconBackgroundColor={"dark"} />
+                </Grid>
+                <Grid>
+                  <Typography variant="body2">Alpha</Typography>
+                </Grid>
+              </Grid>
             </Box>
           </Box>
           <IconButton

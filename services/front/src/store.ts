@@ -4,7 +4,7 @@ import {
   type TypedStartListening,
 } from "@reduxjs/toolkit";
 import sessionReducer from "./reducers/session";
-import postsReducer from "./reducers/post";
+import snackbarReducer from "./reducers/snackbar";
 import {
   storeRedux,
   type OfflineStorageState,
@@ -34,7 +34,7 @@ startAppListening({
 export const store = configureStore({
   reducer: {
     sessions: sessionReducer,
-    posts: postsReducer,
+    snackbar: snackbarReducer,
     // comments: commentsReducer,
     // users: usersReducer,
   },

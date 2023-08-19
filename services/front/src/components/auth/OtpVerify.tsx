@@ -1,7 +1,5 @@
-import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import Snackbar from "@mui/material/Snackbar";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Typography from "@mui/material/Typography";
 import { MuiOtpInput } from "mui-one-time-password-input";
@@ -9,9 +7,15 @@ import React from "react";
 import { useCountdown } from "usehooks-ts";
 import { AuthVerifyOtpPost200ResponseReasonEnum } from "../../api";
 import { authenticate, validateOtp } from "../../auth/auth";
-import { useAppSelector } from "../../hooks";
+import { useAppDispatch, useAppSelector } from "../../hooks";
 import { ZodType } from "../../shared/types/zod";
 import { CircularProgressCountdown } from "../shared/CircularProgressCountdown";
+import {
+  showError,
+  showInfo,
+  showSuccess,
+  showWarning,
+} from "../../reducers/snackbar";
 
 export function OtpVerify() {
   const [otp, setOtp] = React.useState<string>("");
@@ -22,8 +26,8 @@ export function OtpVerify() {
     React.useState<boolean>(false);
   const [requestingNewCode, setRequestingNewCode] =
     React.useState<boolean>(false);
-  const [openSnackbar, setOpenSnackbar] = React.useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = React.useState<string>("");
+
+  const dispatch = useAppDispatch();
 
   const pendingEmail = useAppSelector((state) => {
     return state.sessions.pendingSessionEmail;
@@ -101,54 +105,47 @@ export function OtpVerify() {
     }
   }, [secondsUntilAllowingNewCode]);
 
-  function handleCloseSnackbar(
-    _event?: React.SyntheticEvent | Event,
-    reason?: string
-  ) {
-    if (reason === "clickaway") {
-      return;
-    }
-    setOpenSnackbar(false);
-  }
-
   async function handleOnComplete(value: string) {
     const result = ZodType.code.safeParse(value);
     if (!result.success) {
-      // should not happen
+      // should not happen - so we log this one
       console.error("Error while parsing code", result.error);
-      setSnackbarMessage(
-        "There was an error. Please try again later or contact ZKorum."
+      dispatch(
+        showError(
+          "There was an error. Please try again later or contact ZKorum."
+        )
       );
-      setOpenSnackbar(true);
     } else {
       setIsVerifyingCode(true);
       try {
         const validateOtpResult = await validateOtp(result.data);
         if (validateOtpResult.success) {
           // update store and close modal
+          dispatch(showSuccess("Authentication successful"));
         } else {
           switch (validateOtpResult.reason) {
             case AuthVerifyOtpPost200ResponseReasonEnum.ExpiredCode:
               setIsCurrentCodeActive(false);
-              setSnackbarMessage("Code expired - request a new one");
-              setOpenSnackbar(true);
+              dispatch(showWarning("Code expired - request a new one"));
               break;
             case AuthVerifyOtpPost200ResponseReasonEnum.WrongGuess:
-              setSnackbarMessage("Wrong guess");
-              setOpenSnackbar(true);
+              dispatch(showWarning("Wrong guess"));
               break;
             case AuthVerifyOtpPost200ResponseReasonEnum.TooManyWrongGuess:
               setIsCurrentCodeActive(false);
-              setSnackbarMessage("Too many wrong guess - request a new code");
-              setOpenSnackbar(true);
+              dispatch(
+                showWarning("Too many wrong guess - request a new code")
+              );
               break;
           }
         }
-      } catch (e) {
-        setSnackbarMessage(
-          "There was an error. Please try again later or contact ZKorum."
+      } catch (_e) {
+        // TODO: take into account the case when user is simply already logged-in - and adapt flow for this case (409)
+        dispatch(
+          showError(
+            "There was an error. Please try again later or contact ZKorum."
+          )
         );
-        setOpenSnackbar(true);
       }
       setIsVerifyingCode(false);
     }
@@ -158,10 +155,9 @@ export function OtpVerify() {
     setRequestingNewCode(true);
     authenticate(pendingEmail, true)
       .then((_response) => {
-        setSnackbarMessage(
-          "New code sent to your email - previous code invalidated"
+        dispatch(
+          showInfo("New code sent to your email - previous code invalidated")
         );
-        setOpenSnackbar(true);
         setCanRequestNewCode(false);
         resetNewCodeCoundown();
         startNewCodeCoundown();
@@ -171,10 +167,11 @@ export function OtpVerify() {
       })
       .catch((_e) => {
         // TODO: show better error if rate-limited
-        setSnackbarMessage(
-          "There was an error. Please try again later - or contact ZKorum."
+        dispatch(
+          showError(
+            "There was an error. Please try again later - or contact ZKorum."
+          )
         );
-        setOpenSnackbar(true);
       })
       .finally(() => {
         setRequestingNewCode(false);
@@ -248,21 +245,6 @@ export function OtpVerify() {
           Request New Code
         </LoadingButton>
       </Box>
-      {/* TODO:  put snackbar in core layout, and create redux action to trigger them. Handle "severity" too*/}
-      <Snackbar
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity="error"
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

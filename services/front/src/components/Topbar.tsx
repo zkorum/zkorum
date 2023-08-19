@@ -5,7 +5,7 @@ import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { HideOnScroll } from "./HideOnScroll";
 import Button from "@mui/material/Button";
-import { openModal } from "../reducers/session";
+import { openAuthModal } from "../reducers/session";
 import { useAppDispatch } from "../hooks";
 import IconButton from "@mui/material/IconButton";
 import Badge from "@mui/material/Badge";
@@ -33,7 +33,9 @@ export function Topbar() {
                   justifyContent="flex-start"
                   alignItems="center"
                 >
-                  <Button onClick={() => dispatch(openModal())}>Log in</Button>
+                  <Button onClick={() => dispatch(openAuthModal())}>
+                    Log in
+                  </Button>
                 </Grid>
                 <Grid
                   xs
