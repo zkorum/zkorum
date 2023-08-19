@@ -42,10 +42,10 @@ export const sessionSlice = createSlice({
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {
-    openModal: (state) => {
+    openAuthModal: (state) => {
       state.isModalOpen = true;
     },
-    closeModal: (state) => {
+    closeAuthModal: (state) => {
       state.isModalOpen = false;
     },
     authenticating: (state, action: PayloadAction<AuthenticateProps>) => {
@@ -77,7 +77,7 @@ export const sessionSlice = createSlice({
   },
 });
 
-export const { openModal, closeModal, authenticating, verifying } =
+export const { openAuthModal, closeAuthModal, authenticating, verifying } =
   sessionSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type

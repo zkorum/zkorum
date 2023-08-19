@@ -175,23 +175,7 @@ export class AuthService {
         success: false,
         reason: "expired_code",
       };
-    } else if (resultOtp[0].guessAttemptAmount + 1 >= maxAttempt) {
-      // we add one to take into account the current guess attempt
-      return {
-        success: false,
-        reason: "too_many_wrong_guess",
-      };
-    } else if (resultOtp[0].code !== code) {
-      await AuthService.updateCodeGuessAttemptAmount(
-        db,
-        didWrite,
-        resultOtp[0].guessAttemptAmount + 1
-      );
-      return {
-        success: false,
-        reason: "wrong_guess",
-      };
-    } else {
+    } else if (resultOtp[0].code === code) {
       switch (resultOtp[0].authType) {
         case "register":
           await AuthService.register(db, didWrite);
@@ -212,6 +196,22 @@ export class AuthService {
             userId: resultOtp[0].userId,
           };
       }
+    } else if (resultOtp[0].guessAttemptAmount + 1 >= maxAttempt) {
+      // we add one to take into account the current guess attempt
+      return {
+        success: false,
+        reason: "too_many_wrong_guess",
+      };
+    } else {
+      await AuthService.updateCodeGuessAttemptAmount(
+        db,
+        didWrite,
+        resultOtp[0].guessAttemptAmount + 1
+      );
+      return {
+        success: false,
+        reason: "wrong_guess",
+      };
     }
   }
 
