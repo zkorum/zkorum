@@ -30,7 +30,6 @@ enum Environment {
   Staging = "staging",
 }
 
-// TODO: another to remove
 const defaultPort = 8080;
 
 const configSchema = z.object({
