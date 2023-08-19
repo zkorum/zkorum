@@ -47,7 +47,7 @@ export const store = configureStore({
 
 function select(state: RootState): OfflineStorageState {
   return {
-    activeSessionEmail: state.sessions.activeSessionUserId,
+    activeSessionEmail: state.sessions.activeSessionEmail,
     sessions: state.sessions.sessions,
   };
 }

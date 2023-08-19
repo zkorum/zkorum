@@ -26,13 +26,12 @@ export function OtpVerify() {
   const [snackbarMessage, setSnackbarMessage] = React.useState<string>("");
 
   const pendingEmail = useAppSelector((state) => {
-    const pendingSessionUserId = state.sessions.pendingSessionUserId;
-    return state.sessions.sessions[pendingSessionUserId].email;
+    return state.sessions.pendingSessionEmail;
   });
   // TODO: send DIDs via email, show them on this page and ask user to verify it's the right ones to counter MITM
   // TODO: send codeID and ask to verify it's the right one (avoiding loop of not using the code from the right email)
   const currentCodeExpiry = useAppSelector((state) => {
-    const pendingSessionUserId = state.sessions.pendingSessionUserId;
+    const pendingSessionUserId = state.sessions.pendingSessionEmail;
     const currentCodeExpiryStr = state.sessions.sessions[pendingSessionUserId]
       .codeExpiry as string; // at this point it SHALL not be possible for it to be undefined
     const now = new Date().getTime(); // ms
@@ -46,7 +45,7 @@ export function OtpVerify() {
     return secondsUntilCodeExpiry;
   });
   const nextCodeSoonestTime = useAppSelector((state) => {
-    const pendingSessionUserId = state.sessions.pendingSessionUserId;
+    const pendingSessionUserId = state.sessions.pendingSessionEmail;
     const nextCodeStr = state.sessions.sessions[pendingSessionUserId]
       .nextCodeSoonestTime as string; // at this point it SHALL not be possible for it to be undefined
     const now = new Date().getTime(); // ms

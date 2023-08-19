@@ -6,23 +6,18 @@ import {
   type AuthAuthenticatePost200Response,
   type AuthVerifyOtpPost200Response,
 } from "../api/api.js";
-import { noAuthAxios, pendingSessionUcanAxios } from "../interceptors.js";
+import { pendingSessionUcanAxios } from "../interceptors.js";
 import { getOrGenerateCryptoKey } from "../crypto/ucan/ucan.js";
 
 export async function authenticate(
   email: string,
   isRequestingNewCode: boolean
 ): Promise<AuthAuthenticatePost200Response> {
-  const userId = await DefaultApiFactory(
-    undefined,
-    undefined,
-    noAuthAxios // TODO: Check if email is already existing (is already in the store - if yes, then change it to active and use UCAN so we can rate-limit less those requests)
-  ).authGetUserIdPost(email);
-  // TODO: if userId.data does not match the potentially existing email/userId local association - move the old association data to the new one
-  const newCryptoKey = await getOrGenerateCryptoKey(userId.data);
+  // TODO: email may be changed in the future, so this will have to be dealt with
+  const newCryptoKey = await getOrGenerateCryptoKey(email);
 
   // this is a necessary step for interceptor to inject UCAN
-  store.dispatch(authenticating({ userId: userId.data, email: email }));
+  store.dispatch(authenticating({ email: email }));
 
   const didExchange = await DID.exchange(newCryptoKey);
 
@@ -32,14 +27,13 @@ export async function authenticate(
     undefined,
     pendingSessionUcanAxios
   ).authAuthenticatePost({
-    userId: userId.data,
     email: email,
     didExchange: didExchange,
     isRequestingNewCode: isRequestingNewCode,
   });
   store.dispatch(
     verifying({
-      userId: userId.data,
+      email: email,
       codeExpiry: otpDetails.data.codeExpiry,
       nextCodeSoonestTime: otpDetails.data.nextCodeSoonestTime,
     })

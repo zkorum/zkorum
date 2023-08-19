@@ -14,7 +14,7 @@ export function AuthDialog() {
   const isModalOpen = useAppSelector((state) => state.sessions.isModalOpen);
   const dispatch = useAppDispatch();
   const pendingSession = useAppSelector((state) => {
-    const pendingSessionUserId = state.sessions.pendingSessionUserId;
+    const pendingSessionUserId = state.sessions.pendingSessionEmail;
     return state.sessions.sessions[pendingSessionUserId];
   });
 

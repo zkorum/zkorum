@@ -6,27 +6,6 @@ info:
 components:
   schemas: {}
 paths:
-  /auth/getUserId:
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-              format: email
-              maxLength: 254
-              minLength: 1
-              description: Email address
-        description: Email address
-      responses:
-        "200":
-          description: Default Response
-          content:
-            application/json:
-              schema:
-                type: string
-                format: uuid
-                minLength: 1
   /auth/authenticate:
     post:
       requestBody:
@@ -41,10 +20,6 @@ paths:
                   maxLength: 254
                   minLength: 1
                   description: Email address
-                userId:
-                  type: string
-                  format: uuid
-                  minLength: 1
                 didExchange:
                   type: string
                   maxLength: 1000
@@ -53,7 +28,6 @@ paths:
                   type: boolean
               required:
                 - email
-                - userId
                 - didExchange
                 - isRequestingNewCode
               additionalProperties: false
@@ -105,8 +79,13 @@ paths:
                         type: boolean
                         enum:
                           - true
+                      userId:
+                        type: string
+                        format: uuid
+                        minLength: 1
                     required:
                       - success
+                      - userId
                     additionalProperties: false
                   - type: object
                     properties:

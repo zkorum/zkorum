@@ -1,15 +1,14 @@
 import { type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import {
   authAttemptTable,
   deviceTable,
   emailTable,
-  userIdEmailTable,
   userTable,
 } from "../schema.js";
 import {
   type AuthenticateRequestBody,
-  type ValidateOtpResponse,
+  type VerifyOtpResponse,
 } from "../dto.js";
 import {
   codeToString,
@@ -32,6 +31,11 @@ export enum AuthenticateType {
   LOGIN_NEW_DEVICE = "login_new_device",
 }
 
+interface AuthTypeAndUserId {
+  userId: string;
+  type: AuthenticateType;
+}
+
 // No need to validate data, it has been done in the controller level
 export class AuthService {
   static async getAuthenticateType(
@@ -39,7 +43,7 @@ export class AuthService {
     authenticateBody: AuthenticateRequestBody,
     didWrite: string,
     httpErrors: HttpErrors
-  ): Promise<AuthenticateType> {
+  ): Promise<AuthTypeAndUserId> {
     const isEmailAvailable = await AuthService.isEmailAvailable(
       db,
       authenticateBody.email
@@ -58,51 +62,18 @@ export class AuthService {
       );
       // we can now safely ignore isDidExchangeAvailable in our AND clauses because it is equal to isDidWriteAvailable
     }
-    // ! IMPORTANT: There should be virtually no difference from an API consumer PoV between REGISTER and LOGIN_NEW_DEVICE to prevent user enumeration attack and preserve privacy
-    const commonError = httpErrors.forbidden(
-      "Email is not associated with this user"
-    );
+
+    const userId = await AuthService.getUserId(db, authenticateBody.email);
     if (isEmailAvailable && isDidWriteAvailable) {
-      const isEmailAssociatedWithRightUserAttempt =
-        AuthService.isEmailAssociatedWithRightUserAttempt(
-          db,
-          authenticateBody.email,
-          authenticateBody.userId
-        );
-      if (!isEmailAssociatedWithRightUserAttempt) {
-        throw commonError;
-      }
-      return AuthenticateType.REGISTER;
+      return { type: AuthenticateType.REGISTER, userId: userId };
     } else if (!isEmailAvailable && isDidWriteAvailable) {
-      // login from a new device
-      const isEmailAssociatedWithRightUser =
-        AuthService.isEmailAssociatedWithRightUser(
-          db,
-          authenticateBody.email,
-          authenticateBody.userId
-        );
-      if (!isEmailAssociatedWithRightUser) {
-        throw commonError;
-      }
-      return AuthenticateType.LOGIN_NEW_DEVICE;
+      return { type: AuthenticateType.LOGIN_NEW_DEVICE, userId: userId };
     } else if (!isEmailAvailable && !isDidWriteAvailable) {
-      // login from a known device
-      const areDidEmailAssociatedWithRightUser =
-        AuthService.areDidEmailAssociatedWithRightUser(
-          db,
-          authenticateBody,
-          didWrite
-        );
-      if (!areDidEmailAssociatedWithRightUser) {
-        throw httpErrors.forbidden(
-          "Email and/or DIDs are not associated with this user"
-        );
-      }
       const isLoggedIn = await AuthService.isLoggedIn(db, didWrite);
       if (isLoggedIn) {
         throw httpErrors.conflict("Device already logged in");
       }
-      return AuthenticateType.LOGIN_KNOWN_DEVICE;
+      return { type: AuthenticateType.LOGIN_KNOWN_DEVICE, userId: userId };
     } else {
       // if (!isEmailAvailable && isDidWriteAvailable) {
       throw httpErrors.forbidden(
@@ -129,23 +100,7 @@ export class AuthService {
         .where(eq(authAttemptTable.email, email));
       if (resultAttempt.length === 0) {
         // this email has never been used to attempt a register
-        // we need to check whether getUserId(email) has already been called with this email
-        // because we want to mimick the behaviour of LOGIN_KNOWN_DEVICE for the API consumer's eyes
-        const result = await db
-          .select({ userId: userIdEmailTable.userId })
-          .from(userIdEmailTable)
-          .where(eq(userIdEmailTable.email, email));
-        if (result.length === 0) {
-          // this email has never been used with "getUserId" endpoint
-          const newUuid = generateUUID();
-          await db.insert(userIdEmailTable).values({
-            email: email,
-            userId: newUuid,
-          });
-          return newUuid;
-        } else {
-          return result[0].userId;
-        }
+        return generateUUID();
       } else {
         // at this point every userId in attempts should be identical, by design
         return resultAttempt[0].userId;
@@ -194,7 +149,7 @@ export class AuthService {
     didWrite: string,
     code: number,
     httpErrors: HttpErrors
-  ): Promise<ValidateOtpResponse> {
+  ): Promise<VerifyOtpResponse> {
     // if the device is already logged in, it means either the auth attempt wasn't initiated OR the code was already verified
     const isLoggedIn = await AuthService.isLoggedIn(db, didWrite);
     if (isLoggedIn) {
@@ -202,6 +157,7 @@ export class AuthService {
     }
     const resultOtp = await db
       .select({
+        userId: authAttemptTable.userId,
         authType: authAttemptTable.type,
         guessAttemptAmount: authAttemptTable.guessAttemptAmount,
         code: authAttemptTable.code,
@@ -241,16 +197,19 @@ export class AuthService {
           await AuthService.register(db, didWrite);
           return {
             success: true,
+            userId: resultOtp[0].userId,
           };
         case "login_known_device":
           await AuthService.loginKnownDevice(db, didWrite);
           return {
             success: true,
+            userId: resultOtp[0].userId,
           };
         case "login_new_device":
           await AuthService.loginNewDevice(db, didWrite);
           return {
             success: true,
+            userId: resultOtp[0].userId,
           };
       }
     }
@@ -301,85 +260,11 @@ export class AuthService {
     }
   }
 
-  static async isEmailAssociatedWithRightUser(
-    db: PostgresJsDatabase,
-    email: string,
-    userId: string
-  ): Promise<boolean> {
-    const result = await db
-      .select()
-      .from(userTable)
-      .leftJoin(emailTable, eq(emailTable.userId, userTable.id))
-      .where(and(eq(emailTable.email, email), eq(userTable.id, userId)));
-    if (result.length !== 0) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static async isEmailAssociatedWithRightUserAttempt(
-    db: PostgresJsDatabase,
-    email: string,
-    userId: string
-  ): Promise<boolean> {
-    const result = await db
-      .select({ userId: authAttemptTable.userId })
-      .from(authAttemptTable)
-      .where(eq(authAttemptTable.email, email))
-      .orderBy(asc(authAttemptTable.createdAt)); // oldest first
-    if (result.length === 0) {
-      // no attempt has ever been done, this a brand new register request
-      // check if getUserId has been called to generate a userId
-      const resultGetUserId = await db
-        .select({ userId: userIdEmailTable.userId })
-        .from(userIdEmailTable)
-        .where(eq(userIdEmailTable.email, email));
-      if (resultGetUserId.length === 0) {
-        // we mimick LOGIN_KNOWN_DEVICE behavior - users must have created a UUID beforehand
-        return false;
-      } else if (resultGetUserId[0].userId === userId) {
-        return true;
-      } else {
-        return false;
-      }
-    } else if (result[0].userId === userId) {
-      // could be many of them, but by design they should have the same userId at this point
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static async areDidEmailAssociatedWithRightUser(
-    db: PostgresJsDatabase,
-    authenticateRequestBody: AuthenticateRequestBody,
-    didWrite: string
-  ): Promise<boolean> {
-    const result = await db
-      .select()
-      .from(userTable)
-      .leftJoin(emailTable, eq(emailTable.userId, userTable.id))
-      .leftJoin(deviceTable, eq(deviceTable.userId, userTable.id))
-      .where(
-        and(
-          eq(userTable.id, authenticateRequestBody.userId),
-          eq(emailTable.email, authenticateRequestBody.email),
-          eq(deviceTable.didWrite, didWrite),
-          eq(deviceTable.didExchange, authenticateRequestBody.didExchange)
-        )
-      );
-    if (result.length !== 0) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   static async authenticateAttempt(
     db: PostgresJsDatabase,
     type: AuthenticateType,
     authenticateRequestBody: AuthenticateRequestBody,
+    userId: string,
     minutesBeforeCodeExpiry: number,
     didWrite: string,
     throttleMinutesInterval: number,
@@ -398,6 +283,7 @@ export class AuthService {
       return await this.insertAuthAttemptCode(
         db,
         type,
+        userId,
         minutesBeforeCodeExpiry,
         didWrite,
         now,
@@ -410,10 +296,11 @@ export class AuthService {
       return await this.updateAuthAttemptCode(
         db,
         type,
+        userId,
         minutesBeforeCodeExpiry,
         didWrite,
         now,
-        authenticateRequestBody.email,
+        authenticateRequestBody,
         throttleMinutesInterval,
         httpErrors
       );
@@ -432,10 +319,11 @@ export class AuthService {
       return await this.updateAuthAttemptCode(
         db,
         type,
+        userId,
         minutesBeforeCodeExpiry,
         didWrite,
         now,
-        authenticateRequestBody.email,
+        authenticateRequestBody,
         throttleMinutesInterval,
         httpErrors
       );
@@ -445,6 +333,7 @@ export class AuthService {
   static async insertAuthAttemptCode(
     db: PostgresJsDatabase,
     type: AuthenticateType,
+    userId: string,
     minutesBeforeCodeExpiry: number,
     didWrite: string,
     now: Date,
@@ -468,7 +357,7 @@ export class AuthService {
       didWrite: didWrite,
       type: type,
       email: authenticateRequestBody.email,
-      userId: authenticateRequestBody.userId,
+      userId: userId,
       didExchange: authenticateRequestBody.didExchange,
       code: oneTimeCode,
       codeExpiry: codeExpiry,
@@ -488,16 +377,17 @@ export class AuthService {
   static async updateAuthAttemptCode(
     db: PostgresJsDatabase,
     type: AuthenticateType,
+    userId: string,
     minutesBeforeCodeExpiry: number,
     didWrite: string,
     now: Date,
-    email: string,
+    authenticateRequestBody: AuthenticateRequestBody,
     throttleMinutesInterval: number,
     httpErrors: HttpErrors
   ): Promise<AuthenticateOtp> {
     await AuthService.throttleByEmail(
       db,
-      email,
+      authenticateRequestBody.email,
       throttleMinutesInterval,
       httpErrors
     );
@@ -510,6 +400,9 @@ export class AuthService {
     await db
       .update(authAttemptTable)
       .set({
+        userId: userId,
+        email: authenticateRequestBody.email,
+        didExchange: authenticateRequestBody.didExchange,
         type: type,
         code: oneTimeCode,
         codeExpiry: codeExpiry,

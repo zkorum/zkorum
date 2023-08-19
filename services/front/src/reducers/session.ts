@@ -5,35 +5,34 @@ import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 // Define a type for the slice state
 interface SessionState {
   isModalOpen: boolean;
-  activeSessionUserId: string;
-  pendingSessionUserId: string; // during log in/register process
+  activeSessionEmail: string;
+  pendingSessionEmail: string; // during log in/register process
   sessions: { [userId: string]: SessionData };
   // isLoggedIn: boolean;
 }
 
 export interface SessionData {
-  email: string;
+  userId?: string;
   codeExpiry?: string;
   nextCodeSoonestTime?: string;
   status: "authenticating" | "verifying" | "logged-in" | "logged-out";
 }
 
 interface VerifyProps {
-  userId: string;
+  email: string;
   codeExpiry: string;
   nextCodeSoonestTime: string;
 }
 
 interface AuthenticateProps {
-  userId: string;
   email: string;
 }
 
 // Define the initial state using that type
 const initialState: SessionState = {
   isModalOpen: false,
-  activeSessionUserId: "",
-  pendingSessionUserId: "",
+  activeSessionEmail: "",
+  pendingSessionEmail: "",
   sessions: {},
   // isLoggedIn: false,
 };
@@ -50,24 +49,30 @@ export const sessionSlice = createSlice({
       state.isModalOpen = false;
     },
     authenticating: (state, action: PayloadAction<AuthenticateProps>) => {
-      if (action.payload.userId in state.sessions) {
-        state.sessions[action.payload.userId].status = "authenticating";
-        state.sessions[action.payload.userId].email = action.payload.email;
+      if (action.payload.email in state.sessions) {
+        state.sessions[action.payload.email].status = "authenticating";
       } else {
-        state.sessions[action.payload.userId] = {
+        state.sessions[action.payload.email] = {
           status: "authenticating",
-          email: action.payload.email,
         };
       }
-      state.pendingSessionUserId = action.payload.userId;
+      state.pendingSessionEmail = action.payload.email;
     },
     verifying: (state, action: PayloadAction<VerifyProps>) => {
-      state.sessions[action.payload.userId].status = "verifying";
-      (state.sessions[action.payload.userId].codeExpiry =
-        action.payload.codeExpiry),
-        (state.sessions[action.payload.userId].nextCodeSoonestTime =
-          action.payload.nextCodeSoonestTime),
-        (state.pendingSessionUserId = action.payload.userId);
+      if (action.payload.email in state.sessions) {
+        state.sessions[action.payload.email].status = "verifying";
+        state.sessions[action.payload.email].codeExpiry =
+          action.payload.codeExpiry;
+        state.sessions[action.payload.email].nextCodeSoonestTime =
+          action.payload.nextCodeSoonestTime;
+      } else {
+        state.sessions[action.payload.email] = {
+          status: "verifying",
+          codeExpiry: action.payload.codeExpiry,
+          nextCodeSoonestTime: action.payload.nextCodeSoonestTime,
+        };
+      }
+      state.pendingSessionEmail = action.payload.email;
     },
   },
 });

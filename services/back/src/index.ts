@@ -169,19 +169,6 @@ async function verifyUCAN(
 }
 
 server.after(() => {
-  // This endpoint is accessible without being logged in
-  // TODO protect this endpoint from DDoS
-  server.withTypeProvider<ZodTypeProvider>().post("/auth/getUserId", {
-    schema: {
-      body: ZodType.email,
-      response: { 200: ZodType.userId },
-    },
-    handler: async (request, _reply) => {
-      // This endpoint is accessible without being logged in
-      // ==> TODO: rate-limit it (via IP Address)
-      return await AuthService.getUserId(db, request.body);
-    },
-  });
   server.withTypeProvider<ZodTypeProvider>().post("/auth/authenticate", {
     schema: {
       body: Dto.authenticateRequestBody,
@@ -198,7 +185,7 @@ server.after(() => {
       const didWrite = await verifyUCAN(db, request, {
         deviceMustBeLoggedIn: false,
       });
-      const authenticateType = await AuthService.getAuthenticateType(
+      const { type, userId } = await AuthService.getAuthenticateType(
         db,
         request.body,
         didWrite,
@@ -206,8 +193,9 @@ server.after(() => {
       );
       return await AuthService.authenticateAttempt(
         db,
-        authenticateType,
+        type,
         request.body,
+        userId,
         config.MINUTES_BEFORE_EMAIL_OTP_EXPIRY,
         didWrite,
         config.THROTTLE_EMAIL_MINUTES_INTERVAL,

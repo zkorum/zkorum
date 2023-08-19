@@ -70,8 +70,8 @@ async function buildUcan(
 // Add UCAN to every request - if an active session exists
 activeSessionUcanAxios.interceptors.request.use(
   async function (config) {
-    const userId = store.getState().sessions.activeSessionUserId;
-    if (userId === "") {
+    const activeSessionEmail = store.getState().sessions.activeSessionEmail;
+    if (activeSessionEmail === "") {
       console.log("No active session: not adding UCAN");
       return config;
     }
@@ -83,7 +83,7 @@ activeSessionUcanAxios.interceptors.request.use(
       );
     }
 
-    const newCryptoKey = await getOrGenerateCryptoKey(userId);
+    const newCryptoKey = await getOrGenerateCryptoKey(activeSessionEmail);
     const newUcan = await buildUcan(config.url, config.method, newCryptoKey);
     config.headers.Authorization = `Bearer ${newUcan}`;
     return config;
@@ -97,8 +97,8 @@ activeSessionUcanAxios.interceptors.request.use(
 // Add UCAN to every request - if an active session exists
 pendingSessionUcanAxios.interceptors.request.use(
   async function (config) {
-    const userId = store.getState().sessions.pendingSessionUserId;
-    if (userId === "") {
+    const pendingSessionEmail = store.getState().sessions.pendingSessionEmail;
+    if (pendingSessionEmail === "") {
       console.log("No pending session: not adding UCAN");
       return config;
     }
@@ -110,7 +110,7 @@ pendingSessionUcanAxios.interceptors.request.use(
       );
     }
 
-    const newCryptoKey = await getOrGenerateCryptoKey(userId);
+    const newCryptoKey = await getOrGenerateCryptoKey(pendingSessionEmail);
     const newUcan = await buildUcan(config.url, config.method, newCryptoKey);
     config.headers.Authorization = `Bearer ${newUcan}`;
     return config;
