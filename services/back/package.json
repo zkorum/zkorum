@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "start:dev": "nodemon --watch 'src/**' --ext 'ts,json', --ignore 'src/**/*.spec.ts' --exec 'ts-node --esm src/index.ts'",
+    "start:dev": "nodemon",
     "db:drop": "drizzle-kit drop",
     "db:generate": "drizzle-kit generate:pg && ./scripts/rename_sql_migration_file.sh drizzle/",
     "db:migrate": "docker run --rm --network host -v ${PWD}:/flyway/conf -v ${PWD}/drizzle:/flyway/sql flyway/flyway migrate"
