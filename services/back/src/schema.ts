@@ -88,11 +88,3 @@ export const authAttemptTable = pgTable("auth_attempt", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-
-// This table serves as a transitory table betweeen getUserId() request and authenticate() request.
-// At the very first REGISTER attempt action for this email, we generate and store the userId for the email. This is necessary to ensure the same behavior between LOGIN_KNOWN_DEVICE and REGISTER.
-// TODO: cron job to regularly purge this table after authAttempt table has been filled once
-export const userIdEmailTable = pgTable("user_id_email", {
-  email: varchar("email", { length: 254 }).primaryKey(),
-  userId: uuid("user_id").unique().notNull(), // two emails cannot have the same UUID in this case, because this table is filled only for brand new REGISTER action
-});

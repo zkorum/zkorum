@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "5923d612-7804-4851-b86d-8eec82375c67",
+  "id": "e72da04a-3afb-4510-97bd-f2000cfff9e7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "auth_attempt": {
@@ -209,36 +209,6 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "user_id_email": {
-      "name": "user_id_email",
-      "schema": "",
-      "columns": {
-        "email": {
-          "name": "email",
-          "type": "varchar(254)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "user_id_email_user_id_unique": {
-          "name": "user_id_email_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
-        }
-      }
-    },
     "user": {
       "name": "user",
       "schema": "",
@@ -289,8 +259,8 @@
       "name": "auth_type",
       "values": {
         "register": "register",
-        "login_new_device": "login_new_device",
-        "login_known_device": "login_known_device"
+        "login_known_device": "login_known_device",
+        "login_new_device": "login_new_device"
       }
     },
     "email_type": {

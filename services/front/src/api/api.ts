@@ -55,12 +55,6 @@ export interface AuthAuthenticatePostRequest {
      */
     'email': string;
     /**
-     * 
-     * @type {string}
-     * @memberof AuthAuthenticatePostRequest
-     */
-    'userId': string;
-    /**
      * Decentralized Identifier with did:key method
      * @type {string}
      * @memberof AuthAuthenticatePostRequest
@@ -90,6 +84,12 @@ export interface AuthVerifyOtpPost200Response {
      * @type {string}
      * @memberof AuthVerifyOtpPost200Response
      */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthVerifyOtpPost200Response
+     */
     'reason': AuthVerifyOtpPost200ResponseReasonEnum;
 }
 
@@ -113,6 +113,12 @@ export interface AuthVerifyOtpPost200ResponseAnyOf {
      * @memberof AuthVerifyOtpPost200ResponseAnyOf
      */
     'success': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     */
+    'userId': string;
 }
 /**
  * 
@@ -191,39 +197,6 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(authAuthenticatePostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} [body] Email address
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authGetUserIdPost: async (body?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/auth/getUserId`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -316,16 +289,6 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {string} [body] Email address
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async authGetUserIdPost(body?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authGetUserIdPost(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -364,15 +327,6 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {string} [body] Email address
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authGetUserIdPost(body?: string, options?: any): AxiosPromise<string> {
-            return localVarFp.authGetUserIdPost(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -407,17 +361,6 @@ export class DefaultApi extends BaseAPI {
      */
     public authAuthenticatePost(authAuthenticatePostRequest: AuthAuthenticatePostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).authAuthenticatePost(authAuthenticatePostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} [body] Email address
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public authGetUserIdPost(body?: string, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authGetUserIdPost(body, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

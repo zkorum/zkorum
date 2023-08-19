@@ -5,7 +5,6 @@ export class Dto {
   static authenticateRequestBody = z
     .object({
       email: ZodType.email,
-      userId: ZodType.userId,
       didExchange: ZodType.didKey,
       isRequestingNewCode: z.boolean(),
     })
@@ -20,7 +19,7 @@ export class Dto {
     })
     .strict();
   static verifyOtpResponse = z.discriminatedUnion("success", [
-    z.object({ success: z.literal(true) }).strict(),
+    z.object({ success: z.literal(true), userId: ZodType.userId }).strict(),
     z
       .object({
         success: z.literal(false),
@@ -33,5 +32,5 @@ export class Dto {
 export type AuthenticateRequestBody = z.infer<
   typeof Dto.authenticateRequestBody
 >;
-export type ValidateOtpResponse = z.infer<typeof Dto.verifyOtpResponse>;
-export type ValidateEmailReqBody = z.infer<typeof Dto.verifyOtpReqBody>;
+export type VerifyOtpResponse = z.infer<typeof Dto.verifyOtpResponse>;
+export type VerifyOtpReqBody = z.infer<typeof Dto.verifyOtpReqBody>;

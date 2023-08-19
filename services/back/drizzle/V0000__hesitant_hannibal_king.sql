@@ -1,5 +1,5 @@
 DO $$ BEGIN
- CREATE TYPE "auth_type" AS ENUM('register', 'login_new_device', 'login_known_device');
+ CREATE TYPE "auth_type" AS ENUM('register', 'login_known_device', 'login_new_device');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -40,12 +40,6 @@ CREATE TABLE IF NOT EXISTS "email" (
 	"user_id" uuid NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "user_id_email" (
-	"email" varchar(254) PRIMARY KEY NOT NULL,
-	"user_id" uuid NOT NULL,
-	CONSTRAINT "user_id_email_user_id_unique" UNIQUE("user_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (

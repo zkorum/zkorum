@@ -34,5 +34,7 @@ export class ZodType {
       }
     );
   static code = z.coerce.number().min(0).max(999999);
+  static digit = z.coerce.number().int().nonnegative().lte(9);
   static userId = z.string().uuid().nonempty();
 }
+export type UserId = z.infer<typeof ZodType.userId>;
