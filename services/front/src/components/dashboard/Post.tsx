@@ -1,15 +1,19 @@
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
+interface Post<array> {
+  title: string;
+  type: number;
+}
 
-export function Post() {
+export function Post({ post: Post }) {
   return (
     // lines
     <Grid container>
       {/* line 1 - group logo and other info */}
-      <Grid container></Grid>
+      <Grid container>{post?.title}</Grid>
       {/* line 2 - poll/vote title */}
-      <Grid></Grid>
+      <Grid>{post?.type}</Grid>
       {/* line 3 - poll/vote type */}
-      <Grid></Grid>
+      <Grid>{post?.tags[0]}</Grid>
       {/* line 4 - tags */}
       <Grid></Grid>
       {/* line 5 - comments and view counts */}
