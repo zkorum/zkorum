@@ -1,56 +1,61 @@
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import {
-  configureStore,
-  createListenerMiddleware,
-  type TypedStartListening,
-} from "@reduxjs/toolkit";
+  FLUSH,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+  REHYDRATE,
+  persistReducer,
+  persistStore,
+} from "redux-persist";
+import localForage from "localforage";
 import sessionReducer from "./reducers/session";
 import snackbarReducer from "./reducers/snackbar";
-import {
-  storeRedux,
-  type OfflineStorageState,
-} from "./offline-storage/storage";
+import { getPersistConfig } from "redux-deep-persist";
 
-// Create the middleware instance and methods
-const listenerMiddleware = createListenerMiddleware();
+/**
+ * Inspired by https://github.com/machester4/redux-persist-indexeddb-storage
+ */
+const db = localForage.createInstance({
+  name: "zkorum",
+});
+const storage = {
+  db,
+  getItem: db.getItem,
+  setItem: db.setItem,
+  removeItem: db.removeItem,
+};
 
-export type AppStartListening = TypedStartListening<RootState, AppDispatch>;
-
-export const startAppListening =
-  listenerMiddleware.startListening as AppStartListening;
-
-// Add one or more listener entries that look for specific actions.
-// They may contain any sync or async logic, similar to thunks.
-startAppListening({
-  predicate: (_action, currentState: RootState, previousState: RootState) => {
-    // Trigger logic whenever this field changes
-    return select(currentState) !== select(previousState);
-  },
-  effect: async (_action, listenerApi) => {
-    listenerApi.cancelActiveListeners();
-    await storeRedux(select(listenerApi.getState()));
-  },
+const rootReducer = combineReducers({
+  sessions: sessionReducer,
+  snackbar: snackbarReducer,
 });
 
+const persistedReducer = persistReducer(
+  getPersistConfig({
+    key: "root",
+    storage,
+    whitelist: ["sessions.activeSessionEmail", "sessions.sessions"],
+    rootReducer,
+  }),
+  rootReducer
+);
+
 export const store = configureStore({
-  reducer: {
-    sessions: sessionReducer,
-    snackbar: snackbarReducer,
-    // comments: commentsReducer,
-    // users: usersReducer,
-  },
+  reducer: persistedReducer,
   // Add the listener middleware to the store.
   // NOTE: Since this can receive actions with functions inside,
   // it should go before the serializability check middleware
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().prepend(listenerMiddleware.middleware),
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER], // see https://redux-toolkit.js.org/usage/usage-guide#use-with-redux-persist
+      },
+    }),
 });
 
-function select(state: RootState): OfflineStorageState {
-  return {
-    activeSessionEmail: state.sessions.activeSessionEmail,
-    sessions: state.sessions.sessions,
-  };
-}
+export const persistor = persistStore(store);
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;

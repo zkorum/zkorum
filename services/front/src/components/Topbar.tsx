@@ -6,10 +6,11 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import { HideOnScroll } from "./HideOnScroll";
 import Button from "@mui/material/Button";
 import { openAuthModal } from "../reducers/session";
-import { useAppDispatch } from "../hooks";
+import { useAppDispatch, useAppSelector } from "../hooks";
 import IconButton from "@mui/material/IconButton";
 import Badge from "@mui/material/Badge";
 import { useNavigate } from "react-router-dom";
+import { LoginMenu } from "./auth/LoginMenu";
 // import { ReactComponent as ZKorumIcon } from "../assets/logo.svg";
 // import SvgIcon from "@mui/material/SvgIcon";
 
@@ -20,6 +21,11 @@ import { useNavigate } from "react-router-dom";
 export function Topbar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const activeSessionEmail = useAppSelector((state) => {
+    console.log("activeSessionEmail", state.sessions.activeSessionEmail);
+    return state.sessions.activeSessionEmail;
+  });
+
   return (
     <>
       <HideOnScroll direction={"down"}>
@@ -33,9 +39,16 @@ export function Topbar() {
                   justifyContent="flex-start"
                   alignItems="center"
                 >
-                  <Button onClick={() => dispatch(openAuthModal())}>
-                    Log in
-                  </Button>
+                  {activeSessionEmail === "" ? (
+                    <Button
+                      variant="contained"
+                      onClick={() => dispatch(openAuthModal())}
+                    >
+                      Log in
+                    </Button>
+                  ) : (
+                    <LoginMenu />
+                  )}
                 </Grid>
                 <Grid
                   xs

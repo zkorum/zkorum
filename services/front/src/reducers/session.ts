@@ -1,13 +1,14 @@
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
+import type { OfflineStorageState } from "../offline-storage/storage";
 
 // import type { RootState } from "../../store";
 
 // Define a type for the slice state
-interface SessionState {
+export interface SessionState {
   isModalOpen: boolean;
   activeSessionEmail: string;
   pendingSessionEmail: string; // during log in/register process
-  sessions: { [userId: string]: SessionData };
+  sessions: { [email: string]: SessionData };
   // isLoggedIn: boolean;
 }
 
@@ -28,8 +29,13 @@ interface AuthenticateProps {
   email: string;
 }
 
+interface LoggedInProps {
+  email: string;
+  userId: string;
+}
+
 // Define the initial state using that type
-const initialState: SessionState = {
+export const initialSessionState: SessionState = {
   isModalOpen: false,
   activeSessionEmail: "",
   pendingSessionEmail: "",
@@ -40,8 +46,12 @@ const initialState: SessionState = {
 export const sessionSlice = createSlice({
   name: "session",
   // `createSlice` will infer the state type from the `initialState` argument
-  initialState,
+  initialState: initialSessionState,
   reducers: {
+    initState: (state, action: PayloadAction<OfflineStorageState>) => {
+      state.activeSessionEmail = action.payload.activeSessionEmail;
+      state.sessions = action.payload.sessions;
+    },
     openAuthModal: (state) => {
       state.isModalOpen = true;
     },
@@ -74,11 +84,31 @@ export const sessionSlice = createSlice({
       }
       state.pendingSessionEmail = action.payload.email;
     },
+    loggedIn: (state, action: PayloadAction<LoggedInProps>) => {
+      if (action.payload.email in state.sessions) {
+        state.sessions[action.payload.email].status = "logged-in";
+        state.sessions[action.payload.email].userId = action.payload.userId;
+      } else {
+        state.sessions[action.payload.email] = {
+          status: "logged-in",
+          userId: action.payload.userId,
+        };
+      }
+      state.pendingSessionEmail = "";
+      state.activeSessionEmail = action.payload.email;
+      closeAuthModal();
+    },
   },
 });
 
-export const { openAuthModal, closeAuthModal, authenticating, verifying } =
-  sessionSlice.actions;
+export const {
+  openAuthModal,
+  closeAuthModal,
+  authenticating,
+  verifying,
+  loggedIn,
+  initState,
+} = sessionSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 // export const selectCount = (state: RootState) => state.counter.value;
