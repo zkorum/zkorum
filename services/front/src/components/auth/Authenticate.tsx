@@ -86,53 +86,62 @@ export function Authenticate() {
           }}
           autoFocus
         />
-        <FormControl
-          error={!hasGivenConsent}
-          component="fieldset"
-          variant="standard"
-        >
-          <FormControlLabel
-            control={
-              <Checkbox
-                required
-                checked={hasGivenConsent}
-                onChange={() => setHasGivenConsent(!hasGivenConsent)}
-              />
-            }
-            label={
-              <Typography variant={"body2"}>
-                I understand that as an alpha version, this product may contain
-                accidental security flaws compromising privacy guarantees
-              </Typography>
-            }
-          />
-        </FormControl>
-        <FormControl error={!isTrusted} component="fieldset" variant="standard">
-          <FormControlLabel
-            control={
-              <Checkbox
-                required
-                checked={isTrusted}
-                onChange={() => setIsTrusted(!isTrusted)}
-              />
-            }
-            label={
-              <Typography variant={"body2"}>
-                Trust this device and stay logged in
-              </Typography>
-            }
-          />
-        </FormControl>
-        <LoadingButton
-          fullWidth
-          loading={isAuthenticating}
-          variant="contained"
-          sx={{ mt: 3, mb: 2 }}
-          onClick={handleOnAuthenticate}
-          disabled={!isEmailValid || !isTrusted || !hasGivenConsent}
-        >
-          Register / Log in
-        </LoadingButton>
+        <Box>
+          <FormControl
+            error={!hasGivenConsent}
+            component="fieldset"
+            variant="standard"
+          >
+            <FormControlLabel
+              control={
+                <Checkbox
+                  required
+                  checked={hasGivenConsent}
+                  onChange={() => setHasGivenConsent(!hasGivenConsent)}
+                />
+              }
+              label={
+                <Typography variant={"body2"}>
+                  I understand that as an alpha version, this product may
+                  contain accidental security flaws compromising privacy
+                  guarantees
+                </Typography>
+              }
+            />
+          </FormControl>
+        </Box>
+        <Box>
+          <FormControl
+            error={!isTrusted}
+            component="fieldset"
+            variant="standard"
+          >
+            <FormControlLabel
+              control={
+                <Checkbox
+                  required
+                  checked={isTrusted}
+                  onChange={() => setIsTrusted(!isTrusted)}
+                />
+              }
+              label={
+                <Typography variant={"body2"}>
+                  This is not a public nor a shared device - stay logged-in
+                </Typography>
+              }
+            />
+          </FormControl>
+          <LoadingButton
+            fullWidth
+            loading={isAuthenticating}
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            onClick={handleOnAuthenticate}
+            disabled={!isEmailValid || !isTrusted || !hasGivenConsent}
+          >
+            Register / Log in
+          </LoadingButton>
+        </Box>
       </Box>
     </Box>
   );

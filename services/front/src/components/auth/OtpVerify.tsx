@@ -16,6 +16,7 @@ import {
   showSuccess,
   showWarning,
 } from "../../reducers/snackbar";
+import { loggedIn } from "../../reducers/session";
 
 export function OtpVerify() {
   const [otp, setOtp] = React.useState<string>("");
@@ -121,6 +122,9 @@ export function OtpVerify() {
         const validateOtpResult = await validateOtp(result.data);
         if (validateOtpResult.success) {
           // update store and close modal
+          dispatch(
+            loggedIn({ email: pendingEmail, userId: validateOtpResult.userId })
+          );
           dispatch(showSuccess("Authentication successful"));
         } else {
           switch (validateOtpResult.reason) {

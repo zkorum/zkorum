@@ -4,14 +4,14 @@ import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 // import type { RootState } from "../../store";
 
 // Define a type for the slice state
-interface SnackbarState {
+export interface SnackbarState {
   isOpen: boolean;
   severity: AlertColor;
   message: string;
 }
 
 // Define the initial state using that type
-const initialState: SnackbarState = {
+export const initialSnackbarState: SnackbarState = {
   isOpen: false,
   severity: "info",
   message: "",
@@ -20,7 +20,7 @@ const initialState: SnackbarState = {
 export const snackbarSlice = createSlice({
   name: "snackbar",
   // `createSlice` will infer the state type from the `initialState` argument
-  initialState,
+  initialState: initialSnackbarState,
   reducers: {
     closeSnackbar: (state) => {
       state.isOpen = false;
