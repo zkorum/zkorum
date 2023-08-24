@@ -8,7 +8,7 @@ import "@fontsource/roboto/700.css";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "./theme";
 import { App } from "./App";
-import { persistor, store } from "./store";
+import { persistor, store } from "./store/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { Provider } from "react-redux";
 import { MainLoading } from "./MainLoading";
@@ -17,7 +17,10 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <Provider store={store}>
-        <PersistGate loading={<MainLoading />} persistor={persistor}>
+        <PersistGate
+          loading={<MainLoading open={true} />}
+          persistor={persistor}
+        >
           <App />
         </PersistGate>
       </Provider>

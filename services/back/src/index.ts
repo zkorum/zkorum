@@ -155,7 +155,7 @@ async function verifyUCAN(
         new AggregateError(result.error)
       );
     } else if (options.deviceMustBeLoggedIn) {
-      const isLoggedIn = await AuthService.isLoggedIn(db, rootIssuerDid);
+      const { isLoggedIn } = await AuthService.isLoggedIn(db, rootIssuerDid);
       if (isLoggedIn) {
         return rootIssuerDid;
       } else {

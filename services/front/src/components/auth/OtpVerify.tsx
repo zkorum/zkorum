@@ -15,8 +15,9 @@ import {
   showInfo,
   showSuccess,
   showWarning,
-} from "../../reducers/snackbar";
-import { loggedIn } from "../../reducers/session";
+} from "../../store/reducers/snackbar";
+import { loggedIn } from "../../store/reducers/session";
+import { authSuccess, genericError } from "../error/message";
 
 export function OtpVerify() {
   const [otp, setOtp] = React.useState<string>("");
@@ -94,7 +95,6 @@ export function OtpVerify() {
   React.useEffect(() => {
     if (secondsUntilCodeExpiry === 0) {
       setIsCurrentCodeActive(false);
-      console.log(isCurrentCodeActive);
     }
   }, [secondsUntilCodeExpiry]);
 
@@ -111,11 +111,7 @@ export function OtpVerify() {
     if (!result.success) {
       // should not happen - so we log this one
       console.error("Error while parsing code", result.error);
-      dispatch(
-        showError(
-          "There was an error. Please try again later or contact ZKorum."
-        )
-      );
+      dispatch(showError(genericError));
     } else {
       setIsVerifyingCode(true);
       try {
@@ -125,7 +121,7 @@ export function OtpVerify() {
           dispatch(
             loggedIn({ email: pendingEmail, userId: validateOtpResult.userId })
           );
-          dispatch(showSuccess("Authentication successful"));
+          dispatch(showSuccess(authSuccess));
         } else {
           switch (validateOtpResult.reason) {
             case AuthVerifyOtpPost200ResponseReasonEnum.ExpiredCode:
@@ -145,11 +141,7 @@ export function OtpVerify() {
         }
       } catch (_e) {
         // TODO: take into account the case when user is simply already logged-in - and adapt flow for this case (409)
-        dispatch(
-          showError(
-            "There was an error. Please try again later or contact ZKorum."
-          )
-        );
+        dispatch(showError(genericError));
       }
       setIsVerifyingCode(false);
     }
@@ -171,11 +163,7 @@ export function OtpVerify() {
       })
       .catch((_e) => {
         // TODO: show better error if rate-limited
-        dispatch(
-          showError(
-            "There was an error. Please try again later - or contact ZKorum."
-          )
-        );
+        dispatch(showError(genericError));
       })
       .finally(() => {
         setRequestingNewCode(false);

@@ -8,6 +8,7 @@ import {
 } from "../schema.js";
 import {
   type AuthenticateRequestBody,
+  type IsLoggedInResponse,
   type VerifyOtpResponse,
 } from "../dto.js";
 import {
@@ -69,9 +70,10 @@ export class AuthService {
     } else if (!isEmailAvailable && isDidWriteAvailable) {
       return { type: AuthenticateType.LOGIN_NEW_DEVICE, userId: userId };
     } else if (!isEmailAvailable && !isDidWriteAvailable) {
-      const isLoggedIn = await AuthService.isLoggedIn(db, didWrite);
-      if (isLoggedIn) {
-        throw httpErrors.conflict("Device already logged in");
+      const isLoggedInResult = await AuthService.isLoggedIn(db, didWrite);
+      if (isLoggedInResult.isLoggedIn) {
+        // user already logged-in - send userId in message
+        throw httpErrors.conflict(isLoggedInResult.userId);
       }
       return { type: AuthenticateType.LOGIN_KNOWN_DEVICE, userId: userId };
     } else {
@@ -110,10 +112,13 @@ export class AuthService {
     }
   }
 
-  static async isLoggedIn(db: PostgresJsDatabase, didWrite: string) {
+  static async isLoggedIn(
+    db: PostgresJsDatabase,
+    didWrite: string
+  ): Promise<IsLoggedInResponse> {
     const now = new Date();
     const resultDevice = await db
-      .select()
+      .select({ userId: deviceTable.userId })
       .from(deviceTable)
       .where(
         and(
@@ -123,9 +128,9 @@ export class AuthService {
       );
     if (resultDevice.length === 0) {
       // device has never been registered OR device is logged out
-      return false;
+      return { isLoggedIn: false };
     } else {
-      return true;
+      return { isLoggedIn: true, userId: resultDevice[0].userId };
     }
   }
 
@@ -151,9 +156,10 @@ export class AuthService {
     httpErrors: HttpErrors
   ): Promise<VerifyOtpResponse> {
     // if the device is already logged in, it means either the auth attempt wasn't initiated OR the code was already verified
-    const isLoggedIn = await AuthService.isLoggedIn(db, didWrite);
-    if (isLoggedIn) {
-      throw httpErrors.conflict("Device already logged in");
+    const isLoggedInResult = await AuthService.isLoggedIn(db, didWrite);
+    if (isLoggedInResult.isLoggedIn) {
+      // user already logged-in - send userId in message
+      throw httpErrors.conflict(isLoggedInResult.userId);
     }
     const resultOtp = await db
       .select({
@@ -505,7 +511,7 @@ export class AuthService {
         sessionExpiry: in1000years,
         updatedAt: now,
       })
-      .where(eq(authAttemptTable.didWrite, didWrite));
+      .where(eq(deviceTable.didWrite, didWrite));
   }
 
   // minutesInterval: "3" in "we allow one email every 3 minutes"

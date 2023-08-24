@@ -5,7 +5,7 @@ import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { HideOnScroll } from "./HideOnScroll";
 import Button from "@mui/material/Button";
-import { openAuthModal } from "../reducers/session";
+import { openAuthModal } from "../store/reducers/session";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import IconButton from "@mui/material/IconButton";
 import Badge from "@mui/material/Badge";
@@ -22,7 +22,6 @@ export function Topbar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const activeSessionEmail = useAppSelector((state) => {
-    console.log("activeSessionEmail", state.sessions.activeSessionEmail);
     return state.sessions.activeSessionEmail;
   });
 

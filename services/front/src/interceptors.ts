@@ -1,14 +1,14 @@
 import axios from "axios";
-import * as Crypto from "./crypto/ucan/implementation.js";
-import * as DID from "./crypto/ucan/did/index.js";
+import * as Crypto from "./crypto/ucan/implementation";
+import * as DID from "./crypto/ucan/did/index";
 import * as ucan from "@ucans/ucans";
 
 import {
   httpMethodToAbility,
   httpUrlToResourcePointer,
 } from "./shared/ucan/ucan";
-import { getOrGenerateCryptoKey } from "./crypto/ucan/ucan.js";
-import { store } from "./store.js";
+import { getOrGenerateCryptoKey } from "./crypto/ucan/ucan";
+import { store } from "./store/store";
 
 export const noAuthAxios = axios.create({
   baseURL: import.meta.env.VITE_BACK_BASE_URL,
