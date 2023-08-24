@@ -6,7 +6,7 @@ import { BottomNavbar } from "../BottomNavbar";
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from "../shared/Alert";
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { closeSnackbar } from "../../reducers/snackbar";
+import { closeSnackbar } from "../../store/reducers/snackbar";
 
 export function DashboardLayout() {
   const snackbarState = useAppSelector((state) => {

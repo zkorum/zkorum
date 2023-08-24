@@ -11,7 +11,8 @@ import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import { AuthDialog } from "./components/auth/AuthDialog";
 import { Alert } from "./components/shared/Alert";
 import { useAppDispatch, useAppSelector } from "./hooks";
-import { closeSnackbar } from "./reducers/snackbar";
+import { closeSnackbar } from "./store/reducers/snackbar";
+import { MainLoading } from "./MainLoading";
 
 const routes = [
   {
@@ -36,6 +37,9 @@ const routes = [
 const router = createBrowserRouter(routes);
 
 export function App() {
+  const isMainLoadingOpen = useAppSelector((state) => {
+    return state.loading.isMainLoadingOpen;
+  });
   const snackbarState = useAppSelector((state) => {
     return state.snackbar;
   });
@@ -67,6 +71,7 @@ export function App() {
           {snackbarState.message}
         </Alert>
       </Snackbar>
+      <MainLoading open={isMainLoadingOpen} />
     </Box>
   );
 }

@@ -1,5 +1,4 @@
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
-import type { OfflineStorageState } from "../offline-storage/storage";
 
 // import type { RootState } from "../../store";
 
@@ -12,11 +11,18 @@ export interface SessionState {
   // isLoggedIn: boolean;
 }
 
+export type SessionStatus =
+  | "authenticating"
+  | "verifying"
+  | "logged-in"
+  | "logged-out";
+
 export interface SessionData {
+  email: string;
   userId?: string;
   codeExpiry?: string;
   nextCodeSoonestTime?: string;
-  status: "authenticating" | "verifying" | "logged-in" | "logged-out";
+  status: SessionStatus;
 }
 
 interface VerifyProps {
@@ -25,13 +31,13 @@ interface VerifyProps {
   nextCodeSoonestTime: string;
 }
 
-interface AuthenticateProps {
-  email: string;
-}
-
 interface LoggedInProps {
   email: string;
   userId: string;
+}
+
+interface EmailProps {
+  email: string;
 }
 
 // Define the initial state using that type
@@ -48,22 +54,18 @@ export const sessionSlice = createSlice({
   // `createSlice` will infer the state type from the `initialState` argument
   initialState: initialSessionState,
   reducers: {
-    initState: (state, action: PayloadAction<OfflineStorageState>) => {
-      state.activeSessionEmail = action.payload.activeSessionEmail;
-      state.sessions = action.payload.sessions;
-    },
     openAuthModal: (state) => {
       state.isModalOpen = true;
     },
     closeAuthModal: (state) => {
+      state.pendingSessionEmail = "";
       state.isModalOpen = false;
     },
-    authenticating: (state, action: PayloadAction<AuthenticateProps>) => {
-      if (action.payload.email in state.sessions) {
-        state.sessions[action.payload.email].status = "authenticating";
-      } else {
+    authenticating: (state, action: PayloadAction<EmailProps>) => {
+      if (!(action.payload.email in state.sessions)) {
         state.sessions[action.payload.email] = {
           status: "authenticating",
+          email: action.payload.email,
         };
       }
       state.pendingSessionEmail = action.payload.email;
@@ -71,6 +73,7 @@ export const sessionSlice = createSlice({
     verifying: (state, action: PayloadAction<VerifyProps>) => {
       if (action.payload.email in state.sessions) {
         state.sessions[action.payload.email].status = "verifying";
+        state.sessions[action.payload.email].email = action.payload.email;
         state.sessions[action.payload.email].codeExpiry =
           action.payload.codeExpiry;
         state.sessions[action.payload.email].nextCodeSoonestTime =
@@ -78,25 +81,64 @@ export const sessionSlice = createSlice({
       } else {
         state.sessions[action.payload.email] = {
           status: "verifying",
+          email: action.payload.email,
           codeExpiry: action.payload.codeExpiry,
           nextCodeSoonestTime: action.payload.nextCodeSoonestTime,
         };
       }
+      state.isModalOpen = true;
       state.pendingSessionEmail = action.payload.email;
     },
     loggedIn: (state, action: PayloadAction<LoggedInProps>) => {
       if (action.payload.email in state.sessions) {
         state.sessions[action.payload.email].status = "logged-in";
+        state.sessions[action.payload.email].email = action.payload.email;
         state.sessions[action.payload.email].userId = action.payload.userId;
       } else {
         state.sessions[action.payload.email] = {
           status: "logged-in",
+          email: action.payload.email,
           userId: action.payload.userId,
         };
       }
-      state.pendingSessionEmail = "";
       state.activeSessionEmail = action.payload.email;
-      closeAuthModal();
+      state.pendingSessionEmail = "";
+      state.isModalOpen = false;
+    },
+    loggedOut: (state, action: PayloadAction<EmailProps>) => {
+      if (action.payload.email in state.sessions) {
+        state.sessions[action.payload.email].status = "logged-out";
+        state.sessions[action.payload.email].email = action.payload.email;
+      } else {
+        state.sessions[action.payload.email] = {
+          status: "logged-out",
+          email: action.payload.email,
+        };
+      }
+      if (state.activeSessionEmail === action.payload.email) {
+        state.activeSessionEmail = "";
+      }
+    },
+    resetPendingSession: (state) => {
+      state.pendingSessionEmail = "";
+    },
+    removeSession: (state, action: PayloadAction<EmailProps>) => {
+      if (
+        action.payload.email in state.sessions &&
+        (state.sessions[action.payload.email].status === "authenticating" ||
+          state.sessions[action.payload.email].status === "verifying")
+      ) {
+        delete state.sessions[action.payload.email];
+      }
+    },
+    switchActiveSession: (state, action: PayloadAction<EmailProps>) => {
+      if (
+        action.payload.email in state.sessions &&
+        state.sessions[action.payload.email].status === "logged-in"
+      ) {
+        state.activeSessionEmail = action.payload.email;
+        state.isModalOpen = false;
+      }
     },
   },
 });
@@ -107,7 +149,10 @@ export const {
   authenticating,
   verifying,
   loggedIn,
-  initState,
+  loggedOut,
+  resetPendingSession,
+  removeSession,
+  switchActiveSession,
 } = sessionSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type

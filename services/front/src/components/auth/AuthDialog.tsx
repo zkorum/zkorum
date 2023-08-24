@@ -9,9 +9,13 @@ import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
 import { Outlet } from "react-router-dom";
 import { ZKorumIcon } from "../../ZKorumIcon";
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { closeAuthModal } from "../../reducers/session";
+import {
+  closeAuthModal,
+  resetPendingSession,
+} from "../../store/reducers/session";
 import { Authenticate } from "./Authenticate";
 import { OtpVerify } from "./OtpVerify";
+import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 
 export function AuthDialog() {
   const isModalOpen = useAppSelector((state) => state.sessions.isModalOpen);
@@ -23,6 +27,27 @@ export function AuthDialog() {
 
   function handleClose() {
     dispatch(closeAuthModal());
+  }
+
+  function getGoBackButton(): JSX.Element | null {
+    if (pendingSession?.status === "verifying") {
+      return (
+        <IconButton
+          aria-label="close"
+          onClick={() => dispatch(resetPendingSession())}
+          sx={{
+            position: "absolute",
+            left: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <KeyboardBackspaceIcon />
+        </IconButton>
+      );
+    } else {
+      return null;
+    }
   }
 
   return (
@@ -52,13 +77,14 @@ export function AuthDialog() {
             onClick={handleClose}
             sx={{
               position: "absolute",
-              left: 8,
+              right: 8,
               top: 8,
               color: (theme) => theme.palette.grey[500],
             }}
           >
             <CloseIcon />
           </IconButton>
+          {getGoBackButton()}
         </DialogTitle>
         <DialogContent>
           {pendingSession?.status === "verifying" ? (

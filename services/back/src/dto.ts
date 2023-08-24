@@ -27,6 +27,14 @@ export class Dto {
       })
       .strict(),
   ]);
+  static isLoggedInResponse = z.discriminatedUnion("isLoggedIn", [
+    z.object({ isLoggedIn: z.literal(true), userId: ZodType.userId }).strict(),
+    z
+      .object({
+        isLoggedIn: z.literal(false),
+      })
+      .strict(),
+  ]);
 }
 
 export type AuthenticateRequestBody = z.infer<
@@ -34,3 +42,4 @@ export type AuthenticateRequestBody = z.infer<
 >;
 export type VerifyOtpResponse = z.infer<typeof Dto.verifyOtpResponse>;
 export type VerifyOtpReqBody = z.infer<typeof Dto.verifyOtpReqBody>;
+export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;

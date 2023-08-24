@@ -12,6 +12,7 @@ import {
 import localForage from "localforage";
 import sessionReducer from "./reducers/session";
 import snackbarReducer from "./reducers/snackbar";
+import loadingReducer from "./reducers/loading";
 import { getPersistConfig } from "redux-deep-persist";
 
 /**
@@ -30,8 +31,10 @@ const storage = {
 const rootReducer = combineReducers({
   sessions: sessionReducer,
   snackbar: snackbarReducer,
+  loading: loadingReducer,
 });
 
+// TODO: make sure "undefined" is parsed to "zero values"
 const persistedReducer = persistReducer(
   getPersistConfig({
     key: "root",
