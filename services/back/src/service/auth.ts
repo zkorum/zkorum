@@ -6,11 +6,7 @@ import {
   emailTable,
   userTable,
 } from "../schema.js";
-import {
-  type AuthenticateRequestBody,
-  type IsLoggedInResponse,
-  type VerifyOtpResponse,
-} from "../dto.js";
+import { type IsLoggedInResponse, type VerifyOtpResponse } from "../dto.js";
 import {
   codeToString,
   generateOneTimeCode,
@@ -18,6 +14,7 @@ import {
   generateUUID,
 } from "../crypto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
+import type { AuthenticateRequestBody } from "../index.js";
 
 export interface AuthenticateOtp {
   codeExpiry: Date;

@@ -1,14 +1,16 @@
 import { z } from "zod";
-import { ZodType } from "./shared/types/zod.js";
+import { ZodType, type FQDN } from "./shared/types/zod.js";
 
 export class Dto {
-  static authenticateRequestBody = z
-    .object({
-      email: ZodType.email,
-      didExchange: ZodType.didKey,
-      isRequestingNewCode: z.boolean(),
-    })
-    .strict();
+  static authenticateRequestBody(authorizedFQDN: FQDN[]) {
+    return z
+      .object({
+        email: ZodType.authorizedEmail(authorizedFQDN),
+        didExchange: ZodType.didKey,
+        isRequestingNewCode: z.boolean(),
+      })
+      .strict();
+  }
   static verifyOtpReqBody = z.object({
     code: ZodType.code,
   });
@@ -36,10 +38,6 @@ export class Dto {
       .strict(),
   ]);
 }
-
-export type AuthenticateRequestBody = z.infer<
-  typeof Dto.authenticateRequestBody
->;
 export type VerifyOtpResponse = z.infer<typeof Dto.verifyOtpResponse>;
 export type VerifyOtpReqBody = z.infer<typeof Dto.verifyOtpReqBody>;
 export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;

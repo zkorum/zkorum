@@ -41,9 +41,13 @@ const configSchema = z.object({
   EMAIL_OTP_MAX_ATTEMPT_AMOUNT: z.number().int().min(1).max(5).default(3),
   THROTTLE_EMAIL_MINUTES_INTERVAL: z.number().int().min(3).default(3),
   MINUTES_BEFORE_EMAIL_OTP_EXPIRY: z.number().int().min(3).max(60).default(10),
+  AUTHORIZED_FQDNS: ZodType.fqdns,
 });
 
 const config = configSchema.parse(process.env);
+
+const zodAuthRequestBody = Dto.authenticateRequestBody(config.AUTHORIZED_FQDNS);
+export type AuthenticateRequestBody = z.infer<typeof zodAuthRequestBody>;
 
 function envToLogger(env: Environment) {
   switch (env) {
@@ -170,7 +174,7 @@ async function verifyUCAN(
 server.after(() => {
   server.withTypeProvider<ZodTypeProvider>().post("/auth/authenticate", {
     schema: {
-      body: Dto.authenticateRequestBody,
+      body: Dto.authenticateRequestBody(config.AUTHORIZED_FQDNS),
       response: { 200: Dto.authenticateResponse },
     },
     handler: async (request, _reply) => {

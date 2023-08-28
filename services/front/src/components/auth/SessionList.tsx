@@ -53,7 +53,7 @@ export function SessionList({
         return (
           <IconButton
             onClick={() => onRemove(session)}
-            edge="end"
+            edge="start"
             aria-label="remove"
           >
             <DeleteIcon color="error" />
@@ -65,7 +65,7 @@ export function SessionList({
           return (
             <IconButton
               onClick={() => onRemove(session)}
-              edge="end"
+              edge="start"
               aria-label="delete"
             >
               <DeleteIcon color="error" />
@@ -79,7 +79,7 @@ export function SessionList({
           return (
             <IconButton
               onClick={async () => await onLogout()}
-              edge="end"
+              edge="start"
               aria-label="logout"
             >
               <LogoutIcon color="error" />
@@ -158,6 +158,7 @@ export function SessionList({
           {sessions.map((session) => {
             return (
               <ListItem
+                key={session.email}
                 sx={{ maxHeight: "60%" }}
                 secondaryAction={getSecondaryAction(
                   session,
@@ -179,7 +180,7 @@ export function SessionList({
       <MenuList>
         {sessions.map((session) => {
           return (
-            <MenuItem sx={{ maxHeight: "60%" }}>
+            <MenuItem key={session.email} sx={{ maxHeight: "60%" }}>
               {getListItemButton({
                 session: session,
                 activeSessionEmail: activeSessionEmail,

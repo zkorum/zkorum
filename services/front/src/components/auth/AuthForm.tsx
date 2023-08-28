@@ -11,15 +11,29 @@ import Button from "@mui/material/Button";
 
 interface AuthFormProps {
   autoFocus: boolean;
+  email: string;
+  setEmail: (email: string) => void;
+  isEmailValid: boolean;
+  setIsEmailValid: (emailHelper: boolean) => void;
+  emailHelper: string;
+  setEmailHelper: (emailHelper: string) => void;
 }
 
-export function AuthForm({ autoFocus }: AuthFormProps) {
+export function AuthForm({
+  autoFocus,
+  email,
+  setEmail,
+  isEmailValid,
+  setIsEmailValid,
+  emailHelper,
+  setEmailHelper,
+}: AuthFormProps) {
   const [isTrusted, setIsTrusted] = React.useState<boolean>(false);
   const [hasGivenConsent, setHasGivenConsent] = React.useState<boolean>(false);
-  const [email, setEmail] = React.useState<string>("");
 
-  const [isEmailValid, setIsEmailValid] = React.useState<boolean>(false);
-  const [emailHelper, setEmailHelper] = React.useState<string>(" "); // we must have a helper set to not change form height: https://stackoverflow.com/questions/72510035/error-message-affects-the-height-of-the-text-field-helpertext-material-ui
+  React.useEffect(() => {
+    console.log("authform", email);
+  }, []);
 
   function validateEmail(emailToValidate: string) {
     if (emailToValidate === "") {
@@ -33,8 +47,18 @@ export function AuthForm({ autoFocus }: AuthFormProps) {
       setIsEmailValid(false);
       setEmailHelper(formatted._errors[0]);
     } else {
-      setIsEmailValid(true);
-      setEmailHelper(" ");
+      const result = ZodType.authorizedEmail(
+        import.meta.env.VITE_AUTHORIZED_FQDNS
+      ).safeParse(emailToValidate);
+      if (!result.success) {
+        setIsEmailValid(false);
+        setEmailHelper(
+          "Closed Alpha is limited to authorized email addresses - stay tuned for future releases!"
+        );
+      } else {
+        setIsEmailValid(true);
+        setEmailHelper(" ");
+      }
     }
   }
 
@@ -57,6 +81,7 @@ export function AuthForm({ autoFocus }: AuthFormProps) {
           name="email"
           error={email !== "" && !isEmailValid}
           helperText={emailHelper} // must always be set to keep same height (see link at variable definition)
+          value={email}
           onChange={(event: React.FocusEvent<HTMLInputElement>) => {
             if (event.target.value !== email) {
               setEmail(event.target.value);

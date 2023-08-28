@@ -1,15 +1,11 @@
 /// <reference types="vite/client" />
 
-// This is necessary to get intellisense from LSP:
-// TODO: this should be in sync with the zod config in vite.config.ts instead of copy-pasting manually...
-// Maybe look into this plugin, though I don't want to rely on yet another plugin:
-// https://github.com/Julien-R44/vite-plugin-validate-env
-interface ImportMetaEnv {
-  readonly VITE_BACK_BASE_URL: string;
-  readonly VITE_BACK_DID: string;
-  // more env variables...
-}
+type ImportMetaEnvAugmented =
+  import("@julr/vite-plugin-validate-env").ImportMetaEnvAugmented<
+    typeof import("../env").default
+  >;
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
+interface ImportMetaEnv extends ImportMetaEnvAugmented {
+  // Now import.meta.env is totally type-safe and based on your `env.ts` schema definition
+  // You can also add custom variables that are not defined in your schema
 }

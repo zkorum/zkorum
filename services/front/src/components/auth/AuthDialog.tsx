@@ -67,7 +67,7 @@ export function AuthDialog() {
                   <ZKorumIcon iconBackgroundColor={"dark"} />
                 </Grid>
                 <Grid>
-                  <Typography variant="body2">Alpha</Typography>
+                  <Typography variant="body2">Closed Alpha</Typography>
                 </Grid>
               </Grid>
             </Box>

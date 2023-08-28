@@ -13,7 +13,12 @@ export function ChooseExistingAccount({
   sessions,
 }: ChooseExistingAccountProps) {
   return (
-    <Grid container direction="row" alignItems="center" justifyContent="center">
+    <Grid
+      container
+      direction="column"
+      alignItems="center"
+      justifyContent="center"
+    >
       <Grid>
         <Typography>Authenticate from existing accounts:</Typography>
       </Grid>
