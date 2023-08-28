@@ -1,12 +1,14 @@
-import Avatar from "@mui/material/Avatar";
+import Avatar from '@mui/material/Avatar'
 
 interface CustomAvatarProps {
-  email: string;
+    email: string
 }
 
 // two first char of email is displayed
 export function CustomAvatar(props: CustomAvatarProps) {
-  return (
-    <Avatar sx={{ width: 32, height: 32 }}>{props.email.slice(0, 2)}</Avatar>
-  );
+    return (
+        <Avatar sx={{ width: 32, height: 32 }}>
+            {props.email.slice(0, 2)}
+        </Avatar>
+    )
 }
