@@ -92,7 +92,7 @@ export function OtpVerify() {
     React.useEffect(() => {
         startNewCodeCoundown();
         startCodeExpiryCoundown();
-    }, []);
+    }, [startNewCodeCoundown, startCodeExpiryCoundown]);
 
     React.useEffect(() => {
         if (secondsUntilCodeExpiry === 0) {

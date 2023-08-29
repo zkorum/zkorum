@@ -1,7 +1,7 @@
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Container from "@mui/material/Container";
-import Grid from "@mui/material/Unstable_Grid2/Grid2";
+import Grid from "@mui/material/Unstable_Grid2";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { HideOnScroll } from "./HideOnScroll";
 import Button from "@mui/material/Button";

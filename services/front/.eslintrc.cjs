@@ -1,5 +1,7 @@
+/* eslint-disable */
 module.exports = {
     env: { browser: true, es2020: true },
+    ignorePatterns: ["src/api/**/*"],
     extends: [
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
