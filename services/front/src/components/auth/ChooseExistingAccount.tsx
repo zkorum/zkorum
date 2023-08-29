@@ -22,7 +22,7 @@ export function ChooseExistingAccount({
             <Grid>
                 <Typography>Authenticate from existing accounts:</Typography>
             </Grid>
-            <Grid>
+            <Grid sx={{ maxHeight: "30vh", overflow: "auto" }}>
                 <SessionList
                     component={"list"}
                     sessions={sessions}

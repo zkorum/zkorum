@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # when connecting to the database from pgadmin,
 # use `docker container ls`, the identify postgres's ID, then
@@ -12,31 +12,31 @@ version: '3.8'
 # create an appread user with readonly role - use this one to inspect the DB locally
 
 services:
-  postgres:
-    container_name: postgres_container
-    image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 7QPgtYETx4EdzvqUeNfo
-      POSTGRES_DB: zkorum
-      PGDATA: /data/postgres
-    volumes:
-      - postgres:/data/postgres
-    ports:
-      - '5432:5432'
-    restart: unless-stopped
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: UsXWq98V68DxGEhfGvBa
-    volumes:
-      - pgadmin:/var/lib/pgadmin
-    ports:
-      - '5050:80'
-    restart: unless-stopped
+    postgres:
+        container_name: postgres_container
+        image: postgres
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: 7QPgtYETx4EdzvqUeNfo
+            POSTGRES_DB: zkorum
+            PGDATA: /data/postgres
+        volumes:
+            - postgres:/data/postgres
+        ports:
+            - "5432:5432"
+        restart: unless-stopped
+    pgadmin:
+        container_name: pgadmin_container
+        image: dpage/pgadmin4
+        environment:
+            PGADMIN_DEFAULT_EMAIL: admin@admin.com
+            PGADMIN_DEFAULT_PASSWORD: UsXWq98V68DxGEhfGvBa
+        volumes:
+            - pgadmin:/var/lib/pgadmin
+        ports:
+            - "5050:80"
+        restart: unless-stopped
 
 volumes:
-  postgres:
-  pgadmin:
+    postgres:
+    pgadmin:

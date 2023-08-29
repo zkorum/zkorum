@@ -8,20 +8,20 @@ import localforage from "localforage";
  * Is this browser supported?
  */
 export async function isSupported(): Promise<boolean> {
-  return (
-    localforage.supports(localforage.INDEXEDDB) &&
-    // Firefox in private mode can't use indexedDB properly,
-    // so we test if we can actually make a database.
-    ((await (() =>
-      new Promise((resolve) => {
-        const db = indexedDB.open("testDatabase");
-        db.onsuccess = () => resolve(true);
-        db.onerror = () => resolve(false);
-      }))()) as boolean)
-  );
+    return (
+        localforage.supports(localforage.INDEXEDDB) &&
+        // Firefox in private mode can't use indexedDB properly,
+        // so we test if we can actually make a database.
+        ((await (() =>
+            new Promise((resolve) => {
+                const db = indexedDB.open("testDatabase");
+                db.onsuccess = () => resolve(true);
+                db.onerror = () => resolve(false);
+            }))()) as boolean)
+    );
 }
 
 export enum ProgramError {
-  InsecureContext = "INSECURE_CONTEXT",
-  UnsupportedBrowser = "UNSUPPORTED_BROWSER",
+    InsecureContext = "INSECURE_CONTEXT",
+    UnsupportedBrowser = "UNSUPPORTED_BROWSER",
 }

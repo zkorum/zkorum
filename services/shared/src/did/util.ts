@@ -3,10 +3,10 @@ export const WEB_DID_PREFIX = "did:web:";
 
 // TODO: improve this validation
 export const validateDidKey = (did: string) => {
-  return did.startsWith(BASE58_DID_PREFIX);
+    return did.startsWith(BASE58_DID_PREFIX);
 };
 
 // TODO: improve this validation
 export const validateDidWeb = (did: string) => {
-  return did.startsWith(WEB_DID_PREFIX);
+    return did.startsWith(WEB_DID_PREFIX);
 };

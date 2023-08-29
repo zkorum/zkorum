@@ -44,14 +44,18 @@ export function AuthForm({
             setIsEmailValid(false);
             setEmailHelper(formatted._errors[0]);
         } else {
-            const result = ZodType.authorizedEmail(
-                import.meta.env.VITE_AUTHORIZED_FQDNS
-            ).safeParse(emailToValidate);
+            const result = ZodType.authorizedEmail.safeParse(emailToValidate);
             if (!result.success) {
                 setIsEmailValid(false);
-                setEmailHelper(
-                    "Closed Alpha is limited to authorized email addresses - stay tuned for future releases!"
-                );
+                if (emailToValidate.split("@")[1] === "essec.edu") {
+                    setEmailHelper(
+                        'Please your ESSEC email address starting with "b", e.g: "b012345678@essec.edu"'
+                    );
+                } else {
+                    setEmailHelper(
+                        "This version is invite-only. Stay tuned for future releases!"
+                    );
+                }
             } else {
                 setIsEmailValid(true);
                 setEmailHelper(" ");

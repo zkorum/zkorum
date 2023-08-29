@@ -1,29 +1,30 @@
 {
-  "name": "shared",
-  "version": "1.0.0",
-  "type": "module",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "sync": "bash scripts/rsync_and_sed.sh",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "keystore-idb": "^0.15.5",
-    "localforage": "^1.10.0",
-    "one-webcrypto": "^1.0.3",
-    "tweetnacl": "^1.0.3",
-    "uint8arrays": "^4.0.4",
-    "validator": "^13.11.0",
-    "zod": "^3.21.4"
-  },
-  "devDependencies": {
-    "@types/node": "^20.4.5",
-    "@types/validator": "^13.7.17",
-    "typecript": "0.0.1-security",
-    "typescript": "^5.1.6"
-  }
+    "name": "shared",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "sync": "bash scripts/rsync_and_sed.sh",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "format:check": "prettier . --check",
+        "format:write": "prettier . --write"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "keystore-idb": "^0.15.5",
+        "localforage": "^1.10.0",
+        "one-webcrypto": "^1.0.3",
+        "tweetnacl": "^1.0.3",
+        "uint8arrays": "^4.0.4",
+        "zod": "^3.21.4"
+    },
+    "devDependencies": {
+        "@types/node": "^20.4.5",
+        "prettier": "^3.0.3",
+        "typecript": "0.0.1-security",
+        "typescript": "^5.1.6"
+    }
 }

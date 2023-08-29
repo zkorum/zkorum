@@ -1,282 +1,270 @@
 {
-  "version": "5",
-  "dialect": "pg",
-  "id": "e72da04a-3afb-4510-97bd-f2000cfff9e7",
-  "prevId": "00000000-0000-0000-0000-000000000000",
-  "tables": {
-    "auth_attempt": {
-      "name": "auth_attempt",
-      "schema": "",
-      "columns": {
-        "did_write": {
-          "name": "did_write",
-          "type": "varchar(1000)",
-          "primaryKey": true,
-          "notNull": true
+    "version": "5",
+    "dialect": "pg",
+    "id": "e72da04a-3afb-4510-97bd-f2000cfff9e7",
+    "prevId": "00000000-0000-0000-0000-000000000000",
+    "tables": {
+        "auth_attempt": {
+            "name": "auth_attempt",
+            "schema": "",
+            "columns": {
+                "did_write": {
+                    "name": "did_write",
+                    "type": "varchar(1000)",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "type": {
+                    "name": "type",
+                    "type": "auth_type",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "email": {
+                    "name": "email",
+                    "type": "varchar(254)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "did_exchange": {
+                    "name": "did_exchange",
+                    "type": "varchar(1000)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "code": {
+                    "name": "code",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "code_expiry": {
+                    "name": "code_expiry",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "guess_attempt_amount": {
+                    "name": "guess_attempt_amount",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": 0
+                },
+                "last_email_sent_at": {
+                    "name": "last_email_sent_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
         },
-        "type": {
-          "name": "type",
-          "type": "auth_type",
-          "primaryKey": false,
-          "notNull": true
+        "device": {
+            "name": "device",
+            "schema": "",
+            "columns": {
+                "did_write": {
+                    "name": "did_write",
+                    "type": "varchar(1000)",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "did_exchange": {
+                    "name": "did_exchange",
+                    "type": "varchar(1000)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "session_expiry": {
+                    "name": "session_expiry",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "device_user_id_user_id_fk": {
+                    "name": "device_user_id_user_id_fk",
+                    "tableFrom": "device",
+                    "tableTo": "user",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {
+                "device_did_exchange_unique": {
+                    "name": "device_did_exchange_unique",
+                    "nullsNotDistinct": false,
+                    "columns": ["did_exchange"]
+                }
+            }
         },
         "email": {
-          "name": "email",
-          "type": "varchar(254)",
-          "primaryKey": false,
-          "notNull": true
+            "name": "email",
+            "schema": "",
+            "columns": {
+                "email": {
+                    "name": "email",
+                    "type": "varchar(254)",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "type": {
+                    "name": "type",
+                    "type": "email_type",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "email_user_id_user_id_fk": {
+                    "name": "email_user_id_user_id_fk",
+                    "tableFrom": "email",
+                    "tableTo": "user",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
         },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "did_exchange": {
-          "name": "did_exchange",
-          "type": "varchar(1000)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "code": {
-          "name": "code",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "code_expiry": {
-          "name": "code_expiry",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "guess_attempt_amount": {
-          "name": "guess_attempt_amount",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "last_email_sent_at": {
-          "name": "last_email_sent_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+        "user": {
+            "name": "user",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "uuid",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "uid": {
+                    "name": "uid",
+                    "type": "char(32)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {
+                "user_uid_unique": {
+                    "name": "user_uid_unique",
+                    "nullsNotDistinct": false,
+                    "columns": ["uid"]
+                }
+            }
         }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
     },
-    "device": {
-      "name": "device",
-      "schema": "",
-      "columns": {
-        "did_write": {
-          "name": "did_write",
-          "type": "varchar(1000)",
-          "primaryKey": true,
-          "notNull": true
+    "enums": {
+        "auth_type": {
+            "name": "auth_type",
+            "values": {
+                "register": "register",
+                "login_known_device": "login_known_device",
+                "login_new_device": "login_new_device"
+            }
         },
-        "did_exchange": {
-          "name": "did_exchange",
-          "type": "varchar(1000)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "session_expiry": {
-          "name": "session_expiry",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+        "email_type": {
+            "name": "email_type",
+            "values": {
+                "primary": "primary",
+                "backup": "backup",
+                "secondary": "secondary",
+                "other": "other"
+            }
         }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "device_user_id_user_id_fk": {
-          "name": "device_user_id_user_id_fk",
-          "tableFrom": "device",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "device_did_exchange_unique": {
-          "name": "device_did_exchange_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "did_exchange"
-          ]
-        }
-      }
     },
-    "email": {
-      "name": "email",
-      "schema": "",
-      "columns": {
-        "email": {
-          "name": "email",
-          "type": "varchar(254)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "email_type",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "email_user_id_user_id_fk": {
-          "name": "email_user_id_user_id_fk",
-          "tableFrom": "email",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "user": {
-      "name": "user",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "uid": {
-          "name": "uid",
-          "type": "char(32)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "user_uid_unique": {
-          "name": "user_uid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "uid"
-          ]
-        }
-      }
-    }
-  },
-  "enums": {
-    "auth_type": {
-      "name": "auth_type",
-      "values": {
-        "register": "register",
-        "login_known_device": "login_known_device",
-        "login_new_device": "login_new_device"
-      }
-    },
-    "email_type": {
-      "name": "email_type",
-      "values": {
-        "primary": "primary",
-        "backup": "backup",
-        "secondary": "secondary",
-        "other": "other"
-      }
-    }
-  },
-  "schemas": {},
-  "_meta": {
     "schemas": {},
-    "tables": {},
-    "columns": {}
-  }
+    "_meta": {
+        "schemas": {},
+        "tables": {},
+        "columns": {}
+    }
 }

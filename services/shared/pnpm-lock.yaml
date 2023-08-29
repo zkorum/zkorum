@@ -1,125 +1,163 @@
-lockfileVersion: '6.1'
+lockfileVersion: "6.1"
 
 settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
+    autoInstallPeers: true
+    excludeLinksFromLockfile: false
 
 dependencies:
-  keystore-idb:
-    specifier: ^0.15.5
-    version: 0.15.5
-  localforage:
-    specifier: ^1.10.0
-    version: 1.10.0
-  one-webcrypto:
-    specifier: ^1.0.3
-    version: 1.0.3
-  tweetnacl:
-    specifier: ^1.0.3
-    version: 1.0.3
-  uint8arrays:
-    specifier: ^4.0.4
-    version: 4.0.4
-  validator:
-    specifier: ^13.11.0
-    version: 13.11.0
-  zod:
-    specifier: ^3.21.4
-    version: 3.21.4
+    keystore-idb:
+        specifier: ^0.15.5
+        version: 0.15.5
+    localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
+    one-webcrypto:
+        specifier: ^1.0.3
+        version: 1.0.3
+    tweetnacl:
+        specifier: ^1.0.3
+        version: 1.0.3
+    uint8arrays:
+        specifier: ^4.0.4
+        version: 4.0.4
+    zod:
+        specifier: ^3.21.4
+        version: 3.21.4
 
 devDependencies:
-  '@types/node':
-    specifier: ^20.4.5
-    version: 20.4.5
-  '@types/validator':
-    specifier: ^13.7.17
-    version: 13.7.17
-  typecript:
-    specifier: 0.0.1-security
-    version: 0.0.1-security
-  typescript:
-    specifier: ^5.1.6
-    version: 5.1.6
+    "@types/node":
+        specifier: ^20.4.5
+        version: 20.4.5
+    prettier:
+        specifier: ^3.0.3
+        version: 3.0.3
+    typecript:
+        specifier: 0.0.1-security
+        version: 0.0.1-security
+    typescript:
+        specifier: ^5.1.6
+        version: 5.1.6
 
 packages:
+    /@types/node@20.4.5:
+        resolution:
+            {
+                integrity: sha512-rt40Nk13II9JwQBdeYqmbn2Q6IVTA5uPhvSO+JVqdXw/6/4glI6oR9ezty/A9Hg5u7JH4OmYmuQ+XvjKm0Datg==,
+            }
+        dev: true
 
-  /@types/node@20.4.5:
-    resolution: {integrity: sha512-rt40Nk13II9JwQBdeYqmbn2Q6IVTA5uPhvSO+JVqdXw/6/4glI6oR9ezty/A9Hg5u7JH4OmYmuQ+XvjKm0Datg==}
-    dev: true
+    /immediate@3.0.6:
+        resolution:
+            {
+                integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==,
+            }
+        dev: false
 
-  /@types/validator@13.7.17:
-    resolution: {integrity: sha512-aqayTNmeWrZcvnG2MG9eGYI6b7S5fl+yKgPs6bAjOTwPS316R5SxBGKvtSExfyoJU7pIeHJfsHI0Ji41RVMkvQ==}
-    dev: true
+    /keystore-idb@0.15.5:
+        resolution:
+            {
+                integrity: sha512-7bcUAnY5iD0+N75odQVTCs8mhXBW+yLt9/HH8+VUrl44FGllpAhu7q3/w9QpNMHxLQv3OXs1fsA042CAviN79Q==,
+            }
+        engines: { node: ">=10.21.0" }
+        dependencies:
+            localforage: 1.10.0
+            one-webcrypto: 1.0.3
+            uint8arrays: 3.1.1
+        dev: false
 
-  /immediate@3.0.6:
-    resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==}
-    dev: false
+    /lie@3.1.1:
+        resolution:
+            {
+                integrity: sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==,
+            }
+        dependencies:
+            immediate: 3.0.6
+        dev: false
 
-  /keystore-idb@0.15.5:
-    resolution: {integrity: sha512-7bcUAnY5iD0+N75odQVTCs8mhXBW+yLt9/HH8+VUrl44FGllpAhu7q3/w9QpNMHxLQv3OXs1fsA042CAviN79Q==}
-    engines: {node: '>=10.21.0'}
-    dependencies:
-      localforage: 1.10.0
-      one-webcrypto: 1.0.3
-      uint8arrays: 3.1.1
-    dev: false
+    /localforage@1.10.0:
+        resolution:
+            {
+                integrity: sha512-14/H1aX7hzBBmmh7sGPd+AOMkkIrHM3Z1PAyGgZigA1H1p5O5ANnMyWzvpAETtG68/dC4pC0ncy3+PPGzXZHPg==,
+            }
+        dependencies:
+            lie: 3.1.1
+        dev: false
 
-  /lie@3.1.1:
-    resolution: {integrity: sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==}
-    dependencies:
-      immediate: 3.0.6
-    dev: false
+    /multiformats@11.0.2:
+        resolution:
+            {
+                integrity: sha512-b5mYMkOkARIuVZCpvijFj9a6m5wMVLC7cf/jIPd5D/ARDOfLC5+IFkbgDXQgcU2goIsTD/O9NY4DI/Mt4OGvlg==,
+            }
+        engines: { node: ">=16.0.0", npm: ">=7.0.0" }
+        dev: false
 
-  /localforage@1.10.0:
-    resolution: {integrity: sha512-14/H1aX7hzBBmmh7sGPd+AOMkkIrHM3Z1PAyGgZigA1H1p5O5ANnMyWzvpAETtG68/dC4pC0ncy3+PPGzXZHPg==}
-    dependencies:
-      lie: 3.1.1
-    dev: false
+    /multiformats@9.9.0:
+        resolution:
+            {
+                integrity: sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==,
+            }
+        dev: false
 
-  /multiformats@11.0.2:
-    resolution: {integrity: sha512-b5mYMkOkARIuVZCpvijFj9a6m5wMVLC7cf/jIPd5D/ARDOfLC5+IFkbgDXQgcU2goIsTD/O9NY4DI/Mt4OGvlg==}
-    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
-    dev: false
+    /one-webcrypto@1.0.3:
+        resolution:
+            {
+                integrity: sha512-fu9ywBVBPx0gS9K0etIROTiCkvI5S1TDjFsYFb3rC1ewFxeOqsbzq7aIMBHsYfrTHBcGXJaONXXjTl8B01cW1Q==,
+            }
+        dev: false
 
-  /multiformats@9.9.0:
-    resolution: {integrity: sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==}
-    dev: false
+    /prettier@3.0.3:
+        resolution:
+            {
+                integrity: sha512-L/4pUDMxcNa8R/EthV08Zt42WBO4h1rarVtK0K+QJG0X187OLo7l699jWw0GKuwzkPQ//jMFA/8Xm6Fh3J/DAg==,
+            }
+        engines: { node: ">=14" }
+        hasBin: true
+        dev: true
 
-  /one-webcrypto@1.0.3:
-    resolution: {integrity: sha512-fu9ywBVBPx0gS9K0etIROTiCkvI5S1TDjFsYFb3rC1ewFxeOqsbzq7aIMBHsYfrTHBcGXJaONXXjTl8B01cW1Q==}
-    dev: false
+    /tweetnacl@1.0.3:
+        resolution:
+            {
+                integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==,
+            }
+        dev: false
 
-  /tweetnacl@1.0.3:
-    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
-    dev: false
+    /typecript@0.0.1-security:
+        resolution:
+            {
+                integrity: sha512-88WUWdO0zl/cC+X44m7TJkNssn0sTwZOSAyZu7ZmY6BfGJ4idVWJGjFmd6wEjS3yhWUYrAszzNMHZMIJ7h3ycg==,
+            }
+        dev: true
 
-  /typecript@0.0.1-security:
-    resolution: {integrity: sha512-88WUWdO0zl/cC+X44m7TJkNssn0sTwZOSAyZu7ZmY6BfGJ4idVWJGjFmd6wEjS3yhWUYrAszzNMHZMIJ7h3ycg==}
-    dev: true
+    /typescript@5.1.6:
+        resolution:
+            {
+                integrity: sha512-zaWCozRZ6DLEWAWFrVDz1H6FVXzUSfTy5FUMWsQlU8Ym5JP9eO4xkTIROFCQvhQf61z6O/G6ugw3SgAnvvm+HA==,
+            }
+        engines: { node: ">=14.17" }
+        hasBin: true
+        dev: true
 
-  /typescript@5.1.6:
-    resolution: {integrity: sha512-zaWCozRZ6DLEWAWFrVDz1H6FVXzUSfTy5FUMWsQlU8Ym5JP9eO4xkTIROFCQvhQf61z6O/G6ugw3SgAnvvm+HA==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-    dev: true
+    /uint8arrays@3.1.1:
+        resolution:
+            {
+                integrity: sha512-+QJa8QRnbdXVpHYjLoTpJIdCTiw9Ir62nocClWuXIq2JIh4Uta0cQsTSpFL678p2CN8B+XSApwcU+pQEqVpKWg==,
+            }
+        dependencies:
+            multiformats: 9.9.0
+        dev: false
 
-  /uint8arrays@3.1.1:
-    resolution: {integrity: sha512-+QJa8QRnbdXVpHYjLoTpJIdCTiw9Ir62nocClWuXIq2JIh4Uta0cQsTSpFL678p2CN8B+XSApwcU+pQEqVpKWg==}
-    dependencies:
-      multiformats: 9.9.0
-    dev: false
+    /uint8arrays@4.0.4:
+        resolution:
+            {
+                integrity: sha512-AOoA66e/A7zoXm1mgzQjGmkWDTvCrS3ttWXLHFtlVAwMobLcaOA7G7WRNNAcyfjjYdFDtkEK6njRDX7hZLIO9Q==,
+            }
+        dependencies:
+            multiformats: 11.0.2
+        dev: false
 
-  /uint8arrays@4.0.4:
-    resolution: {integrity: sha512-AOoA66e/A7zoXm1mgzQjGmkWDTvCrS3ttWXLHFtlVAwMobLcaOA7G7WRNNAcyfjjYdFDtkEK6njRDX7hZLIO9Q==}
-    dependencies:
-      multiformats: 11.0.2
-    dev: false
-
-  /validator@13.11.0:
-    resolution: {integrity: sha512-Ii+sehpSfZy+At5nPdnyMhx78fEoPDkR2XW/zimHEL3MyGJQOCQ7WeP20jPYRz7ZCpcKLB21NxuXHF3bxjStBQ==}
-    engines: {node: '>= 0.10'}
-    dev: false
-
-  /zod@3.21.4:
-    resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
-    dev: false
+    /zod@3.21.4:
+        resolution:
+            {
+                integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==,
+            }
+        dev: false

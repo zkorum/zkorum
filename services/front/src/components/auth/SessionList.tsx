@@ -177,7 +177,7 @@ export function SessionList({
         );
     } else {
         return (
-            <MenuList>
+            <MenuList sx={{ maxHeight: "30vh", overflow: "auto" }}>
                 {sessions.map((session) => {
                     return (
                         <MenuItem key={session.email} sx={{ maxHeight: "60%" }}>

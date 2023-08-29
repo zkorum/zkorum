@@ -1,6 +1,5 @@
 import { defineConfig } from "@julr/vite-plugin-validate-env";
 import { z } from "zod";
-import validator from "validator";
 
 const configSchema = {
     VITE_BACK_BASE_URL: z
@@ -22,14 +21,6 @@ const configSchema = {
             }
         )
         .default("did:web:localhost%3A8080"),
-    VITE_AUTHORIZED_FQDNS: z.preprocess(
-        (val) =>
-            String(val)
-                .trim()
-                .split(",")
-                .filter((v) => validator.isFQDN(v)),
-        z.array(z.string().nonempty()).nonempty()
-    ),
 };
 
 export default defineConfig({
