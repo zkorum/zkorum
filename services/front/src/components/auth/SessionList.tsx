@@ -1,28 +1,28 @@
-import List from '@mui/material/List'
-import ListItem from '@mui/material/ListItem'
-import Grid from '@mui/material/Unstable_Grid2/Grid2'
-import ListItemAvatar from '@mui/material/ListItemAvatar'
-import ListItemText from '@mui/material/ListItemText'
-import { CustomAvatar } from './CustomAvatar'
-import ListItemButton from '@mui/material/ListItemButton'
-import Chip from '@mui/material/Chip'
-import { removeSession, type SessionData } from '../../store/reducers/session'
-import { logout, onChooseAccount } from '../../auth/auth'
-import IconButton from '@mui/material/IconButton'
-import DeleteIcon from '@mui/icons-material/Delete'
-import LogoutIcon from '@mui/icons-material/Logout'
-import { useAppDispatch } from '../../hooks'
-import { showError, showSuccess } from '../../store/reducers/snackbar'
-import { genericError, logoutMessage } from '../error/message'
-import React from 'react'
-import MenuList from '@mui/material/MenuList'
-import MenuItem from '@mui/material/MenuItem'
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import Grid from "@mui/material/Unstable_Grid2/Grid2";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import ListItemText from "@mui/material/ListItemText";
+import { CustomAvatar } from "./CustomAvatar";
+import ListItemButton from "@mui/material/ListItemButton";
+import Chip from "@mui/material/Chip";
+import { removeSession, type SessionData } from "../../store/reducers/session";
+import { logout, onChooseAccount } from "../../auth/auth";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { useAppDispatch } from "../../hooks";
+import { showError, showSuccess } from "../../store/reducers/snackbar";
+import { genericError, logoutMessage } from "../error/message";
+import React from "react";
+import MenuList from "@mui/material/MenuList";
+import MenuItem from "@mui/material/MenuItem";
 
 interface SessionListProps {
-    sessions: SessionData[]
-    activeSessionEmail: string
-    component: 'list' | 'menu'
-    onClick?: (session: SessionData) => Promise<void> | void
+    sessions: SessionData[];
+    activeSessionEmail: string;
+    component: "list" | "menu";
+    onClick?: (session: SessionData) => Promise<void> | void;
 }
 
 export function SessionList({
@@ -31,25 +31,25 @@ export function SessionList({
     component,
     onClick,
 }: SessionListProps) {
-    const dispatch = useAppDispatch()
+    const dispatch = useAppDispatch();
 
     async function onLogout(): Promise<void> {
         try {
-            await logout()
-            dispatch(showSuccess(logoutMessage))
+            await logout();
+            dispatch(showSuccess(logoutMessage));
         } catch (e) {
-            dispatch(showError(genericError))
+            dispatch(showError(genericError));
         }
     }
 
     interface ListItemProps {
-        session: SessionData
-        activeSessionEmail: string
+        session: SessionData;
+        activeSessionEmail: string;
     }
 
     function getSecondaryAction(session: SessionData, isActive: boolean) {
         switch (session.status) {
-            case 'authenticating':
+            case "authenticating":
                 return (
                     <IconButton
                         onClick={() => onRemove(session)}
@@ -58,9 +58,9 @@ export function SessionList({
                     >
                         <DeleteIcon color="error" />
                     </IconButton>
-                )
-            case 'verifying':
-                if (session.userId === undefined || session.userId === '') {
+                );
+            case "verifying":
+                if (session.userId === undefined || session.userId === "") {
                     // user has never been logged-in on this device
                     return (
                         <IconButton
@@ -70,11 +70,11 @@ export function SessionList({
                         >
                             <DeleteIcon color="error" />
                         </IconButton>
-                    )
+                    );
                 } else {
-                    return null
+                    return null;
                 }
-            case 'logged-in':
+            case "logged-in":
                 if (isActive) {
                     return (
                         <IconButton
@@ -84,17 +84,17 @@ export function SessionList({
                         >
                             <LogoutIcon color="error" />
                         </IconButton>
-                    )
+                    );
                 } else {
-                    return null
+                    return null;
                 }
-            case 'logged-out':
-                return null
+            case "logged-out":
+                return null;
         }
     }
 
     function onRemove(session: SessionData): void {
-        dispatch(removeSession({ email: session.email }))
+        dispatch(removeSession({ email: session.email }));
     }
 
     function getListItemButton({
@@ -109,7 +109,7 @@ export function SessionList({
                     onClick !== undefined
                         ? () => onClick(session)
                         : async () => {
-                              await onChooseAccount(session)
+                              await onChooseAccount(session);
                           }
                 }
             >
@@ -135,7 +135,7 @@ export function SessionList({
                                         color="success"
                                         variant="outlined"
                                     />
-                                ) : session.status === 'logged-in' ? (
+                                ) : session.status === "logged-in" ? (
                                     <Chip
                                         size="small"
                                         label="inactive"
@@ -148,10 +148,10 @@ export function SessionList({
                     }
                 ></ListItemText>
             </ListItemButton>
-        )
+        );
     }
 
-    if (component === 'list') {
+    if (component === "list") {
         return (
             <List>
                 <React.Fragment>
@@ -159,7 +159,7 @@ export function SessionList({
                         return (
                             <ListItem
                                 key={session.email}
-                                sx={{ maxHeight: '60%' }}
+                                sx={{ maxHeight: "60%" }}
                                 secondaryAction={getSecondaryAction(
                                     session,
                                     session.email === activeSessionEmail
@@ -170,25 +170,25 @@ export function SessionList({
                                     activeSessionEmail: activeSessionEmail,
                                 })}
                             </ListItem>
-                        )
+                        );
                     })}
                 </React.Fragment>
             </List>
-        )
+        );
     } else {
         return (
             <MenuList>
                 {sessions.map((session) => {
                     return (
-                        <MenuItem key={session.email} sx={{ maxHeight: '60%' }}>
+                        <MenuItem key={session.email} sx={{ maxHeight: "60%" }}>
                             {getListItemButton({
                                 session: session,
                                 activeSessionEmail: activeSessionEmail,
                             })}
                         </MenuItem>
-                    )
+                    );
                 })}
             </MenuList>
-        )
+        );
     }
 }

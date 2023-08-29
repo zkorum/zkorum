@@ -1,26 +1,26 @@
-import Box from '@mui/material/Box'
-import Container from '@mui/material/Container'
-import { Topbar } from '../Topbar'
-import { Outlet } from 'react-router-dom'
-import { BottomNavbar } from '../BottomNavbar'
-import Snackbar from '@mui/material/Snackbar'
-import { Alert } from '../shared/Alert'
-import { useAppDispatch, useAppSelector } from '../../hooks'
-import { closeSnackbar } from '../../store/reducers/snackbar'
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import { Topbar } from "../Topbar";
+import { Outlet } from "react-router-dom";
+import { BottomNavbar } from "../BottomNavbar";
+import Snackbar from "@mui/material/Snackbar";
+import { Alert } from "../shared/Alert";
+import { useAppDispatch, useAppSelector } from "../../hooks";
+import { closeSnackbar } from "../../store/reducers/snackbar";
 
 export function DashboardLayout() {
     const snackbarState = useAppSelector((state) => {
-        return state.snackbar
-    })
-    const dispatch = useAppDispatch()
+        return state.snackbar;
+    });
+    const dispatch = useAppDispatch();
     function handleCloseSnackbar(
         _event?: React.SyntheticEvent | Event,
         reason?: string
     ) {
-        if (reason === 'clickaway') {
-            return
+        if (reason === "clickaway") {
+            return;
         }
-        dispatch(closeSnackbar())
+        dispatch(closeSnackbar());
     }
 
     return (
@@ -31,7 +31,7 @@ export function DashboardLayout() {
             </Container>
             <BottomNavbar />
             <Snackbar
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 open={snackbarState.isOpen}
                 autoHideDuration={6000}
                 onClose={handleCloseSnackbar}
@@ -45,5 +45,5 @@ export function DashboardLayout() {
                 </Alert>
             </Snackbar>
         </Box>
-    )
+    );
 }

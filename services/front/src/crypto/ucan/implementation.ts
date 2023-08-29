@@ -1,15 +1,15 @@
 // Copyright ts-odd team
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
-import { SymmAlg } from 'keystore-idb/types.js'
+import { SymmAlg } from "keystore-idb/types.js";
 
-export { SymmAlg }
+export { SymmAlg };
 
 export type ImplementationOptions = {
-    exchangeKeyName: string
-    storeName: string
-    writeKeyName: string
-}
+    exchangeKeyName: string;
+    storeName: string;
+    writeKeyName: string;
+};
 
 export type Implementation = {
     aes: {
@@ -20,7 +20,7 @@ export type Implementation = {
             key: CryptoKey | Uint8Array,
             alg: SymmAlg,
             iv?: Uint8Array
-        ) => Promise<Uint8Array>
+        ) => Promise<Uint8Array>;
 
         // Related to AES-GCM, this will produce a cipher text with
         // a random `iv` prefixed into it. Unless, you provide the `iv` as a parameter.
@@ -29,10 +29,10 @@ export type Implementation = {
             key: CryptoKey | Uint8Array,
             alg: SymmAlg,
             iv?: Uint8Array
-        ) => Promise<Uint8Array>
-        exportKey: (key: CryptoKey) => Promise<Uint8Array>
-        genKey: (alg: SymmAlg) => Promise<CryptoKey>
-    }
+        ) => Promise<Uint8Array>;
+        exportKey: (key: CryptoKey) => Promise<Uint8Array>;
+        genKey: (alg: SymmAlg) => Promise<CryptoKey>;
+    };
 
     did: {
         /**
@@ -53,50 +53,50 @@ export type Implementation = {
         keyTypes: Record<
             string,
             {
-                magicBytes: Uint8Array
-                verify: (args: VerifyArgs) => Promise<boolean>
+                magicBytes: Uint8Array;
+                verify: (args: VerifyArgs) => Promise<boolean>;
             }
-        >
-    }
+        >;
+    };
 
     hash: {
-        sha256: (bytes: Uint8Array) => Promise<Uint8Array>
-    }
+        sha256: (bytes: Uint8Array) => Promise<Uint8Array>;
+    };
 
     keystore: {
-        clearStore: () => Promise<void>
-        decrypt: (encrypted: Uint8Array) => Promise<Uint8Array>
-        exportSymmKey: (name: string) => Promise<Uint8Array>
-        getAlgorithm: () => Promise<string> // This goes hand in hand with the DID keyTypes record
-        getUcanAlgorithm: () => Promise<string>
-        importSymmKey: (key: Uint8Array, name: string) => Promise<void>
-        keyExists: (keyName: string) => Promise<boolean>
-        publicExchangeKey: () => Promise<Uint8Array>
-        publicWriteKey: () => Promise<Uint8Array>
-        sign: (message: Uint8Array) => Promise<Uint8Array>
-    }
+        clearStore: () => Promise<void>;
+        decrypt: (encrypted: Uint8Array) => Promise<Uint8Array>;
+        exportSymmKey: (name: string) => Promise<Uint8Array>;
+        getAlgorithm: () => Promise<string>; // This goes hand in hand with the DID keyTypes record
+        getUcanAlgorithm: () => Promise<string>;
+        importSymmKey: (key: Uint8Array, name: string) => Promise<void>;
+        keyExists: (keyName: string) => Promise<boolean>;
+        publicExchangeKey: () => Promise<Uint8Array>;
+        publicWriteKey: () => Promise<Uint8Array>;
+        sign: (message: Uint8Array) => Promise<Uint8Array>;
+    };
 
     misc: {
-        randomNumbers: (options: { amount: number }) => Uint8Array
-    }
+        randomNumbers: (options: { amount: number }) => Uint8Array;
+    };
 
     rsa: {
         // Used for exchange keys only
         decrypt: (
             data: Uint8Array,
             privateKey: CryptoKey | Uint8Array
-        ) => Promise<Uint8Array>
+        ) => Promise<Uint8Array>;
         encrypt: (
             message: Uint8Array,
             publicKey: CryptoKey | Uint8Array
-        ) => Promise<Uint8Array>
-        exportPublicKey: (key: CryptoKey) => Promise<Uint8Array>
-        genKey: () => Promise<CryptoKeyPair>
-    }
-}
+        ) => Promise<Uint8Array>;
+        exportPublicKey: (key: CryptoKey) => Promise<Uint8Array>;
+        genKey: () => Promise<CryptoKeyPair>;
+    };
+};
 
 export type VerifyArgs = {
-    message: Uint8Array
-    publicKey: Uint8Array
-    signature: Uint8Array
-}
+    message: Uint8Array;
+    publicKey: Uint8Array;
+    signature: Uint8Array;
+};

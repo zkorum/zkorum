@@ -1,22 +1,22 @@
-import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
-import React from 'react'
-import { ZodType } from '../../shared/types/zod'
-import { handleOnAuthenticate } from '../../auth/auth'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Checkbox from '@mui/material/Checkbox'
-import FormControl from '@mui/material/FormControl'
-import Typography from '@mui/material/Typography'
-import Button from '@mui/material/Button'
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import React from "react";
+import { ZodType } from "../../shared/types/zod";
+import { handleOnAuthenticate } from "../../auth/auth";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import FormControl from "@mui/material/FormControl";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 
 interface AuthFormProps {
-    autoFocus: boolean
-    email: string
-    setEmail: (email: string) => void
-    isEmailValid: boolean
-    setIsEmailValid: (emailHelper: boolean) => void
-    emailHelper: string
-    setEmailHelper: (emailHelper: string) => void
+    autoFocus: boolean;
+    email: string;
+    setEmail: (email: string) => void;
+    isEmailValid: boolean;
+    setIsEmailValid: (emailHelper: boolean) => void;
+    emailHelper: string;
+    setEmailHelper: (emailHelper: string) => void;
 }
 
 export function AuthForm({
@@ -28,32 +28,33 @@ export function AuthForm({
     emailHelper,
     setEmailHelper,
 }: AuthFormProps) {
-    const [isTrusted, setIsTrusted] = React.useState<boolean>(false)
-    const [hasGivenConsent, setHasGivenConsent] = React.useState<boolean>(false)
+    const [isTrusted, setIsTrusted] = React.useState<boolean>(false);
+    const [hasGivenConsent, setHasGivenConsent] =
+        React.useState<boolean>(false);
 
     function validateEmail(emailToValidate: string) {
-        if (emailToValidate === '') {
-            setIsEmailValid(false)
-            setEmailHelper(' ')
-            return
+        if (emailToValidate === "") {
+            setIsEmailValid(false);
+            setEmailHelper(" ");
+            return;
         }
-        const result = ZodType.email.safeParse(emailToValidate)
+        const result = ZodType.email.safeParse(emailToValidate);
         if (!result.success) {
-            const formatted = result.error.format()
-            setIsEmailValid(false)
-            setEmailHelper(formatted._errors[0])
+            const formatted = result.error.format();
+            setIsEmailValid(false);
+            setEmailHelper(formatted._errors[0]);
         } else {
             const result = ZodType.authorizedEmail(
                 import.meta.env.VITE_AUTHORIZED_FQDNS
-            ).safeParse(emailToValidate)
+            ).safeParse(emailToValidate);
             if (!result.success) {
-                setIsEmailValid(false)
+                setIsEmailValid(false);
                 setEmailHelper(
-                    'Closed Alpha is limited to authorized email addresses - stay tuned for future releases!'
-                )
+                    "Closed Alpha is limited to authorized email addresses - stay tuned for future releases!"
+                );
             } else {
-                setIsEmailValid(true)
-                setEmailHelper(' ')
+                setIsEmailValid(true);
+                setEmailHelper(" ");
             }
         }
     }
@@ -61,9 +62,9 @@ export function AuthForm({
     return (
         <Box
             sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
             }}
         >
             <Box sx={{ mt: 1 }}>
@@ -75,13 +76,13 @@ export function AuthForm({
                     id="email"
                     label="Email Address"
                     name="email"
-                    error={email !== '' && !isEmailValid}
+                    error={email !== "" && !isEmailValid}
                     helperText={emailHelper} // must always be set to keep same height (see link at variable definition)
                     value={email}
                     onChange={(event: React.FocusEvent<HTMLInputElement>) => {
                         if (event.target.value !== email) {
-                            setEmail(event.target.value)
-                            validateEmail(event.target.value)
+                            setEmail(event.target.value);
+                            validateEmail(event.target.value);
                         }
                     }}
                 />
@@ -102,7 +103,7 @@ export function AuthForm({
                                 />
                             }
                             label={
-                                <Typography variant={'body2'}>
+                                <Typography variant={"body2"}>
                                     I understand that as an alpha version, this
                                     product may contain accidental security
                                     flaws compromising privacy guarantees
@@ -126,7 +127,7 @@ export function AuthForm({
                                 />
                             }
                             label={
-                                <Typography variant={'body2'}>
+                                <Typography variant={"body2"}>
                                     This is a private & trusted device - stay
                                     logged-in
                                 </Typography>
@@ -147,5 +148,5 @@ export function AuthForm({
                 </Box>
             </Box>
         </Box>
-    )
+    );
 }

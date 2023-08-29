@@ -1,70 +1,71 @@
-import Box from '@mui/material/Box'
-import CircularProgress from '@mui/material/CircularProgress'
-import LoadingButton from '@mui/lab/LoadingButton'
-import Typography from '@mui/material/Typography'
-import { MuiOtpInput } from 'mui-one-time-password-input'
-import React from 'react'
-import { useCountdown } from 'usehooks-ts'
-import { AuthVerifyOtpPost200ResponseReasonEnum } from '../../api'
-import { authenticate, validateOtp } from '../../auth/auth'
-import { useAppDispatch, useAppSelector } from '../../hooks'
-import { ZodType } from '../../shared/types/zod'
-import { CircularProgressCountdown } from '../shared/CircularProgressCountdown'
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import LoadingButton from "@mui/lab/LoadingButton";
+import Typography from "@mui/material/Typography";
+import { MuiOtpInput } from "mui-one-time-password-input";
+import React from "react";
+import { useCountdown } from "usehooks-ts";
+import { AuthVerifyOtpPost200ResponseReasonEnum } from "../../api";
+import { authenticate, validateOtp } from "../../auth/auth";
+import { useAppDispatch, useAppSelector } from "../../hooks";
+import { ZodType } from "../../shared/types/zod";
+import { CircularProgressCountdown } from "../shared/CircularProgressCountdown";
 import {
     showError,
     showInfo,
     showSuccess,
     showWarning,
-} from '../../store/reducers/snackbar'
-import { loggedIn } from '../../store/reducers/session'
-import { authSuccess, genericError } from '../error/message'
+} from "../../store/reducers/snackbar";
+import { loggedIn } from "../../store/reducers/session";
+import { authSuccess, genericError } from "../error/message";
 
 export function OtpVerify() {
-    const [otp, setOtp] = React.useState<string>('')
-    const [isVerifyingCode, setIsVerifyingCode] = React.useState<boolean>(false)
+    const [otp, setOtp] = React.useState<string>("");
+    const [isVerifyingCode, setIsVerifyingCode] =
+        React.useState<boolean>(false);
     const [isCurrentCodeActive, setIsCurrentCodeActive] =
-        React.useState<boolean>(true)
+        React.useState<boolean>(true);
     const [canRequestNewCode, setCanRequestNewCode] =
-        React.useState<boolean>(false)
+        React.useState<boolean>(false);
     const [requestingNewCode, setRequestingNewCode] =
-        React.useState<boolean>(false)
+        React.useState<boolean>(false);
 
-    const dispatch = useAppDispatch()
+    const dispatch = useAppDispatch();
 
     const pendingEmail = useAppSelector((state) => {
-        return state.sessions.pendingSessionEmail
-    })
+        return state.sessions.pendingSessionEmail;
+    });
     // TODO: send DIDs via email, show them on this page and ask user to verify it's the right ones to counter MITM
     // TODO: send codeID and ask to verify it's the right one (avoiding loop of not using the code from the right email)
     const currentCodeExpiry = useAppSelector((state) => {
-        const pendingSessionUserId = state.sessions.pendingSessionEmail
+        const pendingSessionUserId = state.sessions.pendingSessionEmail;
         const currentCodeExpiryStr = state.sessions.sessions[
             pendingSessionUserId
-        ].codeExpiry as string // at this point it SHALL not be possible for it to be undefined
-        const now = new Date().getTime() // ms
-        const currentCodeDateExpiry = Date.parse(currentCodeExpiryStr) // ms
+        ].codeExpiry as string; // at this point it SHALL not be possible for it to be undefined
+        const now = new Date().getTime(); // ms
+        const currentCodeDateExpiry = Date.parse(currentCodeExpiryStr); // ms
         const secondsUntilCodeExpiry = Math.round(
             (currentCodeDateExpiry - now) / 1000
-        )
+        );
         if (secondsUntilCodeExpiry < 0) {
-            return 0
+            return 0;
         }
-        return secondsUntilCodeExpiry
-    })
+        return secondsUntilCodeExpiry;
+    });
     const nextCodeSoonestTime = useAppSelector((state) => {
-        const pendingSessionUserId = state.sessions.pendingSessionEmail
+        const pendingSessionUserId = state.sessions.pendingSessionEmail;
         const nextCodeStr = state.sessions.sessions[pendingSessionUserId]
-            .nextCodeSoonestTime as string // at this point it SHALL not be possible for it to be undefined
-        const now = new Date().getTime() // ms
-        const nextCodeDate = Date.parse(nextCodeStr) // ms
+            .nextCodeSoonestTime as string; // at this point it SHALL not be possible for it to be undefined
+        const now = new Date().getTime(); // ms
+        const nextCodeDate = Date.parse(nextCodeStr); // ms
         const secondsUntilNextCodeSoonestTime = Math.round(
             (nextCodeDate - now) / 1000
-        )
+        );
         if (secondsUntilNextCodeSoonestTime < 0) {
-            return 0
+            return 0;
         }
-        return secondsUntilNextCodeSoonestTime
-    })
+        return secondsUntilNextCodeSoonestTime;
+    });
 
     const [
         secondsUntilAllowingNewCode,
@@ -75,7 +76,7 @@ export function OtpVerify() {
     ] = useCountdown({
         countStart: nextCodeSoonestTime,
         intervalMs: 1000,
-    })
+    });
 
     const [
         secondsUntilCodeExpiry,
@@ -86,37 +87,37 @@ export function OtpVerify() {
     ] = useCountdown({
         countStart: currentCodeExpiry,
         intervalMs: 1000,
-    })
+    });
 
     React.useEffect(() => {
-        startNewCodeCoundown()
-        startCodeExpiryCoundown()
-    }, [])
+        startNewCodeCoundown();
+        startCodeExpiryCoundown();
+    }, []);
 
     React.useEffect(() => {
         if (secondsUntilCodeExpiry === 0) {
-            setIsCurrentCodeActive(false)
+            setIsCurrentCodeActive(false);
         }
-    }, [secondsUntilCodeExpiry])
+    }, [secondsUntilCodeExpiry]);
 
     React.useEffect(() => {
         if (secondsUntilAllowingNewCode === 0) {
-            setCanRequestNewCode(true)
+            setCanRequestNewCode(true);
         } else {
-            setCanRequestNewCode(false)
+            setCanRequestNewCode(false);
         }
-    }, [secondsUntilAllowingNewCode])
+    }, [secondsUntilAllowingNewCode]);
 
     async function handleOnComplete(value: string) {
-        const result = ZodType.code.safeParse(value)
+        const result = ZodType.code.safeParse(value);
         if (!result.success) {
             // should not happen - so we log this one
-            console.error('Error while parsing code', result.error)
-            dispatch(showError(genericError))
+            console.error("Error while parsing code", result.error);
+            dispatch(showError(genericError));
         } else {
-            setIsVerifyingCode(true)
+            setIsVerifyingCode(true);
             try {
-                const validateOtpResult = await validateOtp(result.data)
+                const validateOtpResult = await validateOtp(result.data);
                 if (validateOtpResult.success) {
                     // update store and close modal
                     dispatch(
@@ -124,83 +125,83 @@ export function OtpVerify() {
                             email: pendingEmail,
                             userId: validateOtpResult.userId,
                         })
-                    )
-                    dispatch(showSuccess(authSuccess))
+                    );
+                    dispatch(showSuccess(authSuccess));
                 } else {
                     switch (validateOtpResult.reason) {
                         case AuthVerifyOtpPost200ResponseReasonEnum.ExpiredCode:
-                            setIsCurrentCodeActive(false)
+                            setIsCurrentCodeActive(false);
                             dispatch(
-                                showWarning('Code expired - request a new one')
-                            )
-                            break
+                                showWarning("Code expired - request a new one")
+                            );
+                            break;
                         case AuthVerifyOtpPost200ResponseReasonEnum.WrongGuess:
-                            dispatch(showWarning('Wrong guess'))
-                            break
+                            dispatch(showWarning("Wrong guess"));
+                            break;
                         case AuthVerifyOtpPost200ResponseReasonEnum.TooManyWrongGuess:
-                            setIsCurrentCodeActive(false)
+                            setIsCurrentCodeActive(false);
                             dispatch(
                                 showWarning(
-                                    'Too many wrong guess - request a new code'
+                                    "Too many wrong guess - request a new code"
                                 )
-                            )
-                            break
+                            );
+                            break;
                     }
                 }
             } catch (_e) {
                 // TODO: take into account the case when user is simply already logged-in - and adapt flow for this case (409)
-                dispatch(showError(genericError))
+                dispatch(showError(genericError));
             }
-            setIsVerifyingCode(false)
+            setIsVerifyingCode(false);
         }
     }
 
     function handleRequestNewCode() {
-        setRequestingNewCode(true)
+        setRequestingNewCode(true);
         authenticate(pendingEmail, true)
             .then((_response) => {
                 dispatch(
                     showInfo(
-                        'New code sent to your email - previous code invalidated'
+                        "New code sent to your email - previous code invalidated"
                     )
-                )
-                setCanRequestNewCode(false)
-                resetNewCodeCoundown()
-                startNewCodeCoundown()
-                resetCodeExpiryCountdown()
-                startCodeExpiryCoundown()
-                setIsCurrentCodeActive(true)
+                );
+                setCanRequestNewCode(false);
+                resetNewCodeCoundown();
+                startNewCodeCoundown();
+                resetCodeExpiryCountdown();
+                startCodeExpiryCoundown();
+                setIsCurrentCodeActive(true);
             })
             .catch((_e) => {
                 // TODO: show better error if rate-limited
-                dispatch(showError(genericError))
+                dispatch(showError(genericError));
             })
             .finally(() => {
-                setRequestingNewCode(false)
-            })
+                setRequestingNewCode(false);
+            });
     }
 
     function handleChange(value: string) {
-        setOtp(value)
+        setOtp(value);
     }
 
     function validateChar(char: string) {
-        const result = ZodType.digit.safeParse(char)
-        return result.success
+        const result = ZodType.digit.safeParse(char);
+        return result.success;
     }
 
     return (
         <Box
             sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
             }}
         >
             <Box sx={{ my: 3 }}>
-                <Typography component={'span'}>
+                <Typography component={"span"}>
                     {/* why span? see https://stackoverflow.com/a/53494821/11046178 */}
-                    We've sent a 6-digits code to{' '}
+                    We've sent a 6-digits code to{" "}
                     <Box fontWeight="medium" display="inline">
                         {pendingEmail}
                     </Box>
@@ -211,7 +212,7 @@ export function OtpVerify() {
             <Box sx={{ mb: 2 }}>
                 <CircularProgressCountdown
                     value={secondsUntilCodeExpiry}
-                    unit={'s'}
+                    unit={"s"}
                 />
             </Box>
             <Box>
@@ -238,7 +239,7 @@ export function OtpVerify() {
             <Box>
                 <CircularProgressCountdown
                     value={secondsUntilAllowingNewCode}
-                    unit={'s'}
+                    unit={"s"}
                 />
             </Box>
             <Box>
@@ -252,5 +253,5 @@ export function OtpVerify() {
                 </LoadingButton>
             </Box>
         </Box>
-    )
+    );
 }

@@ -1,24 +1,24 @@
-import { createTheme } from '@mui/material/styles'
-import { red } from '@mui/material/colors'
+import { createTheme } from "@mui/material/styles";
+import { red } from "@mui/material/colors";
 
 const background = {
-    paper: '#fff',
-    default: '#fff',
-}
+    paper: "#fff",
+    default: "#fff",
+};
 
 const text = {
     // https://mui.com/material-ui/customization/default-theme/?expand-path=$.palette#explore
-    primary: 'rgba(0,0,0,0.87)',
-}
+    primary: "rgba(0,0,0,0.87)",
+};
 
 // Create a theme instance.
 const theme = createTheme({
     palette: {
         primary: {
-            main: '#00275b',
+            main: "#00275b",
         },
         secondary: {
-            main: '#19857b',
+            main: "#19857b",
         },
         error: {
             main: red.A400,
@@ -41,6 +41,6 @@ const theme = createTheme({
             },
         },
     },
-})
+});
 
-export default theme
+export default theme;

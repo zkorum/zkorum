@@ -1,5 +1,5 @@
-import * as Crypto from './implementation.js'
-import * as BrowserCrypto from './implementation/browser.js'
+import * as Crypto from "./implementation.js";
+import * as BrowserCrypto from "./implementation/browser.js";
 
 export async function getOrGenerateCryptoKey(
     userId: string
@@ -8,6 +8,6 @@ export async function getOrGenerateCryptoKey(
         storeName: `${userId}-zkorum`,
         exchangeKeyName: `${userId}-exchange-key`,
         writeKeyName: `${userId}-write-key`,
-    })
-    return newCryptoKey
+    });
+    return newCryptoKey;
 }

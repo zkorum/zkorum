@@ -1,42 +1,42 @@
-import CloseIcon from '@mui/icons-material/Close'
-import Box from '@mui/material/Box'
-import Dialog from '@mui/material/Dialog'
-import DialogContent from '@mui/material/DialogContent'
-import DialogTitle from '@mui/material/DialogTitle'
-import IconButton from '@mui/material/IconButton'
-import Typography from '@mui/material/Typography'
-import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
-import { Outlet } from 'react-router-dom'
-import { ZKorumIcon } from '../../ZKorumIcon'
-import { useAppDispatch, useAppSelector } from '../../hooks'
+import CloseIcon from "@mui/icons-material/Close";
+import Box from "@mui/material/Box";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
+import { Outlet } from "react-router-dom";
+import { ZKorumIcon } from "../../ZKorumIcon";
+import { useAppDispatch, useAppSelector } from "../../hooks";
 import {
     closeAuthModal,
     resetPendingSession,
-} from '../../store/reducers/session'
-import { Authenticate } from './Authenticate'
-import { OtpVerify } from './OtpVerify'
-import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace'
+} from "../../store/reducers/session";
+import { Authenticate } from "./Authenticate";
+import { OtpVerify } from "./OtpVerify";
+import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 
 export function AuthDialog() {
-    const isModalOpen = useAppSelector((state) => state.sessions.isModalOpen)
-    const dispatch = useAppDispatch()
+    const isModalOpen = useAppSelector((state) => state.sessions.isModalOpen);
+    const dispatch = useAppDispatch();
     const pendingSession = useAppSelector((state) => {
-        const pendingSessionUserId = state.sessions.pendingSessionEmail
-        return state.sessions.sessions[pendingSessionUserId]
-    })
+        const pendingSessionUserId = state.sessions.pendingSessionEmail;
+        return state.sessions.sessions[pendingSessionUserId];
+    });
 
     function handleClose() {
-        dispatch(closeAuthModal())
+        dispatch(closeAuthModal());
     }
 
     function getGoBackButton(): JSX.Element | null {
-        if (pendingSession?.status === 'verifying') {
+        if (pendingSession?.status === "verifying") {
             return (
                 <IconButton
                     aria-label="close"
                     onClick={() => dispatch(resetPendingSession())}
                     sx={{
-                        position: 'absolute',
+                        position: "absolute",
                         left: 8,
                         top: 8,
                         color: (theme) => theme.palette.grey[500],
@@ -44,9 +44,9 @@ export function AuthDialog() {
                 >
                     <KeyboardBackspaceIcon />
                 </IconButton>
-            )
+            );
         } else {
-            return null
+            return null;
         }
     }
 
@@ -56,9 +56,9 @@ export function AuthDialog() {
                 <DialogTitle>
                     <Box
                         sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
                         }}
                     >
                         <Box>
@@ -68,7 +68,7 @@ export function AuthDialog() {
                                 alignItems="center"
                             >
                                 <Grid>
-                                    <ZKorumIcon iconBackgroundColor={'dark'} />
+                                    <ZKorumIcon iconBackgroundColor={"dark"} />
                                 </Grid>
                                 <Grid>
                                     <Typography variant="body2">
@@ -82,7 +82,7 @@ export function AuthDialog() {
                         aria-label="close"
                         onClick={handleClose}
                         sx={{
-                            position: 'absolute',
+                            position: "absolute",
                             right: 8,
                             top: 8,
                             color: (theme) => theme.palette.grey[500],
@@ -93,7 +93,7 @@ export function AuthDialog() {
                     {getGoBackButton()}
                 </DialogTitle>
                 <DialogContent>
-                    {pendingSession?.status === 'verifying' ? (
+                    {pendingSession?.status === "verifying" ? (
                         <OtpVerify />
                     ) : (
                         <Authenticate />
@@ -102,5 +102,5 @@ export function AuthDialog() {
             </Dialog>
             <Outlet />
         </Box>
-    )
+    );
 }

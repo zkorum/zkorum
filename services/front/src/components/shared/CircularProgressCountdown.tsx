@@ -1,14 +1,14 @@
-import Box from '@mui/material/Box'
+import Box from "@mui/material/Box";
 import CircularProgress, {
     type CircularProgressProps,
-} from '@mui/material/CircularProgress'
-import Typography from '@mui/material/Typography'
+} from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
 
 export function CircularProgressCountdown(
     props: CircularProgressProps & { value: number; unit: string }
 ) {
     return (
-        <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+        <Box sx={{ position: "relative", display: "inline-flex" }}>
             <CircularProgress variant="determinate" {...props} />
             <Box
                 sx={{
@@ -16,10 +16,10 @@ export function CircularProgressCountdown(
                     left: 0,
                     bottom: 0,
                     right: 0,
-                    position: 'absolute',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    position: "absolute",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                 }}
             >
                 <Typography
@@ -29,5 +29,5 @@ export function CircularProgressCountdown(
                 >{`${Math.round(props.value)}${props.unit}`}</Typography>
             </Box>
         </Box>
-    )
+    );
 }
