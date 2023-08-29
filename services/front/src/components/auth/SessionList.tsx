@@ -17,6 +17,7 @@ import { genericError, logoutMessage } from "../error/message";
 import React from "react";
 import MenuList from "@mui/material/MenuList";
 import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 
 interface SessionListProps {
     sessions: SessionData[];
@@ -116,8 +117,10 @@ export function SessionList({
                 <ListItemAvatar>
                     <CustomAvatar email={session.email} />
                 </ListItemAvatar>
+                {/* disableTypography necessary to avoid warning: <div> cannot appear as a descendant of <p> */}
                 <ListItemText
                     primary={session.email}
+                    disableTypography
                     secondary={
                         <Grid
                             container
@@ -126,7 +129,14 @@ export function SessionList({
                             justifyContent="flex-start"
                             spacing={1}
                         >
-                            <Grid>{session.status}</Grid>
+                            <Grid>
+                                <Typography
+                                    color="text.secondary"
+                                    variant={"body2"}
+                                >
+                                    {session.status}
+                                </Typography>
+                            </Grid>
                             <Grid>
                                 {session.email === activeSessionEmail ? (
                                     <Chip
