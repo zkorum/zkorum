@@ -10,6 +10,7 @@
         "db:drop": "drizzle-kit drop",
         "db:generate": "drizzle-kit generate:pg && ./scripts/rename_sql_migration_file.sh drizzle/",
         "db:migrate": "docker run --rm --network host -v ${PWD}:/flyway/conf -v ${PWD}/drizzle:/flyway/sql flyway/flyway migrate",
+        "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format:check": "prettier . --check",
         "format:write": "prettier . --write"
     },
@@ -48,7 +49,11 @@
     "devDependencies": {
         "@openapitools/openapi-generator-cli": "^2.7.0",
         "@types/node": "^20.4.2",
+        "@typescript-eslint/eslint-plugin": "^6.5.0",
+        "@typescript-eslint/parser": "^6.5.0",
         "drizzle-kit": "^0.19.12",
+        "eslint": "^8.48.0",
+        "eslint-config-prettier": "^9.0.0",
         "pino-pretty": "^10.0.1",
         "prettier": "^3.0.3",
         "tsx": "^3.12.7",

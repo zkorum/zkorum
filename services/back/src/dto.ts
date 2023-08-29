@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ZodType, type FQDN } from "./shared/types/zod.js";
+import { ZodType } from "./shared/types/zod.js";
 
 export class Dto {
     static authenticateRequestBody = z
