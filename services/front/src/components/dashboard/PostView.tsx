@@ -1,10 +1,10 @@
-import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PublicIcon from '@mui/icons-material/Public';
 import PollIcon from '@mui/icons-material/Poll';
 import CommentIcon from '@mui/icons-material/Comment';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Grid } from '@mui/material';
 interface PostProps {
   post: Post;
 }
