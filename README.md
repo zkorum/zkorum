@@ -73,6 +73,10 @@ We generate an `openapi-zkorum.yml` file from the backend, and then use [openapi
 
 Some typescript source files are shared directly without using npm packages - by copy-pasting using rsync.
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md)
+
 ## License
 
 See [COPYING-README](COPYING-README.md)
