@@ -73,17 +73,17 @@ export async function authenticate(
     }
 }
 
-export async function validateOtp(
+export async function verifyOtp(
     code: number
 ): Promise<AuthVerifyOtpPost200Response> {
-    const validateOtpResult = await DefaultApiFactory(
+    const verifyOtpResult = await DefaultApiFactory(
         undefined,
         undefined,
         pendingSessionUcanAxios
     ).authVerifyOtpPost({
         code: code,
     });
-    return validateOtpResult.data;
+    return verifyOtpResult.data;
 }
 
 export async function logout() {

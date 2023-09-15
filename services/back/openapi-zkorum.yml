@@ -50,6 +50,26 @@ paths:
                   - codeExpiry
                   - nextCodeSoonestTime
                 additionalProperties: false
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                    enum:
+                      - awaiting_syncing
+                      - already_logged_in
+                  userId:
+                    type: string
+                    format: uuid
+                    minLength: 1
+                required:
+                  - reason
+                  - userId
+                additionalProperties: false
   /auth/verifyOtp:
     post:
       requestBody:
@@ -103,9 +123,106 @@ paths:
                       - success
                       - reason
                     additionalProperties: false
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                    enum:
+                      - awaiting_syncing
+                      - already_logged_in
+                  userId:
+                    type: string
+                    format: uuid
+                    minLength: 1
+                required:
+                  - reason
+                  - userId
+                additionalProperties: false
   /auth/logout:
     post:
       responses:
         "200":
           description: Default Response
+  /auth/sync:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                  minLength: 1
+                  description: Email address
+                secretBlindedCredentialRequest:
+                  type: string
+              required:
+                - email
+              additionalProperties: false
+        required: true
+      responses:
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                    enum:
+                      - already_syncing
+                  userId:
+                    type: string
+                    format: uuid
+                    minLength: 1
+                required:
+                  - reason
+                  - userId
+                additionalProperties: false
+  /credential/createOrGetEmailCredentials:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                  minLength: 1
+                  description: Email address
+                secretBlindedCredentialRequest:
+                  type: string
+              required:
+                - email
+              additionalProperties: false
+        required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emailCredential:
+                    type: string
+                    minLength: 1
+                  secretBlindedCredential:
+                    type: string
+                required:
+                  - emailCredential
+                  - secretBlindedCredential
+                additionalProperties: false
 servers: []

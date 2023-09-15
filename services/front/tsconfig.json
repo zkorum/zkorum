@@ -10,9 +10,9 @@
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,
         "resolveJsonModule": true,
-        // "isolatedModules": true // redundant with verbatimModuleSyntax
+        // "isolatedModules": true, // if true, redundant with verbatimModuleSyntax, was true by default with vite
         // https://vitejs.dev/guide/features.html#transpile-only
-        "verbatimModuleSyntax": true,
+        "verbatimModuleSyntax": true, // causes isolatedModules: true by default
         "noEmit": true,
         "jsx": "react-jsx",
 
@@ -22,6 +22,7 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
         "forceConsistentCasingInFileNames": true,
+        "maxNodeModuleJsDepth": 0,
         "types": ["vite-plugin-svgr/client"]
     },
     "include": ["src"],

@@ -45,6 +45,33 @@ export interface AuthAuthenticatePost200Response {
 /**
  * 
  * @export
+ * @interface AuthAuthenticatePost409Response
+ */
+export interface AuthAuthenticatePost409Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'reason': AuthAuthenticatePost409ResponseReasonEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'userId': string;
+}
+
+export const AuthAuthenticatePost409ResponseReasonEnum = {
+    AwaitingSyncing: 'awaiting_syncing',
+    AlreadyLoggedIn: 'already_logged_in'
+} as const;
+
+export type AuthAuthenticatePost409ResponseReasonEnum = typeof AuthAuthenticatePost409ResponseReasonEnum[keyof typeof AuthAuthenticatePost409ResponseReasonEnum];
+
+/**
+ * 
+ * @export
  * @interface AuthAuthenticatePostRequest
  */
 export interface AuthAuthenticatePostRequest {
@@ -66,6 +93,51 @@ export interface AuthAuthenticatePostRequest {
      * @memberof AuthAuthenticatePostRequest
      */
     'isRequestingNewCode': boolean;
+}
+/**
+ * 
+ * @export
+ * @interface AuthSyncPost409Response
+ */
+export interface AuthSyncPost409Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthSyncPost409Response
+     */
+    'reason': AuthSyncPost409ResponseReasonEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthSyncPost409Response
+     */
+    'userId': string;
+}
+
+export const AuthSyncPost409ResponseReasonEnum = {
+    AlreadySyncing: 'already_syncing'
+} as const;
+
+export type AuthSyncPost409ResponseReasonEnum = typeof AuthSyncPost409ResponseReasonEnum[keyof typeof AuthSyncPost409ResponseReasonEnum];
+
+/**
+ * 
+ * @export
+ * @interface AuthSyncPostRequest
+ */
+export interface AuthSyncPostRequest {
+    /**
+     * Email address
+     * @type {string}
+     * @memberof AuthSyncPostRequest
+     */
+    'email': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthSyncPostRequest
+     */
+    'secretBlindedCredentialRequest'?: string;
 }
 /**
  * 
@@ -161,6 +233,25 @@ export interface AuthVerifyOtpPostRequest {
      */
     'code': number;
 }
+/**
+ * 
+ * @export
+ * @interface CredentialCreateOrGetEmailCredentialsPost200Response
+ */
+export interface CredentialCreateOrGetEmailCredentialsPost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof CredentialCreateOrGetEmailCredentialsPost200Response
+     */
+    'emailCredential': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CredentialCreateOrGetEmailCredentialsPost200Response
+     */
+    'secretBlindedCredential': string;
+}
 
 /**
  * DefaultApi - axios parameter creator
@@ -234,6 +325,41 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authSyncPost: async (authSyncPostRequest: AuthSyncPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'authSyncPostRequest' is not null or undefined
+            assertParamExists('authSyncPost', 'authSyncPostRequest', authSyncPostRequest)
+            const localVarPath = `/auth/sync`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(authSyncPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -261,6 +387,41 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(authVerifyOtpPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        credentialCreateOrGetEmailCredentialsPost: async (authSyncPostRequest: AuthSyncPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'authSyncPostRequest' is not null or undefined
+            assertParamExists('credentialCreateOrGetEmailCredentialsPost', 'authSyncPostRequest', authSyncPostRequest)
+            const localVarPath = `/credential/createOrGetEmailCredentials`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(authSyncPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -298,12 +459,32 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authSyncPost(authSyncPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         async authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthVerifyOtpPost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authVerifyOtpPost(authVerifyOtpPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async credentialCreateOrGetEmailCredentialsPost(authSyncPostRequest: AuthSyncPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialCreateOrGetEmailCredentialsPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.credentialCreateOrGetEmailCredentialsPost(authSyncPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -335,12 +516,30 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: any): AxiosPromise<void> {
+            return localVarFp.authSyncPost(authSyncPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: any): AxiosPromise<AuthVerifyOtpPost200Response> {
             return localVarFp.authVerifyOtpPost(authVerifyOtpPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        credentialCreateOrGetEmailCredentialsPost(authSyncPostRequest: AuthSyncPostRequest, options?: any): AxiosPromise<CredentialCreateOrGetEmailCredentialsPost200Response> {
+            return localVarFp.credentialCreateOrGetEmailCredentialsPost(authSyncPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -375,6 +574,17 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
+     * @param {AuthSyncPostRequest} authSyncPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authSyncPost(authSyncPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -382,6 +592,17 @@ export class DefaultApi extends BaseAPI {
      */
     public authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).authVerifyOtpPost(authVerifyOtpPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {AuthSyncPostRequest} authSyncPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public credentialCreateOrGetEmailCredentialsPost(authSyncPostRequest: AuthSyncPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).credentialCreateOrGetEmailCredentialsPost(authSyncPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

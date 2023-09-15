@@ -6,7 +6,28 @@ import {
     uuid,
     varchar,
     integer,
+    boolean,
+    jsonb,
+    serial,
+    customType,
 } from "drizzle-orm/pg-core";
+import * as uint8arrays from "uint8arrays";
+
+export const bytea = customType<{
+    data: string;
+    notNull: false;
+    default: false;
+}>({
+    dataType() {
+        return "bytea";
+    },
+    toDriver(val: string) {
+        return uint8arrays.fromString(val, "base64url");
+    },
+    fromDriver(val) {
+        return uint8arrays.toString(val as Uint8Array, "base64url");
+    },
+});
 
 // One user == one account.
 // Inserting a record in that table means that the user has been successfully registered.
@@ -40,7 +61,7 @@ export const emailType = pgEnum("email_type", [
 // That's why email is primaryKey even though it can change from a user's perspective: changing an email is considered adding another record to this table, and removing the old one.
 // Emails in that table have already been validated by the user at least once and are related to an existing registered user.
 export const emailTable = pgTable("email", {
-    email: varchar("email", { length: 254 }).primaryKey(),
+    email: varchar("email", { length: 254 }).notNull().primaryKey(),
     type: emailType("type").notNull(),
     userId: uuid("user_id")
         .references(() => userTable.id)
@@ -60,6 +81,8 @@ export const deviceTable = pgTable("device", {
         .notNull(),
     // TODO: isTrusted: boolean("is_trusted").notNull(), // if set to true by user then, device should stay logged-in indefinitely until log out action
     sessionExpiry: timestamp("session_expiry").notNull(), // on register, a new login session is always started, hence the notNull. This column is updated to now + 15 minutes at each request when isTrusted == false. Otherwise, expiry will be now + 1000 years - meaning no expiry.
+    isSyncing: boolean("is_syncing").notNull().default(false), // devices belonging to the same user and with isSyncing=true automatically sync credentials and presentations between each other
+    encryptedSecrets: bytea("encrypted_secrets"), // contains symmetric encryption key, and secrets for blinded credentials
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -85,6 +108,32 @@ export const authAttemptTable = pgTable("auth_attempt", {
     codeExpiry: timestamp("code_expiry").notNull(),
     guessAttemptAmount: integer("guess_attempt_amount").default(0).notNull(),
     lastEmailSentAt: timestamp("last_email_sent_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// "emailCredential" is an Email-specific verifiable credential issued by ZKorum, as opposed to a VC issued by an external authority. It contains the result of the forms filled by the associated user.
+// this table may contain revoke credentials
+export const credentialEmailTable = pgTable("credential_email", {
+    id: serial("id").primaryKey(),
+    credential: jsonb("credential").unique(),
+    email: varchar("email", { length: 254 })
+        .references(() => emailTable.email)
+        .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// "secretCredential" is a blinded credential that contains a blinded secret used for creating a post or responding as comments, NOT for responding to a vote/poll. Same secret means generating the same pseudonym across usage. No need for unicity when recovery after loss as this pseudonym is not used for polling/voting and we don't care about double vote, but a fixed pseudonym is necessary for moderation.
+// on secret loss, user would start the recovery process which is rate-limited and only allowed if the user is not banned/suspended. On recovery user would generate a brand new secret and hence have a brand new pseudonym.
+// this table may contained revoke credentials
+// it is necessary to keep them for the frontend to be able to regenerate to revoked pseudonyms.
+export const credentialSecretTable = pgTable("credential_secret", {
+    id: serial("id").primaryKey(),
+    credential: jsonb("credential").unique(),
+    userId: uuid("user_id")
+        .references(() => userTable.id)
+        .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

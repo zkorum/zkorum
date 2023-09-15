@@ -6,7 +6,7 @@ import { MuiOtpInput } from "mui-one-time-password-input";
 import React from "react";
 import { useCountdown } from "usehooks-ts";
 import { AuthVerifyOtpPost200ResponseReasonEnum } from "../../api";
-import { authenticate, validateOtp } from "../../auth/auth";
+import { authenticate, verifyOtp } from "../../auth/auth";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { ZodType } from "../../shared/types/zod";
 import { CircularProgressCountdown } from "../shared/CircularProgressCountdown";
@@ -17,7 +17,13 @@ import {
     showWarning,
 } from "../../store/reducers/snackbar";
 import { loggedIn } from "../../store/reducers/session";
-import { authSuccess, genericError } from "../error/message";
+import {
+    authAlreadyLoggedIn,
+    authSuccess,
+    authWarning,
+    genericError,
+} from "../error/message";
+import { createOrGetEmailCredentials } from "../../credential/credential";
 
 export function OtpVerify() {
     const [otp, setOtp] = React.useState<string>("");
@@ -90,9 +96,18 @@ export function OtpVerify() {
     });
 
     React.useEffect(() => {
+        resetNewCodeCoundown();
         startNewCodeCoundown();
+    }, [currentCodeExpiry, resetNewCodeCoundown, startNewCodeCoundown]);
+
+    React.useEffect(() => {
+        resetCodeExpiryCountdown();
         startCodeExpiryCoundown();
-    }, [startNewCodeCoundown, startCodeExpiryCoundown]);
+    }, [
+        nextCodeSoonestTime,
+        resetCodeExpiryCountdown,
+        startCodeExpiryCoundown,
+    ]);
 
     React.useEffect(() => {
         if (secondsUntilCodeExpiry === 0) {
@@ -117,16 +132,32 @@ export function OtpVerify() {
         } else {
             setIsVerifyingCode(true);
             try {
-                const validateOtpResult = await validateOtp(result.data);
+                const validateOtpResult = await verifyOtp(result.data);
                 if (validateOtpResult.success) {
-                    // update store and close modal
+                    // TODO: if device is already syncing - logged-in!
+                    //
+                    //
                     dispatch(
                         loggedIn({
                             email: pendingEmail,
                             userId: validateOtpResult.userId,
                         })
                     );
-                    dispatch(showSuccess(authSuccess));
+                    // TODO: only request credentials if validateOtp did not send credentials (login known device) and did not suggest sync with existing device (login new device)
+                    createOrGetEmailCredentials(pendingEmail)
+                        .then(
+                            ({ emailCredential, secretBlindedCredential }) => {
+                                console.log(
+                                    emailCredential,
+                                    secretBlindedCredential
+                                );
+                                // TODO: encrypt and store credential in indexedDB
+                                dispatch(showSuccess(authSuccess));
+                            }
+                        )
+                        .catch(() => {
+                            dispatch(showWarning(authWarning));
+                        });
                 } else {
                     switch (validateOtpResult.reason) {
                         case AuthVerifyOtpPost200ResponseReasonEnum.ExpiredCode:
@@ -159,18 +190,16 @@ export function OtpVerify() {
     function handleRequestNewCode() {
         setRequestingNewCode(true);
         authenticate(pendingEmail, true)
-            .then((_response) => {
+            .then((response) => {
+                if (response === "logged-in") {
+                    dispatch(showSuccess(authAlreadyLoggedIn));
+                    return;
+                }
                 dispatch(
                     showInfo(
                         "New code sent to your email - previous code invalidated"
                     )
                 );
-                setCanRequestNewCode(false);
-                resetNewCodeCoundown();
-                startNewCodeCoundown();
-                resetCodeExpiryCountdown();
-                startCodeExpiryCoundown();
-                setIsCurrentCodeActive(true);
             })
             .catch((_e) => {
                 // TODO: show better error if rate-limited

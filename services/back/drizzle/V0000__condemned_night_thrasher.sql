@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS "device" (
 	"did_exchange" varchar(1000) NOT NULL,
 	"user_id" uuid NOT NULL,
 	"session_expiry" timestamp NOT NULL,
+	"isSynced" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "device_did_exchange_unique" UNIQUE("did_exchange")
@@ -38,8 +39,11 @@ CREATE TABLE IF NOT EXISTS "email" (
 	"email" varchar(254) PRIMARY KEY NOT NULL,
 	"type" "email_type" NOT NULL,
 	"user_id" uuid NOT NULL,
+	"email_credential" jsonb DEFAULT '{}'::jsonb,
+	"secret_credential" jsonb DEFAULT '{}'::jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "email_email_credential_unique" UNIQUE("email_credential")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (
