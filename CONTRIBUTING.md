@@ -2,13 +2,23 @@
 
 Thank you for contributing to ZKorum! ❤️
 
+## AUTHORS file
+
+Every contributor must add their full name and email address in the [AUTHORS file](./AUTHORS). Anonymous contributions are not allowed.
+
+## Signing commits
+
+Every contributor must [sign their commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits).
+
+After configuring the signing key, commit using `git commit -s` or simply [configure your `.gitconfig` to do add the `-s` parameter automatically](https://github.com/zkorum/zkorum/blob/main/CONTRIBUTING.md#local-git-config-configuration).
+
 ## FLA
 
-We require every contributors to sign the [Free Software Foundation Europe's Fiduciary Licensing Agreement](https://fsfe.org/activities/fla/fla.en.html). It's in use by KDE for example.
+Every contributors must sign our iteration of the [Free Software Foundation Europe's Fiduciary Licensing Agreement](https://github.com/zkorum/zkorum). Click on the link to sign it with your GitHub account.
 
-What does it do? In short, it is a normalized contract that allows us to change the license of your code to any other OSI-approved and FSF-approved free and open-source license. You delegate to us the responsibility to defend against eventual license misuse. But it does NOT allow us to sell your GPL code under a proprietary license (dual licensing), like every other CLA does.
+What does it do? In short, it is a normalized contract that allows us to change the license of your code to any other OSI-approved and FSF-approved free and open-source license. You delegate to us the responsibility to defend against eventual license misuse. But it does NOT allow us to sell your GPL code under a proprietary license (dual licensing), like every other CLA does. The FLA is in use by large free software projects such as KDE for example.
 
-We haven't set it up yet, this document will be updated later.
+More info are available on the [FSFE website](https://fsfe.org/activities/fla/fla.en.html).
 
 ## Git flow
 
