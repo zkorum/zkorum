@@ -1,5 +1,4 @@
 import { useAppDispatch } from "@/hooks";
-import type { FormsStatus } from "./LoggedInPage";
 import React from "react";
 import Grid from "@mui/material/Unstable_Grid2";
 import { closeAuthModal, resetPendingSession } from "@/store/reducers/session";
@@ -11,22 +10,18 @@ import { COMMUNITIES, SETTINGS } from "@/common/navigation";
 
 export interface LoggedInUserMustPerformActionPageProps {
     isTheOnlyDevice: boolean;
-    formsStatus: FormsStatus;
+    hasFilledForms: boolean;
 }
 
 export function LoggedInUserMustPerformActionPage({
     isTheOnlyDevice,
-    formsStatus,
+    hasFilledForms,
 }: LoggedInUserMustPerformActionPageProps) {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     React.useEffect(() => {
-        if (
-            formsStatus.hasFilledForms &&
-            formsStatus.hasActiveCredential &&
-            !isTheOnlyDevice
-        ) {
+        if (hasFilledForms && !isTheOnlyDevice) {
             // this component should not have been called on first place! close the form
             dispatch(closeAuthModal());
             dispatch(resetPendingSession());
@@ -58,39 +53,63 @@ export function LoggedInUserMustPerformActionPage({
                 alignItems: "center",
             }}
         >
-            <Box sx={{ my: 3 }}>
-                <Typography variant={"h4"}>Actions needed</Typography>{" "}
+            <Box sx={{ my: 2 }}>
+                <Typography variant={"h6"}>
+                    Do NOT clear ZKorum cache
+                </Typography>{" "}
+            </Box>
+            <Box sx={{ my: 2 }}>
+                <Typography component="div">
+                    ZKorum securely generates secret values and keys directly in
+                    your browser. Those are responsible for your privacy.
+                    ZKorum's server never has access to them. ZKorum
+                    automatically encrypts and synchronizes your secrets between
+                    your connected devices.{" "}
+                    <Box fontWeight="fontWeightMedium" display="inline">
+                        {" "}
+                        Do not delete ZKorum cache, as it would wipe out the
+                        secrets.
+                    </Box>
+                </Typography>
             </Box>
             {isTheOnlyDevice ? (
-                <Box sx={{ my: 3 }}>
-                    <Typography>
-                        ZKorum securely generates secret values and keys
-                        directly in your browser. Those are responsible for your
-                        privacy. ZKorum's server never has access to them.
-                    </Typography>
-                    <Typography>
-                        This is the only device connected to your account.
-                        Without syncing another device, if you lose access to
-                        this device, the secrets will be lost. As a consequence
-                        you won't be allowed to change your responses in
-                        polls/votes you already registered to, and ZKorum will
-                        not be able to tell what posts you created.
-                    </Typography>
-                </Box>
+                <>
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant={"h6"}>Add a new device</Typography>{" "}
+                    </Box>
+                    <Box sx={{ my: 2 }}>
+                        <Typography>
+                            This is the only device connected to your account.
+                            Without syncing another device, if you lose access
+                            to this one, the secrets will be lost. As a
+                            consequence you won't be allowed to change your
+                            responses in polls/votes you already registered to,
+                            and ZKorum will not be able to tell what posts you
+                            created.
+                        </Typography>
+                    </Box>
+                </>
             ) : null}
-            {!formsStatus.hasFilledForms || !formsStatus.hasActiveCredential ? (
-                <Box sx={{ my: 3 }}>
-                    <Typography>
-                        Before using ZKorum, you need to fill forms so that
-                        ZKorum will issue you a Verifiable Credential. ZKorum
-                        and anyone from your community can see what you
-                        responded, but nobody else can. The posts you will
-                        create using the Credential are completely anonymous and
-                        cannot trace back to your identity.
-                    </Typography>
-                </Box>
+            {!hasFilledForms ? (
+                <>
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant={"h6"}>Fill the forms</Typography>{" "}
+                    </Box>
+
+                    <Box sx={{ my: 2 }}>
+                        <Typography>
+                            Before using ZKorum, you need to fill forms so that
+                            ZKorum will issue you a Verifiable Credential.
+                            ZKorum and anyone from your community can see what
+                            you responded, but nobody else can. The posts you
+                            will create using the Credential are completely
+                            anonymous and cannot trace back to your identity
+                            thanks to Zero-Knowledge proofs.
+                        </Typography>
+                    </Box>
+                </>
             ) : null}
-            <Box sx={{ my: 3 }}>
+            <Box sx={{ my: 2 }}>
                 <Grid
                     container
                     direction="row"
@@ -105,8 +124,7 @@ export function LoggedInUserMustPerformActionPage({
                             </Button>
                         </Grid>
                     ) : null}
-                    {!formsStatus.hasFilledForms ||
-                    !formsStatus.hasActiveCredential ? (
+                    {!hasFilledForms ? (
                         <Grid>
                             <Button onClick={handleOnForms} variant="contained">
                                 Fill forms

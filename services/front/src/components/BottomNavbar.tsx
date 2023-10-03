@@ -26,6 +26,10 @@ export function BottomNavbar() {
     const [value, setValue] = React.useState<Nav>(Nav.Home);
     const [isHidden, setIsHidden] = React.useState<boolean>(false);
     const navigate = useNavigate();
+    // const isTheOnlyDevice = useAppSelector((state) => {
+    //     const pendingSessionEmail = state.sessions.pendingSessionEmail;
+    //     return state.sessions.sessions[pendingSessionEmail]?.status;
+    // });
 
     // To place the add icon
     // https://github.com/mui/material-ui/issues/15662#issuecomment-492771975

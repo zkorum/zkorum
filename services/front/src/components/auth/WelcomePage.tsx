@@ -16,21 +16,20 @@ export function WelcomePage({ onNextButtonClicked }: WelcomePageProps) {
                 alignItems: "left",
             }}
         >
-            <Box sx={{ my: 3 }}>
+            <Box sx={{ my: 2 }}>
                 <Typography variant={"h4"}>Welcome to ZKorum!</Typography>{" "}
             </Box>
-            <Box sx={{ my: 3 }}>
+            <Box sx={{ my: 2 }}>
                 <Typography>
                     You're in the closed alpha version of our app. While we have
                     limited features, your privacy is a top priority. Your
                     actions here are completely separate from your identity,
-                    thanks to client-side encryption and Zero-Knowledge proofs.
                     This means that neither ZKorum nor anyone else can tell what
                     you contribute to the forum. For tech details, check out our
                     Github - it's fully open-source for transparency!
                 </Typography>
             </Box>
-            <Box sx={{ my: 3 }}>
+            <Box sx={{ my: 2 }}>
                 <Typography>
                     We believe in anonymity for freedom of expression, but we
                     don't tolerate hateful speech or personal info sharing.
@@ -38,13 +37,13 @@ export function WelcomePage({ onNextButtonClicked }: WelcomePageProps) {
                     safe space together.
                 </Typography>
             </Box>
-            <Box sx={{ my: 3 }}>
+            <Box sx={{ my: 2 }}>
                 <Typography>
                     Thanks for joining us on this adventure. Enjoy connecting
                     with your community!
                 </Typography>
             </Box>
-            <Box sx={{ my: 3 }}>
+            <Box sx={{ my: 2 }}>
                 <Typography>Cheers,</Typography>
                 <Typography>Yuting, CEO of ZKorum</Typography>
             </Box>

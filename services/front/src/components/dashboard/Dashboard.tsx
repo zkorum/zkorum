@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { PostView } from "./Postview";
+import { PostView } from "./PostView";
 import { Divider } from "@mui/material";
 
 export function Dashboard() {
@@ -31,4 +31,3 @@ export function Dashboard() {
         </Box>
     );
 }
-

@@ -16,7 +16,7 @@ import {
 import { Authenticate } from "./Authenticate";
 import { OtpVerify } from "./OtpVerify";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
-import { LoggedInPage, type FormsStatus } from "./LoggedInPage";
+import { LoggedInPage } from "./LoggedInPage";
 import Container from "@mui/material/Container";
 
 // TODO: maybe refactor this as routable dialog or something?
@@ -40,7 +40,7 @@ export function AuthDialog() {
         }
         return syncingDevices.length === 1;
     });
-    const formsStatus = useAppSelector((state) => {
+    const hasFilledForms = useAppSelector((state) => {
         const pendingSessionEmail = state.sessions.pendingSessionEmail;
         const emailCredentialsPerEmail =
             state.sessions.sessions[pendingSessionEmail]
@@ -48,13 +48,8 @@ export function AuthDialog() {
         if (emailCredentialsPerEmail === undefined) {
             return undefined;
         }
-        return {
-            hasFilledForms: pendingSessionEmail in emailCredentialsPerEmail,
-            hasActiveCredential:
-                pendingSessionEmail in emailCredentialsPerEmail &&
-                emailCredentialsPerEmail[pendingSessionEmail].active !==
-                    undefined,
-        };
+        // TODO: maybe improve that? KISS for now
+        return pendingSessionEmail in emailCredentialsPerEmail;
     });
 
     function handleClose() {
@@ -133,12 +128,11 @@ export function AuthDialog() {
                         ) : pendingSessionStatus === "logged-in" &&
                           (isRegistration ||
                               isTheOnlyDevice ||
-                              !formsStatus?.hasFilledForms ||
-                              !formsStatus?.hasActiveCredential) ? (
+                              !hasFilledForms) ? (
                             <LoggedInPage
                                 isRegistration={isRegistration as boolean}
                                 isTheOnlyDevice={isTheOnlyDevice as boolean}
-                                formsStatus={formsStatus as FormsStatus}
+                                hasFilledForms={hasFilledForms as boolean}
                             /> // when status is logged-in, there must be data in these fields - TODO: provide better error-handling later (notably via better typing and by being careful when loading from fresh local DB)
                         ) : (
                             <Authenticate />
