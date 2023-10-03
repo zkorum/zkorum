@@ -24,11 +24,33 @@ CREATE TABLE IF NOT EXISTS "auth_attempt" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "credential_email" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"credential" jsonb,
+	"is_revoked" boolean DEFAULT false,
+	"email" varchar(254) NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "credential_email_credential_unique" UNIQUE("credential")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "credential_secret" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"poll_id" uuid,
+	"credential" jsonb,
+	"is_revoked" boolean DEFAULT false,
+	"user_id" uuid NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "credential_secret_credential_unique" UNIQUE("credential")
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "device" (
 	"did_write" varchar(1000) PRIMARY KEY NOT NULL,
 	"did_exchange" varchar(1000) NOT NULL,
 	"user_id" uuid NOT NULL,
 	"session_expiry" timestamp NOT NULL,
+	"encrypted_symm_key" "bytea",
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "device_did_exchange_unique" UNIQUE("did_exchange")
@@ -49,6 +71,18 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "user_uid_unique" UNIQUE("uid")
 );
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "credential_email" ADD CONSTRAINT "credential_email_email_email_email_fk" FOREIGN KEY ("email") REFERENCES "email"("email") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "credential_secret" ADD CONSTRAINT "credential_secret_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "device" ADD CONSTRAINT "device_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE no action ON UPDATE no action;

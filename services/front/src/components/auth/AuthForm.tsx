@@ -12,6 +12,7 @@ import Button from "@mui/material/Button";
 interface AuthFormProps {
     autoFocus: boolean;
     email: string;
+    userId?: string;
     setEmail: (email: string) => void;
     isEmailValid: boolean;
     setIsEmailValid: (emailHelper: boolean) => void;
@@ -22,6 +23,7 @@ interface AuthFormProps {
 export function AuthForm({
     autoFocus,
     email,
+    userId,
     setEmail,
     isEmailValid,
     setIsEmailValid,
@@ -49,7 +51,7 @@ export function AuthForm({
                 setIsEmailValid(false);
                 if (emailToValidate.split("@")[1] === "essec.edu") {
                     setEmailHelper(
-                        'Please your ESSEC email address starting with "b", e.g: "b012345678@essec.edu"'
+                        'Please use your ESSEC email address starting with "b", e.g: "b012345678@essec.edu"'
                     );
                 } else {
                     setEmailHelper(
@@ -142,7 +144,7 @@ export function AuthForm({
                         fullWidth
                         variant="contained"
                         sx={{ mt: 3, mb: 2 }}
-                        onClick={() => handleOnAuthenticate(email)}
+                        onClick={() => handleOnAuthenticate(email, userId)}
                         disabled={
                             !isEmailValid || !isTrusted || !hasGivenConsent
                         }

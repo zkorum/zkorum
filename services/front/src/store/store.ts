@@ -14,6 +14,14 @@ import sessionReducer from "./reducers/session";
 import snackbarReducer from "./reducers/snackbar";
 import loadingReducer from "./reducers/loading";
 import { getPersistConfig } from "redux-deep-persist";
+import * as BrowserCrypto from "../crypto/ucan/implementation/browser.js";
+
+// localForage instance for storing keys only
+export const cryptoStore = await BrowserCrypto.implementation({
+    storeName: `zkorum-keys`,
+});
+
+// localForage instance for storing everything else (and especially the redux store)
 
 /**
  * Inspired by https://github.com/machester4/redux-persist-indexeddb-storage
@@ -21,6 +29,7 @@ import { getPersistConfig } from "redux-deep-persist";
 const db = localForage.createInstance({
     name: "zkorum",
 });
+
 const storage = {
     db,
     getItem: db.getItem,

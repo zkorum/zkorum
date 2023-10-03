@@ -1,5 +1,4 @@
 import axios from "axios";
-import * as Crypto from "./crypto/ucan/implementation";
 import * as DID from "./crypto/ucan/did/index";
 import * as ucan from "@ucans/ucans";
 
@@ -7,8 +6,7 @@ import {
     httpMethodToAbility,
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan";
-import { getOrGenerateCryptoKey } from "./crypto/ucan/ucan";
-import { store } from "./store/store";
+import { store, cryptoStore } from "./store/store";
 
 export const noAuthAxios = axios.create({
     baseURL: import.meta.env.VITE_BACK_BASE_URL,
@@ -25,14 +23,28 @@ export const pendingSessionUcanAxios = axios.create({
 async function buildUcan(
     url: string,
     method: string,
-    accountCrypto: Crypto.Implementation
+    email: string,
+    userId?: string
 ): Promise<string> {
-    const accountDid = await DID.ucan(accountCrypto);
+    let emailOrUserId: string;
+    if (userId !== undefined) {
+        const keyExists = await cryptoStore.keystore.writeKeyExists(userId);
+        if (keyExists) {
+            emailOrUserId = userId;
+        } else {
+            emailOrUserId = email;
+        }
+    } else {
+        emailOrUserId = email;
+    }
+
+    const accountDid = await DID.ucan(cryptoStore, emailOrUserId);
     const u = await ucan.Builder.create()
         .issuedBy({
             did: () => accountDid,
-            jwtAlg: await accountCrypto.keystore.getUcanAlgorithm(),
-            sign: accountCrypto.keystore.sign,
+            jwtAlg: await cryptoStore.keystore.getUcanAlgorithm(),
+            sign: (msg: Uint8Array) =>
+                cryptoStore.keystore.sign(msg, emailOrUserId),
         })
         .toAudience(import.meta.env.VITE_BACK_DID)
         .withLifetimeInSeconds(30)
@@ -83,11 +95,14 @@ activeSessionUcanAxios.interceptors.request.use(
             );
         }
 
-        const newCryptoKey = await getOrGenerateCryptoKey(activeSessionEmail);
+        const sessions = store.getState().sessions.sessions;
         const newUcan = await buildUcan(
             config.url,
             config.method,
-            newCryptoKey
+            sessions !== undefined && activeSessionEmail in sessions
+                ? sessions[activeSessionEmail].email
+                : activeSessionEmail,
+            sessions[activeSessionEmail]?.userId
         );
         config.headers.Authorization = `Bearer ${newUcan}`;
         return config;
@@ -115,11 +130,14 @@ pendingSessionUcanAxios.interceptors.request.use(
             );
         }
 
-        const newCryptoKey = await getOrGenerateCryptoKey(pendingSessionEmail);
+        const sessions = store.getState().sessions.sessions;
         const newUcan = await buildUcan(
             config.url,
             config.method,
-            newCryptoKey
+            sessions[pendingSessionEmail]
+                ? sessions[pendingSessionEmail].email
+                : pendingSessionEmail,
+            sessions[pendingSessionEmail]?.userId
         );
         config.headers.Authorization = `Bearer ${newUcan}`;
         return config;

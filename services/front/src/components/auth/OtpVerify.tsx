@@ -5,8 +5,11 @@ import Typography from "@mui/material/Typography";
 import { MuiOtpInput } from "mui-one-time-password-input";
 import React from "react";
 import { useCountdown } from "usehooks-ts";
-import { AuthVerifyOtpPost200ResponseReasonEnum } from "../../api";
-import { authenticate, validateOtp } from "../../auth/auth";
+import {
+    AuthVerifyOtpPost200ResponseReasonEnum,
+    type AuthAuthenticatePost409Response,
+} from "../../api";
+import { authenticate, verifyOtp } from "../../auth/auth";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { ZodType } from "../../shared/types/zod";
 import { CircularProgressCountdown } from "../shared/CircularProgressCountdown";
@@ -17,7 +20,13 @@ import {
     showWarning,
 } from "../../store/reducers/snackbar";
 import { loggedIn } from "../../store/reducers/session";
-import { authSuccess, genericError } from "../error/message";
+import { authAlreadyLoggedIn, genericError } from "../error/message";
+import {
+    copyKeypairsIfDestIsEmpty as copyKeypairs,
+    generateAndEncryptSymmKey,
+    storeSymmKeyLocally,
+} from "../../crypto/ucan/ucan";
+import axios from "axios";
 
 export function OtpVerify() {
     const [otp, setOtp] = React.useState<string>("");
@@ -35,12 +44,16 @@ export function OtpVerify() {
     const pendingEmail = useAppSelector((state) => {
         return state.sessions.pendingSessionEmail;
     });
+    const userId = useAppSelector((state) => {
+        const pendingSessionEmail = state.sessions.pendingSessionEmail;
+        return state.sessions.sessions[pendingSessionEmail]?.userId;
+    });
     // TODO: send DIDs via email, show them on this page and ask user to verify it's the right ones to counter MITM
     // TODO: send codeID and ask to verify it's the right one (avoiding loop of not using the code from the right email)
     const currentCodeExpiry = useAppSelector((state) => {
-        const pendingSessionUserId = state.sessions.pendingSessionEmail;
+        const pendingSessionEmail = state.sessions.pendingSessionEmail;
         const currentCodeExpiryStr = state.sessions.sessions[
-            pendingSessionUserId
+            pendingSessionEmail
         ].codeExpiry as string; // at this point it SHALL not be possible for it to be undefined
         const now = new Date().getTime(); // ms
         const currentCodeDateExpiry = Date.parse(currentCodeExpiryStr); // ms
@@ -90,9 +103,18 @@ export function OtpVerify() {
     });
 
     React.useEffect(() => {
+        resetNewCodeCoundown();
         startNewCodeCoundown();
+    }, [currentCodeExpiry, resetNewCodeCoundown, startNewCodeCoundown]);
+
+    React.useEffect(() => {
+        resetCodeExpiryCountdown();
         startCodeExpiryCoundown();
-    }, [startNewCodeCoundown, startCodeExpiryCoundown]);
+    }, [
+        nextCodeSoonestTime,
+        resetCodeExpiryCountdown,
+        startCodeExpiryCoundown,
+    ]);
 
     React.useEffect(() => {
         if (secondsUntilCodeExpiry === 0) {
@@ -116,19 +138,55 @@ export function OtpVerify() {
             dispatch(showError(genericError));
         } else {
             setIsVerifyingCode(true);
+            const tempEncryptedSymmKey =
+                await generateAndEncryptSymmKey(pendingEmail);
+            // we systematically send an encrypted symmetric key, even though it is only taken into account on registration
+            // that is because we don't know at this point if it is a registration or a log in
+            // and we don't want the backend to tell us before, otherwise an attacker could do an enumeration attack on the authenticate endpoint.
+            // we could send the symm key later, only if needed, but it would result in synchronization issues (what if the user is considered logged-in when registering, but has never synced any symmetric key?)
+            // so for the sake of simplicity, we trade off a bit of performance
             try {
-                const validateOtpResult = await validateOtp(result.data);
-                if (validateOtpResult.success) {
-                    // update store and close modal
-                    dispatch(
-                        loggedIn({
-                            email: pendingEmail,
-                            userId: validateOtpResult.userId,
-                        })
-                    );
-                    dispatch(showSuccess(authSuccess));
+                const verifyOtpResult = await verifyOtp(
+                    result.data,
+                    tempEncryptedSymmKey
+                );
+                if (verifyOtpResult.success) {
+                    if (verifyOtpResult.encryptedSymmKey === undefined) {
+                        // this is login from a new device or a known unsynced device
+                        // device is awaiting syncing: TODO show corresponding screen and update redux user status
+                        // then when syncing is OK - steps as in "else"
+                    } else {
+                        // this is a first time registration or a login from a known device that's been synced already
+                        await copyKeypairs(
+                            pendingEmail,
+                            verifyOtpResult.userId
+                        );
+                        // TODO: what to do what the symm key cannot be deciphered? we ignore this range of problems for now.
+                        // current design should not allow it.
+                        // we also ignore the potential I/O error from storing the key. This should be dealt with by re-trying.
+                        await storeSymmKeyLocally(
+                            verifyOtpResult.encryptedSymmKey,
+                            verifyOtpResult.userId
+                        );
+                        dispatch(
+                            loggedIn({
+                                email: pendingEmail,
+                                userId: verifyOtpResult.userId,
+                                encryptedSymmKey:
+                                    verifyOtpResult.encryptedSymmKey,
+                                isRegistration:
+                                    verifyOtpResult.encryptedSymmKey ===
+                                    tempEncryptedSymmKey, // adapts the welcome page in that case
+                                syncingDevices: verifyOtpResult.syncingDevices, // adapts the welcome page if there is only one device in that list
+                                emailCredentialsPerEmail:
+                                    verifyOtpResult.emailCredentialsPerEmail, // adapts the welcome page whether it is empty or not
+                                secretCredentialsPerType:
+                                    verifyOtpResult.secretCredentialsPerType,
+                            })
+                        );
+                    }
                 } else {
-                    switch (validateOtpResult.reason) {
+                    switch (verifyOtpResult.reason) {
                         case AuthVerifyOtpPost200ResponseReasonEnum.ExpiredCode:
                             setIsCurrentCodeActive(false);
                             dispatch(
@@ -148,32 +206,62 @@ export function OtpVerify() {
                             break;
                     }
                 }
-            } catch (_e) {
-                // TODO: take into account the case when user is simply already logged-in - and adapt flow for this case (409)
-                dispatch(showError(genericError));
+            } catch (e) {
+                console.error(e);
+                if (axios.isAxiosError(e)) {
+                    if (e.response?.status === 409) {
+                        const auth409: AuthAuthenticatePost409Response = e
+                            .response.data as AuthAuthenticatePost409Response;
+                        if (auth409.reason === "already_logged_in") {
+                            dispatch(
+                                loggedIn({
+                                    email: pendingEmail,
+                                    userId: auth409.userId,
+                                    isRegistration: false,
+                                    encryptedSymmKey: auth409.encryptedSymmKey,
+                                    syncingDevices: auth409.syncingDevices,
+                                    emailCredentialsPerEmail:
+                                        auth409.emailCredentialsPerEmail,
+                                    secretCredentialsPerType:
+                                        auth409.secretCredentialsPerType,
+                                })
+                            );
+                        } else {
+                            console.log("awaiting_syncing");
+                            // TODO "awaiting_syncing";
+                        }
+                    } else {
+                        dispatch(showError(genericError));
+                    }
+                } else {
+                    console.error("not axios", e);
+                }
+            } finally {
+                setIsVerifyingCode(false);
             }
-            setIsVerifyingCode(false);
         }
     }
 
     function handleRequestNewCode() {
         setRequestingNewCode(true);
-        authenticate(pendingEmail, true)
-            .then((_response) => {
+        authenticate(pendingEmail, true, userId)
+            .then((response) => {
+                if (response === "logged-in") {
+                    dispatch(showSuccess(authAlreadyLoggedIn));
+                    return;
+                } else if (response === "awaiting-syncing") {
+                    // TODO
+                    return;
+                }
                 dispatch(
                     showInfo(
                         "New code sent to your email - previous code invalidated"
                     )
                 );
-                setCanRequestNewCode(false);
-                resetNewCodeCoundown();
-                startNewCodeCoundown();
-                resetCodeExpiryCountdown();
-                startCodeExpiryCoundown();
-                setIsCurrentCodeActive(true);
             })
-            .catch((_e) => {
+            .catch((e) => {
                 // TODO: show better error if rate-limited
+                console.error(e);
                 dispatch(showError(genericError));
             })
             .finally(() => {

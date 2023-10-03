@@ -14,7 +14,7 @@ version: "3.8"
 services:
     postgres:
         container_name: postgres_container
-        image: postgres
+        image: postgres:16
         environment:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: 7QPgtYETx4EdzvqUeNfo
@@ -27,7 +27,7 @@ services:
         restart: unless-stopped
     pgadmin:
         container_name: pgadmin_container
-        image: dpage/pgadmin4
+        image: dpage/pgadmin4:latest
         environment:
             PGADMIN_DEFAULT_EMAIL: admin@admin.com
             PGADMIN_DEFAULT_PASSWORD: UsXWq98V68DxGEhfGvBa

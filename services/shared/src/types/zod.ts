@@ -60,5 +60,35 @@ export class ZodType {
     static code = z.coerce.number().min(0).max(999999);
     static digit = z.coerce.number().int().nonnegative().lte(9);
     static userId = z.string().uuid().nonempty();
+    static secretCredentials = z
+        .object({
+            active: z.string().optional(),
+            revoked: z.array(z.string()),
+        })
+        .strict();
+    static secretCredentialsPerType = z.record(
+        z.string().uuid().or(z.literal("global")),
+        ZodType.secretCredentials
+    );
+    static emailCredentials = z
+        .object({
+            active: z.string().optional(),
+            revoked: z.array(z.string()),
+        })
+        .strict();
+    static emailCredentialsPerEmail = z.record(
+        ZodType.email,
+        ZodType.emailCredentials
+    );
+    static devices = z.array(z.string()); // list of didWrite of all the devices belonging to a user
 }
 type Email = z.infer<typeof ZodType.email>;
+export type SecretCredentials = z.infer<typeof ZodType.secretCredentials>;
+export type SecretCredentialsPerType = z.infer<
+    typeof ZodType.secretCredentialsPerType
+>;
+export type EmailCredentials = z.infer<typeof ZodType.emailCredentials>;
+export type EmailCredentialsPerEmail = z.infer<
+    typeof ZodType.emailCredentialsPerEmail
+>;
+export type Devices = z.infer<typeof ZodType.devices>;

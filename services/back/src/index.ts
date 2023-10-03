@@ -1,13 +1,11 @@
 import "dotenv/config"; // this loads .env values in process.env
 import fs from "fs";
-import fastify, { type FastifyRequest } from "fastify";
+import { type FastifyRequest } from "fastify";
 import fastifyAuth from "@fastify/auth";
 import fastifySensible from "@fastify/sensible";
 import fastifySwagger from "@fastify/swagger";
 import fastifyCors from "@fastify/cors";
-import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import { AuthService } from "./service/auth.js";
+import { Service } from "./service/service.js";
 import {
     serializerCompiler,
     validatorCompiler,
@@ -15,62 +13,22 @@ import {
     type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { DrizzleFastifyLogger } from "./logger.js";
-import { z } from "zod";
-import { ZodType } from "./shared/types/zod.js";
 import { Dto } from "./dto.js";
 import * as ucans from "@ucans/ucans";
 import {
     httpMethodToAbility,
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan.js";
-
-enum Environment {
-    Development = "development",
-    Production = "production",
-    Staging = "staging",
-}
-
-const defaultPort = 8080;
-
-const configSchema = z.object({
-    CONNECTION_STRING: z.string(),
-    PORT: z.number().int().nonnegative().default(defaultPort),
-    NODE_ENV: z.nativeEnum(Environment).default(Environment.Development),
-    SERVER_URL: z.string().url().default(`http://localhost:${defaultPort}`),
-    SERVER_DID: ZodType.didWeb.default(`did:web:localhost%3A${defaultPort}`),
-    EMAIL_OTP_MAX_ATTEMPT_AMOUNT: z.number().int().min(1).max(5).default(3),
-    THROTTLE_EMAIL_MINUTES_INTERVAL: z.number().int().min(3).default(3),
-    MINUTES_BEFORE_EMAIL_OTP_EXPIRY: z
-        .number()
-        .int()
-        .min(3)
-        .max(60)
-        .default(10),
-});
-
-const config = configSchema.parse(process.env);
-
-function envToLogger(env: Environment) {
-    switch (env) {
-        case Environment.Development:
-            return {
-                transport: {
-                    target: "pino-pretty",
-                    options: {
-                        translateTime: "HH:MM:ss Z",
-                        ignore: "pid,hostname",
-                    },
-                },
-            };
-        case Environment.Production:
-        case Environment.Staging:
-            return true;
-    }
-}
-
-const server = fastify({
-    logger: envToLogger(config.NODE_ENV),
-});
+import {
+    initializeWasm,
+    BBSPlusSecretKey as SecretKey,
+} from "@docknetwork/crypto-wasm-ts";
+import { config, Environment, server } from "./app.js";
+import {
+    drizzle,
+    type PostgresJsDatabase as PostgresDatabase,
+} from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -116,22 +74,55 @@ server.setErrorHandler((error, _request, reply) => {
     }
 });
 
+// const client = postgres(config.CONNECTION_STRING);
 const client = postgres(config.CONNECTION_STRING);
 const db = drizzle(client, {
     logger: new DrizzleFastifyLogger(server.log),
 });
 
+// This is necessary for crypto-wasm-ts to work
+await initializeWasm();
+const _sk: SecretKey = getSecretKey(config.NODE_ENV);
+function getSecretKey(env: Environment): SecretKey {
+    if (env === Environment.Development) {
+        const skAsHex = fs.readFileSync("./private.dev.key", {
+            encoding: "utf8",
+            flag: "r",
+        });
+        return new SecretKey(SecretKey.fromHex(skAsHex).bytes);
+    } else {
+        // TODO modify that to load it from an encrypted S3 value.
+        // Not very safe, but no KMS supports BBSPlus secret key at this time: WIP
+        const skAsHex = fs.readFileSync("./private.dev.key", {
+            encoding: "utf8",
+            flag: "r",
+        });
+        return new SecretKey(SecretKey.fromHex(skAsHex).bytes);
+    }
+}
+
+interface ExpectedDeviceStatus {
+    userId?: string;
+    isSyncing?: boolean;
+    isLoggedIn?: boolean;
+}
+
 interface OptionsVerifyUcan {
-    deviceMustBeLoggedIn: boolean;
+    expectedDeviceStatus?: ExpectedDeviceStatus;
 }
 
 // auth functions
 // TODO: store UCAN in ucan table at the end and check whether UCAN has already been seen in the ucan table on the first place - if yes, throw unauthorized error and log the potential replay attack attempt.
 // ! WARNING: will not work if there are queryParams. We only use POST requests and JSON body requests (JSON-RPC style).
 async function verifyUCAN(
-    db: PostgresJsDatabase,
+    db: PostgresDatabase,
     request: FastifyRequest,
-    options: OptionsVerifyUcan = { deviceMustBeLoggedIn: true }
+    options: OptionsVerifyUcan = {
+        expectedDeviceStatus: {
+            isLoggedIn: true,
+            isSyncing: true,
+        },
+    }
 ): Promise<string> {
     const authHeader = request.headers.authorization;
     if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
@@ -161,19 +152,43 @@ async function verifyUCAN(
                 "Unauthorized",
                 new AggregateError(result.error)
             );
-        } else if (options.deviceMustBeLoggedIn) {
-            const { isLoggedIn } = await AuthService.isLoggedIn(
+        }
+        if (options.expectedDeviceStatus !== undefined) {
+            const deviceStatus = await Service.getDeviceStatus(
                 db,
                 rootIssuerDid
             );
-            if (isLoggedIn) {
-                return rootIssuerDid;
+            if (deviceStatus === undefined) {
+                if (options.expectedDeviceStatus.isLoggedIn !== undefined) {
+                    throw server.httpErrors.unauthorized();
+                } else if (options.expectedDeviceStatus.userId !== undefined) {
+                    throw server.httpErrors.forbidden();
+                } else if (
+                    options.expectedDeviceStatus.isSyncing !== undefined
+                ) {
+                    throw server.httpErrors.forbidden();
+                }
             } else {
-                throw server.httpErrors.unauthorized();
+                const { userId, isLoggedIn, isSyncing } = deviceStatus;
+                if (
+                    options.expectedDeviceStatus.isLoggedIn !== undefined &&
+                    options.expectedDeviceStatus.isLoggedIn !== isLoggedIn
+                ) {
+                    throw server.httpErrors.unauthorized();
+                } else if (
+                    options.expectedDeviceStatus.userId !== undefined &&
+                    options.expectedDeviceStatus.userId !== userId
+                ) {
+                    throw server.httpErrors.forbidden();
+                } else if (
+                    options.expectedDeviceStatus.isSyncing !== undefined &&
+                    options.expectedDeviceStatus.isSyncing !== isSyncing
+                ) {
+                    throw server.httpErrors.forbidden();
+                }
             }
-        } else {
-            return rootIssuerDid;
         }
+        return rootIssuerDid;
     }
 }
 
@@ -181,7 +196,7 @@ server.after(() => {
     server.withTypeProvider<ZodTypeProvider>().post("/auth/authenticate", {
         schema: {
             body: Dto.authenticateRequestBody,
-            response: { 200: Dto.authenticateResponse },
+            response: { 200: Dto.authenticateResponse, 409: Dto.auth409 },
         },
         handler: async (request, _reply) => {
             // This endpoint is accessible without being logged in
@@ -192,15 +207,15 @@ server.after(() => {
             // As a social network (hopefully) subject to heavy traffic, the whole app will need to be protected via a privacy-preserving alternative to CAPTCHA anyway, such as Turnstile: https://developers.cloudflare.com/turnstile/
             // => TODO: encourage users to use a mixnet such as Tor to preserve their privacy.
             const didWrite = await verifyUCAN(db, request, {
-                deviceMustBeLoggedIn: false,
+                expectedDeviceStatus: undefined,
             });
-            const { type, userId } = await AuthService.getAuthenticateType(
+            const { type, userId } = await Service.getAuthenticateType(
                 db,
                 request.body,
                 didWrite,
                 server.httpErrors
             );
-            return await AuthService.authenticateAttempt(
+            return await Service.authenticateAttempt(
                 db,
                 type,
                 request.body,
@@ -224,25 +239,50 @@ server.after(() => {
     server.withTypeProvider<ZodTypeProvider>().post("/auth/verifyOtp", {
         schema: {
             body: Dto.verifyOtpReqBody,
-            response: { 200: Dto.verifyOtpResponse },
+            response: { 200: Dto.verifyOtp200, 409: Dto.auth409 },
         },
         handler: async (request, _reply) => {
             const didWrite = await verifyUCAN(db, request, {
-                deviceMustBeLoggedIn: false,
+                expectedDeviceStatus: undefined,
             });
-            return await AuthService.verifyOtp(
+            return await Service.verifyOtp(
                 db,
                 config.EMAIL_OTP_MAX_ATTEMPT_AMOUNT,
                 didWrite,
                 request.body.code,
+                request.body.encryptedSymmKey,
                 server.httpErrors
             );
         },
     });
     server.withTypeProvider<ZodTypeProvider>().post("/auth/logout", {
         handler: async (request, _reply) => {
-            const didWrite = await verifyUCAN(db, request);
-            await AuthService.logout(db, didWrite);
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: {
+                    isLoggedIn: true,
+                },
+            });
+            await Service.logout(db, didWrite);
+        },
+    });
+    // TODO
+    server.withTypeProvider<ZodTypeProvider>().post("/auth/sync", {
+        schema: {
+            body: Dto.createOrGetEmailCredentialsReq,
+            response: {
+                // TODO 200: Dto.createOrGetEmailCredentialsRes,
+                409: Dto.sync409,
+            },
+        },
+        handler: async (request, _reply) => {
+            const _didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: {
+                    isLoggedIn: true,
+                    isSyncing: false,
+                },
+            });
+            // TODO
+            // return await AuthService.syncAttempt(db, didWrite);
         },
     });
 });

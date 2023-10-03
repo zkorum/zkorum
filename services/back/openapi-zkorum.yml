@@ -50,6 +50,78 @@ paths:
                   - codeExpiry
                   - nextCodeSoonestTime
                 additionalProperties: false
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    properties:
+                      reason:
+                        type: string
+                        enum:
+                          - awaiting_syncing
+                      userId:
+                        type: string
+                        format: uuid
+                        minLength: 1
+                    required:
+                      - reason
+                      - userId
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      reason:
+                        type: string
+                        enum:
+                          - already_logged_in
+                      userId:
+                        type: string
+                        format: uuid
+                        minLength: 1
+                      encryptedSymmKey:
+                        type: string
+                      syncingDevices:
+                        type: array
+                        items:
+                          type: string
+                      emailCredentialsPerEmail:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            active:
+                              type: string
+                            revoked:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                            - revoked
+                          additionalProperties: false
+                      secretCredentialsPerType:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            active:
+                              type: string
+                            revoked:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                            - revoked
+                          additionalProperties: false
+                    required:
+                      - reason
+                      - userId
+                      - encryptedSymmKey
+                      - syncingDevices
+                      - emailCredentialsPerEmail
+                      - secretCredentialsPerType
+                    additionalProperties: false
   /auth/verifyOtp:
     post:
       requestBody:
@@ -62,8 +134,11 @@ paths:
                   type: number
                   minimum: 0
                   maximum: 999999
+                encryptedSymmKey:
+                  type: string
               required:
                 - code
+                - encryptedSymmKey
               additionalProperties: false
         required: true
       responses:
@@ -83,9 +158,46 @@ paths:
                         type: string
                         format: uuid
                         minLength: 1
+                      encryptedSymmKey:
+                        type: string
+                      syncingDevices:
+                        type: array
+                        items:
+                          type: string
+                      emailCredentialsPerEmail:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            active:
+                              type: string
+                            revoked:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                            - revoked
+                          additionalProperties: false
+                      secretCredentialsPerType:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            active:
+                              type: string
+                            revoked:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                            - revoked
+                          additionalProperties: false
                     required:
                       - success
                       - userId
+                      - syncingDevices
+                      - emailCredentialsPerEmail
+                      - secretCredentialsPerType
                     additionalProperties: false
                   - type: object
                     properties:
@@ -103,9 +215,121 @@ paths:
                       - success
                       - reason
                     additionalProperties: false
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    properties:
+                      reason:
+                        type: string
+                        enum:
+                          - awaiting_syncing
+                      userId:
+                        type: string
+                        format: uuid
+                        minLength: 1
+                    required:
+                      - reason
+                      - userId
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      reason:
+                        type: string
+                        enum:
+                          - already_logged_in
+                      userId:
+                        type: string
+                        format: uuid
+                        minLength: 1
+                      encryptedSymmKey:
+                        type: string
+                      syncingDevices:
+                        type: array
+                        items:
+                          type: string
+                      emailCredentialsPerEmail:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            active:
+                              type: string
+                            revoked:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                            - revoked
+                          additionalProperties: false
+                      secretCredentialsPerType:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            active:
+                              type: string
+                            revoked:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                            - revoked
+                          additionalProperties: false
+                    required:
+                      - reason
+                      - userId
+                      - encryptedSymmKey
+                      - syncingDevices
+                      - emailCredentialsPerEmail
+                      - secretCredentialsPerType
+                    additionalProperties: false
   /auth/logout:
     post:
       responses:
         "200":
           description: Default Response
+  /auth/sync:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                  minLength: 1
+                  description: Email address
+                secretBlindedCredentialRequest:
+                  type: string
+              required:
+                - email
+              additionalProperties: false
+        required: true
+      responses:
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                    enum:
+                      - already_syncing
+                  userId:
+                    type: string
+                    format: uuid
+                    minLength: 1
+                required:
+                  - reason
+                  - userId
+                additionalProperties: false
 servers: []

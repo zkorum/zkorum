@@ -1,4 +1,4 @@
-import { store } from "../store/store";
+import { cryptoStore, store } from "../store/store";
 import {
     verifying,
     authenticating,
@@ -12,12 +12,12 @@ import {
     DefaultApiFactory,
     type AuthAuthenticatePost200Response,
     type AuthVerifyOtpPost200Response,
+    type AuthAuthenticatePost409Response,
 } from "../api/api";
 import {
     activeSessionUcanAxios,
     pendingSessionUcanAxios,
 } from "../interceptors";
-import { getOrGenerateCryptoKey } from "../crypto/ucan/ucan";
 import axios from "axios";
 import { showError, showSuccess } from "../store/reducers/snackbar";
 import { authSuccess, genericError } from "../components/error/message";
@@ -25,15 +25,27 @@ import { closeMainLoading, openMainLoading } from "../store/reducers/loading";
 
 export async function authenticate(
     email: string,
-    isRequestingNewCode: boolean
-): Promise<AuthAuthenticatePost200Response | "logged-in"> {
-    // TODO: email may be changed in the future, so this will have to be dealt with
-    const newCryptoKey = await getOrGenerateCryptoKey(email);
+    isRequestingNewCode: boolean,
+    userId?: string
+): Promise<AuthAuthenticatePost200Response | "logged-in" | "awaiting-syncing"> {
+    let didExchange: string;
+    if (userId !== undefined) {
+        const exchangeKeyExists =
+            await cryptoStore.keystore.exchangeKeyExists(userId);
+        if (exchangeKeyExists) {
+            didExchange = await DID.exchange(cryptoStore, userId);
+        } else {
+            console.warn("UserId did not fetch any exchange key");
+            await cryptoStore.keystore.createIfDoesNotExists(email);
+            didExchange = await DID.exchange(cryptoStore, email);
+        }
+    } else {
+        await cryptoStore.keystore.createIfDoesNotExists(email);
+        didExchange = await DID.exchange(cryptoStore, email);
+    }
 
     // this is a necessary step for interceptor to inject UCAN
-    store.dispatch(authenticating({ email: email }));
-
-    const didExchange = await DID.exchange(newCryptoKey);
+    store.dispatch(authenticating({ email: email, userId: userId }));
 
     // Send authenticate request - UCAN will be sent by interceptor
     try {
@@ -49,6 +61,7 @@ export async function authenticate(
         store.dispatch(
             verifying({
                 email: email,
+                userId: userId,
                 codeExpiry: otpDetails.data.codeExpiry,
                 nextCodeSoonestTime: otpDetails.data.nextCodeSoonestTime,
             })
@@ -56,34 +69,52 @@ export async function authenticate(
         return otpDetails.data;
     } catch (e) {
         if (axios.isAxiosError(e)) {
-            if (e.status === 409) {
-                store.dispatch(
-                    loggedIn({
-                        email: email,
-                        userId: e.message,
-                    })
-                );
-                return "logged-in";
+            if (e.response?.status === 409) {
+                const auth409: AuthAuthenticatePost409Response = e.response
+                    .data as AuthAuthenticatePost409Response;
+                if (auth409.reason === "already_logged_in") {
+                    store.dispatch(
+                        loggedIn({
+                            email: email,
+                            userId: auth409.userId,
+                            isRegistration: false,
+                            encryptedSymmKey: auth409.encryptedSymmKey,
+                            syncingDevices: auth409.syncingDevices,
+                            emailCredentialsPerEmail:
+                                auth409.emailCredentialsPerEmail,
+                            secretCredentialsPerType:
+                                auth409.secretCredentialsPerType,
+                        })
+                    );
+                    return "logged-in";
+                } else {
+                    // TODO
+                    return "awaiting-syncing";
+                }
             } else {
+                console.log("outside", e);
                 throw e;
             }
         } else {
+            console.log(" more outside", e);
             throw e;
         }
     }
 }
 
-export async function validateOtp(
-    code: number
+export async function verifyOtp(
+    code: number,
+    encryptedSymmKey: string
 ): Promise<AuthVerifyOtpPost200Response> {
-    const validateOtpResult = await DefaultApiFactory(
+    const verifyOtpResult = await DefaultApiFactory(
         undefined,
         undefined,
         pendingSessionUcanAxios
     ).authVerifyOtpPost({
         code: code,
+        encryptedSymmKey: encryptedSymmKey,
     });
-    return validateOtpResult.data;
+    return verifyOtpResult.data;
 }
 
 export async function logout() {
@@ -96,17 +127,20 @@ export async function logout() {
     store.dispatch(loggedOut({ email: activeSessionEmail }));
 }
 
-export function handleOnAuthenticate(email: string) {
+export function handleOnAuthenticate(email: string, userId?: string) {
     store.dispatch(openMainLoading());
     // do register the user
-    authenticate(email, false)
+    authenticate(email, false, userId)
         .then((response) => {
             if (response === "logged-in") {
                 store.dispatch(showSuccess(authSuccess));
+            } else if (response === "awaiting-syncing") {
+                // TODO
             }
             // else go to next step => validate email address => automatic via redux store update
         })
-        .catch((_e) => {
+        .catch((e) => {
+            console.error(e);
             store.dispatch(showError(genericError));
         })
         .finally(() => {
@@ -123,6 +157,6 @@ export async function onChooseAccount(session: SessionData): Promise<void> {
     if (session.status === "logged-in") {
         handleSwitchActiveSession(session.email);
     } else {
-        handleOnAuthenticate(session.email);
+        handleOnAuthenticate(session.email, session.userId);
     }
 }

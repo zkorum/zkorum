@@ -1,3 +1,8 @@
+import type {
+    Devices,
+    EmailCredentialsPerEmail,
+    SecretCredentialsPerType,
+} from "@/shared/types/zod";
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 // import type { RootState } from "../../store";
@@ -23,10 +28,16 @@ export interface SessionData {
     codeExpiry?: string;
     nextCodeSoonestTime?: string;
     status: SessionStatus;
+    encryptedSymmKey?: string;
+    isRegistration?: boolean;
+    syncingDevices?: Devices;
+    emailCredentialsPerEmail?: EmailCredentialsPerEmail;
+    secretCredentialsPerType?: SecretCredentialsPerType;
 }
 
 interface VerifyProps {
     email: string;
+    userId?: string;
     codeExpiry: string;
     nextCodeSoonestTime: string;
 }
@@ -34,10 +45,20 @@ interface VerifyProps {
 interface LoggedInProps {
     email: string;
     userId: string;
+    encryptedSymmKey: string;
+    isRegistration: boolean;
+    syncingDevices: Devices;
+    emailCredentialsPerEmail: EmailCredentialsPerEmail;
+    secretCredentialsPerType: SecretCredentialsPerType;
 }
 
 interface EmailProps {
     email: string;
+}
+
+interface AuthenticatingProps {
+    email: string;
+    userId?: string;
 }
 
 // Define the initial state using that type
@@ -58,14 +79,14 @@ export const sessionSlice = createSlice({
             state.isModalOpen = true;
         },
         closeAuthModal: (state) => {
-            state.pendingSessionEmail = "";
             state.isModalOpen = false;
         },
-        authenticating: (state, action: PayloadAction<EmailProps>) => {
+        authenticating: (state, action: PayloadAction<AuthenticatingProps>) => {
             if (!(action.payload.email in state.sessions)) {
                 state.sessions[action.payload.email] = {
                     status: "authenticating",
                     email: action.payload.email,
+                    userId: action.payload.userId,
                 };
             }
             state.pendingSessionEmail = action.payload.email;
@@ -75,6 +96,8 @@ export const sessionSlice = createSlice({
                 state.sessions[action.payload.email].status = "verifying";
                 state.sessions[action.payload.email].email =
                     action.payload.email;
+                state.sessions[action.payload.email].userId =
+                    action.payload.userId;
                 state.sessions[action.payload.email].codeExpiry =
                     action.payload.codeExpiry;
                 state.sessions[action.payload.email].nextCodeSoonestTime =
@@ -83,6 +106,7 @@ export const sessionSlice = createSlice({
                 state.sessions[action.payload.email] = {
                     status: "verifying",
                     email: action.payload.email,
+                    userId: action.payload.userId,
                     codeExpiry: action.payload.codeExpiry,
                     nextCodeSoonestTime: action.payload.nextCodeSoonestTime,
                 };
@@ -97,16 +121,31 @@ export const sessionSlice = createSlice({
                     action.payload.email;
                 state.sessions[action.payload.email].userId =
                     action.payload.userId;
+                state.sessions[action.payload.email].encryptedSymmKey =
+                    action.payload.encryptedSymmKey;
+                state.sessions[action.payload.email].isRegistration =
+                    action.payload.isRegistration;
+                state.sessions[action.payload.email].syncingDevices =
+                    action.payload.syncingDevices;
+                state.sessions[action.payload.email].emailCredentialsPerEmail =
+                    action.payload.emailCredentialsPerEmail;
+                state.sessions[action.payload.email].secretCredentialsPerType =
+                    action.payload.secretCredentialsPerType;
             } else {
                 state.sessions[action.payload.email] = {
                     status: "logged-in",
                     email: action.payload.email,
                     userId: action.payload.userId,
+                    encryptedSymmKey: action.payload.encryptedSymmKey,
+                    isRegistration: action.payload.isRegistration,
+                    syncingDevices: action.payload.syncingDevices,
+                    emailCredentialsPerEmail:
+                        action.payload.emailCredentialsPerEmail,
+                    secretCredentialsPerType:
+                        action.payload.secretCredentialsPerType,
                 };
             }
             state.activeSessionEmail = action.payload.email;
-            state.pendingSessionEmail = "";
-            state.isModalOpen = false;
         },
         loggedOut: (state, action: PayloadAction<EmailProps>) => {
             if (action.payload.email in state.sessions) {

@@ -45,6 +45,151 @@ export interface AuthAuthenticatePost200Response {
 /**
  * 
  * @export
+ * @interface AuthAuthenticatePost409Response
+ */
+export interface AuthAuthenticatePost409Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'reason': AuthAuthenticatePost409ResponseReasonEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'encryptedSymmKey': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'syncingDevices': Array<string>;
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+}
+
+export const AuthAuthenticatePost409ResponseReasonEnum = {
+    AlreadyLoggedIn: 'already_logged_in'
+} as const;
+
+export type AuthAuthenticatePost409ResponseReasonEnum = typeof AuthAuthenticatePost409ResponseReasonEnum[keyof typeof AuthAuthenticatePost409ResponseReasonEnum];
+
+/**
+ * 
+ * @export
+ * @interface AuthAuthenticatePost409ResponseAnyOf
+ */
+export interface AuthAuthenticatePost409ResponseAnyOf {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf
+     */
+    'reason': AuthAuthenticatePost409ResponseAnyOfReasonEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf
+     */
+    'userId': string;
+}
+
+export const AuthAuthenticatePost409ResponseAnyOfReasonEnum = {
+    AwaitingSyncing: 'awaiting_syncing'
+} as const;
+
+export type AuthAuthenticatePost409ResponseAnyOfReasonEnum = typeof AuthAuthenticatePost409ResponseAnyOfReasonEnum[keyof typeof AuthAuthenticatePost409ResponseAnyOfReasonEnum];
+
+/**
+ * 
+ * @export
+ * @interface AuthAuthenticatePost409ResponseAnyOf1
+ */
+export interface AuthAuthenticatePost409ResponseAnyOf1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     */
+    'reason': AuthAuthenticatePost409ResponseAnyOf1ReasonEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     */
+    'encryptedSymmKey': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     */
+    'syncingDevices': Array<string>;
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     */
+    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     */
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+}
+
+export const AuthAuthenticatePost409ResponseAnyOf1ReasonEnum = {
+    AlreadyLoggedIn: 'already_logged_in'
+} as const;
+
+export type AuthAuthenticatePost409ResponseAnyOf1ReasonEnum = typeof AuthAuthenticatePost409ResponseAnyOf1ReasonEnum[keyof typeof AuthAuthenticatePost409ResponseAnyOf1ReasonEnum];
+
+/**
+ * 
+ * @export
+ * @interface AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
+ */
+export interface AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
+     */
+    'active'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
+     */
+    'revoked': Array<string>;
+}
+/**
+ * 
+ * @export
  * @interface AuthAuthenticatePostRequest
  */
 export interface AuthAuthenticatePostRequest {
@@ -70,6 +215,51 @@ export interface AuthAuthenticatePostRequest {
 /**
  * 
  * @export
+ * @interface AuthSyncPost409Response
+ */
+export interface AuthSyncPost409Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthSyncPost409Response
+     */
+    'reason': AuthSyncPost409ResponseReasonEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthSyncPost409Response
+     */
+    'userId': string;
+}
+
+export const AuthSyncPost409ResponseReasonEnum = {
+    AlreadySyncing: 'already_syncing'
+} as const;
+
+export type AuthSyncPost409ResponseReasonEnum = typeof AuthSyncPost409ResponseReasonEnum[keyof typeof AuthSyncPost409ResponseReasonEnum];
+
+/**
+ * 
+ * @export
+ * @interface AuthSyncPostRequest
+ */
+export interface AuthSyncPostRequest {
+    /**
+     * Email address
+     * @type {string}
+     * @memberof AuthSyncPostRequest
+     */
+    'email': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthSyncPostRequest
+     */
+    'secretBlindedCredentialRequest'?: string;
+}
+/**
+ * 
+ * @export
  * @interface AuthVerifyOtpPost200Response
  */
 export interface AuthVerifyOtpPost200Response {
@@ -85,6 +275,30 @@ export interface AuthVerifyOtpPost200Response {
      * @memberof AuthVerifyOtpPost200Response
      */
     'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthVerifyOtpPost200Response
+     */
+    'encryptedSymmKey'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof AuthVerifyOtpPost200Response
+     */
+    'syncingDevices': Array<string>;
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof AuthVerifyOtpPost200Response
+     */
+    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof AuthVerifyOtpPost200Response
+     */
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
      * @type {string}
@@ -119,6 +333,30 @@ export interface AuthVerifyOtpPost200ResponseAnyOf {
      * @memberof AuthVerifyOtpPost200ResponseAnyOf
      */
     'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     */
+    'encryptedSymmKey'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     */
+    'syncingDevices': Array<string>;
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     */
+    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     */
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
 }
 /**
  * 
@@ -160,6 +398,12 @@ export interface AuthVerifyOtpPostRequest {
      * @memberof AuthVerifyOtpPostRequest
      */
     'code': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthVerifyOtpPostRequest
+     */
+    'encryptedSymmKey': string;
 }
 
 /**
@@ -234,6 +478,41 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authSyncPost: async (authSyncPostRequest: AuthSyncPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'authSyncPostRequest' is not null or undefined
+            assertParamExists('authSyncPost', 'authSyncPostRequest', authSyncPostRequest)
+            const localVarPath = `/auth/sync`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(authSyncPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -298,6 +577,16 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authSyncPost(authSyncPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -332,6 +621,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         authLogoutPost(options?: any): AxiosPromise<void> {
             return localVarFp.authLogoutPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {AuthSyncPostRequest} authSyncPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: any): AxiosPromise<void> {
+            return localVarFp.authSyncPost(authSyncPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -371,6 +669,17 @@ export class DefaultApi extends BaseAPI {
      */
     public authLogoutPost(options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).authLogoutPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {AuthSyncPostRequest} authSyncPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authSyncPost(authSyncPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

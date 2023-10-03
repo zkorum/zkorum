@@ -1,14 +1,13 @@
 // Copyright ts-odd team
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
-import { SymmAlg } from "keystore-idb/types.js";
+import type RSAKeyStore from "@zkorum/keystore-idb/lib/rsa/keystore.js";
+import { SymmAlg } from "@zkorum/keystore-idb/types.js";
 
 export { SymmAlg };
 
 export type ImplementationOptions = {
-    exchangeKeyName: string;
     storeName: string;
-    writeKeyName: string;
 };
 
 export type Implementation = {
@@ -65,15 +64,25 @@ export type Implementation = {
 
     keystore: {
         clearStore: () => Promise<void>;
-        decrypt: (encrypted: Uint8Array) => Promise<Uint8Array>;
-        exportSymmKey: (name: string) => Promise<Uint8Array>;
+        decrypt: (
+            encrypted: Uint8Array,
+            emailOrUserId: string
+        ) => Promise<Uint8Array>;
+        exportSymmKey: (userId: string) => Promise<Uint8Array>;
         getAlgorithm: () => Promise<string>; // This goes hand in hand with the DID keyTypes record
         getUcanAlgorithm: () => Promise<string>;
-        importSymmKey: (key: Uint8Array, name: string) => Promise<void>;
-        keyExists: (keyName: string) => Promise<boolean>;
-        publicExchangeKey: () => Promise<Uint8Array>;
-        publicWriteKey: () => Promise<Uint8Array>;
-        sign: (message: Uint8Array) => Promise<Uint8Array>;
+        importSymmKey: (key: Uint8Array, userId: string) => Promise<void>;
+        symmKeyExists: (userId: string) => Promise<boolean>;
+        writeKeyExists: (emailOrUserId: string) => Promise<boolean>;
+        exchangeKeyExists: (emailOrUserId: string) => Promise<boolean>;
+        publicExchangeKey: (emailOrUserId: string) => Promise<Uint8Array>;
+        publicWriteKey: (emailOrUserId: string) => Promise<Uint8Array>;
+        sign: (
+            message: Uint8Array,
+            emailOrUserId: string
+        ) => Promise<Uint8Array>;
+        createIfDoesNotExists: (emailOrUserId: string) => Promise<RSAKeyStore>;
+        copyKeypairs: (fromEmail: string, toUserId: string) => Promise<void>;
     };
 
     misc: {

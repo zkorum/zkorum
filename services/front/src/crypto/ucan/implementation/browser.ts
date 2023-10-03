@@ -4,11 +4,11 @@
 import * as uint8arrays from "uint8arrays";
 import tweetnacl from "tweetnacl";
 
-import * as keystoreAES from "keystore-idb/aes/index.js";
-import * as keystoreIDB from "keystore-idb/constants.js";
-import { HashAlg, SymmAlg, SymmKeyLength } from "keystore-idb/types.js";
-import { RSAKeyStore } from "keystore-idb/rsa/index.js";
-import rsaOperations from "keystore-idb/rsa/index.js";
+import * as keystoreAES from "@zkorum/keystore-idb/aes/index.js";
+import * as keystoreIDB from "@zkorum/keystore-idb/constants.js";
+import { HashAlg, SymmAlg, SymmKeyLength } from "@zkorum/keystore-idb/types.js";
+import { RSAKeyStore } from "@zkorum/keystore-idb/rsa/index.js";
+import rsaOperations from "@zkorum/keystore-idb/rsa/index.js";
 
 import * as typeChecks from "../../../common/type-checks.js";
 import {
@@ -152,23 +152,38 @@ export async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
 
 // KEYSTORE
 
+function ksSymmIdentifier(_ks: RSAKeyStore, userId: string) {
+    return `${userId}:symm`;
+}
+
+function ksExchangeIdentifier(_ks: RSAKeyStore, emailOrUserId: string): string {
+    return `${emailOrUserId}:exchange`;
+}
+
+function ksWriteIdentifier(_ks: RSAKeyStore, emailOrUserId: string): string {
+    return `${emailOrUserId}:write`;
+}
+
 export function ksClearStore(ks: RSAKeyStore): Promise<void> {
     return ks.destroy();
 }
 
 export async function ksDecrypt(
     ks: RSAKeyStore,
-    cipherText: Uint8Array
+    cipherText: Uint8Array,
+    emailOrUserId: string
 ): Promise<Uint8Array> {
-    const exchangeKey = await ks.exchangeKey();
+    const exchangeKeyName = ksExchangeIdentifier(ks, emailOrUserId);
+    const exchangeKey = await ks.exchangeKey(exchangeKeyName);
 
     return rsaDecrypt(cipherText, exchangeKey.privateKey);
 }
 
 export async function ksExportSymmKey(
     ks: RSAKeyStore,
-    keyName: string
+    userId: string
 ): Promise<Uint8Array> {
+    const keyName = ksSymmIdentifier(ks, userId);
     if ((await ks.keyExists(keyName)) === false) {
         throw new Error(
             `Expected a key under the name '${keyName}', but couldn't find anything`
@@ -193,29 +208,56 @@ export function ksGetUcanAlgorithm(_ks: RSAKeyStore): Promise<string> {
 export function ksImportSymmKey(
     ks: RSAKeyStore,
     key: Uint8Array,
-    name: string
+    userId: string
 ): Promise<void> {
-    return ks.importSymmKey(uint8arrays.toString(key, "base64pad"), name);
+    const symmKeyName = ksSymmIdentifier(ks, userId);
+    return ks.importSymmKey(
+        uint8arrays.toString(key, "base64pad"),
+        symmKeyName
+    );
 }
 
-export function ksKeyExists(
+export function ksSymmKeyExists(
     ks: RSAKeyStore,
-    keyName: string
+    userId: string
 ): Promise<boolean> {
+    const keyName = ksSymmIdentifier(ks, userId);
     return ks.keyExists(keyName);
 }
 
+export function ksWriteKeyExists(
+    ks: RSAKeyStore,
+    emailOrUserId: string
+): Promise<boolean> {
+    const keyName = ksWriteIdentifier(ks, emailOrUserId);
+    return ks.keypairExists(keyName);
+}
+
+export function ksExchangeKeyExists(
+    ks: RSAKeyStore,
+    emailOrUserId: string
+): Promise<boolean> {
+    const keyName = ksExchangeIdentifier(ks, emailOrUserId);
+    return ks.keypairExists(keyName);
+}
+
 export async function ksPublicExchangeKey(
-    ks: RSAKeyStore
+    ks: RSAKeyStore,
+    emailOrUserId: string
 ): Promise<Uint8Array> {
-    const keypair = await ks.exchangeKey();
+    const keypair = await ks.exchangeKey(
+        ksExchangeIdentifier(ks, emailOrUserId)
+    );
     const spki = await webcrypto.subtle.exportKey("spki", keypair.publicKey);
 
     return new Uint8Array(spki);
 }
 
-export async function ksPublicWriteKey(ks: RSAKeyStore): Promise<Uint8Array> {
-    const keypair = await ks.writeKey();
+export async function ksPublicWriteKey(
+    ks: RSAKeyStore,
+    emailOrUserId: string
+): Promise<Uint8Array> {
+    const keypair = await ks.writeKey(ksWriteIdentifier(ks, emailOrUserId));
     const spki = await webcrypto.subtle.exportKey("spki", keypair.publicKey);
 
     return new Uint8Array(spki);
@@ -223,9 +265,11 @@ export async function ksPublicWriteKey(ks: RSAKeyStore): Promise<Uint8Array> {
 
 export async function ksSign(
     ks: RSAKeyStore,
-    message: Uint8Array
+    message: Uint8Array,
+    emailOrUserId: string
 ): Promise<Uint8Array> {
-    const writeKey = await ks.writeKey();
+    const writeKeyName = ksWriteIdentifier(ks, emailOrUserId);
+    const writeKey = await ks.writeKey(writeKeyName);
     const arrayBuffer = await rsaOperations.sign(
         message,
         writeKey.privateKey,
@@ -233,6 +277,31 @@ export async function ksSign(
     );
 
     return new Uint8Array(arrayBuffer);
+}
+
+export async function ksCreateIfDoesNotExist(
+    ks: RSAKeyStore,
+    emailOrUserId: string
+): Promise<RSAKeyStore> {
+    return await ks.createIfDoesNotExist(
+        ksWriteIdentifier(ks, emailOrUserId),
+        ksExchangeIdentifier(ks, emailOrUserId)
+    );
+}
+
+export async function ksCopyKeypairs(
+    ks: RSAKeyStore,
+    fromEmail: string,
+    toUserId: string
+): Promise<void> {
+    // NOTE: no content is deleted from the "from" key names
+    const fromWriteKeyName = ksWriteIdentifier(ks, fromEmail);
+    const toWriteKeyName = ksWriteIdentifier(ks, toUserId);
+    await ks.copyKeypair(fromWriteKeyName, toWriteKeyName);
+
+    const fromExchangeKeyName = ksExchangeIdentifier(ks, fromEmail);
+    const toExchangeKeyName = ksExchangeIdentifier(ks, toUserId);
+    await ks.copyKeypair(fromExchangeKeyName, toExchangeKeyName);
 }
 
 // MISC
@@ -332,16 +401,11 @@ export function rsaGenKey(): Promise<CryptoKeyPair> {
 
 export async function implementation({
     storeName,
-    exchangeKeyName,
-    writeKeyName,
 }: ImplementationOptions): Promise<Implementation> {
     const ks = await RSAKeyStore.init({
         charSize: 8,
         hashAlg: HashAlg.SHA_256,
-
-        storeName,
-        exchangeKeyName,
-        writeKeyName,
+        storeName: storeName,
     });
 
     return {
@@ -358,10 +422,15 @@ export async function implementation({
             getAlgorithm: (...args) => ksGetAlgorithm(ks, ...args),
             getUcanAlgorithm: (...args) => ksGetUcanAlgorithm(ks, ...args),
             importSymmKey: (...args) => ksImportSymmKey(ks, ...args),
-            keyExists: (...args) => ksKeyExists(ks, ...args),
+            symmKeyExists: (...args) => ksSymmKeyExists(ks, ...args),
+            writeKeyExists: (...args) => ksWriteKeyExists(ks, ...args),
+            exchangeKeyExists: (...args) => ksExchangeKeyExists(ks, ...args),
             publicExchangeKey: (...args) => ksPublicExchangeKey(ks, ...args),
             publicWriteKey: (...args) => ksPublicWriteKey(ks, ...args),
             sign: (...args) => ksSign(ks, ...args),
+            createIfDoesNotExists: (...args) =>
+                ksCreateIfDoesNotExist(ks, ...args),
+            copyKeypairs: (...args) => ksCopyKeypairs(ks, ...args),
         },
     };
 }

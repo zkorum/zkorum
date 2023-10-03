@@ -39,6 +39,7 @@ export function SessionList({
             await logout();
             dispatch(showSuccess(logoutMessage));
         } catch (e) {
+            console.error(e);
             dispatch(showError(genericError));
         }
     }

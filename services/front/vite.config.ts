@@ -4,6 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react-swc";
 import checker from "vite-plugin-checker";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
     plugins: [
@@ -14,5 +15,6 @@ export default defineConfig({
             typescript: true,
         }),
         ValidateEnv(),
+        tsconfigPaths(),
     ],
 });

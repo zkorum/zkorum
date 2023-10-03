@@ -16,13 +16,45 @@ import {
 import { Authenticate } from "./Authenticate";
 import { OtpVerify } from "./OtpVerify";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
+import { LoggedInPage, type FormsStatus } from "./LoggedInPage";
+import Container from "@mui/material/Container";
 
+// TODO: maybe refactor this as routable dialog or something?
 export function AuthDialog() {
     const isModalOpen = useAppSelector((state) => state.sessions.isModalOpen);
     const dispatch = useAppDispatch();
-    const pendingSession = useAppSelector((state) => {
-        const pendingSessionUserId = state.sessions.pendingSessionEmail;
-        return state.sessions.sessions[pendingSessionUserId];
+    const pendingSessionStatus = useAppSelector((state) => {
+        const pendingSessionEmail = state.sessions.pendingSessionEmail;
+        return state.sessions.sessions[pendingSessionEmail]?.status;
+    });
+    const isRegistration = useAppSelector((state) => {
+        const pendingSessionEmail = state.sessions.pendingSessionEmail;
+        return state.sessions.sessions[pendingSessionEmail]?.isRegistration;
+    });
+    const isTheOnlyDevice = useAppSelector((state) => {
+        const pendingSessionEmail = state.sessions.pendingSessionEmail;
+        const syncingDevices = state.sessions.sessions[pendingSessionEmail]
+            ?.syncingDevices as string[]; // at this point it cannot be undefined => TODO improve this
+        if (syncingDevices === undefined) {
+            return undefined;
+        }
+        return syncingDevices.length === 1;
+    });
+    const formsStatus = useAppSelector((state) => {
+        const pendingSessionEmail = state.sessions.pendingSessionEmail;
+        const emailCredentialsPerEmail =
+            state.sessions.sessions[pendingSessionEmail]
+                ?.emailCredentialsPerEmail;
+        if (emailCredentialsPerEmail === undefined) {
+            return undefined;
+        }
+        return {
+            hasFilledForms: pendingSessionEmail in emailCredentialsPerEmail,
+            hasActiveCredential:
+                pendingSessionEmail in emailCredentialsPerEmail &&
+                emailCredentialsPerEmail[pendingSessionEmail].active !==
+                    undefined,
+        };
     });
 
     function handleClose() {
@@ -30,7 +62,7 @@ export function AuthDialog() {
     }
 
     function getGoBackButton(): JSX.Element | null {
-        if (pendingSession?.status === "verifying") {
+        if (pendingSessionStatus === "verifying") {
             return (
                 <IconButton
                     aria-label="close"
@@ -78,26 +110,40 @@ export function AuthDialog() {
                             </Grid>
                         </Box>
                     </Box>
-                    <IconButton
-                        aria-label="close"
-                        onClick={handleClose}
-                        sx={{
-                            position: "absolute",
-                            right: 8,
-                            top: 8,
-                            color: (theme) => theme.palette.grey[500],
-                        }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
+                    {pendingSessionStatus !== "logged-in" ? (
+                        <IconButton
+                            aria-label="close"
+                            onClick={handleClose}
+                            sx={{
+                                position: "absolute",
+                                right: 8,
+                                top: 8,
+                                color: (theme) => theme.palette.grey[500],
+                            }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    ) : null}
                     {getGoBackButton()}
                 </DialogTitle>
                 <DialogContent>
-                    {pendingSession?.status === "verifying" ? (
-                        <OtpVerify />
-                    ) : (
-                        <Authenticate />
-                    )}
+                    <Container>
+                        {pendingSessionStatus === "verifying" ? (
+                            <OtpVerify />
+                        ) : pendingSessionStatus === "logged-in" &&
+                          (isRegistration ||
+                              isTheOnlyDevice ||
+                              !formsStatus?.hasFilledForms ||
+                              !formsStatus?.hasActiveCredential) ? (
+                            <LoggedInPage
+                                isRegistration={isRegistration as boolean}
+                                isTheOnlyDevice={isTheOnlyDevice as boolean}
+                                formsStatus={formsStatus as FormsStatus}
+                            /> // when status is logged-in, there must be data in these fields - TODO: provide better error-handling later (notably via better typing and by being careful when loading from fresh local DB)
+                        ) : (
+                            <Authenticate />
+                        )}
+                    </Container>
                 </DialogContent>
             </Dialog>
             <Outlet />
