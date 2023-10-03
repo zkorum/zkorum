@@ -25,8 +25,9 @@ export async function storeSymmKeyLocally(
     encryptedSymmKey: string,
     userId: string
 ) {
+    const decodedEncryptedSymmKey = decode(encryptedSymmKey);
     const symmKey = await cryptoStore.keystore.decrypt(
-        decode(encryptedSymmKey),
+        decodedEncryptedSymmKey,
         userId
     );
     await cryptoStore.keystore.importSymmKey(symmKey, userId);
@@ -44,5 +45,11 @@ export async function copyKeypairsIfDestIsEmpty(
     fromEmail: string,
     toUserId: string
 ): Promise<void> {
+    if (
+        (await cryptoStore.keystore.writeKeyExists(toUserId)) &&
+        (await cryptoStore.keystore.exchangeKeyExists(toUserId))
+    ) {
+        return;
+    }
     await cryptoStore.keystore.copyKeypairs(fromEmail, toUserId);
 }

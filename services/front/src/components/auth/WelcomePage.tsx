@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 
 interface WelcomePageProps {
@@ -6,13 +7,13 @@ interface WelcomePageProps {
 }
 
 // TODO add nextButton and trigger the function passed as props
-export function WelcomePage(onNextButtonClicked: WelcomePageProps) {
+export function WelcomePage({ onNextButtonClicked }: WelcomePageProps) {
     return (
         <Box
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
+                alignItems: "left",
             }}
         >
             <Box sx={{ my: 3 }}>
@@ -23,10 +24,10 @@ export function WelcomePage(onNextButtonClicked: WelcomePageProps) {
                     You're in the closed alpha version of our app. While we have
                     limited features, your privacy is a top priority. Your
                     actions here are completely separate from your identity,
-                    thanks to client-side encryption. This means that neither
-                    ZKorum nor anyone else can tell what you contribute to the
-                    forum. For tech details, check out our Github - it's fully
-                    open-source for transparency!
+                    thanks to client-side encryption and Zero-Knowledge proofs.
+                    This means that neither ZKorum nor anyone else can tell what
+                    you contribute to the forum. For tech details, check out our
+                    Github - it's fully open-source for transparency!
                 </Typography>
             </Box>
             <Box sx={{ my: 3 }}>
@@ -46,6 +47,11 @@ export function WelcomePage(onNextButtonClicked: WelcomePageProps) {
             <Box sx={{ my: 3 }}>
                 <Typography>Cheers,</Typography>
                 <Typography>Yuting, CEO of ZKorum</Typography>
+            </Box>
+            <Box sx={{ alignSelf: "center", my: 3 }}>
+                <Button variant="contained" onClick={onNextButtonClicked}>
+                    OK, let the fun begin! 🎉
+                </Button>
             </Box>
         </Box>
     );

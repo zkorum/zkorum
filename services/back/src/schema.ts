@@ -21,11 +21,11 @@ export const bytea = customType<{
         return "bytea";
     },
     toDriver(val: string): Uint8Array {
-        const buffer = Buffer.from(val, "base64");
+        const buffer = Buffer.from(val, "base64url");
         return Uint8Array.from(buffer);
     },
     fromDriver(val): string {
-        return Buffer.from(val as Uint8Array).toString("base64");
+        return Buffer.from(val as Uint8Array).toString("base64url");
     },
 });
 

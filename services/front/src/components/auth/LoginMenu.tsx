@@ -13,7 +13,10 @@ import {
 import MenuItem from "@mui/material/MenuItem";
 import { logout, onChooseAccount } from "../../auth/auth";
 import { CustomAvatar } from "./CustomAvatar";
-import { openAuthModal } from "../../store/reducers/session";
+import {
+    openAuthModal,
+    resetPendingSession,
+} from "../../store/reducers/session";
 import Divider from "@mui/material/Divider";
 import { showError, showSuccess } from "../../store/reducers/snackbar";
 import { genericError, logoutMessage } from "../error/message";
@@ -73,6 +76,7 @@ export function LoginMenu() {
                         variant="text"
                         onClick={() => {
                             handleOnClose();
+                            dispatch(resetPendingSession());
                             dispatch(openAuthModal());
                         }}
                     >

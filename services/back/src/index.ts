@@ -1,4 +1,3 @@
-import "dotenv/config"; // this loads .env values in process.env
 import fs from "fs";
 import { type FastifyRequest } from "fastify";
 import fastifyAuth from "@fastify/auth";

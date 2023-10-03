@@ -9,7 +9,7 @@ import {
     AuthVerifyOtpPost200ResponseReasonEnum,
     type AuthAuthenticatePost409Response,
 } from "../../api";
-import { authenticate, verifyOtp } from "../../auth/auth";
+import { authenticate, onLoggedIn, verifyOtp } from "../../auth/auth";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { ZodType } from "../../shared/types/zod";
 import { CircularProgressCountdown } from "../shared/CircularProgressCountdown";
@@ -19,14 +19,11 @@ import {
     showSuccess,
     showWarning,
 } from "../../store/reducers/snackbar";
-import { loggedIn } from "../../store/reducers/session";
+import { setPendingSessionCodeExpiry } from "../../store/reducers/session";
 import { authAlreadyLoggedIn, genericError } from "../error/message";
-import {
-    copyKeypairsIfDestIsEmpty as copyKeypairs,
-    generateAndEncryptSymmKey,
-    storeSymmKeyLocally,
-} from "../../crypto/ucan/ucan";
+import { generateAndEncryptSymmKey } from "../../crypto/ucan/ucan";
 import axios from "axios";
+import Alert from "@mui/material/Alert";
 
 export function OtpVerify() {
     const [otp, setOtp] = React.useState<string>("");
@@ -119,6 +116,8 @@ export function OtpVerify() {
     React.useEffect(() => {
         if (secondsUntilCodeExpiry === 0) {
             setIsCurrentCodeActive(false);
+        } else {
+            setIsCurrentCodeActive(true);
         }
     }, [secondsUntilCodeExpiry]);
 
@@ -138,14 +137,14 @@ export function OtpVerify() {
             dispatch(showError(genericError));
         } else {
             setIsVerifyingCode(true);
-            const tempEncryptedSymmKey =
-                await generateAndEncryptSymmKey(pendingEmail);
-            // we systematically send an encrypted symmetric key, even though it is only taken into account on registration
-            // that is because we don't know at this point if it is a registration or a log in
-            // and we don't want the backend to tell us before, otherwise an attacker could do an enumeration attack on the authenticate endpoint.
-            // we could send the symm key later, only if needed, but it would result in synchronization issues (what if the user is considered logged-in when registering, but has never synced any symmetric key?)
-            // so for the sake of simplicity, we trade off a bit of performance
             try {
+                const tempEncryptedSymmKey =
+                    await generateAndEncryptSymmKey(pendingEmail);
+                // we systematically send an encrypted symmetric key, even though it is only taken into account on registration
+                // that is because we don't know at this point if it is a registration or a log in
+                // and we don't want the backend to tell us before, otherwise an attacker could do an enumeration attack on the authenticate endpoint.
+                // we could send the symm key later, only if needed, but it would result in synchronization issues (what if the user is considered logged-in when registering, but has never synced any symmetric key?)
+                // so for the sake of simplicity, we trade off a bit of performance
                 const verifyOtpResult = await verifyOtp(
                     result.data,
                     tempEncryptedSymmKey
@@ -157,33 +156,19 @@ export function OtpVerify() {
                         // then when syncing is OK - steps as in "else"
                     } else {
                         // this is a first time registration or a login from a known device that's been synced already
-                        await copyKeypairs(
-                            pendingEmail,
-                            verifyOtpResult.userId
-                        );
-                        // TODO: what to do what the symm key cannot be deciphered? we ignore this range of problems for now.
-                        // current design should not allow it.
-                        // we also ignore the potential I/O error from storing the key. This should be dealt with by re-trying.
-                        await storeSymmKeyLocally(
-                            verifyOtpResult.encryptedSymmKey,
-                            verifyOtpResult.userId
-                        );
-                        dispatch(
-                            loggedIn({
-                                email: pendingEmail,
-                                userId: verifyOtpResult.userId,
-                                encryptedSymmKey:
-                                    verifyOtpResult.encryptedSymmKey,
-                                isRegistration:
-                                    verifyOtpResult.encryptedSymmKey ===
-                                    tempEncryptedSymmKey, // adapts the welcome page in that case
-                                syncingDevices: verifyOtpResult.syncingDevices, // adapts the welcome page if there is only one device in that list
-                                emailCredentialsPerEmail:
-                                    verifyOtpResult.emailCredentialsPerEmail, // adapts the welcome page whether it is empty or not
-                                secretCredentialsPerType:
-                                    verifyOtpResult.secretCredentialsPerType,
-                            })
-                        );
+                        await onLoggedIn({
+                            email: pendingEmail,
+                            userId: verifyOtpResult.userId,
+                            encryptedSymmKey: verifyOtpResult.encryptedSymmKey,
+                            isRegistration:
+                                verifyOtpResult.encryptedSymmKey ===
+                                tempEncryptedSymmKey,
+                            syncingDevices: verifyOtpResult.syncingDevices,
+                            emailCredentialsPerEmail:
+                                verifyOtpResult.emailCredentialsPerEmail,
+                            secretCredentialsPerType:
+                                verifyOtpResult.secretCredentialsPerType,
+                        });
                     }
                 } else {
                     switch (verifyOtpResult.reason) {
@@ -198,6 +183,12 @@ export function OtpVerify() {
                             break;
                         case AuthVerifyOtpPost200ResponseReasonEnum.TooManyWrongGuess:
                             setIsCurrentCodeActive(false);
+                            setOtp("");
+                            dispatch(
+                                setPendingSessionCodeExpiry(
+                                    new Date().toISOString()
+                                )
+                            );
                             dispatch(
                                 showWarning(
                                     "Too many wrong guess - request a new code"
@@ -213,28 +204,28 @@ export function OtpVerify() {
                         const auth409: AuthAuthenticatePost409Response = e
                             .response.data as AuthAuthenticatePost409Response;
                         if (auth409.reason === "already_logged_in") {
-                            dispatch(
-                                loggedIn({
-                                    email: pendingEmail,
-                                    userId: auth409.userId,
-                                    isRegistration: false,
-                                    encryptedSymmKey: auth409.encryptedSymmKey,
-                                    syncingDevices: auth409.syncingDevices,
-                                    emailCredentialsPerEmail:
-                                        auth409.emailCredentialsPerEmail,
-                                    secretCredentialsPerType:
-                                        auth409.secretCredentialsPerType,
-                                })
-                            );
+                            await onLoggedIn({
+                                email: pendingEmail,
+                                userId: auth409.userId,
+                                isRegistration: false,
+                                encryptedSymmKey: auth409.encryptedSymmKey,
+                                syncingDevices: auth409.syncingDevices,
+                                emailCredentialsPerEmail:
+                                    auth409.emailCredentialsPerEmail,
+                                secretCredentialsPerType:
+                                    auth409.secretCredentialsPerType,
+                            });
                         } else {
                             console.log("awaiting_syncing");
                             // TODO "awaiting_syncing";
                         }
                     } else {
+                        console.error("unexpected axios error", e);
                         dispatch(showError(genericError));
                     }
                 } else {
-                    console.error("not axios", e);
+                    console.error("unexpected error", e);
+                    dispatch(showError(genericError));
                 }
             } finally {
                 setIsVerifyingCode(false);
@@ -253,6 +244,7 @@ export function OtpVerify() {
                     // TODO
                     return;
                 }
+                setIsCurrentCodeActive(true);
                 dispatch(
                     showInfo(
                         "New code sent to your email - previous code invalidated"
@@ -283,7 +275,7 @@ export function OtpVerify() {
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
+                alignItems: "left",
             }}
         >
             <Box sx={{ my: 3 }}>
@@ -297,13 +289,19 @@ export function OtpVerify() {
                     device/browser. You have 3 attempts.
                 </Typography>
             </Box>
-            <Box sx={{ mb: 2 }}>
-                <CircularProgressCountdown
-                    value={secondsUntilCodeExpiry}
-                    unit={"s"}
-                />
+            <Box alignSelf="center" sx={{ mb: 2 }}>
+                {secondsUntilCodeExpiry === 0 ? (
+                    <Alert severity="warning">
+                        Code expired - request a new one
+                    </Alert>
+                ) : (
+                    <CircularProgressCountdown
+                        value={secondsUntilCodeExpiry}
+                        unit={"s"}
+                    />
+                )}
             </Box>
-            <Box>
+            <Box alignSelf="center">
                 <MuiOtpInput
                     TextFieldsProps={{ disabled: !isCurrentCodeActive }}
                     length={6}
@@ -314,7 +312,7 @@ export function OtpVerify() {
                     onComplete={handleOnComplete}
                 />
             </Box>
-            <Box hidden={!isVerifyingCode}>
+            <Box alignSelf="center" hidden={!isVerifyingCode}>
                 Verifying code <CircularProgress />
             </Box>
             <Box sx={{ mt: 12, mb: 2 }}>
@@ -324,13 +322,13 @@ export function OtpVerify() {
                     code sent is valid.
                 </Typography>
             </Box>
-            <Box>
+            <Box alignSelf="center">
                 <CircularProgressCountdown
                     value={secondsUntilAllowingNewCode}
                     unit={"s"}
                 />
             </Box>
-            <Box>
+            <Box alignSelf="center">
                 <LoadingButton
                     size="small"
                     disabled={!canRequestNewCode}

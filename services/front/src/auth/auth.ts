@@ -22,6 +22,15 @@ import axios from "axios";
 import { showError, showSuccess } from "../store/reducers/snackbar";
 import { authSuccess, genericError } from "../components/error/message";
 import { closeMainLoading, openMainLoading } from "../store/reducers/loading";
+import {
+    copyKeypairsIfDestIsEmpty,
+    storeSymmKeyLocally,
+} from "@/crypto/ucan/ucan";
+import type {
+    Devices,
+    EmailCredentialsPerEmail,
+    SecretCredentialsPerType,
+} from "@/shared/types/zod";
 
 export async function authenticate(
     email: string,
@@ -73,19 +82,17 @@ export async function authenticate(
                 const auth409: AuthAuthenticatePost409Response = e.response
                     .data as AuthAuthenticatePost409Response;
                 if (auth409.reason === "already_logged_in") {
-                    store.dispatch(
-                        loggedIn({
-                            email: email,
-                            userId: auth409.userId,
-                            isRegistration: false,
-                            encryptedSymmKey: auth409.encryptedSymmKey,
-                            syncingDevices: auth409.syncingDevices,
-                            emailCredentialsPerEmail:
-                                auth409.emailCredentialsPerEmail,
-                            secretCredentialsPerType:
-                                auth409.secretCredentialsPerType,
-                        })
-                    );
+                    await onLoggedIn({
+                        email: email,
+                        userId: auth409.userId,
+                        isRegistration: false,
+                        encryptedSymmKey: auth409.encryptedSymmKey,
+                        syncingDevices: auth409.syncingDevices,
+                        emailCredentialsPerEmail:
+                            auth409.emailCredentialsPerEmail,
+                        secretCredentialsPerType:
+                            auth409.secretCredentialsPerType,
+                    });
                     return "logged-in";
                 } else {
                     // TODO
@@ -159,4 +166,43 @@ export async function onChooseAccount(session: SessionData): Promise<void> {
     } else {
         handleOnAuthenticate(session.email, session.userId);
     }
+}
+
+interface OnLoggedInProps {
+    email: string;
+    userId: string;
+    encryptedSymmKey: string;
+    isRegistration: boolean;
+    syncingDevices: Devices; // adapts the welcome page if there is only one device in that list
+    emailCredentialsPerEmail: EmailCredentialsPerEmail; // adapts the welcome page whether it is empty or not
+    secretCredentialsPerType: SecretCredentialsPerType;
+}
+
+export async function onLoggedIn({
+    email,
+    userId,
+    encryptedSymmKey,
+    isRegistration,
+    syncingDevices, // adapts the welcome page if there is only one device in that list
+    emailCredentialsPerEmail, // adapts the welcome page whether it is empty or not
+    secretCredentialsPerType,
+}: OnLoggedInProps) {
+    // this is a first time registration or a login from a known device that's been synced already
+    await copyKeypairsIfDestIsEmpty(email, userId);
+    // TODO: what to do what the symm key cannot be deciphered? we ignore this range of problems for now.
+    // current design should not allow it.
+    // we also ignore the potential I/O error from storing the key. This should be dealt with by re-trying.
+    await storeSymmKeyLocally(encryptedSymmKey, userId);
+
+    store.dispatch(
+        loggedIn({
+            email: email,
+            userId: userId,
+            encryptedSymmKey: encryptedSymmKey,
+            isRegistration: isRegistration,
+            syncingDevices: syncingDevices, // adapts the welcome page if there is only one device in that list
+            emailCredentialsPerEmail: emailCredentialsPerEmail, // adapts the welcome page whether it is empty or not
+            secretCredentialsPerType: secretCredentialsPerType,
+        })
+    );
 }

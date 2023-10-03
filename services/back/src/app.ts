@@ -1,3 +1,4 @@
+import "dotenv/config"; // this loads .env values in process.env
 import { z } from "zod";
 import { ZodType } from "./shared/types/zod.js";
 import fastify from "fastify";

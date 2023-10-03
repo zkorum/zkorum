@@ -301,19 +301,9 @@ export class Service {
                 "Device has never made an authentication attempt"
             );
         }
-        await Service.updateCodeGuessAttemptAmount(
-            db,
-            didWrite,
-            resultOtp[0].guessAttemptAmount + 1
-        );
         const now = new Date();
         if (resultOtp[0].codeExpiry <= now) {
             return { success: false, reason: "expired_code" };
-        } else if (resultOtp[0].guessAttemptAmount >= maxAttempt) {
-            return {
-                success: false,
-                reason: "too_many_wrong_guess",
-            };
         } else if (resultOtp[0].code === code) {
             switch (resultOtp[0].authType) {
                 case "register": {
@@ -374,11 +364,35 @@ export class Service {
                 }
             }
         } else {
+            await Service.updateCodeGuessAttemptAmount(
+                db,
+                didWrite,
+                resultOtp[0].guessAttemptAmount + 1
+            );
+            if (resultOtp[0].guessAttemptAmount + 1 >= maxAttempt) {
+                // code is now considered expired
+                await Service.expireCode(db, didWrite);
+                return {
+                    success: false,
+                    reason: "too_many_wrong_guess",
+                };
+            }
             return {
                 success: false,
                 reason: "wrong_guess",
             };
         }
+    }
+
+    static async expireCode(db: PostgresDatabase, didWrite: string) {
+        const now = new Date();
+        await db
+            .update(authAttemptTable)
+            .set({
+                codeExpiry: now,
+                updatedAt: now,
+            })
+            .where(eq(authAttemptTable.didWrite, didWrite));
     }
 
     static async getAllSyncingDidWrites(
@@ -639,6 +653,7 @@ export class Service {
         encryptedSymmKey: string
     ): Promise<void> {
         const uid = generateRandomHex();
+        const now = new Date();
         const in1000years = new Date();
         in1000years.setFullYear(in1000years.getFullYear() + 1000);
         return await db.transaction(async (tx) => {
@@ -655,6 +670,13 @@ export class Service {
                     "No register attempt was initiated - cannot register the user"
                 );
             }
+            await tx
+                .update(authAttemptTable)
+                .set({
+                    codeExpiry: now, // this is important to forbid further usage of the same code once it has been successfully guessed
+                    updatedAt: now,
+                })
+                .where(eq(authAttemptTable.didWrite, didWrite));
             await tx
                 .insert(userTable)
                 .values({ uid: uid, id: authAttemptResult[0].userId });
@@ -690,24 +712,33 @@ export class Service {
     // ! WARN we assume the OTP was verified for login new device at this point
     static async awaitSyncingNewDevice(db: PostgresDatabase, didWrite: string) {
         const now = new Date();
-        const authAttemptResult = await db
-            .select({
-                userId: authAttemptTable.userId,
-                didExchange: authAttemptTable.didExchange,
-            })
-            .from(authAttemptTable)
-            .where(eq(authAttemptTable.didWrite, didWrite));
-        if (authAttemptResult.length === 0) {
-            throw new Error(
-                "No loginNewDevice attempt was initiated - cannot login the user"
-            );
-        }
-        await db.insert(deviceTable).values({
-            userId: authAttemptResult[0].userId,
-            didWrite: didWrite,
-            // it's a new device - so no encryption key. Users must manually accept syncing from an existing syncing device. This is necessary because symmetric keys are only known client-side, and it is a protection against an attacker that would have access to the user's email address. Even in such situation, the attacker will not be able to get access to the user's credentials and secrets unless the attacker has also access to one of the user's existing syncing device - or unless the attacker successfully phishes the user into accepting syncing with the attacker's device.
-            didExchange: authAttemptResult[0].didExchange,
-            sessionExpiry: now,
+        await db.transaction(async (tx) => {
+            const authAttemptResult = await tx
+                .select({
+                    userId: authAttemptTable.userId,
+                    didExchange: authAttemptTable.didExchange,
+                })
+                .from(authAttemptTable)
+                .where(eq(authAttemptTable.didWrite, didWrite));
+            if (authAttemptResult.length === 0) {
+                throw new Error(
+                    "No loginNewDevice attempt was initiated - cannot login the user"
+                );
+            }
+            await tx
+                .update(authAttemptTable)
+                .set({
+                    codeExpiry: now, // this is important to forbid further usage of the same code once it has been successfully guessed
+                    updatedAt: now,
+                })
+                .where(eq(authAttemptTable.didWrite, didWrite));
+            await tx.insert(deviceTable).values({
+                userId: authAttemptResult[0].userId,
+                didWrite: didWrite,
+                // it's a new device - so no encryption key. Users must manually accept syncing from an existing syncing device. This is necessary because symmetric keys are only known client-side, and it is a protection against an attacker that would have access to the user's email address. Even in such situation, the attacker will not be able to get access to the user's credentials and secrets unless the attacker has also access to one of the user's existing syncing device - or unless the attacker successfully phishes the user into accepting syncing with the attacker's device.
+                didExchange: authAttemptResult[0].didExchange,
+                sessionExpiry: now,
+            });
         });
     }
 
@@ -716,13 +747,22 @@ export class Service {
         const now = new Date();
         const in1000years = new Date();
         in1000years.setFullYear(in1000years.getFullYear() + 1000);
-        await db
-            .update(deviceTable)
-            .set({
-                sessionExpiry: in1000years,
-                updatedAt: now,
-            })
-            .where(eq(deviceTable.didWrite, didWrite));
+        await db.transaction(async (tx) => {
+            await tx
+                .update(authAttemptTable)
+                .set({
+                    codeExpiry: now, // this is important to forbid further usage of the same code once it has been successfully guessed
+                    updatedAt: now,
+                })
+                .where(eq(authAttemptTable.didWrite, didWrite));
+            await tx
+                .update(deviceTable)
+                .set({
+                    sessionExpiry: in1000years,
+                    updatedAt: now,
+                })
+                .where(eq(deviceTable.didWrite, didWrite));
+        });
     }
 
     // minutesInterval: "3" in "we allow one email every 3 minutes"

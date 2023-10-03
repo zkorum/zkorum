@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
 import { type SxProps } from "@mui/material/styles";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { COMMUNITIES, CREDENTIALS, SETTINGS } from "@/common/navigation";
 
 enum Nav {
     Home = "Home",
@@ -43,13 +44,13 @@ export function BottomNavbar() {
                 navigate("/");
                 break;
             case Nav.Credentials:
-                navigate("/credentials");
+                navigate(CREDENTIALS);
                 break;
             case Nav.Communities:
-                navigate("/communities");
+                navigate(COMMUNITIES);
                 break;
             case Nav.Settings:
-                navigate("/settings");
+                navigate(SETTINGS);
                 break;
             case Nav.Post:
                 // TODO => make a dialog

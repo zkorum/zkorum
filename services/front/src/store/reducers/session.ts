@@ -184,6 +184,12 @@ export const sessionSlice = createSlice({
                 state.isModalOpen = false;
             }
         },
+        setPendingSessionCodeExpiry: (state, action: PayloadAction<string>) => {
+            if (state.pendingSessionEmail in state.sessions) {
+                state.sessions[state.pendingSessionEmail].codeExpiry =
+                    action.payload;
+            }
+        },
     },
 });
 
@@ -197,6 +203,7 @@ export const {
     resetPendingSession,
     removeSession,
     switchActiveSession,
+    setPendingSessionCodeExpiry,
 } = sessionSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
