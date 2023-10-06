@@ -405,6 +405,25 @@ export interface AuthVerifyOtpPostRequest {
      */
     'encryptedSymmKey': string;
 }
+/**
+ * 
+ * @export
+ * @interface CredentialsGetPost200Response
+ */
+export interface CredentialsGetPost200Response {
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof CredentialsGetPost200Response
+     */
+    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof CredentialsGetPost200Response
+     */
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+}
 
 /**
  * DefaultApi - axios parameter creator
@@ -546,6 +565,35 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        credentialsGetPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/credentials/get`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -595,6 +643,15 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authVerifyOtpPost(authVerifyOtpPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async credentialsGetPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialsGetPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.credentialsGetPost(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -639,6 +696,14 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: any): AxiosPromise<AuthVerifyOtpPost200Response> {
             return localVarFp.authVerifyOtpPost(authVerifyOtpPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        credentialsGetPost(options?: any): AxiosPromise<CredentialsGetPost200Response> {
+            return localVarFp.credentialsGetPost(options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -691,6 +756,16 @@ export class DefaultApi extends BaseAPI {
      */
     public authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).authVerifyOtpPost(authVerifyOtpPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public credentialsGetPost(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).credentialsGetPost(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

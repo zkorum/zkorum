@@ -4,6 +4,8 @@
 //     initializeWasm,
 //     SUBJECT_STR,
 // } from "@docknetwork/crypto-wasm-ts";
+import { DefaultApiFactory, type CredentialsGetPost200Response } from "@/api";
+import { activeSessionUcanAxios } from "@/interceptors";
 
 // let WASM_INITIALIZED = false;
 
@@ -69,3 +71,13 @@
 //     throw e;
 // }
 // }
+//
+
+export async function getCredentials(): Promise<CredentialsGetPost200Response> {
+    const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        activeSessionUcanAxios
+    ).credentialsGetPost();
+    return response.data;
+}

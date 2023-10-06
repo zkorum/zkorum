@@ -332,4 +332,46 @@ paths:
                   - reason
                   - userId
                 additionalProperties: false
+  /credentials/get:
+    post:
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emailCredentialsPerEmail:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        active:
+                          type: string
+                        revoked:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                        - revoked
+                      additionalProperties: false
+                  secretCredentialsPerType:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        active:
+                          type: string
+                        revoked:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                        - revoked
+                      additionalProperties: false
+                required:
+                  - emailCredentialsPerEmail
+                  - secretCredentialsPerType
+                additionalProperties: false
 servers: []

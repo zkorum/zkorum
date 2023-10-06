@@ -5,14 +5,16 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ErrorPage } from "./components/error/ErrorPage";
-import { Dashboard } from "./components/dashboard/Dashboard";
+import { Feed } from "./components/feed/Feed";
 import { Box, CssBaseline, Snackbar } from "@mui/material";
-import { DashboardLayout } from "./components/dashboard/DashboardLayout";
+import { AppLayout } from "./components/AppLayout";
 import { AuthDialog } from "./components/auth/AuthDialog";
 import { Alert } from "./components/shared/Alert";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { closeSnackbar } from "./store/reducers/snackbar";
 import { MainLoading } from "./MainLoading";
+import { COMMUNITIES } from "./common/navigation";
+import { CommunitiesLayout } from "./components/communities/CommunitiesLayout";
 
 const routes = [
     {
@@ -22,11 +24,15 @@ const routes = [
         children: [
             {
                 path: "/",
-                element: <DashboardLayout />,
+                element: <AppLayout />,
                 children: [
                     {
                         path: "/",
-                        element: <Dashboard />,
+                        element: <Feed />,
+                    },
+                    {
+                        path: COMMUNITIES,
+                        element: <CommunitiesLayout />,
                     },
                 ],
             },

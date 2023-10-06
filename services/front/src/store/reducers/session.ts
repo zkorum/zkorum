@@ -61,6 +61,11 @@ interface AuthenticatingProps {
     userId?: string;
 }
 
+interface SetCredentialsProps {
+    emailCredentialsPerEmail: EmailCredentialsPerEmail;
+    secretCredentialsPerType: SecretCredentialsPerType;
+}
+
 // Define the initial state using that type
 export const initialSessionState: SessionState = {
     isModalOpen: false,
@@ -190,6 +195,21 @@ export const sessionSlice = createSlice({
                     action.payload;
             }
         },
+        setCredentials: (state, action: PayloadAction<SetCredentialsProps>) => {
+            if (
+                state.activeSessionEmail in state.sessions &&
+                state.sessions[state.activeSessionEmail].status === "logged-in"
+            ) {
+                state.sessions[
+                    state.activeSessionEmail
+                ].emailCredentialsPerEmail =
+                    action.payload.emailCredentialsPerEmail;
+                state.sessions[
+                    state.activeSessionEmail
+                ].secretCredentialsPerType =
+                    action.payload.secretCredentialsPerType;
+            }
+        },
     },
 });
 
@@ -204,6 +224,7 @@ export const {
     removeSession,
     switchActiveSession,
     setPendingSessionCodeExpiry,
+    setCredentials,
 } = sessionSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type

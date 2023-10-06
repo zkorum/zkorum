@@ -5,11 +5,11 @@ import PollIcon from "@mui/icons-material/Poll";
 import CommentIcon from "@mui/icons-material/Comment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Grid } from "@mui/material";
+
 interface PostViewProps {
     post: Post;
 }
-
-interface Post {
+export interface Post {
     id: number;
     title: string;
     type: number;
@@ -60,4 +60,3 @@ export function PostView(props: PostViewProps) {
         </Grid>
     );
 }
-

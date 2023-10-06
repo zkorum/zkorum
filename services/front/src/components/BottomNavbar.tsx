@@ -12,6 +12,8 @@ import useScrollTrigger from "@mui/material/useScrollTrigger";
 import { type SxProps } from "@mui/material/styles";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { COMMUNITIES, CREDENTIALS, SETTINGS } from "@/common/navigation";
+import { useAppSelector } from "@/hooks";
+import Badge from "@mui/material/Badge";
 
 enum Nav {
     Home = "Home",
@@ -22,6 +24,39 @@ enum Nav {
 }
 
 export function BottomNavbar() {
+    const hasFilledForms = useAppSelector((state) => {
+        const activeSessionEmail = state.sessions.activeSessionEmail;
+        if (
+            activeSessionEmail === "" ||
+            !(activeSessionEmail in state.sessions.sessions) ||
+            state.sessions.sessions[activeSessionEmail].status !== "logged-in"
+        ) {
+            return true;
+        }
+        const emailCredentialsPerEmail =
+            state.sessions.sessions[activeSessionEmail]
+                .emailCredentialsPerEmail;
+        if (emailCredentialsPerEmail === undefined) {
+            return false;
+        }
+        return activeSessionEmail in emailCredentialsPerEmail;
+    });
+    const isTheOnlyDevice = useAppSelector((state) => {
+        const activeSessionEmail = state.sessions.activeSessionEmail;
+        if (
+            activeSessionEmail === "" ||
+            !(activeSessionEmail in state.sessions.sessions) ||
+            state.sessions.sessions[activeSessionEmail].status !== "logged-in"
+        ) {
+            return false;
+        }
+        const syncingDevices =
+            state.sessions.sessions[activeSessionEmail]?.syncingDevices;
+        if (syncingDevices === undefined) {
+            return true;
+        }
+        return syncingDevices.length === 1;
+    });
     const trigger = useScrollTrigger();
     const [value, setValue] = React.useState<Nav>(Nav.Home);
     const [isHidden, setIsHidden] = React.useState<boolean>(false);
@@ -103,13 +138,37 @@ export function BottomNavbar() {
                     <BottomNavigationAction
                         label={Nav.Communities}
                         value={Nav.Communities}
-                        icon={<GroupsIcon />}
+                        icon={
+                            !hasFilledForms ? (
+                                <Badge
+                                    color="error"
+                                    variant="dot"
+                                    invisible={false}
+                                >
+                                    <GroupsIcon />
+                                </Badge>
+                            ) : (
+                                <GroupsIcon />
+                            )
+                        }
                         sx={{ minWidth: "60px" }}
                     />
                     <BottomNavigationAction
                         label={Nav.Settings}
                         value={Nav.Settings}
-                        icon={<SettingsIcon />}
+                        icon={
+                            isTheOnlyDevice ? (
+                                <Badge
+                                    color="error"
+                                    variant="dot"
+                                    invisible={false}
+                                >
+                                    <SettingsIcon />
+                                </Badge>
+                            ) : (
+                                <SettingsIcon />
+                            )
+                        }
                         sx={{ minWidth: "60px" }}
                     />
                 </BottomNavigation>

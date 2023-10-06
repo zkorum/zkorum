@@ -1,14 +1,14 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import { Topbar } from "../Topbar";
 import { Outlet } from "react-router-dom";
-import { BottomNavbar } from "../BottomNavbar";
 import Snackbar from "@mui/material/Snackbar";
-import { Alert } from "../shared/Alert";
-import { useAppDispatch, useAppSelector } from "../../hooks";
-import { closeSnackbar } from "../../store/reducers/snackbar";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { closeSnackbar } from "@/store/reducers/snackbar";
+import { Topbar } from "./Topbar";
+import { BottomNavbar } from "./BottomNavbar";
+import Alert from "@mui/material/Alert";
 
-export function DashboardLayout() {
+export function AppLayout() {
     const snackbarState = useAppSelector((state) => {
         return state.snackbar;
     });

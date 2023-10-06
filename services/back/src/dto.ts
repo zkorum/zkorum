@@ -112,6 +112,10 @@ export class Dto {
             secretBlindedCredential: z.string(),
         })
         .strict();
+    static userCredentials = z.object({
+        emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
+        secretCredentialsPerType: ZodType.secretCredentialsPerType,
+    });
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
@@ -124,3 +128,4 @@ export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type CreateOrGetEmailCredentialsRes = z.infer<
     typeof Dto.createOrGetEmailCredentialsRes
 >;
+export type UserCredentials = z.infer<typeof Dto.userCredentials>;

@@ -284,6 +284,22 @@ server.after(() => {
             // return await AuthService.syncAttempt(db, didWrite);
         },
     });
+    server.withTypeProvider<ZodTypeProvider>().post("/credentials/get", {
+        schema: {
+            response: {
+                200: Dto.userCredentials,
+            },
+        },
+        handler: async (request, _reply) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: {
+                    isLoggedIn: true,
+                    isSyncing: true,
+                },
+            });
+            return await Service.getCredentials(db, didWrite);
+        },
+    });
 });
 
 server.ready((e) => {

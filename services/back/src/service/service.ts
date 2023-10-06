@@ -12,6 +12,7 @@ import {
     type AuthenticateRequestBody,
     type GetDeviceStatusResp,
     type IsLoggedInResponse,
+    type UserCredentials,
     type VerifyOtp200,
 } from "../dto.js";
 import {
@@ -1002,5 +1003,21 @@ export class Service {
             return undefined;
         }
         return results[0].encryptedSymmKey;
+    }
+
+    // maybe remove that when ServerSideEvents is implemented...
+    static async getCredentials(
+        db: PostgresDatabase,
+        didWrite: string
+    ): Promise<UserCredentials> {
+        const emailCredentialsPerEmail =
+            await Service.getEmailCredentialsPerEmailFromDidWrite(db, didWrite);
+        const userId = await Service.getUserIdFromDevice(db, didWrite);
+        const secretCredentialsPerType =
+            await Service.getSecretCredentialsPerType(db, userId);
+        return {
+            emailCredentialsPerEmail: emailCredentialsPerEmail,
+            secretCredentialsPerType: secretCredentialsPerType,
+        };
     }
 }

@@ -99,12 +99,13 @@ export function LoggedInUserMustPerformActionPage({
                     <Box sx={{ my: 2 }}>
                         <Typography>
                             Before using ZKorum, you need to fill forms so that
-                            ZKorum will issue you a Verifiable Credential.
-                            ZKorum and anyone from your community can see what
-                            you responded, but nobody else can. The posts you
-                            will create using the Credential are completely
-                            anonymous and cannot trace back to your identity
-                            thanks to Zero-Knowledge proofs.
+                            ZKorum verifies your identity and issue you a
+                            Verifiable Credential. ZKorum and anyone from your
+                            community can see what you responded, but nobody
+                            else can. Thanks to Zero-Knowledge proofs, the posts
+                            you will create using the Verifiable Credential are
+                            completely anonymous, even to ZKorum, and cannot
+                            trace back to your identity.
                         </Typography>
                     </Box>
                 </>

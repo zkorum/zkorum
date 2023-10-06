@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Typography from "@mui/material/Typography";
 import { MuiOtpInput } from "mui-one-time-password-input";
@@ -24,11 +23,10 @@ import { authAlreadyLoggedIn, genericError } from "../error/message";
 import { generateAndEncryptSymmKey } from "../../crypto/ucan/ucan";
 import axios from "axios";
 import Alert from "@mui/material/Alert";
+import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 
 export function OtpVerify() {
     const [otp, setOtp] = React.useState<string>("");
-    const [isVerifyingCode, setIsVerifyingCode] =
-        React.useState<boolean>(false);
     const [isCurrentCodeActive, setIsCurrentCodeActive] =
         React.useState<boolean>(true);
     const [canRequestNewCode, setCanRequestNewCode] =
@@ -136,7 +134,7 @@ export function OtpVerify() {
             console.error("Error while parsing code", result.error);
             dispatch(showError(genericError));
         } else {
-            setIsVerifyingCode(true);
+            dispatch(openMainLoading());
             try {
                 const tempEncryptedSymmKey =
                     await generateAndEncryptSymmKey(pendingEmail);
@@ -228,13 +226,14 @@ export function OtpVerify() {
                     dispatch(showError(genericError));
                 }
             } finally {
-                setIsVerifyingCode(false);
+                dispatch(closeMainLoading());
             }
         }
     }
 
     function handleRequestNewCode() {
         setRequestingNewCode(true);
+        dispatch(openMainLoading());
         authenticate(pendingEmail, true, userId)
             .then((response) => {
                 if (response === "logged-in") {
@@ -258,6 +257,7 @@ export function OtpVerify() {
             })
             .finally(() => {
                 setRequestingNewCode(false);
+                dispatch(closeMainLoading());
             });
     }
 
@@ -311,9 +311,6 @@ export function OtpVerify() {
                     validateChar={validateChar}
                     onComplete={handleOnComplete}
                 />
-            </Box>
-            <Box alignSelf="center" hidden={!isVerifyingCode}>
-                Verifying code <CircularProgress />
             </Box>
             <Box sx={{ mt: 12, mb: 2 }}>
                 <Typography variant="body2">

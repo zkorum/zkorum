@@ -6,6 +6,7 @@ import {
     loggedIn,
     switchActiveSession,
     type SessionData,
+    openAuthModal,
 } from "../store/reducers/session";
 import * as DID from "../crypto/ucan/did/index";
 import {
@@ -205,4 +206,8 @@ export async function onLoggedIn({
             secretCredentialsPerType: secretCredentialsPerType,
         })
     );
+}
+
+export function redirectToLogin() {
+    store.dispatch(openAuthModal());
 }
