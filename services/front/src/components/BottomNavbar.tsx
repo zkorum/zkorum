@@ -7,7 +7,7 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import GroupsIcon from "@mui/icons-material/Groups";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
 import { type SxProps } from "@mui/material/styles";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
@@ -61,10 +61,20 @@ export function BottomNavbar() {
     const [value, setValue] = React.useState<Nav>(Nav.Home);
     const [isHidden, setIsHidden] = React.useState<boolean>(false);
     const navigate = useNavigate();
-    // const isTheOnlyDevice = useAppSelector((state) => {
-    //     const pendingSessionEmail = state.sessions.pendingSessionEmail;
-    //     return state.sessions.sessions[pendingSessionEmail]?.status;
-    // });
+    const location = useLocation();
+
+    React.useEffect(() => {
+        const { pathname } = location;
+        if (pathname === CREDENTIALS) {
+            setValue(Nav.Credentials);
+        } else if (pathname.startsWith(COMMUNITIES)) {
+            setValue(Nav.Communities);
+        } else if (pathname.startsWith(SETTINGS)) {
+            setValue(Nav.Settings);
+        } else {
+            setValue(Nav.Home);
+        }
+    }, [location]);
 
     // To place the add icon
     // https://github.com/mui/material-ui/issues/15662#issuecomment-492771975
@@ -77,28 +87,28 @@ export function BottomNavbar() {
         }
     }, [trigger]);
 
-    React.useEffect(() => {
-        switch (value) {
+    const handleChange = (_event: React.SyntheticEvent, newValue: Nav) => {
+        switch (newValue) {
             case Nav.Home:
+                setValue(Nav.Home);
                 navigate("/");
                 break;
             case Nav.Credentials:
+                setValue(Nav.Credentials);
                 navigate(CREDENTIALS);
                 break;
             case Nav.Communities:
+                setValue(Nav.Communities);
                 navigate(COMMUNITIES);
                 break;
             case Nav.Settings:
+                setValue(Nav.Settings);
                 navigate(SETTINGS);
                 break;
             case Nav.Post:
                 // TODO => make a dialog
                 break;
         }
-    }, [value, navigate]);
-
-    const handleChange = (_event: React.SyntheticEvent, newValue: Nav) => {
-        setValue(newValue);
     };
 
     const showBottomNavbar: SxProps = {
@@ -113,7 +123,13 @@ export function BottomNavbar() {
     return (
         <Box sx={isHidden ? hideBottomNavbar : showBottomNavbar}>
             <Paper
-                sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
+                sx={{
+                    position: "fixed",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 999,
+                }}
                 elevation={3}
             >
                 <BottomNavigation value={value} onChange={handleChange}>

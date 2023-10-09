@@ -21,7 +21,11 @@ import {
 } from "../interceptors";
 import axios from "axios";
 import { showError, showSuccess } from "../store/reducers/snackbar";
-import { authSuccess, genericError } from "../components/error/message";
+import {
+    authSuccess,
+    genericError,
+    throttled,
+} from "../components/error/message";
 import { closeMainLoading, openMainLoading } from "../store/reducers/loading";
 import {
     copyKeypairsIfDestIsEmpty,
@@ -37,7 +41,12 @@ export async function authenticate(
     email: string,
     isRequestingNewCode: boolean,
     userId?: string
-): Promise<AuthAuthenticatePost200Response | "logged-in" | "awaiting-syncing"> {
+): Promise<
+    | AuthAuthenticatePost200Response
+    | "logged-in"
+    | "awaiting-syncing"
+    | "throttled"
+> {
     let didExchange: string;
     if (userId !== undefined) {
         const exchangeKeyExists =
@@ -99,12 +108,12 @@ export async function authenticate(
                     // TODO
                     return "awaiting-syncing";
                 }
+            } else if (e.response?.status === 429) {
+                return "throttled";
             } else {
-                console.log("outside", e);
                 throw e;
             }
         } else {
-            console.log(" more outside", e);
             throw e;
         }
     }
@@ -144,6 +153,8 @@ export function handleOnAuthenticate(email: string, userId?: string) {
                 store.dispatch(showSuccess(authSuccess));
             } else if (response === "awaiting-syncing") {
                 // TODO
+            } else if (response === "throttled") {
+                store.dispatch(showError(throttled));
             }
             // else go to next step => validate email address => automatic via redux store update
         })

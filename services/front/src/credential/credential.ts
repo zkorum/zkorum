@@ -4,8 +4,10 @@
 //     initializeWasm,
 //     SUBJECT_STR,
 // } from "@docknetwork/crypto-wasm-ts";
-import { DefaultApiFactory, type CredentialsGetPost200Response } from "@/api";
+import { DefaultApiFactory } from "@/api";
 import { activeSessionUcanAxios } from "@/interceptors";
+import { setCredentials as updateCredentials } from "@/store/reducers/session";
+import { store } from "@/store/store";
 
 // let WASM_INITIALIZED = false;
 
@@ -73,11 +75,24 @@ import { activeSessionUcanAxios } from "@/interceptors";
 // }
 //
 
-export async function getCredentials(): Promise<CredentialsGetPost200Response> {
+// TODO this function is subject to synchronization error,
+// because the activeSessionEmail email is continuously
+// fetched in the cache, instead of being passed as param.
+// This could lead to situation where someone else's credential
+// is stored in the active session email
+export async function fetchAndUpdateCredentials(): Promise<void> {
     const response = await DefaultApiFactory(
         undefined,
         undefined,
         activeSessionUcanAxios
     ).credentialsGetPost();
-    return response.data;
+    const credentials = response?.data;
+    if (credentials !== undefined) {
+        store.dispatch(
+            updateCredentials({
+                emailCredentialsPerEmail: credentials.emailCredentialsPerEmail,
+                secretCredentialsPerType: credentials.secretCredentialsPerType,
+            })
+        );
+    }
 }

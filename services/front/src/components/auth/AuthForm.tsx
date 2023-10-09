@@ -31,8 +31,6 @@ export function AuthForm({
     setEmailHelper,
 }: AuthFormProps) {
     const [isTrusted, setIsTrusted] = React.useState<boolean>(false);
-    const [hasGivenConsent, setHasGivenConsent] =
-        React.useState<boolean>(false);
 
     function validateEmail(emailToValidate: string) {
         if (emailToValidate === "") {
@@ -94,32 +92,6 @@ export function AuthForm({
                 />
                 <Box>
                     <FormControl
-                        error={!hasGivenConsent}
-                        component="fieldset"
-                        variant="standard"
-                    >
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    required
-                                    checked={hasGivenConsent}
-                                    onChange={() =>
-                                        setHasGivenConsent(!hasGivenConsent)
-                                    }
-                                />
-                            }
-                            label={
-                                <Typography variant={"body2"}>
-                                    I understand that as an alpha version, this
-                                    product may contain accidental security
-                                    flaws compromising privacy guarantees
-                                </Typography>
-                            }
-                        />
-                    </FormControl>
-                </Box>
-                <Box>
-                    <FormControl
                         error={!isTrusted}
                         component="fieldset"
                         variant="standard"
@@ -145,9 +117,7 @@ export function AuthForm({
                         variant="contained"
                         sx={{ mt: 3, mb: 2 }}
                         onClick={() => handleOnAuthenticate(email, userId)}
-                        disabled={
-                            !isEmailValid || !isTrusted || !hasGivenConsent
-                        }
+                        disabled={!isEmailValid || !isTrusted}
                     >
                         Register / Log in
                     </Button>

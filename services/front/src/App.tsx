@@ -16,7 +16,7 @@ import { MainLoading } from "./MainLoading";
 import { COMMUNITIES } from "./common/navigation";
 import { CommunitiesLayout } from "./components/communities/CommunitiesLayout";
 
-const routes = [
+export const routes = [
     {
         path: "/",
         element: <AuthDialog />,

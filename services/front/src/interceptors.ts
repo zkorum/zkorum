@@ -7,6 +7,9 @@ import {
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan";
 import { store, cryptoStore } from "./store/store";
+import { loggedOut, openAuthModal } from "./store/reducers/session";
+import { showWarning } from "./store/reducers/snackbar";
+import { sessionExpired } from "./components/error/message";
 
 export const noAuthAxios = axios.create({
     baseURL: import.meta.env.VITE_BACK_BASE_URL,
@@ -83,7 +86,7 @@ async function buildUcan(
 activeSessionUcanAxios.interceptors.request.use(
     async function (config) {
         const activeSessionEmail = store.getState().sessions.activeSessionEmail;
-        if (activeSessionEmail === "") {
+        if (activeSessionEmail === "" || activeSessionEmail === undefined) {
             console.log("No active session: not adding UCAN");
             return config;
         }
@@ -118,7 +121,7 @@ pendingSessionUcanAxios.interceptors.request.use(
     async function (config) {
         const pendingSessionEmail =
             store.getState().sessions.pendingSessionEmail;
-        if (pendingSessionEmail === "") {
+        if (pendingSessionEmail === "" || pendingSessionEmail === undefined) {
             console.log("No pending session: not adding UCAN");
             return config;
         }
@@ -145,5 +148,49 @@ pendingSessionUcanAxios.interceptors.request.use(
     function (error) {
         // Do something with request error
         return Promise.reject(error);
+    }
+);
+
+// Add a response interceptor
+activeSessionUcanAxios.interceptors.response.use(
+    function (response) {
+        // Any status code that lie within the range of 2xx cause this function to trigger
+        // Do something with response data
+        return response;
+    },
+    function (error) {
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 401) {
+                // most likely the device is logged-out
+                const activeSessionEmail =
+                    store.getState().sessions.activeSessionEmail;
+                if (
+                    activeSessionEmail === "" ||
+                    activeSessionEmail === undefined
+                ) {
+                    console.log(
+                        "[This should not happen in production]: Ignoring 401 from already inactive account"
+                    );
+                    // this happens only when the same request has been sent and unauthorized twice in a row,
+                    // it typically happens in React Strict mode + Dev mode because every requests in useEffect are sent at least twice
+                    // as the components are mounted twice in dev mode
+                    // ignore these type of errors then
+                }
+                store.dispatch(loggedOut({ email: activeSessionEmail }));
+                store.dispatch(showWarning(sessionExpired));
+                store.dispatch(openAuthModal());
+                // other than that no need to keep rejecting the error, just swallow it
+            } else if (error.response?.status === 403) {
+                // TODO
+                // most likely the device is awaiting syncing (we don't check for specific userId - see backend)
+                // store.dispatch(awaitingSyncing({ email: activeSessionEmail }));
+                // store.dispatch(showWarning(awaitingSyncing));
+                // other than that no need to keep rejecting the error, just swallow it
+            } else {
+                return Promise.reject(error);
+            }
+        } else {
+            return Promise.reject(error);
+        }
     }
 );

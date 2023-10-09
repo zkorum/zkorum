@@ -6,3 +6,6 @@ export const authAlreadyLoggedIn = "Already logged-in";
 export const authWarning =
     "Authentication successful but credential cannot be retrieved";
 export const logoutMessage = "Log out successful";
+export const sessionExpired = "Session expired";
+export const throttled =
+    "Too many authentication emails were sent, wait for some time";

@@ -153,6 +153,9 @@ export const sessionSlice = createSlice({
             state.activeSessionEmail = action.payload.email;
         },
         loggedOut: (state, action: PayloadAction<EmailProps>) => {
+            if (state.activeSessionEmail === action.payload.email) {
+                state.activeSessionEmail = "";
+            }
             if (action.payload.email in state.sessions) {
                 state.sessions[action.payload.email].status = "logged-out";
                 state.sessions[action.payload.email].email =
@@ -162,9 +165,6 @@ export const sessionSlice = createSlice({
                     status: "logged-out",
                     email: action.payload.email,
                 };
-            }
-            if (state.activeSessionEmail === action.payload.email) {
-                state.activeSessionEmail = "";
             }
         },
         resetPendingSession: (state) => {

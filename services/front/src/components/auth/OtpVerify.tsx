@@ -19,7 +19,7 @@ import {
     showWarning,
 } from "../../store/reducers/snackbar";
 import { setPendingSessionCodeExpiry } from "../../store/reducers/session";
-import { authAlreadyLoggedIn, genericError } from "../error/message";
+import { authAlreadyLoggedIn, genericError, throttled } from "../error/message";
 import { generateAndEncryptSymmKey } from "../../crypto/ucan/ucan";
 import axios from "axios";
 import Alert from "@mui/material/Alert";
@@ -217,6 +217,8 @@ export function OtpVerify() {
                             console.log("awaiting_syncing");
                             // TODO "awaiting_syncing";
                         }
+                    } else if (e.response?.status === 429) {
+                        dispatch(showError(throttled));
                     } else {
                         console.error("unexpected axios error", e);
                         dispatch(showError(genericError));
@@ -242,13 +244,17 @@ export function OtpVerify() {
                 } else if (response === "awaiting-syncing") {
                     // TODO
                     return;
+                } else if (response === "throttled") {
+                    dispatch(showError(throttled));
+                    return;
+                } else {
+                    setIsCurrentCodeActive(true);
+                    dispatch(
+                        showInfo(
+                            "New code sent to your email - previous code invalidated"
+                        )
+                    );
                 }
-                setIsCurrentCodeActive(true);
-                dispatch(
-                    showInfo(
-                        "New code sent to your email - previous code invalidated"
-                    )
-                );
             })
             .catch((e) => {
                 // TODO: show better error if rate-limited

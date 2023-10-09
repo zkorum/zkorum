@@ -1,11 +1,12 @@
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { selectActiveSessionEmail } from "@/store/selector";
 import { Typography } from "@mui/material";
+import { Container } from "@mui/material";
 import Box from "@mui/material/Box";
 import React from "react";
 import { CommunityPage } from "./CommunityPage";
 import { redirectToLogin } from "@/auth/auth";
-import { getCredentials } from "@/credential/credential";
+import { fetchAndUpdateCredentials } from "@/credential/credential";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { showError } from "@/store/reducers/snackbar";
 import { genericError } from "../error/message";
@@ -15,12 +16,12 @@ export function CommunitiesLayout() {
     const dispatch = useAppDispatch();
     const emailCredential = useAppSelector((state) => {
         const activeSessionEmail = state.sessions.activeSessionEmail;
-        if (activeSessionEmail === undefined) {
+        if (activeSessionEmail === "") {
             return undefined;
         }
         const emailCredentialsPerEmail =
             state.sessions.sessions[activeSessionEmail]
-                .emailCredentialsPerEmail;
+                ?.emailCredentialsPerEmail;
         if (
             emailCredentialsPerEmail !== undefined &&
             activeSessionEmail in emailCredentialsPerEmail
@@ -34,66 +35,68 @@ export function CommunitiesLayout() {
     const [communityName, setCommunityName] = React.useState<string>("");
     React.useEffect(() => {
         if (activeSessionEmail === undefined || activeSessionEmail === "") {
+            setCommunityName("");
             redirectToLogin();
-        } else {
-            const nameAndDomain = activeSessionEmail.split("@");
-            if (nameAndDomain.length === 2) {
-                const [_username, domain] = [
-                    nameAndDomain[0],
-                    nameAndDomain[1],
-                ];
-                const domainNameAndDomainExtension = domain.split(".");
-                if (domainNameAndDomainExtension.length === 2) {
-                    const [domainName, _domainExtension] =
-                        domainNameAndDomainExtension;
-                    setCommunityName(domainName.toUpperCase());
-                    // setUsername(username);
-                }
+            return;
+        }
+
+        const nameAndDomain = activeSessionEmail.split("@");
+        if (nameAndDomain.length === 2) {
+            const [_username, domain] = [nameAndDomain[0], nameAndDomain[1]];
+            const domainNameAndDomainExtension = domain.split(".");
+            if (domainNameAndDomainExtension.length === 2) {
+                const [domainName, _domainExtension] =
+                    domainNameAndDomainExtension;
+                setCommunityName(domainName.toUpperCase());
+                // setUsername(username);
             }
         }
-    }, [activeSessionEmail]);
 
-    // browser-value could be out of date
-    React.useEffect(() => {
         // this will set the values in redux store and eventually update this page
         const fetchData = async function () {
-            dispatch(openMainLoading());
-            await getCredentials();
+            try {
+                dispatch(openMainLoading());
+                await fetchAndUpdateCredentials();
+            } catch (e) {
+                dispatch(showError(genericError));
+            } finally {
+                dispatch(closeMainLoading());
+            }
         };
-        fetchData()
-            .catch(() => dispatch(showError(genericError)))
-            .finally(() => dispatch(closeMainLoading()));
+        fetchData();
         return () => {
             dispatch(closeMainLoading());
         };
-    }, []);
+    }, [activeSessionEmail]);
 
     return (
-        <Box
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "left",
-            }}
-        >
-            <Box sx={{ my: 2 }}>
-                <Typography variant={"h4"}>
-                    Your {communityName} community
-                </Typography>
-            </Box>
-            {activeSessionEmail !== "" ? (
+        <Container>
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "left",
+                }}
+            >
                 <Box sx={{ my: 2 }}>
-                    <CommunityPage
-                        communityCredential={emailCredential}
-                    ></CommunityPage>
-                </Box>
-            ) : (
-                <Box>
-                    <Typography>
-                        Log in to connect with your community.
+                    <Typography variant={"h4"}>
+                        Your {communityName} community
                     </Typography>
                 </Box>
-            )}
-        </Box>
+                {activeSessionEmail !== "" ? (
+                    <Box sx={{ my: 2 }}>
+                        <CommunityPage
+                            communityCredential={emailCredential}
+                        ></CommunityPage>
+                    </Box>
+                ) : (
+                    <Box>
+                        <Typography>
+                            Log in to connect with your community.
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
+        </Container>
     );
 }

@@ -63,9 +63,16 @@ server.setErrorHandler((error, _request, reply) => {
         // Modify the response message for status code 500
         // ... by wrapping the original error with a generic error
         // For security sake, we don't want the frontend to know the exact nature of the internal errors
-        const genericError = new Error("Internal server error", {
-            cause: error,
-        });
+        const genericError = server.httpErrors.internalServerError();
+        genericError.cause = error;
+        reply.send(genericError);
+    } else if (error.statusCode !== undefined && error.statusCode === 401) {
+        const genericError = server.httpErrors.unauthorized();
+        genericError.cause = error;
+        reply.send(genericError);
+    } else if (error.statusCode !== undefined && error.statusCode === 403) {
+        const genericError = server.httpErrors.forbidden();
+        genericError.cause = error;
         reply.send(genericError);
     } else {
         // For other status codes, forward the original error
@@ -159,13 +166,19 @@ async function verifyUCAN(
             );
             if (deviceStatus === undefined) {
                 if (options.expectedDeviceStatus.isLoggedIn !== undefined) {
-                    throw server.httpErrors.unauthorized();
+                    throw server.httpErrors.unauthorized(
+                        `[${rootIssuerDid}}] has not been registered but is expected to have a log in status`
+                    );
                 } else if (options.expectedDeviceStatus.userId !== undefined) {
-                    throw server.httpErrors.forbidden();
+                    throw server.httpErrors.forbidden(
+                        `[${rootIssuerDid}}] has not been registered but is expected to have a specific userId`
+                    );
                 } else if (
                     options.expectedDeviceStatus.isSyncing !== undefined
                 ) {
-                    throw server.httpErrors.forbidden();
+                    throw server.httpErrors.forbidden(
+                        `[${rootIssuerDid}}] has not been registered but is expected to have a syncing status`
+                    );
                 }
             } else {
                 const { userId, isLoggedIn, isSyncing } = deviceStatus;
@@ -173,17 +186,23 @@ async function verifyUCAN(
                     options.expectedDeviceStatus.isLoggedIn !== undefined &&
                     options.expectedDeviceStatus.isLoggedIn !== isLoggedIn
                 ) {
-                    throw server.httpErrors.unauthorized();
+                    throw server.httpErrors.unauthorized(
+                        `[${rootIssuerDid}}] is expected to have 'isLoggedIn=${options.expectedDeviceStatus.isLoggedIn}' but has 'isLoggedIn=${isLoggedIn}'`
+                    );
                 } else if (
                     options.expectedDeviceStatus.userId !== undefined &&
                     options.expectedDeviceStatus.userId !== userId
                 ) {
-                    throw server.httpErrors.forbidden();
+                    throw server.httpErrors.forbidden(
+                        `[${rootIssuerDid}}] is expected to have 'userId=${options.expectedDeviceStatus.userId}' but has 'userId=${userId}'`
+                    );
                 } else if (
                     options.expectedDeviceStatus.isSyncing !== undefined &&
                     options.expectedDeviceStatus.isSyncing !== isSyncing
                 ) {
-                    throw server.httpErrors.forbidden();
+                    throw server.httpErrors.forbidden(
+                        `[${rootIssuerDid}}] is expected to have 'isSyncing=${options.expectedDeviceStatus.isSyncing}' but has 'isSyncing=${isSyncing}'`
+                    );
                 }
             }
         }
