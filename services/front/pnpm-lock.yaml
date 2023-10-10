@@ -38,6 +38,9 @@ dependencies:
   axios:
     specifier: ^1.4.0
     version: 1.4.0
+  countries-list:
+    specifier: ^3.0.5
+    version: 3.0.5
   localforage:
     specifier: ^1.10.0
     version: 1.10.0
@@ -3846,6 +3849,10 @@ packages:
       parse-json: 5.2.0
       path-type: 4.0.0
     dev: true
+
+  /countries-list@3.0.5:
+    resolution: {integrity: sha512-JwaAU/wpoUoZk+6WSaGJL1WDoNCJ2vrQCkHOg/t3qoYIPH6kZ+SGAX3YZukMsKXbX1xkxU34pJOE+xr55O+Sww==}
+    dev: false
 
   /create-jest@29.7.0(@types/node@20.4.2):
     resolution: {integrity: sha512-Adz2bdH0Vq3F53KEMJOoftQFutWCukm6J24wbPWRO4k1kMY7gS7ds/uoJkNuV8wDCtWWnuwGcJwpWcih+zEW1Q==}
