@@ -21,8 +21,12 @@ interface StudentFormProps {
     program: Program;
     setProgram: (value: Program) => void;
     memoizedCountries: string[];
-    setCountries: (newCountries: string[]) => void;
+    setCountries: (selectedCountries: string[]) => void;
     allCountries: TCountries;
+    admissionYear: number | null;
+    setAdmissionYear: (selectedAdmissionYear: number | null) => void;
+    allAdmissionYears: readonly number[];
+    hasTriedSubmitting: boolean;
 }
 
 export enum Campus {
@@ -47,6 +51,10 @@ export function StudentForm({
     setCountries,
     memoizedCountries,
     allCountries,
+    admissionYear,
+    setAdmissionYear,
+    allAdmissionYears,
+    hasTriedSubmitting,
 }: StudentFormProps) {
     const handleChangeCampus = (event: React.ChangeEvent<HTMLInputElement>) => {
         setCampus(event.target.value as Campus);
@@ -60,15 +68,22 @@ export function StudentForm({
 
     const handleChangeCountries = (
         _event: SyntheticEvent,
-        newCountries: string[]
+        selectedCountries: string[]
     ) => {
-        setCountries(newCountries);
+        setCountries(selectedCountries);
+    };
+
+    const handleChangeAdmissionYear = (
+        _event: SyntheticEvent,
+        selectedAdmissionYear: number | null
+    ) => {
+        setAdmissionYear(selectedAdmissionYear);
     };
 
     return (
         <>
             <Box sx={{ my: 2 }}>
-                <FormControl>
+                <FormControl required>
                     <FormLabel id="form-label-campus-student-form">
                         Which campus are you based in?
                     </FormLabel>
@@ -97,7 +112,7 @@ export function StudentForm({
                 </FormControl>
             </Box>
             <Box sx={{ my: 2 }}>
-                <FormControl>
+                <FormControl required>
                     <FormLabel id="form-label-program-student-form">
                         What is your program?
                     </FormLabel>
@@ -166,6 +181,11 @@ export function StudentForm({
                                 ...params.inputProps,
                                 autoComplete: "new-password", // disable autocomplete and autofill
                             }}
+                            required
+                            error={
+                                memoizedCountries.length === 0 &&
+                                hasTriedSubmitting
+                            }
                         />
                     )}
                     renderTags={(value: string[], getTagProps) =>
@@ -179,6 +199,28 @@ export function StudentForm({
                             />
                         ))
                     }
+                />
+            </Box>
+            <Box sx={{ my: 2 }}>
+                <Autocomplete
+                    id="admission-year-autocomplete-student-form"
+                    sx={{ width: 300 }}
+                    value={admissionYear}
+                    onChange={handleChangeAdmissionYear}
+                    options={allAdmissionYears}
+                    autoHighlight
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="What is your year of admission?"
+                            inputProps={{
+                                ...params.inputProps,
+                                autoComplete: "new-password", // disable autocomplete and autofill
+                            }}
+                            required
+                            error={admissionYear === null && hasTriedSubmitting}
+                        />
+                    )}
                 />
             </Box>
         </>

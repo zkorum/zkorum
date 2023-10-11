@@ -1,19 +1,19 @@
 import * as uint8arrays from "uint8arrays";
 
 export function encode(value: Uint8Array): string {
-    return uint8arrays.toString(value, "base64urlpad");
+    return uint8arrays.toString(value, "base64url");
 }
 
 export function decode(str: string): Uint8Array {
-    return uint8arrays.fromString(str, "base64urlpad");
+    return uint8arrays.fromString(str, "base64url");
 }
 
 export function decodeToStr(base64: string): string {
-    return uint8arrays.toString(uint8arrays.fromString(base64, "base64urlpad"));
+    return uint8arrays.toString(uint8arrays.fromString(base64, "base64url"));
 }
 
 export function encodeFromStr(str: string): string {
-    return uint8arrays.toString(uint8arrays.fromString(str), "base64urlpad");
+    return uint8arrays.toString(uint8arrays.fromString(str), "base64url");
 }
 
 export function urlDecode(base64: string): string {

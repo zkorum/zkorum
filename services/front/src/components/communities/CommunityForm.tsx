@@ -13,6 +13,8 @@ import { Campus, Program, StudentForm } from "./StudentForm";
 import { AlumForm } from "./AlumForm";
 import { FacultyForm } from "./FacultyForm";
 import { countries as allCountries } from "countries-list";
+import { currentStudentsAdmissionYears } from "@/shared/essec/data";
+import Button from "@mui/material/Button";
 
 enum CommunityType {
     STUDENT = "Student",
@@ -30,20 +32,61 @@ export function CommunityForm() {
     const [type, setType] = React.useState<CommunityType>(
         CommunityType.STUDENT
     );
-    const [campus, setCampus] = React.useState<Campus>(Campus.CERGY);
-    const [program, setProgram] = React.useState<Program>(Program.BBA);
-    const [countries, setCountries] = React.useState<string[]>([]);
+    const [studentCampus, setStudentCampus] = React.useState<Campus>(
+        Campus.CERGY
+    );
+    const [studentProgram, setStudentProgram] = React.useState<Program>(
+        Program.BBA
+    );
+    const [studentCountries, setStudentCountries] = React.useState<string[]>(
+        []
+    );
+    const [studentAdmissionYear, setStudentAdmissionYear] = React.useState<
+        number | null
+    >(null);
+    const [studentHasTriedSubmitting, setStudentHasTriedSubmitting] =
+        React.useState<boolean>(false);
+    const [isInvalid, setIsInvalid] = React.useState<boolean>(true);
+
+    React.useEffect(() => {
+        switch (type) {
+            case CommunityType.STUDENT:
+                if (
+                    studentCountries.length === 0 ||
+                    studentAdmissionYear === null
+                ) {
+                    setIsInvalid(true);
+                } else {
+                    setIsInvalid(false);
+                }
+                break;
+            case CommunityType.ALUM:
+                //TODO
+                break;
+            case CommunityType.FACULTY:
+                //TODO
+                break;
+        }
+    }, [type, studentCountries, studentAdmissionYear]);
 
     // For performace purpose, see https://mui.com/material-ui/react-autocomplete/#controlled-states
-    const memoizedCountries = React.useMemo(() => {
+    const memoizedStudentCountries = React.useMemo(() => {
         return Object.keys(allCountries).filter((countryCode) =>
-            countries.includes(countryCode)
+            studentCountries.includes(countryCode)
         );
-    }, [allCountries, countries]);
+    }, [allCountries, studentCountries]);
 
     const handleChangeType = (event: React.ChangeEvent<HTMLInputElement>) => {
         setType(event.target.value as CommunityType);
     };
+
+    function onSubmitForm(): void {
+        if (isInvalid) {
+            return;
+        }
+        setStudentHasTriedSubmitting(true);
+        // TODO actually send the request to backend to create credentials
+    }
 
     function getForm({ typeSpecificForm }: GetFormProps): JSX.Element {
         return (
@@ -74,7 +117,7 @@ export function CommunityForm() {
                     </Typography>
                 </Box>
                 <Box sx={{ my: 2 }}>
-                    <FormControl>
+                    <FormControl required>
                         <FormLabel id="form-label-which-type-form">
                             Are you a ...
                         </FormLabel>
@@ -103,6 +146,15 @@ export function CommunityForm() {
                     </FormControl>
                 </Box>
                 {typeSpecificForm}
+                <Box sx={{ my: 2 }}>
+                    <Button
+                        variant="contained"
+                        onClick={() => onSubmitForm()}
+                        disabled={isInvalid}
+                    >
+                        Request anonymous credentials
+                    </Button>
+                </Box>
             </Box>
         );
     }
@@ -112,13 +164,17 @@ export function CommunityForm() {
             return getForm({
                 typeSpecificForm: (
                     <StudentForm
-                        campus={campus}
-                        setCampus={setCampus}
-                        program={program}
-                        setProgram={setProgram}
-                        memoizedCountries={memoizedCountries}
-                        setCountries={setCountries}
+                        campus={studentCampus}
+                        setCampus={setStudentCampus}
+                        program={studentProgram}
+                        setProgram={setStudentProgram}
+                        memoizedCountries={memoizedStudentCountries}
+                        setCountries={setStudentCountries}
                         allCountries={allCountries}
+                        admissionYear={studentAdmissionYear}
+                        setAdmissionYear={setStudentAdmissionYear}
+                        allAdmissionYears={currentStudentsAdmissionYears}
+                        hasTriedSubmitting={studentHasTriedSubmitting}
                     />
                 ),
             });
