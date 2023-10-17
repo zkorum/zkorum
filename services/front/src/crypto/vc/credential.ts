@@ -3,6 +3,19 @@ import { decode, encode } from "../../shared/common/base64";
 import { DEFAULT_AES_ALG } from "../basic";
 import { cryptoStore } from "@/store/store";
 
+export async function encryptAndEncode(
+    data: Uint8Array,
+    userId: string
+): Promise<string> {
+    const symmKey = await cryptoStore.keystore.exportSymmKey(userId);
+    const encryptedData = await cryptoStore.aes.encrypt(
+        data,
+        symmKey,
+        DEFAULT_AES_ALG
+    );
+    return encode(encryptedData);
+}
+
 /**
  *  May throw exceptions
  * */

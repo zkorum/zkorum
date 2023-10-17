@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "f6406f4a-bd9a-4b10-9f67-a69db5cacfdd",
+  "id": "b0a64a92-9345-4d54-9787-4fa7f8d3c6f2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "auth_attempt": {
@@ -95,7 +95,7 @@
         },
         "credential": {
           "name": "credential",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -172,9 +172,21 @@
         },
         "credential": {
           "name": "credential",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "encrypted_blinding": {
+          "name": "encrypted_blinding",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "encrypted_blinded_subject": {
+          "name": "encrypted_blinded_subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
         },
         "is_revoked": {
           "name": "is_revoked",

@@ -9,14 +9,20 @@ import { CommunityFormFilled } from "./CommunityFormFilled";
 
 interface CommunityPageProps {
     communityCredential: string | undefined;
+    email: string;
+    userId: string;
 }
 
-export function CommunityPage({ communityCredential }: CommunityPageProps) {
+export function CommunityPage({
+    communityCredential,
+    email,
+    userId,
+}: CommunityPageProps) {
     if (communityCredential !== undefined) {
         return (
             <CommunityFormFilled communityCredential={communityCredential} />
         );
     } else {
-        return <CommunityForm />;
+        return <CommunityForm userId={userId} email={email} />;
     }
 }

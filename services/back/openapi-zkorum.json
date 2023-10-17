@@ -147,12 +147,46 @@
                             "type": "object",
                             "properties": {
                               "active": {
-                                "type": "string"
+                                "type": "object",
+                                "properties": {
+                                  "encodedBlindedCredential": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlinding": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlindedSubject": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "encodedBlindedCredential",
+                                  "encryptedBlinding",
+                                  "encryptedBlindedSubject"
+                                ],
+                                "additionalProperties": false
                               },
                               "revoked": {
                                 "type": "array",
                                 "items": {
-                                  "type": "string"
+                                  "type": "object",
+                                  "properties": {
+                                    "encodedBlindedCredential": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlinding": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlindedSubject": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "encodedBlindedCredential",
+                                    "encryptedBlinding",
+                                    "encryptedBlindedSubject"
+                                  ],
+                                  "additionalProperties": false
                                 }
                               }
                             },
@@ -265,12 +299,46 @@
                             "type": "object",
                             "properties": {
                               "active": {
-                                "type": "string"
+                                "type": "object",
+                                "properties": {
+                                  "encodedBlindedCredential": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlinding": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlindedSubject": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "encodedBlindedCredential",
+                                  "encryptedBlinding",
+                                  "encryptedBlindedSubject"
+                                ],
+                                "additionalProperties": false
                               },
                               "revoked": {
                                 "type": "array",
                                 "items": {
-                                  "type": "string"
+                                  "type": "object",
+                                  "properties": {
+                                    "encodedBlindedCredential": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlinding": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlindedSubject": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "encodedBlindedCredential",
+                                    "encryptedBlinding",
+                                    "encryptedBlindedSubject"
+                                  ],
+                                  "additionalProperties": false
                                 }
                               }
                             },
@@ -396,12 +464,46 @@
                             "type": "object",
                             "properties": {
                               "active": {
-                                "type": "string"
+                                "type": "object",
+                                "properties": {
+                                  "encodedBlindedCredential": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlinding": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlindedSubject": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "encodedBlindedCredential",
+                                  "encryptedBlinding",
+                                  "encryptedBlindedSubject"
+                                ],
+                                "additionalProperties": false
                               },
                               "revoked": {
                                 "type": "array",
                                 "items": {
-                                  "type": "string"
+                                  "type": "object",
+                                  "properties": {
+                                    "encodedBlindedCredential": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlinding": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlindedSubject": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "encodedBlindedCredential",
+                                    "encryptedBlinding",
+                                    "encryptedBlindedSubject"
+                                  ],
+                                  "additionalProperties": false
                                 }
                               }
                             },
@@ -536,12 +638,46 @@
                         "type": "object",
                         "properties": {
                           "active": {
-                            "type": "string"
+                            "type": "object",
+                            "properties": {
+                              "encodedBlindedCredential": {
+                                "type": "string"
+                              },
+                              "encryptedBlinding": {
+                                "type": "string"
+                              },
+                              "encryptedBlindedSubject": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "encodedBlindedCredential",
+                              "encryptedBlinding",
+                              "encryptedBlindedSubject"
+                            ],
+                            "additionalProperties": false
                           },
                           "revoked": {
                             "type": "array",
                             "items": {
-                              "type": "string"
+                              "type": "object",
+                              "properties": {
+                                "encodedBlindedCredential": {
+                                  "type": "string"
+                                },
+                                "encryptedBlinding": {
+                                  "type": "string"
+                                },
+                                "encryptedBlindedSubject": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "encodedBlindedCredential",
+                                "encryptedBlinding",
+                                "encryptedBlindedSubject"
+                              ],
+                              "additionalProperties": false
                             }
                           }
                         },
@@ -913,11 +1049,33 @@
                         "additionalProperties": false
                       }
                     ]
+                  },
+                  "secretCredentialRequest": {
+                    "type": "object",
+                    "properties": {
+                      "blindedRequest": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "encryptedEncodedBlindedSubject": {
+                        "type": "string"
+                      },
+                      "encryptedEncodedBlinding": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "blindedRequest",
+                      "encryptedEncodedBlindedSubject",
+                      "encryptedEncodedBlinding"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
                   "email",
-                  "emailCredentialRequest"
+                  "emailCredentialRequest",
+                  "secretCredentialRequest"
                 ],
                 "additionalProperties": false
               }
@@ -925,7 +1083,101 @@
           },
           "required": true
         },
-        "responses": {}
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "emailCredentialsPerEmail": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "active": {
+                            "type": "string"
+                          },
+                          "revoked": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "revoked"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "secretCredentialsPerType": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "active": {
+                            "type": "object",
+                            "properties": {
+                              "encodedBlindedCredential": {
+                                "type": "string"
+                              },
+                              "encryptedBlinding": {
+                                "type": "string"
+                              },
+                              "encryptedBlindedSubject": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "encodedBlindedCredential",
+                              "encryptedBlinding",
+                              "encryptedBlindedSubject"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "revoked": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "encodedBlindedCredential": {
+                                  "type": "string"
+                                },
+                                "encryptedBlinding": {
+                                  "type": "string"
+                                },
+                                "encryptedBlindedSubject": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "encodedBlindedCredential",
+                                "encryptedBlinding",
+                                "encryptedBlindedSubject"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "revoked"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "emailCredentialsPerEmail",
+                    "secretCredentialsPerType"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

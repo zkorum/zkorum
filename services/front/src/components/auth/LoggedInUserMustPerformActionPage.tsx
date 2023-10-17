@@ -60,10 +60,9 @@ export function LoggedInUserMustPerformActionPage({
                     </Box>
                     <Box sx={{ my: 2 }}>
                         <Typography component="div">
-                            This is the only device connected to your account.
-                            Without syncing another device,{" "}
+                            This is the only device connected to your account.{" "}
                             <Box fontWeight="fontWeightMedium" display="inline">
-                                if you lose access to this device, uninstall the
+                                If you lose access to this device, uninstall the
                                 app or delete its cache,
                             </Box>{" "}
                             you won't be able to change your responses in

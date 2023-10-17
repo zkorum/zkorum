@@ -1,5 +1,8 @@
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { selectActiveSessionEmail } from "@/store/selector";
+import {
+    selectActiveSessionEmail,
+    selectActiveSessionUserId,
+} from "@/store/selector";
 import { Typography } from "@mui/material";
 import { Container } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -32,6 +35,7 @@ export function CommunitiesLayout() {
         }
     });
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
+    const activeSessionUserId = useAppSelector(selectActiveSessionUserId);
     const [communityName, setCommunityName] = React.useState<string>("");
     React.useEffect(() => {
         if (activeSessionEmail === undefined || activeSessionEmail === "") {
@@ -83,10 +87,14 @@ export function CommunitiesLayout() {
                         Your {communityName} community
                     </Typography>
                 </Box>
-                {activeSessionEmail !== "" ? (
+                {activeSessionEmail !== undefined &&
+                activeSessionEmail !== "" &&
+                activeSessionUserId !== undefined ? (
                     <Box sx={{ my: 2 }}>
                         <CommunityPage
+                            email={activeSessionEmail}
                             communityCredential={emailCredential}
+                            userId={activeSessionUserId}
                         ></CommunityPage>
                     </Box>
                 ) : (

@@ -7,9 +7,9 @@ import {
     varchar,
     integer,
     boolean,
-    jsonb,
     serial,
     customType,
+    text,
 } from "drizzle-orm/pg-core";
 
 export const bytea = customType<{
@@ -116,7 +116,7 @@ export const authAttemptTable = pgTable("auth_attempt", {
 // TODO: make sure there are always one and only one active credential (not revoked)
 export const credentialEmailTable = pgTable("credential_email", {
     id: serial("id").primaryKey(),
-    credential: jsonb("credential").unique(),
+    credential: text("credential").unique(), // encoded credential
     isRevoked: boolean("is_revoked").default(false),
     email: varchar("email", { length: 254 })
         .references(() => emailTable.email)
@@ -133,7 +133,9 @@ export const credentialEmailTable = pgTable("credential_email", {
 export const credentialSecretTable = pgTable("credential_secret", {
     id: serial("id").primaryKey(),
     pollId: uuid("poll_id"),
-    credential: jsonb("credential").unique(),
+    credential: text("credential").notNull().unique(),
+    encryptedBlinding: text("encrypted_blinding").notNull(),
+    encryptedBlindedSubject: text("encrypted_blinded_subject").notNull(),
     isRevoked: boolean("is_revoked").default(false),
     userId: uuid("user_id")
         .references(() => userTable.id)

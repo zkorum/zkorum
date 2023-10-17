@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS "auth_attempt" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "credential_email" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"credential" jsonb,
+	"credential" text,
 	"is_revoked" boolean DEFAULT false,
 	"email" varchar(254) NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -37,7 +37,9 @@ CREATE TABLE IF NOT EXISTS "credential_email" (
 CREATE TABLE IF NOT EXISTS "credential_secret" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"poll_id" uuid,
-	"credential" jsonb,
+	"credential" text NOT NULL,
+	"encrypted_blinding" text NOT NULL,
+	"encrypted_blinded_subject" text NOT NULL,
 	"is_revoked" boolean DEFAULT false,
 	"user_id" uuid NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
