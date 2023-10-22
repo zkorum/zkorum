@@ -23,7 +23,7 @@ export function WelcomePage({ onNextButtonClicked }: WelcomePageProps) {
                 <Typography>
                     You're in the closed alpha version of our app. While we have
                     limited features, your privacy is a top priority. Your
-                    actions here are completely separate from your identity,
+                    actions here are completely separate from your identity.
                     This means that neither ZKorum nor anyone else can tell what
                     you contribute to the forum. For tech details, check out our
                     Github - it's fully open-source for transparency!

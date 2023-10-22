@@ -23,12 +23,25 @@ import {
 } from "../crypto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { BBSPlusSecretKey as SecretKey } from "@docknetwork/crypto-wasm-ts";
-import { buildEmailCredential } from "./credential.js";
+import {
+    buildEmailCredential,
+    buildSecretCredential,
+    parseSecretCredentialRequest,
+} from "./credential.js";
 import type {
     Devices,
+    SecretCredentialRequest,
+    EmailCredentialRequest,
     EmailCredentialsPerEmail,
+    EmailCredential,
+    EncodedBlindedCredential,
+    SecretCredentialType,
     SecretCredentialsPerType,
+    Credentials,
 } from "../shared/types/zod.js";
+import { encode } from "../shared/common/base64.js";
+import { anyToUint8Array } from "../shared/common/arrbufs.js";
+import { BBSPlusBlindedCredentialRequest as BlindedCredentialRequest } from "@docknetwork/crypto-wasm-ts";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -46,6 +59,16 @@ export enum AuthenticateType {
 interface AuthTypeAndUserId {
     userId: string;
     type: AuthenticateType;
+}
+interface CreateAndStoreCredentialsParams {
+    db: PostgresDatabase;
+    didWrite: string;
+    secretCredentialRequest: SecretCredentialRequest;
+    type: SecretCredentialType;
+    httpErrors: HttpErrors;
+    sk: SecretKey;
+    email: string;
+    emailCredentialRequest: EmailCredentialRequest;
 }
 
 // No need to validate data, it has been done in the controller level
@@ -255,8 +278,8 @@ export class Service {
 
     static async isEmailAssociatedWithDevice(
         db: PostgresDatabase,
-        email: string,
-        didWrite: string
+        didWrite: string,
+        email: string
     ): Promise<boolean> {
         const result = await db
             .select()
@@ -902,15 +925,85 @@ export class Service {
     static async createAndStoreEmailCredential(
         db: PostgresDatabase,
         email: string,
+        emailCredentialRequest: EmailCredentialRequest,
         sk: SecretKey
-    ): Promise<string> {
-        const credential = buildEmailCredential(email, sk);
-        const credentialStr = JSON.stringify(credential.toJSON());
+    ): Promise<EmailCredential> {
+        const credential = buildEmailCredential(
+            email,
+            emailCredentialRequest,
+            sk
+        );
+        const encodedCredential = encode(anyToUint8Array(credential.toJSON()));
         await db.insert(credentialEmailTable).values({
             email: email,
-            credential: credentialStr,
+            isRevoked: false,
+            credential: encodedCredential,
         });
-        return credentialStr;
+        return encodedCredential;
+    }
+
+    static async createAndStoreSecretCredential(
+        db: PostgresDatabase,
+        didWrite: string,
+        secretCredentialRequest: SecretCredentialRequest,
+        type: SecretCredentialType,
+        httpErrors: HttpErrors,
+        sk: SecretKey
+    ): Promise<EncodedBlindedCredential> {
+        let blindedCredentialRequest: BlindedCredentialRequest;
+        try {
+            blindedCredentialRequest = parseSecretCredentialRequest(
+                secretCredentialRequest.blindedRequest
+            );
+        } catch (e) {
+            throw httpErrors.createError(400, e as Error);
+        }
+
+        const userId = await Service.getUserIdFromDevice(db, didWrite);
+        const credential = buildSecretCredential(
+            blindedCredentialRequest,
+            userId,
+            type,
+            sk
+        );
+        const encodedCredential = encode(anyToUint8Array(credential.toJSON()));
+        await db.insert(credentialSecretTable).values({
+            userId: userId,
+            pollId: type !== "global" ? type : null,
+            isRevoked: false,
+            credential: encodedCredential,
+            encryptedBlinding: secretCredentialRequest.encryptedEncodedBlinding,
+            encryptedBlindedSubject:
+                secretCredentialRequest.encryptedEncodedBlindedSubject,
+        });
+        return encodedCredential;
+    }
+
+    static async createAndStoreCredentials(
+        params: CreateAndStoreCredentialsParams
+    ): Promise<Credentials> {
+        return await params.db.transaction(async (tx) => {
+            const encodedEmailCredential =
+                await this.createAndStoreEmailCredential(
+                    tx,
+                    params.email,
+                    params.emailCredentialRequest,
+                    params.sk
+                );
+            const encodedBlindedCredential =
+                await this.createAndStoreSecretCredential(
+                    tx,
+                    params.didWrite,
+                    params.secretCredentialRequest,
+                    params.type,
+                    params.httpErrors,
+                    params.sk
+                );
+            return {
+                encodedEmailCredential,
+                encodedBlindedCredential,
+            };
+        });
     }
 
     static async getUserIdFromDevice(
@@ -935,7 +1028,10 @@ export class Service {
         const results = await db
             .select({
                 pollId: credentialSecretTable.pollId,
-                secretCredential: credentialSecretTable.credential, // TODO: make sure this really output a string...
+                blindedCredential: credentialSecretTable.credential, // TODO: make sure this really output a string...
+                encryptedBlinding: credentialSecretTable.encryptedBlinding,
+                encryptedBlindedSubject:
+                    credentialSecretTable.encryptedBlindedSubject,
                 isRevoked: credentialSecretTable.isRevoked,
             })
             .from(credentialSecretTable)
@@ -950,36 +1046,69 @@ export class Service {
                     result.pollId in secretCredentialsPerType
                 ) {
                     if (result.isRevoked) {
-                        secretCredentialsPerType[result.pollId].revoked.push(
-                            result.secretCredential as string
-                        ); // TODO make sure this is string and not object...
+                        secretCredentialsPerType[result.pollId].revoked.push({
+                            encodedBlindedCredential: result.blindedCredential,
+                            encryptedBlinding: result.encryptedBlinding,
+                            encryptedBlindedSubject:
+                                result.encryptedBlindedSubject,
+                        });
                     } else {
-                        secretCredentialsPerType[result.pollId].active =
-                            result.secretCredential as string; // TODO make sure this is string and not object...
+                        secretCredentialsPerType[result.pollId].active = {
+                            encodedBlindedCredential: result.blindedCredential,
+                            encryptedBlinding: result.encryptedBlinding,
+                            encryptedBlindedSubject:
+                                result.encryptedBlindedSubject,
+                        };
                     }
                 } else if (result.pollId !== null) {
                     if (result.isRevoked) {
                         secretCredentialsPerType[result.pollId] = {
-                            revoked: [result.secretCredential as string],
+                            revoked: [
+                                {
+                                    encodedBlindedCredential:
+                                        result.blindedCredential,
+                                    encryptedBlinding: result.encryptedBlinding,
+                                    encryptedBlindedSubject:
+                                        result.encryptedBlindedSubject,
+                                },
+                            ],
                         };
                     } else {
                         secretCredentialsPerType[result.pollId] = {
-                            active: result.secretCredential as string, // TODO make sure this is string and not object...
+                            active: {
+                                encodedBlindedCredential:
+                                    result.blindedCredential,
+                                encryptedBlinding: result.encryptedBlinding,
+                                encryptedBlindedSubject:
+                                    result.encryptedBlindedSubject,
+                            },
                             revoked: [],
                         };
                     }
                 } else if ("global" in secretCredentialsPerType) {
                     if (result.isRevoked) {
-                        secretCredentialsPerType["global"].revoked.push(
-                            result.secretCredential as string
-                        ); // TODO make sure this is string and not object...
+                        secretCredentialsPerType["global"].revoked.push({
+                            encodedBlindedCredential: result.blindedCredential,
+                            encryptedBlinding: result.encryptedBlinding,
+                            encryptedBlindedSubject:
+                                result.encryptedBlindedSubject,
+                        }); // TODO make sure this is string and not object...
                     } else {
-                        secretCredentialsPerType["global"].active =
-                            result.secretCredential as string; // TODO make sure this is string and not object...
+                        secretCredentialsPerType["global"].active = {
+                            encodedBlindedCredential: result.blindedCredential,
+                            encryptedBlinding: result.encryptedBlinding,
+                            encryptedBlindedSubject:
+                                result.encryptedBlindedSubject,
+                        };
                     }
                 } else {
                     secretCredentialsPerType["global"] = {
-                        active: result.secretCredential as string, // TODO make sure this is string and not object...
+                        active: {
+                            encodedBlindedCredential: result.blindedCredential,
+                            encryptedBlinding: result.encryptedBlinding,
+                            encryptedBlindedSubject:
+                                result.encryptedBlindedSubject,
+                        },
                         revoked: [],
                     };
                 }

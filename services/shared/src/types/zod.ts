@@ -1,5 +1,13 @@
 import { z } from "zod";
 import { validateDidKey, validateDidWeb } from "../did/util.js";
+import {
+    maxStudentYear,
+    EssecCampus,
+    EssecProgram,
+    minStudentYear,
+    UniversityType,
+} from "./university.js";
+import { type TCountryCode } from "countries-list";
 
 // Alpha only for ESSEC
 function isAuthorizedEmail(email: Email) {
@@ -60,20 +68,30 @@ export class ZodType {
     static code = z.coerce.number().min(0).max(999999);
     static digit = z.coerce.number().int().nonnegative().lte(9);
     static userId = z.string().uuid().nonempty();
+    static secretCredentialType = z.string().uuid().or(z.literal("global"));
+    static secretCredential = z
+        .object({
+            encodedBlindedCredential: z.string(),
+            encryptedBlinding: z.string(),
+            encryptedBlindedSubject: z.string(),
+        })
+        .strict();
     static secretCredentials = z
         .object({
-            active: z.string().optional(),
-            revoked: z.array(z.string()),
+            active: ZodType.secretCredential.optional(),
+            revoked: z.array(ZodType.secretCredential),
         })
         .strict();
     static secretCredentialsPerType = z.record(
-        z.string().uuid().or(z.literal("global")),
+        ZodType.secretCredentialType,
         ZodType.secretCredentials
     );
+    static encodedBlindedCredential = z.string();
+    static emailCredential = z.string();
     static emailCredentials = z
         .object({
-            active: z.string().optional(),
-            revoked: z.array(z.string()),
+            active: ZodType.emailCredential.optional(),
+            revoked: z.array(ZodType.emailCredential),
         })
         .strict();
     static emailCredentialsPerEmail = z.record(
@@ -81,14 +99,322 @@ export class ZodType {
         ZodType.emailCredentials
     );
     static devices = z.array(z.string()); // list of didWrite of all the devices belonging to a user
+    static essecCampus = z.nativeEnum(EssecCampus);
+    static essecProgram = z.nativeEnum(EssecProgram);
+    static countryCode: z.ZodType<TCountryCode> = z.enum([
+        "AD",
+        "AE",
+        "AF",
+        "AG",
+        "AI",
+        "AL",
+        "AM",
+        "AO",
+        "AQ",
+        "AR",
+        "AS",
+        "AT",
+        "AU",
+        "AW",
+        "AX",
+        "AZ",
+        "BA",
+        "BB",
+        "BD",
+        "BE",
+        "BF",
+        "BG",
+        "BH",
+        "BI",
+        "BJ",
+        "BL",
+        "BM",
+        "BN",
+        "BO",
+        "BQ",
+        "BR",
+        "BS",
+        "BT",
+        "BV",
+        "BW",
+        "BY",
+        "BZ",
+        "CA",
+        "CC",
+        "CD",
+        "CF",
+        "CG",
+        "CH",
+        "CI",
+        "CK",
+        "CL",
+        "CM",
+        "CN",
+        "CO",
+        "CR",
+        "CU",
+        "CV",
+        "CW",
+        "CX",
+        "CY",
+        "CZ",
+        "DE",
+        "DJ",
+        "DK",
+        "DM",
+        "DO",
+        "DZ",
+        "EC",
+        "EE",
+        "EG",
+        "EH",
+        "ER",
+        "ES",
+        "ET",
+        "FI",
+        "FJ",
+        "FK",
+        "FM",
+        "FO",
+        "FR",
+        "GA",
+        "GB",
+        "GD",
+        "GE",
+        "GF",
+        "GG",
+        "GH",
+        "GI",
+        "GL",
+        "GM",
+        "GN",
+        "GP",
+        "GQ",
+        "GR",
+        "GS",
+        "GT",
+        "GU",
+        "GW",
+        "GY",
+        "HK",
+        "HM",
+        "HN",
+        "HR",
+        "HT",
+        "HU",
+        "ID",
+        "IE",
+        "IL",
+        "IM",
+        "IN",
+        "IO",
+        "IQ",
+        "IR",
+        "IS",
+        "IT",
+        "JE",
+        "JM",
+        "JO",
+        "JP",
+        "KE",
+        "KG",
+        "KH",
+        "KI",
+        "KM",
+        "KN",
+        "KP",
+        "KR",
+        "KW",
+        "KY",
+        "KZ",
+        "LA",
+        "LB",
+        "LC",
+        "LI",
+        "LK",
+        "LR",
+        "LS",
+        "LT",
+        "LU",
+        "LV",
+        "LY",
+        "MA",
+        "MC",
+        "MD",
+        "ME",
+        "MF",
+        "MG",
+        "MH",
+        "MK",
+        "ML",
+        "MM",
+        "MN",
+        "MO",
+        "MP",
+        "MQ",
+        "MR",
+        "MS",
+        "MT",
+        "MU",
+        "MV",
+        "MW",
+        "MX",
+        "MY",
+        "MZ",
+        "NA",
+        "NC",
+        "NE",
+        "NF",
+        "NG",
+        "NI",
+        "NL",
+        "NO",
+        "NP",
+        "NR",
+        "NU",
+        "NZ",
+        "OM",
+        "PA",
+        "PE",
+        "PF",
+        "PG",
+        "PH",
+        "PK",
+        "PL",
+        "PM",
+        "PN",
+        "PR",
+        "PS",
+        "PT",
+        "PW",
+        "PY",
+        "QA",
+        "RE",
+        "RO",
+        "RS",
+        "RU",
+        "RW",
+        "SA",
+        "SB",
+        "SC",
+        "SD",
+        "SE",
+        "SG",
+        "SH",
+        "SI",
+        "SJ",
+        "SK",
+        "SL",
+        "SM",
+        "SN",
+        "SO",
+        "SR",
+        "SS",
+        "ST",
+        "SV",
+        "SX",
+        "SY",
+        "SZ",
+        "TC",
+        "TD",
+        "TF",
+        "TG",
+        "TH",
+        "TJ",
+        "TK",
+        "TL",
+        "TM",
+        "TN",
+        "TO",
+        "TR",
+        "TT",
+        "TV",
+        "TW",
+        "TZ",
+        "UA",
+        "UG",
+        "UM",
+        "US",
+        "UY",
+        "UZ",
+        "VA",
+        "VC",
+        "VE",
+        "VG",
+        "VI",
+        "VN",
+        "VU",
+        "WF",
+        "WS",
+        "XK",
+        "YE",
+        "YT",
+        "ZA",
+        "ZM",
+        "ZW",
+    ]);
+    static studentAdmissionYear = z
+        .number()
+        .positive()
+        .int()
+        .min(minStudentYear)
+        .max(maxStudentYear);
+    static emailCredentialRequest = z.discriminatedUnion("type", [
+        z
+            .object({
+                type: z.literal(UniversityType.STUDENT),
+                campus: ZodType.essecCampus,
+                program: ZodType.essecProgram,
+                countries: z.array(ZodType.countryCode),
+                admissionYear: ZodType.studentAdmissionYear,
+            })
+            .strict(),
+        z
+            .object({
+                type: z.literal(UniversityType.ALUM),
+                // TODO
+            })
+            .strict(),
+        z
+            .object({
+                type: z.literal(UniversityType.FACULTY),
+                // TODO
+            })
+            .strict(),
+    ]);
+    static secretCredentialRequest = z
+        .object({
+            blindedRequest: z.record(z.string(), z.unknown()),
+            encryptedEncodedBlindedSubject: z.string(),
+            encryptedEncodedBlinding: z.string(),
+        })
+        .strict();
+    static credentials = z.object({
+        encodedEmailCredential: ZodType.emailCredential,
+        encodedBlindedCredential: ZodType.encodedBlindedCredential,
+    });
 }
 type Email = z.infer<typeof ZodType.email>;
+export type Credentials = z.infer<typeof ZodType.credentials>;
+export type SecretCredentialType = z.infer<typeof ZodType.secretCredentialType>;
+export type SecretCredential = z.infer<typeof ZodType.secretCredential>;
 export type SecretCredentials = z.infer<typeof ZodType.secretCredentials>;
 export type SecretCredentialsPerType = z.infer<
     typeof ZodType.secretCredentialsPerType
 >;
+export type EncodedBlindedCredential = z.infer<
+    typeof ZodType.encodedBlindedCredential
+>;
+export type SecretCredentialRequest = z.infer<
+    typeof ZodType.secretCredentialRequest
+>;
+export type EmailCredential = z.infer<typeof ZodType.emailCredential>;
 export type EmailCredentials = z.infer<typeof ZodType.emailCredentials>;
 export type EmailCredentialsPerEmail = z.infer<
     typeof ZodType.emailCredentialsPerEmail
 >;
+export type EmailCredentialRequest = z.infer<
+    typeof ZodType.emailCredentialRequest
+>;
 export type Devices = z.infer<typeof ZodType.devices>;
+export type StudentAdmissionYear = z.infer<typeof ZodType.studentAdmissionYear>;

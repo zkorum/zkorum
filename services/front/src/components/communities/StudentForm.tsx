@@ -14,12 +14,13 @@ import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import TextField from "@mui/material/TextField";
 import React, { type SyntheticEvent } from "react";
+import { EssecCampus, EssecProgram } from "@/shared/types/university";
 
 interface StudentFormProps {
-    campus: Campus;
-    setCampus: (value: Campus) => void;
-    program: Program;
-    setProgram: (value: Program) => void;
+    campus: EssecCampus;
+    setCampus: (value: EssecCampus) => void;
+    program: EssecProgram;
+    setProgram: (value: EssecProgram) => void;
     memoizedCountries: string[];
     setCountries: (selectedCountries: string[]) => void;
     allCountries: TCountries;
@@ -27,20 +28,6 @@ interface StudentFormProps {
     setAdmissionYear: (selectedAdmissionYear: number | null) => void;
     allAdmissionYears: readonly number[];
     hasTriedSubmitting: boolean;
-}
-
-export enum Campus {
-    CERGY = "Cergy",
-    SINGAPORE = "Singapore",
-    RABAT = "Rabat",
-}
-
-export enum Program {
-    BBA = "BBA",
-    MIM = "MIM / GE",
-    OM = "Other Masters",
-    PHD = "PhD",
-    EXCHANGE = "Exchange",
 }
 
 export function StudentForm({
@@ -57,13 +44,27 @@ export function StudentForm({
     hasTriedSubmitting,
 }: StudentFormProps) {
     const handleChangeCampus = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setCampus(event.target.value as Campus);
+        const selectedCampus = parseInt(event.target.value);
+        if (isNaN(selectedCampus)) {
+            console.warn(
+                "Enum Campus is not a number, this is not supposed to happen"
+            );
+            return;
+        }
+        setCampus(selectedCampus);
     };
 
     const handleChangeProgram = (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
-        setProgram(event.target.value as Program);
+        const selectedProgram = parseInt(event.target.value);
+        if (isNaN(selectedProgram)) {
+            console.warn(
+                "Enum Program is not a number, this is not supposed to happen"
+            );
+            return;
+        }
+        setProgram(selectedProgram);
     };
 
     const handleChangeCountries = (
@@ -94,19 +95,19 @@ export function StudentForm({
                         onChange={handleChangeCampus}
                     >
                         <FormControlLabel
-                            value={Campus.CERGY}
+                            value={EssecCampus.CERGY}
                             control={<Radio />}
-                            label={Campus.CERGY.toString()}
+                            label={EssecCampus.CERGY.toString()}
                         />
                         <FormControlLabel
-                            value={Campus.SINGAPORE}
+                            value={EssecCampus.SINGAPORE}
                             control={<Radio />}
-                            label={Campus.SINGAPORE.toString()}
+                            label={EssecCampus.SINGAPORE.toString()}
                         />
                         <FormControlLabel
-                            value={Campus.RABAT}
+                            value={EssecCampus.RABAT}
                             control={<Radio />}
-                            label={Campus.RABAT.toString()}
+                            label={EssecCampus.RABAT.toString()}
                         />
                     </RadioGroup>
                 </FormControl>
@@ -123,29 +124,29 @@ export function StudentForm({
                         onChange={handleChangeProgram}
                     >
                         <FormControlLabel
-                            value={Program.BBA}
+                            value={EssecProgram.BBA}
                             control={<Radio />}
-                            label={Program.BBA.toString()}
+                            label={EssecProgram.BBA.toString()}
                         />
                         <FormControlLabel
-                            value={Program.MIM}
+                            value={EssecProgram.MIM}
                             control={<Radio />}
-                            label={Program.MIM.toString()}
+                            label={EssecProgram.MIM.toString()}
                         />
                         <FormControlLabel
-                            value={Program.OM}
+                            value={EssecProgram.OM}
                             control={<Radio />}
-                            label={Program.OM.toString()}
+                            label={EssecProgram.OM.toString()}
                         />
                         <FormControlLabel
-                            value={Program.PHD}
+                            value={EssecProgram.PHD}
                             control={<Radio />}
-                            label={Program.PHD.toString()}
+                            label={EssecProgram.PHD.toString()}
                         />
                         <FormControlLabel
-                            value={Program.EXCHANGE}
+                            value={EssecProgram.EXCHANGE}
                             control={<Radio />}
-                            label={Program.EXCHANGE.toString()}
+                            label={EssecProgram.EXCHANGE.toString()}
                         />
                     </RadioGroup>
                 </FormControl>
@@ -209,6 +210,7 @@ export function StudentForm({
                     onChange={handleChangeAdmissionYear}
                     options={allAdmissionYears}
                     autoHighlight
+                    getOptionLabel={(option) => option.toString()}
                     renderInput={(params) => (
                         <TextField
                             {...params}

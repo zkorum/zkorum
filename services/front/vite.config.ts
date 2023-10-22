@@ -5,6 +5,7 @@ import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react-swc";
 import checker from "vite-plugin-checker";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 
 export default defineConfig({
     plugins: [
@@ -17,4 +18,19 @@ export default defineConfig({
         ValidateEnv(),
         tsconfigPaths(),
     ],
+    // The below config is for initializeWasm to work: https://stackoverflow.com/a/70719923/11046178
+    optimizeDeps: {
+        esbuildOptions: {
+            // Node.js global to browser globalThis
+            define: {
+                global: "globalThis",
+            },
+            // Enable esbuild polyfill plugins
+            plugins: [
+                NodeGlobalsPolyfillPlugin({
+                    buffer: true,
+                }),
+            ],
+        },
+    },
 });

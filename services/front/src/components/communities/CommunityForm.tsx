@@ -9,34 +9,42 @@ import RadioGroup from "@mui/material/RadioGroup";
 import Typography from "@mui/material/Typography";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import React from "react";
-import { Campus, Program, StudentForm } from "./StudentForm";
+import { StudentForm } from "./StudentForm";
 import { AlumForm } from "./AlumForm";
 import { FacultyForm } from "./FacultyForm";
-import { countries as allCountries } from "countries-list";
-import { currentStudentsAdmissionYears } from "@/shared/essec/data";
+import { countries as allCountries, type TCountryCode } from "countries-list";
+import {
+    EssecCampus,
+    EssecProgram,
+    UniversityType,
+    currentStudentsAdmissionYears,
+    universityTypeToString,
+} from "@/shared/types/university";
 import Button from "@mui/material/Button";
-
-enum CommunityType {
-    STUDENT = "Student",
-    ALUM = "Alum",
-    FACULTY = "Faculty/Staff member",
-}
+import { requestAnonymousCredentials } from "@/credential/credential";
+import { useNavigate } from "react-router-dom";
+import { FEED } from "@/common/navigation";
 
 interface GetFormProps {
     typeSpecificForm: JSX.Element;
 }
 
+interface CommunityFormProps {
+    email: string;
+    userId: string;
+}
+
 // TODO: To support abitrary communities, move the form schema to a standardized JSON schema or something that's fetched from the backend
 // and dynamically create the form from that.
-export function CommunityForm() {
-    const [type, setType] = React.useState<CommunityType>(
-        CommunityType.STUDENT
+export function CommunityForm({ email, userId }: CommunityFormProps) {
+    const [type, setType] = React.useState<UniversityType>(
+        UniversityType.STUDENT
     );
-    const [studentCampus, setStudentCampus] = React.useState<Campus>(
-        Campus.CERGY
+    const [studentCampus, setStudentCampus] = React.useState<EssecCampus>(
+        EssecCampus.CERGY
     );
-    const [studentProgram, setStudentProgram] = React.useState<Program>(
-        Program.BBA
+    const [studentProgram, setStudentProgram] = React.useState<EssecProgram>(
+        EssecProgram.BBA
     );
     const [studentCountries, setStudentCountries] = React.useState<string[]>(
         []
@@ -48,9 +56,11 @@ export function CommunityForm() {
         React.useState<boolean>(false);
     const [isInvalid, setIsInvalid] = React.useState<boolean>(true);
 
+    const navigate = useNavigate();
+
     React.useEffect(() => {
         switch (type) {
-            case CommunityType.STUDENT:
+            case UniversityType.STUDENT:
                 if (
                     studentCountries.length === 0 ||
                     studentAdmissionYear === null
@@ -60,16 +70,16 @@ export function CommunityForm() {
                     setIsInvalid(false);
                 }
                 break;
-            case CommunityType.ALUM:
+            case UniversityType.ALUM:
                 //TODO
                 break;
-            case CommunityType.FACULTY:
+            case UniversityType.FACULTY:
                 //TODO
                 break;
         }
     }, [type, studentCountries, studentAdmissionYear]);
 
-    // For performace purpose, see https://mui.com/material-ui/react-autocomplete/#controlled-states
+    // For performance purpose, see https://mui.com/material-ui/react-autocomplete/#controlled-states
     const memoizedStudentCountries = React.useMemo(() => {
         return Object.keys(allCountries).filter((countryCode) =>
             studentCountries.includes(countryCode)
@@ -77,14 +87,46 @@ export function CommunityForm() {
     }, [allCountries, studentCountries]);
 
     const handleChangeType = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setType(event.target.value as CommunityType);
+        const selectedType = parseInt(event.target.value);
+        if (isNaN(selectedType)) {
+            console.warn(
+                "Enum Type is not a number, this is not supposed to happen"
+            );
+            return;
+        }
+        setType(selectedType);
     };
 
-    function onSubmitForm(): void {
+    async function onSubmitForm(): Promise<void> {
         if (isInvalid) {
             return;
         }
         setStudentHasTriedSubmitting(true);
+        switch (type) {
+            case UniversityType.STUDENT:
+                const emailCredentialRequest = {
+                    type: UniversityType.STUDENT,
+                    campus: studentCampus,
+                    program: studentProgram,
+                    countries: studentCountries as TCountryCode[],
+                    admissionYear: studentAdmissionYear as number,
+                };
+                // this will eventually update redux emailCredential and hence the parent to show CommunityFormFilled instead
+                await requestAnonymousCredentials(
+                    email,
+                    emailCredentialRequest,
+                    userId
+                );
+                //... though we redirect to the feed
+                navigate(FEED);
+                break;
+            case UniversityType.ALUM:
+                //TODO
+                break;
+            case UniversityType.FACULTY:
+                //TODO
+                break;
+        }
         // TODO actually send the request to backend to create credentials
     }
 
@@ -128,19 +170,25 @@ export function CommunityForm() {
                             onChange={handleChangeType}
                         >
                             <FormControlLabel
-                                value={CommunityType.STUDENT}
+                                value={UniversityType.STUDENT}
                                 control={<Radio />}
-                                label={CommunityType.STUDENT.toString()}
+                                label={universityTypeToString(
+                                    UniversityType.STUDENT
+                                )}
                             />
                             <FormControlLabel
-                                value={CommunityType.ALUM}
+                                value={UniversityType.ALUM}
                                 control={<Radio />}
-                                label={CommunityType.ALUM.toString()}
+                                label={universityTypeToString(
+                                    UniversityType.ALUM
+                                )}
                             />
                             <FormControlLabel
-                                value={CommunityType.FACULTY}
+                                value={UniversityType.FACULTY}
                                 control={<Radio />}
-                                label={CommunityType.FACULTY.toString()}
+                                label={universityTypeToString(
+                                    UniversityType.FACULTY
+                                )}
                             />
                         </RadioGroup>
                     </FormControl>
@@ -160,7 +208,7 @@ export function CommunityForm() {
     }
 
     switch (type) {
-        case CommunityType.STUDENT:
+        case UniversityType.STUDENT:
             return getForm({
                 typeSpecificForm: (
                     <StudentForm
@@ -178,9 +226,11 @@ export function CommunityForm() {
                     />
                 ),
             });
-        case CommunityType.ALUM:
+        case UniversityType.ALUM:
+            // TODO
             return getForm({ typeSpecificForm: <AlumForm /> });
-        case CommunityType.FACULTY:
+        case UniversityType.FACULTY:
+            // TODO
             return getForm({ typeSpecificForm: <FacultyForm /> });
     }
 }

@@ -51,3 +51,14 @@ export const selectSortedSessionsData = createSelector(
 export const selectActiveSessionEmail = (state: RootState) => {
     return state.sessions.activeSessionEmail;
 };
+
+export const selectActiveSessionUserId = (state: RootState) => {
+    const activeSessionEmail = state.sessions.activeSessionEmail;
+    if (state.sessions?.sessions === undefined) {
+        return undefined;
+    }
+    if (!(activeSessionEmail in state.sessions.sessions)) {
+        return undefined;
+    }
+    return state.sessions.sessions[activeSessionEmail].userId;
+};

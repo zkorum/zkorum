@@ -1,3 +1,4 @@
+import { countries as allCountries, type TCountryCode } from "countries-list";
 import {
     BBSPlusCredentialBuilder as CredentialBuilder,
     CredentialSchema,
@@ -7,6 +8,23 @@ import {
     BBSPlusBlindedCredentialRequest as BlindedCredentialRequest,
     BBSPlusBlindedCredential as BlindedCredential,
 } from "@docknetwork/crypto-wasm-ts";
+import type {
+    EmailCredentialRequest,
+    EmailCredentialsPerEmail,
+    EmailCredential,
+    SecretCredential,
+    SecretCredentialType,
+    SecretCredentialsPerType,
+} from "../shared/types/zod.js";
+import { log } from "../app.js";
+import {
+    UniversityType,
+    essecCampusToString,
+    essecProgramToString,
+    maxStudentYear,
+    minStudentYear,
+    universityTypeToString,
+} from "../shared/types/university.js";
 
 enum WebDomainType {
     UNIVERSITY,
@@ -23,9 +41,10 @@ function getTypeFromEmail(_email: string): WebDomainType {
     return WebDomainType.UNIVERSITY;
 }
 
-function _buildSecretBlindedCredential(
-    email: string,
+export function buildSecretCredential(
     blindCredentialRequest: BlindedCredentialRequest,
+    userId: string,
+    type: SecretCredentialType,
     sk: SecretKey
 ): BlindedCredential {
     // create blinded credential from blind credential request
@@ -36,31 +55,95 @@ function _buildSecretBlindedCredential(
     const blindedCredBuilder =
         blindCredentialRequest.generateBlindedCredentialBuilder();
     blindedCredBuilder.subject = {
-        email: email,
+        userId: userId,
+        type: type,
     };
     // TODO accumulator and revocation status
     const blindedCred = blindedCredBuilder.sign(sk);
     return blindedCred;
 }
 
-export function buildEmailCredential(email: string, sk: SecretKey): Credential {
+function toCredProperties(emailCredentialRequest: EmailCredentialRequest) {
+    switch (emailCredentialRequest.type) {
+        case UniversityType.STUDENT:
+            return {
+                type: universityTypeToString(emailCredentialRequest.type),
+                campus: essecCampusToString(emailCredentialRequest.campus),
+                program: essecProgramToString(emailCredentialRequest.program),
+                countries: (
+                    Object.keys(allCountries) as Array<TCountryCode>
+                ).map((countryCode) =>
+                    emailCredentialRequest.countries.includes(countryCode)
+                ),
+                admissionYear: emailCredentialRequest.admissionYear,
+            };
+        case UniversityType.ALUM:
+            // TODO
+            return {};
+        case UniversityType.FACULTY:
+            // TODO
+            return {};
+    }
+}
+
+export function buildEmailCredential(
+    email: string,
+    emailCredentialRequest: EmailCredentialRequest,
+    sk: SecretKey
+): Credential {
     const emailType = getTypeFromEmail(email);
     const schema = CredentialSchema.essential();
-    // TODO: update schema depending on email type (university, company...etc)
-    schema.properties[SUBJECT_STR] = {
-        type: "object",
-        properties: {
-            email: { type: "string" },
-            type: { type: "string" },
-        },
-    };
+    // TODO: pass schema as param depending on email type (university, company...etc)
+    const typeBoolean = { type: "boolean" };
+    switch (emailCredentialRequest.type) {
+        case UniversityType.STUDENT:
+            schema.properties[SUBJECT_STR] = {
+                type: "object",
+                properties: {
+                    email: { type: "string" },
+                    type: { type: "string" },
+                    typeSpecific: {
+                        type: "object",
+                        properties: {
+                            type: { type: "string" },
+                            campus: { type: "string" },
+                            program: { type: "string" },
+                            countries: {
+                                type: "array",
+                                items: Object.keys(allCountries).map(
+                                    () => typeBoolean // 1 if present, else 0. We do this because the number of elements must be known in advance: "the schema should specify exactly how many items are present in the array"
+                                ),
+                            },
+                            admissionYear: {
+                                type: "number",
+                                minimum: minStudentYear,
+                                multipleOf: 0.1,
+                            },
+                        },
+                    },
+                },
+            };
+            break;
+        case UniversityType.ALUM:
+            // TODO
+            break;
+        case UniversityType.FACULTY:
+            // TODO
+            break;
+    }
     const credSchema = new CredentialSchema(schema);
 
     const builder = new CredentialBuilder();
     builder.schema = credSchema;
     // TODO revocation status and such
 
-    builder.subject = { email: email, type: WebDomainType[emailType] };
+    // log.warn(`\n\n\n${{ ...toCredProperties(emailCredentialRequest) }}\n\n\n`);
+
+    builder.subject = {
+        email: email,
+        type: WebDomainType[emailType],
+        typeSpecific: { ...toCredProperties(emailCredentialRequest) },
+    };
     return builder.sign(sk);
 }
 
@@ -98,16 +181,12 @@ export function buildEmailCredential(email: string, sk: SecretKey): Credential {
 //     return { emailCredential, secretBlindedCredential };
 // }
 
-// function blindedCredentialRequestFromObj(
-//     blindedCredentialRequestObj: object
-// ): BlindedCredentialRequest | undefined {
-//     try {
-//         return BlindedCredentialRequest.fromJSON(blindedCredentialRequestObj);
-//     } catch (e) {
-//         log.error("Cannot parse blinded credential request", e);
-//         return undefined;
-//     }
-// }
+export function parseSecretCredentialRequest(
+    blindedCredentialRequestObj: any
+): BlindedCredentialRequest {
+    return BlindedCredentialRequest.fromJSON(blindedCredentialRequestObj);
+    // log.error("Cannot parse blinded credential request", e);
+}
 
 // async function getEmailCredentials(
 //     db: PostgresJsDatabase,
@@ -170,3 +249,75 @@ export function buildEmailCredential(email: string, sk: SecretKey): Credential {
 //         return emailCredentials;
 //     }
 // }
+//
+export function hasActiveEmailCredential(
+    email: string,
+    emailCredentialsPerEmail: EmailCredentialsPerEmail
+): boolean {
+    if (
+        email in emailCredentialsPerEmail &&
+        emailCredentialsPerEmail[email].active !== undefined
+    ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+export function hasActiveSecretCredential(
+    type: SecretCredentialType,
+    secretCredentialsPerType: SecretCredentialsPerType
+): boolean {
+    if (
+        type in secretCredentialsPerType &&
+        secretCredentialsPerType[type].active !== undefined
+    ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+export function addActiveEmailCredential(
+    email: string,
+    encodedEmailCredential: EmailCredential,
+    existingEmailCredentialsPerEmail: EmailCredentialsPerEmail
+): EmailCredentialsPerEmail {
+    const emailCredentialsPerEmail = { ...existingEmailCredentialsPerEmail };
+    if (hasActiveEmailCredential(email, existingEmailCredentialsPerEmail)) {
+        log.warn(
+            "Replacing active email credential in an object that is not expected to have one"
+        );
+        emailCredentialsPerEmail[email].active = encodedEmailCredential;
+    } else if (email in emailCredentialsPerEmail) {
+        emailCredentialsPerEmail[email].active = encodedEmailCredential;
+    } else {
+        emailCredentialsPerEmail[email] = {
+            active: encodedEmailCredential,
+            revoked: [],
+        };
+    }
+    return emailCredentialsPerEmail;
+}
+
+export function addActiveSecretCredential(
+    type: SecretCredentialType,
+    secretCredential: SecretCredential,
+    existingSecretCredentialsPerType: SecretCredentialsPerType
+): SecretCredentialsPerType {
+    const secretCredentialsPerType = { ...existingSecretCredentialsPerType };
+    if (hasActiveSecretCredential(type, existingSecretCredentialsPerType)) {
+        log.warn(
+            "Replacing active secret credential in an object that is not expected to have one"
+        );
+        secretCredentialsPerType[type].active = secretCredential;
+    } else if (type in secretCredentialsPerType) {
+        secretCredentialsPerType[type].active = secretCredential;
+    } else {
+        secretCredentialsPerType[type] = {
+            active: secretCredential,
+            revoked: [],
+        };
+    }
+    return secretCredentialsPerType;
+}

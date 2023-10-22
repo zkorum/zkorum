@@ -80,10 +80,10 @@ export interface AuthAuthenticatePost409Response {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
      * @memberof AuthAuthenticatePost409Response
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
 }
 
 export const AuthAuthenticatePost409ResponseReasonEnum = {
@@ -156,10 +156,10 @@ export interface AuthAuthenticatePost409ResponseAnyOf1 {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
      * @memberof AuthAuthenticatePost409ResponseAnyOf1
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
 }
 
 export const AuthAuthenticatePost409ResponseAnyOf1ReasonEnum = {
@@ -186,6 +186,50 @@ export interface AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailVa
      * @memberof AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
      */
     'revoked': Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue
+ */
+export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue {
+    /**
+     * 
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue
+     */
+    'active'?: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive;
+    /**
+     * 
+     * @type {Array<AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive>}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue
+     */
+    'revoked': Array<AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive>;
+}
+/**
+ * 
+ * @export
+ * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
+ */
+export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
+     */
+    'encodedBlindedCredential': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
+     */
+    'encryptedBlinding': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
+     */
+    'encryptedBlindedSubject': string;
 }
 /**
  * 
@@ -295,10 +339,10 @@ export interface AuthVerifyOtpPost200Response {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
      * @memberof AuthVerifyOtpPost200Response
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
     /**
      * 
      * @type {string}
@@ -353,10 +397,10 @@ export interface AuthVerifyOtpPost200ResponseAnyOf {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
      * @memberof AuthVerifyOtpPost200ResponseAnyOf
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
 }
 /**
  * 
@@ -408,21 +452,741 @@ export interface AuthVerifyOtpPostRequest {
 /**
  * 
  * @export
- * @interface CredentialsGetPost200Response
+ * @interface CredentialGetPost200Response
  */
-export interface CredentialsGetPost200Response {
+export interface CredentialGetPost200Response {
     /**
      * 
      * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof CredentialsGetPost200Response
+     * @memberof CredentialGetPost200Response
      */
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof CredentialsGetPost200Response
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
+     * @memberof CredentialGetPost200Response
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
+}
+/**
+ * 
+ * @export
+ * @interface CredentialRequestPostRequest
+ */
+export interface CredentialRequestPostRequest {
+    /**
+     * Email address
+     * @type {string}
+     * @memberof CredentialRequestPostRequest
+     */
+    'email': string;
+    /**
+     * 
+     * @type {CredentialRequestPostRequestEmailCredentialRequest}
+     * @memberof CredentialRequestPostRequest
+     */
+    'emailCredentialRequest': CredentialRequestPostRequestEmailCredentialRequest;
+    /**
+     * 
+     * @type {CredentialRequestPostRequestSecretCredentialRequest}
+     * @memberof CredentialRequestPostRequest
+     */
+    'secretCredentialRequest': CredentialRequestPostRequestSecretCredentialRequest;
+}
+/**
+ * 
+ * @export
+ * @interface CredentialRequestPostRequestEmailCredentialRequest
+ */
+export interface CredentialRequestPostRequestEmailCredentialRequest {
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     */
+    'type': CredentialRequestPostRequestEmailCredentialRequestTypeEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     */
+    'campus': CredentialRequestPostRequestEmailCredentialRequestCampusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     */
+    'program': CredentialRequestPostRequestEmailCredentialRequestProgramEnum;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     */
+    'countries': Array<CredentialRequestPostRequestEmailCredentialRequestCountriesEnum>;
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     */
+    'admissionYear': number;
+}
+
+export const CredentialRequestPostRequestEmailCredentialRequestTypeEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestTypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestTypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestTypeEnum];
+export const CredentialRequestPostRequestEmailCredentialRequestCampusEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestCampusEnum = typeof CredentialRequestPostRequestEmailCredentialRequestCampusEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestCampusEnum];
+export const CredentialRequestPostRequestEmailCredentialRequestProgramEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2,
+    NUMBER_3: 3,
+    NUMBER_4: 4
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestProgramEnum = typeof CredentialRequestPostRequestEmailCredentialRequestProgramEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestProgramEnum];
+export const CredentialRequestPostRequestEmailCredentialRequestCountriesEnum = {
+    Ad: 'AD',
+    Ae: 'AE',
+    Af: 'AF',
+    Ag: 'AG',
+    Ai: 'AI',
+    Al: 'AL',
+    Am: 'AM',
+    Ao: 'AO',
+    Aq: 'AQ',
+    Ar: 'AR',
+    As: 'AS',
+    At: 'AT',
+    Au: 'AU',
+    Aw: 'AW',
+    Ax: 'AX',
+    Az: 'AZ',
+    Ba: 'BA',
+    Bb: 'BB',
+    Bd: 'BD',
+    Be: 'BE',
+    Bf: 'BF',
+    Bg: 'BG',
+    Bh: 'BH',
+    Bi: 'BI',
+    Bj: 'BJ',
+    Bl: 'BL',
+    Bm: 'BM',
+    Bn: 'BN',
+    Bo: 'BO',
+    Bq: 'BQ',
+    Br: 'BR',
+    Bs: 'BS',
+    Bt: 'BT',
+    Bv: 'BV',
+    Bw: 'BW',
+    By: 'BY',
+    Bz: 'BZ',
+    Ca: 'CA',
+    Cc: 'CC',
+    Cd: 'CD',
+    Cf: 'CF',
+    Cg: 'CG',
+    Ch: 'CH',
+    Ci: 'CI',
+    Ck: 'CK',
+    Cl: 'CL',
+    Cm: 'CM',
+    Cn: 'CN',
+    Co: 'CO',
+    Cr: 'CR',
+    Cu: 'CU',
+    Cv: 'CV',
+    Cw: 'CW',
+    Cx: 'CX',
+    Cy: 'CY',
+    Cz: 'CZ',
+    De: 'DE',
+    Dj: 'DJ',
+    Dk: 'DK',
+    Dm: 'DM',
+    Do: 'DO',
+    Dz: 'DZ',
+    Ec: 'EC',
+    Ee: 'EE',
+    Eg: 'EG',
+    Eh: 'EH',
+    Er: 'ER',
+    Es: 'ES',
+    Et: 'ET',
+    Fi: 'FI',
+    Fj: 'FJ',
+    Fk: 'FK',
+    Fm: 'FM',
+    Fo: 'FO',
+    Fr: 'FR',
+    Ga: 'GA',
+    Gb: 'GB',
+    Gd: 'GD',
+    Ge: 'GE',
+    Gf: 'GF',
+    Gg: 'GG',
+    Gh: 'GH',
+    Gi: 'GI',
+    Gl: 'GL',
+    Gm: 'GM',
+    Gn: 'GN',
+    Gp: 'GP',
+    Gq: 'GQ',
+    Gr: 'GR',
+    Gs: 'GS',
+    Gt: 'GT',
+    Gu: 'GU',
+    Gw: 'GW',
+    Gy: 'GY',
+    Hk: 'HK',
+    Hm: 'HM',
+    Hn: 'HN',
+    Hr: 'HR',
+    Ht: 'HT',
+    Hu: 'HU',
+    Id: 'ID',
+    Ie: 'IE',
+    Il: 'IL',
+    Im: 'IM',
+    In: 'IN',
+    Io: 'IO',
+    Iq: 'IQ',
+    Ir: 'IR',
+    Is: 'IS',
+    It: 'IT',
+    Je: 'JE',
+    Jm: 'JM',
+    Jo: 'JO',
+    Jp: 'JP',
+    Ke: 'KE',
+    Kg: 'KG',
+    Kh: 'KH',
+    Ki: 'KI',
+    Km: 'KM',
+    Kn: 'KN',
+    Kp: 'KP',
+    Kr: 'KR',
+    Kw: 'KW',
+    Ky: 'KY',
+    Kz: 'KZ',
+    La: 'LA',
+    Lb: 'LB',
+    Lc: 'LC',
+    Li: 'LI',
+    Lk: 'LK',
+    Lr: 'LR',
+    Ls: 'LS',
+    Lt: 'LT',
+    Lu: 'LU',
+    Lv: 'LV',
+    Ly: 'LY',
+    Ma: 'MA',
+    Mc: 'MC',
+    Md: 'MD',
+    Me: 'ME',
+    Mf: 'MF',
+    Mg: 'MG',
+    Mh: 'MH',
+    Mk: 'MK',
+    Ml: 'ML',
+    Mm: 'MM',
+    Mn: 'MN',
+    Mo: 'MO',
+    Mp: 'MP',
+    Mq: 'MQ',
+    Mr: 'MR',
+    Ms: 'MS',
+    Mt: 'MT',
+    Mu: 'MU',
+    Mv: 'MV',
+    Mw: 'MW',
+    Mx: 'MX',
+    My: 'MY',
+    Mz: 'MZ',
+    Na: 'NA',
+    Nc: 'NC',
+    Ne: 'NE',
+    Nf: 'NF',
+    Ng: 'NG',
+    Ni: 'NI',
+    Nl: 'NL',
+    No: 'NO',
+    Np: 'NP',
+    Nr: 'NR',
+    Nu: 'NU',
+    Nz: 'NZ',
+    Om: 'OM',
+    Pa: 'PA',
+    Pe: 'PE',
+    Pf: 'PF',
+    Pg: 'PG',
+    Ph: 'PH',
+    Pk: 'PK',
+    Pl: 'PL',
+    Pm: 'PM',
+    Pn: 'PN',
+    Pr: 'PR',
+    Ps: 'PS',
+    Pt: 'PT',
+    Pw: 'PW',
+    Py: 'PY',
+    Qa: 'QA',
+    Re: 'RE',
+    Ro: 'RO',
+    Rs: 'RS',
+    Ru: 'RU',
+    Rw: 'RW',
+    Sa: 'SA',
+    Sb: 'SB',
+    Sc: 'SC',
+    Sd: 'SD',
+    Se: 'SE',
+    Sg: 'SG',
+    Sh: 'SH',
+    Si: 'SI',
+    Sj: 'SJ',
+    Sk: 'SK',
+    Sl: 'SL',
+    Sm: 'SM',
+    Sn: 'SN',
+    So: 'SO',
+    Sr: 'SR',
+    Ss: 'SS',
+    St: 'ST',
+    Sv: 'SV',
+    Sx: 'SX',
+    Sy: 'SY',
+    Sz: 'SZ',
+    Tc: 'TC',
+    Td: 'TD',
+    Tf: 'TF',
+    Tg: 'TG',
+    Th: 'TH',
+    Tj: 'TJ',
+    Tk: 'TK',
+    Tl: 'TL',
+    Tm: 'TM',
+    Tn: 'TN',
+    To: 'TO',
+    Tr: 'TR',
+    Tt: 'TT',
+    Tv: 'TV',
+    Tw: 'TW',
+    Tz: 'TZ',
+    Ua: 'UA',
+    Ug: 'UG',
+    Um: 'UM',
+    Us: 'US',
+    Uy: 'UY',
+    Uz: 'UZ',
+    Va: 'VA',
+    Vc: 'VC',
+    Ve: 'VE',
+    Vg: 'VG',
+    Vi: 'VI',
+    Vn: 'VN',
+    Vu: 'VU',
+    Wf: 'WF',
+    Ws: 'WS',
+    Xk: 'XK',
+    Ye: 'YE',
+    Yt: 'YT',
+    Za: 'ZA',
+    Zm: 'ZM',
+    Zw: 'ZW'
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestCountriesEnum = typeof CredentialRequestPostRequestEmailCredentialRequestCountriesEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestCountriesEnum];
+
+/**
+ * 
+ * @export
+ * @interface CredentialRequestPostRequestEmailCredentialRequestAnyOf
+ */
+export interface CredentialRequestPostRequestEmailCredentialRequestAnyOf {
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     */
+    'type': CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     */
+    'campus': CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     */
+    'program': CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     */
+    'countries': Array<CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum>;
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     */
+    'admissionYear': number;
+}
+
+export const CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum = {
+    NUMBER_0: 0
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum];
+export const CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum];
+export const CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2,
+    NUMBER_3: 3,
+    NUMBER_4: 4
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum];
+export const CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum = {
+    Ad: 'AD',
+    Ae: 'AE',
+    Af: 'AF',
+    Ag: 'AG',
+    Ai: 'AI',
+    Al: 'AL',
+    Am: 'AM',
+    Ao: 'AO',
+    Aq: 'AQ',
+    Ar: 'AR',
+    As: 'AS',
+    At: 'AT',
+    Au: 'AU',
+    Aw: 'AW',
+    Ax: 'AX',
+    Az: 'AZ',
+    Ba: 'BA',
+    Bb: 'BB',
+    Bd: 'BD',
+    Be: 'BE',
+    Bf: 'BF',
+    Bg: 'BG',
+    Bh: 'BH',
+    Bi: 'BI',
+    Bj: 'BJ',
+    Bl: 'BL',
+    Bm: 'BM',
+    Bn: 'BN',
+    Bo: 'BO',
+    Bq: 'BQ',
+    Br: 'BR',
+    Bs: 'BS',
+    Bt: 'BT',
+    Bv: 'BV',
+    Bw: 'BW',
+    By: 'BY',
+    Bz: 'BZ',
+    Ca: 'CA',
+    Cc: 'CC',
+    Cd: 'CD',
+    Cf: 'CF',
+    Cg: 'CG',
+    Ch: 'CH',
+    Ci: 'CI',
+    Ck: 'CK',
+    Cl: 'CL',
+    Cm: 'CM',
+    Cn: 'CN',
+    Co: 'CO',
+    Cr: 'CR',
+    Cu: 'CU',
+    Cv: 'CV',
+    Cw: 'CW',
+    Cx: 'CX',
+    Cy: 'CY',
+    Cz: 'CZ',
+    De: 'DE',
+    Dj: 'DJ',
+    Dk: 'DK',
+    Dm: 'DM',
+    Do: 'DO',
+    Dz: 'DZ',
+    Ec: 'EC',
+    Ee: 'EE',
+    Eg: 'EG',
+    Eh: 'EH',
+    Er: 'ER',
+    Es: 'ES',
+    Et: 'ET',
+    Fi: 'FI',
+    Fj: 'FJ',
+    Fk: 'FK',
+    Fm: 'FM',
+    Fo: 'FO',
+    Fr: 'FR',
+    Ga: 'GA',
+    Gb: 'GB',
+    Gd: 'GD',
+    Ge: 'GE',
+    Gf: 'GF',
+    Gg: 'GG',
+    Gh: 'GH',
+    Gi: 'GI',
+    Gl: 'GL',
+    Gm: 'GM',
+    Gn: 'GN',
+    Gp: 'GP',
+    Gq: 'GQ',
+    Gr: 'GR',
+    Gs: 'GS',
+    Gt: 'GT',
+    Gu: 'GU',
+    Gw: 'GW',
+    Gy: 'GY',
+    Hk: 'HK',
+    Hm: 'HM',
+    Hn: 'HN',
+    Hr: 'HR',
+    Ht: 'HT',
+    Hu: 'HU',
+    Id: 'ID',
+    Ie: 'IE',
+    Il: 'IL',
+    Im: 'IM',
+    In: 'IN',
+    Io: 'IO',
+    Iq: 'IQ',
+    Ir: 'IR',
+    Is: 'IS',
+    It: 'IT',
+    Je: 'JE',
+    Jm: 'JM',
+    Jo: 'JO',
+    Jp: 'JP',
+    Ke: 'KE',
+    Kg: 'KG',
+    Kh: 'KH',
+    Ki: 'KI',
+    Km: 'KM',
+    Kn: 'KN',
+    Kp: 'KP',
+    Kr: 'KR',
+    Kw: 'KW',
+    Ky: 'KY',
+    Kz: 'KZ',
+    La: 'LA',
+    Lb: 'LB',
+    Lc: 'LC',
+    Li: 'LI',
+    Lk: 'LK',
+    Lr: 'LR',
+    Ls: 'LS',
+    Lt: 'LT',
+    Lu: 'LU',
+    Lv: 'LV',
+    Ly: 'LY',
+    Ma: 'MA',
+    Mc: 'MC',
+    Md: 'MD',
+    Me: 'ME',
+    Mf: 'MF',
+    Mg: 'MG',
+    Mh: 'MH',
+    Mk: 'MK',
+    Ml: 'ML',
+    Mm: 'MM',
+    Mn: 'MN',
+    Mo: 'MO',
+    Mp: 'MP',
+    Mq: 'MQ',
+    Mr: 'MR',
+    Ms: 'MS',
+    Mt: 'MT',
+    Mu: 'MU',
+    Mv: 'MV',
+    Mw: 'MW',
+    Mx: 'MX',
+    My: 'MY',
+    Mz: 'MZ',
+    Na: 'NA',
+    Nc: 'NC',
+    Ne: 'NE',
+    Nf: 'NF',
+    Ng: 'NG',
+    Ni: 'NI',
+    Nl: 'NL',
+    No: 'NO',
+    Np: 'NP',
+    Nr: 'NR',
+    Nu: 'NU',
+    Nz: 'NZ',
+    Om: 'OM',
+    Pa: 'PA',
+    Pe: 'PE',
+    Pf: 'PF',
+    Pg: 'PG',
+    Ph: 'PH',
+    Pk: 'PK',
+    Pl: 'PL',
+    Pm: 'PM',
+    Pn: 'PN',
+    Pr: 'PR',
+    Ps: 'PS',
+    Pt: 'PT',
+    Pw: 'PW',
+    Py: 'PY',
+    Qa: 'QA',
+    Re: 'RE',
+    Ro: 'RO',
+    Rs: 'RS',
+    Ru: 'RU',
+    Rw: 'RW',
+    Sa: 'SA',
+    Sb: 'SB',
+    Sc: 'SC',
+    Sd: 'SD',
+    Se: 'SE',
+    Sg: 'SG',
+    Sh: 'SH',
+    Si: 'SI',
+    Sj: 'SJ',
+    Sk: 'SK',
+    Sl: 'SL',
+    Sm: 'SM',
+    Sn: 'SN',
+    So: 'SO',
+    Sr: 'SR',
+    Ss: 'SS',
+    St: 'ST',
+    Sv: 'SV',
+    Sx: 'SX',
+    Sy: 'SY',
+    Sz: 'SZ',
+    Tc: 'TC',
+    Td: 'TD',
+    Tf: 'TF',
+    Tg: 'TG',
+    Th: 'TH',
+    Tj: 'TJ',
+    Tk: 'TK',
+    Tl: 'TL',
+    Tm: 'TM',
+    Tn: 'TN',
+    To: 'TO',
+    Tr: 'TR',
+    Tt: 'TT',
+    Tv: 'TV',
+    Tw: 'TW',
+    Tz: 'TZ',
+    Ua: 'UA',
+    Ug: 'UG',
+    Um: 'UM',
+    Us: 'US',
+    Uy: 'UY',
+    Uz: 'UZ',
+    Va: 'VA',
+    Vc: 'VC',
+    Ve: 'VE',
+    Vg: 'VG',
+    Vi: 'VI',
+    Vn: 'VN',
+    Vu: 'VU',
+    Wf: 'WF',
+    Ws: 'WS',
+    Xk: 'XK',
+    Ye: 'YE',
+    Yt: 'YT',
+    Za: 'ZA',
+    Zm: 'ZM',
+    Zw: 'ZW'
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum];
+
+/**
+ * 
+ * @export
+ * @interface CredentialRequestPostRequestEmailCredentialRequestAnyOf1
+ */
+export interface CredentialRequestPostRequestEmailCredentialRequestAnyOf1 {
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf1
+     */
+    'type': CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum;
+}
+
+export const CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum = {
+    NUMBER_1: 1
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface CredentialRequestPostRequestEmailCredentialRequestAnyOf2
+ */
+export interface CredentialRequestPostRequestEmailCredentialRequestAnyOf2 {
+    /**
+     * 
+     * @type {number}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf2
+     */
+    'type': CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum;
+}
+
+export const CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum = {
+    NUMBER_2: 2
+} as const;
+
+export type CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface CredentialRequestPostRequestSecretCredentialRequest
+ */
+export interface CredentialRequestPostRequestSecretCredentialRequest {
+    /**
+     * 
+     * @type {{ [key: string]: any; }}
+     * @memberof CredentialRequestPostRequestSecretCredentialRequest
+     */
+    'blindedRequest': { [key: string]: any; };
+    /**
+     * 
+     * @type {string}
+     * @memberof CredentialRequestPostRequestSecretCredentialRequest
+     */
+    'encryptedEncodedBlindedSubject': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CredentialRequestPostRequestSecretCredentialRequest
+     */
+    'encryptedEncodedBlinding': string;
 }
 
 /**
@@ -570,8 +1334,8 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        credentialsGetPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/credentials/get`;
+        credentialGetPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/credential/get`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -588,6 +1352,41 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {CredentialRequestPostRequest} credentialRequestPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        credentialRequestPost: async (credentialRequestPostRequest: CredentialRequestPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'credentialRequestPostRequest' is not null or undefined
+            assertParamExists('credentialRequestPost', 'credentialRequestPostRequest', credentialRequestPostRequest)
+            const localVarPath = `/credential/request`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(credentialRequestPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -648,8 +1447,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async credentialsGetPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialsGetPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.credentialsGetPost(options);
+        async credentialGetPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialGetPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.credentialGetPost(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {CredentialRequestPostRequest} credentialRequestPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialGetPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.credentialRequestPost(credentialRequestPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -702,8 +1511,17 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        credentialsGetPost(options?: any): AxiosPromise<CredentialsGetPost200Response> {
-            return localVarFp.credentialsGetPost(options).then((request) => request(axios, basePath));
+        credentialGetPost(options?: any): AxiosPromise<CredentialGetPost200Response> {
+            return localVarFp.credentialGetPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {CredentialRequestPostRequest} credentialRequestPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: any): AxiosPromise<CredentialGetPost200Response> {
+            return localVarFp.credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -764,8 +1582,19 @@ export class DefaultApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public credentialsGetPost(options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).credentialsGetPost(options).then((request) => request(this.axios, this.basePath));
+    public credentialGetPost(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).credentialGetPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {CredentialRequestPostRequest} credentialRequestPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

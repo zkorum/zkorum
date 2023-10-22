@@ -12,7 +12,7 @@ import {
     type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { DrizzleFastifyLogger } from "./logger.js";
-import { Dto } from "./dto.js";
+import { Dto, type UserCredentials } from "./dto.js";
 import * as ucans from "@ucans/ucans";
 import {
     httpMethodToAbility,
@@ -28,6 +28,13 @@ import {
     type PostgresJsDatabase as PostgresDatabase,
 } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import {
+    addActiveEmailCredential,
+    addActiveSecretCredential,
+    hasActiveEmailCredential,
+    hasActiveSecretCredential,
+} from "./service/credential.js";
+import type { SecretCredential } from "./shared/types/zod.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -88,7 +95,7 @@ const db = drizzle(client, {
 
 // This is necessary for crypto-wasm-ts to work
 await initializeWasm();
-const _sk: SecretKey = getSecretKey(config.NODE_ENV);
+const sk: SecretKey = getSecretKey(config.NODE_ENV);
 function getSecretKey(env: Environment): SecretKey {
     if (env === Environment.Development) {
         const skAsHex = fs.readFileSync("./private.dev.key", {
@@ -303,7 +310,7 @@ server.after(() => {
             // return await AuthService.syncAttempt(db, didWrite);
         },
     });
-    server.withTypeProvider<ZodTypeProvider>().post("/credentials/get", {
+    server.withTypeProvider<ZodTypeProvider>().post("/credential/get", {
         schema: {
             response: {
                 200: Dto.userCredentials,
@@ -319,6 +326,161 @@ server.after(() => {
             return await Service.getCredentials(db, didWrite);
         },
     });
+    server.withTypeProvider<ZodTypeProvider>().post("/credential/request", {
+        schema: {
+            body: Dto.requestCredentials,
+            response: {
+                200: Dto.userCredentials,
+            },
+        },
+        handler: async (request, _reply) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: {
+                    isLoggedIn: true,
+                    isSyncing: true,
+                },
+            });
+            const email = request.body.email;
+            const isEmailAssociatedWithDevice =
+                await Service.isEmailAssociatedWithDevice(db, didWrite, email);
+            if (!isEmailAssociatedWithDevice) {
+                throw server.httpErrors.forbidden(
+                    `Email ${email} is not associated with this didWrite ${didWrite}`
+                );
+            }
+
+            const {
+                emailCredentialsPerEmail: existingEmailCredentialsPerEmail,
+                secretCredentialsPerType: existingSecretCredentialsPerType,
+            } = await Service.getCredentials(db, didWrite);
+            const type = "global";
+            if (
+                hasActiveEmailCredential(
+                    email,
+                    existingEmailCredentialsPerEmail
+                )
+            ) {
+                if (
+                    hasActiveSecretCredential(
+                        type,
+                        existingSecretCredentialsPerType
+                    )
+                ) {
+                    server.log.warn("Credentials requested but already exist");
+                    const userCredentials: UserCredentials = {
+                        emailCredentialsPerEmail:
+                            existingEmailCredentialsPerEmail,
+                        secretCredentialsPerType:
+                            existingSecretCredentialsPerType,
+                    };
+                    return userCredentials;
+                } else {
+                    server.log.warn(
+                        "Credentials requested but only email credential existed"
+                    );
+                    const encodedBlindedCredential =
+                        await Service.createAndStoreSecretCredential(
+                            db,
+                            didWrite,
+                            request.body.secretCredentialRequest,
+                            type,
+                            server.httpErrors,
+                            sk
+                        );
+                    const secretCredential: SecretCredential = {
+                        encodedBlindedCredential: encodedBlindedCredential,
+                        encryptedBlinding:
+                            request.body.secretCredentialRequest
+                                .encryptedEncodedBlinding,
+                        encryptedBlindedSubject:
+                            request.body.secretCredentialRequest
+                                .encryptedEncodedBlindedSubject,
+                    };
+                    const secretCredentialsPerType = addActiveSecretCredential(
+                        type,
+                        secretCredential,
+                        existingSecretCredentialsPerType
+                    );
+                    const userCredentials: UserCredentials = {
+                        emailCredentialsPerEmail:
+                            existingEmailCredentialsPerEmail,
+                        secretCredentialsPerType,
+                    };
+                    return userCredentials;
+                }
+            } else {
+                if (
+                    hasActiveSecretCredential(
+                        type,
+                        existingSecretCredentialsPerType
+                    )
+                ) {
+                    server.log.warn(
+                        "Credentials requested but only secret credential existed"
+                    );
+                    const encodedEmailCredential =
+                        await Service.createAndStoreEmailCredential(
+                            db,
+                            email,
+                            request.body.emailCredentialRequest,
+                            sk
+                        );
+                    const emailCredentialsPerEmail = addActiveEmailCredential(
+                        email,
+                        encodedEmailCredential,
+                        existingEmailCredentialsPerEmail
+                    );
+                    const userCredentials: UserCredentials = {
+                        emailCredentialsPerEmail,
+                        secretCredentialsPerType:
+                            existingSecretCredentialsPerType,
+                    };
+                    return userCredentials;
+                } else {
+                    server.log.info(
+                        "Creating both email and secret credentials"
+                    );
+                    const { encodedEmailCredential, encodedBlindedCredential } =
+                        await Service.createAndStoreCredentials({
+                            db: db,
+                            didWrite: didWrite,
+                            secretCredentialRequest:
+                                request.body.secretCredentialRequest,
+                            type: type,
+                            httpErrors: server.httpErrors,
+                            sk: sk,
+                            email: email,
+                            emailCredentialRequest:
+                                request.body.emailCredentialRequest,
+                        });
+                    const emailCredentialsPerEmail = addActiveEmailCredential(
+                        email,
+                        encodedEmailCredential,
+                        existingEmailCredentialsPerEmail
+                    );
+                    const secretCredential: SecretCredential = {
+                        encodedBlindedCredential: encodedBlindedCredential,
+                        encryptedBlinding:
+                            request.body.secretCredentialRequest
+                                .encryptedEncodedBlinding,
+                        encryptedBlindedSubject:
+                            request.body.secretCredentialRequest
+                                .encryptedEncodedBlindedSubject,
+                    };
+                    const secretCredentialsPerType = addActiveSecretCredential(
+                        type,
+                        secretCredential,
+                        existingSecretCredentialsPerType
+                    );
+                    const userCredentials: UserCredentials = {
+                        emailCredentialsPerEmail,
+                        secretCredentialsPerType,
+                    };
+                    return userCredentials;
+                }
+            }
+        },
+    });
 });
 
 server.ready((e) => {
@@ -327,8 +489,12 @@ server.ready((e) => {
         process.exit(1);
     }
     if (config.NODE_ENV === Environment.Development) {
-        const swaggerYaml = server.swagger({ yaml: true });
-        fs.writeFileSync("./openapi-zkorum.yml", swaggerYaml);
+        const swaggerJson = JSON.stringify(
+            server.swagger({ yaml: false }),
+            null,
+            2
+        );
+        fs.writeFileSync("./openapi-zkorum.json", swaggerJson);
     }
 });
 

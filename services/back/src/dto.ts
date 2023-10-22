@@ -116,6 +116,15 @@ export class Dto {
         emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
         secretCredentialsPerType: ZodType.secretCredentialsPerType,
     });
+    static credentials = z.object({
+        emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
+        secretCredentialsPerType: ZodType.secretCredentialsPerType,
+    });
+    static requestCredentials = z.object({
+        email: ZodType.email,
+        emailCredentialRequest: ZodType.emailCredentialRequest,
+        secretCredentialRequest: ZodType.secretCredentialRequest,
+    });
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
