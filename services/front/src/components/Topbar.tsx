@@ -1,6 +1,5 @@
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import Container from "@mui/material/Container";
 import Grid from "@mui/material/Unstable_Grid2";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { HideOnScroll } from "./HideOnScroll";
@@ -11,6 +10,9 @@ import IconButton from "@mui/material/IconButton";
 import Badge from "@mui/material/Badge";
 import { useNavigate } from "react-router-dom";
 import { LoginMenu } from "./auth/LoginMenu";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchIcon from "@mui/icons-material/Search";
 // import { ReactComponent as ZKorumIcon } from "../assets/logo.svg";
 // import SvgIcon from "@mui/material/SvgIcon";
 
@@ -29,65 +31,65 @@ export function Topbar() {
         <>
             <HideOnScroll direction={"down"}>
                 <AppBar>
-                    <Container maxWidth="xl">
-                        <Toolbar disableGutters>
-                            <Grid container width="100%">
-                                <Grid
-                                    xs
-                                    display="flex"
-                                    justifyContent="flex-start"
-                                    alignItems="center"
-                                >
-                                    {activeSessionEmail === "" ? (
-                                        <Button
-                                            variant="contained"
-                                            onClick={() =>
-                                                dispatch(openAuthModal())
-                                            }
-                                        >
-                                            Log in
-                                        </Button>
-                                    ) : (
-                                        <LoginMenu />
-                                    )}
-                                </Grid>
-                                <Grid
-                                    xs
-                                    display="flex"
-                                    justifyContent="center"
-                                    alignItems="center"
-                                >
-                                    Search bar
-                                </Grid>
-                                <Grid
-                                    xs
-                                    display="flex"
-                                    justifyContent="flex-end"
-                                    alignItems="center"
-                                >
-                                    <IconButton
-                                        aria-label="notifications"
+                    <Toolbar disableGutters>
+                        <Grid
+                            sx={{ ml: 0.2 }}
+                            container
+                            width="100%"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            spacing={2}
+                        >
+                            <Grid>
+                                {activeSessionEmail === "" ? (
+                                    <Button
+                                        variant="contained"
                                         onClick={() =>
-                                            navigate("/notifications")
+                                            dispatch(openAuthModal())
                                         }
                                     >
-                                        <Badge
-                                            color="error"
-                                            sx={{
-                                                "& .MuiBadge-badge": {
-                                                    right: 2,
-                                                    top: 3,
-                                                },
-                                            }}
-                                            // badgeContent={4}
-                                        >
-                                            <NotificationsIcon />
-                                        </Badge>
-                                    </IconButton>
-                                </Grid>
+                                        Log in
+                                    </Button>
+                                ) : (
+                                    <LoginMenu />
+                                )}
                             </Grid>
-                        </Toolbar>
-                    </Container>
+                            <Grid flexGrow={1}>
+                                <TextField
+                                    margin="none"
+                                    fullWidth
+                                    id="standard-basic"
+                                    variant="standard"
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Grid>
+                            <Grid>
+                                <IconButton
+                                    aria-label="notifications"
+                                    onClick={() => navigate("/notifications")}
+                                >
+                                    <Badge
+                                        color="error"
+                                        sx={{
+                                            "& .MuiBadge-badge": {
+                                                right: 2,
+                                                top: 3,
+                                            },
+                                        }}
+                                        badgeContent={4}
+                                    >
+                                        <NotificationsIcon />
+                                    </Badge>
+                                </IconButton>
+                            </Grid>
+                        </Grid>
+                    </Toolbar>
                 </AppBar>
             </HideOnScroll>
             <Toolbar />

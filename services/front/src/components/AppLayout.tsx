@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
 import { Outlet } from "react-router-dom";
 import Snackbar from "@mui/material/Snackbar";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -23,12 +22,11 @@ export function AppLayout() {
         dispatch(closeSnackbar());
     }
 
+    /* <Container maxWidth={false} disableGutters> */
     return (
-        <Box>
+        <Box sx={{ backgroundColor: "#e6e9ec" }}>
             <Topbar />
-            <Container>
-                <Outlet />
-            </Container>
+            <Outlet />
             <BottomNavbar />
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
