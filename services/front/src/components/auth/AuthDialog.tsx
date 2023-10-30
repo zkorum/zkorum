@@ -6,7 +6,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
-import { Outlet } from "react-router-dom";
 import { ZKorumIcon } from "../../ZKorumIcon";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import {
@@ -140,7 +139,6 @@ export function AuthDialog() {
                     </Container>
                 </DialogContent>
             </Dialog>
-            <Outlet />
         </Box>
     );
 }

@@ -10,7 +10,12 @@ import {
     serial,
     customType,
     text,
+    jsonb,
 } from "drizzle-orm/pg-core";
+import type {
+    EmailCredential,
+    BlindedCredentialType,
+} from "./shared/types/zod.js";
 
 export const bytea = customType<{
     data: string;
@@ -116,7 +121,7 @@ export const authAttemptTable = pgTable("auth_attempt", {
 // TODO: make sure there are always one and only one active credential (not revoked)
 export const credentialEmailTable = pgTable("credential_email", {
     id: serial("id").primaryKey(),
-    credential: text("credential").unique(), // encoded credential
+    credential: jsonb("credential").$type<object>().notNull(), // encoded credential
     isRevoked: boolean("is_revoked").default(false),
     email: varchar("email", { length: 254 })
         .references(() => emailTable.email)
@@ -133,7 +138,7 @@ export const credentialEmailTable = pgTable("credential_email", {
 export const credentialSecretTable = pgTable("credential_secret", {
     id: serial("id").primaryKey(),
     pollId: uuid("poll_id"),
-    credential: text("credential").notNull().unique(),
+    credential: jsonb("credential").$type<object>().notNull(),
     encryptedBlinding: text("encrypted_blinding").notNull(),
     encryptedBlindedSubject: text("encrypted_blinded_subject").notNull(),
     isRevoked: boolean("is_revoked").default(false),

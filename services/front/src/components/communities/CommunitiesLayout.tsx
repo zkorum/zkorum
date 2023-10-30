@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
+    selectActiveEmailCredential,
     selectActiveSessionEmail,
     selectActiveSessionUserId,
 } from "@/store/selector";
@@ -17,23 +18,7 @@ import { genericError } from "../error/message";
 // for now we just assume there's one community from one unique email
 export function CommunitiesLayout() {
     const dispatch = useAppDispatch();
-    const emailCredential = useAppSelector((state) => {
-        const activeSessionEmail = state.sessions.activeSessionEmail;
-        if (activeSessionEmail === "") {
-            return undefined;
-        }
-        const emailCredentialsPerEmail =
-            state.sessions.sessions[activeSessionEmail]
-                ?.emailCredentialsPerEmail;
-        if (
-            emailCredentialsPerEmail !== undefined &&
-            activeSessionEmail in emailCredentialsPerEmail
-        ) {
-            return emailCredentialsPerEmail[activeSessionEmail].active;
-        } else {
-            return undefined;
-        }
-    });
+    const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const activeSessionUserId = useAppSelector(selectActiveSessionUserId);
     const [communityName, setCommunityName] = React.useState<string>("");
@@ -74,7 +59,7 @@ export function CommunitiesLayout() {
     }, [activeSessionEmail]);
 
     return (
-        <Container>
+        <Container maxWidth="md" sx={{ backgroundColor: "#ffff" }}>
             <Box
                 sx={{
                     display: "flex",
@@ -93,7 +78,7 @@ export function CommunitiesLayout() {
                     <Box sx={{ my: 2 }}>
                         <CommunityPage
                             email={activeSessionEmail}
-                            communityCredential={emailCredential}
+                            communityCredential={activeEmailCredential}
                             userId={activeSessionUserId}
                         ></CommunityPage>
                     </Box>

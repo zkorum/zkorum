@@ -8,22 +8,20 @@ import { ErrorPage } from "./components/error/ErrorPage";
 import { Feed } from "./components/feed/Feed";
 import { Box, CssBaseline, Snackbar } from "@mui/material";
 import { AppLayout } from "./components/AppLayout";
-import { AuthDialog } from "./components/auth/AuthDialog";
 import { Alert } from "./components/shared/Alert";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { closeSnackbar } from "./store/reducers/snackbar";
 import { MainLoading } from "./MainLoading";
 import { COMMUNITIES } from "./common/navigation";
 import { CommunitiesLayout } from "./components/communities/CommunitiesLayout";
+import { RootDialog } from "./RootDialog";
 
 export const routes = [
     {
-        path: "/",
-        element: <AuthDialog />,
+        element: <RootDialog />,
         errorElement: <ErrorPage />,
         children: [
             {
-                path: "/",
                 element: <AppLayout />,
                 children: [
                     {

@@ -34,7 +34,7 @@ import type {
     EmailCredentialRequest,
     EmailCredentialsPerEmail,
     EmailCredential,
-    EncodedBlindedCredential,
+    BlindedCredentialType,
     SecretCredentialType,
     SecretCredentialsPerType,
     Credentials,
@@ -589,10 +589,11 @@ export class Service {
             db,
             authenticateRequestBody.email,
             throttleMinutesInterval,
+            minutesBeforeCodeExpiry,
             httpErrors
         );
         const oneTimeCode = generateOneTimeCode();
-        const codeExpiry = new Date();
+        const codeExpiry = new Date(now);
         codeExpiry.setMinutes(
             codeExpiry.getMinutes() + minutesBeforeCodeExpiry
         );
@@ -635,10 +636,11 @@ export class Service {
             db,
             authenticateRequestBody.email,
             throttleMinutesInterval,
+            minutesBeforeCodeExpiry,
             httpErrors
         );
         const oneTimeCode = generateOneTimeCode();
-        const codeExpiry = new Date();
+        const codeExpiry = new Date(now);
         codeExpiry.setMinutes(
             codeExpiry.getMinutes() + minutesBeforeCodeExpiry
         );
@@ -794,6 +796,7 @@ export class Service {
         db: PostgresDatabase,
         email: string,
         minutesInterval: number,
+        minutesBeforeCodeExpiry: number,
         httpErrors: HttpErrors
     ) {
         // now - 3 minutes if minutesInterval == 3
@@ -802,19 +805,27 @@ export class Service {
             minutesIntervalAgo.getMinutes() - minutesInterval
         );
 
-        const result = await db
-            .select({ lastEmailSentAt: authAttemptTable.lastEmailSentAt })
+        const results = await db
+            .select({
+                lastEmailSentAt: authAttemptTable.lastEmailSentAt,
+                codeExpiry: authAttemptTable.codeExpiry,
+            })
             .from(authAttemptTable)
-            .where(
-                and(
-                    eq(authAttemptTable.email, email),
-                    gt(authAttemptTable.lastEmailSentAt, minutesIntervalAgo) // we select emails sent between 3 minutes ago and now
-                )
+            .where(and(eq(authAttemptTable.email, email)));
+        for (const result of results) {
+            const expectedExpiryTime = new Date(result.lastEmailSentAt);
+            expectedExpiryTime.setMinutes(
+                expectedExpiryTime.getMinutes() + minutesBeforeCodeExpiry
             );
-        if (result.length !== 0) {
-            throw httpErrors.tooManyRequests(
-                "Throttling amount of emails sent"
-            );
+            if (
+                result.lastEmailSentAt.getTime() >=
+                    minutesIntervalAgo.getTime() &&
+                expectedExpiryTime.getTime() === result.codeExpiry.getTime() // code hasn't been guessed, because otherwise it would have been manually expired before the normal expiry time
+            ) {
+                throw httpErrors.tooManyRequests(
+                    "Throttling amount of emails sent"
+                );
+            }
         }
     }
 
@@ -896,23 +907,26 @@ export class Service {
         } else {
             const emailCredentials: EmailCredentialsPerEmail = {};
             for (const result of results) {
+                const encodedCredential = encode(
+                    anyToUint8Array(result.emailCredential)
+                );
                 if (result.email in emailCredentials) {
                     if (result.isRevoked) {
                         emailCredentials[result.email].revoked.push(
-                            result.emailCredential as string
+                            encodedCredential
                         ); // TODO make sure this is string and not object...
                     } else {
                         emailCredentials[result.email].active =
-                            result.emailCredential as string; // TODO make sure this is string and not object...
+                            encodedCredential;
                     }
                 } else {
                     if (result.isRevoked) {
                         emailCredentials[result.email] = {
-                            revoked: [result.emailCredential as string],
+                            revoked: [encodedCredential],
                         };
                     } else {
                         emailCredentials[result.email] = {
-                            active: result.emailCredential as string, // TODO make sure this is string and not object...
+                            active: encodedCredential, // TODO make sure this is string and not object...
                             revoked: [],
                         };
                     }
@@ -937,7 +951,7 @@ export class Service {
         await db.insert(credentialEmailTable).values({
             email: email,
             isRevoked: false,
-            credential: encodedCredential,
+            credential: credential.toJSON(),
         });
         return encodedCredential;
     }
@@ -949,7 +963,7 @@ export class Service {
         type: SecretCredentialType,
         httpErrors: HttpErrors,
         sk: SecretKey
-    ): Promise<EncodedBlindedCredential> {
+    ): Promise<BlindedCredentialType> {
         let blindedCredentialRequest: BlindedCredentialRequest;
         try {
             blindedCredentialRequest = parseSecretCredentialRequest(
@@ -971,7 +985,7 @@ export class Service {
             userId: userId,
             pollId: type !== "global" ? type : null,
             isRevoked: false,
-            credential: encodedCredential,
+            credential: credential.toJSON(),
             encryptedBlinding: secretCredentialRequest.encryptedEncodedBlinding,
             encryptedBlindedSubject:
                 secretCredentialRequest.encryptedEncodedBlindedSubject,
@@ -983,25 +997,23 @@ export class Service {
         params: CreateAndStoreCredentialsParams
     ): Promise<Credentials> {
         return await params.db.transaction(async (tx) => {
-            const encodedEmailCredential =
-                await this.createAndStoreEmailCredential(
-                    tx,
-                    params.email,
-                    params.emailCredentialRequest,
-                    params.sk
-                );
-            const encodedBlindedCredential =
-                await this.createAndStoreSecretCredential(
-                    tx,
-                    params.didWrite,
-                    params.secretCredentialRequest,
-                    params.type,
-                    params.httpErrors,
-                    params.sk
-                );
+            const emailCredential = await this.createAndStoreEmailCredential(
+                tx,
+                params.email,
+                params.emailCredentialRequest,
+                params.sk
+            );
+            const blindedCredential = await this.createAndStoreSecretCredential(
+                tx,
+                params.didWrite,
+                params.secretCredentialRequest,
+                params.type,
+                params.httpErrors,
+                params.sk
+            );
             return {
-                encodedEmailCredential,
-                encodedBlindedCredential,
+                emailCredential,
+                blindedCredential,
             };
         });
     }
@@ -1041,20 +1053,23 @@ export class Service {
         } else {
             const secretCredentialsPerType: SecretCredentialsPerType = {};
             for (const result of results) {
+                const encodedCredential = encode(
+                    anyToUint8Array(result.blindedCredential)
+                );
                 if (
                     result.pollId !== null &&
                     result.pollId in secretCredentialsPerType
                 ) {
                     if (result.isRevoked) {
                         secretCredentialsPerType[result.pollId].revoked.push({
-                            encodedBlindedCredential: result.blindedCredential,
+                            blindedCredential: encodedCredential,
                             encryptedBlinding: result.encryptedBlinding,
                             encryptedBlindedSubject:
                                 result.encryptedBlindedSubject,
                         });
                     } else {
                         secretCredentialsPerType[result.pollId].active = {
-                            encodedBlindedCredential: result.blindedCredential,
+                            blindedCredential: encodedCredential,
                             encryptedBlinding: result.encryptedBlinding,
                             encryptedBlindedSubject:
                                 result.encryptedBlindedSubject,
@@ -1065,8 +1080,7 @@ export class Service {
                         secretCredentialsPerType[result.pollId] = {
                             revoked: [
                                 {
-                                    encodedBlindedCredential:
-                                        result.blindedCredential,
+                                    blindedCredential: encodedCredential,
                                     encryptedBlinding: result.encryptedBlinding,
                                     encryptedBlindedSubject:
                                         result.encryptedBlindedSubject,
@@ -1076,8 +1090,7 @@ export class Service {
                     } else {
                         secretCredentialsPerType[result.pollId] = {
                             active: {
-                                encodedBlindedCredential:
-                                    result.blindedCredential,
+                                blindedCredential: encodedCredential,
                                 encryptedBlinding: result.encryptedBlinding,
                                 encryptedBlindedSubject:
                                     result.encryptedBlindedSubject,
@@ -1088,14 +1101,14 @@ export class Service {
                 } else if ("global" in secretCredentialsPerType) {
                     if (result.isRevoked) {
                         secretCredentialsPerType["global"].revoked.push({
-                            encodedBlindedCredential: result.blindedCredential,
+                            blindedCredential: encodedCredential,
                             encryptedBlinding: result.encryptedBlinding,
                             encryptedBlindedSubject:
                                 result.encryptedBlindedSubject,
                         }); // TODO make sure this is string and not object...
                     } else {
                         secretCredentialsPerType["global"].active = {
-                            encodedBlindedCredential: result.blindedCredential,
+                            blindedCredential: encodedCredential,
                             encryptedBlinding: result.encryptedBlinding,
                             encryptedBlindedSubject:
                                 result.encryptedBlindedSubject,
@@ -1104,7 +1117,7 @@ export class Service {
                 } else {
                     secretCredentialsPerType["global"] = {
                         active: {
-                            encodedBlindedCredential: result.blindedCredential,
+                            blindedCredential: encodedCredential,
                             encryptedBlinding: result.encryptedBlinding,
                             encryptedBlindedSubject:
                                 result.encryptedBlindedSubject,

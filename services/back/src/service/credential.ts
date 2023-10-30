@@ -21,10 +21,10 @@ import {
     UniversityType,
     essecCampusToString,
     essecProgramToString,
-    maxStudentYear,
     minStudentYear,
     universityTypeToString,
 } from "../shared/types/university.js";
+import { type } from "os";
 
 enum WebDomainType {
     UNIVERSITY,
@@ -66,15 +66,23 @@ export function buildSecretCredential(
 function toCredProperties(emailCredentialRequest: EmailCredentialRequest) {
     switch (emailCredentialRequest.type) {
         case UniversityType.STUDENT:
+            // replace undefined by false in list of countries
+            for (const countryCode of Object.keys(allCountries)) {
+                if (
+                    emailCredentialRequest.countries[
+                        countryCode as TCountryCode
+                    ] === undefined
+                ) {
+                    emailCredentialRequest.countries[
+                        countryCode as TCountryCode
+                    ] = false;
+                }
+            }
             return {
                 type: universityTypeToString(emailCredentialRequest.type),
                 campus: essecCampusToString(emailCredentialRequest.campus),
                 program: essecProgramToString(emailCredentialRequest.program),
-                countries: (
-                    Object.keys(allCountries) as Array<TCountryCode>
-                ).map((countryCode) =>
-                    emailCredentialRequest.countries.includes(countryCode)
-                ),
+                countries: emailCredentialRequest.countries,
                 admissionYear: emailCredentialRequest.admissionYear,
             };
         case UniversityType.ALUM:
@@ -86,6 +94,27 @@ function toCredProperties(emailCredentialRequest: EmailCredentialRequest) {
     }
 }
 
+interface TypeSchema {
+    type: string;
+}
+
+let allCountriesAsSchema: { [countryCode: string]: TypeSchema } | undefined =
+    undefined;
+function getAllCountriesAsSchema(): { [countryCode: string]: TypeSchema } {
+    // calculate only once using cache
+    if (allCountriesAsSchema !== undefined) {
+        return allCountriesAsSchema;
+    } else {
+        const typeBoolean = { type: "boolean" };
+        const countriesAsSchema: { [countryCode: string]: TypeSchema } = {};
+        for (const countryCode of Object.keys(allCountries)) {
+            countriesAsSchema[countryCode] = typeBoolean;
+        }
+        allCountriesAsSchema = countriesAsSchema;
+        return allCountriesAsSchema;
+    }
+}
+
 export function buildEmailCredential(
     email: string,
     emailCredentialRequest: EmailCredentialRequest,
@@ -94,7 +123,6 @@ export function buildEmailCredential(
     const emailType = getTypeFromEmail(email);
     const schema = CredentialSchema.essential();
     // TODO: pass schema as param depending on email type (university, company...etc)
-    const typeBoolean = { type: "boolean" };
     switch (emailCredentialRequest.type) {
         case UniversityType.STUDENT:
             schema.properties[SUBJECT_STR] = {
@@ -109,10 +137,8 @@ export function buildEmailCredential(
                             campus: { type: "string" },
                             program: { type: "string" },
                             countries: {
-                                type: "array",
-                                items: Object.keys(allCountries).map(
-                                    () => typeBoolean // 1 if present, else 0. We do this because the number of elements must be known in advance: "the schema should specify exactly how many items are present in the array"
-                                ),
+                                type: "object",
+                                properties: getAllCountriesAsSchema(),
                             },
                             admissionYear: {
                                 type: "number",

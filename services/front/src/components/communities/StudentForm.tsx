@@ -14,7 +14,12 @@ import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import TextField from "@mui/material/TextField";
 import React, { type SyntheticEvent } from "react";
-import { EssecCampus, EssecProgram } from "@/shared/types/university";
+import {
+    EssecCampus,
+    EssecProgram,
+    essecCampusToString,
+    essecProgramToString,
+} from "@/shared/types/university";
 
 interface StudentFormProps {
     campus: EssecCampus;
@@ -94,21 +99,18 @@ export function StudentForm({
                         value={campus}
                         onChange={handleChangeCampus}
                     >
-                        <FormControlLabel
-                            value={EssecCampus.CERGY}
-                            control={<Radio />}
-                            label={EssecCampus.CERGY.toString()}
-                        />
-                        <FormControlLabel
-                            value={EssecCampus.SINGAPORE}
-                            control={<Radio />}
-                            label={EssecCampus.SINGAPORE.toString()}
-                        />
-                        <FormControlLabel
-                            value={EssecCampus.RABAT}
-                            control={<Radio />}
-                            label={EssecCampus.RABAT.toString()}
-                        />
+                        {Object.keys(EssecCampus)
+                            .filter((key) => !isNaN(parseInt(key)))
+                            .map((campusKey) => (
+                                <FormControlLabel
+                                    key={`student-form-campus-formcontrol-${campusKey}`}
+                                    value={parseInt(campusKey)}
+                                    control={<Radio />}
+                                    label={essecCampusToString(
+                                        parseInt(campusKey)
+                                    )}
+                                />
+                            ))}
                     </RadioGroup>
                 </FormControl>
             </Box>
@@ -123,31 +125,18 @@ export function StudentForm({
                         value={program}
                         onChange={handleChangeProgram}
                     >
-                        <FormControlLabel
-                            value={EssecProgram.BBA}
-                            control={<Radio />}
-                            label={EssecProgram.BBA.toString()}
-                        />
-                        <FormControlLabel
-                            value={EssecProgram.MIM}
-                            control={<Radio />}
-                            label={EssecProgram.MIM.toString()}
-                        />
-                        <FormControlLabel
-                            value={EssecProgram.OM}
-                            control={<Radio />}
-                            label={EssecProgram.OM.toString()}
-                        />
-                        <FormControlLabel
-                            value={EssecProgram.PHD}
-                            control={<Radio />}
-                            label={EssecProgram.PHD.toString()}
-                        />
-                        <FormControlLabel
-                            value={EssecProgram.EXCHANGE}
-                            control={<Radio />}
-                            label={EssecProgram.EXCHANGE.toString()}
-                        />
+                        {Object.keys(EssecProgram)
+                            .filter((key) => !isNaN(parseInt(key)))
+                            .map((programKey) => (
+                                <FormControlLabel
+                                    key={`student-form-campus-formcontrol-${programKey}`}
+                                    value={parseInt(programKey)}
+                                    control={<Radio />}
+                                    label={essecProgramToString(
+                                        parseInt(programKey)
+                                    )}
+                                />
+                            ))}
                     </RadioGroup>
                 </FormControl>
             </Box>

@@ -133,6 +133,8 @@ export async function requestAnonymousCredentials(
                 secretCredentialsPerType: credentials.secretCredentialsPerType,
             })
         );
+    } else {
+        console.warn("Unexpected empty data on credential request response");
     }
 }
 

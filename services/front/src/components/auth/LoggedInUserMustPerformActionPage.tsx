@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { useNavigate } from "react-router-dom";
-import { COMMUNITIES, SETTINGS } from "@/common/navigation";
+import { COMMUNITIES, NOTIFICATIONS } from "@/common/navigation";
 
 export interface LoggedInUserMustPerformActionPageProps {
     isTheOnlyDevice: boolean;
@@ -29,7 +29,7 @@ export function LoggedInUserMustPerformActionPage({
     }, []);
 
     function handleOnSync() {
-        navigate(SETTINGS);
+        navigate(NOTIFICATIONS);
         dispatch(closeAuthModal());
         dispatch(resetPendingSession());
     }

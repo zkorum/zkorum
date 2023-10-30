@@ -13,6 +13,7 @@ import localForage from "localforage";
 import sessionReducer from "./reducers/session";
 import snackbarReducer from "./reducers/snackbar";
 import loadingReducer from "./reducers/loading";
+import postReducer from "./reducers/post";
 import { getPersistConfig } from "redux-deep-persist";
 import * as BrowserCrypto from "../crypto/ucan/implementation/browser.js";
 
@@ -41,6 +42,7 @@ const rootReducer = combineReducers({
     sessions: sessionReducer,
     snackbar: snackbarReducer,
     loading: loadingReducer,
+    post: postReducer,
 });
 
 // TODO: make sure "undefined" is parsed to "zero values"

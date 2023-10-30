@@ -9,3 +9,5 @@ export const logoutMessage = "Log out successful";
 export const sessionExpired = "Session expired";
 export const throttled =
     "Too many authentication emails were sent, wait for some time";
+export const credentialsIssued =
+    "Credentials issued, you can now start posting anonymously! 🎭";

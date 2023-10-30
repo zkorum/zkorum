@@ -26,12 +26,11 @@ CREATE TABLE IF NOT EXISTS "auth_attempt" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "credential_email" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"credential" text,
+	"credential" jsonb,
 	"is_revoked" boolean DEFAULT false,
 	"email" varchar(254) NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "credential_email_credential_unique" UNIQUE("credential")
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "credential_secret" (

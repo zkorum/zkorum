@@ -149,7 +149,7 @@
                               "active": {
                                 "type": "object",
                                 "properties": {
-                                  "encodedBlindedCredential": {
+                                  "blindedCredential": {
                                     "type": "string"
                                   },
                                   "encryptedBlinding": {
@@ -160,7 +160,7 @@
                                   }
                                 },
                                 "required": [
-                                  "encodedBlindedCredential",
+                                  "blindedCredential",
                                   "encryptedBlinding",
                                   "encryptedBlindedSubject"
                                 ],
@@ -171,7 +171,7 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "encodedBlindedCredential": {
+                                    "blindedCredential": {
                                       "type": "string"
                                     },
                                     "encryptedBlinding": {
@@ -182,7 +182,7 @@
                                     }
                                   },
                                   "required": [
-                                    "encodedBlindedCredential",
+                                    "blindedCredential",
                                     "encryptedBlinding",
                                     "encryptedBlindedSubject"
                                   ],
@@ -301,7 +301,7 @@
                               "active": {
                                 "type": "object",
                                 "properties": {
-                                  "encodedBlindedCredential": {
+                                  "blindedCredential": {
                                     "type": "string"
                                   },
                                   "encryptedBlinding": {
@@ -312,7 +312,7 @@
                                   }
                                 },
                                 "required": [
-                                  "encodedBlindedCredential",
+                                  "blindedCredential",
                                   "encryptedBlinding",
                                   "encryptedBlindedSubject"
                                 ],
@@ -323,7 +323,7 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "encodedBlindedCredential": {
+                                    "blindedCredential": {
                                       "type": "string"
                                     },
                                     "encryptedBlinding": {
@@ -334,7 +334,7 @@
                                     }
                                   },
                                   "required": [
-                                    "encodedBlindedCredential",
+                                    "blindedCredential",
                                     "encryptedBlinding",
                                     "encryptedBlindedSubject"
                                   ],
@@ -466,7 +466,7 @@
                               "active": {
                                 "type": "object",
                                 "properties": {
-                                  "encodedBlindedCredential": {
+                                  "blindedCredential": {
                                     "type": "string"
                                   },
                                   "encryptedBlinding": {
@@ -477,7 +477,7 @@
                                   }
                                 },
                                 "required": [
-                                  "encodedBlindedCredential",
+                                  "blindedCredential",
                                   "encryptedBlinding",
                                   "encryptedBlindedSubject"
                                 ],
@@ -488,7 +488,7 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "encodedBlindedCredential": {
+                                    "blindedCredential": {
                                       "type": "string"
                                     },
                                     "encryptedBlinding": {
@@ -499,7 +499,7 @@
                                     }
                                   },
                                   "required": [
-                                    "encodedBlindedCredential",
+                                    "blindedCredential",
                                     "encryptedBlinding",
                                     "encryptedBlindedSubject"
                                   ],
@@ -640,7 +640,7 @@
                           "active": {
                             "type": "object",
                             "properties": {
-                              "encodedBlindedCredential": {
+                              "blindedCredential": {
                                 "type": "string"
                               },
                               "encryptedBlinding": {
@@ -651,7 +651,7 @@
                               }
                             },
                             "required": [
-                              "encodedBlindedCredential",
+                              "blindedCredential",
                               "encryptedBlinding",
                               "encryptedBlindedSubject"
                             ],
@@ -662,7 +662,7 @@
                             "items": {
                               "type": "object",
                               "properties": {
-                                "encodedBlindedCredential": {
+                                "blindedCredential": {
                                   "type": "string"
                                 },
                                 "encryptedBlinding": {
@@ -673,7 +673,7 @@
                                 }
                               },
                               "required": [
-                                "encodedBlindedCredential",
+                                "blindedCredential",
                                 "encryptedBlinding",
                                 "encryptedBlindedSubject"
                               ],
@@ -741,266 +741,1017 @@
                               1,
                               2,
                               3,
-                              4
+                              4,
+                              5
                             ]
                           },
                           "countries": {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "enum": [
-                                "AD",
-                                "AE",
-                                "AF",
-                                "AG",
-                                "AI",
-                                "AL",
-                                "AM",
-                                "AO",
-                                "AQ",
-                                "AR",
-                                "AS",
-                                "AT",
-                                "AU",
-                                "AW",
-                                "AX",
-                                "AZ",
-                                "BA",
-                                "BB",
-                                "BD",
-                                "BE",
-                                "BF",
-                                "BG",
-                                "BH",
-                                "BI",
-                                "BJ",
-                                "BL",
-                                "BM",
-                                "BN",
-                                "BO",
-                                "BQ",
-                                "BR",
-                                "BS",
-                                "BT",
-                                "BV",
-                                "BW",
-                                "BY",
-                                "BZ",
-                                "CA",
-                                "CC",
-                                "CD",
-                                "CF",
-                                "CG",
-                                "CH",
-                                "CI",
-                                "CK",
-                                "CL",
-                                "CM",
-                                "CN",
-                                "CO",
-                                "CR",
-                                "CU",
-                                "CV",
-                                "CW",
-                                "CX",
-                                "CY",
-                                "CZ",
-                                "DE",
-                                "DJ",
-                                "DK",
-                                "DM",
-                                "DO",
-                                "DZ",
-                                "EC",
-                                "EE",
-                                "EG",
-                                "EH",
-                                "ER",
-                                "ES",
-                                "ET",
-                                "FI",
-                                "FJ",
-                                "FK",
-                                "FM",
-                                "FO",
-                                "FR",
-                                "GA",
-                                "GB",
-                                "GD",
-                                "GE",
-                                "GF",
-                                "GG",
-                                "GH",
-                                "GI",
-                                "GL",
-                                "GM",
-                                "GN",
-                                "GP",
-                                "GQ",
-                                "GR",
-                                "GS",
-                                "GT",
-                                "GU",
-                                "GW",
-                                "GY",
-                                "HK",
-                                "HM",
-                                "HN",
-                                "HR",
-                                "HT",
-                                "HU",
-                                "ID",
-                                "IE",
-                                "IL",
-                                "IM",
-                                "IN",
-                                "IO",
-                                "IQ",
-                                "IR",
-                                "IS",
-                                "IT",
-                                "JE",
-                                "JM",
-                                "JO",
-                                "JP",
-                                "KE",
-                                "KG",
-                                "KH",
-                                "KI",
-                                "KM",
-                                "KN",
-                                "KP",
-                                "KR",
-                                "KW",
-                                "KY",
-                                "KZ",
-                                "LA",
-                                "LB",
-                                "LC",
-                                "LI",
-                                "LK",
-                                "LR",
-                                "LS",
-                                "LT",
-                                "LU",
-                                "LV",
-                                "LY",
-                                "MA",
-                                "MC",
-                                "MD",
-                                "ME",
-                                "MF",
-                                "MG",
-                                "MH",
-                                "MK",
-                                "ML",
-                                "MM",
-                                "MN",
-                                "MO",
-                                "MP",
-                                "MQ",
-                                "MR",
-                                "MS",
-                                "MT",
-                                "MU",
-                                "MV",
-                                "MW",
-                                "MX",
-                                "MY",
-                                "MZ",
-                                "NA",
-                                "NC",
-                                "NE",
-                                "NF",
-                                "NG",
-                                "NI",
-                                "NL",
-                                "NO",
-                                "NP",
-                                "NR",
-                                "NU",
-                                "NZ",
-                                "OM",
-                                "PA",
-                                "PE",
-                                "PF",
-                                "PG",
-                                "PH",
-                                "PK",
-                                "PL",
-                                "PM",
-                                "PN",
-                                "PR",
-                                "PS",
-                                "PT",
-                                "PW",
-                                "PY",
-                                "QA",
-                                "RE",
-                                "RO",
-                                "RS",
-                                "RU",
-                                "RW",
-                                "SA",
-                                "SB",
-                                "SC",
-                                "SD",
-                                "SE",
-                                "SG",
-                                "SH",
-                                "SI",
-                                "SJ",
-                                "SK",
-                                "SL",
-                                "SM",
-                                "SN",
-                                "SO",
-                                "SR",
-                                "SS",
-                                "ST",
-                                "SV",
-                                "SX",
-                                "SY",
-                                "SZ",
-                                "TC",
-                                "TD",
-                                "TF",
-                                "TG",
-                                "TH",
-                                "TJ",
-                                "TK",
-                                "TL",
-                                "TM",
-                                "TN",
-                                "TO",
-                                "TR",
-                                "TT",
-                                "TV",
-                                "TW",
-                                "TZ",
-                                "UA",
-                                "UG",
-                                "UM",
-                                "US",
-                                "UY",
-                                "UZ",
-                                "VA",
-                                "VC",
-                                "VE",
-                                "VG",
-                                "VI",
-                                "VN",
-                                "VU",
-                                "WF",
-                                "WS",
-                                "XK",
-                                "YE",
-                                "YT",
-                                "ZA",
-                                "ZM",
-                                "ZW"
-                              ]
-                            }
+                            "type": "object",
+                            "required": [
+                              "AD",
+                              "AE",
+                              "AF",
+                              "AG",
+                              "AI",
+                              "AL",
+                              "AM",
+                              "AO",
+                              "AQ",
+                              "AR",
+                              "AS",
+                              "AT",
+                              "AU",
+                              "AW",
+                              "AX",
+                              "AZ",
+                              "BA",
+                              "BB",
+                              "BD",
+                              "BE",
+                              "BF",
+                              "BG",
+                              "BH",
+                              "BI",
+                              "BJ",
+                              "BL",
+                              "BM",
+                              "BN",
+                              "BO",
+                              "BQ",
+                              "BR",
+                              "BS",
+                              "BT",
+                              "BV",
+                              "BW",
+                              "BY",
+                              "BZ",
+                              "CA",
+                              "CC",
+                              "CD",
+                              "CF",
+                              "CG",
+                              "CH",
+                              "CI",
+                              "CK",
+                              "CL",
+                              "CM",
+                              "CN",
+                              "CO",
+                              "CR",
+                              "CU",
+                              "CV",
+                              "CW",
+                              "CX",
+                              "CY",
+                              "CZ",
+                              "DE",
+                              "DJ",
+                              "DK",
+                              "DM",
+                              "DO",
+                              "DZ",
+                              "EC",
+                              "EE",
+                              "EG",
+                              "EH",
+                              "ER",
+                              "ES",
+                              "ET",
+                              "FI",
+                              "FJ",
+                              "FK",
+                              "FM",
+                              "FO",
+                              "FR",
+                              "GA",
+                              "GB",
+                              "GD",
+                              "GE",
+                              "GF",
+                              "GG",
+                              "GH",
+                              "GI",
+                              "GL",
+                              "GM",
+                              "GN",
+                              "GP",
+                              "GQ",
+                              "GR",
+                              "GS",
+                              "GT",
+                              "GU",
+                              "GW",
+                              "GY",
+                              "HK",
+                              "HM",
+                              "HN",
+                              "HR",
+                              "HT",
+                              "HU",
+                              "ID",
+                              "IE",
+                              "IL",
+                              "IM",
+                              "IN",
+                              "IO",
+                              "IQ",
+                              "IR",
+                              "IS",
+                              "IT",
+                              "JE",
+                              "JM",
+                              "JO",
+                              "JP",
+                              "KE",
+                              "KG",
+                              "KH",
+                              "KI",
+                              "KM",
+                              "KN",
+                              "KP",
+                              "KR",
+                              "KW",
+                              "KY",
+                              "KZ",
+                              "LA",
+                              "LB",
+                              "LC",
+                              "LI",
+                              "LK",
+                              "LR",
+                              "LS",
+                              "LT",
+                              "LU",
+                              "LV",
+                              "LY",
+                              "MA",
+                              "MC",
+                              "MD",
+                              "ME",
+                              "MF",
+                              "MG",
+                              "MH",
+                              "MK",
+                              "ML",
+                              "MM",
+                              "MN",
+                              "MO",
+                              "MP",
+                              "MQ",
+                              "MR",
+                              "MS",
+                              "MT",
+                              "MU",
+                              "MV",
+                              "MW",
+                              "MX",
+                              "MY",
+                              "MZ",
+                              "NA",
+                              "NC",
+                              "NE",
+                              "NF",
+                              "NG",
+                              "NI",
+                              "NL",
+                              "NO",
+                              "NP",
+                              "NR",
+                              "NU",
+                              "NZ",
+                              "OM",
+                              "PA",
+                              "PE",
+                              "PF",
+                              "PG",
+                              "PH",
+                              "PK",
+                              "PL",
+                              "PM",
+                              "PN",
+                              "PR",
+                              "PS",
+                              "PT",
+                              "PW",
+                              "PY",
+                              "QA",
+                              "RE",
+                              "RO",
+                              "RS",
+                              "RU",
+                              "RW",
+                              "SA",
+                              "SB",
+                              "SC",
+                              "SD",
+                              "SE",
+                              "SG",
+                              "SH",
+                              "SI",
+                              "SJ",
+                              "SK",
+                              "SL",
+                              "SM",
+                              "SN",
+                              "SO",
+                              "SR",
+                              "SS",
+                              "ST",
+                              "SV",
+                              "SX",
+                              "SY",
+                              "SZ",
+                              "TC",
+                              "TD",
+                              "TF",
+                              "TG",
+                              "TH",
+                              "TJ",
+                              "TK",
+                              "TL",
+                              "TM",
+                              "TN",
+                              "TO",
+                              "TR",
+                              "TT",
+                              "TV",
+                              "TW",
+                              "TZ",
+                              "UA",
+                              "UG",
+                              "UM",
+                              "US",
+                              "UY",
+                              "UZ",
+                              "VA",
+                              "VC",
+                              "VE",
+                              "VG",
+                              "VI",
+                              "VN",
+                              "VU",
+                              "WF",
+                              "WS",
+                              "XK",
+                              "YE",
+                              "YT",
+                              "ZA",
+                              "ZM",
+                              "ZW"
+                            ],
+                            "properties": {
+                              "AD": {
+                                "type": "boolean"
+                              },
+                              "AE": {
+                                "type": "boolean"
+                              },
+                              "AF": {
+                                "type": "boolean"
+                              },
+                              "AG": {
+                                "type": "boolean"
+                              },
+                              "AI": {
+                                "type": "boolean"
+                              },
+                              "AL": {
+                                "type": "boolean"
+                              },
+                              "AM": {
+                                "type": "boolean"
+                              },
+                              "AO": {
+                                "type": "boolean"
+                              },
+                              "AQ": {
+                                "type": "boolean"
+                              },
+                              "AR": {
+                                "type": "boolean"
+                              },
+                              "AS": {
+                                "type": "boolean"
+                              },
+                              "AT": {
+                                "type": "boolean"
+                              },
+                              "AU": {
+                                "type": "boolean"
+                              },
+                              "AW": {
+                                "type": "boolean"
+                              },
+                              "AX": {
+                                "type": "boolean"
+                              },
+                              "AZ": {
+                                "type": "boolean"
+                              },
+                              "BA": {
+                                "type": "boolean"
+                              },
+                              "BB": {
+                                "type": "boolean"
+                              },
+                              "BD": {
+                                "type": "boolean"
+                              },
+                              "BE": {
+                                "type": "boolean"
+                              },
+                              "BF": {
+                                "type": "boolean"
+                              },
+                              "BG": {
+                                "type": "boolean"
+                              },
+                              "BH": {
+                                "type": "boolean"
+                              },
+                              "BI": {
+                                "type": "boolean"
+                              },
+                              "BJ": {
+                                "type": "boolean"
+                              },
+                              "BL": {
+                                "type": "boolean"
+                              },
+                              "BM": {
+                                "type": "boolean"
+                              },
+                              "BN": {
+                                "type": "boolean"
+                              },
+                              "BO": {
+                                "type": "boolean"
+                              },
+                              "BQ": {
+                                "type": "boolean"
+                              },
+                              "BR": {
+                                "type": "boolean"
+                              },
+                              "BS": {
+                                "type": "boolean"
+                              },
+                              "BT": {
+                                "type": "boolean"
+                              },
+                              "BV": {
+                                "type": "boolean"
+                              },
+                              "BW": {
+                                "type": "boolean"
+                              },
+                              "BY": {
+                                "type": "boolean"
+                              },
+                              "BZ": {
+                                "type": "boolean"
+                              },
+                              "CA": {
+                                "type": "boolean"
+                              },
+                              "CC": {
+                                "type": "boolean"
+                              },
+                              "CD": {
+                                "type": "boolean"
+                              },
+                              "CF": {
+                                "type": "boolean"
+                              },
+                              "CG": {
+                                "type": "boolean"
+                              },
+                              "CH": {
+                                "type": "boolean"
+                              },
+                              "CI": {
+                                "type": "boolean"
+                              },
+                              "CK": {
+                                "type": "boolean"
+                              },
+                              "CL": {
+                                "type": "boolean"
+                              },
+                              "CM": {
+                                "type": "boolean"
+                              },
+                              "CN": {
+                                "type": "boolean"
+                              },
+                              "CO": {
+                                "type": "boolean"
+                              },
+                              "CR": {
+                                "type": "boolean"
+                              },
+                              "CU": {
+                                "type": "boolean"
+                              },
+                              "CV": {
+                                "type": "boolean"
+                              },
+                              "CW": {
+                                "type": "boolean"
+                              },
+                              "CX": {
+                                "type": "boolean"
+                              },
+                              "CY": {
+                                "type": "boolean"
+                              },
+                              "CZ": {
+                                "type": "boolean"
+                              },
+                              "DE": {
+                                "type": "boolean"
+                              },
+                              "DJ": {
+                                "type": "boolean"
+                              },
+                              "DK": {
+                                "type": "boolean"
+                              },
+                              "DM": {
+                                "type": "boolean"
+                              },
+                              "DO": {
+                                "type": "boolean"
+                              },
+                              "DZ": {
+                                "type": "boolean"
+                              },
+                              "EC": {
+                                "type": "boolean"
+                              },
+                              "EE": {
+                                "type": "boolean"
+                              },
+                              "EG": {
+                                "type": "boolean"
+                              },
+                              "EH": {
+                                "type": "boolean"
+                              },
+                              "ER": {
+                                "type": "boolean"
+                              },
+                              "ES": {
+                                "type": "boolean"
+                              },
+                              "ET": {
+                                "type": "boolean"
+                              },
+                              "FI": {
+                                "type": "boolean"
+                              },
+                              "FJ": {
+                                "type": "boolean"
+                              },
+                              "FK": {
+                                "type": "boolean"
+                              },
+                              "FM": {
+                                "type": "boolean"
+                              },
+                              "FO": {
+                                "type": "boolean"
+                              },
+                              "FR": {
+                                "type": "boolean"
+                              },
+                              "GA": {
+                                "type": "boolean"
+                              },
+                              "GB": {
+                                "type": "boolean"
+                              },
+                              "GD": {
+                                "type": "boolean"
+                              },
+                              "GE": {
+                                "type": "boolean"
+                              },
+                              "GF": {
+                                "type": "boolean"
+                              },
+                              "GG": {
+                                "type": "boolean"
+                              },
+                              "GH": {
+                                "type": "boolean"
+                              },
+                              "GI": {
+                                "type": "boolean"
+                              },
+                              "GL": {
+                                "type": "boolean"
+                              },
+                              "GM": {
+                                "type": "boolean"
+                              },
+                              "GN": {
+                                "type": "boolean"
+                              },
+                              "GP": {
+                                "type": "boolean"
+                              },
+                              "GQ": {
+                                "type": "boolean"
+                              },
+                              "GR": {
+                                "type": "boolean"
+                              },
+                              "GS": {
+                                "type": "boolean"
+                              },
+                              "GT": {
+                                "type": "boolean"
+                              },
+                              "GU": {
+                                "type": "boolean"
+                              },
+                              "GW": {
+                                "type": "boolean"
+                              },
+                              "GY": {
+                                "type": "boolean"
+                              },
+                              "HK": {
+                                "type": "boolean"
+                              },
+                              "HM": {
+                                "type": "boolean"
+                              },
+                              "HN": {
+                                "type": "boolean"
+                              },
+                              "HR": {
+                                "type": "boolean"
+                              },
+                              "HT": {
+                                "type": "boolean"
+                              },
+                              "HU": {
+                                "type": "boolean"
+                              },
+                              "ID": {
+                                "type": "boolean"
+                              },
+                              "IE": {
+                                "type": "boolean"
+                              },
+                              "IL": {
+                                "type": "boolean"
+                              },
+                              "IM": {
+                                "type": "boolean"
+                              },
+                              "IN": {
+                                "type": "boolean"
+                              },
+                              "IO": {
+                                "type": "boolean"
+                              },
+                              "IQ": {
+                                "type": "boolean"
+                              },
+                              "IR": {
+                                "type": "boolean"
+                              },
+                              "IS": {
+                                "type": "boolean"
+                              },
+                              "IT": {
+                                "type": "boolean"
+                              },
+                              "JE": {
+                                "type": "boolean"
+                              },
+                              "JM": {
+                                "type": "boolean"
+                              },
+                              "JO": {
+                                "type": "boolean"
+                              },
+                              "JP": {
+                                "type": "boolean"
+                              },
+                              "KE": {
+                                "type": "boolean"
+                              },
+                              "KG": {
+                                "type": "boolean"
+                              },
+                              "KH": {
+                                "type": "boolean"
+                              },
+                              "KI": {
+                                "type": "boolean"
+                              },
+                              "KM": {
+                                "type": "boolean"
+                              },
+                              "KN": {
+                                "type": "boolean"
+                              },
+                              "KP": {
+                                "type": "boolean"
+                              },
+                              "KR": {
+                                "type": "boolean"
+                              },
+                              "KW": {
+                                "type": "boolean"
+                              },
+                              "KY": {
+                                "type": "boolean"
+                              },
+                              "KZ": {
+                                "type": "boolean"
+                              },
+                              "LA": {
+                                "type": "boolean"
+                              },
+                              "LB": {
+                                "type": "boolean"
+                              },
+                              "LC": {
+                                "type": "boolean"
+                              },
+                              "LI": {
+                                "type": "boolean"
+                              },
+                              "LK": {
+                                "type": "boolean"
+                              },
+                              "LR": {
+                                "type": "boolean"
+                              },
+                              "LS": {
+                                "type": "boolean"
+                              },
+                              "LT": {
+                                "type": "boolean"
+                              },
+                              "LU": {
+                                "type": "boolean"
+                              },
+                              "LV": {
+                                "type": "boolean"
+                              },
+                              "LY": {
+                                "type": "boolean"
+                              },
+                              "MA": {
+                                "type": "boolean"
+                              },
+                              "MC": {
+                                "type": "boolean"
+                              },
+                              "MD": {
+                                "type": "boolean"
+                              },
+                              "ME": {
+                                "type": "boolean"
+                              },
+                              "MF": {
+                                "type": "boolean"
+                              },
+                              "MG": {
+                                "type": "boolean"
+                              },
+                              "MH": {
+                                "type": "boolean"
+                              },
+                              "MK": {
+                                "type": "boolean"
+                              },
+                              "ML": {
+                                "type": "boolean"
+                              },
+                              "MM": {
+                                "type": "boolean"
+                              },
+                              "MN": {
+                                "type": "boolean"
+                              },
+                              "MO": {
+                                "type": "boolean"
+                              },
+                              "MP": {
+                                "type": "boolean"
+                              },
+                              "MQ": {
+                                "type": "boolean"
+                              },
+                              "MR": {
+                                "type": "boolean"
+                              },
+                              "MS": {
+                                "type": "boolean"
+                              },
+                              "MT": {
+                                "type": "boolean"
+                              },
+                              "MU": {
+                                "type": "boolean"
+                              },
+                              "MV": {
+                                "type": "boolean"
+                              },
+                              "MW": {
+                                "type": "boolean"
+                              },
+                              "MX": {
+                                "type": "boolean"
+                              },
+                              "MY": {
+                                "type": "boolean"
+                              },
+                              "MZ": {
+                                "type": "boolean"
+                              },
+                              "NA": {
+                                "type": "boolean"
+                              },
+                              "NC": {
+                                "type": "boolean"
+                              },
+                              "NE": {
+                                "type": "boolean"
+                              },
+                              "NF": {
+                                "type": "boolean"
+                              },
+                              "NG": {
+                                "type": "boolean"
+                              },
+                              "NI": {
+                                "type": "boolean"
+                              },
+                              "NL": {
+                                "type": "boolean"
+                              },
+                              "NO": {
+                                "type": "boolean"
+                              },
+                              "NP": {
+                                "type": "boolean"
+                              },
+                              "NR": {
+                                "type": "boolean"
+                              },
+                              "NU": {
+                                "type": "boolean"
+                              },
+                              "NZ": {
+                                "type": "boolean"
+                              },
+                              "OM": {
+                                "type": "boolean"
+                              },
+                              "PA": {
+                                "type": "boolean"
+                              },
+                              "PE": {
+                                "type": "boolean"
+                              },
+                              "PF": {
+                                "type": "boolean"
+                              },
+                              "PG": {
+                                "type": "boolean"
+                              },
+                              "PH": {
+                                "type": "boolean"
+                              },
+                              "PK": {
+                                "type": "boolean"
+                              },
+                              "PL": {
+                                "type": "boolean"
+                              },
+                              "PM": {
+                                "type": "boolean"
+                              },
+                              "PN": {
+                                "type": "boolean"
+                              },
+                              "PR": {
+                                "type": "boolean"
+                              },
+                              "PS": {
+                                "type": "boolean"
+                              },
+                              "PT": {
+                                "type": "boolean"
+                              },
+                              "PW": {
+                                "type": "boolean"
+                              },
+                              "PY": {
+                                "type": "boolean"
+                              },
+                              "QA": {
+                                "type": "boolean"
+                              },
+                              "RE": {
+                                "type": "boolean"
+                              },
+                              "RO": {
+                                "type": "boolean"
+                              },
+                              "RS": {
+                                "type": "boolean"
+                              },
+                              "RU": {
+                                "type": "boolean"
+                              },
+                              "RW": {
+                                "type": "boolean"
+                              },
+                              "SA": {
+                                "type": "boolean"
+                              },
+                              "SB": {
+                                "type": "boolean"
+                              },
+                              "SC": {
+                                "type": "boolean"
+                              },
+                              "SD": {
+                                "type": "boolean"
+                              },
+                              "SE": {
+                                "type": "boolean"
+                              },
+                              "SG": {
+                                "type": "boolean"
+                              },
+                              "SH": {
+                                "type": "boolean"
+                              },
+                              "SI": {
+                                "type": "boolean"
+                              },
+                              "SJ": {
+                                "type": "boolean"
+                              },
+                              "SK": {
+                                "type": "boolean"
+                              },
+                              "SL": {
+                                "type": "boolean"
+                              },
+                              "SM": {
+                                "type": "boolean"
+                              },
+                              "SN": {
+                                "type": "boolean"
+                              },
+                              "SO": {
+                                "type": "boolean"
+                              },
+                              "SR": {
+                                "type": "boolean"
+                              },
+                              "SS": {
+                                "type": "boolean"
+                              },
+                              "ST": {
+                                "type": "boolean"
+                              },
+                              "SV": {
+                                "type": "boolean"
+                              },
+                              "SX": {
+                                "type": "boolean"
+                              },
+                              "SY": {
+                                "type": "boolean"
+                              },
+                              "SZ": {
+                                "type": "boolean"
+                              },
+                              "TC": {
+                                "type": "boolean"
+                              },
+                              "TD": {
+                                "type": "boolean"
+                              },
+                              "TF": {
+                                "type": "boolean"
+                              },
+                              "TG": {
+                                "type": "boolean"
+                              },
+                              "TH": {
+                                "type": "boolean"
+                              },
+                              "TJ": {
+                                "type": "boolean"
+                              },
+                              "TK": {
+                                "type": "boolean"
+                              },
+                              "TL": {
+                                "type": "boolean"
+                              },
+                              "TM": {
+                                "type": "boolean"
+                              },
+                              "TN": {
+                                "type": "boolean"
+                              },
+                              "TO": {
+                                "type": "boolean"
+                              },
+                              "TR": {
+                                "type": "boolean"
+                              },
+                              "TT": {
+                                "type": "boolean"
+                              },
+                              "TV": {
+                                "type": "boolean"
+                              },
+                              "TW": {
+                                "type": "boolean"
+                              },
+                              "TZ": {
+                                "type": "boolean"
+                              },
+                              "UA": {
+                                "type": "boolean"
+                              },
+                              "UG": {
+                                "type": "boolean"
+                              },
+                              "UM": {
+                                "type": "boolean"
+                              },
+                              "US": {
+                                "type": "boolean"
+                              },
+                              "UY": {
+                                "type": "boolean"
+                              },
+                              "UZ": {
+                                "type": "boolean"
+                              },
+                              "VA": {
+                                "type": "boolean"
+                              },
+                              "VC": {
+                                "type": "boolean"
+                              },
+                              "VE": {
+                                "type": "boolean"
+                              },
+                              "VG": {
+                                "type": "boolean"
+                              },
+                              "VI": {
+                                "type": "boolean"
+                              },
+                              "VN": {
+                                "type": "boolean"
+                              },
+                              "VU": {
+                                "type": "boolean"
+                              },
+                              "WF": {
+                                "type": "boolean"
+                              },
+                              "WS": {
+                                "type": "boolean"
+                              },
+                              "XK": {
+                                "type": "boolean"
+                              },
+                              "YE": {
+                                "type": "boolean"
+                              },
+                              "YT": {
+                                "type": "boolean"
+                              },
+                              "ZA": {
+                                "type": "boolean"
+                              },
+                              "ZM": {
+                                "type": "boolean"
+                              },
+                              "ZW": {
+                                "type": "boolean"
+                              }
+                            },
+                            "additionalProperties": false
                           },
                           "admissionYear": {
                             "type": "integer",
@@ -1120,7 +1871,7 @@
                           "active": {
                             "type": "object",
                             "properties": {
-                              "encodedBlindedCredential": {
+                              "blindedCredential": {
                                 "type": "string"
                               },
                               "encryptedBlinding": {
@@ -1131,7 +1882,7 @@
                               }
                             },
                             "required": [
-                              "encodedBlindedCredential",
+                              "blindedCredential",
                               "encryptedBlinding",
                               "encryptedBlindedSubject"
                             ],
@@ -1142,7 +1893,7 @@
                             "items": {
                               "type": "object",
                               "properties": {
-                                "encodedBlindedCredential": {
+                                "blindedCredential": {
                                   "type": "string"
                                 },
                                 "encryptedBlinding": {
@@ -1153,7 +1904,7 @@
                                 }
                               },
                               "required": [
-                                "encodedBlindedCredential",
+                                "blindedCredential",
                                 "encryptedBlinding",
                                 "encryptedBlindedSubject"
                               ],

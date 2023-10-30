@@ -1,7 +1,7 @@
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import PublicIcon from "@mui/icons-material/Public";
 import Grid from "@mui/material/Unstable_Grid2";
-import Logo from "@/../public/logo-essec_72x107.af462b8d2b4c.png";
+import Logo from "/logo-essec_72x107.af462b8d2b4c.png";
 import Box from "@mui/material/Box";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import { PollResultView, type Answer } from "./PollResultView";
@@ -11,7 +11,7 @@ import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import LockPersonIcon from "@mui/icons-material/LockPerson";
 import { faMask } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeSvgIcon } from "../shared/FontAwesomeSvgIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface PostViewProps {
     post: Post;
@@ -168,11 +168,9 @@ export function PostView(props: PostViewProps) {
                                         </Typography>
                                     </Grid>
                                     <Grid>
-                                        <FontAwesomeSvgIcon
-                                            sx={{
-                                                color: "rgba(0, 0, 0, 0.6)",
-                                                fontSize: 12,
-                                            }}
+                                        <FontAwesomeIcon
+                                            color="rgba(0, 0, 0, 0.6)"
+                                            size="xs"
                                             icon={faMask}
                                         />
                                     </Grid>

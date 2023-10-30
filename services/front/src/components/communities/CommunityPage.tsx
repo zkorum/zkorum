@@ -3,12 +3,13 @@
 // import ListItemButton from "@mui/material/ListItemButton";
 // import ListItemText from "@mui/material/ListItemText";
 // import ListSubheader from "@mui/material/ListSubheader";
+import { BBSPlusCredential as Credential } from "@docknetwork/crypto-wasm-ts";
 
 import { CommunityForm } from "./CommunityForm";
 import { CommunityFormFilled } from "./CommunityFormFilled";
 
 interface CommunityPageProps {
-    communityCredential: string | undefined;
+    communityCredential: Credential | undefined;
     email: string;
     userId: string;
 }

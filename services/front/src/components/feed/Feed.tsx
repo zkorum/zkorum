@@ -121,9 +121,9 @@ export function Feed() {
             <Box>
                 {posts.map((post) => {
                     return (
-                        <>
+                        <Box key={`postview-${post.id}`}>
                             <PostView post={post} />
-                        </>
+                        </Box>
                     );
                 })}
             </Box>

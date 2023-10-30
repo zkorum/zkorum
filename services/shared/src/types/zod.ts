@@ -69,9 +69,10 @@ export class ZodType {
     static digit = z.coerce.number().int().nonnegative().lte(9);
     static userId = z.string().uuid().nonempty();
     static secretCredentialType = z.string().uuid().or(z.literal("global"));
+    static blindedCredential = z.string(); // generic "object" does not exist :(, so for now we just encode it
     static secretCredential = z
         .object({
-            encodedBlindedCredential: z.string(),
+            blindedCredential: ZodType.blindedCredential,
             encryptedBlinding: z.string(),
             encryptedBlindedSubject: z.string(),
         })
@@ -86,8 +87,7 @@ export class ZodType {
         ZodType.secretCredentialType,
         ZodType.secretCredentials
     );
-    static encodedBlindedCredential = z.string();
-    static emailCredential = z.string();
+    static emailCredential = z.string(); // generic "object" does not exist :(, so for now we just encode it
     static emailCredentials = z
         .object({
             active: ZodType.emailCredential.optional(),
@@ -365,7 +365,7 @@ export class ZodType {
                 type: z.literal(UniversityType.STUDENT),
                 campus: ZodType.essecCampus,
                 program: ZodType.essecProgram,
-                countries: z.array(ZodType.countryCode),
+                countries: z.record(ZodType.countryCode, z.boolean()),
                 admissionYear: ZodType.studentAdmissionYear,
             })
             .strict(),
@@ -390,8 +390,8 @@ export class ZodType {
         })
         .strict();
     static credentials = z.object({
-        encodedEmailCredential: ZodType.emailCredential,
-        encodedBlindedCredential: ZodType.encodedBlindedCredential,
+        emailCredential: ZodType.emailCredential,
+        blindedCredential: ZodType.blindedCredential,
     });
 }
 type Email = z.infer<typeof ZodType.email>;
@@ -402,9 +402,7 @@ export type SecretCredentials = z.infer<typeof ZodType.secretCredentials>;
 export type SecretCredentialsPerType = z.infer<
     typeof ZodType.secretCredentialsPerType
 >;
-export type EncodedBlindedCredential = z.infer<
-    typeof ZodType.encodedBlindedCredential
->;
+export type BlindedCredentialType = z.infer<typeof ZodType.blindedCredential>;
 export type SecretCredentialRequest = z.infer<
     typeof ZodType.secretCredentialRequest
 >;

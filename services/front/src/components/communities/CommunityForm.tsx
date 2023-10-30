@@ -24,6 +24,10 @@ import Button from "@mui/material/Button";
 import { requestAnonymousCredentials } from "@/credential/credential";
 import { useNavigate } from "react-router-dom";
 import { FEED } from "@/common/navigation";
+import { useAppDispatch } from "@/hooks";
+import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
+import { credentialsIssued, genericError } from "../error/message";
+import { showError, showSuccess } from "@/store/reducers/snackbar";
 
 interface GetFormProps {
     typeSpecificForm: JSX.Element;
@@ -55,6 +59,7 @@ export function CommunityForm({ email, userId }: CommunityFormProps) {
     const [studentHasTriedSubmitting, setStudentHasTriedSubmitting] =
         React.useState<boolean>(false);
     const [isInvalid, setIsInvalid] = React.useState<boolean>(true);
+    const dispatch = useAppDispatch();
 
     const navigate = useNavigate();
 
@@ -104,21 +109,39 @@ export function CommunityForm({ email, userId }: CommunityFormProps) {
         setStudentHasTriedSubmitting(true);
         switch (type) {
             case UniversityType.STUDENT:
+                const studentCountriesAsObj: Partial<
+                    Record<TCountryCode, boolean>
+                > = {};
+                for (const countryCode of studentCountries) {
+                    studentCountriesAsObj[countryCode as TCountryCode] = true;
+                }
                 const emailCredentialRequest = {
                     type: UniversityType.STUDENT,
                     campus: studentCampus,
                     program: studentProgram,
-                    countries: studentCountries as TCountryCode[],
+                    countries: studentCountriesAsObj,
                     admissionYear: studentAdmissionYear as number,
                 };
-                // this will eventually update redux emailCredential and hence the parent to show CommunityFormFilled instead
-                await requestAnonymousCredentials(
-                    email,
-                    emailCredentialRequest,
-                    userId
-                );
-                //... though we redirect to the feed
-                navigate(FEED);
+                dispatch(openMainLoading());
+                try {
+                    // this will eventually update redux emailCredential and hence the parent to show CommunityFormFilled instead
+                    await requestAnonymousCredentials(
+                        email,
+                        emailCredentialRequest,
+                        userId
+                    );
+                    //... if it gets through, we redirect to the feed
+                    navigate(FEED);
+                    dispatch(showSuccess(credentialsIssued));
+                } catch (e) {
+                    console.warn(
+                        "Error while attempting to request credentials",
+                        e
+                    );
+                    dispatch(showError(genericError));
+                } finally {
+                    dispatch(closeMainLoading());
+                }
                 break;
             case UniversityType.ALUM:
                 //TODO

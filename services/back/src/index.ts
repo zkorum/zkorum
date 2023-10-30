@@ -378,7 +378,7 @@ server.after(() => {
                     server.log.warn(
                         "Credentials requested but only email credential existed"
                     );
-                    const encodedBlindedCredential =
+                    const blindedCredential =
                         await Service.createAndStoreSecretCredential(
                             db,
                             didWrite,
@@ -388,7 +388,7 @@ server.after(() => {
                             sk
                         );
                     const secretCredential: SecretCredential = {
-                        encodedBlindedCredential: encodedBlindedCredential,
+                        blindedCredential: blindedCredential,
                         encryptedBlinding:
                             request.body.secretCredentialRequest
                                 .encryptedEncodedBlinding,
@@ -440,7 +440,7 @@ server.after(() => {
                     server.log.info(
                         "Creating both email and secret credentials"
                     );
-                    const { encodedEmailCredential, encodedBlindedCredential } =
+                    const { emailCredential, blindedCredential } =
                         await Service.createAndStoreCredentials({
                             db: db,
                             didWrite: didWrite,
@@ -455,11 +455,11 @@ server.after(() => {
                         });
                     const emailCredentialsPerEmail = addActiveEmailCredential(
                         email,
-                        encodedEmailCredential,
+                        emailCredential,
                         existingEmailCredentialsPerEmail
                     );
                     const secretCredential: SecretCredential = {
-                        encodedBlindedCredential: encodedBlindedCredential,
+                        blindedCredential: blindedCredential,
                         encryptedBlinding:
                             request.body.secretCredentialRequest
                                 .encryptedEncodedBlinding,

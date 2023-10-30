@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "b0a64a92-9345-4d54-9787-4fa7f8d3c6f2",
+  "id": "2ba9475b-0c5d-43bd-84af-c14b3d471b15",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "auth_attempt": {
@@ -95,7 +95,7 @@
         },
         "credential": {
           "name": "credential",
-          "type": "text",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
@@ -144,15 +144,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "credential_email_credential_unique": {
-          "name": "credential_email_credential_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "credential"
-          ]
-        }
-      }
+      "uniqueConstraints": {}
     },
     "credential_secret": {
       "name": "credential_secret",

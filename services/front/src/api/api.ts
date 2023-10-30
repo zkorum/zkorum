@@ -217,7 +217,7 @@ export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeVa
      * @type {string}
      * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
      */
-    'encodedBlindedCredential': string;
+    'blindedCredential': string;
     /**
      * 
      * @type {string}
@@ -519,10 +519,10 @@ export interface CredentialRequestPostRequestEmailCredentialRequest {
     'program': CredentialRequestPostRequestEmailCredentialRequestProgramEnum;
     /**
      * 
-     * @type {Array<string>}
+     * @type {CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries}
      * @memberof CredentialRequestPostRequestEmailCredentialRequest
      */
-    'countries': Array<CredentialRequestPostRequestEmailCredentialRequestCountriesEnum>;
+    'countries': CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries;
     /**
      * 
      * @type {number}
@@ -550,264 +550,11 @@ export const CredentialRequestPostRequestEmailCredentialRequestProgramEnum = {
     NUMBER_1: 1,
     NUMBER_2: 2,
     NUMBER_3: 3,
-    NUMBER_4: 4
+    NUMBER_4: 4,
+    NUMBER_5: 5
 } as const;
 
 export type CredentialRequestPostRequestEmailCredentialRequestProgramEnum = typeof CredentialRequestPostRequestEmailCredentialRequestProgramEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestProgramEnum];
-export const CredentialRequestPostRequestEmailCredentialRequestCountriesEnum = {
-    Ad: 'AD',
-    Ae: 'AE',
-    Af: 'AF',
-    Ag: 'AG',
-    Ai: 'AI',
-    Al: 'AL',
-    Am: 'AM',
-    Ao: 'AO',
-    Aq: 'AQ',
-    Ar: 'AR',
-    As: 'AS',
-    At: 'AT',
-    Au: 'AU',
-    Aw: 'AW',
-    Ax: 'AX',
-    Az: 'AZ',
-    Ba: 'BA',
-    Bb: 'BB',
-    Bd: 'BD',
-    Be: 'BE',
-    Bf: 'BF',
-    Bg: 'BG',
-    Bh: 'BH',
-    Bi: 'BI',
-    Bj: 'BJ',
-    Bl: 'BL',
-    Bm: 'BM',
-    Bn: 'BN',
-    Bo: 'BO',
-    Bq: 'BQ',
-    Br: 'BR',
-    Bs: 'BS',
-    Bt: 'BT',
-    Bv: 'BV',
-    Bw: 'BW',
-    By: 'BY',
-    Bz: 'BZ',
-    Ca: 'CA',
-    Cc: 'CC',
-    Cd: 'CD',
-    Cf: 'CF',
-    Cg: 'CG',
-    Ch: 'CH',
-    Ci: 'CI',
-    Ck: 'CK',
-    Cl: 'CL',
-    Cm: 'CM',
-    Cn: 'CN',
-    Co: 'CO',
-    Cr: 'CR',
-    Cu: 'CU',
-    Cv: 'CV',
-    Cw: 'CW',
-    Cx: 'CX',
-    Cy: 'CY',
-    Cz: 'CZ',
-    De: 'DE',
-    Dj: 'DJ',
-    Dk: 'DK',
-    Dm: 'DM',
-    Do: 'DO',
-    Dz: 'DZ',
-    Ec: 'EC',
-    Ee: 'EE',
-    Eg: 'EG',
-    Eh: 'EH',
-    Er: 'ER',
-    Es: 'ES',
-    Et: 'ET',
-    Fi: 'FI',
-    Fj: 'FJ',
-    Fk: 'FK',
-    Fm: 'FM',
-    Fo: 'FO',
-    Fr: 'FR',
-    Ga: 'GA',
-    Gb: 'GB',
-    Gd: 'GD',
-    Ge: 'GE',
-    Gf: 'GF',
-    Gg: 'GG',
-    Gh: 'GH',
-    Gi: 'GI',
-    Gl: 'GL',
-    Gm: 'GM',
-    Gn: 'GN',
-    Gp: 'GP',
-    Gq: 'GQ',
-    Gr: 'GR',
-    Gs: 'GS',
-    Gt: 'GT',
-    Gu: 'GU',
-    Gw: 'GW',
-    Gy: 'GY',
-    Hk: 'HK',
-    Hm: 'HM',
-    Hn: 'HN',
-    Hr: 'HR',
-    Ht: 'HT',
-    Hu: 'HU',
-    Id: 'ID',
-    Ie: 'IE',
-    Il: 'IL',
-    Im: 'IM',
-    In: 'IN',
-    Io: 'IO',
-    Iq: 'IQ',
-    Ir: 'IR',
-    Is: 'IS',
-    It: 'IT',
-    Je: 'JE',
-    Jm: 'JM',
-    Jo: 'JO',
-    Jp: 'JP',
-    Ke: 'KE',
-    Kg: 'KG',
-    Kh: 'KH',
-    Ki: 'KI',
-    Km: 'KM',
-    Kn: 'KN',
-    Kp: 'KP',
-    Kr: 'KR',
-    Kw: 'KW',
-    Ky: 'KY',
-    Kz: 'KZ',
-    La: 'LA',
-    Lb: 'LB',
-    Lc: 'LC',
-    Li: 'LI',
-    Lk: 'LK',
-    Lr: 'LR',
-    Ls: 'LS',
-    Lt: 'LT',
-    Lu: 'LU',
-    Lv: 'LV',
-    Ly: 'LY',
-    Ma: 'MA',
-    Mc: 'MC',
-    Md: 'MD',
-    Me: 'ME',
-    Mf: 'MF',
-    Mg: 'MG',
-    Mh: 'MH',
-    Mk: 'MK',
-    Ml: 'ML',
-    Mm: 'MM',
-    Mn: 'MN',
-    Mo: 'MO',
-    Mp: 'MP',
-    Mq: 'MQ',
-    Mr: 'MR',
-    Ms: 'MS',
-    Mt: 'MT',
-    Mu: 'MU',
-    Mv: 'MV',
-    Mw: 'MW',
-    Mx: 'MX',
-    My: 'MY',
-    Mz: 'MZ',
-    Na: 'NA',
-    Nc: 'NC',
-    Ne: 'NE',
-    Nf: 'NF',
-    Ng: 'NG',
-    Ni: 'NI',
-    Nl: 'NL',
-    No: 'NO',
-    Np: 'NP',
-    Nr: 'NR',
-    Nu: 'NU',
-    Nz: 'NZ',
-    Om: 'OM',
-    Pa: 'PA',
-    Pe: 'PE',
-    Pf: 'PF',
-    Pg: 'PG',
-    Ph: 'PH',
-    Pk: 'PK',
-    Pl: 'PL',
-    Pm: 'PM',
-    Pn: 'PN',
-    Pr: 'PR',
-    Ps: 'PS',
-    Pt: 'PT',
-    Pw: 'PW',
-    Py: 'PY',
-    Qa: 'QA',
-    Re: 'RE',
-    Ro: 'RO',
-    Rs: 'RS',
-    Ru: 'RU',
-    Rw: 'RW',
-    Sa: 'SA',
-    Sb: 'SB',
-    Sc: 'SC',
-    Sd: 'SD',
-    Se: 'SE',
-    Sg: 'SG',
-    Sh: 'SH',
-    Si: 'SI',
-    Sj: 'SJ',
-    Sk: 'SK',
-    Sl: 'SL',
-    Sm: 'SM',
-    Sn: 'SN',
-    So: 'SO',
-    Sr: 'SR',
-    Ss: 'SS',
-    St: 'ST',
-    Sv: 'SV',
-    Sx: 'SX',
-    Sy: 'SY',
-    Sz: 'SZ',
-    Tc: 'TC',
-    Td: 'TD',
-    Tf: 'TF',
-    Tg: 'TG',
-    Th: 'TH',
-    Tj: 'TJ',
-    Tk: 'TK',
-    Tl: 'TL',
-    Tm: 'TM',
-    Tn: 'TN',
-    To: 'TO',
-    Tr: 'TR',
-    Tt: 'TT',
-    Tv: 'TV',
-    Tw: 'TW',
-    Tz: 'TZ',
-    Ua: 'UA',
-    Ug: 'UG',
-    Um: 'UM',
-    Us: 'US',
-    Uy: 'UY',
-    Uz: 'UZ',
-    Va: 'VA',
-    Vc: 'VC',
-    Ve: 'VE',
-    Vg: 'VG',
-    Vi: 'VI',
-    Vn: 'VN',
-    Vu: 'VU',
-    Wf: 'WF',
-    Ws: 'WS',
-    Xk: 'XK',
-    Ye: 'YE',
-    Yt: 'YT',
-    Za: 'ZA',
-    Zm: 'ZM',
-    Zw: 'ZW'
-} as const;
-
-export type CredentialRequestPostRequestEmailCredentialRequestCountriesEnum = typeof CredentialRequestPostRequestEmailCredentialRequestCountriesEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestCountriesEnum];
 
 /**
  * 
@@ -835,10 +582,10 @@ export interface CredentialRequestPostRequestEmailCredentialRequestAnyOf {
     'program': CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum;
     /**
      * 
-     * @type {Array<string>}
+     * @type {CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries}
      * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
      */
-    'countries': Array<CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum>;
+    'countries': CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries;
     /**
      * 
      * @type {number}
@@ -864,264 +611,11 @@ export const CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum 
     NUMBER_1: 1,
     NUMBER_2: 2,
     NUMBER_3: 3,
-    NUMBER_4: 4
+    NUMBER_4: 4,
+    NUMBER_5: 5
 } as const;
 
 export type CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum];
-export const CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum = {
-    Ad: 'AD',
-    Ae: 'AE',
-    Af: 'AF',
-    Ag: 'AG',
-    Ai: 'AI',
-    Al: 'AL',
-    Am: 'AM',
-    Ao: 'AO',
-    Aq: 'AQ',
-    Ar: 'AR',
-    As: 'AS',
-    At: 'AT',
-    Au: 'AU',
-    Aw: 'AW',
-    Ax: 'AX',
-    Az: 'AZ',
-    Ba: 'BA',
-    Bb: 'BB',
-    Bd: 'BD',
-    Be: 'BE',
-    Bf: 'BF',
-    Bg: 'BG',
-    Bh: 'BH',
-    Bi: 'BI',
-    Bj: 'BJ',
-    Bl: 'BL',
-    Bm: 'BM',
-    Bn: 'BN',
-    Bo: 'BO',
-    Bq: 'BQ',
-    Br: 'BR',
-    Bs: 'BS',
-    Bt: 'BT',
-    Bv: 'BV',
-    Bw: 'BW',
-    By: 'BY',
-    Bz: 'BZ',
-    Ca: 'CA',
-    Cc: 'CC',
-    Cd: 'CD',
-    Cf: 'CF',
-    Cg: 'CG',
-    Ch: 'CH',
-    Ci: 'CI',
-    Ck: 'CK',
-    Cl: 'CL',
-    Cm: 'CM',
-    Cn: 'CN',
-    Co: 'CO',
-    Cr: 'CR',
-    Cu: 'CU',
-    Cv: 'CV',
-    Cw: 'CW',
-    Cx: 'CX',
-    Cy: 'CY',
-    Cz: 'CZ',
-    De: 'DE',
-    Dj: 'DJ',
-    Dk: 'DK',
-    Dm: 'DM',
-    Do: 'DO',
-    Dz: 'DZ',
-    Ec: 'EC',
-    Ee: 'EE',
-    Eg: 'EG',
-    Eh: 'EH',
-    Er: 'ER',
-    Es: 'ES',
-    Et: 'ET',
-    Fi: 'FI',
-    Fj: 'FJ',
-    Fk: 'FK',
-    Fm: 'FM',
-    Fo: 'FO',
-    Fr: 'FR',
-    Ga: 'GA',
-    Gb: 'GB',
-    Gd: 'GD',
-    Ge: 'GE',
-    Gf: 'GF',
-    Gg: 'GG',
-    Gh: 'GH',
-    Gi: 'GI',
-    Gl: 'GL',
-    Gm: 'GM',
-    Gn: 'GN',
-    Gp: 'GP',
-    Gq: 'GQ',
-    Gr: 'GR',
-    Gs: 'GS',
-    Gt: 'GT',
-    Gu: 'GU',
-    Gw: 'GW',
-    Gy: 'GY',
-    Hk: 'HK',
-    Hm: 'HM',
-    Hn: 'HN',
-    Hr: 'HR',
-    Ht: 'HT',
-    Hu: 'HU',
-    Id: 'ID',
-    Ie: 'IE',
-    Il: 'IL',
-    Im: 'IM',
-    In: 'IN',
-    Io: 'IO',
-    Iq: 'IQ',
-    Ir: 'IR',
-    Is: 'IS',
-    It: 'IT',
-    Je: 'JE',
-    Jm: 'JM',
-    Jo: 'JO',
-    Jp: 'JP',
-    Ke: 'KE',
-    Kg: 'KG',
-    Kh: 'KH',
-    Ki: 'KI',
-    Km: 'KM',
-    Kn: 'KN',
-    Kp: 'KP',
-    Kr: 'KR',
-    Kw: 'KW',
-    Ky: 'KY',
-    Kz: 'KZ',
-    La: 'LA',
-    Lb: 'LB',
-    Lc: 'LC',
-    Li: 'LI',
-    Lk: 'LK',
-    Lr: 'LR',
-    Ls: 'LS',
-    Lt: 'LT',
-    Lu: 'LU',
-    Lv: 'LV',
-    Ly: 'LY',
-    Ma: 'MA',
-    Mc: 'MC',
-    Md: 'MD',
-    Me: 'ME',
-    Mf: 'MF',
-    Mg: 'MG',
-    Mh: 'MH',
-    Mk: 'MK',
-    Ml: 'ML',
-    Mm: 'MM',
-    Mn: 'MN',
-    Mo: 'MO',
-    Mp: 'MP',
-    Mq: 'MQ',
-    Mr: 'MR',
-    Ms: 'MS',
-    Mt: 'MT',
-    Mu: 'MU',
-    Mv: 'MV',
-    Mw: 'MW',
-    Mx: 'MX',
-    My: 'MY',
-    Mz: 'MZ',
-    Na: 'NA',
-    Nc: 'NC',
-    Ne: 'NE',
-    Nf: 'NF',
-    Ng: 'NG',
-    Ni: 'NI',
-    Nl: 'NL',
-    No: 'NO',
-    Np: 'NP',
-    Nr: 'NR',
-    Nu: 'NU',
-    Nz: 'NZ',
-    Om: 'OM',
-    Pa: 'PA',
-    Pe: 'PE',
-    Pf: 'PF',
-    Pg: 'PG',
-    Ph: 'PH',
-    Pk: 'PK',
-    Pl: 'PL',
-    Pm: 'PM',
-    Pn: 'PN',
-    Pr: 'PR',
-    Ps: 'PS',
-    Pt: 'PT',
-    Pw: 'PW',
-    Py: 'PY',
-    Qa: 'QA',
-    Re: 'RE',
-    Ro: 'RO',
-    Rs: 'RS',
-    Ru: 'RU',
-    Rw: 'RW',
-    Sa: 'SA',
-    Sb: 'SB',
-    Sc: 'SC',
-    Sd: 'SD',
-    Se: 'SE',
-    Sg: 'SG',
-    Sh: 'SH',
-    Si: 'SI',
-    Sj: 'SJ',
-    Sk: 'SK',
-    Sl: 'SL',
-    Sm: 'SM',
-    Sn: 'SN',
-    So: 'SO',
-    Sr: 'SR',
-    Ss: 'SS',
-    St: 'ST',
-    Sv: 'SV',
-    Sx: 'SX',
-    Sy: 'SY',
-    Sz: 'SZ',
-    Tc: 'TC',
-    Td: 'TD',
-    Tf: 'TF',
-    Tg: 'TG',
-    Th: 'TH',
-    Tj: 'TJ',
-    Tk: 'TK',
-    Tl: 'TL',
-    Tm: 'TM',
-    Tn: 'TN',
-    To: 'TO',
-    Tr: 'TR',
-    Tt: 'TT',
-    Tv: 'TV',
-    Tw: 'TW',
-    Tz: 'TZ',
-    Ua: 'UA',
-    Ug: 'UG',
-    Um: 'UM',
-    Us: 'US',
-    Uy: 'UY',
-    Uz: 'UZ',
-    Va: 'VA',
-    Vc: 'VC',
-    Ve: 'VE',
-    Vg: 'VG',
-    Vi: 'VI',
-    Vn: 'VN',
-    Vu: 'VU',
-    Wf: 'WF',
-    Ws: 'WS',
-    Xk: 'XK',
-    Ye: 'YE',
-    Yt: 'YT',
-    Za: 'ZA',
-    Zm: 'ZM',
-    Zw: 'ZW'
-} as const;
-
-export type CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountriesEnum];
 
 /**
  * 
@@ -1163,6 +657,1513 @@ export const CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum = 
 
 export type CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum];
 
+/**
+ * 
+ * @export
+ * @interface CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+ */
+export interface CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AX': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'AZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BB': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'BZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CX': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'CZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'DE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'DJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'DK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'DM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'DO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'DZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'EC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'EE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'EG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'EH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ER': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ES': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ET': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'FI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'FJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'FK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'FM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'FO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'FR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GB': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'GY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'HK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'HM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'HN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'HR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'HT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'HU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ID': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'IT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'JE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'JM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'JO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'JP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'KZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LB': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'LY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ME': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ML': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MX': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'MZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'NZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'OM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'PY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'QA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'RE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'RO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'RS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'RU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'RW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SB': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ST': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SX': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'SZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'TZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'UA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'UG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'UM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'US': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'UY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'UZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'VA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'VC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'VE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'VG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'VI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'VN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'VU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'WF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'WS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'XK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'YE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'YT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ZA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ZM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     */
+    'ZW': boolean;
+}
 /**
  * 
  * @export

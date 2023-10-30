@@ -1,5 +1,9 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "./store";
+import { uint8ArrayToJSON } from "@/shared/common/arrbufs";
+import { decode } from "@/shared/common/base64";
+import { BBSPlusCredential as Credential } from "@docknetwork/crypto-wasm-ts";
+import type { SessionStatus } from "./reducers/session";
 
 const selectSessionsData = (state: RootState) => {
     return Object.values(state.sessions.sessions).sort((s1, s2) => {
@@ -61,4 +65,48 @@ export const selectActiveSessionUserId = (state: RootState) => {
         return undefined;
     }
     return state.sessions.sessions[activeSessionEmail].userId;
+};
+
+// for some reason this is called 5 times (in dev mode)!!!
+// => TODO: look into optimizing this...
+export const selectActiveEmailCredential = (
+    state: RootState
+): Credential | undefined => {
+    const activeSessionEmail = state.sessions.activeSessionEmail;
+    if (activeSessionEmail === "") {
+        return undefined;
+    }
+    const emailCredentialsPerEmail =
+        state.sessions.sessions[activeSessionEmail]?.emailCredentialsPerEmail;
+    if (
+        emailCredentialsPerEmail !== undefined &&
+        activeSessionEmail in emailCredentialsPerEmail
+    ) {
+        const encodedEmailCredential =
+            emailCredentialsPerEmail[activeSessionEmail].active;
+        if (encodedEmailCredential === undefined) {
+            return undefined;
+        } else {
+            try {
+                return Credential.fromJSON(
+                    uint8ArrayToJSON(decode(encodedEmailCredential))
+                );
+            } catch (e) {
+                // TODO: better error handling
+                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
+                console.error("Error while parsing email credential", e);
+            }
+        }
+    } else {
+        return undefined;
+    }
+};
+export const selectActiveSessionStatus = (
+    state: RootState
+): SessionStatus | undefined => {
+    const activeSessionEmail = state.sessions.activeSessionEmail;
+    if (activeSessionEmail === "") {
+        return undefined;
+    }
+    return state.sessions.sessions[activeSessionEmail]?.status;
 };

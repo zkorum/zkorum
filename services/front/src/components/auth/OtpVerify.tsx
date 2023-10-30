@@ -24,8 +24,12 @@ import { generateAndEncryptSymmKey } from "../../crypto/ucan/ucan";
 import axios from "axios";
 import Alert from "@mui/material/Alert";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 export function OtpVerify() {
+    const theme = useTheme();
+    const smallScreen = useMediaQuery(theme.breakpoints.down("sm"));
     const [otp, setOtp] = React.useState<string>("");
     const [isCurrentCodeActive, setIsCurrentCodeActive] =
         React.useState<boolean>(true);
@@ -249,6 +253,7 @@ export function OtpVerify() {
                     return;
                 } else {
                     setIsCurrentCodeActive(true);
+                    setOtp("");
                     dispatch(
                         showInfo(
                             "New code sent to your email - previous code invalidated"
@@ -308,15 +313,36 @@ export function OtpVerify() {
                 )}
             </Box>
             <Box alignSelf="center">
-                <MuiOtpInput
-                    TextFieldsProps={{ disabled: !isCurrentCodeActive }}
-                    length={6}
-                    autoFocus
-                    value={otp}
-                    onChange={handleChange}
-                    validateChar={validateChar}
-                    onComplete={handleOnComplete}
-                />
+                {smallScreen ? (
+                    <MuiOtpInput
+                        sx={{
+                            "& .MuiInputBase-input": {
+                                p: 0, // TODO: this is ugly - improve this
+                            },
+                        }}
+                        TextFieldsProps={{
+                            disabled: !isCurrentCodeActive,
+                        }}
+                        length={6}
+                        autoFocus
+                        value={otp}
+                        onChange={handleChange}
+                        validateChar={validateChar}
+                        onComplete={handleOnComplete}
+                    />
+                ) : (
+                    <MuiOtpInput
+                        TextFieldsProps={{
+                            disabled: !isCurrentCodeActive,
+                        }}
+                        length={6}
+                        autoFocus
+                        value={otp}
+                        onChange={handleChange}
+                        validateChar={validateChar}
+                        onComplete={handleOnComplete}
+                    />
+                )}
             </Box>
             <Box sx={{ mt: 12, mb: 2 }}>
                 <Typography variant="body2">

@@ -6,6 +6,7 @@ import { closeSnackbar } from "@/store/reducers/snackbar";
 import { Topbar } from "./Topbar";
 import { BottomNavbar } from "./BottomNavbar";
 import Alert from "@mui/material/Alert";
+import React from "react";
 
 export function AppLayout() {
     const snackbarState = useAppSelector((state) => {
