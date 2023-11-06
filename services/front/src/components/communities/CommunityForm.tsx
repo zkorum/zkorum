@@ -21,7 +21,7 @@ import {
     universityTypeToString,
 } from "@/shared/types/university";
 import Button from "@mui/material/Button";
-import { requestAnonymousCredentials } from "@/credential/credential";
+import { requestAnonymousCredentials } from "@/request/credential";
 import { useNavigate } from "react-router-dom";
 import { FEED } from "@/common/navigation";
 import { useAppDispatch } from "@/hooks";

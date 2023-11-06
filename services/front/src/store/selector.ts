@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "./store";
 import { uint8ArrayToJSON } from "@/shared/common/arrbufs";
-import { decode } from "@/shared/common/base64";
+import { base64UrlDecode } from "@/shared/common/base64";
 import { BBSPlusCredential as Credential } from "@docknetwork/crypto-wasm-ts";
 import type { SessionStatus } from "./reducers/session";
 
@@ -68,7 +68,10 @@ export const selectActiveSessionUserId = (state: RootState) => {
 };
 
 // for some reason this is called 5 times (in dev mode)!!!
-// => TODO: look into optimizing this...
+// => TODO: look into optimizing this - ...
+// The following console warning has to be investigated:
+// Selector selectActiveEmailCredential returned a different result when called with the same parameters. This can lead to unnecessary rerenders.
+// Selectors that return a new reference (such as an object or an array) should be memoized: https://redux.js.org/usage/deriving-data-selectors#optimizing-selectors-with-memoization
 export const selectActiveEmailCredential = (
     state: RootState
 ): Credential | undefined => {
@@ -89,7 +92,7 @@ export const selectActiveEmailCredential = (
         } else {
             try {
                 return Credential.fromJSON(
-                    uint8ArrayToJSON(decode(encodedEmailCredential))
+                    uint8ArrayToJSON(base64UrlDecode(encodedEmailCredential))
                 );
             } catch (e) {
                 // TODO: better error handling
@@ -101,6 +104,7 @@ export const selectActiveEmailCredential = (
         return undefined;
     }
 };
+
 export const selectActiveSessionStatus = (
     state: RootState
 ): SessionStatus | undefined => {
@@ -109,4 +113,47 @@ export const selectActiveSessionStatus = (
         return undefined;
     }
     return state.sessions.sessions[activeSessionEmail]?.status;
+};
+
+export const selectActiveGlobalSecretCredential = (
+    state: RootState
+): Credential | undefined => {
+    const activeSessionEmail = state.sessions.activeSessionEmail;
+    if (activeSessionEmail === "") {
+        return undefined;
+    }
+    const secretCredentialsPerType =
+        state.sessions.sessions[activeSessionEmail]
+            ?.unblindedSecretCredentialsPerType;
+    const userId = state.sessions.sessions[activeSessionEmail]?.userId;
+    console.log(
+        "Values",
+        state.sessions.sessions[activeSessionEmail],
+        secretCredentialsPerType,
+        userId
+    );
+    if (
+        secretCredentialsPerType !== undefined &&
+        "global" in secretCredentialsPerType &&
+        userId !== undefined
+    ) {
+        const unblindedSecretCredential =
+            secretCredentialsPerType["global"].active;
+        if (unblindedSecretCredential === undefined) {
+            return undefined;
+        } else {
+            try {
+                const credential = Credential.fromJSON(
+                    uint8ArrayToJSON(base64UrlDecode(unblindedSecretCredential))
+                );
+                return credential;
+            } catch (e) {
+                // TODO: better error handling
+                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
+                console.error("Error while parsing secret credential", e);
+            }
+        }
+    } else {
+        return undefined;
+    }
 };

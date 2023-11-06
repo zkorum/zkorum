@@ -22,7 +22,10 @@ import {
     generateUUID,
 } from "../crypto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
-import { BBSPlusSecretKey as SecretKey } from "@docknetwork/crypto-wasm-ts";
+import {
+    Presentation,
+    BBSPlusSecretKey as SecretKey,
+} from "@docknetwork/crypto-wasm-ts";
 import {
     buildEmailCredential,
     buildSecretCredential,
@@ -38,8 +41,9 @@ import type {
     SecretCredentialType,
     SecretCredentialsPerType,
     Credentials,
+    Poll,
 } from "../shared/types/zod.js";
-import { encode } from "../shared/common/base64.js";
+import { base64UrlEncode } from "../shared/common/base64.js";
 import { anyToUint8Array } from "../shared/common/arrbufs.js";
 import { BBSPlusBlindedCredentialRequest as BlindedCredentialRequest } from "@docknetwork/crypto-wasm-ts";
 
@@ -69,6 +73,14 @@ interface CreateAndStoreCredentialsParams {
     sk: SecretKey;
     email: string;
     emailCredentialRequest: EmailCredentialRequest;
+}
+
+interface CreatePollProps {
+    db: PostgresDatabase;
+    presentation: Presentation;
+    poll: Poll;
+    pseudonym: string;
+    postAs: PostAs;
 }
 
 // No need to validate data, it has been done in the controller level
@@ -907,7 +919,7 @@ export class Service {
         } else {
             const emailCredentials: EmailCredentialsPerEmail = {};
             for (const result of results) {
-                const encodedCredential = encode(
+                const encodedCredential = base64UrlEncode(
                     anyToUint8Array(result.emailCredential)
                 );
                 if (result.email in emailCredentials) {
@@ -947,7 +959,9 @@ export class Service {
             emailCredentialRequest,
             sk
         );
-        const encodedCredential = encode(anyToUint8Array(credential.toJSON()));
+        const encodedCredential = base64UrlEncode(
+            anyToUint8Array(credential.toJSON())
+        );
         await db.insert(credentialEmailTable).values({
             email: email,
             isRevoked: false,
@@ -960,6 +974,7 @@ export class Service {
         db: PostgresDatabase,
         didWrite: string,
         secretCredentialRequest: SecretCredentialRequest,
+        email: string,
         type: SecretCredentialType,
         httpErrors: HttpErrors,
         sk: SecretKey
@@ -978,9 +993,12 @@ export class Service {
             blindedCredentialRequest,
             userId,
             type,
+            email,
             sk
         );
-        const encodedCredential = encode(anyToUint8Array(credential.toJSON()));
+        const encodedCredential = base64UrlEncode(
+            anyToUint8Array(credential.toJSON())
+        );
         await db.insert(credentialSecretTable).values({
             userId: userId,
             pollId: type !== "global" ? type : null,
@@ -1007,6 +1025,7 @@ export class Service {
                 tx,
                 params.didWrite,
                 params.secretCredentialRequest,
+                params.email,
                 params.type,
                 params.httpErrors,
                 params.sk
@@ -1053,7 +1072,7 @@ export class Service {
         } else {
             const secretCredentialsPerType: SecretCredentialsPerType = {};
             for (const result of results) {
-                const encodedCredential = encode(
+                const encodedCredential = base64UrlEncode(
                     anyToUint8Array(result.blindedCredential)
                 );
                 if (
@@ -1161,5 +1180,14 @@ export class Service {
             emailCredentialsPerEmail: emailCredentialsPerEmail,
             secretCredentialsPerType: secretCredentialsPerType,
         };
+    }
+
+    static async createPoll({
+        db,
+        presentation,
+        poll,
+        pseudonym,
+    }: CreatePollProps): Promise<void> {
+        // TODO
     }
 }

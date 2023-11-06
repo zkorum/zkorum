@@ -8,7 +8,7 @@ import {
     AuthVerifyOtpPost200ResponseReasonEnum,
     type AuthAuthenticatePost409Response,
 } from "../../api";
-import { authenticate, onLoggedIn, verifyOtp } from "../../auth/auth";
+import { authenticate, onLoggedIn, verifyOtp } from "@/request/auth";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { ZodType } from "../../shared/types/zod";
 import { CircularProgressCountdown } from "../shared/CircularProgressCountdown";

@@ -125,6 +125,10 @@ export class Dto {
         emailCredentialRequest: ZodType.emailCredentialRequest,
         secretCredentialRequest: ZodType.secretCredentialRequest,
     });
+    static createPollRequest = z.object({
+        poll: ZodType.poll,
+        pres: z.unknown(), // z.object() does not exist :(
+    });
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody

@@ -21,6 +21,21 @@ export function universityTypeToString(universityType: UniversityType): string {
     }
 }
 
+export function universityStringToType(universityStr: string): UniversityType {
+    switch (universityStr) {
+        case "Student":
+            return UniversityType.STUDENT;
+        case "Alum":
+            return UniversityType.ALUM;
+        case "Faculty/Staff member":
+            return UniversityType.FACULTY;
+        default:
+            throw new Error(
+                `String '${universityStr}' cannot be parsed to university type`
+            );
+    }
+}
+
 export interface StudentPersona {
     campus?: EssecCampus;
     program?: EssecProgram;

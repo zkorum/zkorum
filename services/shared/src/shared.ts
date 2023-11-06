@@ -24,3 +24,36 @@ export enum ProgramError {
     InsecureContext = "INSECURE_CONTEXT",
     UnsupportedBrowser = "UNSUPPORTED_BROWSER",
 }
+
+interface DomainAndExtension {
+    domainName?: string;
+    domainExtension?: string;
+}
+
+export function domainNameAndExtensionFromEmail(
+    email: string
+): DomainAndExtension {
+    const domain = domainFromEmail(email);
+    if (domain === undefined) {
+        return { domainName: undefined, domainExtension: undefined };
+    } else {
+        const domainNameAndDomainExtension = domain.split(".");
+        if (domainNameAndDomainExtension.length === 2) {
+            const [domainName, domainExtension] = domainNameAndDomainExtension;
+            return { domainName, domainExtension };
+        } else {
+            return { domainName: undefined, domainExtension: undefined };
+        }
+    }
+}
+
+export function domainFromEmail(email: string): string | undefined {
+    const nameAndDomain = email.split("@");
+    if (nameAndDomain.length === 2) {
+        const [_username, domain] = [nameAndDomain[0], nameAndDomain[1]];
+        return domain;
+    }
+}
+
+export const MAX_LENGTH_OPTION = 30;
+export const MAX_LENGTH_QUESTION = 140;

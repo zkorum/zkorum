@@ -11,7 +11,7 @@ import {
     selectSortedSessionsData,
 } from "../../store/selector";
 import MenuItem from "@mui/material/MenuItem";
-import { logout, onChooseAccount } from "../../auth/auth";
+import { logout, onChooseAccount } from "@/request/auth";
 import { CustomAvatar } from "./CustomAvatar";
 import {
     openAuthModal,

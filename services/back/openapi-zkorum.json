@@ -6,6 +6,12 @@
     "version": "1.0.0"
   },
   "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
     "schemas": {}
   },
   "paths": {
@@ -1930,7 +1936,143 @@
           }
         }
       }
+    },
+    "/poll/create": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "poll": {
+                    "type": "object",
+                    "properties": {
+                      "question": {
+                        "type": "string",
+                        "maxLength": 140,
+                        "minLength": 1
+                      },
+                      "option1": {
+                        "type": "string",
+                        "maxLength": 30,
+                        "minLength": 1
+                      },
+                      "option2": {
+                        "type": "string",
+                        "maxLength": 30,
+                        "minLength": 1
+                      },
+                      "option3": {
+                        "type": "string",
+                        "maxLength": 30,
+                        "minLength": 1
+                      },
+                      "option4": {
+                        "type": "string",
+                        "maxLength": 30,
+                        "minLength": 1
+                      },
+                      "option5": {
+                        "type": "string",
+                        "maxLength": 30,
+                        "minLength": 1
+                      },
+                      "option6": {
+                        "type": "string",
+                        "maxLength": 30,
+                        "minLength": 1
+                      },
+                      "eligibility": {
+                        "type": "object",
+                        "properties": {
+                          "student": {
+                            "type": "boolean"
+                          },
+                          "alum": {
+                            "type": "boolean"
+                          },
+                          "faculty": {
+                            "type": "boolean"
+                          },
+                          "countries": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "FR",
+                                "INT"
+                              ]
+                            }
+                          },
+                          "campuses": {
+                            "type": "array",
+                            "items": {
+                              "type": "number",
+                              "enum": [
+                                0,
+                                1,
+                                2
+                              ]
+                            }
+                          },
+                          "programs": {
+                            "type": "array",
+                            "items": {
+                              "type": "number",
+                              "enum": [
+                                0,
+                                1,
+                                2,
+                                3,
+                                4,
+                                5
+                              ]
+                            }
+                          },
+                          "admissionYears": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "exclusiveMinimum": true,
+                              "minimum": 2014,
+                              "maximum": 2024
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "question",
+                      "option1",
+                      "option2"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "pres": {}
+                },
+                "required": [
+                  "poll"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
-  "servers": []
+  "servers": [],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
 }

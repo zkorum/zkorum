@@ -7,7 +7,7 @@ import { CustomAvatar } from "./CustomAvatar";
 import ListItemButton from "@mui/material/ListItemButton";
 import Chip from "@mui/material/Chip";
 import { removeSession, type SessionData } from "../../store/reducers/session";
-import { logout, onChooseAccount } from "../../auth/auth";
+import { logout, onChooseAccount } from "@/request/auth";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LogoutIcon from "@mui/icons-material/Logout";

@@ -1,7 +1,10 @@
 // Part of these functions were extracted from ts-odd which is Apache licensed
 // https://github.com/nicobao/ts-odd/blob/f90bde37416d9986d1c0afed406182a95ce7c1d7/src/common/root-key.ts#L29
 
-import { encode, decode } from "../../shared/common/base64.js";
+import {
+    base64UrlEncode,
+    base64UrlDecode,
+} from "../../shared/common/base64.js";
 import { DEFAULT_AES_ALG } from "../basic.js";
 import { cryptoStore } from "@/store/store.js";
 
@@ -15,7 +18,7 @@ export async function generateAndEncryptSymmKey(
         .then((symmKey: Uint8Array) =>
             cryptoStore.rsa.encrypt(symmKey, didExchange)
         )
-        .then(encode);
+        .then(base64UrlEncode);
 }
 
 /**
@@ -25,7 +28,7 @@ export async function storeSymmKeyLocally(
     encryptedSymmKey: string,
     userId: string
 ) {
-    const decodedEncryptedSymmKey = decode(encryptedSymmKey);
+    const decodedEncryptedSymmKey = base64UrlDecode(encryptedSymmKey);
     const symmKey = await cryptoStore.keystore.decrypt(
         decodedEncryptedSymmKey,
         userId

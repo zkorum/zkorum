@@ -12,10 +12,6 @@ import {
     text,
     jsonb,
 } from "drizzle-orm/pg-core";
-import type {
-    EmailCredential,
-    BlindedCredentialType,
-} from "./shared/types/zod.js";
 
 export const bytea = customType<{
     data: string;
@@ -147,4 +143,27 @@ export const credentialSecretTable = pgTable("credential_secret", {
         .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// export interface EssecPersona {
+//     type?: UniversityType;
+//     campus?: EssecCampus;
+//     program?: EssecProgram;
+//     countries?: Countries;
+//     admissionYear?: number;
+// }
+
+// export interface PostAs {
+//     domain: string;
+//     type: string;
+//     typeSpecific?: EssecPersona;
+// }
+
+export const pollTable = pgTable("poll", {
+    id: uuid("id").primaryKey(),
+    cid: text("cid").notNull().unique(), // calculated from pres+created_at. Change type to varchar? I don't what what's the CIDv1 max length...
+    author: text("author").notNull(), // pseudonym of the author of the poll. Change type to varchar? I don't know how long a pseudonym can be...
+    presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
+    domain: varchar("domain", { length: 255 }).notNull(), // should be enough for subdomains? TODO: test that
+    // TODO add the other fields - maybe create tables for author, postAs, eligibility and pollContent
 });

@@ -2189,6 +2189,154 @@ export interface CredentialRequestPostRequestSecretCredentialRequest {
      */
     'encryptedEncodedBlinding': string;
 }
+/**
+ * 
+ * @export
+ * @interface PollCreatePostRequest
+ */
+export interface PollCreatePostRequest {
+    /**
+     * 
+     * @type {PollCreatePostRequestPoll}
+     * @memberof PollCreatePostRequest
+     */
+    'poll': PollCreatePostRequestPoll;
+    /**
+     * 
+     * @type {any}
+     * @memberof PollCreatePostRequest
+     */
+    'pres'?: any;
+}
+/**
+ * 
+ * @export
+ * @interface PollCreatePostRequestPoll
+ */
+export interface PollCreatePostRequestPoll {
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPoll
+     */
+    'question': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPoll
+     */
+    'option1': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPoll
+     */
+    'option2': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPoll
+     */
+    'option3'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPoll
+     */
+    'option4'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPoll
+     */
+    'option5'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPoll
+     */
+    'option6'?: string;
+    /**
+     * 
+     * @type {PollCreatePostRequestPollEligibility}
+     * @memberof PollCreatePostRequestPoll
+     */
+    'eligibility'?: PollCreatePostRequestPollEligibility;
+}
+/**
+ * 
+ * @export
+ * @interface PollCreatePostRequestPollEligibility
+ */
+export interface PollCreatePostRequestPollEligibility {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PollCreatePostRequestPollEligibility
+     */
+    'student'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PollCreatePostRequestPollEligibility
+     */
+    'alum'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PollCreatePostRequestPollEligibility
+     */
+    'faculty'?: boolean;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PollCreatePostRequestPollEligibility
+     */
+    'countries'?: Array<PollCreatePostRequestPollEligibilityCountriesEnum>;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof PollCreatePostRequestPollEligibility
+     */
+    'campuses'?: Array<PollCreatePostRequestPollEligibilityCampusesEnum>;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof PollCreatePostRequestPollEligibility
+     */
+    'programs'?: Array<PollCreatePostRequestPollEligibilityProgramsEnum>;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof PollCreatePostRequestPollEligibility
+     */
+    'admissionYears'?: Array<number>;
+}
+
+export const PollCreatePostRequestPollEligibilityCountriesEnum = {
+    Fr: 'FR',
+    Int: 'INT'
+} as const;
+
+export type PollCreatePostRequestPollEligibilityCountriesEnum = typeof PollCreatePostRequestPollEligibilityCountriesEnum[keyof typeof PollCreatePostRequestPollEligibilityCountriesEnum];
+export const PollCreatePostRequestPollEligibilityCampusesEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2
+} as const;
+
+export type PollCreatePostRequestPollEligibilityCampusesEnum = typeof PollCreatePostRequestPollEligibilityCampusesEnum[keyof typeof PollCreatePostRequestPollEligibilityCampusesEnum];
+export const PollCreatePostRequestPollEligibilityProgramsEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2,
+    NUMBER_3: 3,
+    NUMBER_4: 4,
+    NUMBER_5: 5
+} as const;
+
+export type PollCreatePostRequestPollEligibilityProgramsEnum = typeof PollCreatePostRequestPollEligibilityProgramsEnum[keyof typeof PollCreatePostRequestPollEligibilityProgramsEnum];
+
 
 /**
  * DefaultApi - axios parameter creator
@@ -2216,6 +2364,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -2249,6 +2401,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -2280,6 +2436,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -2316,6 +2476,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -2347,6 +2511,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -2380,6 +2548,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -2388,6 +2560,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(credentialRequestPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {PollCreatePostRequest} pollCreatePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        pollCreatePost: async (pollCreatePostRequest: PollCreatePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'pollCreatePostRequest' is not null or undefined
+            assertParamExists('pollCreatePost', 'pollCreatePostRequest', pollCreatePostRequest)
+            const localVarPath = `/poll/create`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(pollCreatePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -2462,6 +2673,16 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.credentialRequestPost(credentialRequestPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @param {PollCreatePostRequest} pollCreatePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.pollCreatePost(pollCreatePostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -2523,6 +2744,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: any): AxiosPromise<CredentialGetPost200Response> {
             return localVarFp.credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {PollCreatePostRequest} pollCreatePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: any): AxiosPromise<void> {
+            return localVarFp.pollCreatePost(pollCreatePostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -2596,6 +2826,17 @@ export class DefaultApi extends BaseAPI {
      */
     public credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {PollCreatePostRequest} pollCreatePostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).pollCreatePost(pollCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

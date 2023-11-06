@@ -9,11 +9,12 @@ import { Container } from "@mui/material";
 import Box from "@mui/material/Box";
 import React from "react";
 import { CommunityPage } from "./CommunityPage";
-import { redirectToLogin } from "@/auth/auth";
-import { fetchAndUpdateCredentials } from "@/credential/credential";
+import { redirectToLogin } from "@/request/auth";
+import { fetchAndUpdateCredentials } from "@/request/credential";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { showError } from "@/store/reducers/snackbar";
 import { genericError } from "../error/message";
+import { domainNameAndExtensionFromEmail } from "@/shared/shared";
 
 // for now we just assume there's one community from one unique email
 export function CommunitiesLayout() {
@@ -29,34 +30,30 @@ export function CommunitiesLayout() {
             return;
         }
 
-        const nameAndDomain = activeSessionEmail.split("@");
-        if (nameAndDomain.length === 2) {
-            const [_username, domain] = [nameAndDomain[0], nameAndDomain[1]];
-            const domainNameAndDomainExtension = domain.split(".");
-            if (domainNameAndDomainExtension.length === 2) {
-                const [domainName, _domainExtension] =
-                    domainNameAndDomainExtension;
-                setCommunityName(domainName.toUpperCase());
-                // setUsername(username);
-            }
+        const { domainName } =
+            domainNameAndExtensionFromEmail(activeSessionEmail);
+        if (domainName !== undefined) {
+            setCommunityName(domainName.toUpperCase());
         }
 
         // this will set the values in redux store and eventually update this page
         const fetchData = async function () {
-            try {
-                dispatch(openMainLoading());
-                await fetchAndUpdateCredentials();
-            } catch (e) {
-                dispatch(showError(genericError));
-            } finally {
-                dispatch(closeMainLoading());
+            if (activeSessionUserId !== undefined) {
+                try {
+                    dispatch(openMainLoading());
+                    await fetchAndUpdateCredentials(activeSessionUserId);
+                } catch (e) {
+                    dispatch(showError(genericError));
+                } finally {
+                    dispatch(closeMainLoading());
+                }
             }
         };
         fetchData();
         return () => {
             dispatch(closeMainLoading());
         };
-    }, [activeSessionEmail]);
+    }, [activeSessionEmail, activeSessionUserId]);
 
     return (
         <Container maxWidth="md" sx={{ backgroundColor: "#ffff" }}>

@@ -15,16 +15,22 @@ import type {
     SecretCredential,
     SecretCredentialType,
     SecretCredentialsPerType,
+    Countries,
 } from "../shared/types/zod.js";
 import { log } from "../app.js";
 import {
+    EssecCampus,
+    EssecProgram,
     UniversityType,
+    essecCampusStrToEnum,
     essecCampusToString,
+    essecProgramStrToEnum,
     essecProgramToString,
     minStudentYear,
+    universityStringToType,
     universityTypeToString,
 } from "../shared/types/university.js";
-import { type } from "os";
+import { domainFromEmail } from "@/shared/shared.js";
 
 enum WebDomainType {
     UNIVERSITY,
@@ -45,6 +51,7 @@ export function buildSecretCredential(
     blindCredentialRequest: BlindedCredentialRequest,
     userId: string,
     type: SecretCredentialType,
+    email: string,
     sk: SecretKey
 ): BlindedCredential {
     // create blinded credential from blind credential request
@@ -55,6 +62,7 @@ export function buildSecretCredential(
     const blindedCredBuilder =
         blindCredentialRequest.generateBlindedCredentialBuilder();
     blindedCredBuilder.subject = {
+        email: email,
         userId: userId,
         type: type,
     };
@@ -129,6 +137,7 @@ export function buildEmailCredential(
                 type: "object",
                 properties: {
                     email: { type: "string" },
+                    domain: { type: "string" },
                     type: { type: "string" },
                     typeSpecific: {
                         type: "object",
@@ -165,8 +174,14 @@ export function buildEmailCredential(
 
     // log.warn(`\n\n\n${{ ...toCredProperties(emailCredentialRequest) }}\n\n\n`);
 
+    const domain = domainFromEmail(email);
+    if (domain === undefined) {
+        throw new Error(`Unable to get domain from email '${email}'`);
+    }
+
     builder.subject = {
         email: email,
+        domain: domain,
         type: WebDomainType[emailType],
         typeSpecific: { ...toCredProperties(emailCredentialRequest) },
     };
@@ -346,4 +361,122 @@ export function addActiveSecretCredential(
         };
     }
     return secretCredentialsPerType;
+}
+
+export interface EssecPersona {
+    type?: UniversityType;
+    campus?: EssecCampus;
+    program?: EssecProgram;
+    countries?: Countries;
+    admissionYear?: number;
+}
+
+export interface PostAs {
+    domain: string;
+    type: string;
+    typeSpecific?: EssecPersona;
+}
+
+export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
+    if (!(SUBJECT_STR in attributesRevealed)) {
+        throw new Error(`No ${SUBJECT_STR} in revealed attributes`);
+    }
+    const subjectAttrs = attributesRevealed[SUBJECT_STR] as any;
+    if (
+        !(
+            "domain" in subjectAttrs ||
+            typeof subjectAttrs["domain"] !== "string"
+        )
+    ) {
+        throw new Error(`No 'domain' in revealed attributes`);
+    }
+    if (!("type" in subjectAttrs || typeof subjectAttrs["type"] !== "string")) {
+        throw new Error(`No 'type' in revealed attributes`);
+    }
+    const postAs: PostAs = {
+        domain: subjectAttrs["domain"] as string,
+        type: subjectAttrs["type"] as string,
+    };
+    if ("typeSpecific" in subjectAttrs) {
+        const typeSpecificAttrs = subjectAttrs["typeSpecific"] as any;
+        if (typeof typeSpecificAttrs !== "object") {
+            throw new Error(
+                `'typeSpecific' in revealed attributes is not an object`
+            );
+        }
+        if ("type" in typeSpecificAttrs) {
+            if (typeof typeSpecificAttrs["type"] !== "string") {
+                throw new Error(
+                    `'typeSpecific.type' in revealed attributes is not a string`
+                );
+            }
+            postAs.typeSpecific = {
+                type: universityStringToType(typeSpecificAttrs["type"]),
+            };
+        }
+        if ("campus" in typeSpecificAttrs) {
+            if (typeof typeSpecificAttrs["campus"] !== "string") {
+                throw new Error(
+                    `'typeSpecific.campus' in revealed attributes is not a string`
+                );
+            }
+            if (postAs.typeSpecific === undefined) {
+                postAs.typeSpecific = {
+                    campus: essecCampusStrToEnum(typeSpecificAttrs["campus"]),
+                };
+            } else {
+                postAs.typeSpecific.campus = essecCampusStrToEnum(
+                    typeSpecificAttrs["campus"]
+                );
+            }
+        }
+        if ("program" in typeSpecificAttrs) {
+            if (typeof typeSpecificAttrs["program"] !== "string") {
+                throw new Error(
+                    `'typeSpecific.program' in revealed attributes is not a string`
+                );
+            }
+            if (postAs.typeSpecific === undefined) {
+                postAs.typeSpecific = {
+                    program: essecProgramStrToEnum(
+                        typeSpecificAttrs["program"]
+                    ),
+                };
+            } else {
+                postAs.typeSpecific.program = essecProgramStrToEnum(
+                    typeSpecificAttrs["program"]
+                );
+            }
+        }
+        if ("countries" in typeSpecificAttrs) {
+            if (typeof typeSpecificAttrs["countries"] !== "object") {
+                throw new Error(
+                    `'typeSpecific.countries' in revealed attributes is not an object`
+                );
+            }
+            if (postAs.typeSpecific === undefined) {
+                postAs.typeSpecific = {
+                    countries: typeSpecificAttrs["countries"],
+                };
+            } else {
+                postAs.typeSpecific.countries = typeSpecificAttrs["countries"];
+            }
+        }
+        if ("admissionYear" in typeSpecificAttrs) {
+            if (typeof typeSpecificAttrs["admissionYear"] !== "number") {
+                throw new Error(
+                    `'typeSpecific.admissionYear' in revealed attributes is not a number`
+                );
+            }
+            if (postAs.typeSpecific === undefined) {
+                postAs.typeSpecific = {
+                    admissionYear: typeSpecificAttrs["admissionYear"],
+                };
+            } else {
+                postAs.typeSpecific.admissionYear =
+                    typeSpecificAttrs["admissionYear"];
+            }
+        }
+    }
+    return postAs;
 }

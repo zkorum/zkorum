@@ -21,6 +21,11 @@ import {
 import {
     initializeWasm,
     BBSPlusSecretKey as SecretKey,
+    Presentation,
+    BBS_PLUS_SIGNATURE_PARAMS_LABEL_BYTES as SIGNATURE_PARAMS_LABEL_BYTES,
+    BBSPlusSignatureParamsG1 as SignatureParams,
+    SUBJECT_STR,
+    PseudonymBases,
 } from "@docknetwork/crypto-wasm-ts";
 import { config, Environment, server } from "./app.js";
 import {
@@ -33,8 +38,21 @@ import {
     addActiveSecretCredential,
     hasActiveEmailCredential,
     hasActiveSecretCredential,
+    revealedAttributesToPostAs,
+    type PostAs,
 } from "./service/credential.js";
-import type { SecretCredential } from "./shared/types/zod.js";
+import type {
+    SecretCredential,
+    SecretCredentialType,
+} from "./shared/types/zod.js";
+import { toCID, decodeCID } from "./shared/common/cid.js";
+import isEqual from "lodash/isEqual.js";
+import { stringToBytes } from "./shared/common/arrbufs.js";
+import { scopeWith } from "./shared/common/util.js";
+import {
+    UniversityType,
+    universityStringToType,
+} from "./shared/types/university.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -54,6 +72,19 @@ server.register(fastifySwagger, {
             version: "1.0.0",
         },
         servers: [],
+        security: [
+            {
+                BearerAuth: [],
+            },
+        ],
+        components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                },
+            },
+        },
     },
     transform: jsonSchemaTransform,
     // You can also create transform with custom skiplist of endpoints that should not be included in the specification:
@@ -113,6 +144,8 @@ function getSecretKey(env: Environment): SecretKey {
         return new SecretKey(SecretKey.fromHex(skAsHex).bytes);
     }
 }
+const params = SignatureParams.generate(100, SIGNATURE_PARAMS_LABEL_BYTES);
+const pk = sk.generatePublicKeyG2(params);
 
 interface ExpectedDeviceStatus {
     userId?: string;
@@ -124,7 +157,7 @@ interface OptionsVerifyUcan {
     expectedDeviceStatus?: ExpectedDeviceStatus;
 }
 
-// auth functions
+// auth for account profile interaction
 // TODO: store UCAN in ucan table at the end and check whether UCAN has already been seen in the ucan table on the first place - if yes, throw unauthorized error and log the potential replay attack attempt.
 // ! WARNING: will not work if there are queryParams. We only use POST requests and JSON body requests (JSON-RPC style).
 async function verifyUCAN(
@@ -139,6 +172,7 @@ async function verifyUCAN(
 ): Promise<string> {
     const authHeader = request.headers.authorization;
     if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
+        console.log("no header");
         throw server.httpErrors.unauthorized();
     } else {
         const { scheme, hierPart } = httpUrlToResourcePointer(
@@ -214,6 +248,243 @@ async function verifyUCAN(
             }
         }
         return rootIssuerDid;
+    }
+}
+
+interface VerifyPresentationProps {
+    pres: unknown;
+    content: object;
+    expectedSecretCredentialType: SecretCredentialType;
+}
+
+function basesFromRevealedAttributes(
+    revealedAttributes: any,
+    subjectStr: string,
+    credentialNumber: number
+): string[] {
+    if (!(subjectStr in revealedAttributes)) {
+        throw server.httpErrors.unauthorized(
+            `Credential ${credentialNumber} must have subject attribute ${SUBJECT_STR}`
+        );
+    }
+    let scope = "base";
+    const typeSpecificStr = "typeSpecific";
+    const subjectAttribute = revealedAttributes[subjectStr];
+    if (typeSpecificStr in subjectAttribute) {
+        const typeSpecificAttribute = subjectAttribute[typeSpecificStr];
+        const typeStr = "type";
+        if (typeStr in typeSpecificAttribute) {
+            const universityType = universityStringToType(
+                typeSpecificAttribute[typeStr]
+            ); // this can throw an error
+            switch (universityType) {
+                case UniversityType.STUDENT:
+                    scope = scopeWith(scope, "student");
+                    break;
+                case UniversityType.FACULTY:
+                    //TODO
+                    break;
+                case UniversityType.ALUM:
+                    // TODO
+                    break;
+            }
+        }
+        const campusStr = "campus";
+        if (campusStr in typeSpecificAttribute) {
+            scope = scopeWith(scope, campusStr);
+        }
+        const programStr = "program";
+        if (programStr in typeSpecificAttribute) {
+            scope = scopeWith(scope, programStr);
+        }
+        const admissionYearStr = "admissionYear";
+        if (admissionYearStr in typeSpecificAttribute) {
+            scope = scopeWith(scope, admissionYearStr);
+        }
+        const countriesStr = "countries";
+        if (countriesStr in typeSpecificAttribute) {
+            scope = scopeWith(scope, countriesStr);
+        }
+    }
+    const basesForAttributes = PseudonymBases.generateBasesForAttributes(
+        2, // communityId ( == email here) + secret value = 2 attributes
+        stringToBytes(scope)
+    );
+    return PseudonymBases.decodeBasesForAttributes(basesForAttributes);
+}
+
+interface VerifyPresentationResult {
+    postAs: PostAs;
+    pseudonym: string;
+    presentation: Presentation;
+}
+
+// auth for anonymous posting
+// TODO: check for replay attacks
+async function verifyPresentation({
+    pres,
+    content,
+    expectedSecretCredentialType,
+}: VerifyPresentationProps): Promise<VerifyPresentationResult> {
+    if (pres === undefined || pres === null || typeof pres !== "object") {
+        throw server.httpErrors.unauthorized();
+    } else {
+        try {
+            // check that pres parses to presentation (note: pres cannot be bearer token because it is 36kB and exceeds HTTP header limit...)
+            const presentation = Presentation.fromJSON(pres);
+
+            // check that presentation verifies
+            const verifyResult = presentation.verify([pk, pk]);
+            if (!verifyResult.verified) {
+                throw server.httpErrors.createError(
+                    401,
+                    "Unauthorized",
+                    new Error(
+                        `Presentation does not verify: ${verifyResult.error}`
+                    )
+                );
+            }
+
+            // check that request body's CID === presentation's context
+            if (presentation.context === undefined) {
+                throw server.httpErrors.unauthorized("Context is missing");
+            }
+            const contextCID = decodeCID(presentation.context);
+            if (contextCID === null) {
+                throw server.httpErrors.unauthorized(
+                    "Presentation context is not a valid CID"
+                );
+            }
+            const expectedCID = await toCID(JSON.stringify(content));
+            if (!contextCID.equals(expectedCID)) {
+                throw server.httpErrors.unauthorized(
+                    "Body CID and context CID do not match"
+                );
+            }
+
+            // check that there are two credentials, the first one being email credential, the second one being a secret credential
+            if (presentation.spec.credentials.length !== 2) {
+                throw server.httpErrors.unauthorized(
+                    "The Presentation is expected to be created by two credentials"
+                );
+            }
+            // TODO check schema of credentials
+            // const schemaCred0 = CredentialSchema.fromJSON(
+            //     JSON.parse(presentation.spec.credentials[0].schema)
+            // );
+            // schemaCred0.flatten();
+            // const flattenedSchema0Attributes = schemaCred0.flatten()[0];
+            // server.log.info(flattenedSchema0Attributes.join(", "));
+
+            // check that there is ONE pseudonym associated with the right attributeNames and with the basesForAttributes expected from the attributes shared
+            if (presentation.spec.boundedPseudonyms === undefined) {
+                throw server.httpErrors.unauthorized(
+                    "The Presentation contains no anonymous pseudonym"
+                );
+            }
+            if (
+                presentation.spec.unboundedPseudonyms !== undefined &&
+                Object.keys(presentation.spec.unboundedPseudonyms).length > 0
+            ) {
+                throw server.httpErrors.unauthorized(
+                    `The Presentation must not contain any unbounded pseudonym`
+                );
+            }
+            const entries = Object.entries(presentation.spec.boundedPseudonyms);
+            if (entries.length != 1) {
+                throw server.httpErrors.unauthorized(
+                    `The Presentation must contain one and only one (bounded) anonymous pseudonym but has ${entries.length}`
+                );
+            }
+            const [pseudonym, { attributes, commitKey }] = entries[0];
+            const { basesForAttributes } = commitKey;
+            const attributesEntries = Object.entries(attributes);
+            if (attributesEntries.length !== 2) {
+                throw server.httpErrors.unauthorized(
+                    `The pseudonym must be created from attributes from the two credentials, but was created from ${attributesEntries.length} credentials`
+                );
+            }
+            // TODO used shared function to make sure the same thing is used in front and back
+            if (!isEqual(attributes[0], [`${SUBJECT_STR}.email`])) {
+                throw server.httpErrors.unauthorized(
+                    `The attribute from the first credential used to generate the pseudonym must be email`
+                );
+            }
+            // TODO used shared function clean this up to make sure the same thing is used in front and back
+            if (!isEqual(attributes[1], [`${SUBJECT_STR}.secret`])) {
+                throw server.httpErrors.unauthorized(
+                    `The attribute from the second credential used to generate the pseudonym must be secret`
+                );
+            }
+            const emailCredentialRevealedAttributes =
+                presentation.spec.credentials[0].revealedAttributes;
+            if (!(SUBJECT_STR in emailCredentialRevealedAttributes)) {
+                throw server.httpErrors.unauthorized(
+                    `Attribute '${SUBJECT_STR}' is not revealed in email credential`
+                );
+            }
+            const emailSubjectRevealedAttrs = emailCredentialRevealedAttributes[
+                SUBJECT_STR
+            ] as object;
+            if (!("type" in emailSubjectRevealedAttrs)) {
+                throw server.httpErrors.unauthorized(
+                    `Attribute 'type' is not revealed in email credential `
+                );
+            }
+            if (!("domain" in emailSubjectRevealedAttrs)) {
+                throw server.httpErrors.unauthorized(
+                    `Attribute 'domain' is not revealed in email credential `
+                );
+            }
+            const expectedBasesForAttributes = basesFromRevealedAttributes(
+                emailCredentialRevealedAttributes,
+                SUBJECT_STR,
+                0
+            );
+            if (!isEqual(basesForAttributes, expectedBasesForAttributes)) {
+                throw server.httpErrors.unauthorized(
+                    `The bases for attributes used to generate the anonymous pseudonym does not match with the revealed attributes`
+                );
+            }
+            const secretCredentialRevealedAttributes =
+                presentation.spec.credentials[1].revealedAttributes;
+            if (
+                !(SUBJECT_STR in secretCredentialRevealedAttributes) ||
+                !(
+                    "type" in
+                    (secretCredentialRevealedAttributes[SUBJECT_STR] as object)
+                ) ||
+                (secretCredentialRevealedAttributes as any)[SUBJECT_STR][
+                    "type"
+                ] !== expectedSecretCredentialType
+            ) {
+                throw server.httpErrors.unauthorized(
+                    `Second credential must reveal attribute '${SUBJECT_STR}.type' and be equal to 'global'`
+                );
+            }
+            return {
+                postAs: revealedAttributesToPostAs(
+                    emailCredentialRevealedAttributes
+                ),
+                pseudonym: pseudonym,
+                presentation: presentation,
+            };
+        } catch (e: unknown) {
+            if (typeof e === "string") {
+                throw server.httpErrors.unauthorized(e);
+            } else if (e instanceof Error) {
+                throw server.httpErrors.createError(401, "Unauthorized", e);
+            } else {
+                throw server.httpErrors.createError(
+                    401,
+                    "Unauthorized",
+                    new AggregateError(
+                        [e],
+                        `'pres' generic object cannot parse to Presentation object`
+                    )
+                );
+            }
+        }
     }
 }
 
@@ -383,6 +654,7 @@ server.after(() => {
                             db,
                             didWrite,
                             request.body.secretCredentialRequest,
+                            email,
                             type,
                             server.httpErrors,
                             sk
@@ -479,6 +751,29 @@ server.after(() => {
                     return userCredentials;
                 }
             }
+        },
+    });
+    server.withTypeProvider<ZodTypeProvider>().post("/poll/create", {
+        schema: {
+            body: Dto.createPollRequest,
+            // response: {
+            //     200: Dto.createPollRequest,
+            // },
+        },
+        handler: async (request, _reply) => {
+            const { pseudonym, postAs, presentation } =
+                await verifyPresentation({
+                    pres: request.body.pres,
+                    content: request.body.poll,
+                    expectedSecretCredentialType: "global",
+                });
+            await Service.createPoll({
+                db: db,
+                presentation: presentation,
+                poll: request.body.poll,
+                pseudonym: pseudonym,
+                postAs: postAs,
+            });
         },
     });
 });

@@ -1,7 +1,7 @@
 import type {
     Devices,
     EmailCredentialsPerEmail,
-    SecretCredentialsPerType,
+    UnblindedSecretCredentialsPerType,
 } from "@/shared/types/zod";
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
@@ -32,7 +32,7 @@ export interface SessionData {
     isRegistration?: boolean;
     syncingDevices?: Devices;
     emailCredentialsPerEmail?: EmailCredentialsPerEmail;
-    secretCredentialsPerType?: SecretCredentialsPerType;
+    unblindedSecretCredentialsPerType?: UnblindedSecretCredentialsPerType;
 }
 
 interface VerifyProps {
@@ -49,7 +49,7 @@ interface LoggedInProps {
     isRegistration: boolean;
     syncingDevices: Devices;
     emailCredentialsPerEmail: EmailCredentialsPerEmail;
-    secretCredentialsPerType: SecretCredentialsPerType;
+    unblindedSecretCredentialsPerType: UnblindedSecretCredentialsPerType;
 }
 
 interface EmailProps {
@@ -63,7 +63,7 @@ interface AuthenticatingProps {
 
 interface UpdateCredentialsProps {
     emailCredentialsPerEmail: EmailCredentialsPerEmail;
-    secretCredentialsPerType: SecretCredentialsPerType;
+    unblindedSecretCredentialsPerType: UnblindedSecretCredentialsPerType;
 }
 
 // Define the initial state using that type
@@ -134,8 +134,10 @@ export const sessionSlice = createSlice({
                     action.payload.syncingDevices;
                 state.sessions[action.payload.email].emailCredentialsPerEmail =
                     action.payload.emailCredentialsPerEmail;
-                state.sessions[action.payload.email].secretCredentialsPerType =
-                    action.payload.secretCredentialsPerType;
+                state.sessions[
+                    action.payload.email
+                ].unblindedSecretCredentialsPerType =
+                    action.payload.unblindedSecretCredentialsPerType;
             } else {
                 state.sessions[action.payload.email] = {
                     status: "logged-in",
@@ -146,8 +148,8 @@ export const sessionSlice = createSlice({
                     syncingDevices: action.payload.syncingDevices,
                     emailCredentialsPerEmail:
                         action.payload.emailCredentialsPerEmail,
-                    secretCredentialsPerType:
-                        action.payload.secretCredentialsPerType,
+                    unblindedSecretCredentialsPerType:
+                        action.payload.unblindedSecretCredentialsPerType,
                 };
             }
             state.activeSessionEmail = action.payload.email;
@@ -209,8 +211,8 @@ export const sessionSlice = createSlice({
                     action.payload.emailCredentialsPerEmail;
                 state.sessions[
                     state.activeSessionEmail
-                ].secretCredentialsPerType =
-                    action.payload.secretCredentialsPerType;
+                ].unblindedSecretCredentialsPerType =
+                    action.payload.unblindedSecretCredentialsPerType;
             }
         },
     },

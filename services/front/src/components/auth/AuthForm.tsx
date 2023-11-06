@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import React from "react";
 import { ZodType } from "../../shared/types/zod";
-import { handleOnAuthenticate } from "../../auth/auth";
+import { handleOnAuthenticate } from "@/request/auth";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";

@@ -36,6 +36,7 @@ import type {
     EmailCredentialsPerEmail,
     SecretCredentialsPerType,
 } from "@/shared/types/zod";
+import { unblindedSecretCredentialsPerTypeFrom } from "@/crypto/vc/credential";
 
 export async function authenticate(
     email: string,
@@ -214,7 +215,11 @@ export async function onLoggedIn({
             isRegistration: isRegistration,
             syncingDevices: syncingDevices, // adapts the welcome page if there is only one device in that list
             emailCredentialsPerEmail: emailCredentialsPerEmail, // adapts the welcome page whether it is empty or not
-            secretCredentialsPerType: secretCredentialsPerType,
+            unblindedSecretCredentialsPerType:
+                await unblindedSecretCredentialsPerTypeFrom(
+                    secretCredentialsPerType,
+                    userId
+                ),
         })
     );
 }

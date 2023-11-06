@@ -1,5 +1,7 @@
 import * as uint8arrays from "uint8arrays";
 
+import { fromString } from "uint8arrays/from-string";
+
 // Copyright ts-odd team
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
@@ -19,4 +21,8 @@ export function anyToUint8Array(data: any): Uint8Array {
 
 export function uint8ArrayToJSON(data: Uint8Array): object {
     return JSON.parse(uint8arrays.toString(data));
+}
+
+export function stringToBytes(data: string): Uint8Array {
+    return fromString(data);
 }

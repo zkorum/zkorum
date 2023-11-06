@@ -9,6 +9,7 @@ import {
     UniversityType,
 } from "./university.js";
 import { type TCountryCode } from "countries-list";
+import { MAX_LENGTH_QUESTION, MAX_LENGTH_OPTION } from "../shared.js";
 
 // Alpha only for ESSEC
 function isAuthorizedEmail(email: Email) {
@@ -71,6 +72,7 @@ export class ZodType {
     static userId = z.string().uuid().nonempty();
     static secretCredentialType = z.string().uuid().or(z.literal("global"));
     static blindedCredential = z.string(); // generic "object" does not exist :(, so for now we just encode it
+    static unblindedSecretCredential = z.string(); // generic "object" does not exist :(, so for now we just encode it
     static secretCredential = z
         .object({
             blindedCredential: ZodType.blindedCredential,
@@ -84,6 +86,16 @@ export class ZodType {
             revoked: z.array(ZodType.secretCredential),
         })
         .strict();
+    static unblindedSecretCredentials = z
+        .object({
+            active: ZodType.unblindedSecretCredential.optional(),
+            revoked: z.array(ZodType.unblindedSecretCredential),
+        })
+        .strict();
+    static unblindedSecretCredentialsPerType = z.record(
+        ZodType.secretCredentialType,
+        ZodType.unblindedSecretCredentials
+    );
     static secretCredentialsPerType = z.record(
         ZodType.secretCredentialType,
         ZodType.secretCredentials
@@ -360,13 +372,14 @@ export class ZodType {
         .int()
         .min(minStudentYear)
         .max(maxStudentYear);
+    static countries = z.record(ZodType.countryCode, z.boolean());
     static emailCredentialRequest = z.discriminatedUnion("type", [
         z
             .object({
                 type: z.literal(UniversityType.STUDENT),
                 campus: ZodType.essecCampus,
                 program: ZodType.essecProgram,
-                countries: z.record(ZodType.countryCode, z.boolean()),
+                countries: ZodType.countries,
                 admissionYear: ZodType.studentAdmissionYear,
             })
             .strict(),
@@ -394,14 +407,47 @@ export class ZodType {
         emailCredential: ZodType.emailCredential,
         blindedCredential: ZodType.blindedCredential,
     });
+    static eligibility = z
+        .object({
+            student: z.boolean().optional(),
+            alum: z.boolean().optional(),
+            faculty: z.boolean().optional(),
+            countries: z.array(z.enum(["FR", "INT"])).optional(),
+            campuses: z.array(ZodType.essecCampus).optional(),
+            programs: z.array(ZodType.essecProgram).optional(),
+            admissionYears: z.array(ZodType.studentAdmissionYear).optional(),
+        })
+        .strict();
+    static poll = z
+        .object({
+            question: z.string().max(MAX_LENGTH_QUESTION).nonempty(),
+            option1: z.string().max(MAX_LENGTH_OPTION).nonempty(),
+            option2: z.string().max(MAX_LENGTH_OPTION).nonempty(),
+            option3: z.string().max(MAX_LENGTH_OPTION).nonempty().optional(),
+            option4: z.string().max(MAX_LENGTH_OPTION).nonempty().optional(),
+            option5: z.string().max(MAX_LENGTH_OPTION).nonempty().optional(),
+            option6: z.string().max(MAX_LENGTH_OPTION).nonempty().optional(),
+            eligibility: ZodType.eligibility.optional(),
+        })
+        .strict();
 }
+
 type Email = z.infer<typeof ZodType.email>;
 export type Credentials = z.infer<typeof ZodType.credentials>;
 export type SecretCredentialType = z.infer<typeof ZodType.secretCredentialType>;
+export type UnblindedSecretCredential = z.infer<
+    typeof ZodType.unblindedSecretCredential
+>;
 export type SecretCredential = z.infer<typeof ZodType.secretCredential>;
 export type SecretCredentials = z.infer<typeof ZodType.secretCredentials>;
+export type UnblindedSecretCredentials = z.infer<
+    typeof ZodType.unblindedSecretCredentials
+>;
 export type SecretCredentialsPerType = z.infer<
     typeof ZodType.secretCredentialsPerType
+>;
+export type UnblindedSecretCredentialsPerType = z.infer<
+    typeof ZodType.unblindedSecretCredentialsPerType
 >;
 export type BlindedCredentialType = z.infer<typeof ZodType.blindedCredential>;
 export type SecretCredentialRequest = z.infer<
@@ -417,3 +463,6 @@ export type EmailCredentialRequest = z.infer<
 >;
 export type Devices = z.infer<typeof ZodType.devices>;
 export type StudentAdmissionYear = z.infer<typeof ZodType.studentAdmissionYear>;
+export type Eligibility = z.infer<typeof ZodType.eligibility>;
+export type Poll = z.infer<typeof ZodType.poll>;
+export type Countries = z.infer<typeof ZodType.countries>;

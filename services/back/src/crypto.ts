@@ -1,4 +1,13 @@
-import crypto from "crypto";
+import { log } from "./app.js";
+
+// see https://nodejs.org/api/crypto.html for reasons behind dynamic ESM import
+type CryptoModule = typeof import("node:crypto");
+let crypto: CryptoModule;
+try {
+    crypto = await import("node:crypto");
+} catch (err) {
+    log.error("crypto support is disabled!");
+}
 
 // Used to generate cryptographically random user identifier (for VC and voting purpose, to preserve privacy)
 export function generateRandomHex() {
