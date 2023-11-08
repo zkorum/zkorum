@@ -96,11 +96,7 @@ export async function createPoll(
     //     bearerToken,
     //     new Blob([bearerToken]).size
     // );
-    const _response = await DefaultApiFactory(
-        undefined,
-        undefined,
-        noAuthAxios
-    ).pollCreatePost({
+    await DefaultApiFactory(undefined, undefined, noAuthAxios).pollCreatePost({
         poll: pollContent,
         pres: presentation.toJSON(),
     });

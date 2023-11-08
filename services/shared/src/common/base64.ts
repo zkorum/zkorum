@@ -1,10 +1,10 @@
 import * as uint8arrays from "uint8arrays";
 
-export function base64UrlEncode(value: Uint8Array): string {
+export function encode(value: Uint8Array): string {
     return uint8arrays.toString(value, "base64url");
 }
 
-export function base64UrlDecode(str: string): Uint8Array {
+export function decode(str: string): Uint8Array {
     return uint8arrays.fromString(str, "base64url");
 }
 

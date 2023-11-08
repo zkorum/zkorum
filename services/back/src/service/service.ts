@@ -5,7 +5,15 @@ import {
     credentialEmailTable,
     credentialSecretTable,
     deviceTable,
+    eligibilityTable,
     emailTable,
+    personaTable,
+    pollTable,
+    pseudonymTable,
+    studentEligibilityTable,
+    studentPersonaTable,
+    universityEligibilityTable,
+    universityPersonaTable,
     userTable,
 } from "../schema.js";
 import {
@@ -30,6 +38,7 @@ import {
     buildEmailCredential,
     buildSecretCredential,
     parseSecretCredentialRequest,
+    type PostAs,
 } from "./credential.js";
 import type {
     Devices,
@@ -43,9 +52,18 @@ import type {
     Credentials,
     Poll,
 } from "../shared/types/zod.js";
-import { base64UrlEncode } from "../shared/common/base64.js";
+import { base64 } from "../shared/common/index.js";
 import { anyToUint8Array } from "../shared/common/arrbufs.js";
 import { BBSPlusBlindedCredentialRequest as BlindedCredentialRequest } from "@docknetwork/crypto-wasm-ts";
+import { toEncodedCID } from "@/shared/common/cid.js";
+import {
+    UniversityType,
+    essecCampusToString,
+    essecProgramToString,
+    universityTypeToString,
+} from "@/shared/types/university.js";
+import { type TCountryCode, countries as allCountries } from "countries-list";
+import isEqual from "lodash/isEqual.js";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -919,7 +937,7 @@ export class Service {
         } else {
             const emailCredentials: EmailCredentialsPerEmail = {};
             for (const result of results) {
-                const encodedCredential = base64UrlEncode(
+                const encodedCredential = base64.encode(
                     anyToUint8Array(result.emailCredential)
                 );
                 if (result.email in emailCredentials) {
@@ -959,7 +977,7 @@ export class Service {
             emailCredentialRequest,
             sk
         );
-        const encodedCredential = base64UrlEncode(
+        const encodedCredential = base64.encode(
             anyToUint8Array(credential.toJSON())
         );
         await db.insert(credentialEmailTable).values({
@@ -996,7 +1014,7 @@ export class Service {
             email,
             sk
         );
-        const encodedCredential = base64UrlEncode(
+        const encodedCredential = base64.encode(
             anyToUint8Array(credential.toJSON())
         );
         await db.insert(credentialSecretTable).values({
@@ -1072,7 +1090,7 @@ export class Service {
         } else {
             const secretCredentialsPerType: SecretCredentialsPerType = {};
             for (const result of results) {
-                const encodedCredential = base64UrlEncode(
+                const encodedCredential = base64.encode(
                     anyToUint8Array(result.blindedCredential)
                 );
                 if (
@@ -1187,7 +1205,282 @@ export class Service {
         presentation,
         poll,
         pseudonym,
-    }: CreatePollProps): Promise<void> {
-        // TODO
+        postAs,
+    }: CreatePollProps): Promise<string> {
+        const now = new Date();
+        const timestampedPresentation = {
+            timestamp: now.getTime(),
+            presentation: presentation,
+        }; // TODO: use a TimeStamp Authority Server to get this data from the presentation's CID, instead of creating it ourselves
+        const timestampedPresentationCID = await toEncodedCID(
+            timestampedPresentation
+        );
+        const optionalOptions = [
+            poll.option3,
+            poll.option4,
+            poll.option5,
+            poll.option6,
+        ];
+        const realOptionalOptions: string[] = optionalOptions.filter(
+            (option) => option !== undefined && option !== ""
+        ) as string[];
+
+        // TODO try select persona first, if exists just use that ID - or maybe add constraints in operational DB + add onConflictDoNothing
+        // TODO try to select pseudonym first, if exists verifies that it matches with persona, else log warning and update
+        // TODO try to select eligibility first, if exists just use that ID or maybe add constraints in operational DB + add onConflictDoNothing
+        await db.transaction(async (tx) => {
+            ////////////// PERSONA - POST AS ///////////
+            let universityPersonaId: number | undefined = undefined;
+            // TODO: switch case depending on value of postAs.type - here we only do work for universities
+            if (postAs.typeSpecific !== undefined) {
+                let studentPersonaId: number | undefined = undefined;
+                let alumPersonaId: number | undefined = undefined;
+                let facultyPersonaId: number | undefined = undefined;
+                switch (postAs.typeSpecific.type) {
+                    case UniversityType.STUDENT:
+                        if (
+                            postAs.typeSpecific.campus !== undefined ||
+                            postAs.typeSpecific.program !== undefined ||
+                            postAs.typeSpecific.admissionYear !== undefined
+                        ) {
+                            const insertedStudentPersona = await tx
+                                .insert(studentPersonaTable)
+                                .values({
+                                    campus:
+                                        postAs.typeSpecific.campus !== undefined
+                                            ? essecCampusToString(
+                                                  postAs.typeSpecific.campus
+                                              )
+                                            : undefined,
+                                    program:
+                                        postAs.typeSpecific.program !==
+                                        undefined
+                                            ? essecProgramToString(
+                                                  postAs.typeSpecific.program
+                                              )
+                                            : undefined,
+                                    admissionYear:
+                                        postAs.typeSpecific.admissionYear !==
+                                        undefined
+                                            ? postAs.typeSpecific.admissionYear
+                                            : undefined,
+                                })
+                                .returning({
+                                    insertedId: studentPersonaTable.id,
+                                });
+                            studentPersonaId =
+                                insertedStudentPersona[0].insertedId;
+                        }
+                        break;
+                    case UniversityType.ALUM:
+                        // TODO
+                        break;
+                    case UniversityType.FACULTY:
+                        // TODO
+                        break;
+                }
+                let personaCountries = undefined;
+                if (postAs.typeSpecific.countries) {
+                    const postAsCountries = postAs.typeSpecific.countries;
+                    personaCountries = Object.keys(
+                        postAs.typeSpecific.countries
+                    ).filter(
+                        (countryCode) =>
+                            postAsCountries[countryCode as TCountryCode] ===
+                            true
+                    );
+                }
+                const insertedUniversityPersona = await tx
+                    .insert(universityPersonaTable)
+                    .values({
+                        type: universityTypeToString(postAs.typeSpecific.type),
+                        countries: personaCountries,
+                        studentPersonaId: studentPersonaId,
+                        alumPersonaId: alumPersonaId,
+                        facultyPersonaId: facultyPersonaId,
+                    })
+                    .returning({ insertedId: personaTable.id });
+                universityPersonaId = insertedUniversityPersona[0].insertedId;
+            }
+            const insertedPersona = await tx
+                .insert(personaTable)
+                .values({
+                    domain: postAs.domain,
+                    type: postAs.type,
+                    universityPersonaId: universityPersonaId,
+                })
+                .returning({ insertedId: personaTable.id });
+            const insertedAuthor = await tx
+                .insert(pseudonymTable)
+                .values({
+                    pseudonym: pseudonym,
+                    personaId: insertedPersona[0].insertedId, // TODO: maybe we could allow posting just as a member of ZKorum? Then this could be undefined
+                })
+                .returning({ insertedId: pseudonymTable.id })
+                .onConflictDoUpdate({
+                    target: pseudonymTable.pseudonym,
+                    set: { personaId: 1, updatedAt: now },
+                }); // TODO: we want to select instead of insert in that case, and make sure the personaId was the same or log a warning and update
+            /////////////////////////////////////////////////////////////////////////////////////////
+
+            //////////////////////// ELIGIBILITY ///////////////////////////////////////////////////
+            let eligibilityId: number | undefined = undefined;
+            let universityEligibilityId: number | undefined = undefined;
+            let eligibilityTypes: string[] = [];
+            let eligibilityCountries: TCountryCode[] = [];
+            let studentEligibilityId: number | undefined = undefined;
+            let alumEligibilityId: number | undefined = undefined;
+            let facultyEligibilityId: number | undefined = undefined;
+            if (poll.eligibility !== undefined) {
+                if (
+                    poll.eligibility.countries !== undefined &&
+                    poll.eligibility.countries.length == 1
+                ) {
+                    if (isEqual(poll.eligibility.countries, ["FR"])) {
+                        eligibilityCountries = ["FR"];
+                    } else {
+                        const allCountriesButFrance = Object.keys(
+                            allCountries
+                        ).filter((country) => country !== "FR");
+                        eligibilityCountries =
+                            allCountriesButFrance as TCountryCode[];
+                    }
+                }
+                if (poll.eligibility.student !== undefined) {
+                    eligibilityTypes.push(
+                        universityTypeToString(UniversityType.STUDENT)
+                    );
+                    if (
+                        (poll.eligibility.admissionYears !== undefined &&
+                            poll.eligibility.admissionYears.length > 0) ||
+                        (poll.eligibility.campuses !== undefined &&
+                            poll.eligibility.campuses.length > 0) ||
+                        (poll.eligibility.programs !== undefined &&
+                            poll.eligibility.programs.length > 0)
+                    ) {
+                        const insertedStudentEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
+                            .insert(studentEligibilityTable)
+                            .values({
+                                campuses:
+                                    poll.eligibility.campuses !== undefined
+                                        ? poll.eligibility.campuses.map(
+                                              (campus) =>
+                                                  essecCampusToString(campus)
+                                          )
+                                        : undefined,
+                                programs:
+                                    poll.eligibility.programs !== undefined
+                                        ? poll.eligibility.programs.map(
+                                              (program) =>
+                                                  essecProgramToString(program)
+                                          )
+                                        : undefined,
+                                admissionYears:
+                                    poll.eligibility.admissionYears !==
+                                    undefined
+                                        ? poll.eligibility.admissionYears
+                                        : undefined,
+                            })
+                            .returning({ insertedId: eligibilityTable.id });
+                        studentEligibilityId =
+                            insertedStudentEligibility[0].insertedId;
+                    }
+                    if (poll.eligibility.alum !== undefined) {
+                        eligibilityTypes.push(
+                            universityTypeToString(UniversityType.ALUM)
+                        );
+                        // TODO ALUM info
+                    }
+                    if (poll.eligibility.faculty !== undefined) {
+                        eligibilityTypes.push(
+                            universityTypeToString(UniversityType.FACULTY)
+                        );
+                    }
+                    // TODO FACULTY info
+                }
+            }
+            if (
+                eligibilityTypes.length !== 0 ||
+                eligibilityCountries.length !== 0
+            ) {
+                const insertedUniversityEligibility = await tx
+                    .insert(universityEligibilityTable)
+                    .values({
+                        type:
+                            eligibilityTypes.length !== 0
+                                ? eligibilityTypes
+                                : undefined,
+                        countries:
+                            eligibilityCountries.length !== 0
+                                ? eligibilityCountries
+                                : undefined,
+                        studentEligibilityId: studentEligibilityId,
+                        alumEligibilityId: alumEligibilityId,
+                        facultyEligibilityId: facultyEligibilityId,
+                    })
+                    .returning({ insertedId: universityEligibilityTable.id });
+                universityEligibilityId =
+                    insertedUniversityEligibility[0].insertedId;
+            }
+            const insertedEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
+                .insert(eligibilityTable)
+                .values({
+                    domain: [postAs.domain], // for now users can only ask questions to people in their own community
+                    type: [postAs.type], // for now users can only ask questions to people in their own community
+                    universityEligibilityId: universityEligibilityId,
+                })
+                .returning({ insertedId: eligibilityTable.id });
+
+            /////////////////////////////////////////////////////////////////////////////////////////
+
+            await tx.insert(pollTable).values({
+                presentation: presentation.toJSON(),
+                timestampedPresentationCID: timestampedPresentationCID,
+                question: poll.question,
+                option1: poll.option1,
+                option2: poll.option2,
+                option3:
+                    realOptionalOptions.length >= 1
+                        ? realOptionalOptions[0]
+                        : undefined,
+                option4:
+                    realOptionalOptions.length >= 2
+                        ? realOptionalOptions[1]
+                        : undefined,
+                option5:
+                    realOptionalOptions.length >= 3
+                        ? realOptionalOptions[2]
+                        : undefined,
+                option6:
+                    realOptionalOptions.length >= 4
+                        ? realOptionalOptions[3]
+                        : undefined,
+                authorId: insertedAuthor[0].insertedId,
+                eligibilityId: insertedEligibility[0].insertedId,
+            });
+        });
+        // TODO: broadcast timestampedPresentation to Nostr or custom libp2p node
+        return timestampedPresentationCID;
     }
 }
+// id: uuid("id").primaryKey(),
+// presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
+// // TODO add the other fields - maybe create tables for author, postAs, eligibility and pollContent
+// timestampedPresentationCID: char("time_pres_cid", { length: 61 }) // see shared/test/common/cid.test.ts for length
+//     .notNull()
+//     .unique(), // CID calculated from stringified object representing pres+created_at.
+// authorId: uuid("author_id") // "postAs"
+//     .notNull()
+//     .references(() => pseudonymTable.id), // the author of the poll
+// eligibilityId: uuid("eligibility_id")
+//     .notNull()
+//     .references(() => eligibilityTable.id),
+// question: varchar("question", { length: MAX_LENGTH_QUESTION }).notNull(),
+// option1: varchar("option1", { length: MAX_LENGTH_OPTION }).notNull(),
+// option2: varchar("option2", { length: MAX_LENGTH_OPTION }).notNull(),
+// option3: varchar("option3", { length: MAX_LENGTH_OPTION }),
+// option4: varchar("option4", { length: MAX_LENGTH_OPTION }),
+// option5: varchar("option5", { length: MAX_LENGTH_OPTION }),
+// option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
+// createdAt: timestamp("created_at").defaultNow().notNull(),
+// updatedAt: timestamp("updated_at").defaultNow().notNull(),

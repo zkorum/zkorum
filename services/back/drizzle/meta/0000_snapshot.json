@@ -1,9 +1,69 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "2ba9475b-0c5d-43bd-84af-c14b3d471b15",
+  "id": "d60182ce-9409-4cbc-8caf-97767a12b8ac",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
+    "alum_eligibility": {
+      "name": "alum_eligibility",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "alum_persona": {
+      "name": "alum_persona",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "auth_attempt": {
       "name": "auth_attempt",
       "schema": "",
@@ -97,7 +157,7 @@
           "name": "credential",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_revoked": {
           "name": "is_revoked",
@@ -164,7 +224,7 @@
         },
         "credential": {
           "name": "credential",
-          "type": "text",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
@@ -225,15 +285,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "credential_secret_credential_unique": {
-          "name": "credential_secret_credential_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "credential"
-          ]
-        }
-      }
+      "uniqueConstraints": {}
     },
     "device": {
       "name": "device",
@@ -311,6 +363,68 @@
         }
       }
     },
+    "eligibility": {
+      "name": "eligibility",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "domain": {
+          "name": "domain",
+          "type": "varchar(255)[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "credential_type[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "university_eligibility_id": {
+          "name": "university_eligibility_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "eligibility_university_eligibility_id_university_eligibility_id_fk": {
+          "name": "eligibility_university_eligibility_id_university_eligibility_id_fk",
+          "tableFrom": "eligibility",
+          "tableTo": "university_eligibility",
+          "columnsFrom": [
+            "university_eligibility_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "email": {
       "name": "email",
       "schema": "",
@@ -356,6 +470,626 @@
           "tableTo": "user",
           "columnsFrom": [
             "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "faculty_eligibility": {
+      "name": "faculty_eligibility",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "faculty_persona": {
+      "name": "faculty_persona",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "persona": {
+      "name": "persona",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "domain": {
+          "name": "domain",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "credential_type",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "university_persona_id": {
+          "name": "university_persona_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "persona_university_persona_id_university_persona_id_fk": {
+          "name": "persona_university_persona_id_university_persona_id_fk",
+          "tableFrom": "persona",
+          "tableTo": "university_persona",
+          "columnsFrom": [
+            "university_persona_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "poll": {
+      "name": "poll",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "presentation": {
+          "name": "presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "time_pres_cid": {
+          "name": "time_pres_cid",
+          "type": "char(61)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eligibility_id": {
+          "name": "eligibility_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question": {
+          "name": "question",
+          "type": "varchar(140)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "option1": {
+          "name": "option1",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "option2": {
+          "name": "option2",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "option3": {
+          "name": "option3",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "option4": {
+          "name": "option4",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "option5": {
+          "name": "option5",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "option6": {
+          "name": "option6",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "poll_author_id_pseudonym_id_fk": {
+          "name": "poll_author_id_pseudonym_id_fk",
+          "tableFrom": "poll",
+          "tableTo": "pseudonym",
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "poll_eligibility_id_eligibility_id_fk": {
+          "name": "poll_eligibility_id_eligibility_id_fk",
+          "tableFrom": "poll",
+          "tableTo": "eligibility",
+          "columnsFrom": [
+            "eligibility_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "poll_time_pres_cid_unique": {
+          "name": "poll_time_pres_cid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "time_pres_cid"
+          ]
+        }
+      }
+    },
+    "pseudonym": {
+      "name": "pseudonym",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "pseudonym": {
+          "name": "pseudonym",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "persona_id": {
+          "name": "persona_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "pseudonym_persona_id_persona_id_fk": {
+          "name": "pseudonym_persona_id_persona_id_fk",
+          "tableFrom": "pseudonym",
+          "tableTo": "persona",
+          "columnsFrom": [
+            "persona_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "pseudonym_pseudonym_unique": {
+          "name": "pseudonym_pseudonym_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "pseudonym"
+          ]
+        },
+        "pseudonym_persona_id_unique": {
+          "name": "pseudonym_persona_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "persona_id"
+          ]
+        }
+      }
+    },
+    "student_eligibility": {
+      "name": "student_eligibility",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "campus": {
+          "name": "campus",
+          "type": "varchar(255)[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "program": {
+          "name": "program",
+          "type": "varchar(255)[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "admissionYear": {
+          "name": "admissionYear",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "student_persona": {
+      "name": "student_persona",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "campus": {
+          "name": "campus",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "program": {
+          "name": "program",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "admissionYear": {
+          "name": "admissionYear",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "university_eligibility": {
+      "name": "university_eligibility",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(255)[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "countries": {
+          "name": "countries",
+          "type": "char(2)[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "student_eligibility_id": {
+          "name": "student_eligibility_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alum_eligibility_id": {
+          "name": "alum_eligibility_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "faculty_eligibility_id": {
+          "name": "faculty_eligibility_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "university_eligibility_student_eligibility_id_student_eligibility_id_fk": {
+          "name": "university_eligibility_student_eligibility_id_student_eligibility_id_fk",
+          "tableFrom": "university_eligibility",
+          "tableTo": "student_eligibility",
+          "columnsFrom": [
+            "student_eligibility_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "university_eligibility_alum_eligibility_id_alum_eligibility_id_fk": {
+          "name": "university_eligibility_alum_eligibility_id_alum_eligibility_id_fk",
+          "tableFrom": "university_eligibility",
+          "tableTo": "alum_eligibility",
+          "columnsFrom": [
+            "alum_eligibility_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "university_eligibility_faculty_eligibility_id_faculty_eligibility_id_fk": {
+          "name": "university_eligibility_faculty_eligibility_id_faculty_eligibility_id_fk",
+          "tableFrom": "university_eligibility",
+          "tableTo": "faculty_eligibility",
+          "columnsFrom": [
+            "faculty_eligibility_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "university_persona": {
+      "name": "university_persona",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "countries": {
+          "name": "countries",
+          "type": "char(2)[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "student_persona_id": {
+          "name": "student_persona_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alum_persona_id": {
+          "name": "alum_persona_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "faculty_persona_id": {
+          "name": "faculty_persona_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "university_persona_student_persona_id_student_persona_id_fk": {
+          "name": "university_persona_student_persona_id_student_persona_id_fk",
+          "tableFrom": "university_persona",
+          "tableTo": "student_persona",
+          "columnsFrom": [
+            "student_persona_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "university_persona_alum_persona_id_alum_persona_id_fk": {
+          "name": "university_persona_alum_persona_id_alum_persona_id_fk",
+          "tableFrom": "university_persona",
+          "tableTo": "alum_persona",
+          "columnsFrom": [
+            "alum_persona_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "university_persona_faculty_persona_id_faculty_persona_id_fk": {
+          "name": "university_persona_faculty_persona_id_faculty_persona_id_fk",
+          "tableFrom": "university_persona",
+          "tableTo": "faculty_persona",
+          "columnsFrom": [
+            "faculty_persona_id"
           ],
           "columnsTo": [
             "id"
@@ -419,6 +1153,13 @@
         "register": "register",
         "login_known_device": "login_known_device",
         "login_new_device": "login_new_device"
+      }
+    },
+    "credential_type": {
+      "name": "credential_type",
+      "values": {
+        "UNIVERSITY": "UNIVERSITY",
+        "COMPANY": "COMPANY"
       }
     },
     "email_type": {

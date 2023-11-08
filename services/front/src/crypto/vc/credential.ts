@@ -1,6 +1,6 @@
 import { randomNumbers } from "@/crypto/ucan/implementation/browser";
 import { anyToUint8Array, uint8ArrayToJSON } from "@/shared/common/arrbufs";
-import { base64UrlDecode, base64UrlEncode } from "@/shared/common/base64";
+import { base64 } from "@/shared/common/index";
 import type {
     EmailCredentialsPerEmail,
     SecretCredential,
@@ -87,7 +87,7 @@ function newReqBuilder(
 
 export async function buildBlindedSecretCredential() {
     await maybeInitWasm();
-    const secret = base64UrlEncode(randomNumbers({ amount: 32 }));
+    const secret = base64.encode(randomNumbers({ amount: 32 }));
     const blindedSubject = {
         secret: secret,
     };
@@ -105,7 +105,7 @@ async function unblindedCredentialFrom(
     userId: string
 ): Promise<UnblindedSecretCredential> {
     const blindedCredential = BlindedCredential.fromJSON(
-        uint8ArrayToJSON(base64UrlDecode(secretCredential.blindedCredential))
+        uint8ArrayToJSON(base64.decode(secretCredential.blindedCredential))
     );
     const blindedSubjectBinary = await decodeAndDecrypt(
         secretCredential.encryptedBlindedSubject,
@@ -121,7 +121,7 @@ async function unblindedCredentialFrom(
         blindedSubject,
         blinding
     );
-    return base64UrlEncode(anyToUint8Array(unblindedCredential.toJSON()));
+    return base64.encode(anyToUint8Array(unblindedCredential.toJSON()));
 }
 
 export async function unblindedSecretCredentialsPerTypeFrom(
@@ -167,7 +167,7 @@ export async function encryptAndEncode(
         symmKey,
         DEFAULT_AES_ALG
     );
-    return base64UrlEncode(encryptedData);
+    return base64.encode(encryptedData);
 }
 
 export async function decodeAndDecrypt(
@@ -175,7 +175,7 @@ export async function decodeAndDecrypt(
     userId: string
 ): Promise<Uint8Array> {
     const symmKey = await cryptoStore.keystore.exportSymmKey(userId);
-    const decodedEncryptedData = base64UrlDecode(encodedEncryptedData);
+    const decodedEncryptedData = base64.decode(encodedEncryptedData);
     const decryptedData = await cryptoStore.aes.decrypt(
         decodedEncryptedData,
         symmKey,
@@ -193,15 +193,15 @@ export async function decryptEmailCredentials(
     encryptedCredentials: string
 ): Promise<EmailCredentialsPerEmail> {
     const symmKey = await cryptoStore.keystore.decrypt(
-        base64UrlDecode(encryptedSymmKey),
+        base64.decode(encryptedSymmKey),
         userId
     );
     const decryptedCredential = await cryptoStore.aes.decrypt(
-        base64UrlDecode(encryptedCredentials),
+        base64.decode(encryptedCredentials),
         symmKey,
         DEFAULT_AES_ALG
     );
-    const emailCredentialsPerEmailStr = base64UrlEncode(decryptedCredential);
+    const emailCredentialsPerEmailStr = base64.encode(decryptedCredential);
     const emailCredentialsPerEmail: EmailCredentialsPerEmail = {};
     return Object.assign(
         emailCredentialsPerEmail,
@@ -218,13 +218,13 @@ export async function encryptEmailCredentials(
     emailCredentials: EmailCredentialsPerEmail
 ): Promise<string> {
     const symmKey = await cryptoStore.keystore.decrypt(
-        base64UrlDecode(encryptedSymmKey),
+        base64.decode(encryptedSymmKey),
         userId
     );
     const encryptedEmailCredentials = await cryptoStore.aes.encrypt(
-        base64UrlDecode(JSON.stringify(emailCredentials)),
+        base64.decode(JSON.stringify(emailCredentials)),
         symmKey,
         DEFAULT_AES_ALG
     );
-    return base64UrlEncode(encryptedEmailCredentials);
+    return base64.encode(encryptedEmailCredentials);
 }

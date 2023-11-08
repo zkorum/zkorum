@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "./store";
 import { uint8ArrayToJSON } from "@/shared/common/arrbufs";
-import { base64UrlDecode } from "@/shared/common/base64";
+import { base64 } from "@/shared/common/index";
 import { BBSPlusCredential as Credential } from "@docknetwork/crypto-wasm-ts";
 import type { SessionStatus } from "./reducers/session";
 
@@ -92,7 +92,7 @@ export const selectActiveEmailCredential = (
         } else {
             try {
                 return Credential.fromJSON(
-                    uint8ArrayToJSON(base64UrlDecode(encodedEmailCredential))
+                    uint8ArrayToJSON(base64.decode(encodedEmailCredential))
                 );
             } catch (e) {
                 // TODO: better error handling
@@ -144,7 +144,7 @@ export const selectActiveGlobalSecretCredential = (
         } else {
             try {
                 const credential = Credential.fromJSON(
-                    uint8ArrayToJSON(base64UrlDecode(unblindedSecretCredential))
+                    uint8ArrayToJSON(base64.decode(unblindedSecretCredential))
                 );
                 return credential;
             } catch (e) {

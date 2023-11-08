@@ -5,4 +5,5 @@
 import * as arrbufs from "./arrbufs.js";
 import * as base64 from "./base64.js";
 import * as util from "./util.js";
-export { arrbufs, base64, util };
+import * as cid from "./cid.js";
+export { arrbufs, base64, cid, util };

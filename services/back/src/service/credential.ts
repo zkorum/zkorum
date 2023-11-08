@@ -32,19 +32,15 @@ import {
 } from "../shared/types/university.js";
 import { domainFromEmail } from "@/shared/shared.js";
 
-enum WebDomainType {
-    UNIVERSITY,
-    // COMPANY
-    // ADMINISTRATION / PUBLIC_SECTOR
-    // ...
-}
+// duplicate from DB
+export type WebDomainType = "UNIVERSITY" | "COMPANY"; // ADMINISTRATION / PUBLIC_SECTOR...
 
 function getTypeFromEmail(_email: string): WebDomainType {
     // TODO: have list of known domain names for each type in a static file or in the DB
     // load it on startup, pass it here and compare with fqdn
     // const fqdn = email.trim().toLowerCase().split("@")[1]
     // 1st version only support university
-    return WebDomainType.UNIVERSITY;
+    return "UNIVERSITY";
 }
 
 export function buildSecretCredential(
@@ -130,7 +126,7 @@ export function buildEmailCredential(
 ): Credential {
     const emailType = getTypeFromEmail(email);
     const schema = CredentialSchema.essential();
-    // TODO: pass schema as param depending on email type (university, company...etc)
+    // TODO: pass schema as param depending on email type (university, company...etc) & specific domain that could override the default values
     switch (emailCredentialRequest.type) {
         case UniversityType.STUDENT:
             schema.properties[SUBJECT_STR] = {
@@ -182,7 +178,7 @@ export function buildEmailCredential(
     builder.subject = {
         email: email,
         domain: domain,
-        type: WebDomainType[emailType],
+        type: emailType,
         typeSpecific: { ...toCredProperties(emailCredentialRequest) },
     };
     return builder.sign(sk);
@@ -363,8 +359,8 @@ export function addActiveSecretCredential(
     return secretCredentialsPerType;
 }
 
-export interface EssecPersona {
-    type?: UniversityType;
+export interface UniversityPersona {
+    type: UniversityType; // if not typeSpecific not null, we want to share at least whether the user is student or alum or something else
     campus?: EssecCampus;
     program?: EssecProgram;
     countries?: Countries;
@@ -373,8 +369,8 @@ export interface EssecPersona {
 
 export interface PostAs {
     domain: string;
-    type: string;
-    typeSpecific?: EssecPersona;
+    type: WebDomainType;
+    typeSpecific?: UniversityPersona; // TODO could be another persona type such as CompanyPersona
 }
 
 export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
@@ -394,8 +390,9 @@ export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
         throw new Error(`No 'type' in revealed attributes`);
     }
     const postAs: PostAs = {
+        // TODO maybe double check types here
         domain: subjectAttrs["domain"] as string,
-        type: subjectAttrs["type"] as string,
+        type: subjectAttrs["type"] as WebDomainType,
     };
     if ("typeSpecific" in subjectAttrs) {
         const typeSpecificAttrs = subjectAttrs["typeSpecific"] as any;
