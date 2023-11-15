@@ -16,6 +16,12 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "credential_secret_type" AS ENUM('unbound', 'timebound');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "alum_eligibility" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -45,7 +51,16 @@ CREATE TABLE IF NOT EXISTS "auth_attempt" (
 CREATE TABLE IF NOT EXISTS "credential_email" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"credential" jsonb NOT NULL,
-	"is_revoked" boolean DEFAULT false,
+	"is_revoked" boolean DEFAULT false NOT NULL,
+	"email" varchar(254) NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "credential_form" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"credential" jsonb NOT NULL,
+	"is_revoked" boolean DEFAULT false NOT NULL,
 	"email" varchar(254) NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
@@ -53,11 +68,11 @@ CREATE TABLE IF NOT EXISTS "credential_email" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "credential_secret" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"poll_id" uuid,
+	"type" "credential_secret_type" NOT NULL,
 	"credential" jsonb NOT NULL,
 	"encrypted_blinding" text NOT NULL,
 	"encrypted_blinded_subject" text NOT NULL,
-	"is_revoked" boolean DEFAULT false,
+	"is_revoked" boolean DEFAULT false NOT NULL,
 	"user_id" uuid NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
@@ -182,7 +197,7 @@ CREATE TABLE IF NOT EXISTS "university_persona" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"uid" char(32) NOT NULL,
+	"uid" char(64) NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "user_uid_unique" UNIQUE("uid")
@@ -190,6 +205,12 @@ CREATE TABLE IF NOT EXISTS "user" (
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "credential_email" ADD CONSTRAINT "credential_email_email_email_email_fk" FOREIGN KEY ("email") REFERENCES "email"("email") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "credential_form" ADD CONSTRAINT "credential_form_email_email_email_fk" FOREIGN KEY ("email") REFERENCES "email"("email") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

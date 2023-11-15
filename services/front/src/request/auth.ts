@@ -14,6 +14,7 @@ import {
     type AuthAuthenticatePost200Response,
     type AuthVerifyOtpPost200Response,
     type AuthAuthenticatePost409Response,
+    AuthVerifyOtpPost200ResponseReasonEnum,
 } from "../api/api";
 import {
     activeSessionUcanAxios,
@@ -29,14 +30,19 @@ import {
 import { closeMainLoading, openMainLoading } from "../store/reducers/loading";
 import {
     copyKeypairsIfDestIsEmpty,
+    generateAndEncryptSymmKey,
     storeSymmKeyLocally,
 } from "@/crypto/ucan/ucan";
 import type {
     Devices,
     EmailCredentialsPerEmail,
+    SecretCredentialRequest,
     SecretCredentialsPerType,
 } from "@/shared/types/zod";
-import { unblindedSecretCredentialsPerTypeFrom } from "@/crypto/vc/credential";
+import {
+    buildSecretCredentialRequest,
+    unblindedSecretCredentialsPerTypeFrom,
+} from "@/crypto/vc/credential";
 
 export async function authenticate(
     email: string,
@@ -101,6 +107,8 @@ export async function authenticate(
                         syncingDevices: auth409.syncingDevices,
                         emailCredentialsPerEmail:
                             auth409.emailCredentialsPerEmail,
+                        formCredentialsPerEmail:
+                            auth409.formCredentialsPerEmail,
                         secretCredentialsPerType:
                             auth409.secretCredentialsPerType,
                     });
@@ -120,19 +128,73 @@ export async function authenticate(
     }
 }
 
+interface VerifyOtpResult {
+    verifyOtpData: AuthVerifyOtpPost200Response;
+    tempEncryptedSymmKey: string | undefined;
+}
+
 export async function verifyOtp(
     code: number,
-    encryptedSymmKey: string
-): Promise<AuthVerifyOtpPost200Response> {
-    const verifyOtpResult = await DefaultApiFactory(
+    pendingEmail: string,
+    userId?: string
+): Promise<VerifyOtpResult> {
+    let unboundSecretCredentialRequest: SecretCredentialRequest | undefined =
+        undefined;
+    let timeboundSecretCredentialRequest: SecretCredentialRequest | undefined =
+        undefined;
+    let tempEncryptedSymmKey: string | undefined = undefined;
+    let tempExportedSymmKey: Uint8Array | undefined = undefined;
+    if (userId === undefined) {
+        const { exportedSymmKey, encodedEncryptedSymmKey } =
+            await generateAndEncryptSymmKey(pendingEmail);
+        tempEncryptedSymmKey = encodedEncryptedSymmKey;
+        tempExportedSymmKey = exportedSymmKey;
+        unboundSecretCredentialRequest =
+            await buildSecretCredentialRequest(tempExportedSymmKey);
+        timeboundSecretCredentialRequest =
+            await buildSecretCredentialRequest(tempExportedSymmKey);
+    }
+    let verifyOtpResult = await DefaultApiFactory(
         undefined,
         undefined,
         pendingSessionUcanAxios
     ).authVerifyOtpPost({
         code: code,
-        encryptedSymmKey: encryptedSymmKey,
+        encryptedSymmKey: tempEncryptedSymmKey,
+        unboundSecretCredentialRequest: unboundSecretCredentialRequest,
+        timeboundSecretCredentialRequest: timeboundSecretCredentialRequest,
     });
-    return verifyOtpResult.data;
+    if (
+        verifyOtpResult.data.success === false &&
+        (verifyOtpResult.data.reason ===
+            AuthVerifyOtpPost200ResponseReasonEnum.SecretCredentialRequestsRequired ||
+            verifyOtpResult.data.reason ===
+                AuthVerifyOtpPost200ResponseReasonEnum.UnboundSecretCredentialRequestRequired ||
+            verifyOtpResult.data.reason ===
+                AuthVerifyOtpPost200ResponseReasonEnum.TimeboundSecretCredentialRequestRequired ||
+            verifyOtpResult.data.reason ===
+                AuthVerifyOtpPost200ResponseReasonEnum.EncryptedSymmKeyRequired)
+    ) {
+        const { exportedSymmKey, encodedEncryptedSymmKey } =
+            await generateAndEncryptSymmKey(pendingEmail);
+        tempEncryptedSymmKey = encodedEncryptedSymmKey;
+        tempExportedSymmKey = exportedSymmKey;
+        unboundSecretCredentialRequest =
+            await buildSecretCredentialRequest(tempExportedSymmKey);
+        timeboundSecretCredentialRequest =
+            await buildSecretCredentialRequest(tempExportedSymmKey);
+        verifyOtpResult = await DefaultApiFactory(
+            undefined,
+            undefined,
+            pendingSessionUcanAxios
+        ).authVerifyOtpPost({
+            code: code,
+            encryptedSymmKey: tempEncryptedSymmKey,
+            unboundSecretCredentialRequest: unboundSecretCredentialRequest,
+            timeboundSecretCredentialRequest: timeboundSecretCredentialRequest,
+        });
+    }
+    return { verifyOtpData: verifyOtpResult.data, tempEncryptedSymmKey };
 }
 
 export async function logout() {
@@ -187,7 +249,8 @@ interface OnLoggedInProps {
     encryptedSymmKey: string;
     isRegistration: boolean;
     syncingDevices: Devices; // adapts the welcome page if there is only one device in that list
-    emailCredentialsPerEmail: EmailCredentialsPerEmail; // adapts the welcome page whether it is empty or not
+    emailCredentialsPerEmail: EmailCredentialsPerEmail;
+    formCredentialsPerEmail: EmailCredentialsPerEmail; // adapts the welcome page whether it is empty or not
     secretCredentialsPerType: SecretCredentialsPerType;
 }
 
@@ -197,7 +260,8 @@ export async function onLoggedIn({
     encryptedSymmKey,
     isRegistration,
     syncingDevices, // adapts the welcome page if there is only one device in that list
-    emailCredentialsPerEmail, // adapts the welcome page whether it is empty or not
+    emailCredentialsPerEmail,
+    formCredentialsPerEmail, // adapts the welcome page whether it is empty or not
     secretCredentialsPerType,
 }: OnLoggedInProps) {
     // this is a first time registration or a login from a known device that's been synced already
@@ -214,7 +278,8 @@ export async function onLoggedIn({
             encryptedSymmKey: encryptedSymmKey,
             isRegistration: isRegistration,
             syncingDevices: syncingDevices, // adapts the welcome page if there is only one device in that list
-            emailCredentialsPerEmail: emailCredentialsPerEmail, // adapts the welcome page whether it is empty or not
+            emailCredentialsPerEmail: emailCredentialsPerEmail,
+            formCredentialsPerEmail: formCredentialsPerEmail, // adapts the welcome page whether it is empty or not
             unblindedSecretCredentialsPerType:
                 await unblindedSecretCredentialsPerTypeFrom(
                     secretCredentialsPerType,

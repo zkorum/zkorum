@@ -11,7 +11,11 @@ export class Dto {
         .strict();
     static verifyOtpReqBody = z.object({
         code: ZodType.code,
-        encryptedSymmKey: z.string(),
+        encryptedSymmKey: z.string().optional(),
+        timeboundSecretCredentialRequest:
+            ZodType.secretCredentialRequest.optional(),
+        unboundSecretCredentialRequest:
+            ZodType.secretCredentialRequest.optional(),
     });
     static authenticateResponse = z
         .object({
@@ -27,6 +31,7 @@ export class Dto {
                 encryptedSymmKey: z.string().optional(), // if undefined, device is awaiting synchronization
                 syncingDevices: ZodType.devices,
                 emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
+                formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
                 secretCredentialsPerType: ZodType.secretCredentialsPerType,
             })
             .strict(),
@@ -37,6 +42,10 @@ export class Dto {
                     "expired_code",
                     "wrong_guess",
                     "too_many_wrong_guess",
+                    "encrypted_symm_key_required",
+                    "unbound_secret_credential_request_required",
+                    "timebound_secret_credential_request_required",
+                    "secret_credential_requests_required", // both are undefined
                 ]),
             })
             .strict(),
@@ -52,6 +61,7 @@ export class Dto {
             encryptedSymmKey: z.string(),
             syncingDevices: ZodType.devices,
             emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
+            formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
             secretCredentialsPerType: ZodType.secretCredentialsPerType,
         }),
     ]);
@@ -91,39 +101,25 @@ export class Dto {
                 .strict(),
         ])
         .optional();
-    static createOrGetEmailCredentialsReq = z
+    static userCredentials = z
         .object({
-            email: ZodType.authorizedEmail,
-            secretBlindedCredentialRequest: z
-                .string()
-                .optional()
-                .transform((str): object => {
-                    if (str !== undefined) {
-                        return JSON.parse(str);
-                    } else {
-                        return {};
-                    }
-                }),
+            emailCredentialsPerEmail: ZodType.formCredentialsPerEmail,
+            formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
+            secretCredentialsPerType: ZodType.secretCredentialsPerType,
         })
         .strict();
-    static createOrGetEmailCredentialsRes = z
+    static emailSecretCredentials = z
         .object({
-            emailCredential: z.string().nonempty(),
-            secretBlindedCredential: z.string(),
+            emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
+            secretCredentialsPerType: ZodType.secretCredentialsPerType,
         })
         .strict();
-    static userCredentials = z.object({
-        emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
-        secretCredentialsPerType: ZodType.secretCredentialsPerType,
-    });
-    static credentials = z.object({
-        emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
-        secretCredentialsPerType: ZodType.secretCredentialsPerType,
-    });
     static requestCredentials = z.object({
         email: ZodType.email,
-        emailCredentialRequest: ZodType.emailCredentialRequest,
-        secretCredentialRequest: ZodType.secretCredentialRequest,
+        formCredentialRequest: ZodType.formCredentialRequest,
+    });
+    static requestCredentials200 = z.object({
+        formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
     });
     static createPollRequest = z.object({
         poll: ZodType.poll,
@@ -138,7 +134,5 @@ export type VerifyOtpReqBody = z.infer<typeof Dto.verifyOtpReqBody>;
 export type Auth409 = z.infer<typeof Dto.auth409>;
 export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;
 export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
-export type CreateOrGetEmailCredentialsRes = z.infer<
-    typeof Dto.createOrGetEmailCredentialsRes
->;
 export type UserCredentials = z.infer<typeof Dto.userCredentials>;
+export type EmailSecretCredentials = z.infer<typeof Dto.emailSecretCredentials>;

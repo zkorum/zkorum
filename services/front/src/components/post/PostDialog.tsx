@@ -14,7 +14,8 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import React from "react";
 import {
     selectActiveEmailCredential,
-    selectActiveGlobalSecretCredential,
+    selectActiveFormCredential,
+    selectActiveUnboundSecretCredential,
 } from "@/store/selector";
 import type { TCountryCode } from "countries-list";
 import Container from "@mui/material/Container";
@@ -81,8 +82,9 @@ export function PostDialog() {
         dispatch(closePostModal());
     }
     const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
-    const activeGlobalSecretCredential = useAppSelector(
-        selectActiveGlobalSecretCredential
+    const activeFormCredential = useAppSelector(selectActiveFormCredential);
+    const activeUnboundSecretCredential = useAppSelector(
+        selectActiveUnboundSecretCredential
     );
 
     const [postAsStudentChecked, setPostAsStudentChecked] =
@@ -149,7 +151,7 @@ export function PostDialog() {
         console.log(
             "credentials",
             activeEmailCredential,
-            activeGlobalSecretCredential
+            activeUnboundSecretCredential
         );
     }, []);
 
@@ -318,7 +320,7 @@ export function PostDialog() {
         );
     }
 
-    function getPostAsAlum() {
+    function getPostAsAlum(_alumAttributes: any) {
         return (
             <>
                 <FormControlLabel
@@ -337,7 +339,7 @@ export function PostDialog() {
         );
     }
 
-    function getPostAsFaculty() {
+    function getPostAsFaculty(_facultyAttributes: any) {
         return (
             <>
                 <FormControlLabel
@@ -390,7 +392,7 @@ export function PostDialog() {
         postAsCountries: boolean;
     }
 
-    interface AttributesFromPostAsProps {
+    interface AttributesFormRevealedFromPostAsProps {
         postAs: PostAsProps;
         credential: Credential;
     }
@@ -451,10 +453,10 @@ export function PostDialog() {
         }
     }
 
-    function attributesRevealedFromPostAs({
+    function attributesFormRevealedFromPostAs({
         postAs,
         credential,
-    }: AttributesFromPostAsProps): Set<string> {
+    }: AttributesFormRevealedFromPostAsProps): Set<string> {
         const {
             postAsStudent,
             postAsCampus,
@@ -463,17 +465,6 @@ export function PostDialog() {
             postAsCountries,
         } = postAs;
         const attributesRevealed = new Set<string>();
-        addIfExists({
-            attribute: "credentialSubject.domain",
-            credential: credential,
-            set: attributesRevealed,
-        });
-        addIfExists({
-            attribute: "credentialSubject.type",
-            credential: credential,
-            set: attributesRevealed,
-        });
-
         if (postAsStudent) {
             addIfExists({
                 attribute: "credentialSubject.typeSpecific.type",
@@ -517,7 +508,6 @@ export function PostDialog() {
     }
 
     async function onCreate() {
-        let hasError = false;
         setHasModifiedQuestion(true);
         setHasModifiedOption1(true);
         setHasModifiedOption2(true);
@@ -525,9 +515,9 @@ export function PostDialog() {
             questionInputRef.current?.value === undefined ||
             questionInputRef.current?.value === ""
         ) {
-            hasError = true;
             setIsQuestionValid(false);
             setQuestionHelper(fieldRequired);
+            return;
         } else {
             setIsQuestionValid(true);
             setQuestionHelper(undefined);
@@ -536,9 +526,9 @@ export function PostDialog() {
             option1InputRef.current?.value === undefined ||
             option1InputRef.current?.value === ""
         ) {
-            hasError = true;
             setIsOption1Valid(false);
             setOption1Helper(fieldRequired);
+            return;
         } else {
             setIsOption1Valid(true);
             setOption1Helper(undefined);
@@ -547,22 +537,18 @@ export function PostDialog() {
             option2InputRef.current?.value === undefined ||
             option2InputRef.current?.value === ""
         ) {
-            hasError = true;
             setIsOption2Valid(false);
             setOption2Helper(fieldRequired);
+            return;
         } else {
             setIsOption2Valid(true);
             setOption2Helper(undefined);
         }
         if (
             activeEmailCredential === undefined ||
-            activeGlobalSecretCredential === undefined
+            activeUnboundSecretCredential === undefined
         ) {
-            hasError = true;
             return; // for typescript...
-        }
-        if (hasError) {
-            return;
         }
         try {
             dispatch(openMainLoading());
@@ -574,26 +560,40 @@ export function PostDialog() {
                 PublicKey.fromHex(import.meta.env.VITE_BACK_PUBLIC_KEY).bytes
             ); // no DID resolution for now
             const builder = new PresentationBuilder();
-            builder.addCredential(activeEmailCredential, backendPublicKey); // for externally issued credential, the pub key here will not be ZKorum's but the community authority's (e.g,: ESSEC's)
             builder.addCredential(
-                activeGlobalSecretCredential,
+                activeUnboundSecretCredential,
                 backendPublicKey
             );
-            const attributesRevealed = attributesRevealedFromPostAs({
-                postAs: {
-                    postAsStudent: postAsStudentChecked,
-                    postAsCampus: postAsCampusChecked,
-                    postAsProgram: postAsProgramChecked,
-                    postAsAdmissionYear: postAsAdmissionYearChecked,
-                    postAsCountries: postAsFrench || postAsInternational,
-                },
-                credential: activeEmailCredential,
-            });
-            builder.markAttributesRevealed(0, attributesRevealed); // first credential added was email credential
+            builder.addCredential(activeEmailCredential, backendPublicKey); // for externally issued credential, the pub key here will not be ZKorum's but the community authority's (e.g,: ESSEC's)
+            if (activeFormCredential !== undefined) {
+            }
+            builder.markAttributesRevealed(
+                0,
+                new Set<string>(["credentialSubject.type"])
+            ); // first credential added was secret credential, for posting must be an unbound one
             builder.markAttributesRevealed(
                 1,
-                new Set<string>(["credentialSubject.type"])
-            ); // second credential added was secret credential, for posting must be global one
+                new Set<string>([
+                    "credentialSubject.domain",
+                    "credentialSubject.type",
+                ])
+            ); // second credential added was email credential
+            if (activeFormCredential !== undefined) {
+                builder.addCredential(activeFormCredential, backendPublicKey);
+                const attributesRevealed = attributesFormRevealedFromPostAs({
+                    postAs: {
+                        postAsStudent: postAsStudentChecked,
+                        postAsCampus: postAsCampusChecked,
+                        postAsProgram: postAsProgramChecked,
+                        postAsAdmissionYear: postAsAdmissionYearChecked,
+                        postAsCountries: postAsFrench || postAsInternational,
+                    },
+                    credential: activeEmailCredential,
+                });
+                builder.markAttributesRevealed(2, attributesRevealed); // third credential added was form credential
+            }
+
+            //////// PSEUDONYMS /////
             const scope = stringToBytes(
                 scopeFromPostAs({
                     postAsStudent: postAsStudentChecked,
@@ -604,6 +604,20 @@ export function PostDialog() {
                 })
             ); // the scope and thus the pseudonym will be different for each combination of attributes revealed. @see doc/anonymous_pseudonym.md
             const attributeNames = new Map();
+
+            const secretSubject = "credentialSubject.secret";
+            const attributesSecretCredential =
+                activeUnboundSecretCredential.schema.flatten()[0];
+            if (!attributesSecretCredential.includes(secretSubject)) {
+                console.warn(
+                    `Secret credential does not contain subject '${secretSubject}'`
+                );
+                // TODO: instead of generic error, propose something for recovering
+                dispatch(showError(genericError));
+                return;
+            }
+            attributeNames.set(0, [secretSubject]); // index is 0 because secret credential is the first credential added
+
             const emailSubject = "credentialSubject.email";
             const attributesEmailCredential =
                 activeEmailCredential.schema.flatten()[0];
@@ -615,37 +629,33 @@ export function PostDialog() {
                 dispatch(showError(genericError));
                 return;
             }
-            const secretSubject = "credentialSubject.secret";
-            attributeNames.set(0, [emailSubject]); // email credential is index 0 because it's the first that was added
-            const attributesSecretCredential =
-                activeGlobalSecretCredential.schema.flatten()[0];
-            if (!attributesSecretCredential.includes(secretSubject)) {
-                console.warn(
-                    `Secret credential does not contain subject '${secretSubject}'`
-                );
-                // TODO: instead of generic error, propose something for recovering
-                dispatch(showError(genericError));
-                return;
-            }
-            attributeNames.set(1, [secretSubject]);
+            attributeNames.set(1, [emailSubject]); // email credential is index 1 because it's the second that was added
+
             const basesForAttributes =
                 PseudonymBases.generateBasesForAttributes(
                     2, // communityId ( == email here) + secret value = 2 attributes
                     scope
                 );
             builder.addBoundedPseudonym(basesForAttributes, attributeNames);
-            if (!attributesSecretCredential.includes(emailSubject)) {
-                console.warn(
-                    `Secret credential does not contain subject '${emailSubject}'`
+
+            // meta equalities
+            if (activeFormCredential !== undefined) {
+                builder.markAttributesEqual(
+                    [0, "credentialSubject.uid"],
+                    [1, "credentialSubject.uid"],
+                    [2, "credentialSubject.uid"]
                 );
-                dispatch(showError(genericError));
-                // TODO: instead of generic error, propose something for recovering
-                return;
+                builder.markAttributesEqual(
+                    // email in email and form credentials are equal
+                    [1, "credentialSubject.email"],
+                    [2, "credentialSubject.email"]
+                );
+            } else {
+                builder.markAttributesEqual(
+                    [0, "credentialSubject.uid"],
+                    [1, "credentialSubject.uid"]
+                );
             }
-            builder.markAttributesEqual(
-                [0, "credentialSubject.email"],
-                [1, "credentialSubject.email"]
-            );
 
             if (
                 questionInputRef.current?.value !== undefined &&
@@ -714,6 +724,7 @@ export function PostDialog() {
                 const context = await buildContext(JSON.stringify(newPoll));
                 builder.context = context;
                 builder.nonce = randomFieldElement();
+                builder.version = "0.1.0";
                 const presentation = builder.finalize();
                 dispatch(showInfo(sendingPost));
                 await createPoll(presentation, newPoll);
@@ -732,6 +743,54 @@ export function PostDialog() {
             dispatch(closeMainLoading());
             onClose();
         }
+    }
+
+    function getOtherPostAs(
+        activeFormCredential: Credential | undefined
+    ): JSX.Element | null {
+        if (activeFormCredential === undefined) {
+            return null;
+        }
+        let postAsCountries: null | JSX.Element = null;
+        let postAsStudent: null | JSX.Element = null;
+        let postAsAlum: null | JSX.Element = null;
+        let postAsFaculty: null | JSX.Element = null;
+
+        if (
+            (activeFormCredential?.subject as any)?.typeSpecific.countries !==
+            undefined
+        ) {
+            postAsCountries = getPostAsCountries(
+                (activeFormCredential?.subject as any)?.typeSpecific.countries
+            );
+        }
+        if (
+            (activeFormCredential?.subject as any)?.typeSpecific?.type !==
+            undefined
+        ) {
+            const typeSpecific = (activeFormCredential?.subject as any)
+                ?.typeSpecific;
+            const univType = typeSpecific.type as string;
+            switch (univType) {
+                case "Student":
+                    postAsStudent = getPostAsStudent(typeSpecific);
+                    break;
+                case "Alum":
+                    postAsAlum = getPostAsAlum(typeSpecific);
+                    break;
+                case "Faculty/Staff member":
+                    postAsFaculty = getPostAsFaculty(typeSpecific);
+                    break;
+            }
+        }
+        return (
+            <>
+                <>{postAsCountries}</>
+                <>{postAsStudent}</>
+                <>{postAsAlum}</>
+                <>{postAsFaculty}</>
+            </>
+        );
     }
 
     return (
@@ -816,27 +875,7 @@ export function PostDialog() {
                                             label="an anonymous ESSEC member"
                                             required
                                         />
-                                        {(activeEmailCredential?.subject as any)
-                                            ?.typeSpecific.countries !==
-                                        undefined
-                                            ? getPostAsCountries(
-                                                  (
-                                                      activeEmailCredential?.subject as any
-                                                  )?.typeSpecific.countries
-                                              )
-                                            : null}
-                                        {(activeEmailCredential?.subject as any)
-                                            ?.typeSpecific.type === "Student"
-                                            ? getPostAsStudent(
-                                                  (
-                                                      activeEmailCredential?.subject as any
-                                                  ).typeSpecific
-                                              )
-                                            : (
-                                                  activeEmailCredential?.subject as any
-                                              )?.typeSpecific.type === "Alum"
-                                            ? getPostAsAlum()
-                                            : getPostAsFaculty()}
+                                        {getOtherPostAs(activeFormCredential)}
                                     </FormGroup>
                                 </AccordionDetails>
                             </Accordion>

@@ -70,7 +70,7 @@ export class ZodType {
     static code = z.coerce.number().min(0).max(999999);
     static digit = z.coerce.number().int().nonnegative().lte(9);
     static userId = z.string().uuid().nonempty();
-    static secretCredentialType = z.string().uuid().or(z.literal("global"));
+    static secretCredentialType = z.enum(["unbound", "timebound"]);
     static blindedCredential = z.string(); // generic "object" does not exist :(, so for now we just encode it
     static unblindedSecretCredential = z.string(); // generic "object" does not exist :(, so for now we just encode it
     static secretCredential = z
@@ -111,6 +111,21 @@ export class ZodType {
         ZodType.email,
         ZodType.emailCredentials
     );
+    static formCredential = ZodType.emailCredential;
+    static formCredentials = z
+        .object({
+            active: ZodType.formCredential.optional(),
+            revoked: z.array(ZodType.emailCredential),
+        })
+        .strict();
+    static formCredentialsPerEmail = z.record(
+        ZodType.email,
+        ZodType.formCredentials
+    );
+    static emailFormCredentialsPerEmail = z.object({
+        emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
+        formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
+    });
     static devices = z.array(z.string()); // list of didWrite of all the devices belonging to a user
     static essecCampus = z.nativeEnum(EssecCampus);
     static essecProgram = z.nativeEnum(EssecProgram);
@@ -373,7 +388,7 @@ export class ZodType {
         .min(minStudentYear)
         .max(maxStudentYear);
     static countries = z.record(ZodType.countryCode, z.boolean());
-    static emailCredentialRequest = z.discriminatedUnion("type", [
+    static formCredentialRequest = z.discriminatedUnion("type", [
         z
             .object({
                 type: z.literal(UniversityType.STUDENT),
@@ -403,8 +418,8 @@ export class ZodType {
             encryptedEncodedBlinding: z.string(),
         })
         .strict();
-    static credentials = z.object({
-        emailCredential: ZodType.emailCredential,
+    static formAndBlindedCredentials = z.object({
+        formCredential: ZodType.formCredential,
         blindedCredential: ZodType.blindedCredential,
     });
     static eligibility = z
@@ -433,7 +448,9 @@ export class ZodType {
 }
 
 type Email = z.infer<typeof ZodType.email>;
-export type Credentials = z.infer<typeof ZodType.credentials>;
+export type FormAndBlindedCredentials = z.infer<
+    typeof ZodType.formAndBlindedCredentials
+>;
 export type SecretCredentialType = z.infer<typeof ZodType.secretCredentialType>;
 export type UnblindedSecretCredential = z.infer<
     typeof ZodType.unblindedSecretCredential
@@ -458,8 +475,16 @@ export type EmailCredentials = z.infer<typeof ZodType.emailCredentials>;
 export type EmailCredentialsPerEmail = z.infer<
     typeof ZodType.emailCredentialsPerEmail
 >;
-export type EmailCredentialRequest = z.infer<
-    typeof ZodType.emailCredentialRequest
+export type FormCredential = z.infer<typeof ZodType.formCredential>;
+export type FormCredentials = z.infer<typeof ZodType.formCredentials>;
+export type FormCredentialsPerEmail = z.infer<
+    typeof ZodType.formCredentialsPerEmail
+>;
+export type FormCredentialRequest = z.infer<
+    typeof ZodType.formCredentialRequest
+>;
+export type EmailFormCredentialsPerEmail = z.infer<
+    typeof ZodType.emailFormCredentialsPerEmail
 >;
 export type Devices = z.infer<typeof ZodType.devices>;
 export type StudentAdmissionYear = z.infer<typeof ZodType.studentAdmissionYear>;

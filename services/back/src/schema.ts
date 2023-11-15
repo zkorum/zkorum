@@ -42,7 +42,7 @@ export const bytea = customType<{
 // The "at least one" conditon is not enforced directly in the SQL model yet. It is done in the application code.
 export const userTable = pgTable("user", {
     id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
-    uid: char("uid", { length: 32 }).unique().notNull(), // @see generateRandomHex() - crypto random hex number for anonymous credential - should be kept secret. We cannot use the already existing UUID because it is not secured across the stack the same way and UUID is too long (36 bytes) to be used by the Dock crypto-wasm-ts library that we use for ZKP and anonymous credentials
+    uid: char("uid", { length: 64 }).unique().notNull(), // @see generateRandomHex() - crypto random hex number for anonymous credential - should be kept secret. We cannot use the already existing UUID because it is not secured across the stack the same way and UUID is too long (36 bytes) to be used by the Dock crypto-wasm-ts library that we use for ZKP and anonymous credentials
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -115,19 +115,39 @@ export const authAttemptTable = pgTable("auth_attempt", {
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// "emailCredential" is an Email-specific verifiable credential issued by ZKorum, as opposed to a VC issued by an external authority. It contains the result of the forms filled by the associated user.
+// "emailCredential" is an Email-specific verifiable credential only containing the email and issued by ZKorum, as opposed to a VC issued by an external authority. It contains the result of the forms filled by the associated user.
 // this table may contain revoke credentials
 // TODO: make sure there are always one and only one active credential (not revoked)
 export const credentialEmailTable = pgTable("credential_email", {
     id: serial("id").primaryKey(),
     credential: jsonb("credential").$type<object>().notNull(), // encoded credential
-    isRevoked: boolean("is_revoked").default(false),
+    isRevoked: boolean("is_revoked").notNull().default(false),
     email: varchar("email", { length: 254 })
         .references(() => emailTable.email)
         .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// formCredential" is an Email-specific Form verifiable credential issued by ZKorum, as opposed to a VC issued by an external authority. It contains the result of the forms filled by the associated user.
+// this table may contain revoke credentials
+// TODO: make sure there are always one and only one active credential (not revoked)
+export const credentialFormTable = pgTable("credential_form", {
+    id: serial("id").primaryKey(),
+    credential: jsonb("credential").$type<object>().notNull(), // encoded credential
+    isRevoked: boolean("is_revoked").notNull().default(false),
+    email: varchar("email", { length: 254 })
+        .references(() => emailTable.email)
+        .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// TODO: merge with the value in zod...
+export const secretCredentialType = pgEnum("credential_secret_type", [
+    "unbound",
+    "timebound",
+]);
 
 // "secretCredential" is a blinded credential that contains a blinded secret used for creating a post or responding as comments, NOT for responding to a vote/poll. Same secret means generating the same pseudonym across usage. No need for unicity when recovery after loss as this pseudonym is not used for polling/voting and we don't care about double vote, but a fixed pseudonym is necessary for moderation.
 // on secret loss, user would start the recovery process which is rate-limited and only allowed if the user is not banned/suspended. On recovery user would generate a brand new secret and hence have a brand new pseudonym.
@@ -136,11 +156,11 @@ export const credentialEmailTable = pgTable("credential_email", {
 // pollId: the UUID for responding to the poll. If null, it is the global secret
 export const credentialSecretTable = pgTable("credential_secret", {
     id: serial("id").primaryKey(),
-    pollId: uuid("poll_id"),
+    type: secretCredentialType("type").notNull(),
     credential: jsonb("credential").$type<object>().notNull(),
     encryptedBlinding: text("encrypted_blinding").notNull(),
     encryptedBlindedSubject: text("encrypted_blinded_subject").notNull(),
-    isRevoked: boolean("is_revoked").default(false),
+    isRevoked: boolean("is_revoked").notNull().default(false),
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),

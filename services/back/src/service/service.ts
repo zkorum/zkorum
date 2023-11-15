@@ -3,6 +3,7 @@ import { and, eq, gt, inArray, isNotNull } from "drizzle-orm";
 import {
     authAttemptTable,
     credentialEmailTable,
+    credentialFormTable,
     credentialSecretTable,
     deviceTable,
     eligibilityTable,
@@ -20,8 +21,9 @@ import {
     type AuthenticateRequestBody,
     type GetDeviceStatusResp,
     type IsLoggedInResponse,
-    type UserCredentials,
     type VerifyOtp200,
+    type EmailSecretCredentials,
+    type UserCredentials,
 } from "../dto.js";
 import {
     codeToString,
@@ -36,6 +38,7 @@ import {
 } from "@docknetwork/crypto-wasm-ts";
 import {
     buildEmailCredential,
+    buildFormCredential,
     buildSecretCredential,
     parseSecretCredentialRequest,
     type PostAs,
@@ -43,14 +46,17 @@ import {
 import type {
     Devices,
     SecretCredentialRequest,
-    EmailCredentialRequest,
+    FormCredentialRequest,
     EmailCredentialsPerEmail,
     EmailCredential,
     BlindedCredentialType,
     SecretCredentialType,
     SecretCredentialsPerType,
-    Credentials,
     Poll,
+    FormCredentialsPerEmail,
+    EmailFormCredentialsPerEmail,
+    FormCredential,
+    SecretCredentials,
 } from "../shared/types/zod.js";
 import { base64 } from "../shared/common/index.js";
 import { anyToUint8Array } from "../shared/common/arrbufs.js";
@@ -82,16 +88,6 @@ interface AuthTypeAndUserId {
     userId: string;
     type: AuthenticateType;
 }
-interface CreateAndStoreCredentialsParams {
-    db: PostgresDatabase;
-    didWrite: string;
-    secretCredentialRequest: SecretCredentialRequest;
-    type: SecretCredentialType;
-    httpErrors: HttpErrors;
-    sk: SecretKey;
-    email: string;
-    emailCredentialRequest: EmailCredentialRequest;
-}
 
 interface CreatePollProps {
     db: PostgresDatabase;
@@ -99,6 +95,102 @@ interface CreatePollProps {
     poll: Poll;
     pseudonym: string;
     postAs: PostAs;
+}
+
+interface VerifyOtpProps {
+    db: PostgresDatabase;
+    maxAttempt: number;
+    didWrite: string;
+    code: number;
+    encryptedSymmKey?: string;
+    sk: SecretKey;
+    httpErrors: HttpErrors;
+    unboundSecretCredentialRequest?: SecretCredentialRequest;
+    timeboundSecretCredentialRequest?: SecretCredentialRequest;
+}
+
+interface RegisterProps {
+    db: PostgresDatabase;
+    didWrite: string;
+    encryptedSymmKey: string;
+    sk: SecretKey;
+    unboundSecretCredentialRequest: SecretCredentialRequest;
+    timeboundSecretCredentialRequest: SecretCredentialRequest;
+    httpErrors: HttpErrors;
+}
+
+interface CreateSecretCredentialsProps {
+    db: PostgresDatabase;
+    uid: string;
+    userId: string;
+    timeboundSecretCredentialRequest: SecretCredentialRequest;
+    unboundSecretCredentialRequest: SecretCredentialRequest;
+    httpErrors: HttpErrors;
+    sk: SecretKey;
+}
+
+interface CreateAndStoreSecretCredentialProps {
+    db: PostgresDatabase;
+    uid: string;
+    userId: string;
+    secretCredentialRequest: SecretCredentialRequest;
+    type: SecretCredentialType;
+    httpErrors: HttpErrors;
+    sk: SecretKey;
+}
+
+interface GetCredentialsResult {
+    email: string;
+    credential: object;
+    isRevoked: boolean | null;
+}
+
+interface CreateAndStoreEmailCredentialsProps {
+    db: PostgresDatabase;
+    email: string;
+    uid: string;
+    sk: SecretKey;
+}
+
+interface CreateAndStoreFormCredentialProps {
+    db: PostgresDatabase;
+    email: string;
+    formCredentialRequest: FormCredentialRequest;
+    uid: string;
+    sk: SecretKey;
+}
+
+interface AddCredentialProps {
+    results: GetCredentialsResult[];
+    credentialsPerEmail: EmailCredentialsPerEmail | FormCredentialsPerEmail;
+}
+
+function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
+    for (const result of results) {
+        const credential = result.credential;
+        const isRevoked = result.isRevoked;
+        const encodedCredential = base64.encode(anyToUint8Array(credential));
+        if (result.email in credentialsPerEmail) {
+            if (isRevoked) {
+                credentialsPerEmail[result.email].revoked.push(
+                    encodedCredential
+                );
+            } else {
+                credentialsPerEmail[result.email].active = encodedCredential;
+            }
+        } else {
+            if (isRevoked) {
+                credentialsPerEmail[result.email] = {
+                    revoked: [encodedCredential],
+                };
+            } else {
+                credentialsPerEmail[result.email] = {
+                    active: encodedCredential,
+                    revoked: [],
+                };
+            }
+        }
+    }
 }
 
 // No need to validate data, it has been done in the controller level
@@ -228,8 +320,8 @@ export class Service {
                     db,
                     deviceStatus.userId
                 );
-                const emailCredentialsPerEmail =
-                    await Service.getEmailCredentialsPerEmailFromUserId(
+                const { emailCredentialsPerEmail, formCredentialsPerEmail } =
+                    await Service.getEmailFormCredentialsPerEmailFromUserId(
                         db,
                         deviceStatus.userId
                     );
@@ -244,6 +336,7 @@ export class Service {
                     encryptedSymmKey: deviceStatus.encryptedSymmKey,
                     syncingDevices: syncingDevices,
                     emailCredentialsPerEmail: emailCredentialsPerEmail,
+                    formCredentialsPerEmail: formCredentialsPerEmail,
                     secretCredentialsPerType: secretCredentialsPerType,
                 });
             }
@@ -329,14 +422,17 @@ export class Service {
         }
     }
 
-    static async verifyOtp(
-        db: PostgresDatabase,
-        maxAttempt: number,
-        didWrite: string,
-        code: number,
-        encryptedSymmKey: string,
-        httpErrors: HttpErrors
-    ): Promise<VerifyOtp200> {
+    static async verifyOtp({
+        db,
+        maxAttempt,
+        didWrite,
+        code,
+        encryptedSymmKey,
+        sk,
+        httpErrors,
+        unboundSecretCredentialRequest,
+        timeboundSecretCredentialRequest,
+    }: VerifyOtpProps): Promise<VerifyOtp200> {
         // TODO: make cron job to clean up devices awaiting syncing for too long
         await this.throwIfAwaitingSyncingOrLoggedIn(db, didWrite, httpErrors);
         const resultOtp = await db
@@ -361,14 +457,55 @@ export class Service {
         } else if (resultOtp[0].code === code) {
             switch (resultOtp[0].authType) {
                 case "register": {
-                    await Service.register(db, didWrite, encryptedSymmKey);
+                    // we can't register the user without an encrypted symm key
+                    if (encryptedSymmKey === undefined) {
+                        return {
+                            success: false,
+                            reason: "encrypted_symm_key_required",
+                        };
+                    }
+                    // we can't register the user without creating secret credentials
+                    if (
+                        unboundSecretCredentialRequest === undefined &&
+                        timeboundSecretCredentialRequest === undefined
+                    ) {
+                        return {
+                            success: false,
+                            reason: "secret_credential_requests_required",
+                        };
+                    }
+                    if (unboundSecretCredentialRequest === undefined) {
+                        return {
+                            success: false,
+                            reason: "unbound_secret_credential_request_required",
+                        };
+                    }
+                    if (timeboundSecretCredentialRequest === undefined) {
+                        return {
+                            success: false,
+                            reason: "timebound_secret_credential_request_required",
+                        };
+                    }
+                    const {
+                        emailCredentialsPerEmail,
+                        secretCredentialsPerType,
+                    } = await Service.register({
+                        db,
+                        didWrite,
+                        encryptedSymmKey,
+                        sk,
+                        unboundSecretCredentialRequest,
+                        timeboundSecretCredentialRequest,
+                        httpErrors,
+                    });
                     return {
                         success: true,
                         userId: resultOtp[0].userId,
                         encryptedSymmKey: encryptedSymmKey,
                         syncingDevices: [didWrite],
-                        emailCredentialsPerEmail: {},
-                        secretCredentialsPerType: {},
+                        emailCredentialsPerEmail: emailCredentialsPerEmail,
+                        formCredentialsPerEmail: {},
+                        secretCredentialsPerType: secretCredentialsPerType,
                     };
                 }
                 case "login_known_device": {
@@ -383,11 +520,13 @@ export class Service {
                         db,
                         resultOtp[0].userId
                     );
-                    const emailCredentialsPerEmail =
-                        await Service.getEmailCredentialsPerEmailFromUserId(
-                            db,
-                            resultOtp[0].userId
-                        );
+                    const {
+                        emailCredentialsPerEmail,
+                        formCredentialsPerEmail,
+                    } = await Service.getEmailFormCredentialsPerEmailFromUserId(
+                        db,
+                        resultOtp[0].userId
+                    );
                     const secretCredentialsPerType =
                         await Service.getSecretCredentialsPerType(
                             db,
@@ -399,6 +538,7 @@ export class Service {
                         encryptedSymmKey: existingEncryptedSymmKey,
                         syncingDevices: syncingDevices,
                         emailCredentialsPerEmail: emailCredentialsPerEmail,
+                        formCredentialsPerEmail: formCredentialsPerEmail,
                         secretCredentialsPerType: secretCredentialsPerType,
                     };
                 }
@@ -412,7 +552,8 @@ export class Service {
                         success: true,
                         userId: resultOtp[0].userId,
                         syncingDevices: syncingDevices,
-                        emailCredentialsPerEmail: {}, // user may actually have already filled credentials, but this will be unused. We don't want to send the credentials before the device has been confirmed
+                        emailCredentialsPerEmail: {}, // user already have an email credential, but this will be unused. We don't want to send the credentials before the device has been confirmed
+                        formCredentialsPerEmail: {}, // user may actually have already filled credentials, but this will be unused. We don't want to send the credentials before the device has been confirmed
                         secretCredentialsPerType: {}, // TODO: remove them altogether when z.switch will be shipped instead of z.discriminatedUnion (cannot embed z.discriminatedUnion...)
                     };
                 }
@@ -475,11 +616,11 @@ export class Service {
     ): Promise<boolean> {
         const result = await db
             .select()
-            .from(credentialEmailTable)
+            .from(credentialFormTable)
             .where(
                 and(
-                    eq(credentialEmailTable.email, email),
-                    eq(credentialEmailTable.isRevoked, false)
+                    eq(credentialFormTable.email, email),
+                    eq(credentialFormTable.isRevoked, false)
                 )
             );
         if (result.length > 0) {
@@ -703,11 +844,15 @@ export class Service {
     }
 
     // ! WARN we assume the OTP was verified for registering at this point
-    static async register(
-        db: PostgresDatabase,
-        didWrite: string,
-        encryptedSymmKey: string
-    ): Promise<void> {
+    static async register({
+        db,
+        didWrite,
+        encryptedSymmKey,
+        sk,
+        unboundSecretCredentialRequest,
+        timeboundSecretCredentialRequest,
+        httpErrors,
+    }: RegisterProps): Promise<EmailSecretCredentials> {
         const uid = generateRandomHex();
         const now = new Date();
         const in1000years = new Date();
@@ -748,20 +893,31 @@ export class Service {
                 type: "primary",
                 email: authAttemptResult[0].email,
             });
-            // const credential = buildEmailCredential(email, sk);
-            // const credentialStr = JSON.stringify(credential.toJSON());
-            // await tx.insert(credentialEmailTable).values({
-            //     email: email,
-            //     credential: credentialStr,
-            //     isRevoked: false,
-            // });
-            // const emailCredentials: { [email: string]: EmailCredentials } = {
-            //     [email]: {
-            //         active: credentialStr,
-            //         revoked: [],
-            //     },
-            // };
-            // return emailCredentials;
+            const emailCredential = await Service.createAndStoreEmailCredential(
+                {
+                    db: tx,
+                    email: authAttemptResult[0].email,
+                    sk: sk,
+                    uid: uid,
+                }
+            );
+            const emailCredentialsPerEmail: EmailCredentialsPerEmail = {
+                [authAttemptResult[0].email]: {
+                    active: emailCredential,
+                    revoked: [],
+                },
+            };
+            const secretCredentialsPerType: SecretCredentialsPerType =
+                await Service.createAndStoreSecretCredentials({
+                    db: tx,
+                    uid: uid,
+                    userId: authAttemptResult[0].userId,
+                    unboundSecretCredentialRequest,
+                    timeboundSecretCredentialRequest,
+                    httpErrors,
+                    sk,
+                });
+            return { emailCredentialsPerEmail, secretCredentialsPerType };
         });
     }
 
@@ -904,30 +1060,55 @@ export class Service {
         }
     }
 
-    static async getEmailCredentialsPerEmailFromDidWrite(
+    static async getFormCredentialsPerEmailFromDidWrite(
         db: PostgresDatabase,
         didWrite: string
-    ): Promise<EmailCredentialsPerEmail> {
+    ): Promise<FormCredentialsPerEmail> {
         const emails = await Service.getEmailsFromDidWrite(db, didWrite);
-        return await Service.getEmailCredentialsPerEmail(db, emails);
+        return await Service.getFormCredentialsPerEmail(db, emails);
     }
 
-    static async getEmailCredentialsPerEmailFromUserId(
+    static async getEmailFormCredentialsPerEmailFromUserId(
         db: PostgresDatabase,
         userId: string
-    ): Promise<EmailCredentialsPerEmail> {
+    ): Promise<EmailFormCredentialsPerEmail> {
         const emails = await Service.getEmailsFromUserId(db, userId);
-        return await Service.getEmailCredentialsPerEmail(db, emails);
+        return await Service.getEmailFormCredentialsPerEmail(db, emails);
+    }
+
+    static async getFormCredentialsPerEmail(
+        db: PostgresDatabase,
+        emails: string[]
+    ): Promise<FormCredentialsPerEmail> {
+        const formCredentials: FormCredentialsPerEmail = {};
+        const results = await db
+            .select({
+                email: credentialFormTable.email,
+                credential: credentialFormTable.credential,
+                isRevoked: credentialFormTable.isRevoked,
+            })
+            .from(credentialFormTable)
+            .where(inArray(credentialFormTable.email, emails));
+        if (results.length === 0) {
+            return {};
+        } else {
+            addCredentials({
+                results: results,
+                credentialsPerEmail: formCredentials,
+            });
+            return formCredentials;
+        }
     }
 
     static async getEmailCredentialsPerEmail(
         db: PostgresDatabase,
         emails: string[]
     ): Promise<EmailCredentialsPerEmail> {
+        const emailCredentials: EmailCredentialsPerEmail = {};
         const results = await db
             .select({
                 email: credentialEmailTable.email,
-                emailCredential: credentialEmailTable.credential,
+                credential: credentialEmailTable.credential,
                 isRevoked: credentialEmailTable.isRevoked,
             })
             .from(credentialEmailTable)
@@ -935,48 +1116,32 @@ export class Service {
         if (results.length === 0) {
             return {};
         } else {
-            const emailCredentials: EmailCredentialsPerEmail = {};
-            for (const result of results) {
-                const encodedCredential = base64.encode(
-                    anyToUint8Array(result.emailCredential)
-                );
-                if (result.email in emailCredentials) {
-                    if (result.isRevoked) {
-                        emailCredentials[result.email].revoked.push(
-                            encodedCredential
-                        ); // TODO make sure this is string and not object...
-                    } else {
-                        emailCredentials[result.email].active =
-                            encodedCredential;
-                    }
-                } else {
-                    if (result.isRevoked) {
-                        emailCredentials[result.email] = {
-                            revoked: [encodedCredential],
-                        };
-                    } else {
-                        emailCredentials[result.email] = {
-                            active: encodedCredential, // TODO make sure this is string and not object...
-                            revoked: [],
-                        };
-                    }
-                }
-            }
+            addCredentials({
+                results: results,
+                credentialsPerEmail: emailCredentials,
+            });
             return emailCredentials;
         }
     }
 
-    static async createAndStoreEmailCredential(
+    static async getEmailFormCredentialsPerEmail(
         db: PostgresDatabase,
-        email: string,
-        emailCredentialRequest: EmailCredentialRequest,
-        sk: SecretKey
-    ): Promise<EmailCredential> {
-        const credential = buildEmailCredential(
-            email,
-            emailCredentialRequest,
-            sk
-        );
+        emails: string[]
+    ): Promise<EmailFormCredentialsPerEmail> {
+        const emailCredentialsPerEmail =
+            await Service.getEmailCredentialsPerEmail(db, emails);
+        const formCredentialsPerEmail =
+            await Service.getFormCredentialsPerEmail(db, emails);
+        return { emailCredentialsPerEmail, formCredentialsPerEmail };
+    }
+
+    static async createAndStoreEmailCredential({
+        db,
+        email,
+        uid,
+        sk,
+    }: CreateAndStoreEmailCredentialsProps): Promise<EmailCredential> {
+        const credential = buildEmailCredential({ email, uid, sk });
         const encodedCredential = base64.encode(
             anyToUint8Array(credential.toJSON())
         );
@@ -988,15 +1153,93 @@ export class Service {
         return encodedCredential;
     }
 
-    static async createAndStoreSecretCredential(
-        db: PostgresDatabase,
-        didWrite: string,
-        secretCredentialRequest: SecretCredentialRequest,
-        email: string,
-        type: SecretCredentialType,
-        httpErrors: HttpErrors,
-        sk: SecretKey
-    ): Promise<BlindedCredentialType> {
+    static async createAndStoreFormCredential({
+        db,
+        email,
+        formCredentialRequest,
+        uid,
+        sk,
+    }: CreateAndStoreFormCredentialProps): Promise<FormCredential> {
+        const credential = buildFormCredential({
+            email,
+            formCredentialRequest,
+            sk,
+            uid,
+        });
+        const encodedCredential = base64.encode(
+            anyToUint8Array(credential.toJSON())
+        );
+        await db.insert(credentialFormTable).values({
+            email: email,
+            isRevoked: false,
+            credential: credential.toJSON(),
+        });
+        return encodedCredential;
+    }
+
+    static async createAndStoreSecretCredentials({
+        db,
+        unboundSecretCredentialRequest,
+        userId,
+        uid,
+        timeboundSecretCredentialRequest,
+        httpErrors,
+        sk,
+    }: CreateSecretCredentialsProps): Promise<SecretCredentialsPerType> {
+        const unboundSecretCredential =
+            await Service.createAndStoreSecretCredential({
+                db,
+                secretCredentialRequest: unboundSecretCredentialRequest,
+                type: "unbound",
+                uid,
+                userId,
+                httpErrors,
+                sk,
+            });
+        const timeboundSecretCredential =
+            await Service.createAndStoreSecretCredential({
+                db,
+                userId,
+                uid,
+                secretCredentialRequest: timeboundSecretCredentialRequest,
+                httpErrors,
+                sk,
+                type: "timebound",
+            });
+        const secretCredentialsPerType: SecretCredentialsPerType = {
+            unbound: {
+                active: {
+                    blindedCredential: unboundSecretCredential,
+                    encryptedBlinding:
+                        unboundSecretCredentialRequest.encryptedEncodedBlinding,
+                    encryptedBlindedSubject:
+                        unboundSecretCredentialRequest.encryptedEncodedBlindedSubject,
+                },
+                revoked: [],
+            },
+            timebound: {
+                active: {
+                    blindedCredential: timeboundSecretCredential,
+                    encryptedBlinding:
+                        timeboundSecretCredentialRequest.encryptedEncodedBlinding,
+                    encryptedBlindedSubject:
+                        timeboundSecretCredentialRequest.encryptedEncodedBlindedSubject,
+                },
+                revoked: [],
+            },
+        };
+        return secretCredentialsPerType;
+    }
+
+    static async createAndStoreSecretCredential({
+        db,
+        secretCredentialRequest,
+        type,
+        uid,
+        userId,
+        httpErrors,
+        sk,
+    }: CreateAndStoreSecretCredentialProps): Promise<BlindedCredentialType> {
         let blindedCredentialRequest: BlindedCredentialRequest;
         try {
             blindedCredentialRequest = parseSecretCredentialRequest(
@@ -1005,21 +1248,18 @@ export class Service {
         } catch (e) {
             throw httpErrors.createError(400, e as Error);
         }
-
-        const userId = await Service.getUserIdFromDevice(db, didWrite);
-        const credential = buildSecretCredential(
+        const credential = buildSecretCredential({
             blindedCredentialRequest,
-            userId,
+            uid,
             type,
-            email,
-            sk
-        );
+            sk,
+        });
         const encodedCredential = base64.encode(
             anyToUint8Array(credential.toJSON())
         );
         await db.insert(credentialSecretTable).values({
             userId: userId,
-            pollId: type !== "global" ? type : null,
+            type: type,
             isRevoked: false,
             credential: credential.toJSON(),
             encryptedBlinding: secretCredentialRequest.encryptedEncodedBlinding,
@@ -1027,32 +1267,6 @@ export class Service {
                 secretCredentialRequest.encryptedEncodedBlindedSubject,
         });
         return encodedCredential;
-    }
-
-    static async createAndStoreCredentials(
-        params: CreateAndStoreCredentialsParams
-    ): Promise<Credentials> {
-        return await params.db.transaction(async (tx) => {
-            const emailCredential = await this.createAndStoreEmailCredential(
-                tx,
-                params.email,
-                params.emailCredentialRequest,
-                params.sk
-            );
-            const blindedCredential = await this.createAndStoreSecretCredential(
-                tx,
-                params.didWrite,
-                params.secretCredentialRequest,
-                params.email,
-                params.type,
-                params.httpErrors,
-                params.sk
-            );
-            return {
-                emailCredential,
-                blindedCredential,
-            };
-        });
     }
 
     static async getUserIdFromDevice(
@@ -1070,13 +1284,28 @@ export class Service {
         return results[0].userId;
     }
 
+    static async getUidFromDevice(
+        db: PostgresDatabase,
+        didWrite: string
+    ): Promise<string> {
+        const results = await db
+            .select({ uid: userTable.uid })
+            .from(userTable)
+            .leftJoin(deviceTable, eq(deviceTable.userId, userTable.id))
+            .where(eq(deviceTable.didWrite, didWrite));
+        if (results.length === 0) {
+            throw new Error("This didWrite is not registered to any user");
+        }
+        return results[0].uid;
+    }
+
     static async getSecretCredentialsPerType(
         db: PostgresDatabase,
         userId: string
     ): Promise<SecretCredentialsPerType> {
         const results = await db
             .select({
-                pollId: credentialSecretTable.pollId,
+                type: credentialSecretTable.type,
                 blindedCredential: credentialSecretTable.credential, // TODO: make sure this really output a string...
                 encryptedBlinding: credentialSecretTable.encryptedBlinding,
                 encryptedBlindedSubject:
@@ -1093,28 +1322,36 @@ export class Service {
                 const encodedCredential = base64.encode(
                     anyToUint8Array(result.blindedCredential)
                 );
-                if (
-                    result.pollId !== null &&
-                    result.pollId in secretCredentialsPerType
-                ) {
+                if (result.type in secretCredentialsPerType) {
                     if (result.isRevoked) {
-                        secretCredentialsPerType[result.pollId].revoked.push({
+                        (
+                            secretCredentialsPerType[
+                                result.type
+                            ] as SecretCredentials
+                        ).revoked.push({
+                            // ts thinks secretCredentialsPerType[result.type] can be undefined :@
                             blindedCredential: encodedCredential,
                             encryptedBlinding: result.encryptedBlinding,
                             encryptedBlindedSubject:
                                 result.encryptedBlindedSubject,
                         });
                     } else {
-                        secretCredentialsPerType[result.pollId].active = {
+                        (
+                            secretCredentialsPerType[
+                                result.type
+                            ] as SecretCredentials
+                        ).active = {
+                            // ts thinks secretCredentialsPerType[result.type] can be undefined :@
                             blindedCredential: encodedCredential,
                             encryptedBlinding: result.encryptedBlinding,
                             encryptedBlindedSubject:
                                 result.encryptedBlindedSubject,
                         };
                     }
-                } else if (result.pollId !== null) {
+                } else {
                     if (result.isRevoked) {
-                        secretCredentialsPerType[result.pollId] = {
+                        secretCredentialsPerType[result.type] = {
+                            active: undefined,
                             revoked: [
                                 {
                                     blindedCredential: encodedCredential,
@@ -1125,7 +1362,7 @@ export class Service {
                             ],
                         };
                     } else {
-                        secretCredentialsPerType[result.pollId] = {
+                        secretCredentialsPerType[result.type] = {
                             active: {
                                 blindedCredential: encodedCredential,
                                 encryptedBlinding: result.encryptedBlinding,
@@ -1135,32 +1372,6 @@ export class Service {
                             revoked: [],
                         };
                     }
-                } else if ("global" in secretCredentialsPerType) {
-                    if (result.isRevoked) {
-                        secretCredentialsPerType["global"].revoked.push({
-                            blindedCredential: encodedCredential,
-                            encryptedBlinding: result.encryptedBlinding,
-                            encryptedBlindedSubject:
-                                result.encryptedBlindedSubject,
-                        }); // TODO make sure this is string and not object...
-                    } else {
-                        secretCredentialsPerType["global"].active = {
-                            blindedCredential: encodedCredential,
-                            encryptedBlinding: result.encryptedBlinding,
-                            encryptedBlindedSubject:
-                                result.encryptedBlindedSubject,
-                        };
-                    }
-                } else {
-                    secretCredentialsPerType["global"] = {
-                        active: {
-                            blindedCredential: encodedCredential,
-                            encryptedBlinding: result.encryptedBlinding,
-                            encryptedBlindedSubject:
-                                result.encryptedBlindedSubject,
-                        },
-                        revoked: [],
-                    };
                 }
             }
             return secretCredentialsPerType;
@@ -1185,17 +1396,18 @@ export class Service {
     }
 
     // maybe remove that when ServerSideEvents is implemented...
-    static async getCredentials(
+    static async getUserCredentials(
         db: PostgresDatabase,
         didWrite: string
     ): Promise<UserCredentials> {
-        const emailCredentialsPerEmail =
-            await Service.getEmailCredentialsPerEmailFromDidWrite(db, didWrite);
         const userId = await Service.getUserIdFromDevice(db, didWrite);
+        const { emailCredentialsPerEmail, formCredentialsPerEmail } =
+            await Service.getEmailFormCredentialsPerEmailFromUserId(db, userId);
         const secretCredentialsPerType =
             await Service.getSecretCredentialsPerType(db, userId);
         return {
             emailCredentialsPerEmail: emailCredentialsPerEmail,
+            formCredentialsPerEmail: formCredentialsPerEmail,
             secretCredentialsPerType: secretCredentialsPerType,
         };
     }

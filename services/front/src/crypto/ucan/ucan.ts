@@ -5,17 +5,23 @@ import { base64 } from "../../shared/common/index.js";
 import { DEFAULT_AES_ALG } from "../basic.js";
 import { cryptoStore } from "@/store/store.js";
 
+interface PlainAndEncryptedSymmKey {
+    exportedSymmKey: Uint8Array;
+    encodedEncryptedSymmKey: string;
+}
+
 export async function generateAndEncryptSymmKey(
     email: string
-): Promise<string> {
+): Promise<PlainAndEncryptedSymmKey> {
     const didExchange = await cryptoStore.keystore.publicExchangeKey(email);
-    return cryptoStore.aes
-        .genKey(DEFAULT_AES_ALG)
-        .then(cryptoStore.aes.exportKey)
-        .then((symmKey: Uint8Array) =>
-            cryptoStore.rsa.encrypt(symmKey, didExchange)
-        )
-        .then(base64.encode);
+    const symmKey = await cryptoStore.aes.genKey(DEFAULT_AES_ALG).then();
+    const exportedSymmKey = await cryptoStore.aes.exportKey(symmKey);
+    const encryptedSymmKey = await cryptoStore.rsa.encrypt(
+        exportedSymmKey,
+        didExchange
+    );
+    const encodedEncryptedSymmKey = base64.encode(encryptedSymmKey);
+    return { exportedSymmKey, encodedEncryptedSymmKey };
 }
 
 /**

@@ -35,12 +35,11 @@ interface GetFormProps {
 
 interface CommunityFormProps {
     email: string;
-    userId: string;
 }
 
 // TODO: To support abitrary communities, move the form schema to a standardized JSON schema or something that's fetched from the backend
 // and dynamically create the form from that.
-export function CommunityForm({ email, userId }: CommunityFormProps) {
+export function CommunityForm({ email }: CommunityFormProps) {
     const [type, setType] = React.useState<UniversityType>(
         UniversityType.STUDENT
     );
@@ -127,8 +126,7 @@ export function CommunityForm({ email, userId }: CommunityFormProps) {
                     // this will eventually update redux emailCredential and hence the parent to show CommunityFormFilled instead
                     await requestAnonymousCredentials(
                         email,
-                        emailCredentialRequest,
-                        userId
+                        emailCredentialRequest
                     );
                     //... if it gets through, we redirect to the feed
                     navigate(FEED);

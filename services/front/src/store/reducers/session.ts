@@ -1,6 +1,7 @@
 import type {
     Devices,
     EmailCredentialsPerEmail,
+    FormCredentialsPerEmail,
     UnblindedSecretCredentialsPerType,
 } from "@/shared/types/zod";
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
@@ -32,6 +33,7 @@ export interface SessionData {
     isRegistration?: boolean;
     syncingDevices?: Devices;
     emailCredentialsPerEmail?: EmailCredentialsPerEmail;
+    formCredentialsPerEmail?: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType?: UnblindedSecretCredentialsPerType;
 }
 
@@ -49,6 +51,7 @@ interface LoggedInProps {
     isRegistration: boolean;
     syncingDevices: Devices;
     emailCredentialsPerEmail: EmailCredentialsPerEmail;
+    formCredentialsPerEmail: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType: UnblindedSecretCredentialsPerType;
 }
 
@@ -63,7 +66,12 @@ interface AuthenticatingProps {
 
 interface UpdateCredentialsProps {
     emailCredentialsPerEmail: EmailCredentialsPerEmail;
+    formCredentialsPerEmail: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType: UnblindedSecretCredentialsPerType;
+}
+
+interface UpdateFormCredentialsProps {
+    formCredentialsPerEmail: FormCredentialsPerEmail;
 }
 
 // Define the initial state using that type
@@ -134,6 +142,8 @@ export const sessionSlice = createSlice({
                     action.payload.syncingDevices;
                 state.sessions[action.payload.email].emailCredentialsPerEmail =
                     action.payload.emailCredentialsPerEmail;
+                state.sessions[action.payload.email].formCredentialsPerEmail =
+                    action.payload.formCredentialsPerEmail;
                 state.sessions[
                     action.payload.email
                 ].unblindedSecretCredentialsPerType =
@@ -148,6 +158,8 @@ export const sessionSlice = createSlice({
                     syncingDevices: action.payload.syncingDevices,
                     emailCredentialsPerEmail:
                         action.payload.emailCredentialsPerEmail,
+                    formCredentialsPerEmail:
+                        action.payload.formCredentialsPerEmail,
                     unblindedSecretCredentialsPerType:
                         action.payload.unblindedSecretCredentialsPerType,
                 };
@@ -211,8 +223,26 @@ export const sessionSlice = createSlice({
                     action.payload.emailCredentialsPerEmail;
                 state.sessions[
                     state.activeSessionEmail
+                ].formCredentialsPerEmail =
+                    action.payload.formCredentialsPerEmail;
+                state.sessions[
+                    state.activeSessionEmail
                 ].unblindedSecretCredentialsPerType =
                     action.payload.unblindedSecretCredentialsPerType;
+            }
+        },
+        updateFormCredentials: (
+            state,
+            action: PayloadAction<UpdateFormCredentialsProps>
+        ) => {
+            if (
+                state.activeSessionEmail in state.sessions &&
+                state.sessions[state.activeSessionEmail].status === "logged-in"
+            ) {
+                state.sessions[
+                    state.activeSessionEmail
+                ].formCredentialsPerEmail =
+                    action.payload.formCredentialsPerEmail;
             }
         },
     },
@@ -230,6 +260,7 @@ export const {
     switchActiveSession,
     setPendingSessionCodeExpiry,
     updateCredentials,
+    updateFormCredentials,
 } = sessionSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type

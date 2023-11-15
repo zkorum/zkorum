@@ -76,7 +76,6 @@ export function CommunitiesLayout() {
                         <CommunityPage
                             email={activeSessionEmail}
                             communityCredential={activeEmailCredential}
-                            userId={activeSessionUserId}
                         ></CommunityPage>
                     </Box>
                 ) : (

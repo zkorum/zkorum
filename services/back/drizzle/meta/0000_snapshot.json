@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "d60182ce-9409-4cbc-8caf-97767a12b8ac",
+  "id": "901747dd-fd89-4c38-948c-170768737a92",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "alum_eligibility": {
@@ -163,7 +163,7 @@
           "name": "is_revoked",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": false
         },
         "email": {
@@ -206,6 +206,69 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "credential_form": {
+      "name": "credential_form",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "credential": {
+          "name": "credential",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_revoked": {
+          "name": "is_revoked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "credential_form_email_email_email_fk": {
+          "name": "credential_form_email_email_email_fk",
+          "tableFrom": "credential_form",
+          "tableTo": "email",
+          "columnsFrom": [
+            "email"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "credential_secret": {
       "name": "credential_secret",
       "schema": "",
@@ -216,11 +279,11 @@
           "primaryKey": true,
           "notNull": true
         },
-        "poll_id": {
-          "name": "poll_id",
-          "type": "uuid",
+        "type": {
+          "name": "type",
+          "type": "credential_secret_type",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "credential": {
           "name": "credential",
@@ -244,7 +307,7 @@
           "name": "is_revoked",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": false
         },
         "user_id": {
@@ -1113,7 +1176,7 @@
         },
         "uid": {
           "name": "uid",
-          "type": "char(32)",
+          "type": "char(64)",
           "primaryKey": false,
           "notNull": true
         },
@@ -1169,6 +1232,13 @@
         "backup": "backup",
         "secondary": "secondary",
         "other": "other"
+      }
+    },
+    "credential_secret_type": {
+      "name": "credential_secret_type",
+      "values": {
+        "unbound": "unbound",
+        "timebound": "timebound"
       }
     }
   },

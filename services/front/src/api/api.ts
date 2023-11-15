@@ -80,10 +80,16 @@ export interface AuthAuthenticatePost409Response {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
      * @memberof AuthAuthenticatePost409Response
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
+    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof AuthAuthenticatePost409Response
+     */
+    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
 }
 
 export const AuthAuthenticatePost409ResponseReasonEnum = {
@@ -156,10 +162,16 @@ export interface AuthAuthenticatePost409ResponseAnyOf1 {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
      * @memberof AuthAuthenticatePost409ResponseAnyOf1
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
+    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     */
+    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
 }
 
 export const AuthAuthenticatePost409ResponseAnyOf1ReasonEnum = {
@@ -190,44 +202,63 @@ export interface AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailVa
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue
+ * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
  */
-export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue {
+export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType {
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
      */
-    'active'?: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive;
+    'unbound': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound;
     /**
      * 
-     * @type {Array<AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive>}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
      */
-    'revoked': Array<AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive>;
+    'timebound': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound;
 }
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
+ * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
  */
-export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive {
+export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound {
+    /**
+     * 
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
+     */
+    'active'?: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive;
+    /**
+     * 
+     * @type {Array<AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive>}
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
+     */
+    'revoked': Array<AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive>;
+}
+/**
+ * 
+ * @export
+ * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
+ */
+export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive {
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
      */
     'blindedCredential': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
      */
     'encryptedBlinding': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValueActive
+     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
      */
     'encryptedBlindedSubject': string;
 }
@@ -285,25 +316,6 @@ export type AuthSyncPost409ResponseReasonEnum = typeof AuthSyncPost409ResponseRe
 /**
  * 
  * @export
- * @interface AuthSyncPostRequest
- */
-export interface AuthSyncPostRequest {
-    /**
-     * Email address
-     * @type {string}
-     * @memberof AuthSyncPostRequest
-     */
-    'email': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AuthSyncPostRequest
-     */
-    'secretBlindedCredentialRequest'?: string;
-}
-/**
- * 
- * @export
  * @interface AuthVerifyOtpPost200Response
  */
 export interface AuthVerifyOtpPost200Response {
@@ -339,10 +351,16 @@ export interface AuthVerifyOtpPost200Response {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
      * @memberof AuthVerifyOtpPost200Response
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
+    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof AuthVerifyOtpPost200Response
+     */
+    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
     /**
      * 
      * @type {string}
@@ -354,7 +372,11 @@ export interface AuthVerifyOtpPost200Response {
 export const AuthVerifyOtpPost200ResponseReasonEnum = {
     ExpiredCode: 'expired_code',
     WrongGuess: 'wrong_guess',
-    TooManyWrongGuess: 'too_many_wrong_guess'
+    TooManyWrongGuess: 'too_many_wrong_guess',
+    EncryptedSymmKeyRequired: 'encrypted_symm_key_required',
+    UnboundSecretCredentialRequestRequired: 'unbound_secret_credential_request_required',
+    TimeboundSecretCredentialRequestRequired: 'timebound_secret_credential_request_required',
+    SecretCredentialRequestsRequired: 'secret_credential_requests_required'
 } as const;
 
 export type AuthVerifyOtpPost200ResponseReasonEnum = typeof AuthVerifyOtpPost200ResponseReasonEnum[keyof typeof AuthVerifyOtpPost200ResponseReasonEnum];
@@ -397,10 +419,16 @@ export interface AuthVerifyOtpPost200ResponseAnyOf {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
      * @memberof AuthVerifyOtpPost200ResponseAnyOf
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
+    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     */
+    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
 }
 /**
  * 
@@ -425,7 +453,11 @@ export interface AuthVerifyOtpPost200ResponseAnyOf1 {
 export const AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = {
     ExpiredCode: 'expired_code',
     WrongGuess: 'wrong_guess',
-    TooManyWrongGuess: 'too_many_wrong_guess'
+    TooManyWrongGuess: 'too_many_wrong_guess',
+    EncryptedSymmKeyRequired: 'encrypted_symm_key_required',
+    UnboundSecretCredentialRequestRequired: 'unbound_secret_credential_request_required',
+    TimeboundSecretCredentialRequestRequired: 'timebound_secret_credential_request_required',
+    SecretCredentialRequestsRequired: 'secret_credential_requests_required'
 } as const;
 
 export type AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = typeof AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum[keyof typeof AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum];
@@ -447,7 +479,44 @@ export interface AuthVerifyOtpPostRequest {
      * @type {string}
      * @memberof AuthVerifyOtpPostRequest
      */
-    'encryptedSymmKey': string;
+    'encryptedSymmKey'?: string;
+    /**
+     * 
+     * @type {AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
+     * @memberof AuthVerifyOtpPostRequest
+     */
+    'timeboundSecretCredentialRequest'?: AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
+    /**
+     * 
+     * @type {AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
+     * @memberof AuthVerifyOtpPostRequest
+     */
+    'unboundSecretCredentialRequest'?: AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
+}
+/**
+ * 
+ * @export
+ * @interface AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
+ */
+export interface AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest {
+    /**
+     * 
+     * @type {{ [key: string]: any; }}
+     * @memberof AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
+     */
+    'blindedRequest': { [key: string]: any; };
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
+     */
+    'encryptedEncodedBlindedSubject': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
+     */
+    'encryptedEncodedBlinding': string;
 }
 /**
  * 
@@ -463,10 +532,29 @@ export interface CredentialGetPost200Response {
     'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; }}
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
      * @memberof CredentialGetPost200Response
      */
-    'secretCredentialsPerType': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeValue; };
+    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof CredentialGetPost200Response
+     */
+    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
+}
+/**
+ * 
+ * @export
+ * @interface CredentialRequestPost200Response
+ */
+export interface CredentialRequestPost200Response {
+    /**
+     * 
+     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof CredentialRequestPost200Response
+     */
+    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
 }
 /**
  * 
@@ -482,70 +570,64 @@ export interface CredentialRequestPostRequest {
     'email': string;
     /**
      * 
-     * @type {CredentialRequestPostRequestEmailCredentialRequest}
+     * @type {CredentialRequestPostRequestFormCredentialRequest}
      * @memberof CredentialRequestPostRequest
      */
-    'emailCredentialRequest': CredentialRequestPostRequestEmailCredentialRequest;
-    /**
-     * 
-     * @type {CredentialRequestPostRequestSecretCredentialRequest}
-     * @memberof CredentialRequestPostRequest
-     */
-    'secretCredentialRequest': CredentialRequestPostRequestSecretCredentialRequest;
+    'formCredentialRequest': CredentialRequestPostRequestFormCredentialRequest;
 }
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestEmailCredentialRequest
+ * @interface CredentialRequestPostRequestFormCredentialRequest
  */
-export interface CredentialRequestPostRequestEmailCredentialRequest {
+export interface CredentialRequestPostRequestFormCredentialRequest {
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     * @memberof CredentialRequestPostRequestFormCredentialRequest
      */
-    'type': CredentialRequestPostRequestEmailCredentialRequestTypeEnum;
+    'type': CredentialRequestPostRequestFormCredentialRequestTypeEnum;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     * @memberof CredentialRequestPostRequestFormCredentialRequest
      */
-    'campus': CredentialRequestPostRequestEmailCredentialRequestCampusEnum;
+    'campus': CredentialRequestPostRequestFormCredentialRequestCampusEnum;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     * @memberof CredentialRequestPostRequestFormCredentialRequest
      */
-    'program': CredentialRequestPostRequestEmailCredentialRequestProgramEnum;
+    'program': CredentialRequestPostRequestFormCredentialRequestProgramEnum;
     /**
      * 
-     * @type {CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     * @type {CredentialRequestPostRequestFormCredentialRequestAnyOfCountries}
+     * @memberof CredentialRequestPostRequestFormCredentialRequest
      */
-    'countries': CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries;
+    'countries': CredentialRequestPostRequestFormCredentialRequestAnyOfCountries;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequest
+     * @memberof CredentialRequestPostRequestFormCredentialRequest
      */
     'admissionYear': number;
 }
 
-export const CredentialRequestPostRequestEmailCredentialRequestTypeEnum = {
+export const CredentialRequestPostRequestFormCredentialRequestTypeEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2
 } as const;
 
-export type CredentialRequestPostRequestEmailCredentialRequestTypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestTypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestTypeEnum];
-export const CredentialRequestPostRequestEmailCredentialRequestCampusEnum = {
+export type CredentialRequestPostRequestFormCredentialRequestTypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestTypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestTypeEnum];
+export const CredentialRequestPostRequestFormCredentialRequestCampusEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2
 } as const;
 
-export type CredentialRequestPostRequestEmailCredentialRequestCampusEnum = typeof CredentialRequestPostRequestEmailCredentialRequestCampusEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestCampusEnum];
-export const CredentialRequestPostRequestEmailCredentialRequestProgramEnum = {
+export type CredentialRequestPostRequestFormCredentialRequestCampusEnum = typeof CredentialRequestPostRequestFormCredentialRequestCampusEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestCampusEnum];
+export const CredentialRequestPostRequestFormCredentialRequestProgramEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2,
@@ -554,59 +636,59 @@ export const CredentialRequestPostRequestEmailCredentialRequestProgramEnum = {
     NUMBER_5: 5
 } as const;
 
-export type CredentialRequestPostRequestEmailCredentialRequestProgramEnum = typeof CredentialRequestPostRequestEmailCredentialRequestProgramEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestProgramEnum];
+export type CredentialRequestPostRequestFormCredentialRequestProgramEnum = typeof CredentialRequestPostRequestFormCredentialRequestProgramEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestProgramEnum];
 
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestEmailCredentialRequestAnyOf
+ * @interface CredentialRequestPostRequestFormCredentialRequestAnyOf
  */
-export interface CredentialRequestPostRequestEmailCredentialRequestAnyOf {
+export interface CredentialRequestPostRequestFormCredentialRequestAnyOf {
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
-    'type': CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum;
+    'type': CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
-    'campus': CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum;
+    'campus': CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
-    'program': CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum;
+    'program': CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum;
     /**
      * 
-     * @type {CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     * @type {CredentialRequestPostRequestFormCredentialRequestAnyOfCountries}
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
-    'countries': CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries;
+    'countries': CredentialRequestPostRequestFormCredentialRequestAnyOfCountries;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
     'admissionYear': number;
 }
 
-export const CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum = {
+export const CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = {
     NUMBER_0: 0
 } as const;
 
-export type CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfTypeEnum];
-export const CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum = {
+export type CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum];
+export const CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2
 } as const;
 
-export type CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfCampusEnum];
-export const CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum = {
+export type CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum];
+export const CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2,
@@ -615,1579 +697,1554 @@ export const CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum 
     NUMBER_5: 5
 } as const;
 
-export type CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOfProgramEnum];
+export type CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum];
 
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestEmailCredentialRequestAnyOf1
+ * @interface CredentialRequestPostRequestFormCredentialRequestAnyOf1
  */
-export interface CredentialRequestPostRequestEmailCredentialRequestAnyOf1 {
+export interface CredentialRequestPostRequestFormCredentialRequestAnyOf1 {
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf1
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf1
      */
-    'type': CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum;
+    'type': CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum;
 }
 
-export const CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum = {
+export const CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = {
     NUMBER_1: 1
 } as const;
 
-export type CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf1TypeEnum];
+export type CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum];
 
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestEmailCredentialRequestAnyOf2
+ * @interface CredentialRequestPostRequestFormCredentialRequestAnyOf2
  */
-export interface CredentialRequestPostRequestEmailCredentialRequestAnyOf2 {
+export interface CredentialRequestPostRequestFormCredentialRequestAnyOf2 {
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOf2
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf2
      */
-    'type': CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum;
+    'type': CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum;
 }
 
-export const CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum = {
+export const CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = {
     NUMBER_2: 2
 } as const;
 
-export type CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum = typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum[keyof typeof CredentialRequestPostRequestEmailCredentialRequestAnyOf2TypeEnum];
+export type CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum];
 
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+ * @interface CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
  */
-export interface CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries {
+export interface CredentialRequestPostRequestFormCredentialRequestAnyOfCountries {
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AX': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BB': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CX': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'EC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'EE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'EG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'EH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ER': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ES': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ET': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GB': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ID': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'JE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'JM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'JO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'JP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LB': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ME': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ML': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MX': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'OM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'QA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SB': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ST': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SX': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'US': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'WF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'WS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'XK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'YE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'YT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ZA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ZM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestEmailCredentialRequestAnyOfCountries
+     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ZW': boolean;
-}
-/**
- * 
- * @export
- * @interface CredentialRequestPostRequestSecretCredentialRequest
- */
-export interface CredentialRequestPostRequestSecretCredentialRequest {
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof CredentialRequestPostRequestSecretCredentialRequest
-     */
-    'blindedRequest': { [key: string]: any; };
-    /**
-     * 
-     * @type {string}
-     * @memberof CredentialRequestPostRequestSecretCredentialRequest
-     */
-    'encryptedEncodedBlindedSubject': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CredentialRequestPostRequestSecretCredentialRequest
-     */
-    'encryptedEncodedBlinding': string;
 }
 /**
  * 
@@ -2418,13 +2475,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {AuthSyncPostRequest} authSyncPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authSyncPost: async (authSyncPostRequest: AuthSyncPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'authSyncPostRequest' is not null or undefined
-            assertParamExists('authSyncPost', 'authSyncPostRequest', authSyncPostRequest)
+        authSyncPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/auth/sync`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2443,12 +2497,9 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
 
 
     
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(authSyncPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -2636,12 +2687,11 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {AuthSyncPostRequest} authSyncPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authSyncPost(authSyncPostRequest, options);
+        async authSyncPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authSyncPost(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -2669,7 +2719,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialGetPost200Response>> {
+        async credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialRequestPost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.credentialRequestPost(credentialRequestPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -2712,12 +2762,11 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {AuthSyncPostRequest} authSyncPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.authSyncPost(authSyncPostRequest, options).then((request) => request(axios, basePath));
+        authSyncPost(options?: any): AxiosPromise<void> {
+            return localVarFp.authSyncPost(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2742,7 +2791,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: any): AxiosPromise<CredentialGetPost200Response> {
+        credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: any): AxiosPromise<CredentialRequestPost200Response> {
             return localVarFp.credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2787,13 +2836,12 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {AuthSyncPostRequest} authSyncPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authSyncPost(authSyncPostRequest: AuthSyncPostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authSyncPost(authSyncPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public authSyncPost(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authSyncPost(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

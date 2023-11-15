@@ -147,34 +147,38 @@
                             "additionalProperties": false
                           }
                         },
-                        "secretCredentialsPerType": {
+                        "formCredentialsPerEmail": {
                           "type": "object",
                           "additionalProperties": {
                             "type": "object",
                             "properties": {
                               "active": {
-                                "type": "object",
-                                "properties": {
-                                  "blindedCredential": {
-                                    "type": "string"
-                                  },
-                                  "encryptedBlinding": {
-                                    "type": "string"
-                                  },
-                                  "encryptedBlindedSubject": {
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "blindedCredential",
-                                  "encryptedBlinding",
-                                  "encryptedBlindedSubject"
-                                ],
-                                "additionalProperties": false
+                                "type": "string"
                               },
                               "revoked": {
                                 "type": "array",
                                 "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "revoked"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "secretCredentialsPerType": {
+                          "type": "object",
+                          "required": [
+                            "unbound",
+                            "timebound"
+                          ],
+                          "properties": {
+                            "unbound": {
+                              "type": "object",
+                              "properties": {
+                                "active": {
                                   "type": "object",
                                   "properties": {
                                     "blindedCredential": {
@@ -193,14 +197,90 @@
                                     "encryptedBlindedSubject"
                                   ],
                                   "additionalProperties": false
+                                },
+                                "revoked": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "blindedCredential": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlinding": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlindedSubject": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "blindedCredential",
+                                      "encryptedBlinding",
+                                      "encryptedBlindedSubject"
+                                    ],
+                                    "additionalProperties": false
+                                  }
                                 }
-                              }
+                              },
+                              "required": [
+                                "revoked"
+                              ],
+                              "additionalProperties": false
                             },
-                            "required": [
-                              "revoked"
-                            ],
-                            "additionalProperties": false
-                          }
+                            "timebound": {
+                              "type": "object",
+                              "properties": {
+                                "active": {
+                                  "type": "object",
+                                  "properties": {
+                                    "blindedCredential": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlinding": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlindedSubject": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "blindedCredential",
+                                    "encryptedBlinding",
+                                    "encryptedBlindedSubject"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "revoked": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "blindedCredential": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlinding": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlindedSubject": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "blindedCredential",
+                                      "encryptedBlinding",
+                                      "encryptedBlindedSubject"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "revoked"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -209,6 +289,7 @@
                         "encryptedSymmKey",
                         "syncingDevices",
                         "emailCredentialsPerEmail",
+                        "formCredentialsPerEmail",
                         "secretCredentialsPerType"
                       ],
                       "additionalProperties": false
@@ -236,11 +317,52 @@
                   },
                   "encryptedSymmKey": {
                     "type": "string"
+                  },
+                  "timeboundSecretCredentialRequest": {
+                    "type": "object",
+                    "properties": {
+                      "blindedRequest": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "encryptedEncodedBlindedSubject": {
+                        "type": "string"
+                      },
+                      "encryptedEncodedBlinding": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "blindedRequest",
+                      "encryptedEncodedBlindedSubject",
+                      "encryptedEncodedBlinding"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "unboundSecretCredentialRequest": {
+                    "type": "object",
+                    "properties": {
+                      "blindedRequest": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "encryptedEncodedBlindedSubject": {
+                        "type": "string"
+                      },
+                      "encryptedEncodedBlinding": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "blindedRequest",
+                      "encryptedEncodedBlindedSubject",
+                      "encryptedEncodedBlinding"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
-                  "code",
-                  "encryptedSymmKey"
+                  "code"
                 ],
                 "additionalProperties": false
               }
@@ -299,34 +421,38 @@
                             "additionalProperties": false
                           }
                         },
-                        "secretCredentialsPerType": {
+                        "formCredentialsPerEmail": {
                           "type": "object",
                           "additionalProperties": {
                             "type": "object",
                             "properties": {
                               "active": {
-                                "type": "object",
-                                "properties": {
-                                  "blindedCredential": {
-                                    "type": "string"
-                                  },
-                                  "encryptedBlinding": {
-                                    "type": "string"
-                                  },
-                                  "encryptedBlindedSubject": {
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "blindedCredential",
-                                  "encryptedBlinding",
-                                  "encryptedBlindedSubject"
-                                ],
-                                "additionalProperties": false
+                                "type": "string"
                               },
                               "revoked": {
                                 "type": "array",
                                 "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "revoked"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "secretCredentialsPerType": {
+                          "type": "object",
+                          "required": [
+                            "unbound",
+                            "timebound"
+                          ],
+                          "properties": {
+                            "unbound": {
+                              "type": "object",
+                              "properties": {
+                                "active": {
                                   "type": "object",
                                   "properties": {
                                     "blindedCredential": {
@@ -345,14 +471,90 @@
                                     "encryptedBlindedSubject"
                                   ],
                                   "additionalProperties": false
+                                },
+                                "revoked": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "blindedCredential": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlinding": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlindedSubject": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "blindedCredential",
+                                      "encryptedBlinding",
+                                      "encryptedBlindedSubject"
+                                    ],
+                                    "additionalProperties": false
+                                  }
                                 }
-                              }
+                              },
+                              "required": [
+                                "revoked"
+                              ],
+                              "additionalProperties": false
                             },
-                            "required": [
-                              "revoked"
-                            ],
-                            "additionalProperties": false
-                          }
+                            "timebound": {
+                              "type": "object",
+                              "properties": {
+                                "active": {
+                                  "type": "object",
+                                  "properties": {
+                                    "blindedCredential": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlinding": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlindedSubject": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "blindedCredential",
+                                    "encryptedBlinding",
+                                    "encryptedBlindedSubject"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "revoked": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "blindedCredential": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlinding": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlindedSubject": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "blindedCredential",
+                                      "encryptedBlinding",
+                                      "encryptedBlindedSubject"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "revoked"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -360,6 +562,7 @@
                         "userId",
                         "syncingDevices",
                         "emailCredentialsPerEmail",
+                        "formCredentialsPerEmail",
                         "secretCredentialsPerType"
                       ],
                       "additionalProperties": false
@@ -378,7 +581,11 @@
                           "enum": [
                             "expired_code",
                             "wrong_guess",
-                            "too_many_wrong_guess"
+                            "too_many_wrong_guess",
+                            "encrypted_symm_key_required",
+                            "unbound_secret_credential_request_required",
+                            "timebound_secret_credential_request_required",
+                            "secret_credential_requests_required"
                           ]
                         }
                       },
@@ -464,34 +671,38 @@
                             "additionalProperties": false
                           }
                         },
-                        "secretCredentialsPerType": {
+                        "formCredentialsPerEmail": {
                           "type": "object",
                           "additionalProperties": {
                             "type": "object",
                             "properties": {
                               "active": {
-                                "type": "object",
-                                "properties": {
-                                  "blindedCredential": {
-                                    "type": "string"
-                                  },
-                                  "encryptedBlinding": {
-                                    "type": "string"
-                                  },
-                                  "encryptedBlindedSubject": {
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "blindedCredential",
-                                  "encryptedBlinding",
-                                  "encryptedBlindedSubject"
-                                ],
-                                "additionalProperties": false
+                                "type": "string"
                               },
                               "revoked": {
                                 "type": "array",
                                 "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "revoked"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "secretCredentialsPerType": {
+                          "type": "object",
+                          "required": [
+                            "unbound",
+                            "timebound"
+                          ],
+                          "properties": {
+                            "unbound": {
+                              "type": "object",
+                              "properties": {
+                                "active": {
                                   "type": "object",
                                   "properties": {
                                     "blindedCredential": {
@@ -510,14 +721,90 @@
                                     "encryptedBlindedSubject"
                                   ],
                                   "additionalProperties": false
+                                },
+                                "revoked": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "blindedCredential": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlinding": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlindedSubject": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "blindedCredential",
+                                      "encryptedBlinding",
+                                      "encryptedBlindedSubject"
+                                    ],
+                                    "additionalProperties": false
+                                  }
                                 }
-                              }
+                              },
+                              "required": [
+                                "revoked"
+                              ],
+                              "additionalProperties": false
                             },
-                            "required": [
-                              "revoked"
-                            ],
-                            "additionalProperties": false
-                          }
+                            "timebound": {
+                              "type": "object",
+                              "properties": {
+                                "active": {
+                                  "type": "object",
+                                  "properties": {
+                                    "blindedCredential": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlinding": {
+                                      "type": "string"
+                                    },
+                                    "encryptedBlindedSubject": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "blindedCredential",
+                                    "encryptedBlinding",
+                                    "encryptedBlindedSubject"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "revoked": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "blindedCredential": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlinding": {
+                                        "type": "string"
+                                      },
+                                      "encryptedBlindedSubject": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "blindedCredential",
+                                      "encryptedBlinding",
+                                      "encryptedBlindedSubject"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "revoked"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -526,6 +813,7 @@
                         "encryptedSymmKey",
                         "syncingDevices",
                         "emailCredentialsPerEmail",
+                        "formCredentialsPerEmail",
                         "secretCredentialsPerType"
                       ],
                       "additionalProperties": false
@@ -549,32 +837,6 @@
     },
     "/auth/sync": {
       "post": {
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "maxLength": 254,
-                    "minLength": 1,
-                    "description": "Email address"
-                  },
-                  "secretBlindedCredentialRequest": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "email"
-                ],
-                "additionalProperties": false
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "409": {
             "description": "Default Response",
@@ -638,34 +900,38 @@
                         "additionalProperties": false
                       }
                     },
-                    "secretCredentialsPerType": {
+                    "formCredentialsPerEmail": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "object",
                         "properties": {
                           "active": {
-                            "type": "object",
-                            "properties": {
-                              "blindedCredential": {
-                                "type": "string"
-                              },
-                              "encryptedBlinding": {
-                                "type": "string"
-                              },
-                              "encryptedBlindedSubject": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "blindedCredential",
-                              "encryptedBlinding",
-                              "encryptedBlindedSubject"
-                            ],
-                            "additionalProperties": false
+                            "type": "string"
                           },
                           "revoked": {
                             "type": "array",
                             "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "revoked"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "secretCredentialsPerType": {
+                      "type": "object",
+                      "required": [
+                        "unbound",
+                        "timebound"
+                      ],
+                      "properties": {
+                        "unbound": {
+                          "type": "object",
+                          "properties": {
+                            "active": {
                               "type": "object",
                               "properties": {
                                 "blindedCredential": {
@@ -684,18 +950,95 @@
                                 "encryptedBlindedSubject"
                               ],
                               "additionalProperties": false
+                            },
+                            "revoked": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "blindedCredential": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlinding": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlindedSubject": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "blindedCredential",
+                                  "encryptedBlinding",
+                                  "encryptedBlindedSubject"
+                                ],
+                                "additionalProperties": false
+                              }
                             }
-                          }
+                          },
+                          "required": [
+                            "revoked"
+                          ],
+                          "additionalProperties": false
                         },
-                        "required": [
-                          "revoked"
-                        ],
-                        "additionalProperties": false
-                      }
+                        "timebound": {
+                          "type": "object",
+                          "properties": {
+                            "active": {
+                              "type": "object",
+                              "properties": {
+                                "blindedCredential": {
+                                  "type": "string"
+                                },
+                                "encryptedBlinding": {
+                                  "type": "string"
+                                },
+                                "encryptedBlindedSubject": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "blindedCredential",
+                                "encryptedBlinding",
+                                "encryptedBlindedSubject"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "revoked": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "blindedCredential": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlinding": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlindedSubject": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "blindedCredential",
+                                  "encryptedBlinding",
+                                  "encryptedBlindedSubject"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "revoked"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
                     }
                   },
                   "required": [
                     "emailCredentialsPerEmail",
+                    "formCredentialsPerEmail",
                     "secretCredentialsPerType"
                   ],
                   "additionalProperties": false
@@ -721,7 +1064,7 @@
                     "minLength": 1,
                     "description": "Email address"
                   },
-                  "emailCredentialRequest": {
+                  "formCredentialRequest": {
                     "anyOf": [
                       {
                         "type": "object",
@@ -1806,33 +2149,11 @@
                         "additionalProperties": false
                       }
                     ]
-                  },
-                  "secretCredentialRequest": {
-                    "type": "object",
-                    "properties": {
-                      "blindedRequest": {
-                        "type": "object",
-                        "additionalProperties": {}
-                      },
-                      "encryptedEncodedBlindedSubject": {
-                        "type": "string"
-                      },
-                      "encryptedEncodedBlinding": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "blindedRequest",
-                      "encryptedEncodedBlindedSubject",
-                      "encryptedEncodedBlinding"
-                    ],
-                    "additionalProperties": false
                   }
                 },
                 "required": [
                   "email",
-                  "emailCredentialRequest",
-                  "secretCredentialRequest"
+                  "formCredentialRequest"
                 ],
                 "additionalProperties": false
               }
@@ -1848,7 +2169,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "emailCredentialsPerEmail": {
+                    "formCredentialsPerEmail": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "object",
@@ -1868,66 +2189,10 @@
                         ],
                         "additionalProperties": false
                       }
-                    },
-                    "secretCredentialsPerType": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "active": {
-                            "type": "object",
-                            "properties": {
-                              "blindedCredential": {
-                                "type": "string"
-                              },
-                              "encryptedBlinding": {
-                                "type": "string"
-                              },
-                              "encryptedBlindedSubject": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "blindedCredential",
-                              "encryptedBlinding",
-                              "encryptedBlindedSubject"
-                            ],
-                            "additionalProperties": false
-                          },
-                          "revoked": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "blindedCredential": {
-                                  "type": "string"
-                                },
-                                "encryptedBlinding": {
-                                  "type": "string"
-                                },
-                                "encryptedBlindedSubject": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "blindedCredential",
-                                "encryptedBlinding",
-                                "encryptedBlindedSubject"
-                              ],
-                              "additionalProperties": false
-                            }
-                          }
-                        },
-                        "required": [
-                          "revoked"
-                        ],
-                        "additionalProperties": false
-                      }
                     }
                   },
                   "required": [
-                    "emailCredentialsPerEmail",
-                    "secretCredentialsPerType"
+                    "formCredentialsPerEmail"
                   ],
                   "additionalProperties": false
                 }

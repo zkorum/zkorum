@@ -4,6 +4,7 @@ import { uint8ArrayToJSON } from "@/shared/common/arrbufs";
 import { base64 } from "@/shared/common/index";
 import { BBSPlusCredential as Credential } from "@docknetwork/crypto-wasm-ts";
 import type { SessionStatus } from "./reducers/session";
+import type { UnblindedSecretCredentials } from "@/shared/types/zod";
 
 const selectSessionsData = (state: RootState) => {
     return Object.values(state.sessions.sessions).sort((s1, s2) => {
@@ -105,6 +106,44 @@ export const selectActiveEmailCredential = (
     }
 };
 
+// for some reason this is called 5 times (in dev mode)!!!
+// => TODO: look into optimizing this - ...
+// The following console warning has to be investigated:
+// Selector selectActiveEmailCredential returned a different result when called with the same parameters. This can lead to unnecessary rerenders.
+// Selectors that return a new reference (such as an object or an array) should be memoized: https://redux.js.org/usage/deriving-data-selectors#optimizing-selectors-with-memoization
+export const selectActiveFormCredential = (
+    state: RootState
+): Credential | undefined => {
+    const activeSessionEmail = state.sessions.activeSessionEmail;
+    if (activeSessionEmail === "") {
+        return undefined;
+    }
+    const formCredentialsPerEmail =
+        state.sessions.sessions[activeSessionEmail]?.formCredentialsPerEmail;
+    if (
+        formCredentialsPerEmail !== undefined &&
+        activeSessionEmail in formCredentialsPerEmail
+    ) {
+        const encodedFormCredential =
+            formCredentialsPerEmail[activeSessionEmail].active;
+        if (encodedFormCredential === undefined) {
+            return undefined;
+        } else {
+            try {
+                return Credential.fromJSON(
+                    uint8ArrayToJSON(base64.decode(encodedFormCredential))
+                );
+            } catch (e) {
+                // TODO: better error handling - how to recover the formCredentialsPerEmail?
+                // for now we catch it so it doesn't crash the entire app, and return undefined
+                console.error("Error while parsing form credential", e);
+            }
+        }
+    } else {
+        return undefined;
+    }
+};
+
 export const selectActiveSessionStatus = (
     state: RootState
 ): SessionStatus | undefined => {
@@ -115,7 +154,7 @@ export const selectActiveSessionStatus = (
     return state.sessions.sessions[activeSessionEmail]?.status;
 };
 
-export const selectActiveGlobalSecretCredential = (
+export const selectActiveUnboundSecretCredential = (
     state: RootState
 ): Credential | undefined => {
     const activeSessionEmail = state.sessions.activeSessionEmail;
@@ -125,20 +164,13 @@ export const selectActiveGlobalSecretCredential = (
     const secretCredentialsPerType =
         state.sessions.sessions[activeSessionEmail]
             ?.unblindedSecretCredentialsPerType;
-    const userId = state.sessions.sessions[activeSessionEmail]?.userId;
-    console.log(
-        "Values",
-        state.sessions.sessions[activeSessionEmail],
-        secretCredentialsPerType,
-        userId
-    );
     if (
         secretCredentialsPerType !== undefined &&
-        "global" in secretCredentialsPerType &&
-        userId !== undefined
+        "unbound" in secretCredentialsPerType
     ) {
-        const unblindedSecretCredential =
-            secretCredentialsPerType["global"].active;
+        const unblindedSecretCredential = (
+            secretCredentialsPerType["unbound"] as UnblindedSecretCredentials
+        ).active;
         if (unblindedSecretCredential === undefined) {
             return undefined;
         } else {

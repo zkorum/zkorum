@@ -20,7 +20,6 @@ import {
 } from "../../store/reducers/snackbar";
 import { setPendingSessionCodeExpiry } from "../../store/reducers/session";
 import { authAlreadyLoggedIn, genericError, throttled } from "../error/message";
-import { generateAndEncryptSymmKey } from "../../crypto/ucan/ucan";
 import axios from "axios";
 import Alert from "@mui/material/Alert";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
@@ -140,19 +139,13 @@ export function OtpVerify() {
         } else {
             dispatch(openMainLoading());
             try {
-                const tempEncryptedSymmKey =
-                    await generateAndEncryptSymmKey(pendingEmail);
-                // we systematically send an encrypted symmetric key, even though it is only taken into account on registration
-                // that is because we don't know at this point if it is a registration or a log in
-                // and we don't want the backend to tell us before, otherwise an attacker could do an enumeration attack on the authenticate endpoint.
-                // we could send the symm key later, only if needed, but it would result in synchronization issues (what if the user is considered logged-in when registering, but has never synced any symmetric key?)
-                // so for the sake of simplicity, we trade off a bit of performance
-                const verifyOtpResult = await verifyOtp(
+                const { verifyOtpData, tempEncryptedSymmKey } = await verifyOtp(
                     result.data,
-                    tempEncryptedSymmKey
+                    pendingEmail,
+                    userId
                 );
-                if (verifyOtpResult.success) {
-                    if (verifyOtpResult.encryptedSymmKey === undefined) {
+                if (verifyOtpData.success) {
+                    if (verifyOtpData.encryptedSymmKey === undefined) {
                         // this is login from a new device or a known unsynced device
                         // device is awaiting syncing: TODO show corresponding screen and update redux user status
                         // then when syncing is OK - steps as in "else"
@@ -160,20 +153,22 @@ export function OtpVerify() {
                         // this is a first time registration or a login from a known device that's been synced already
                         await onLoggedIn({
                             email: pendingEmail,
-                            userId: verifyOtpResult.userId,
-                            encryptedSymmKey: verifyOtpResult.encryptedSymmKey,
+                            userId: verifyOtpData.userId,
+                            encryptedSymmKey: verifyOtpData.encryptedSymmKey,
                             isRegistration:
-                                verifyOtpResult.encryptedSymmKey ===
+                                verifyOtpData.encryptedSymmKey ===
                                 tempEncryptedSymmKey,
-                            syncingDevices: verifyOtpResult.syncingDevices,
+                            syncingDevices: verifyOtpData.syncingDevices,
                             emailCredentialsPerEmail:
-                                verifyOtpResult.emailCredentialsPerEmail,
+                                verifyOtpData.emailCredentialsPerEmail,
+                            formCredentialsPerEmail:
+                                verifyOtpData.formCredentialsPerEmail,
                             secretCredentialsPerType:
-                                verifyOtpResult.secretCredentialsPerType,
+                                verifyOtpData.secretCredentialsPerType,
                         });
                     }
                 } else {
-                    switch (verifyOtpResult.reason) {
+                    switch (verifyOtpData.reason) {
                         case AuthVerifyOtpPost200ResponseReasonEnum.ExpiredCode:
                             setIsCurrentCodeActive(false);
                             dispatch(
@@ -214,6 +209,8 @@ export function OtpVerify() {
                                 syncingDevices: auth409.syncingDevices,
                                 emailCredentialsPerEmail:
                                     auth409.emailCredentialsPerEmail,
+                                formCredentialsPerEmail:
+                                    auth409.formCredentialsPerEmail,
                                 secretCredentialsPerType:
                                     auth409.secretCredentialsPerType,
                             });

@@ -55,8 +55,10 @@ export function LoggedInUserMustPerformActionPage({
         >
             {isTheOnlyDevice ? (
                 <>
-                    <Box sx={{ my: 2, alignSelf: "center" }}>
-                        <Typography variant={"h6"}>Add a new device</Typography>{" "}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant={"h6"}>
+                            Add a new device (recommended)
+                        </Typography>{" "}
                     </Box>
                     <Box sx={{ my: 2 }}>
                         <Typography component="div">
@@ -65,27 +67,27 @@ export function LoggedInUserMustPerformActionPage({
                                 If you lose access to this device, uninstall the
                                 app or delete its cache,
                             </Box>{" "}
-                            you won't be able to change your responses in
-                            polls/votes you already registered to, and ZKorum
-                            will not be able to tell what posts you created.
+                            the secret keys will be lost. As a consequence, you
+                            would not be able to respond to polls/votes created
+                            before you lost your device, and ZKorum will not be
+                            able to tell what posts you created.
                         </Typography>
                     </Box>
                 </>
             ) : null}
             {!hasFilledForms ? (
                 <>
-                    <Box sx={{ my: 2, alignSelf: "center" }}>
-                        <Typography variant={"h6"}>Fill the forms</Typography>{" "}
+                    <Box sx={{ my: 2 }}>
+                        <Typography variant={"h6"}>
+                            Self-attest attributes (optional)
+                        </Typography>{" "}
                     </Box>
 
                     <Box sx={{ my: 2 }}>
                         <Typography>
-                            Before using ZKorum, you need to fill forms to
-                            connect with your community. Thanks to
-                            Zero-Knowledge proofs, the posts you will create
-                            cannot trace back to your account or to the forms,
-                            yet we can verify they originated from some
-                            anonymous invididual in your community.
+                            Self-attest attributes such as "student", or
+                            "alumni" to connect with your community with more
+                            granularity.
                         </Typography>
                     </Box>
                 </>
@@ -101,19 +103,22 @@ export function LoggedInUserMustPerformActionPage({
                     {isTheOnlyDevice ? (
                         <Grid>
                             <Button onClick={handleOnSync} variant="contained">
-                                Sync new device
+                                Link new device
                             </Button>
                         </Grid>
                     ) : null}
                     {!hasFilledForms ? (
                         <Grid>
-                            <Button onClick={handleOnForms} variant="contained">
-                                Fill forms
+                            <Button onClick={handleOnForms} variant="outlined">
+                                Self-attest attributes
                             </Button>
                         </Grid>
                     ) : null}
                     <Grid>
-                        <Button onClick={handleOnSkip} variant="outlined">
+                        <Button
+                            onClick={handleOnSkip}
+                            variant={isTheOnlyDevice ? "outlined" : "contained"}
+                        >
                             Skip for now
                         </Button>
                     </Grid>

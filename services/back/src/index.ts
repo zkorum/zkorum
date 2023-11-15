@@ -12,7 +12,7 @@ import {
     type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { DrizzleFastifyLogger } from "./logger.js";
-import { Dto, type UserCredentials } from "./dto.js";
+import { Dto } from "./dto.js";
 import * as ucans from "@ucans/ucans";
 import {
     httpMethodToAbility,
@@ -26,6 +26,7 @@ import {
     BBSPlusSignatureParamsG1 as SignatureParams,
     SUBJECT_STR,
     PseudonymBases,
+    CredentialSchema,
 } from "@docknetwork/crypto-wasm-ts";
 import { config, Environment, server } from "./app.js";
 import {
@@ -34,15 +35,15 @@ import {
 } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import {
-    addActiveEmailCredential,
-    addActiveSecretCredential,
-    hasActiveEmailCredential,
-    hasActiveSecretCredential,
+    addActiveEmailCredential as addActiveEmailOrFormCredential,
+    hasActiveCredential as hasActiveEmailOrFormCredential,
     revealedAttributesToPostAs,
     type PostAs,
+    getWebDomainType,
+    type WebDomainType,
 } from "./service/credential.js";
 import type {
-    SecretCredential,
+    FormCredentialsPerEmail,
     SecretCredentialType,
 } from "./shared/types/zod.js";
 import { toCID, decodeCID } from "./shared/common/cid.js";
@@ -257,21 +258,18 @@ interface VerifyPresentationProps {
     expectedSecretCredentialType: SecretCredentialType;
 }
 
-function basesFromRevealedAttributes(
-    revealedAttributes: any,
-    subjectStr: string,
-    credentialNumber: number
-): string[] {
-    if (!(subjectStr in revealedAttributes)) {
-        throw server.httpErrors.unauthorized(
-            `Credential ${credentialNumber} must have subject attribute ${SUBJECT_STR}`
-        );
-    }
+function basesFromRevealedAttributes(revealedAttributes?: any): string[] {
     let scope = "base";
+    if (revealedAttributes === undefined) {
+        const basesForAttributes = PseudonymBases.generateBasesForAttributes(
+            2, // communityId ( == email here) + secret value = 2 attributes
+            stringToBytes(scope)
+        );
+        return PseudonymBases.decodeBasesForAttributes(basesForAttributes);
+    }
     const typeSpecificStr = "typeSpecific";
-    const subjectAttribute = revealedAttributes[subjectStr];
-    if (typeSpecificStr in subjectAttribute) {
-        const typeSpecificAttribute = subjectAttribute[typeSpecificStr];
+    if (typeSpecificStr in revealedAttributes) {
+        const typeSpecificAttribute = revealedAttributes[typeSpecificStr];
         const typeStr = "type";
         if (typeStr in typeSpecificAttribute) {
             const universityType = universityStringToType(
@@ -345,6 +343,13 @@ async function verifyPresentation({
                 );
             }
 
+            const expectedPresentationVersion = "0.1.0";
+            if (presentation.version !== expectedPresentationVersion) {
+                throw server.httpErrors.unauthorized(
+                    `Version of Presentation must be ${expectedPresentationVersion} but was ${presentation.version}`
+                );
+            }
+
             // check that request body's CID === presentation's context
             if (presentation.context === undefined) {
                 throw server.httpErrors.unauthorized("Context is missing");
@@ -362,11 +367,26 @@ async function verifyPresentation({
                 );
             }
 
-            // check that there are two credentials, the first one being email credential, the second one being a secret credential
-            if (presentation.spec.credentials.length !== 2) {
+            // check that there are two or three credentials, the first one being secret credential, the second one being a email credential, and the eventual third one being the form credential
+            if (
+                presentation.spec.credentials.length !== 2 &&
+                presentation.spec.credentials.length !== 3
+            ) {
                 throw server.httpErrors.unauthorized(
-                    "The Presentation is expected to be created by two credentials"
+                    "The Presentation is expected to be created by two or three credentials"
                 );
+            }
+
+            const expectedCredentialVersion = "0.1.0";
+            for (const [
+                credIdx,
+                credential,
+            ] of presentation.spec.credentials.entries()) {
+                if (credential.version !== expectedCredentialVersion) {
+                    throw server.httpErrors.unauthorized(
+                        `Version of Credential ${credIdx} must be ${expectedPresentationVersion} but was ${credential.version}`
+                    );
+                }
             }
             // TODO check schema of credentials
             // const schemaCred0 = CredentialSchema.fromJSON(
@@ -401,23 +421,23 @@ async function verifyPresentation({
             const attributesEntries = Object.entries(attributes);
             if (attributesEntries.length !== 2) {
                 throw server.httpErrors.unauthorized(
-                    `The pseudonym must be created from attributes from the two credentials, but was created from ${attributesEntries.length} credentials`
+                    `The pseudonym must be created from attributes from two credentials, but was created from ${attributesEntries.length} credentials`
                 );
             }
             // TODO used shared function to make sure the same thing is used in front and back
-            if (!isEqual(attributes[0], [`${SUBJECT_STR}.email`])) {
+            if (!isEqual(attributes[0], [`${SUBJECT_STR}.secret`])) {
                 throw server.httpErrors.unauthorized(
-                    `The attribute from the first credential used to generate the pseudonym must be email`
+                    `The attribute from the first credential used to generate the pseudonym must be secret`
                 );
             }
             // TODO used shared function clean this up to make sure the same thing is used in front and back
-            if (!isEqual(attributes[1], [`${SUBJECT_STR}.secret`])) {
+            if (!isEqual(attributes[1], [`${SUBJECT_STR}.email`])) {
                 throw server.httpErrors.unauthorized(
-                    `The attribute from the second credential used to generate the pseudonym must be secret`
+                    `The attribute from the second credential used to generate the pseudonym must be email`
                 );
             }
             const emailCredentialRevealedAttributes =
-                presentation.spec.credentials[0].revealedAttributes;
+                presentation.spec.credentials[1].revealedAttributes;
             if (!(SUBJECT_STR in emailCredentialRevealedAttributes)) {
                 throw server.httpErrors.unauthorized(
                     `Attribute '${SUBJECT_STR}' is not revealed in email credential`
@@ -426,20 +446,41 @@ async function verifyPresentation({
             const emailSubjectRevealedAttrs = emailCredentialRevealedAttributes[
                 SUBJECT_STR
             ] as object;
-            if (!("type" in emailSubjectRevealedAttrs)) {
+            if (
+                !("type" in emailSubjectRevealedAttrs) ||
+                typeof emailSubjectRevealedAttrs["type"] != "string" ||
+                getWebDomainType(emailSubjectRevealedAttrs["type"]) ===
+                    undefined
+            ) {
                 throw server.httpErrors.unauthorized(
-                    `Attribute 'type' is not revealed in email credential `
+                    `Attribute 'type' is not revealed in email credential or it is not a valid WebDomainType`
                 );
             }
-            if (!("domain" in emailSubjectRevealedAttrs)) {
+            if (
+                !("domain" in emailSubjectRevealedAttrs) ||
+                typeof emailSubjectRevealedAttrs["domain"] !== "string"
+            ) {
                 throw server.httpErrors.unauthorized(
-                    `Attribute 'domain' is not revealed in email credential `
+                    `Attribute 'domain' is not revealed in email credential or it is not a valid string`
                 );
             }
+
+            let formSubjectRevealedAttrs: object | undefined = undefined;
+            if (presentation.spec.credentials.length === 3) {
+                const formCredentialRevealedAttributes =
+                    presentation.spec.credentials[2].revealedAttributes;
+                if (!(SUBJECT_STR in formCredentialRevealedAttributes)) {
+                    throw server.httpErrors.unauthorized(
+                        `Attribute '${SUBJECT_STR}' is not revealed in form credential`
+                    );
+                }
+                formSubjectRevealedAttrs = formCredentialRevealedAttributes[
+                    SUBJECT_STR
+                ] as object;
+            }
+
             const expectedBasesForAttributes = basesFromRevealedAttributes(
-                emailCredentialRevealedAttributes,
-                SUBJECT_STR,
-                0
+                formSubjectRevealedAttrs
             );
             if (!isEqual(basesForAttributes, expectedBasesForAttributes)) {
                 throw server.httpErrors.unauthorized(
@@ -447,7 +488,7 @@ async function verifyPresentation({
                 );
             }
             const secretCredentialRevealedAttributes =
-                presentation.spec.credentials[1].revealedAttributes;
+                presentation.spec.credentials[0].revealedAttributes;
             if (
                 !(SUBJECT_STR in secretCredentialRevealedAttributes) ||
                 !(
@@ -459,13 +500,119 @@ async function verifyPresentation({
                 ] !== expectedSecretCredentialType
             ) {
                 throw server.httpErrors.unauthorized(
-                    `Second credential must reveal attribute '${SUBJECT_STR}.type' and be equal to 'global'`
+                    `Second credential must reveal attribute '${SUBJECT_STR}.type' and be equal to '${expectedSecretCredentialType}'`
                 );
             }
+
+            // meta equality proofs
+            if (presentation.spec.attributeEqualities === undefined) {
+                throw server.httpErrors.unauthorized(
+                    `The presentation attributeEqualities must not be undefined`
+                );
+            }
+            if (
+                presentation.spec.credentials.length === 2 &&
+                presentation.spec.attributeEqualities.length !== 1
+            ) {
+                throw server.httpErrors.unauthorized(
+                    `There must be exactly one attribute equality proof if Form Credential does not partiticipate in the proof`
+                );
+            }
+            if (
+                presentation.spec.credentials.length === 3 &&
+                presentation.spec.attributeEqualities.length !== 2
+            ) {
+                throw server.httpErrors.unauthorized(
+                    `There must be exactly two attribute equality proofs if Form Credential partiticipate in the proof`
+                );
+            }
+            // first attribute equality must be based on uid
+            const uidAttributeEquality =
+                presentation.spec.attributeEqualities[0];
+            if (
+                uidAttributeEquality.length !==
+                presentation.spec.credentials.length
+            ) {
+                throw server.httpErrors.unauthorized(
+                    `The presentation's Uid Attribute Equality must contain the same number of meta equalities as the number of credentials involved in creating the proofs`
+                );
+            }
+            const attributeUidStr = "credentialSubject.uid";
+            const attributeRefSecretCred = uidAttributeEquality[0];
+            if (attributeRefSecretCred[0] !== 0) {
+                throw server.httpErrors.unauthorized(
+                    `The first attribute ref of the Uid Attribute Equality must be related to the first credential - the Secret Credential`
+                );
+            }
+            if (attributeRefSecretCred[1] !== attributeUidStr) {
+                throw server.httpErrors.unauthorized(
+                    `The first attribute ref's name of the Uid Attribute Equality must be 'uid' `
+                );
+            }
+            const attributeRefEmailCred = uidAttributeEquality[1];
+            if (attributeRefEmailCred[0] !== 1) {
+                throw server.httpErrors.unauthorized(
+                    `The second attribute ref of the Uid Attribute Equality must be related to the second credential - the Email Credential`
+                );
+            }
+            if (attributeRefEmailCred[1] !== attributeUidStr) {
+                throw server.httpErrors.unauthorized(
+                    `The second attribute ref's name of the Uid Attribute Equality must be 'uid' `
+                );
+            }
+            if (presentation.spec.attributeEqualities[0].length === 3) {
+                const attributeRefFormCred = uidAttributeEquality[2];
+                if (attributeRefFormCred[0] !== 2) {
+                    throw server.httpErrors.unauthorized(
+                        `The third attribute ref of the Uid Attribute Equality must be related to the third credential - the Form Credential`
+                    );
+                }
+                if (attributeRefFormCred[1] !== attributeUidStr) {
+                    throw server.httpErrors.unauthorized(
+                        `The third attribute ref's name of the Uid Attribute Equality must be 'uid' `
+                    );
+                }
+            }
+            // second attribute equality must be based on email - only exists if Form Credential is shared
+            if (presentation.spec.credentials.length === 3) {
+                const emailAttributeEquality =
+                    presentation.spec.attributeEqualities[1];
+                if (emailAttributeEquality.length !== 2) {
+                    throw server.httpErrors.unauthorized(
+                        `The presentation's Email Attribute Equality must contain 2 meta equalities`
+                    );
+                }
+                const attributeEmailStr = "credentialSubject.email";
+                const attributeRefEmailCred = emailAttributeEquality[0];
+                if (attributeRefEmailCred[0] !== 1) {
+                    throw server.httpErrors.unauthorized(
+                        `The first attribute ref of the Email Attribute Equality must be related to the second credential - the Email Credential`
+                    );
+                }
+                if (attributeRefEmailCred[1] !== attributeEmailStr) {
+                    throw server.httpErrors.unauthorized(
+                        `The first attribute ref's name of the Email Attribute Equality must be 'email' `
+                    );
+                }
+                const attributeRefFormCred = emailAttributeEquality[1];
+                if (attributeRefFormCred[0] !== 2) {
+                    throw server.httpErrors.unauthorized(
+                        `The second attribute ref of the Email Attribute Equality must be related to the third credential - the Form Credential`
+                    );
+                }
+                if (attributeRefFormCred[1] !== attributeEmailStr) {
+                    throw server.httpErrors.unauthorized(
+                        `The second attribute ref's name of the Email Attribute Equality must be 'email' `
+                    );
+                }
+            }
+
             return {
-                postAs: revealedAttributesToPostAs(
-                    emailCredentialRevealedAttributes
-                ),
+                postAs: revealedAttributesToPostAs({
+                    domain: emailSubjectRevealedAttrs["domain"] as string, // we would have thrown already if was not there or not the right type
+                    type: emailSubjectRevealedAttrs["type"] as WebDomainType, // we would have thrown already if was not there or not the right type
+                    revealedFormAttributes: formSubjectRevealedAttrs,
+                }),
                 pseudonym: pseudonym,
                 presentation: presentation,
             };
@@ -541,14 +688,20 @@ server.after(() => {
             const didWrite = await verifyUCAN(db, request, {
                 expectedDeviceStatus: undefined,
             });
-            return await Service.verifyOtp(
+            return await Service.verifyOtp({
                 db,
-                config.EMAIL_OTP_MAX_ATTEMPT_AMOUNT,
+                maxAttempt: config.EMAIL_OTP_MAX_ATTEMPT_AMOUNT,
+
                 didWrite,
-                request.body.code,
-                request.body.encryptedSymmKey,
-                server.httpErrors
-            );
+                code: request.body.code,
+                encryptedSymmKey: request.body.encryptedSymmKey,
+                sk,
+                httpErrors: server.httpErrors,
+                unboundSecretCredentialRequest:
+                    request.body.unboundSecretCredentialRequest,
+                timeboundSecretCredentialRequest:
+                    request.body.timeboundSecretCredentialRequest,
+            });
         },
     });
     server.withTypeProvider<ZodTypeProvider>().post("/auth/logout", {
@@ -564,7 +717,7 @@ server.after(() => {
     // TODO
     server.withTypeProvider<ZodTypeProvider>().post("/auth/sync", {
         schema: {
-            body: Dto.createOrGetEmailCredentialsReq,
+            // body: Dto.createOrGetEmailCredentialsReq,
             response: {
                 // TODO 200: Dto.createOrGetEmailCredentialsRes,
                 409: Dto.sync409,
@@ -594,14 +747,14 @@ server.after(() => {
                     isSyncing: true,
                 },
             });
-            return await Service.getCredentials(db, didWrite);
+            return await Service.getUserCredentials(db, didWrite);
         },
     });
     server.withTypeProvider<ZodTypeProvider>().post("/credential/request", {
         schema: {
             body: Dto.requestCredentials,
             response: {
-                200: Dto.userCredentials,
+                200: Dto.requestCredentials200,
             },
         },
         handler: async (request, _reply) => {
@@ -620,136 +773,40 @@ server.after(() => {
                 );
             }
 
-            const {
-                emailCredentialsPerEmail: existingEmailCredentialsPerEmail,
-                secretCredentialsPerType: existingSecretCredentialsPerType,
-            } = await Service.getCredentials(db, didWrite);
-            const type = "global";
+            const existingFormCredentialsPerEmail: FormCredentialsPerEmail =
+                await Service.getFormCredentialsPerEmailFromDidWrite(
+                    db,
+                    didWrite
+                );
             if (
-                hasActiveEmailCredential(
+                hasActiveEmailOrFormCredential(
                     email,
-                    existingEmailCredentialsPerEmail
+                    existingFormCredentialsPerEmail
                 )
             ) {
-                if (
-                    hasActiveSecretCredential(
-                        type,
-                        existingSecretCredentialsPerType
-                    )
-                ) {
-                    server.log.warn("Credentials requested but already exist");
-                    const userCredentials: UserCredentials = {
-                        emailCredentialsPerEmail:
-                            existingEmailCredentialsPerEmail,
-                        secretCredentialsPerType:
-                            existingSecretCredentialsPerType,
-                    };
-                    return userCredentials;
-                } else {
-                    server.log.warn(
-                        "Credentials requested but only email credential existed"
-                    );
-                    const blindedCredential =
-                        await Service.createAndStoreSecretCredential(
-                            db,
-                            didWrite,
-                            request.body.secretCredentialRequest,
-                            email,
-                            type,
-                            server.httpErrors,
-                            sk
-                        );
-                    const secretCredential: SecretCredential = {
-                        blindedCredential: blindedCredential,
-                        encryptedBlinding:
-                            request.body.secretCredentialRequest
-                                .encryptedEncodedBlinding,
-                        encryptedBlindedSubject:
-                            request.body.secretCredentialRequest
-                                .encryptedEncodedBlindedSubject,
-                    };
-                    const secretCredentialsPerType = addActiveSecretCredential(
-                        type,
-                        secretCredential,
-                        existingSecretCredentialsPerType
-                    );
-                    const userCredentials: UserCredentials = {
-                        emailCredentialsPerEmail:
-                            existingEmailCredentialsPerEmail,
-                        secretCredentialsPerType,
-                    };
-                    return userCredentials;
-                }
+                server.log.warn("Form credentials requested but already exist");
+                return {
+                    formCredentialsPerEmail: existingFormCredentialsPerEmail,
+                };
             } else {
-                if (
-                    hasActiveSecretCredential(
-                        type,
-                        existingSecretCredentialsPerType
-                    )
-                ) {
-                    server.log.warn(
-                        "Credentials requested but only secret credential existed"
-                    );
-                    const encodedEmailCredential =
-                        await Service.createAndStoreEmailCredential(
-                            db,
-                            email,
-                            request.body.emailCredentialRequest,
-                            sk
-                        );
-                    const emailCredentialsPerEmail = addActiveEmailCredential(
+                const uid = await Service.getUidFromDevice(db, didWrite);
+                const encodedFormCredential =
+                    await Service.createAndStoreFormCredential({
+                        db,
                         email,
-                        encodedEmailCredential,
-                        existingEmailCredentialsPerEmail
-                    );
-                    const userCredentials: UserCredentials = {
-                        emailCredentialsPerEmail,
-                        secretCredentialsPerType:
-                            existingSecretCredentialsPerType,
-                    };
-                    return userCredentials;
-                } else {
-                    server.log.info(
-                        "Creating both email and secret credentials"
-                    );
-                    const { emailCredential, blindedCredential } =
-                        await Service.createAndStoreCredentials({
-                            db: db,
-                            didWrite: didWrite,
-                            secretCredentialRequest:
-                                request.body.secretCredentialRequest,
-                            type: type,
-                            httpErrors: server.httpErrors,
-                            sk: sk,
-                            email: email,
-                            emailCredentialRequest:
-                                request.body.emailCredentialRequest,
-                        });
-                    const emailCredentialsPerEmail = addActiveEmailCredential(
-                        email,
-                        emailCredential,
-                        existingEmailCredentialsPerEmail
-                    );
-                    const secretCredential: SecretCredential = {
-                        blindedCredential: blindedCredential,
-                        encryptedBlinding:
-                            request.body.secretCredentialRequest
-                                .encryptedEncodedBlinding,
-                        encryptedBlindedSubject:
-                            request.body.secretCredentialRequest
-                                .encryptedEncodedBlindedSubject,
-                    };
-                    const secretCredentialsPerType = addActiveSecretCredential(
-                        type,
-                        secretCredential,
-                        existingSecretCredentialsPerType
-                    );
-                    const userCredentials: UserCredentials = {
-                        emailCredentialsPerEmail,
-                        secretCredentialsPerType,
-                    };
-                    return userCredentials;
-                }
+                        formCredentialRequest:
+                            request.body.formCredentialRequest,
+                        uid,
+                        sk,
+                    });
+                const formCredentialsPerEmail = addActiveEmailOrFormCredential(
+                    email,
+                    encodedFormCredential,
+                    existingFormCredentialsPerEmail
+                );
+                return {
+                    formCredentialsPerEmail,
+                };
             }
         },
     });
@@ -765,7 +822,7 @@ server.after(() => {
                 await verifyPresentation({
                     pres: request.body.pres,
                     content: request.body.poll,
-                    expectedSecretCredentialType: "global",
+                    expectedSecretCredentialType: "unbound",
                 });
             await Service.createPoll({
                 db: db,

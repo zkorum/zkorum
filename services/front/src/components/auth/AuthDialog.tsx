@@ -41,14 +41,14 @@ export function AuthDialog() {
     });
     const hasFilledForms = useAppSelector((state) => {
         const pendingSessionEmail = state.sessions.pendingSessionEmail;
-        const emailCredentialsPerEmail =
+        const formCredentialsPerEmail =
             state.sessions.sessions[pendingSessionEmail]
-                ?.emailCredentialsPerEmail;
-        if (emailCredentialsPerEmail === undefined) {
+                ?.formCredentialsPerEmail;
+        if (formCredentialsPerEmail === undefined) {
             return undefined;
         }
         // TODO: maybe improve that? KISS for now
-        return pendingSessionEmail in emailCredentialsPerEmail;
+        return pendingSessionEmail in formCredentialsPerEmail;
     });
 
     function handleClose() {

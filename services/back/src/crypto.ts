@@ -11,8 +11,8 @@ try {
 
 // Used to generate cryptographically random user identifier (for VC and voting purpose, to preserve privacy)
 export function generateRandomHex() {
-    // 16 random bytes (this is generally considered resistant to brute-force attack and often used as API token)
-    const randomBytes = new Uint8Array(16);
+    // 32 random bytes (16 would already be considered resistant to brute-force attacks and is often used as API token)
+    const randomBytes = new Uint8Array(32);
     crypto.webcrypto.getRandomValues(randomBytes);
     return Buffer.from(randomBytes).toString("hex");
 }

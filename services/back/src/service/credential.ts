@@ -9,13 +9,16 @@ import {
     BBSPlusBlindedCredential as BlindedCredential,
 } from "@docknetwork/crypto-wasm-ts";
 import type {
-    EmailCredentialRequest,
+    FormCredentialRequest,
     EmailCredentialsPerEmail,
     EmailCredential,
     SecretCredential,
     SecretCredentialType,
     SecretCredentialsPerType,
     Countries,
+    FormCredentialsPerEmail,
+    FormCredential,
+    SecretCredentials,
 } from "../shared/types/zod.js";
 import { log } from "../app.js";
 import {
@@ -33,7 +36,17 @@ import {
 import { domainFromEmail } from "@/shared/shared.js";
 
 // duplicate from DB
-export type WebDomainType = "UNIVERSITY" | "COMPANY"; // ADMINISTRATION / PUBLIC_SECTOR...
+const webDomainTypes = ["UNIVERSITY", "COMPANY"] as const;
+export type WebDomainType = (typeof webDomainTypes)[number]; // "foo" | "bar"
+
+export function getWebDomainType(
+    maybeWebDomain: string
+): WebDomainType | undefined {
+    const webDomain = webDomainTypes.find(
+        (validKey) => validKey === maybeWebDomain
+    );
+    return webDomain;
+}
 
 function getTypeFromEmail(_email: string): WebDomainType {
     // TODO: have list of known domain names for each type in a static file or in the DB
@@ -43,51 +56,57 @@ function getTypeFromEmail(_email: string): WebDomainType {
     return "UNIVERSITY";
 }
 
-export function buildSecretCredential(
-    blindCredentialRequest: BlindedCredentialRequest,
-    userId: string,
-    type: SecretCredentialType,
-    email: string,
-    sk: SecretKey
-): BlindedCredential {
+interface BuildSecretCredentialProps {
+    blindedCredentialRequest: BlindedCredentialRequest;
+    uid: string;
+    type: SecretCredentialType;
+    sk: SecretKey;
+}
+
+export function buildSecretCredential({
+    blindedCredentialRequest,
+    uid,
+    type,
+    sk,
+}: BuildSecretCredentialProps): BlindedCredential {
     // create blinded credential from blind credential request
-    const result = blindCredentialRequest.verify([]);
+    const result = blindedCredentialRequest.verify([]);
     if (!result.verified) {
         throw new Error(result.error);
     }
     const blindedCredBuilder =
-        blindCredentialRequest.generateBlindedCredentialBuilder();
+        blindedCredentialRequest.generateBlindedCredentialBuilder();
     blindedCredBuilder.subject = {
-        email: email,
-        userId: userId,
+        uid: uid,
         type: type,
     };
+    blindedCredBuilder.version = "0.1.0"; // TODO move all of these versioning param in config
     // TODO accumulator and revocation status
     const blindedCred = blindedCredBuilder.sign(sk);
     return blindedCred;
 }
 
-function toCredProperties(emailCredentialRequest: EmailCredentialRequest) {
-    switch (emailCredentialRequest.type) {
+function toCredProperties(formCredentialRequest: FormCredentialRequest) {
+    switch (formCredentialRequest.type) {
         case UniversityType.STUDENT:
             // replace undefined by false in list of countries
             for (const countryCode of Object.keys(allCountries)) {
                 if (
-                    emailCredentialRequest.countries[
+                    formCredentialRequest.countries[
                         countryCode as TCountryCode
                     ] === undefined
                 ) {
-                    emailCredentialRequest.countries[
+                    formCredentialRequest.countries[
                         countryCode as TCountryCode
                     ] = false;
                 }
             }
             return {
-                type: universityTypeToString(emailCredentialRequest.type),
-                campus: essecCampusToString(emailCredentialRequest.campus),
-                program: essecProgramToString(emailCredentialRequest.program),
-                countries: emailCredentialRequest.countries,
-                admissionYear: emailCredentialRequest.admissionYear,
+                type: universityTypeToString(formCredentialRequest.type),
+                campus: essecCampusToString(formCredentialRequest.campus),
+                program: essecProgramToString(formCredentialRequest.program),
+                countries: formCredentialRequest.countries,
+                admissionYear: formCredentialRequest.admissionYear,
             };
         case UniversityType.ALUM:
             // TODO
@@ -119,22 +138,74 @@ function getAllCountriesAsSchema(): { [countryCode: string]: TypeSchema } {
     }
 }
 
-export function buildEmailCredential(
-    email: string,
-    emailCredentialRequest: EmailCredentialRequest,
-    sk: SecretKey
-): Credential {
+interface BuildEmailCredentialProps {
+    email: string;
+    uid: string;
+    sk: SecretKey;
+}
+
+interface BuildFormCredentialProps {
+    email: string;
+    formCredentialRequest: FormCredentialRequest;
+    uid: string;
+    sk: SecretKey;
+}
+
+export function buildEmailCredential({
+    email,
+    uid,
+    sk,
+}: BuildEmailCredentialProps): Credential {
     const emailType = getTypeFromEmail(email);
     const schema = CredentialSchema.essential();
     // TODO: pass schema as param depending on email type (university, company...etc) & specific domain that could override the default values
-    switch (emailCredentialRequest.type) {
+    schema.properties[SUBJECT_STR] = {
+        type: "object",
+        properties: {
+            email: { type: "string" },
+            domain: { type: "string" },
+            type: { type: "string" },
+            uid: { type: "string" },
+        },
+    };
+    const credSchema = new CredentialSchema(schema);
+
+    const builder = new CredentialBuilder();
+    builder.version = "0.1.0";
+    builder.schema = credSchema;
+    // TODO revocation status and such
+
+    // log.warn(`\n\n\n${{ ...toCredProperties(emailCredentialRequest) }}\n\n\n`);
+
+    const domain = domainFromEmail(email);
+    if (domain === undefined) {
+        throw new Error(`Unable to get domain from email '${email}'`);
+    }
+
+    builder.subject = {
+        email: email,
+        domain: domain,
+        type: emailType,
+        uid: uid,
+    };
+    return builder.sign(sk);
+}
+
+export function buildFormCredential({
+    email,
+    formCredentialRequest,
+    uid,
+    sk,
+}: BuildFormCredentialProps): Credential {
+    const schema = CredentialSchema.essential();
+    // TODO: pass schema as param depending on email type (university, company...etc) & specific domain that could override the default values
+    switch (formCredentialRequest.type) {
         case UniversityType.STUDENT:
             schema.properties[SUBJECT_STR] = {
                 type: "object",
                 properties: {
+                    uid: { type: "string" },
                     email: { type: "string" },
-                    domain: { type: "string" },
-                    type: { type: "string" },
                     typeSpecific: {
                         type: "object",
                         properties: {
@@ -166,20 +237,15 @@ export function buildEmailCredential(
 
     const builder = new CredentialBuilder();
     builder.schema = credSchema;
+    builder.version = "0.1.0";
     // TODO revocation status and such
 
     // log.warn(`\n\n\n${{ ...toCredProperties(emailCredentialRequest) }}\n\n\n`);
 
-    const domain = domainFromEmail(email);
-    if (domain === undefined) {
-        throw new Error(`Unable to get domain from email '${email}'`);
-    }
-
     builder.subject = {
+        uid: uid,
         email: email,
-        domain: domain,
-        type: emailType,
-        typeSpecific: { ...toCredProperties(emailCredentialRequest) },
+        typeSpecific: { ...toCredProperties(formCredentialRequest) },
     };
     return builder.sign(sk);
 }
@@ -287,13 +353,15 @@ export function parseSecretCredentialRequest(
 //     }
 // }
 //
-export function hasActiveEmailCredential(
+export function hasActiveCredential(
     email: string,
-    emailCredentialsPerEmail: EmailCredentialsPerEmail
+    emailOrFormCredentialsPerEmail:
+        | EmailCredentialsPerEmail
+        | FormCredentialsPerEmail
 ): boolean {
     if (
-        email in emailCredentialsPerEmail &&
-        emailCredentialsPerEmail[email].active !== undefined
+        email in emailOrFormCredentialsPerEmail &&
+        emailOrFormCredentialsPerEmail[email].active !== undefined
     ) {
         return true;
     } else {
@@ -307,7 +375,7 @@ export function hasActiveSecretCredential(
 ): boolean {
     if (
         type in secretCredentialsPerType &&
-        secretCredentialsPerType[type].active !== undefined
+        secretCredentialsPerType[type]?.active !== undefined
     ) {
         return true;
     } else {
@@ -317,20 +385,24 @@ export function hasActiveSecretCredential(
 
 export function addActiveEmailCredential(
     email: string,
-    encodedEmailCredential: EmailCredential,
-    existingEmailCredentialsPerEmail: EmailCredentialsPerEmail
+    encodedEmailOrFormCredential: EmailCredential | FormCredential,
+    existingEmailOrFormCredentialsPerEmail:
+        | EmailCredentialsPerEmail
+        | FormCredentialsPerEmail
 ): EmailCredentialsPerEmail {
-    const emailCredentialsPerEmail = { ...existingEmailCredentialsPerEmail };
-    if (hasActiveEmailCredential(email, existingEmailCredentialsPerEmail)) {
+    const emailCredentialsPerEmail = {
+        ...existingEmailOrFormCredentialsPerEmail,
+    };
+    if (hasActiveCredential(email, existingEmailOrFormCredentialsPerEmail)) {
         log.warn(
             "Replacing active email credential in an object that is not expected to have one"
         );
-        emailCredentialsPerEmail[email].active = encodedEmailCredential;
+        emailCredentialsPerEmail[email].active = encodedEmailOrFormCredential;
     } else if (email in emailCredentialsPerEmail) {
-        emailCredentialsPerEmail[email].active = encodedEmailCredential;
+        emailCredentialsPerEmail[email].active = encodedEmailOrFormCredential;
     } else {
         emailCredentialsPerEmail[email] = {
-            active: encodedEmailCredential,
+            active: encodedEmailOrFormCredential,
             revoked: [],
         };
     }
@@ -347,9 +419,11 @@ export function addActiveSecretCredential(
         log.warn(
             "Replacing active secret credential in an object that is not expected to have one"
         );
-        secretCredentialsPerType[type].active = secretCredential;
+        (secretCredentialsPerType[type] as SecretCredentials).active =
+            secretCredential;
     } else if (type in secretCredentialsPerType) {
-        secretCredentialsPerType[type].active = secretCredential;
+        (secretCredentialsPerType[type] as SecretCredentials).active =
+            secretCredential;
     } else {
         secretCredentialsPerType[type] = {
             active: secretCredential,
@@ -373,29 +447,26 @@ export interface PostAs {
     typeSpecific?: UniversityPersona; // TODO could be another persona type such as CompanyPersona
 }
 
-export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
-    if (!(SUBJECT_STR in attributesRevealed)) {
-        throw new Error(`No ${SUBJECT_STR} in revealed attributes`);
-    }
-    const subjectAttrs = attributesRevealed[SUBJECT_STR] as any;
-    if (
-        !(
-            "domain" in subjectAttrs ||
-            typeof subjectAttrs["domain"] !== "string"
-        )
-    ) {
-        throw new Error(`No 'domain' in revealed attributes`);
-    }
-    if (!("type" in subjectAttrs || typeof subjectAttrs["type"] !== "string")) {
-        throw new Error(`No 'type' in revealed attributes`);
-    }
+interface RevealedAttributesToPostAsProps {
+    domain: string;
+    type: WebDomainType;
+    revealedFormAttributes: object | undefined;
+}
+
+export function revealedAttributesToPostAs({
+    domain,
+    type,
+    revealedFormAttributes,
+}: RevealedAttributesToPostAsProps): PostAs {
     const postAs: PostAs = {
-        // TODO maybe double check types here
-        domain: subjectAttrs["domain"] as string,
-        type: subjectAttrs["type"] as WebDomainType,
+        domain: domain,
+        type: type,
     };
-    if ("typeSpecific" in subjectAttrs) {
-        const typeSpecificAttrs = subjectAttrs["typeSpecific"] as any;
+    if (revealedFormAttributes === undefined) {
+        return postAs;
+    }
+    if ("typeSpecific" in revealedFormAttributes) {
+        const typeSpecificAttrs = revealedFormAttributes["typeSpecific"] as any;
         if (typeof typeSpecificAttrs !== "object") {
             throw new Error(
                 `'typeSpecific' in revealed attributes is not an object`
@@ -410,6 +481,10 @@ export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
             postAs.typeSpecific = {
                 type: universityStringToType(typeSpecificAttrs["type"]),
             };
+        } else {
+            throw new Error(
+                `typeSpecific is shared by typeSpecific.type is not`
+            );
         }
         if ("campus" in typeSpecificAttrs) {
             if (typeof typeSpecificAttrs["campus"] !== "string") {
@@ -419,6 +494,7 @@ export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
             }
             if (postAs.typeSpecific === undefined) {
                 postAs.typeSpecific = {
+                    type: universityStringToType(typeSpecificAttrs["type"]),
                     campus: essecCampusStrToEnum(typeSpecificAttrs["campus"]),
                 };
             } else {
@@ -435,6 +511,7 @@ export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
             }
             if (postAs.typeSpecific === undefined) {
                 postAs.typeSpecific = {
+                    type: universityStringToType(typeSpecificAttrs["type"]),
                     program: essecProgramStrToEnum(
                         typeSpecificAttrs["program"]
                     ),
@@ -453,6 +530,7 @@ export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
             }
             if (postAs.typeSpecific === undefined) {
                 postAs.typeSpecific = {
+                    type: universityStringToType(typeSpecificAttrs["type"]),
                     countries: typeSpecificAttrs["countries"],
                 };
             } else {
@@ -467,6 +545,7 @@ export function revealedAttributesToPostAs(attributesRevealed: object): PostAs {
             }
             if (postAs.typeSpecific === undefined) {
                 postAs.typeSpecific = {
+                    type: universityStringToType(typeSpecificAttrs["type"]),
                     admissionYear: typeSpecificAttrs["admissionYear"],
                 };
             } else {

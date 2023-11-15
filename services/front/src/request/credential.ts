@@ -1,58 +1,36 @@
 import {
     DefaultApiFactory,
-    type CredentialRequestPostRequestEmailCredentialRequest,
+    type CredentialRequestPostRequestFormCredentialRequest,
     type PollCreatePostRequestPoll,
 } from "@/api";
-import {
-    buildBlindedSecretCredential,
-    encryptAndEncode,
-    unblindedSecretCredentialsPerTypeFrom,
-} from "@/crypto/vc/credential";
+import { unblindedSecretCredentialsPerTypeFrom } from "@/crypto/vc/credential";
 import { activeSessionUcanAxios, noAuthAxios } from "@/interceptors";
-import { arrbufs } from "@/shared/common";
-import type { EmailCredentialRequest } from "@/shared/types/zod";
-import { updateCredentials } from "@/store/reducers/session";
+import type { FormCredentialRequest } from "@/shared/types/zod";
+import {
+    updateCredentials,
+    updateFormCredentials,
+} from "@/store/reducers/session";
 import { store } from "@/store/store";
 import type { Presentation } from "@docknetwork/crypto-wasm-ts";
 
 export async function requestAnonymousCredentials(
     email: string,
-    emailCredentialRequest: EmailCredentialRequest,
-    userId: string
+    formCredentialRequest: FormCredentialRequest
 ): Promise<void> {
-    const { req, blindedSubject, blinding } =
-        await buildBlindedSecretCredential();
-    const blindedSubjectBinary = arrbufs.anyToUint8Array(blindedSubject);
-    const encryptedBlindedSubject = await encryptAndEncode(
-        blindedSubjectBinary,
-        userId
-    );
-    const encryptedBlinding = await encryptAndEncode(blinding.bytes, userId);
-    const secretCredentialRequest = {
-        blindedRequest: req.toJSON(),
-        encryptedEncodedBlindedSubject: encryptedBlindedSubject,
-        encryptedEncodedBlinding: encryptedBlinding,
-    };
     const response = await DefaultApiFactory(
         undefined,
         undefined,
         activeSessionUcanAxios
     ).credentialRequestPost({
         email: email,
-        emailCredentialRequest:
-            emailCredentialRequest as CredentialRequestPostRequestEmailCredentialRequest,
-        secretCredentialRequest: secretCredentialRequest,
+        formCredentialRequest:
+            formCredentialRequest as CredentialRequestPostRequestFormCredentialRequest,
     });
     if (response.data !== undefined) {
         const credentials = response.data;
         store.dispatch(
-            updateCredentials({
-                emailCredentialsPerEmail: credentials.emailCredentialsPerEmail,
-                unblindedSecretCredentialsPerType:
-                    await unblindedSecretCredentialsPerTypeFrom(
-                        credentials.secretCredentialsPerType,
-                        userId
-                    ),
+            updateFormCredentials({
+                formCredentialsPerEmail: credentials.formCredentialsPerEmail,
             })
         );
     } else {
@@ -76,6 +54,7 @@ export async function fetchAndUpdateCredentials(userId: string): Promise<void> {
         store.dispatch(
             updateCredentials({
                 emailCredentialsPerEmail: credentials.emailCredentialsPerEmail,
+                formCredentialsPerEmail: credentials.formCredentialsPerEmail,
                 unblindedSecretCredentialsPerType:
                     await unblindedSecretCredentialsPerTypeFrom(
                         credentials.secretCredentialsPerType,

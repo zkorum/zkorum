@@ -1,11 +1,14 @@
 import { randomNumbers } from "@/crypto/ucan/implementation/browser";
 import { anyToUint8Array, uint8ArrayToJSON } from "@/shared/common/arrbufs";
-import { base64 } from "@/shared/common/index";
+import { arrbufs, base64 } from "@/shared/common/index";
 import type {
     EmailCredentialsPerEmail,
     SecretCredential,
+    SecretCredentialRequest,
+    SecretCredentialType,
     SecretCredentialsPerType,
     UnblindedSecretCredential,
+    UnblindedSecretCredentials,
     UnblindedSecretCredentialsPerType,
 } from "@/shared/types/zod";
 import { cryptoStore } from "@/store/store";
@@ -25,8 +28,7 @@ function secretCredSchema() {
     schema.properties[SUBJECT_STR] = {
         type: "object",
         properties: {
-            userId: { type: "string" },
-            email: { type: "string" },
+            uid: { type: "string" },
             type: { type: "string" },
             secret: { type: "string" },
         },
@@ -100,6 +102,28 @@ export async function buildBlindedSecretCredential() {
     return { req, blindedSubject, blinding };
 }
 
+export async function buildSecretCredentialRequest(
+    symmKey: Uint8Array
+): Promise<SecretCredentialRequest> {
+    const { req, blindedSubject, blinding } =
+        await buildBlindedSecretCredential();
+    const blindedSubjectBinary = arrbufs.anyToUint8Array(blindedSubject);
+    const encryptedBlindedSubject = await encryptAndEncodeWithSymmKey(
+        blindedSubjectBinary,
+        symmKey
+    );
+    const encryptedBlinding = await encryptAndEncodeWithSymmKey(
+        blinding.bytes,
+        symmKey
+    );
+    const secretCredentialRequest = {
+        blindedRequest: req.toJSON() as Record<string, unknown>,
+        encryptedEncodedBlindedSubject: encryptedBlindedSubject,
+        encryptedEncodedBlinding: encryptedBlinding,
+    };
+    return secretCredentialRequest;
+}
+
 async function unblindedCredentialFrom(
     secretCredential: SecretCredential,
     userId: string
@@ -134,15 +158,19 @@ export async function unblindedSecretCredentialsPerTypeFrom(
     for (const [type, secretCredentials] of Object.entries(
         secretCredentialsPerType
     )) {
-        unblindedSecretCredentialsPerType[type] = { revoked: [] };
+        unblindedSecretCredentialsPerType[type as SecretCredentialType] = {
+            revoked: [],
+        };
         for (const secretCredential of secretCredentials.revoked) {
             const unblindedCredential = await unblindedCredentialFrom(
                 secretCredential,
                 userId
             );
-            unblindedSecretCredentialsPerType[type].revoked.push(
-                unblindedCredential
-            );
+            (
+                unblindedSecretCredentialsPerType[
+                    type as SecretCredentialType
+                ] as UnblindedSecretCredentials
+            ).revoked.push(unblindedCredential);
         }
         const unblindedActiveCredential =
             secretCredentials.active !== undefined
@@ -151,10 +179,25 @@ export async function unblindedSecretCredentialsPerTypeFrom(
                       userId
                   )
                 : undefined;
-        unblindedSecretCredentialsPerType[type].active =
-            unblindedActiveCredential;
+        (
+            unblindedSecretCredentialsPerType[
+                type as SecretCredentialType
+            ] as UnblindedSecretCredentials
+        ).active = unblindedActiveCredential;
     }
     return unblindedSecretCredentialsPerType;
+}
+
+export async function encryptAndEncodeWithSymmKey(
+    data: Uint8Array,
+    symmKey: Uint8Array
+): Promise<string> {
+    const encryptedData = await cryptoStore.aes.encrypt(
+        data,
+        symmKey,
+        DEFAULT_AES_ALG
+    );
+    return base64.encode(encryptedData);
 }
 
 export async function encryptAndEncode(
