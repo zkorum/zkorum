@@ -26,7 +26,6 @@ import {
     BBSPlusSignatureParamsG1 as SignatureParams,
     SUBJECT_STR,
     PseudonymBases,
-    CredentialSchema,
 } from "@docknetwork/crypto-wasm-ts";
 import { config, Environment, server } from "./app.js";
 import {
@@ -332,7 +331,9 @@ async function verifyPresentation({
             const presentation = Presentation.fromJSON(pres);
 
             // check that presentation verifies
-            const verifyResult = presentation.verify([pk, pk]);
+            const verifyResult = presentation.verify(
+                Array(presentation.spec.credentials.length).fill(pk) // in the future we have to add did resolution as some credentials will not be expected to be signed by zkorum
+            );
             if (!verifyResult.verified) {
                 throw server.httpErrors.createError(
                     401,
@@ -388,13 +389,6 @@ async function verifyPresentation({
                     );
                 }
             }
-            // TODO check schema of credentials
-            // const schemaCred0 = CredentialSchema.fromJSON(
-            //     JSON.parse(presentation.spec.credentials[0].schema)
-            // );
-            // schemaCred0.flatten();
-            // const flattenedSchema0Attributes = schemaCred0.flatten()[0];
-            // server.log.info(flattenedSchema0Attributes.join(", "));
 
             // check that there is ONE pseudonym associated with the right attributeNames and with the basesForAttributes expected from the attributes shared
             if (presentation.spec.boundedPseudonyms === undefined) {

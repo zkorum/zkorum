@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
-    selectActiveEmailCredential,
+    selectActiveFormCredential,
     selectActiveSessionEmail,
     selectActiveSessionUserId,
 } from "@/store/selector";
@@ -19,7 +19,7 @@ import { domainNameAndExtensionFromEmail } from "@/shared/shared";
 // for now we just assume there's one community from one unique email
 export function CommunitiesLayout() {
     const dispatch = useAppDispatch();
-    const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
+    const activeFormCredential = useAppSelector(selectActiveFormCredential);
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const activeSessionUserId = useAppSelector(selectActiveSessionUserId);
     const [communityName, setCommunityName] = React.useState<string>("");
@@ -75,7 +75,7 @@ export function CommunitiesLayout() {
                     <Box sx={{ my: 2 }}>
                         <CommunityPage
                             email={activeSessionEmail}
-                            communityCredential={activeEmailCredential}
+                            communityCredential={activeFormCredential}
                         ></CommunityPage>
                     </Box>
                 ) : (

@@ -175,9 +175,10 @@ export function BottomNavbar() {
                         sx={{ minWidth: "60px" }}
                     />
                     <BottomNavigationAction
+                        disabled
                         label={Nav.Credentials}
                         value={Nav.Credentials}
-                        icon={<BadgeIcon />}
+                        icon={<BadgeIcon color="disabled" />}
                         sx={{ minWidth: "60px" }}
                     />
                 </BottomNavigation>

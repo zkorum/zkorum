@@ -166,7 +166,6 @@ export function studentPersonasFrom(
             (persona.campus === undefined ||
                 persona.campus === studentData.campus)
     );
-    console.log("filtered", filteredStudentPersonas);
     return filteredStudentPersonas;
 }
 

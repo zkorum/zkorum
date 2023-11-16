@@ -243,7 +243,7 @@ export const universityPersonaTable = pgTable("university_persona", {
 
 export const universityEligibilityTable = pgTable("university_eligibility", {
     id: serial("id").primaryKey(),
-    type: varchar("type", { length: 255 }).array(), // "student" or "faculty" for example
+    types: varchar("types", { length: 255 }).array(), // "student" or "faculty" for example
     countries: char("countries", { length: 2 }).array(), // holds TCountryCode
     studentEligibilityId: integer("student_eligibility_id").references(
         () => studentEligibilityTable.id
@@ -275,8 +275,8 @@ export const personaTable = pgTable("persona", {
 // TODO: would be nice to find a way to enforce unique eligibility per entry as there are only a limited number of possible combination... (though much more than personas)
 export const eligibilityTable = pgTable("eligibility", {
     id: serial("id").primaryKey(),
-    domain: varchar("domain", { length: 255 }).array(),
-    type: credentialType("type").array(),
+    domains: varchar("domain", { length: 255 }).array(),
+    types: credentialType("type").array(),
     universityEligibilityId: integer("university_eligibility_id").references(
         () => universityEligibilityTable.id
     ),

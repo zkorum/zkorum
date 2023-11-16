@@ -59,6 +59,7 @@ import {
     BBSPlusPublicKeyG2 as PublicKey,
     randomFieldElement,
     BBSPlusCredential as Credential,
+    SUBJECT_STR,
 } from "@docknetwork/crypto-wasm-ts";
 import { stringToBytes } from "@/shared/common/arrbufs";
 import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
@@ -146,14 +147,6 @@ export function PostDialog() {
         string | undefined
     >(undefined);
     const [isOption2Valid, setIsOption2Valid] = React.useState<boolean>(false);
-
-    React.useEffect(() => {
-        console.log(
-            "credentials",
-            activeEmailCredential,
-            activeUnboundSecretCredential
-        );
-    }, []);
 
     React.useEffect(() => {
         if (
@@ -467,35 +460,35 @@ export function PostDialog() {
         const attributesRevealed = new Set<string>();
         if (postAsStudent) {
             addIfExists({
-                attribute: "credentialSubject.typeSpecific.type",
+                attribute: `${SUBJECT_STR}.typeSpecific.type`,
                 credential: credential,
                 set: attributesRevealed,
             });
         }
         if (postAsCampus) {
             addIfExists({
-                attribute: "credentialSubject.typeSpecific.campus",
+                attribute: `${SUBJECT_STR}.typeSpecific.campus`,
                 credential: credential,
                 set: attributesRevealed,
             });
         }
         if (postAsProgram) {
             addIfExists({
-                attribute: "credentialSubject.typeSpecific.program",
+                attribute: `${SUBJECT_STR}.typeSpecific.program`,
                 credential: credential,
                 set: attributesRevealed,
             });
         }
         if (postAsAdmissionYear) {
             addIfExists({
-                attribute: "credentialSubject.typeSpecific.admissionYear",
+                attribute: `${SUBJECT_STR}.typeSpecific.admissionYear`,
                 credential: credential,
                 set: attributesRevealed,
             });
         }
         if (postAsCountries) {
             addIfExists({
-                attribute: "credentialSubject.typeSpecific.countries",
+                attribute: `${SUBJECT_STR}.typeSpecific.countries`,
                 credential: credential,
                 set: attributesRevealed,
             });
@@ -565,8 +558,6 @@ export function PostDialog() {
                 backendPublicKey
             );
             builder.addCredential(activeEmailCredential, backendPublicKey); // for externally issued credential, the pub key here will not be ZKorum's but the community authority's (e.g,: ESSEC's)
-            if (activeFormCredential !== undefined) {
-            }
             builder.markAttributesRevealed(
                 0,
                 new Set<string>(["credentialSubject.type"])
@@ -578,8 +569,8 @@ export function PostDialog() {
                     "credentialSubject.type",
                 ])
             ); // second credential added was email credential
+            let formCredentialIsUsed = false;
             if (activeFormCredential !== undefined) {
-                builder.addCredential(activeFormCredential, backendPublicKey);
                 const attributesRevealed = attributesFormRevealedFromPostAs({
                     postAs: {
                         postAsStudent: postAsStudentChecked,
@@ -588,9 +579,17 @@ export function PostDialog() {
                         postAsAdmissionYear: postAsAdmissionYearChecked,
                         postAsCountries: postAsFrench || postAsInternational,
                     },
-                    credential: activeEmailCredential,
+                    credential: activeFormCredential,
                 });
-                builder.markAttributesRevealed(2, attributesRevealed); // third credential added was form credential
+                if (attributesRevealed.size > 0) {
+                    // at least one specific postAs has been selected: even if the formCredential exist, it might not be used!
+                    formCredentialIsUsed = true;
+                    builder.addCredential(
+                        activeFormCredential,
+                        backendPublicKey
+                    );
+                    builder.markAttributesRevealed(2, attributesRevealed); // third credential added is form credential
+                }
             }
 
             //////// PSEUDONYMS /////
@@ -639,7 +638,7 @@ export function PostDialog() {
             builder.addBoundedPseudonym(basesForAttributes, attributeNames);
 
             // meta equalities
-            if (activeFormCredential !== undefined) {
+            if (formCredentialIsUsed) {
                 builder.markAttributesEqual(
                     [0, "credentialSubject.uid"],
                     [1, "credentialSubject.uid"],
@@ -858,7 +857,7 @@ export function PostDialog() {
                         flexWrap={"wrap"}
                     >
                         <Grid mt={"1em"} width={"100%"}>
-                            <Accordion>
+                            <Accordion defaultExpanded={true}>
                                 <AccordionSummary
                                     expandIcon={<ExpandMoreIcon />}
                                     aria-controls="panel1a-content"

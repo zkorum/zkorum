@@ -1,5 +1,5 @@
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import { and, eq, gt, inArray, isNotNull } from "drizzle-orm";
+import { and, eq, gt, inArray, isNotNull, isNull } from "drizzle-orm";
 import {
     authAttemptTable,
     credentialEmailTable,
@@ -42,6 +42,7 @@ import {
     buildSecretCredential,
     parseSecretCredentialRequest,
     type PostAs,
+    type WebDomainType,
 } from "./credential.js";
 import type {
     Devices,
@@ -163,6 +164,52 @@ interface CreateAndStoreFormCredentialProps {
 interface AddCredentialProps {
     results: GetCredentialsResult[];
     credentialsPerEmail: EmailCredentialsPerEmail | FormCredentialsPerEmail;
+}
+
+interface SelectStudentPersonaIdFromAttributesProps {
+    db: PostgresDatabase;
+    campus: string | undefined;
+    program: string | undefined;
+    admissionYear: number | undefined;
+}
+
+interface SelectUniversityPersonaIdFromAttributesProps {
+    db: PostgresDatabase;
+    type: UniversityType;
+    countries: string[] | undefined;
+    studentPersonaId: number | undefined;
+    alumPersonaId: number | undefined;
+    facultyPersonaId: number | undefined;
+}
+
+interface SelectEligibilityIdProps {
+    db: PostgresDatabase;
+    domains: string[] | undefined; // for now users can only ask questions to people in their own community
+    types: WebDomainType[] | undefined; // for now users can only ask questions to people in their own community
+    universityEligibilityId: number | undefined;
+}
+
+interface SelectPersonaIdFromAttributesProps {
+    db: PostgresDatabase;
+    domain: string;
+    type: WebDomainType;
+    universityPersonaId: number | undefined;
+}
+
+interface SelectStudentEligibilityIdFromAttributesProps {
+    db: PostgresDatabase;
+    campuses: string[] | undefined;
+    programs: string[] | undefined;
+    admissionYears: number[] | undefined;
+}
+
+interface SelectUniversityEligibilityIdFromAttributesProps {
+    db: PostgresDatabase;
+    types: string[] | undefined;
+    countries: string[] | undefined;
+    studentEligibilityId: number | undefined;
+    alumEligibilityId: number | undefined;
+    facultyEligibilityId: number | undefined;
 }
 
 function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
@@ -997,7 +1044,7 @@ export class Service {
                 codeExpiry: authAttemptTable.codeExpiry,
             })
             .from(authAttemptTable)
-            .where(and(eq(authAttemptTable.email, email)));
+            .where(eq(authAttemptTable.email, email));
         for (const result of results) {
             const expectedExpiryTime = new Date(result.lastEmailSentAt);
             expectedExpiryTime.setMinutes(
@@ -1412,6 +1459,245 @@ export class Service {
         };
     }
 
+    static async selectStudentEligibilityIdFromAttributes({
+        db,
+        campuses,
+        programs,
+        admissionYears,
+    }: SelectStudentEligibilityIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const campusesWhere =
+            campuses === undefined
+                ? isNull(studentEligibilityTable.campuses)
+                : eq(studentEligibilityTable.campuses, campuses);
+        const programWhere =
+            programs === undefined
+                ? isNull(studentEligibilityTable.programs)
+                : eq(studentEligibilityTable.programs, programs);
+        const admissionYearsWhere =
+            admissionYears === undefined
+                ? isNull(studentEligibilityTable.admissionYears)
+                : eq(studentEligibilityTable.admissionYears, admissionYears);
+
+        const results = await db
+            .select({
+                studentEligibilityId: studentEligibilityTable.id,
+            })
+            .from(studentEligibilityTable)
+            .where(and(campusesWhere, programWhere, admissionYearsWhere));
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].studentEligibilityId;
+        }
+    }
+
+    static async selectStudentPersonaIdFromAttributes({
+        db,
+        campus,
+        program,
+        admissionYear,
+    }: SelectStudentPersonaIdFromAttributesProps): Promise<number | undefined> {
+        const campusWhere =
+            campus === undefined
+                ? isNull(studentPersonaTable.campus)
+                : eq(studentPersonaTable.campus, campus);
+        const programWhere =
+            program === undefined
+                ? isNull(studentPersonaTable.program)
+                : eq(studentPersonaTable.program, program);
+        const admissionYearWhere =
+            admissionYear === undefined
+                ? isNull(studentPersonaTable.admissionYear)
+                : eq(studentPersonaTable.admissionYear, admissionYear);
+
+        const results = await db
+            .select({
+                studentPersonaId: studentPersonaTable.id,
+            })
+            .from(studentPersonaTable)
+            .where(and(campusWhere, programWhere, admissionYearWhere));
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].studentPersonaId;
+        }
+    }
+
+    static async selectUniversityEligibilityIdFromAttributes({
+        db,
+        types,
+        countries,
+        studentEligibilityId,
+        alumEligibilityId,
+        facultyEligibilityId,
+    }: SelectUniversityEligibilityIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const typesWhere =
+            types === undefined
+                ? isNull(universityEligibilityTable.types)
+                : eq(universityEligibilityTable.types, types);
+        const countriesWhere =
+            countries === undefined
+                ? isNull(universityEligibilityTable.countries)
+                : eq(universityEligibilityTable.countries, countries);
+        const studentEligibilityIdWhere =
+            studentEligibilityId === undefined
+                ? isNull(universityEligibilityTable.studentEligibilityId)
+                : eq(
+                      universityEligibilityTable.studentEligibilityId,
+                      studentEligibilityId
+                  );
+        const alumEligibilityIdWhere =
+            alumEligibilityId === undefined
+                ? isNull(universityEligibilityTable.alumEligibilityId)
+                : eq(
+                      universityEligibilityTable.alumEligibilityId,
+                      alumEligibilityId
+                  );
+        const facultyEligibilityIdWhere =
+            facultyEligibilityId === undefined
+                ? isNull(universityEligibilityTable.facultyEligibilityId)
+                : eq(
+                      universityEligibilityTable.facultyEligibilityId,
+                      facultyEligibilityId
+                  );
+
+        const results = await db
+            .select({
+                universityEligibilityId: universityEligibilityTable.id,
+            })
+            .from(universityEligibilityTable)
+            .where(
+                and(
+                    typesWhere,
+                    countriesWhere,
+                    studentEligibilityIdWhere,
+                    alumEligibilityIdWhere,
+                    facultyEligibilityIdWhere
+                )
+            );
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].universityEligibilityId;
+        }
+    }
+
+    static async selectUniversityPersonaIdFromAttributes({
+        db,
+        type,
+        countries,
+        studentPersonaId,
+        alumPersonaId,
+        facultyPersonaId,
+    }: SelectUniversityPersonaIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const typeStr = universityTypeToString(type);
+        const countriesWhere =
+            countries === undefined
+                ? isNull(universityPersonaTable.countries)
+                : eq(universityPersonaTable.countries, countries);
+        const studentPersonaIdWhere =
+            studentPersonaId === undefined
+                ? isNull(universityPersonaTable.studentPersonaId)
+                : eq(universityPersonaTable.studentPersonaId, studentPersonaId);
+        const alumPersonaIdWhere =
+            alumPersonaId === undefined
+                ? isNull(universityPersonaTable.alumPersonaId)
+                : eq(universityPersonaTable.alumPersonaId, alumPersonaId);
+        const facultyPersonaIdWhere =
+            facultyPersonaId === undefined
+                ? isNull(universityPersonaTable.facultyPersonaId)
+                : eq(universityPersonaTable.facultyPersonaId, facultyPersonaId);
+
+        const results = await db
+            .select({
+                universityPersonaId: universityPersonaTable.id,
+            })
+            .from(universityPersonaTable)
+            .where(
+                and(
+                    eq(universityPersonaTable.type, typeStr),
+                    countriesWhere,
+                    studentPersonaIdWhere,
+                    alumPersonaIdWhere,
+                    facultyPersonaIdWhere
+                )
+            );
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].universityPersonaId;
+        }
+    }
+
+    static async selectEligibilityId({
+        db,
+        domains,
+        types,
+        universityEligibilityId,
+    }: SelectEligibilityIdProps): Promise<number | undefined> {
+        const domainsWhere =
+            domains === undefined
+                ? isNull(eligibilityTable.domains)
+                : eq(eligibilityTable.domains, domains);
+        const typesWhere =
+            types === undefined
+                ? isNull(eligibilityTable.types)
+                : eq(eligibilityTable.types, types);
+        const universityEligibilityIdWhere =
+            universityEligibilityId === undefined
+                ? isNull(eligibilityTable.universityEligibilityId)
+                : eq(
+                      eligibilityTable.universityEligibilityId,
+                      universityEligibilityId
+                  );
+        const results = await db
+            .select({
+                eligibilityId: eligibilityTable.id,
+            })
+            .from(eligibilityTable)
+            .where(and(domainsWhere, typesWhere, universityEligibilityIdWhere));
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].eligibilityId;
+        }
+    }
+
+    static async selectPersonaIdFromAttributes({
+        db,
+        domain,
+        type,
+        universityPersonaId,
+    }: SelectPersonaIdFromAttributesProps): Promise<number | undefined> {
+        const universityPersonaIdWhere =
+            universityPersonaId === undefined
+                ? isNull(personaTable.universityPersonaId)
+                : eq(personaTable.universityPersonaId, universityPersonaId);
+        const results = await db
+            .select({
+                personaId: personaTable.id,
+            })
+            .from(personaTable)
+            .where(
+                and(
+                    eq(personaTable.domain, domain),
+                    eq(personaTable.type, type),
+                    universityPersonaIdWhere
+                )
+            );
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].personaId;
+        }
+    }
+
     static async createPoll({
         db,
         presentation,
@@ -1443,6 +1729,7 @@ export class Service {
         await db.transaction(async (tx) => {
             ////////////// PERSONA - POST AS ///////////
             let universityPersonaId: number | undefined = undefined;
+            let personaId: number | undefined = undefined;
             // TODO: switch case depending on value of postAs.type - here we only do work for universities
             if (postAs.typeSpecific !== undefined) {
                 let studentPersonaId: number | undefined = undefined;
@@ -1455,33 +1742,67 @@ export class Service {
                             postAs.typeSpecific.program !== undefined ||
                             postAs.typeSpecific.admissionYear !== undefined
                         ) {
-                            const insertedStudentPersona = await tx
-                                .insert(studentPersonaTable)
-                                .values({
-                                    campus:
-                                        postAs.typeSpecific.campus !== undefined
-                                            ? essecCampusToString(
-                                                  postAs.typeSpecific.campus
-                                              )
-                                            : undefined,
-                                    program:
-                                        postAs.typeSpecific.program !==
-                                        undefined
-                                            ? essecProgramToString(
-                                                  postAs.typeSpecific.program
-                                              )
-                                            : undefined,
-                                    admissionYear:
-                                        postAs.typeSpecific.admissionYear !==
-                                        undefined
-                                            ? postAs.typeSpecific.admissionYear
-                                            : undefined,
-                                })
-                                .returning({
-                                    insertedId: studentPersonaTable.id,
-                                });
-                            studentPersonaId =
-                                insertedStudentPersona[0].insertedId;
+                            const selectedStudentPersonaId: number | undefined =
+                                await Service.selectStudentPersonaIdFromAttributes(
+                                    {
+                                        db: tx,
+                                        campus:
+                                            postAs.typeSpecific.campus !==
+                                            undefined
+                                                ? essecCampusToString(
+                                                      postAs.typeSpecific.campus
+                                                  )
+                                                : undefined,
+                                        program:
+                                            postAs.typeSpecific.program !==
+                                            undefined
+                                                ? essecProgramToString(
+                                                      postAs.typeSpecific
+                                                          .program
+                                                  )
+                                                : undefined,
+                                        admissionYear:
+                                            postAs.typeSpecific
+                                                .admissionYear !== undefined
+                                                ? postAs.typeSpecific
+                                                      .admissionYear
+                                                : undefined,
+                                    }
+                                );
+                            if (selectedStudentPersonaId === undefined) {
+                                const insertedStudentPersona = await tx
+                                    .insert(studentPersonaTable)
+                                    .values({
+                                        campus:
+                                            postAs.typeSpecific.campus !==
+                                            undefined
+                                                ? essecCampusToString(
+                                                      postAs.typeSpecific.campus
+                                                  )
+                                                : undefined,
+                                        program:
+                                            postAs.typeSpecific.program !==
+                                            undefined
+                                                ? essecProgramToString(
+                                                      postAs.typeSpecific
+                                                          .program
+                                                  )
+                                                : undefined,
+                                        admissionYear:
+                                            postAs.typeSpecific
+                                                .admissionYear !== undefined
+                                                ? postAs.typeSpecific
+                                                      .admissionYear
+                                                : undefined,
+                                    })
+                                    .returning({
+                                        insertedId: studentPersonaTable.id,
+                                    });
+                                studentPersonaId =
+                                    insertedStudentPersona[0].insertedId;
+                            } else {
+                                studentPersonaId = selectedStudentPersonaId;
+                            }
                         }
                         break;
                     case UniversityType.ALUM:
@@ -1502,37 +1823,69 @@ export class Service {
                             true
                     );
                 }
-                const insertedUniversityPersona = await tx
-                    .insert(universityPersonaTable)
-                    .values({
-                        type: universityTypeToString(postAs.typeSpecific.type),
+                const selectedUniversityPersonaId: number | undefined =
+                    await Service.selectUniversityPersonaIdFromAttributes({
+                        db: tx,
+                        type: postAs.typeSpecific.type,
                         countries: personaCountries,
                         studentPersonaId: studentPersonaId,
                         alumPersonaId: alumPersonaId,
                         facultyPersonaId: facultyPersonaId,
-                    })
-                    .returning({ insertedId: personaTable.id });
-                universityPersonaId = insertedUniversityPersona[0].insertedId;
+                    });
+
+                if (selectedUniversityPersonaId === undefined) {
+                    const insertedUniversityPersona = await tx
+                        .insert(universityPersonaTable)
+                        .values({
+                            type: universityTypeToString(
+                                postAs.typeSpecific.type
+                            ),
+                            countries: personaCountries,
+                            studentPersonaId: studentPersonaId,
+                            alumPersonaId: alumPersonaId,
+                            facultyPersonaId: facultyPersonaId,
+                        })
+                        .returning({ insertedId: personaTable.id });
+                    universityPersonaId =
+                        insertedUniversityPersona[0].insertedId;
+                } else {
+                    universityPersonaId = selectedUniversityPersonaId;
+                }
             }
-            const insertedPersona = await tx
-                .insert(personaTable)
-                .values({
+            const selectedPersonaId: number | undefined =
+                await Service.selectPersonaIdFromAttributes({
+                    db: tx,
                     domain: postAs.domain,
                     type: postAs.type,
                     universityPersonaId: universityPersonaId,
-                })
-                .returning({ insertedId: personaTable.id });
+                });
+            if (selectedPersonaId === undefined) {
+                const insertedPersona = await tx
+                    .insert(personaTable)
+                    .values({
+                        domain: postAs.domain,
+                        type: postAs.type,
+                        universityPersonaId: universityPersonaId,
+                    })
+                    .returning({ insertedId: personaTable.id });
+                personaId = insertedPersona[0].insertedId;
+            } else {
+                personaId = selectedPersonaId;
+            }
             const insertedAuthor = await tx
                 .insert(pseudonymTable)
                 .values({
                     pseudonym: pseudonym,
-                    personaId: insertedPersona[0].insertedId, // TODO: maybe we could allow posting just as a member of ZKorum? Then this could be undefined
+                    personaId: personaId, // TODO: maybe we could allow posting just as a member of ZKorum? Then this could be undefined
                 })
                 .returning({ insertedId: pseudonymTable.id })
-                .onConflictDoUpdate({
+                .onConflictDoNothing({
                     target: pseudonymTable.pseudonym,
-                    set: { personaId: 1, updatedAt: now },
-                }); // TODO: we want to select instead of insert in that case, and make sure the personaId was the same or log a warning and update
+                })
+                .onConflictDoUpdate({
+                    target: pseudonymTable.personaId,
+                    set: { personaId: personaId, updatedAt: now },
+                }); // TODO: how to log a warning when that happen?, it should not!
             /////////////////////////////////////////////////////////////////////////////////////////
 
             //////////////////////// ELIGIBILITY ///////////////////////////////////////////////////
@@ -1570,32 +1923,69 @@ export class Service {
                         (poll.eligibility.programs !== undefined &&
                             poll.eligibility.programs.length > 0)
                     ) {
-                        const insertedStudentEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
-                            .insert(studentEligibilityTable)
-                            .values({
-                                campuses:
-                                    poll.eligibility.campuses !== undefined
-                                        ? poll.eligibility.campuses.map(
-                                              (campus) =>
-                                                  essecCampusToString(campus)
-                                          )
-                                        : undefined,
-                                programs:
-                                    poll.eligibility.programs !== undefined
-                                        ? poll.eligibility.programs.map(
-                                              (program) =>
-                                                  essecProgramToString(program)
-                                          )
-                                        : undefined,
-                                admissionYears:
-                                    poll.eligibility.admissionYears !==
-                                    undefined
-                                        ? poll.eligibility.admissionYears
-                                        : undefined,
-                            })
-                            .returning({ insertedId: eligibilityTable.id });
-                        studentEligibilityId =
-                            insertedStudentEligibility[0].insertedId;
+                        const selectedStudentEligibilityId: number | undefined =
+                            await Service.selectStudentEligibilityIdFromAttributes(
+                                {
+                                    db: tx,
+                                    campuses:
+                                        poll.eligibility.campuses !== undefined
+                                            ? poll.eligibility.campuses.map(
+                                                  (campus) =>
+                                                      essecCampusToString(
+                                                          campus
+                                                      )
+                                              )
+                                            : undefined,
+                                    programs:
+                                        poll.eligibility.programs !== undefined
+                                            ? poll.eligibility.programs.map(
+                                                  (program) =>
+                                                      essecProgramToString(
+                                                          program
+                                                      )
+                                              )
+                                            : undefined,
+                                    admissionYears:
+                                        poll.eligibility.admissionYears !==
+                                        undefined
+                                            ? poll.eligibility.admissionYears
+                                            : undefined,
+                                }
+                            );
+                        if (selectedStudentEligibilityId === undefined) {
+                            const insertedStudentEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
+                                .insert(studentEligibilityTable)
+                                .values({
+                                    campuses:
+                                        poll.eligibility.campuses !== undefined
+                                            ? poll.eligibility.campuses.map(
+                                                  (campus) =>
+                                                      essecCampusToString(
+                                                          campus
+                                                      )
+                                              )
+                                            : undefined,
+                                    programs:
+                                        poll.eligibility.programs !== undefined
+                                            ? poll.eligibility.programs.map(
+                                                  (program) =>
+                                                      essecProgramToString(
+                                                          program
+                                                      )
+                                              )
+                                            : undefined,
+                                    admissionYears:
+                                        poll.eligibility.admissionYears !==
+                                        undefined
+                                            ? poll.eligibility.admissionYears
+                                            : undefined,
+                                })
+                                .returning({ insertedId: eligibilityTable.id });
+                            studentEligibilityId =
+                                insertedStudentEligibility[0].insertedId;
+                        } else {
+                            studentEligibilityId = selectedStudentEligibilityId;
+                        }
                     }
                     if (poll.eligibility.alum !== undefined) {
                         eligibilityTypes.push(
@@ -1615,10 +2005,10 @@ export class Service {
                 eligibilityTypes.length !== 0 ||
                 eligibilityCountries.length !== 0
             ) {
-                const insertedUniversityEligibility = await tx
-                    .insert(universityEligibilityTable)
-                    .values({
-                        type:
+                const selectedUniversityEligibilityId: number | undefined =
+                    await Service.selectUniversityEligibilityIdFromAttributes({
+                        db: tx,
+                        types:
                             eligibilityTypes.length !== 0
                                 ? eligibilityTypes
                                 : undefined,
@@ -1629,19 +2019,52 @@ export class Service {
                         studentEligibilityId: studentEligibilityId,
                         alumEligibilityId: alumEligibilityId,
                         facultyEligibilityId: facultyEligibilityId,
-                    })
-                    .returning({ insertedId: universityEligibilityTable.id });
-                universityEligibilityId =
-                    insertedUniversityEligibility[0].insertedId;
+                    });
+                if (selectedUniversityEligibilityId === undefined) {
+                    const insertedUniversityEligibility = await tx
+                        .insert(universityEligibilityTable)
+                        .values({
+                            types:
+                                eligibilityTypes.length !== 0
+                                    ? eligibilityTypes
+                                    : undefined,
+                            countries:
+                                eligibilityCountries.length !== 0
+                                    ? eligibilityCountries
+                                    : undefined,
+                            studentEligibilityId: studentEligibilityId,
+                            alumEligibilityId: alumEligibilityId,
+                            facultyEligibilityId: facultyEligibilityId,
+                        })
+                        .returning({
+                            insertedId: universityEligibilityTable.id,
+                        });
+                    universityEligibilityId =
+                        insertedUniversityEligibility[0].insertedId;
+                } else {
+                    universityEligibilityId = selectedUniversityEligibilityId;
+                }
             }
-            const insertedEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
-                .insert(eligibilityTable)
-                .values({
-                    domain: [postAs.domain], // for now users can only ask questions to people in their own community
-                    type: [postAs.type], // for now users can only ask questions to people in their own community
+            const selectedEligibilityId: number | undefined =
+                await Service.selectEligibilityId({
+                    db: tx,
+                    domains: [postAs.domain], // for now users can only ask questions to people in their own community
+                    types: [postAs.type], // for now users can only ask questions to people in their own community
                     universityEligibilityId: universityEligibilityId,
-                })
-                .returning({ insertedId: eligibilityTable.id });
+                });
+            if (selectedEligibilityId === undefined) {
+                const insertedEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
+                    .insert(eligibilityTable)
+                    .values({
+                        domains: [postAs.domain], // for now users can only ask questions to people in their own community
+                        types: [postAs.type], // for now users can only ask questions to people in their own community
+                        universityEligibilityId: universityEligibilityId,
+                    })
+                    .returning({ insertedId: eligibilityTable.id });
+                eligibilityId = insertedEligibility[0].insertedId;
+            } else {
+                eligibilityId = selectedEligibilityId;
+            }
 
             /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1668,7 +2091,7 @@ export class Service {
                         ? realOptionalOptions[3]
                         : undefined,
                 authorId: insertedAuthor[0].insertedId,
-                eligibilityId: insertedEligibility[0].insertedId,
+                eligibilityId: eligibilityId,
             });
         });
         // TODO: broadcast timestampedPresentation to Nostr or custom libp2p node

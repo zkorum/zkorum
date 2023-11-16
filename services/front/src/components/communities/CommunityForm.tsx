@@ -22,8 +22,6 @@ import {
 } from "@/shared/types/university";
 import Button from "@mui/material/Button";
 import { requestAnonymousCredentials } from "@/request/credential";
-import { useNavigate } from "react-router-dom";
-import { FEED } from "@/common/navigation";
 import { useAppDispatch } from "@/hooks";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { credentialsIssued, genericError } from "../error/message";
@@ -59,8 +57,6 @@ export function CommunityForm({ email }: CommunityFormProps) {
         React.useState<boolean>(false);
     const [isInvalid, setIsInvalid] = React.useState<boolean>(true);
     const dispatch = useAppDispatch();
-
-    const navigate = useNavigate();
 
     React.useEffect(() => {
         switch (type) {
@@ -129,7 +125,6 @@ export function CommunityForm({ email }: CommunityFormProps) {
                         emailCredentialRequest
                     );
                     //... if it gets through, we redirect to the feed
-                    navigate(FEED);
                     dispatch(showSuccess(credentialsIssued));
                 } catch (e) {
                     console.warn(
@@ -160,17 +155,30 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     alignItems: "left",
                 }}
             >
-                <Box sx={{ my: 2 }}>
-                    <Typography component="div">
-                        Fill the forms below to start using ZKorum! The forms
-                        result will only be visible to ZKorum and to the other
-                        members of your community. For now,{" "}
+                <Box sx={{ mt: 2 }}>
+                    <Typography component="div" sx={{ mb: 1 }}>
+                        Self-attest attributes to connect with your community
+                        with more granularity than just belonging to ESSEC.
+                    </Typography>
+                    <Typography component="div" sx={{ mb: 1 }}>
+                        For example, If you are a student, you'll be able to
+                        post "as a student" and respond to posts only for
+                        students!
+                    </Typography>
+                    <Typography component="div" sx={{ mb: 1 }}>
+                        The forms result will only be visible to ZKorum and to
+                        the other members of your community.
+                    </Typography>
+                    <Typography component="div" sx={{ mb: 1 }}>
+                        For now,{" "}
                         <Box fontWeight="fontWeightMedium" display="inline">
                             you can't change the forms once it's done! Your best
                             interest is to be genuine
                         </Box>
-                        , so you can connect with your real community. Thanks to
-                        Zero-Knowledge proofs,{" "}
+                        , so you can connect with your real community.
+                    </Typography>
+                    <Typography component="div" sx={{ mb: 1 }}>
+                        Thanks to Zero-Knowledge proofs,{" "}
                         <Box fontWeight="fontWeightMedium" display="inline">
                             the posts you will create cannot trace back to your
                             account or to the forms, even for ZKorum
@@ -221,7 +229,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                         onClick={() => onSubmitForm()}
                         disabled={isInvalid}
                     >
-                        Request anonymous credentials
+                        Request anonymous credential
                     </Button>
                 </Box>
             </Box>

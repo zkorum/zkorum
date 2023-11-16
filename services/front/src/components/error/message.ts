@@ -10,7 +10,7 @@ export const sessionExpired = "Session expired";
 export const throttled =
     "Too many authentication emails were sent, wait for some time";
 export const credentialsIssued =
-    "Credentials issued, you can now start posting anonymously! 🎭";
+    "Credential issued, you can now start posting anonymously! 🎭";
 export const fieldRequired = "This field is required";
 export const creatingProof = "Creating zero-knowledge proof locally... 🧾";
 export const sendingPost = "Sending... 🕓";
