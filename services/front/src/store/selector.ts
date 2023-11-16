@@ -57,6 +57,51 @@ export const selectActiveSessionEmail = (state: RootState) => {
     return state.sessions.activeSessionEmail;
 };
 
+export const selectSessions = (state: RootState) => {
+    return state.sessions.sessions;
+};
+
+export const selectFormCredentialsPerEmail = createSelector(
+    [selectActiveSessionEmail, selectSessions],
+    (activeSessionEmail, sessions) => {
+        if (activeSessionEmail === undefined || activeSessionEmail === "") {
+            return undefined;
+        }
+        return sessions[activeSessionEmail]?.formCredentialsPerEmail;
+    }
+);
+
+export const selectActiveEncodedFormCredential = createSelector(
+    [selectFormCredentialsPerEmail, selectActiveSessionEmail],
+    function (formCredentialsPerEmail, activeSessionEmail) {
+        if (formCredentialsPerEmail === undefined) {
+            return undefined;
+        } else {
+            return formCredentialsPerEmail[activeSessionEmail].active;
+        }
+    }
+);
+
+export const selectActiveFormCredential = createSelector(
+    [selectActiveEncodedFormCredential],
+    function (activeEncodedFormCredential) {
+        if (activeEncodedFormCredential === undefined) {
+            return undefined;
+        } else {
+            try {
+                return Credential.fromJSON(
+                    uint8ArrayToJSON(base64.decode(activeEncodedFormCredential))
+                );
+            } catch (e) {
+                // TODO: better error handling
+                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
+                console.error("Error while parsing email credential", e);
+                return undefined;
+            }
+        }
+    }
+);
+
 export const selectActiveSessionUserId = (state: RootState) => {
     const activeSessionEmail = state.sessions.activeSessionEmail;
     if (state.sessions?.sessions === undefined) {
@@ -99,44 +144,6 @@ export const selectActiveEmailCredential = (
                 // TODO: better error handling
                 // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
                 console.error("Error while parsing email credential", e);
-            }
-        }
-    } else {
-        return undefined;
-    }
-};
-
-// for some reason this is called 5 times (in dev mode)!!!
-// => TODO: look into optimizing this - ...
-// The following console warning has to be investigated:
-// Selector selectActiveEmailCredential returned a different result when called with the same parameters. This can lead to unnecessary rerenders.
-// Selectors that return a new reference (such as an object or an array) should be memoized: https://redux.js.org/usage/deriving-data-selectors#optimizing-selectors-with-memoization
-export const selectActiveFormCredential = (
-    state: RootState
-): Credential | undefined => {
-    const activeSessionEmail = state.sessions.activeSessionEmail;
-    if (activeSessionEmail === "") {
-        return undefined;
-    }
-    const formCredentialsPerEmail =
-        state.sessions.sessions[activeSessionEmail]?.formCredentialsPerEmail;
-    if (
-        formCredentialsPerEmail !== undefined &&
-        activeSessionEmail in formCredentialsPerEmail
-    ) {
-        const encodedFormCredential =
-            formCredentialsPerEmail[activeSessionEmail].active;
-        if (encodedFormCredential === undefined) {
-            return undefined;
-        } else {
-            try {
-                return Credential.fromJSON(
-                    uint8ArrayToJSON(base64.decode(encodedFormCredential))
-                );
-            } catch (e) {
-                // TODO: better error handling - how to recover the formCredentialsPerEmail?
-                // for now we catch it so it doesn't crash the entire app, and return undefined
-                console.error("Error while parsing form credential", e);
             }
         }
     } else {
