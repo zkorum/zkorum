@@ -4,7 +4,6 @@ import { uint8ArrayToJSON } from "@/shared/common/arrbufs";
 import { base64 } from "@/shared/common/index";
 import { BBSPlusCredential as Credential } from "@docknetwork/crypto-wasm-ts";
 import type { SessionStatus } from "./reducers/session";
-import type { UnblindedSecretCredentials } from "@/shared/types/zod";
 
 const selectSessionsData = (state: RootState) => {
     return Object.values(state.sessions.sessions).sort((s1, s2) => {
@@ -71,13 +70,55 @@ export const selectFormCredentialsPerEmail = createSelector(
     }
 );
 
+export const selectEmailCredentialsPerEmail = createSelector(
+    [selectActiveSessionEmail, selectSessions],
+    (activeSessionEmail, sessions) => {
+        if (activeSessionEmail === undefined || activeSessionEmail === "") {
+            return undefined;
+        }
+        return sessions[activeSessionEmail]?.emailCredentialsPerEmail;
+    }
+);
+
+export const selectUnblindedSecretCredentialsPerType = createSelector(
+    [selectActiveSessionEmail, selectSessions],
+    (activeSessionEmail, sessions) => {
+        if (activeSessionEmail === undefined || activeSessionEmail === "") {
+            return undefined;
+        }
+        return sessions[activeSessionEmail]?.unblindedSecretCredentialsPerType;
+    }
+);
+
 export const selectActiveEncodedFormCredential = createSelector(
     [selectFormCredentialsPerEmail, selectActiveSessionEmail],
     function (formCredentialsPerEmail, activeSessionEmail) {
         if (formCredentialsPerEmail === undefined) {
             return undefined;
         } else {
-            return formCredentialsPerEmail[activeSessionEmail].active;
+            return formCredentialsPerEmail[activeSessionEmail]?.active;
+        }
+    }
+);
+
+export const selectActiveEncodedEmailCredential = createSelector(
+    [selectEmailCredentialsPerEmail, selectActiveSessionEmail],
+    function (emailCredentialsPerEmail, activeSessionEmail) {
+        if (emailCredentialsPerEmail === undefined) {
+            return undefined;
+        } else {
+            return emailCredentialsPerEmail[activeSessionEmail]?.active;
+        }
+    }
+);
+
+export const selectActiveEncodedUnboundSecretCredential = createSelector(
+    [selectUnblindedSecretCredentialsPerType],
+    function (unblindedSecretCredentialsPerType) {
+        if (unblindedSecretCredentialsPerType === undefined) {
+            return undefined;
+        } else {
+            return unblindedSecretCredentialsPerType["unbound"]?.active;
         }
     }
 );
@@ -95,7 +136,51 @@ export const selectActiveFormCredential = createSelector(
             } catch (e) {
                 // TODO: better error handling
                 // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
+                console.error("Error while parsing form credential", e);
+                return undefined;
+            }
+        }
+    }
+);
+
+export const selectActiveEmailCredential = createSelector(
+    [selectActiveEncodedEmailCredential],
+    function (activeEncodedEmailCredential) {
+        if (activeEncodedEmailCredential === undefined) {
+            return undefined;
+        } else {
+            try {
+                return Credential.fromJSON(
+                    uint8ArrayToJSON(
+                        base64.decode(activeEncodedEmailCredential)
+                    )
+                );
+            } catch (e) {
+                // TODO: better error handling
+                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
                 console.error("Error while parsing email credential", e);
+                return undefined;
+            }
+        }
+    }
+);
+
+export const selectActiveUnboundSecretCredential = createSelector(
+    [selectActiveEncodedUnboundSecretCredential],
+    function (activeEncodedUnboundSecretCredential) {
+        if (activeEncodedUnboundSecretCredential === undefined) {
+            return undefined;
+        } else {
+            try {
+                return Credential.fromJSON(
+                    uint8ArrayToJSON(
+                        base64.decode(activeEncodedUnboundSecretCredential)
+                    )
+                );
+            } catch (e) {
+                // TODO: better error handling
+                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
+                console.error("Error while parsing secret credential", e);
                 return undefined;
             }
         }
@@ -113,44 +198,6 @@ export const selectActiveSessionUserId = (state: RootState) => {
     return state.sessions.sessions[activeSessionEmail].userId;
 };
 
-// for some reason this is called 5 times (in dev mode)!!!
-// => TODO: look into optimizing this - ...
-// The following console warning has to be investigated:
-// Selector selectActiveEmailCredential returned a different result when called with the same parameters. This can lead to unnecessary rerenders.
-// Selectors that return a new reference (such as an object or an array) should be memoized: https://redux.js.org/usage/deriving-data-selectors#optimizing-selectors-with-memoization
-export const selectActiveEmailCredential = (
-    state: RootState
-): Credential | undefined => {
-    const activeSessionEmail = state.sessions.activeSessionEmail;
-    if (activeSessionEmail === "") {
-        return undefined;
-    }
-    const emailCredentialsPerEmail =
-        state.sessions.sessions[activeSessionEmail]?.emailCredentialsPerEmail;
-    if (
-        emailCredentialsPerEmail !== undefined &&
-        activeSessionEmail in emailCredentialsPerEmail
-    ) {
-        const encodedEmailCredential =
-            emailCredentialsPerEmail[activeSessionEmail].active;
-        if (encodedEmailCredential === undefined) {
-            return undefined;
-        } else {
-            try {
-                return Credential.fromJSON(
-                    uint8ArrayToJSON(base64.decode(encodedEmailCredential))
-                );
-            } catch (e) {
-                // TODO: better error handling
-                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
-                console.error("Error while parsing email credential", e);
-            }
-        }
-    } else {
-        return undefined;
-    }
-};
-
 export const selectActiveSessionStatus = (
     state: RootState
 ): SessionStatus | undefined => {
@@ -159,40 +206,4 @@ export const selectActiveSessionStatus = (
         return undefined;
     }
     return state.sessions.sessions[activeSessionEmail]?.status;
-};
-
-export const selectActiveUnboundSecretCredential = (
-    state: RootState
-): Credential | undefined => {
-    const activeSessionEmail = state.sessions.activeSessionEmail;
-    if (activeSessionEmail === "") {
-        return undefined;
-    }
-    const secretCredentialsPerType =
-        state.sessions.sessions[activeSessionEmail]
-            ?.unblindedSecretCredentialsPerType;
-    if (
-        secretCredentialsPerType !== undefined &&
-        "unbound" in secretCredentialsPerType
-    ) {
-        const unblindedSecretCredential = (
-            secretCredentialsPerType["unbound"] as UnblindedSecretCredentials
-        ).active;
-        if (unblindedSecretCredential === undefined) {
-            return undefined;
-        } else {
-            try {
-                const credential = Credential.fromJSON(
-                    uint8ArrayToJSON(base64.decode(unblindedSecretCredential))
-                );
-                return credential;
-            } catch (e) {
-                // TODO: better error handling
-                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
-                console.error("Error while parsing secret credential", e);
-            }
-        }
-    } else {
-        return undefined;
-    }
 };

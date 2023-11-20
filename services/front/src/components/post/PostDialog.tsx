@@ -152,11 +152,19 @@ export function PostDialog() {
         if (
             postAsCampusChecked ||
             postAsProgramChecked ||
-            postAsAdmissionYearChecked
+            postAsAdmissionYearChecked ||
+            postAsFrench || // TODO: countries should not be here!
+            postAsInternational
         ) {
             setPostAsStudentChecked(true);
         }
-    }, [postAsCampusChecked, postAsProgramChecked, postAsAdmissionYearChecked]);
+    }, [
+        postAsCampusChecked,
+        postAsProgramChecked,
+        postAsAdmissionYearChecked,
+        postAsFrench,
+        postAsInternational,
+    ]);
 
     React.useEffect(() => {
         if (!postAsStudentChecked) {
@@ -230,6 +238,7 @@ export function PostDialog() {
                     }
                     label="a student..."
                 />
+                {getPostAsCountries(studentAttributes.countries)}
                 <FormControlLabel
                     sx={{ ml: 1 }}
                     checked={postAsCampusChecked}
@@ -297,6 +306,7 @@ export function PostDialog() {
                 (presentCountries.length <= 1 &&
                     !presentCountries.includes("FR")) ? (
                     <FormControlLabel
+                        sx={{ ml: 1 }}
                         control={
                             <Checkbox
                                 checked={postAsInternational}
@@ -436,7 +446,11 @@ export function PostDialog() {
 
     function addIfExists({ credential, attribute, set }: AddIfExistsProps) {
         const flattenedSchemaAttributes = credential.schema.flatten()[0];
-        if (flattenedSchemaAttributes.includes(attribute)) {
+        const flattenedSchemaAttributesFiltered =
+            flattenedSchemaAttributes.filter((attr) =>
+                attr.includes(attribute)
+            );
+        if (flattenedSchemaAttributesFiltered.length !== 0) {
             set.add(attribute);
         } else {
             console.warn(
@@ -487,11 +501,21 @@ export function PostDialog() {
             });
         }
         if (postAsCountries) {
-            addIfExists({
-                attribute: `${SUBJECT_STR}.typeSpecific.countries`,
-                credential: credential,
-                set: attributesRevealed,
-            });
+            const attrCountries = (
+                (credential.subject as any)["typeSpecific"] as any
+            )[ // TODO: countries should not be in typeSpecific
+                `countries`
+            ];
+            const justMyCountries = Object.keys(
+                attrCountries as { [key: string]: boolean }
+            ).filter((key) => attrCountries[key] === true);
+            for (const countryCode of justMyCountries) {
+                addIfExists({
+                    attribute: `${SUBJECT_STR}.typeSpecific.countries.${countryCode}`,
+                    credential: credential,
+                    set: attributesRevealed,
+                });
+            }
         }
         return attributesRevealed;
     }
@@ -755,14 +779,15 @@ export function PostDialog() {
         let postAsAlum: null | JSX.Element = null;
         let postAsFaculty: null | JSX.Element = null;
 
-        if (
-            (activeFormCredential?.subject as any)?.typeSpecific.countries !==
-            undefined
-        ) {
-            postAsCountries = getPostAsCountries(
-                (activeFormCredential?.subject as any)?.typeSpecific.countries
-            );
-        }
+        // TODO add countries and other general info
+        // if (
+        //     (activeFormCredential?.subject as any)?.typeSpecific.countries !==
+        //     undefined
+        // ) {
+        //     postAsCountries = getPostAsCountries(
+        //         (activeFormCredential?.subject as any)?.typeSpecific.countries
+        //     );
+        // }
         if (
             (activeFormCredential?.subject as any)?.typeSpecific?.type !==
             undefined
