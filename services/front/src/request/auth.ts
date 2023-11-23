@@ -1,4 +1,4 @@
-import { cryptoStore, store } from "../store/store";
+import { getCryptoStore, store } from "../store/store";
 import {
     verifying,
     authenticating,
@@ -55,6 +55,7 @@ export async function authenticate(
     | "throttled"
 > {
     let didExchange: string;
+    const cryptoStore = await getCryptoStore();
     if (userId !== undefined) {
         const exchangeKeyExists =
             await cryptoStore.keystore.exchangeKeyExists(userId);

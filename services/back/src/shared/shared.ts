@@ -60,3 +60,10 @@ export function domainFromEmail(email: string): string | undefined {
 // IF YOU CHANGE THESE VALUES ALSO CHANGE THEM IN SCHEMA.TS
 export const MAX_LENGTH_OPTION = 30;
 export const MAX_LENGTH_QUESTION = 140;
+
+export function toUnionUndefined<T>(value: T | null): T | undefined {
+    if (value === null) {
+        return undefined;
+    }
+    return value;
+}

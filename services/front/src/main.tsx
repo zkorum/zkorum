@@ -13,6 +13,10 @@ import { PersistGate } from "redux-persist/integration/react";
 import { Provider } from "react-redux";
 import { MainLoading } from "./MainLoading";
 
+// avoid "Buffer is not defined" error
+import { Buffer } from "buffer";
+globalThis.Buffer = Buffer;
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
         <ThemeProvider theme={theme}>

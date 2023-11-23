@@ -5,7 +5,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- CREATE TYPE "credential_type" AS ENUM('UNIVERSITY', 'COMPANY');
+ CREATE TYPE "credential_type" AS ENUM('university', 'company');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -18,6 +18,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  CREATE TYPE "credential_secret_type" AS ENUM('unbound', 'timebound');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "university_type" AS ENUM('student', 'alum', 'faculty');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -135,11 +141,17 @@ CREATE TABLE IF NOT EXISTS "poll" (
 	"eligibility_id" integer NOT NULL,
 	"question" varchar(140) NOT NULL,
 	"option1" varchar(30) NOT NULL,
+	"option1_response" integer DEFAULT 0 NOT NULL,
 	"option2" varchar(30) NOT NULL,
+	"option2_response" integer DEFAULT 0 NOT NULL,
 	"option3" varchar(30),
+	"option3_response" integer,
 	"option4" varchar(30),
+	"option4_response" integer,
 	"option5" varchar(30),
+	"option5_response" integer,
 	"option6" varchar(30),
+	"option6_response" integer,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "poll_time_pres_cid_unique" UNIQUE("time_pres_cid")
@@ -175,7 +187,7 @@ CREATE TABLE IF NOT EXISTS "student_persona" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "university_eligibility" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"type" varchar(255)[],
+	"types" university_type[],
 	"countries" char(2)[],
 	"student_eligibility_id" integer,
 	"alum_eligibility_id" integer,
@@ -186,7 +198,7 @@ CREATE TABLE IF NOT EXISTS "university_eligibility" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "university_persona" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"type" varchar(255) NOT NULL,
+	"type" "university_type" NOT NULL,
 	"countries" char(2)[],
 	"student_persona_id" integer,
 	"alum_persona_id" integer,

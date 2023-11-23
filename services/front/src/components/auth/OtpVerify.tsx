@@ -10,7 +10,6 @@ import {
 } from "../../api";
 import { authenticate, onLoggedIn, verifyOtp } from "@/request/auth";
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { ZodType } from "../../shared/types/zod";
 import { CircularProgressCountdown } from "../shared/CircularProgressCountdown";
 import {
     showError,
@@ -25,6 +24,7 @@ import Alert from "@mui/material/Alert";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { zodcode, zoddigit } from "@/shared/types/zod";
 
 export function OtpVerify() {
     const theme = useTheme();
@@ -131,7 +131,7 @@ export function OtpVerify() {
     }, [secondsUntilAllowingNewCode]);
 
     async function handleOnComplete(value: string) {
-        const result = ZodType.code.safeParse(value);
+        const result = zodcode.safeParse(value);
         if (!result.success) {
             // should not happen - so we log this one
             console.error("Error while parsing code", result.error);
@@ -274,7 +274,7 @@ export function OtpVerify() {
     }
 
     function validateChar(char: string) {
-        const result = ZodType.digit.safeParse(char);
+        const result = zoddigit.safeParse(char);
         return result.success;
     }
 

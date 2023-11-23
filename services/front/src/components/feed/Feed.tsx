@@ -1,132 +1,183 @@
 import Box from "@mui/material/Box";
-import { PostView, type Post } from "./PostView";
+import { PostView } from "./PostView";
 import React from "react";
-import { useAppDispatch } from "@/hooks";
-import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import Container from "@mui/material/Container";
+import { Virtuoso } from "react-virtuoso";
+import CircularProgress from "@mui/material/CircularProgress";
+import Grid from "@mui/material/Unstable_Grid2";
+import type { ExtendedPollData } from "@/shared/types/zod";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import { doLoadMore, doLoadRecent, usePostsAndMeta } from "@/feed";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { selectActiveSessionEmail } from "@/store/selector";
+import { openAuthModal } from "@/store/reducers/session";
 
 export function Feed() {
-    const [posts, setPosts] = React.useState<Array<Post>>([]);
+    const {
+        posts,
+        setPosts,
+        loadingMore,
+        setLoadingMore,
+        loadingRecent,
+        setLoadingRecent,
+    } = usePostsAndMeta();
+
+    const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const dispatch = useAppDispatch();
+
+    const loadRecent = React.useCallback(
+        (minUpdatedAt: Date) => {
+            return setTimeout(async () => {
+                return await doLoadRecent(
+                    setPosts,
+                    setLoadingRecent,
+                    minUpdatedAt
+                );
+            }, 200);
+        },
+        [setPosts, setLoadingRecent]
+    );
+
+    const loadMore = React.useCallback(
+        (onlyIfLoggedIn: boolean, lastIndex?: number) => {
+            return setTimeout(async () => {
+                if (
+                    onlyIfLoggedIn &&
+                    (activeSessionEmail === "" ||
+                        activeSessionEmail === undefined)
+                ) {
+                    return;
+                }
+                return await doLoadMore(
+                    posts,
+                    setPosts,
+                    setLoadingMore,
+                    lastIndex
+                );
+            }, 200);
+        },
+        [activeSessionEmail, setPosts, setLoadingMore, posts]
+    );
+
     React.useEffect(() => {
-        dispatch(openMainLoading());
-        setPosts(fillPosts());
-    }, []);
-    React.useEffect(() => {
-        if (posts.length !== 0) {
-            dispatch(closeMainLoading());
+        let moreTimeout: NodeJS.Timeout | undefined = undefined;
+        let recentTimeout: NodeJS.Timeout | undefined = undefined;
+        if (posts.length === 0) {
+            moreTimeout = loadMore(false);
+        } else if (
+            activeSessionEmail !== "" &&
+            activeSessionEmail !== undefined
+        ) {
+            recentTimeout = loadRecent(posts[0].metadata.updatedAt);
+            if (posts.length === 0) {
+                moreTimeout = loadMore(true);
+            } else {
+                moreTimeout = loadMore(true, posts.length - 1);
+            }
         }
-    }, [posts]);
-    function fillPosts(): Array<Post> {
-        const firstPost = {
-            id: 1,
-            lastUpdatedAt: "2h",
-            title: "How often do you hang out with people from other cultures?",
-            type: 2,
-            isPublic: true,
-            fromType: "a student",
-            toType: "every members",
-            viewCount: 2045,
-            likeCount: 504,
-            comments: Array(208).fill(
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book"
-            ),
-            description:
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-            isEligible: true,
-            expireAt: "2023/12/01",
-            participants: 593,
-            answers: [
-                { response: "Rarely", percentage: 63 },
-                { response: "Sometimes", percentage: 24 },
-                { response: "Often", percentage: 13 },
-            ],
-        };
-        const secondPost = {
-            id: 2,
-            lastUpdatedAt: "12h",
-            title: "Do you use ChatGPT to write essays?",
-            type: 2,
-            isPublic: false,
-            fromType: "a staff member",
-            toType: "students",
-            viewCount: 1548,
-            likeCount: 213,
-            comments: Array(154).fill(
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book"
-            ),
-            description:
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-            isEligible: true,
-            expireAt: undefined,
-            participants: 593,
-            answers: [
-                { response: "Yes", percentage: 78 },
-                { response: "No", percentage: 22 },
-            ],
-        };
-        const thirdPost = {
-            id: 3,
-            lastUpdatedAt: "1d",
-            title: "How much is your starting salary right after ESSEC?",
-            type: 2,
-            isPublic: false,
-            fromType: "an MiM student",
-            toType: "MiM alumni",
-            viewCount: 1074,
-            likeCount: 34,
-            comments: Array(20).fill(
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book"
-            ),
-            description:
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-            isEligible: false,
-            expireAt: undefined,
-            participants: 593,
-            answers: [
-                { response: "Between 38K and 45K", percentage: 58 },
-                { response: "Between 45K and 55K", percentage: 31 },
-                { response: "Above 55K", percentage: 6 },
-                { response: "Below 38K", percentage: 5 },
-            ],
-        };
-        const fourthPost = {
-            id: 4,
-            lastUpdatedAt: "15m",
-            title: "Is ChatGPT a friend or foe for education?",
-            type: 2,
-            isPublic: true,
-            fromType: "a faculty member",
-            toType: "faculty and staff members",
-            viewCount: 547,
-            likeCount: 8,
-            comments: Array(10).fill(
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book"
-            ),
-            description:
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-            isEligible: false,
-            expireAt: undefined,
-            participants: 593,
-            answers: [
-                { response: "Foe", percentage: 49 },
-                { response: "Friend", percentage: 41 },
-                { response: "Not sure", percentage: 10 },
-            ],
-        };
-        return [firstPost, secondPost, thirdPost, fourthPost];
+        if (moreTimeout !== undefined || recentTimeout !== undefined) {
+            return () => {
+                if (moreTimeout !== undefined) {
+                    clearTimeout(moreTimeout);
+                    setLoadingMore(false);
+                }
+                if (recentTimeout !== undefined) {
+                    clearTimeout(recentTimeout);
+                    setLoadingRecent(false);
+                }
+            };
+        }
+    }, [activeSessionEmail]);
+
+    interface LoadingContext {
+        loadingMore: boolean;
+        loadingRecent: boolean;
+        posts: ExtendedPollData[];
+        isLoggedIn: boolean;
     }
+
+    interface LoadingProps {
+        context?: LoadingContext;
+    }
+
+    const LoadingRecent = ({ context }: LoadingProps) => {
+        return (
+            <Grid container justifyContent="center" alignItems="center">
+                <Grid>
+                    {context?.loadingRecent ? (
+                        <CircularProgress color="inherit" />
+                    ) : null}
+                </Grid>
+            </Grid>
+        );
+    };
+
+    const LoadingMore = ({ context }: LoadingProps) => {
+        return (
+            <Grid container justifyContent="center" alignItems="center">
+                <Grid>
+                    {context?.loadingMore ? (
+                        <CircularProgress color="inherit" />
+                    ) : context?.posts.length !== undefined &&
+                      context.posts.length <= 4 ? (
+                        <Button
+                            size="small"
+                            color={"inherit"}
+                            onClick={() =>
+                                doLoadMore(
+                                    posts,
+                                    setPosts,
+                                    setLoadingMore,
+                                    posts.length === 0
+                                        ? undefined
+                                        : posts.length - 1
+                                )
+                            }
+                        >
+                            Load more
+                        </Button>
+                    ) : context?.isLoggedIn ? (
+                        <Typography>No more posts</Typography>
+                    ) : (
+                        <Button
+                            size="small"
+                            color={"inherit"}
+                            onClick={() => dispatch(openAuthModal())}
+                        >
+                            Log in to load more
+                        </Button>
+                    )}
+                </Grid>
+            </Grid>
+        );
+    };
+
     return (
         <Container maxWidth="sm" disableGutters>
-            <Box>
-                {posts.map((post) => {
+            <Virtuoso
+                style={{ height: "100vh" }}
+                useWindowScroll
+                data={posts}
+                endReached={(index) => loadMore(true, index)}
+                context={{
+                    loadingMore: loadingMore,
+                    loadingRecent: loadingRecent,
+                    posts: posts,
+                    isLoggedIn:
+                        activeSessionEmail !== "" &&
+                        activeSessionEmail !== undefined,
+                }}
+                overscan={200}
+                itemContent={(_index, post) => {
                     return (
-                        <Box key={`postview-${post.id}`}>
+                        <Box key={`postview-${post.metadata.uid}`}>
                             <PostView post={post} />
                         </Box>
                     );
-                })}
-            </Box>
+                }}
+                components={{ Footer: LoadingMore, Header: LoadingRecent }}
+            />
         </Container>
     );
 }

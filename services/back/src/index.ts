@@ -39,20 +39,18 @@ import {
     revealedAttributesToPostAs,
     type PostAs,
     getWebDomainType,
-    type WebDomainType,
 } from "./service/credential.js";
-import type {
-    FormCredentialsPerEmail,
-    SecretCredentialType,
+import {
+    type FormCredentialsPerEmail,
+    type SecretCredentialType,
+    type WebDomainType,
+    type UniversityType,
+    zoduniversityType,
 } from "./shared/types/zod.js";
 import { toCID, decodeCID } from "./shared/common/cid.js";
 import isEqual from "lodash/isEqual.js";
 import { stringToBytes } from "./shared/common/arrbufs.js";
 import { scopeWith } from "./shared/common/util.js";
-import {
-    UniversityType,
-    universityStringToType,
-} from "./shared/types/university.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -271,17 +269,17 @@ function basesFromRevealedAttributes(revealedAttributes?: any): string[] {
         const typeSpecificAttribute = revealedAttributes[typeSpecificStr];
         const typeStr = "type";
         if (typeStr in typeSpecificAttribute) {
-            const universityType = universityStringToType(
-                typeSpecificAttribute[typeStr]
-            ); // this can throw an error
+            const universityType = typeSpecificAttribute[
+                typeStr
+            ] as UniversityType; // TODO this can throw errors
             switch (universityType) {
-                case UniversityType.STUDENT:
+                case zoduniversityType.enum.student:
                     scope = scopeWith(scope, "student");
                     break;
-                case UniversityType.FACULTY:
+                case zoduniversityType.enum.faculty:
                     //TODO
                     break;
-                case UniversityType.ALUM:
+                case zoduniversityType.enum.alum:
                     // TODO
                     break;
             }
@@ -824,6 +822,84 @@ server.after(() => {
                 poll: request.body.poll,
                 pseudonym: pseudonym,
                 postAs: postAs,
+            });
+        },
+    });
+    server.withTypeProvider<ZodTypeProvider>().post("/feed/fetchMore", {
+        schema: {
+            body: Dto.fetchFeedRequest,
+            response: {
+                200: Dto.fetchFeed200,
+            },
+        },
+        handler: async (request, _reply) => {
+            // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
+            try {
+                await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                        isSyncing: true,
+                    },
+                });
+            } catch (e) {
+                // TODO: rate-limit by IP Address
+                if (request.body.updatedAt !== undefined) {
+                    return []; // we don't return more feed unless logged-in
+                }
+                // only show limited feed
+                return await Service.fetchFeed({
+                    db: db,
+                    order: "more",
+                    updatedAt: undefined,
+                    limit: 6,
+                });
+            }
+            return await Service.fetchFeed({
+                db: db,
+                order: "more",
+                updatedAt:
+                    request.body.updatedAt !== undefined
+                        ? new Date(request.body.updatedAt)
+                        : undefined,
+            });
+        },
+    });
+    server.withTypeProvider<ZodTypeProvider>().post("/feed/fetchRecent", {
+        schema: {
+            body: Dto.fetchFeedRequest,
+            response: {
+                200: Dto.fetchFeed200,
+            },
+        },
+        handler: async (request, _reply) => {
+            // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
+            try {
+                await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                        isSyncing: true,
+                    },
+                });
+            } catch (e) {
+                // TODO: rate-limit by IP Address
+                if (request.body.updatedAt !== undefined) {
+                    return []; // we don't return more feed unless logged-in
+                }
+                // only show limited feed
+                return await Service.fetchFeed({
+                    db: db,
+                    order: "recent",
+                    updatedAt: undefined,
+                    limit: 6,
+                });
+            }
+            return await Service.fetchFeed({
+                db: db,
+                order: "recent",
+                updatedAt:
+                    request.body.updatedAt !== undefined
+                        ? new Date(request.body.updatedAt)
+                        : undefined,
             });
         },
     });

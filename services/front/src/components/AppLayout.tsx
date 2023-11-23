@@ -7,6 +7,7 @@ import { Topbar } from "./Topbar";
 import { BottomNavbar } from "./BottomNavbar";
 import Alert from "@mui/material/Alert";
 import React from "react";
+import { usePostsAndMeta } from "@/feed";
 
 export function AppLayout() {
     const snackbarState = useAppSelector((state) => {
@@ -23,11 +24,29 @@ export function AppLayout() {
         dispatch(closeSnackbar());
     }
 
+    const {
+        posts,
+        setPosts,
+        loadingMore,
+        setLoadingMore,
+        loadingRecent,
+        setLoadingRecent,
+    } = usePostsAndMeta();
+
     /* <Container maxWidth={false} disableGutters> */
     return (
         <Box sx={{ backgroundColor: "#e6e9ec" }}>
             <Topbar />
-            <Outlet />
+            <Outlet
+                context={{
+                    posts,
+                    setPosts,
+                    loadingMore,
+                    setLoadingMore,
+                    loadingRecent,
+                    setLoadingRecent,
+                }}
+            />
             <BottomNavbar />
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}

@@ -11,7 +11,7 @@ import type {
     UnblindedSecretCredentials,
     UnblindedSecretCredentialsPerType,
 } from "@/shared/types/zod";
-import { cryptoStore } from "@/store/store";
+import { getCryptoStore } from "@/store/store";
 import {
     BBSPlusBlindedCredentialRequestBuilder,
     BBSPlusBlindedCredential as BlindedCredential,
@@ -192,6 +192,7 @@ export async function encryptAndEncodeWithSymmKey(
     data: Uint8Array,
     symmKey: Uint8Array
 ): Promise<string> {
+    const cryptoStore = await getCryptoStore();
     const encryptedData = await cryptoStore.aes.encrypt(
         data,
         symmKey,
@@ -204,6 +205,7 @@ export async function encryptAndEncode(
     data: Uint8Array,
     userId: string
 ): Promise<string> {
+    const cryptoStore = await getCryptoStore();
     const symmKey = await cryptoStore.keystore.exportSymmKey(userId);
     const encryptedData = await cryptoStore.aes.encrypt(
         data,
@@ -217,6 +219,7 @@ export async function decodeAndDecrypt(
     encodedEncryptedData: string,
     userId: string
 ): Promise<Uint8Array> {
+    const cryptoStore = await getCryptoStore();
     const symmKey = await cryptoStore.keystore.exportSymmKey(userId);
     const decodedEncryptedData = base64.decode(encodedEncryptedData);
     const decryptedData = await cryptoStore.aes.decrypt(
@@ -235,6 +238,7 @@ export async function decryptEmailCredentials(
     encryptedSymmKey: string,
     encryptedCredentials: string
 ): Promise<EmailCredentialsPerEmail> {
+    const cryptoStore = await getCryptoStore();
     const symmKey = await cryptoStore.keystore.decrypt(
         base64.decode(encryptedSymmKey),
         userId
@@ -260,6 +264,7 @@ export async function encryptEmailCredentials(
     encryptedSymmKey: string,
     emailCredentials: EmailCredentialsPerEmail
 ): Promise<string> {
+    const cryptoStore = await getCryptoStore();
     const symmKey = await cryptoStore.keystore.decrypt(
         base64.decode(encryptedSymmKey),
         userId

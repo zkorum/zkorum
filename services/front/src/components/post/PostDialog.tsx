@@ -31,12 +31,12 @@ import Box from "@mui/material/Box";
 import {
     EssecCampus,
     EssecProgram,
-    currentStudentsAdmissionYears,
     essecCampusStrToEnum,
     essecCampusToString,
     essecProgramStrToEnum,
     essecProgramToString,
 } from "@/shared/types/university";
+import { currentStudentsAdmissionYears } from "@/shared/types/zod";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -70,8 +70,21 @@ import { createPoll } from "@/request/credential";
 import type { PollCreatePostRequestPoll } from "@/api";
 import { scopeWith } from "@/shared/common/util";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
+import { doLoadMore, doLoadRecent, type PostsType } from "@/feed";
 
-export function PostDialog() {
+interface PostDialogProps {
+    posts: PostsType;
+    setPosts: React.Dispatch<React.SetStateAction<PostsType>>;
+    setLoadingMore: React.Dispatch<React.SetStateAction<boolean>>;
+    setLoadingRecent: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export function PostDialog({
+    posts,
+    setPosts,
+    setLoadingMore,
+    setLoadingRecent,
+}: PostDialogProps) {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
     const dispatch = useAppDispatch();
@@ -147,6 +160,50 @@ export function PostDialog() {
         string | undefined
     >(undefined);
     const [isOption2Valid, setIsOption2Valid] = React.useState<boolean>(false);
+
+    const loadRecent = React.useCallback(
+        (minUpdatedAt: Date) => {
+            return setTimeout(async () => {
+                return await doLoadRecent(
+                    setPosts,
+                    setLoadingRecent,
+                    minUpdatedAt
+                );
+            }, 200);
+        },
+        [setPosts, setLoadingRecent]
+    );
+
+    const loadMore = React.useCallback(
+        (lastIndex?: number) => {
+            return setTimeout(async () => {
+                return await doLoadMore(
+                    posts,
+                    setPosts,
+                    setLoadingMore,
+                    lastIndex
+                );
+            }, 200);
+        },
+        [setPosts, setLoadingMore, posts]
+    );
+
+    function asyncLoadRecent() {
+        let timeout: NodeJS.Timeout;
+        if (posts.length === 0) {
+            timeout = loadMore();
+        } else {
+            timeout = loadRecent(posts[0].metadata.updatedAt);
+        }
+        return () => {
+            clearTimeout(timeout);
+            if (posts.length === 0) {
+                setLoadingMore(false);
+            } else {
+                setLoadingRecent(false);
+            }
+        };
+    }
 
     React.useEffect(() => {
         if (
@@ -694,25 +751,27 @@ export function PostDialog() {
                     eligibilityProgram.length === 0 &&
                     eligibilityAdmissionYear.length === 0;
                 const newPoll: PollCreatePostRequestPoll = {
-                    question: questionInputRef.current?.value,
-                    option1: option1InputRef.current?.value,
-                    option2: option2InputRef.current?.value,
-                    option3:
-                        option3InputRef.current?.value === ""
-                            ? undefined
-                            : option3InputRef.current?.value,
-                    option4:
-                        option4InputRef.current?.value === ""
-                            ? undefined
-                            : option4InputRef.current?.value,
-                    option5:
-                        option5InputRef.current?.value === ""
-                            ? undefined
-                            : option5InputRef.current?.value,
-                    option6:
-                        option6InputRef.current?.value === ""
-                            ? undefined
-                            : option6InputRef.current?.value,
+                    data: {
+                        question: questionInputRef.current?.value,
+                        option1: option1InputRef.current?.value,
+                        option2: option2InputRef.current?.value,
+                        option3:
+                            option3InputRef.current?.value === ""
+                                ? undefined
+                                : option3InputRef.current?.value,
+                        option4:
+                            option4InputRef.current?.value === ""
+                                ? undefined
+                                : option4InputRef.current?.value,
+                        option5:
+                            option5InputRef.current?.value === ""
+                                ? undefined
+                                : option5InputRef.current?.value,
+                        option6:
+                            option6InputRef.current?.value === ""
+                                ? undefined
+                                : option6InputRef.current?.value,
+                    },
                     eligibility: noEligibility
                         ? undefined
                         : {
@@ -751,6 +810,7 @@ export function PostDialog() {
                 const presentation = builder.finalize();
                 dispatch(showInfo(sendingPost));
                 await createPoll(presentation, newPoll);
+                asyncLoadRecent(); // refresh feed to show newly created post
                 dispatch(showSuccess(pollCreated));
             } else {
                 console.warn(

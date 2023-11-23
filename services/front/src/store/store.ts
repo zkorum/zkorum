@@ -16,11 +16,20 @@ import loadingReducer from "./reducers/loading";
 import postReducer from "./reducers/post";
 import { getPersistConfig } from "redux-deep-persist";
 import * as BrowserCrypto from "../crypto/ucan/implementation/browser.js";
+import type { Implementation } from "@/crypto/ucan/implementation.js";
 
 // localForage instance for storing keys only
-export const cryptoStore = await BrowserCrypto.implementation({
-    storeName: `zkorum-keys`,
-});
+let cryptoStore: Implementation | undefined = undefined;
+
+export async function getCryptoStore(): Promise<Implementation> {
+    if (cryptoStore !== undefined) {
+        return cryptoStore;
+    }
+    cryptoStore = await BrowserCrypto.implementation({
+        storeName: `zkorum-keys`,
+    });
+    return cryptoStore;
+}
 
 // localForage instance for storing everything else (and especially the redux store)
 

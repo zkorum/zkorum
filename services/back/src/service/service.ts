@@ -1,5 +1,5 @@
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import { and, eq, gt, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, gt, lt, inArray, isNotNull, isNull, desc } from "drizzle-orm";
 import {
     authAttemptTable,
     credentialEmailTable,
@@ -42,35 +42,37 @@ import {
     buildSecretCredential,
     parseSecretCredentialRequest,
     type PostAs,
-    type WebDomainType,
 } from "./credential.js";
-import type {
-    Devices,
-    SecretCredentialRequest,
-    FormCredentialRequest,
-    EmailCredentialsPerEmail,
-    EmailCredential,
-    BlindedCredentialType,
-    SecretCredentialType,
-    SecretCredentialsPerType,
-    Poll,
-    FormCredentialsPerEmail,
-    EmailFormCredentialsPerEmail,
-    FormCredential,
-    SecretCredentials,
+import {
+    type Devices,
+    type SecretCredentialRequest,
+    type FormCredentialRequest,
+    type EmailCredentialsPerEmail,
+    type EmailCredential,
+    type BlindedCredentialType,
+    type SecretCredentialType,
+    type SecretCredentialsPerType,
+    type Poll,
+    type FormCredentialsPerEmail,
+    type EmailFormCredentialsPerEmail,
+    type FormCredential,
+    type SecretCredentials,
+    type WebDomainType,
+    type UniversityType,
+    type ExtendedPollData,
+    zoduniversityType,
 } from "../shared/types/zod.js";
 import { base64 } from "../shared/common/index.js";
 import { anyToUint8Array } from "../shared/common/arrbufs.js";
 import { BBSPlusBlindedCredentialRequest as BlindedCredentialRequest } from "@docknetwork/crypto-wasm-ts";
 import { toEncodedCID } from "@/shared/common/cid.js";
 import {
-    UniversityType,
     essecCampusToString,
     essecProgramToString,
-    universityTypeToString,
 } from "@/shared/types/university.js";
 import { type TCountryCode, countries as allCountries } from "countries-list";
 import isEqual from "lodash/isEqual.js";
+import { toUnionUndefined } from "@/shared/shared.js";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -205,11 +207,18 @@ interface SelectStudentEligibilityIdFromAttributesProps {
 
 interface SelectUniversityEligibilityIdFromAttributesProps {
     db: PostgresDatabase;
-    types: string[] | undefined;
+    types: UniversityType[] | undefined;
     countries: string[] | undefined;
     studentEligibilityId: number | undefined;
     alumEligibilityId: number | undefined;
     facultyEligibilityId: number | undefined;
+}
+
+interface FetchFeedProps {
+    db: PostgresDatabase;
+    updatedAt: Date | undefined;
+    order: "more" | "recent";
+    limit?: number;
 }
 
 function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
@@ -1596,7 +1605,6 @@ export class Service {
     }: SelectUniversityPersonaIdFromAttributesProps): Promise<
         number | undefined
     > {
-        const typeStr = universityTypeToString(type);
         const countriesWhere =
             countries === undefined
                 ? isNull(universityPersonaTable.countries)
@@ -1621,7 +1629,7 @@ export class Service {
             .from(universityPersonaTable)
             .where(
                 and(
-                    eq(universityPersonaTable.type, typeStr),
+                    eq(universityPersonaTable.type, type),
                     countriesWhere,
                     studentPersonaIdWhere,
                     alumPersonaIdWhere,
@@ -1714,10 +1722,10 @@ export class Service {
             timestampedPresentation
         );
         const optionalOptions = [
-            poll.option3,
-            poll.option4,
-            poll.option5,
-            poll.option6,
+            poll.data.option3,
+            poll.data.option4,
+            poll.data.option5,
+            poll.data.option6,
         ];
         const realOptionalOptions: string[] = optionalOptions.filter(
             (option) => option !== undefined && option !== ""
@@ -1736,7 +1744,7 @@ export class Service {
                 let alumPersonaId: number | undefined = undefined;
                 let facultyPersonaId: number | undefined = undefined;
                 switch (postAs.typeSpecific.type) {
-                    case UniversityType.STUDENT:
+                    case zoduniversityType.enum.student:
                         if (
                             postAs.typeSpecific.campus !== undefined ||
                             postAs.typeSpecific.program !== undefined ||
@@ -1805,10 +1813,10 @@ export class Service {
                             }
                         }
                         break;
-                    case UniversityType.ALUM:
+                    case zoduniversityType.enum.alum:
                         // TODO
                         break;
-                    case UniversityType.FACULTY:
+                    case zoduniversityType.enum.faculty:
                         // TODO
                         break;
                 }
@@ -1837,9 +1845,7 @@ export class Service {
                     const insertedUniversityPersona = await tx
                         .insert(universityPersonaTable)
                         .values({
-                            type: universityTypeToString(
-                                postAs.typeSpecific.type
-                            ),
+                            type: postAs.typeSpecific.type,
                             countries: personaCountries,
                             studentPersonaId: studentPersonaId,
                             alumPersonaId: alumPersonaId,
@@ -1891,7 +1897,7 @@ export class Service {
             //////////////////////// ELIGIBILITY ///////////////////////////////////////////////////
             let eligibilityId: number | undefined = undefined;
             let universityEligibilityId: number | undefined = undefined;
-            let eligibilityTypes: string[] = [];
+            let eligibilityTypes: UniversityType[] = [];
             let eligibilityCountries: TCountryCode[] = [];
             let studentEligibilityId: number | undefined = undefined;
             let alumEligibilityId: number | undefined = undefined;
@@ -1912,9 +1918,7 @@ export class Service {
                     }
                 }
                 if (poll.eligibility.student !== undefined) {
-                    eligibilityTypes.push(
-                        universityTypeToString(UniversityType.STUDENT)
-                    );
+                    eligibilityTypes.push(zoduniversityType.enum.student);
                     if (
                         (poll.eligibility.admissionYears !== undefined &&
                             poll.eligibility.admissionYears.length > 0) ||
@@ -1988,17 +1992,13 @@ export class Service {
                         }
                     }
                     if (poll.eligibility.alum !== undefined) {
-                        eligibilityTypes.push(
-                            universityTypeToString(UniversityType.ALUM)
-                        );
+                        eligibilityTypes.push(zoduniversityType.enum.alum);
                         // TODO ALUM info
                     }
                     if (poll.eligibility.faculty !== undefined) {
-                        eligibilityTypes.push(
-                            universityTypeToString(UniversityType.FACULTY)
-                        );
+                        eligibilityTypes.push(zoduniversityType.enum.faculty);
+                        // TODO FACULTY info
                     }
-                    // TODO FACULTY info
                 }
             }
             if (
@@ -2071,9 +2071,9 @@ export class Service {
             await tx.insert(pollTable).values({
                 presentation: presentation.toJSON(),
                 timestampedPresentationCID: timestampedPresentationCID,
-                question: poll.question,
-                option1: poll.option1,
-                option2: poll.option2,
+                question: poll.data.question,
+                option1: poll.data.option1,
+                option2: poll.data.option2,
                 option3:
                     realOptionalOptions.length >= 1
                         ? realOptionalOptions[0]
@@ -2097,25 +2097,210 @@ export class Service {
         // TODO: broadcast timestampedPresentation to Nostr or custom libp2p node
         return timestampedPresentationCID;
     }
+
+    static async fetchFeed({
+        db,
+        updatedAt,
+        order,
+        limit,
+    }: FetchFeedProps): Promise<ExtendedPollData[]> {
+        const defaultLimit = 30;
+        const actualLimit = limit === undefined ? defaultLimit : limit;
+        const whereUpdatedAt =
+            updatedAt === undefined
+                ? undefined
+                : order === "more"
+                ? lt(pollTable.updatedAt, updatedAt)
+                : gt(pollTable.updatedAt, updatedAt);
+        const results = await db
+            .selectDistinct({
+                // poll payload
+                question: pollTable.question,
+                option1: pollTable.option1,
+                option1Response: pollTable.option1Response,
+                option2: pollTable.option2,
+                option2Response: pollTable.option2Response,
+                option3: pollTable.option3,
+                option3Response: pollTable.option3Response,
+                option4: pollTable.option4,
+                option4Response: pollTable.option4Response,
+                option5: pollTable.option5,
+                option5Response: pollTable.option5Response,
+                option6: pollTable.option6,
+                option6Response: pollTable.option6Response,
+                // post as
+                domain: personaTable.domain,
+                type: personaTable.type,
+                universityType: universityPersonaTable.type,
+                universityCountries: universityPersonaTable.countries,
+                studentCampus: studentPersonaTable.campus,
+                studentProgram: studentPersonaTable.program,
+                studentAdmissionYear: studentPersonaTable.admissionYear,
+                // eligibility
+                eligibilityDomains: eligibilityTable.domains,
+                eligibilityTypes: eligibilityTable.types,
+                eligibilityUniversityTypes: universityEligibilityTable.types,
+                eligibilityUniversityCountries:
+                    universityEligibilityTable.countries,
+                eligibilityStudentCampuses: studentEligibilityTable.campuses,
+                eligibilityStudentPrograms: studentEligibilityTable.programs,
+                eligibilityStudentAdmissionYears:
+                    studentEligibilityTable.admissionYears,
+                // metadata
+                pollUID: pollTable.timestampedPresentationCID,
+                updatedAt: pollTable.updatedAt,
+            })
+            .from(pollTable)
+            .innerJoin(
+                pseudonymTable,
+                eq(pseudonymTable.id, pollTable.authorId)
+            )
+            .innerJoin(
+                personaTable,
+                eq(personaTable.id, pseudonymTable.personaId)
+            )
+            .leftJoin(
+                universityPersonaTable,
+                eq(universityPersonaTable.id, personaTable.universityPersonaId)
+            )
+            .leftJoin(
+                studentPersonaTable,
+                eq(
+                    studentPersonaTable.id,
+                    universityPersonaTable.studentPersonaId
+                )
+            )
+            // TODO: alum and faculty-specific attributes
+            // .leftJoin(
+            //     alumPersonaTable,
+            //     eq(alumPersonaTable.id, universityPersonaTable.alumPersonaId)
+            // )
+            // .leftJoin(
+            //     facultyPersonaTable,
+            //     eq(
+            //         facultyPersonaTable.id,
+            //         universityPersonaTable.facultyPersonaId
+            //     )
+            // )
+            .leftJoin(
+                eligibilityTable,
+                eq(pollTable.eligibilityId, eligibilityTable.id)
+            )
+            .leftJoin(
+                universityEligibilityTable,
+                eq(eligibilityTable.id, universityEligibilityTable.id)
+            )
+            .leftJoin(
+                studentEligibilityTable,
+                eq(universityEligibilityTable.id, studentEligibilityTable.id)
+            )
+            // TODO: alum and faculty eligibility when specific attributes will be created
+            .orderBy(desc(pollTable.updatedAt))
+            .limit(actualLimit)
+            .where(whereUpdatedAt);
+        const polls: ExtendedPollData[] = results.map((result) => {
+            return {
+                metadata: {
+                    uid: result.pollUID,
+                    updatedAt: result.updatedAt,
+                },
+                payload: {
+                    data: {
+                        question: result.question,
+                        option1: result.option1,
+                        option2: result.option2,
+                        option3: toUnionUndefined(result.option3),
+                        option4: toUnionUndefined(result.option4),
+                        option5: toUnionUndefined(result.option5),
+                        option6: toUnionUndefined(result.option6),
+                    },
+                    result: {
+                        option1Response: result.option1Response,
+                        option2Response: result.option2Response,
+                        option3Response: toUnionUndefined(
+                            result.option3Response
+                        ),
+                        option4Response: toUnionUndefined(
+                            result.option4Response
+                        ),
+                        option5Response: toUnionUndefined(
+                            result.option5Response
+                        ),
+                        option6Response: toUnionUndefined(
+                            result.option6Response
+                        ),
+                    },
+                },
+                author: {
+                    domain: result.domain,
+                    type: result.type,
+                    university:
+                        result.universityType !== null
+                            ? {
+                                  type: result.universityType,
+                                  student:
+                                      result.studentCampus !== null ||
+                                      result.studentProgram !== null ||
+                                      result.studentAdmissionYear !== null ||
+                                      result.universityCountries !== null
+                                          ? {
+                                                countries: toUnionUndefined(
+                                                    result.universityCountries
+                                                ) as TCountryCode[] | undefined,
+                                                campus: toUnionUndefined(
+                                                    result.studentCampus
+                                                ),
+                                                program: toUnionUndefined(
+                                                    result.studentProgram
+                                                ),
+                                                admissionYear: toUnionUndefined(
+                                                    result.studentAdmissionYear
+                                                ),
+                                            }
+                                          : undefined,
+                              }
+                            : undefined,
+                },
+                eligibility: {
+                    domains: toUnionUndefined(result.eligibilityDomains),
+                    types: toUnionUndefined(result.eligibilityTypes),
+
+                    university:
+                        result.eligibilityUniversityTypes !== null
+                            ? {
+                                  types: toUnionUndefined(
+                                      result.eligibilityUniversityTypes
+                                  ),
+                                  student:
+                                      result.eligibilityUniversityCountries !==
+                                          null ||
+                                      result.eligibilityStudentPrograms !==
+                                          null ||
+                                      result.eligibilityStudentPrograms !==
+                                          null ||
+                                      result.eligibilityStudentAdmissionYears !==
+                                          null
+                                          ? {
+                                                countries: toUnionUndefined(
+                                                    result.eligibilityUniversityCountries
+                                                ) as TCountryCode[] | undefined,
+                                                campuses: toUnionUndefined(
+                                                    result.eligibilityStudentCampuses
+                                                ),
+                                                programs: toUnionUndefined(
+                                                    result.eligibilityStudentPrograms
+                                                ),
+                                                admissionYears:
+                                                    toUnionUndefined(
+                                                        result.eligibilityStudentAdmissionYears
+                                                    ),
+                                            }
+                                          : undefined,
+                              }
+                            : undefined,
+                },
+            };
+        });
+        return polls;
+    }
 }
-// id: uuid("id").primaryKey(),
-// presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
-// // TODO add the other fields - maybe create tables for author, postAs, eligibility and pollContent
-// timestampedPresentationCID: char("time_pres_cid", { length: 61 }) // see shared/test/common/cid.test.ts for length
-//     .notNull()
-//     .unique(), // CID calculated from stringified object representing pres+created_at.
-// authorId: uuid("author_id") // "postAs"
-//     .notNull()
-//     .references(() => pseudonymTable.id), // the author of the poll
-// eligibilityId: uuid("eligibility_id")
-//     .notNull()
-//     .references(() => eligibilityTable.id),
-// question: varchar("question", { length: MAX_LENGTH_QUESTION }).notNull(),
-// option1: varchar("option1", { length: MAX_LENGTH_OPTION }).notNull(),
-// option2: varchar("option2", { length: MAX_LENGTH_OPTION }).notNull(),
-// option3: varchar("option3", { length: MAX_LENGTH_OPTION }),
-// option4: varchar("option4", { length: MAX_LENGTH_OPTION }),
-// option5: varchar("option5", { length: MAX_LENGTH_OPTION }),
-// option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
-// createdAt: timestamp("created_at").defaultNow().notNull(),
-// updatedAt: timestamp("updated_at").defaultNow().notNull(),

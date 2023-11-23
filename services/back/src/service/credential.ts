@@ -8,36 +8,34 @@ import {
     BBSPlusBlindedCredentialRequest as BlindedCredentialRequest,
     BBSPlusBlindedCredential as BlindedCredential,
 } from "@docknetwork/crypto-wasm-ts";
-import type {
-    FormCredentialRequest,
-    EmailCredentialsPerEmail,
-    EmailCredential,
-    SecretCredential,
-    SecretCredentialType,
-    SecretCredentialsPerType,
-    Countries,
-    FormCredentialsPerEmail,
-    FormCredential,
-    SecretCredentials,
+import {
+    type FormCredentialRequest,
+    type EmailCredentialsPerEmail,
+    type EmailCredential,
+    type SecretCredential,
+    type SecretCredentialType,
+    type SecretCredentialsPerType,
+    type Countries,
+    type FormCredentialsPerEmail,
+    type FormCredential,
+    type SecretCredentials,
+    type WebDomainType,
+    type UniversityType,
+    webDomainTypes,
+    zoduniversityType,
+    minStudentYear,
 } from "../shared/types/zod.js";
 import { log } from "../app.js";
 import {
     EssecCampus,
     EssecProgram,
-    UniversityType,
     essecCampusStrToEnum,
     essecCampusToString,
     essecProgramStrToEnum,
     essecProgramToString,
-    minStudentYear,
-    universityStringToType,
     universityTypeToString,
 } from "../shared/types/university.js";
 import { domainFromEmail } from "@/shared/shared.js";
-
-// duplicate from DB
-const webDomainTypes = ["UNIVERSITY", "COMPANY"] as const;
-export type WebDomainType = (typeof webDomainTypes)[number]; // "foo" | "bar"
 
 export function getWebDomainType(
     maybeWebDomain: string
@@ -53,7 +51,7 @@ function getTypeFromEmail(_email: string): WebDomainType {
     // load it on startup, pass it here and compare with fqdn
     // const fqdn = email.trim().toLowerCase().split("@")[1]
     // 1st version only support university
-    return "UNIVERSITY";
+    return "university";
 }
 
 interface BuildSecretCredentialProps {
@@ -88,7 +86,7 @@ export function buildSecretCredential({
 
 function toCredProperties(formCredentialRequest: FormCredentialRequest) {
     switch (formCredentialRequest.type) {
-        case UniversityType.STUDENT:
+        case zoduniversityType.enum.student:
             // replace undefined by false in list of countries
             for (const countryCode of Object.keys(allCountries)) {
                 if (
@@ -108,10 +106,10 @@ function toCredProperties(formCredentialRequest: FormCredentialRequest) {
                 countries: formCredentialRequest.countries,
                 admissionYear: formCredentialRequest.admissionYear,
             };
-        case UniversityType.ALUM:
+        case zoduniversityType.enum.alum:
             // TODO
             return {};
-        case UniversityType.FACULTY:
+        case zoduniversityType.enum.faculty:
             // TODO
             return {};
     }
@@ -200,7 +198,7 @@ export function buildFormCredential({
     const schema = CredentialSchema.essential();
     // TODO: pass schema as param depending on email type (university, company...etc) & specific domain that could override the default values
     switch (formCredentialRequest.type) {
-        case UniversityType.STUDENT:
+        case zoduniversityType.enum.student:
             schema.properties[SUBJECT_STR] = {
                 type: "object",
                 properties: {
@@ -226,10 +224,10 @@ export function buildFormCredential({
                 },
             };
             break;
-        case UniversityType.ALUM:
+        case zoduniversityType.enum.alum:
             // TODO
             break;
-        case UniversityType.FACULTY:
+        case zoduniversityType.enum.faculty:
             // TODO
             break;
     }
@@ -479,7 +477,7 @@ export function revealedAttributesToPostAs({
                 );
             }
             postAs.typeSpecific = {
-                type: universityStringToType(typeSpecificAttrs["type"]),
+                type: typeSpecificAttrs["type"] as UniversityType,
             };
         } else {
             throw new Error(
@@ -494,7 +492,7 @@ export function revealedAttributesToPostAs({
             }
             if (postAs.typeSpecific === undefined) {
                 postAs.typeSpecific = {
-                    type: universityStringToType(typeSpecificAttrs["type"]),
+                    type: typeSpecificAttrs["type"] as UniversityType,
                     campus: essecCampusStrToEnum(typeSpecificAttrs["campus"]),
                 };
             } else {
@@ -511,7 +509,7 @@ export function revealedAttributesToPostAs({
             }
             if (postAs.typeSpecific === undefined) {
                 postAs.typeSpecific = {
-                    type: universityStringToType(typeSpecificAttrs["type"]),
+                    type: typeSpecificAttrs["type"] as UniversityType,
                     program: essecProgramStrToEnum(
                         typeSpecificAttrs["program"]
                     ),
@@ -530,7 +528,7 @@ export function revealedAttributesToPostAs({
             }
             if (postAs.typeSpecific === undefined) {
                 postAs.typeSpecific = {
-                    type: universityStringToType(typeSpecificAttrs["type"]),
+                    type: typeSpecificAttrs["type"] as UniversityType,
                     countries: typeSpecificAttrs["countries"],
                 };
             } else {
@@ -545,7 +543,7 @@ export function revealedAttributesToPostAs({
             }
             if (postAs.typeSpecific === undefined) {
                 postAs.typeSpecific = {
-                    type: universityStringToType(typeSpecificAttrs["type"]),
+                    type: typeSpecificAttrs["type"] as UniversityType,
                     admissionYear: typeSpecificAttrs["admissionYear"],
                 };
             } else {

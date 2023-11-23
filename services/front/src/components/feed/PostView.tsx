@@ -4,36 +4,17 @@ import Grid from "@mui/material/Unstable_Grid2";
 import Logo from "/logo-essec_72x107.af462b8d2b4c.png";
 import Box from "@mui/material/Box";
 import VerifiedIcon from "@mui/icons-material/Verified";
-import { PollResultView, type Answer } from "./PollResultView";
-import { CommentsViewsLikesView } from "./CommentsViewsLikesView";
+import { PollResultView } from "./PollResultView";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
-import LockPersonIcon from "@mui/icons-material/LockPerson";
 import { faMask } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { ExtendedPollData } from "@/shared/types/zod";
 
 interface PostViewProps {
-    post: Post;
+    post: ExtendedPollData;
 }
-export interface Post {
-    id: number;
-    lastUpdatedAt: string;
-    isPublic: boolean;
-    fromType: string;
-    toType: string;
-    title: string;
-    type: number;
-    isEligible: boolean;
-    expireAt?: string;
-    answers: Answer[];
-    participants: number;
-    description: string;
-    viewCount: number;
-    likeCount: number;
-    comments: string[];
-}
-
 export function PostView(props: PostViewProps) {
     return (
         // lines
@@ -110,7 +91,7 @@ export function PostView(props: PostViewProps) {
                                             }}
                                             variant="body2"
                                         >
-                                            {props.post.lastUpdatedAt}
+                                            {props.post.metadata.updatedAt.getTime()}
                                         </Typography>
                                     </Grid>
                                     <Grid>
@@ -125,21 +106,12 @@ export function PostView(props: PostViewProps) {
                                         </Typography>
                                     </Grid>
                                     <Grid>
-                                        {props.post.isPublic ? (
-                                            <PublicIcon
-                                                sx={{
-                                                    color: "rgba(0, 0, 0, 0.6)",
-                                                    fontSize: 12,
-                                                }}
-                                            />
-                                        ) : (
-                                            <LockPersonIcon
-                                                sx={{
-                                                    color: "rgba(0, 0, 0, 0.6)",
-                                                    fontSize: 12,
-                                                }}
-                                            />
-                                        )}
+                                        <PublicIcon
+                                            sx={{
+                                                color: "rgba(0, 0, 0, 0.6)",
+                                                fontSize: 12,
+                                            }}
+                                        />
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -164,7 +136,7 @@ export function PostView(props: PostViewProps) {
                                             }}
                                             variant="body2"
                                         >
-                                            From {props.post.fromType}
+                                            From {props.post.author.type}
                                         </Typography>
                                     </Grid>
                                     <Grid>
@@ -192,10 +164,10 @@ export function PostView(props: PostViewProps) {
                                         }}
                                         variant="body2"
                                     >
-                                        To {props.post.toType}
+                                        To {props.post.author.type}
                                     </Typography>
                                 </Grid>
-                                {props.post.isEligible ? (
+                                {true ? ( // isEligible
                                     <Chip
                                         sx={{
                                             fontSize: 10,
@@ -235,23 +207,26 @@ export function PostView(props: PostViewProps) {
                                     lineHeight: "1.5rem",
                                 }}
                             >
-                                {props.post.title}
+                                {props.post.payload.data.question}
                             </Typography>
                         </Grid>
-                        {props.post.type === 2 ? (
+                        {true ? ( // poll
                             <PollResultView
-                                participants={props.post.participants}
-                                answers={props.post.answers}
-                                expireAt={props.post.expireAt}
+                                participants={
+                                    props.post.payload.result.option1Response
+                                }
+                                answers={[
+                                    {
+                                        percentage:
+                                            props.post.payload.result
+                                                .option1Response,
+                                        response:
+                                            props.post.payload.data.option1,
+                                    },
+                                ]}
+                                expireAt={"never"}
                             />
                         ) : null}
-                    </Grid>
-                    <Grid sx={{ mt: 1 }}>
-                        <CommentsViewsLikesView
-                            commentCount={props.post.comments.length}
-                            viewCount={props.post.viewCount}
-                            likeCount={props.post.likeCount}
-                        />
                     </Grid>
                 </Grid>
             </Box>

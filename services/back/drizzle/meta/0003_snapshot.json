@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "959a48df-1a79-4da9-a216-3af7abfb3cf0",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "0de3726b-855b-4dff-be18-70298c6793fb",
+  "prevId": "e50018f5-3ef9-44ee-afa1-63a2febd4b28",
   "tables": {
     "alum_eligibility": {
       "name": "alum_eligibility",
@@ -789,7 +789,7 @@
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
 import * as DID from "./crypto/ucan/did/index";
 import * as ucan from "@ucans/ucans";
 
@@ -6,7 +6,7 @@ import {
     httpMethodToAbility,
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan";
-import { store, cryptoStore } from "./store/store";
+import { store, getCryptoStore } from "./store/store";
 import { loggedOut, openAuthModal } from "./store/reducers/session";
 import { showWarning } from "./store/reducers/snackbar";
 import { sessionExpired } from "./components/error/message";
@@ -16,6 +16,10 @@ export const noAuthAxios = axios.create({
 });
 
 export const activeSessionUcanAxios = axios.create({
+    baseURL: import.meta.env.VITE_BACK_BASE_URL,
+});
+
+export const activeSessionUcanAxiosNoLog = axios.create({
     baseURL: import.meta.env.VITE_BACK_BASE_URL,
 });
 
@@ -31,6 +35,7 @@ async function buildUcan(
 ): Promise<string> {
     let emailOrUserId: string;
     if (userId !== undefined) {
+        const cryptoStore = await getCryptoStore();
         const keyExists = await cryptoStore.keystore.writeKeyExists(userId);
         if (keyExists) {
             emailOrUserId = userId;
@@ -41,6 +46,7 @@ async function buildUcan(
         emailOrUserId = email;
     }
 
+    const cryptoStore = await getCryptoStore();
     const accountDid = await DID.ucan(cryptoStore, emailOrUserId);
     const u = await ucan.Builder.create()
         .issuedBy({
@@ -82,33 +88,54 @@ async function buildUcan(
     // return ucan.encode(u);
 }
 
+async function activeSessionUcanAxiosConfig(
+    config: InternalAxiosRequestConfig<any>,
+    logIfNoActiveSession = true
+): Promise<InternalAxiosRequestConfig<any>> {
+    const activeSessionEmail = store.getState().sessions.activeSessionEmail;
+    if (activeSessionEmail === "" || activeSessionEmail === undefined) {
+        if (logIfNoActiveSession) {
+            console.log("No active session: not adding UCAN");
+        }
+        return config;
+    }
+
+    if (config.url === undefined || config.method === undefined) {
+        // TODO: better error handling
+        throw new Error(
+            `Cannot add UCAN because url==${config.url} or method==${config.method} is undefined, should not happen!`
+        );
+    }
+
+    const sessions = store.getState().sessions.sessions;
+    const newUcan = await buildUcan(
+        config.url,
+        config.method,
+        sessions !== undefined && activeSessionEmail in sessions
+            ? sessions[activeSessionEmail].email
+            : activeSessionEmail,
+        sessions[activeSessionEmail]?.userId
+    );
+    config.headers.Authorization = `Bearer ${newUcan}`;
+    return config;
+}
+
 // Add UCAN to every request - if an active session exists
 activeSessionUcanAxios.interceptors.request.use(
     async function (config) {
-        const activeSessionEmail = store.getState().sessions.activeSessionEmail;
-        if (activeSessionEmail === "" || activeSessionEmail === undefined) {
-            console.log("No active session: not adding UCAN");
-            return config;
-        }
+        return await activeSessionUcanAxiosConfig(config);
+    },
+    function (error) {
+        // Do something with request error
+        return Promise.reject(error);
+    }
+);
 
-        if (config.url === undefined || config.method === undefined) {
-            // TODO: better error handling
-            throw new Error(
-                `Cannot add UCAN because url==${config.url} or method==${config.method} is undefined, should not happen!`
-            );
-        }
-
-        const sessions = store.getState().sessions.sessions;
-        const newUcan = await buildUcan(
-            config.url,
-            config.method,
-            sessions !== undefined && activeSessionEmail in sessions
-                ? sessions[activeSessionEmail].email
-                : activeSessionEmail,
-            sessions[activeSessionEmail]?.userId
-        );
-        config.headers.Authorization = `Bearer ${newUcan}`;
-        return config;
+// Add UCAN to every request - if an active session exists
+// no log, because we expect the request to also succeed without auth if there is no active session
+activeSessionUcanAxiosNoLog.interceptors.request.use(
+    async function (config) {
+        return await activeSessionUcanAxiosConfig(config, false);
     },
     function (error) {
         // Do something with request error

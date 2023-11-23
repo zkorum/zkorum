@@ -1070,9 +1070,9 @@
                         "type": "object",
                         "properties": {
                           "type": {
-                            "type": "number",
+                            "type": "string",
                             "enum": [
-                              0
+                              "student"
                             ]
                           },
                           "campus": {
@@ -2122,9 +2122,9 @@
                         "type": "object",
                         "properties": {
                           "type": {
-                            "type": "number",
+                            "type": "string",
                             "enum": [
-                              1
+                              "alum"
                             ]
                           }
                         },
@@ -2137,9 +2137,9 @@
                         "type": "object",
                         "properties": {
                           "type": {
-                            "type": "number",
+                            "type": "string",
                             "enum": [
-                              2
+                              "faculty"
                             ]
                           }
                         },
@@ -2213,40 +2213,51 @@
                   "poll": {
                     "type": "object",
                     "properties": {
-                      "question": {
-                        "type": "string",
-                        "maxLength": 140,
-                        "minLength": 1
-                      },
-                      "option1": {
-                        "type": "string",
-                        "maxLength": 30,
-                        "minLength": 1
-                      },
-                      "option2": {
-                        "type": "string",
-                        "maxLength": 30,
-                        "minLength": 1
-                      },
-                      "option3": {
-                        "type": "string",
-                        "maxLength": 30,
-                        "minLength": 1
-                      },
-                      "option4": {
-                        "type": "string",
-                        "maxLength": 30,
-                        "minLength": 1
-                      },
-                      "option5": {
-                        "type": "string",
-                        "maxLength": 30,
-                        "minLength": 1
-                      },
-                      "option6": {
-                        "type": "string",
-                        "maxLength": 30,
-                        "minLength": 1
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "question": {
+                            "type": "string",
+                            "maxLength": 140,
+                            "minLength": 1
+                          },
+                          "option1": {
+                            "type": "string",
+                            "maxLength": 30,
+                            "minLength": 1
+                          },
+                          "option2": {
+                            "type": "string",
+                            "maxLength": 30,
+                            "minLength": 1
+                          },
+                          "option3": {
+                            "type": "string",
+                            "maxLength": 30,
+                            "minLength": 1
+                          },
+                          "option4": {
+                            "type": "string",
+                            "maxLength": 30,
+                            "minLength": 1
+                          },
+                          "option5": {
+                            "type": "string",
+                            "maxLength": 30,
+                            "minLength": 1
+                          },
+                          "option6": {
+                            "type": "string",
+                            "maxLength": 30,
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "question",
+                          "option1",
+                          "option2"
+                        ],
+                        "additionalProperties": false
                       },
                       "eligibility": {
                         "type": "object",
@@ -2309,9 +2320,7 @@
                       }
                     },
                     "required": [
-                      "question",
-                      "option1",
-                      "option2"
+                      "data"
                     ],
                     "additionalProperties": false
                   },
@@ -2329,6 +2338,1572 @@
         "responses": {
           "200": {
             "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/feed/fetchMore": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metadata": {
+                        "type": "object",
+                        "properties": {
+                          "uid": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "uid",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "type": "object",
+                            "properties": {
+                              "question": {
+                                "type": "string",
+                                "maxLength": 140,
+                                "minLength": 1
+                              },
+                              "option1": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option2": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option3": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option4": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option5": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option6": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              }
+                            },
+                            "required": [
+                              "question",
+                              "option1",
+                              "option2"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "result": {
+                            "type": "object",
+                            "properties": {
+                              "option1Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option2Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option3Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option4Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option5Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option6Response": {
+                                "type": "number",
+                                "minimum": 0
+                              }
+                            },
+                            "required": [
+                              "option1Response",
+                              "option2Response"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "data",
+                          "result"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "author": {
+                        "type": "object",
+                        "properties": {
+                          "domain": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "university",
+                              "company"
+                            ]
+                          },
+                          "university": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "student": {
+                                "type": "object",
+                                "properties": {
+                                  "countries": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "enum": [
+                                        "AD",
+                                        "AE",
+                                        "AF",
+                                        "AG",
+                                        "AI",
+                                        "AL",
+                                        "AM",
+                                        "AO",
+                                        "AQ",
+                                        "AR",
+                                        "AS",
+                                        "AT",
+                                        "AU",
+                                        "AW",
+                                        "AX",
+                                        "AZ",
+                                        "BA",
+                                        "BB",
+                                        "BD",
+                                        "BE",
+                                        "BF",
+                                        "BG",
+                                        "BH",
+                                        "BI",
+                                        "BJ",
+                                        "BL",
+                                        "BM",
+                                        "BN",
+                                        "BO",
+                                        "BQ",
+                                        "BR",
+                                        "BS",
+                                        "BT",
+                                        "BV",
+                                        "BW",
+                                        "BY",
+                                        "BZ",
+                                        "CA",
+                                        "CC",
+                                        "CD",
+                                        "CF",
+                                        "CG",
+                                        "CH",
+                                        "CI",
+                                        "CK",
+                                        "CL",
+                                        "CM",
+                                        "CN",
+                                        "CO",
+                                        "CR",
+                                        "CU",
+                                        "CV",
+                                        "CW",
+                                        "CX",
+                                        "CY",
+                                        "CZ",
+                                        "DE",
+                                        "DJ",
+                                        "DK",
+                                        "DM",
+                                        "DO",
+                                        "DZ",
+                                        "EC",
+                                        "EE",
+                                        "EG",
+                                        "EH",
+                                        "ER",
+                                        "ES",
+                                        "ET",
+                                        "FI",
+                                        "FJ",
+                                        "FK",
+                                        "FM",
+                                        "FO",
+                                        "FR",
+                                        "GA",
+                                        "GB",
+                                        "GD",
+                                        "GE",
+                                        "GF",
+                                        "GG",
+                                        "GH",
+                                        "GI",
+                                        "GL",
+                                        "GM",
+                                        "GN",
+                                        "GP",
+                                        "GQ",
+                                        "GR",
+                                        "GS",
+                                        "GT",
+                                        "GU",
+                                        "GW",
+                                        "GY",
+                                        "HK",
+                                        "HM",
+                                        "HN",
+                                        "HR",
+                                        "HT",
+                                        "HU",
+                                        "ID",
+                                        "IE",
+                                        "IL",
+                                        "IM",
+                                        "IN",
+                                        "IO",
+                                        "IQ",
+                                        "IR",
+                                        "IS",
+                                        "IT",
+                                        "JE",
+                                        "JM",
+                                        "JO",
+                                        "JP",
+                                        "KE",
+                                        "KG",
+                                        "KH",
+                                        "KI",
+                                        "KM",
+                                        "KN",
+                                        "KP",
+                                        "KR",
+                                        "KW",
+                                        "KY",
+                                        "KZ",
+                                        "LA",
+                                        "LB",
+                                        "LC",
+                                        "LI",
+                                        "LK",
+                                        "LR",
+                                        "LS",
+                                        "LT",
+                                        "LU",
+                                        "LV",
+                                        "LY",
+                                        "MA",
+                                        "MC",
+                                        "MD",
+                                        "ME",
+                                        "MF",
+                                        "MG",
+                                        "MH",
+                                        "MK",
+                                        "ML",
+                                        "MM",
+                                        "MN",
+                                        "MO",
+                                        "MP",
+                                        "MQ",
+                                        "MR",
+                                        "MS",
+                                        "MT",
+                                        "MU",
+                                        "MV",
+                                        "MW",
+                                        "MX",
+                                        "MY",
+                                        "MZ",
+                                        "NA",
+                                        "NC",
+                                        "NE",
+                                        "NF",
+                                        "NG",
+                                        "NI",
+                                        "NL",
+                                        "NO",
+                                        "NP",
+                                        "NR",
+                                        "NU",
+                                        "NZ",
+                                        "OM",
+                                        "PA",
+                                        "PE",
+                                        "PF",
+                                        "PG",
+                                        "PH",
+                                        "PK",
+                                        "PL",
+                                        "PM",
+                                        "PN",
+                                        "PR",
+                                        "PS",
+                                        "PT",
+                                        "PW",
+                                        "PY",
+                                        "QA",
+                                        "RE",
+                                        "RO",
+                                        "RS",
+                                        "RU",
+                                        "RW",
+                                        "SA",
+                                        "SB",
+                                        "SC",
+                                        "SD",
+                                        "SE",
+                                        "SG",
+                                        "SH",
+                                        "SI",
+                                        "SJ",
+                                        "SK",
+                                        "SL",
+                                        "SM",
+                                        "SN",
+                                        "SO",
+                                        "SR",
+                                        "SS",
+                                        "ST",
+                                        "SV",
+                                        "SX",
+                                        "SY",
+                                        "SZ",
+                                        "TC",
+                                        "TD",
+                                        "TF",
+                                        "TG",
+                                        "TH",
+                                        "TJ",
+                                        "TK",
+                                        "TL",
+                                        "TM",
+                                        "TN",
+                                        "TO",
+                                        "TR",
+                                        "TT",
+                                        "TV",
+                                        "TW",
+                                        "TZ",
+                                        "UA",
+                                        "UG",
+                                        "UM",
+                                        "US",
+                                        "UY",
+                                        "UZ",
+                                        "VA",
+                                        "VC",
+                                        "VE",
+                                        "VG",
+                                        "VI",
+                                        "VN",
+                                        "VU",
+                                        "WF",
+                                        "WS",
+                                        "XK",
+                                        "YE",
+                                        "YT",
+                                        "ZA",
+                                        "ZM",
+                                        "ZW"
+                                      ]
+                                    }
+                                  },
+                                  "campus": {
+                                    "type": "string"
+                                  },
+                                  "program": {
+                                    "type": "string"
+                                  },
+                                  "admissionYear": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": true,
+                                    "minimum": 2014,
+                                    "maximum": 2024
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "domain",
+                          "type"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "eligibility": {
+                        "type": "object",
+                        "properties": {
+                          "domains": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "types": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "university",
+                                "company"
+                              ]
+                            }
+                          },
+                          "university": {
+                            "type": "object",
+                            "properties": {
+                              "types": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "student",
+                                    "alum",
+                                    "faculty"
+                                  ]
+                                }
+                              },
+                              "student": {
+                                "type": "object",
+                                "properties": {
+                                  "countries": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "enum": [
+                                        "AD",
+                                        "AE",
+                                        "AF",
+                                        "AG",
+                                        "AI",
+                                        "AL",
+                                        "AM",
+                                        "AO",
+                                        "AQ",
+                                        "AR",
+                                        "AS",
+                                        "AT",
+                                        "AU",
+                                        "AW",
+                                        "AX",
+                                        "AZ",
+                                        "BA",
+                                        "BB",
+                                        "BD",
+                                        "BE",
+                                        "BF",
+                                        "BG",
+                                        "BH",
+                                        "BI",
+                                        "BJ",
+                                        "BL",
+                                        "BM",
+                                        "BN",
+                                        "BO",
+                                        "BQ",
+                                        "BR",
+                                        "BS",
+                                        "BT",
+                                        "BV",
+                                        "BW",
+                                        "BY",
+                                        "BZ",
+                                        "CA",
+                                        "CC",
+                                        "CD",
+                                        "CF",
+                                        "CG",
+                                        "CH",
+                                        "CI",
+                                        "CK",
+                                        "CL",
+                                        "CM",
+                                        "CN",
+                                        "CO",
+                                        "CR",
+                                        "CU",
+                                        "CV",
+                                        "CW",
+                                        "CX",
+                                        "CY",
+                                        "CZ",
+                                        "DE",
+                                        "DJ",
+                                        "DK",
+                                        "DM",
+                                        "DO",
+                                        "DZ",
+                                        "EC",
+                                        "EE",
+                                        "EG",
+                                        "EH",
+                                        "ER",
+                                        "ES",
+                                        "ET",
+                                        "FI",
+                                        "FJ",
+                                        "FK",
+                                        "FM",
+                                        "FO",
+                                        "FR",
+                                        "GA",
+                                        "GB",
+                                        "GD",
+                                        "GE",
+                                        "GF",
+                                        "GG",
+                                        "GH",
+                                        "GI",
+                                        "GL",
+                                        "GM",
+                                        "GN",
+                                        "GP",
+                                        "GQ",
+                                        "GR",
+                                        "GS",
+                                        "GT",
+                                        "GU",
+                                        "GW",
+                                        "GY",
+                                        "HK",
+                                        "HM",
+                                        "HN",
+                                        "HR",
+                                        "HT",
+                                        "HU",
+                                        "ID",
+                                        "IE",
+                                        "IL",
+                                        "IM",
+                                        "IN",
+                                        "IO",
+                                        "IQ",
+                                        "IR",
+                                        "IS",
+                                        "IT",
+                                        "JE",
+                                        "JM",
+                                        "JO",
+                                        "JP",
+                                        "KE",
+                                        "KG",
+                                        "KH",
+                                        "KI",
+                                        "KM",
+                                        "KN",
+                                        "KP",
+                                        "KR",
+                                        "KW",
+                                        "KY",
+                                        "KZ",
+                                        "LA",
+                                        "LB",
+                                        "LC",
+                                        "LI",
+                                        "LK",
+                                        "LR",
+                                        "LS",
+                                        "LT",
+                                        "LU",
+                                        "LV",
+                                        "LY",
+                                        "MA",
+                                        "MC",
+                                        "MD",
+                                        "ME",
+                                        "MF",
+                                        "MG",
+                                        "MH",
+                                        "MK",
+                                        "ML",
+                                        "MM",
+                                        "MN",
+                                        "MO",
+                                        "MP",
+                                        "MQ",
+                                        "MR",
+                                        "MS",
+                                        "MT",
+                                        "MU",
+                                        "MV",
+                                        "MW",
+                                        "MX",
+                                        "MY",
+                                        "MZ",
+                                        "NA",
+                                        "NC",
+                                        "NE",
+                                        "NF",
+                                        "NG",
+                                        "NI",
+                                        "NL",
+                                        "NO",
+                                        "NP",
+                                        "NR",
+                                        "NU",
+                                        "NZ",
+                                        "OM",
+                                        "PA",
+                                        "PE",
+                                        "PF",
+                                        "PG",
+                                        "PH",
+                                        "PK",
+                                        "PL",
+                                        "PM",
+                                        "PN",
+                                        "PR",
+                                        "PS",
+                                        "PT",
+                                        "PW",
+                                        "PY",
+                                        "QA",
+                                        "RE",
+                                        "RO",
+                                        "RS",
+                                        "RU",
+                                        "RW",
+                                        "SA",
+                                        "SB",
+                                        "SC",
+                                        "SD",
+                                        "SE",
+                                        "SG",
+                                        "SH",
+                                        "SI",
+                                        "SJ",
+                                        "SK",
+                                        "SL",
+                                        "SM",
+                                        "SN",
+                                        "SO",
+                                        "SR",
+                                        "SS",
+                                        "ST",
+                                        "SV",
+                                        "SX",
+                                        "SY",
+                                        "SZ",
+                                        "TC",
+                                        "TD",
+                                        "TF",
+                                        "TG",
+                                        "TH",
+                                        "TJ",
+                                        "TK",
+                                        "TL",
+                                        "TM",
+                                        "TN",
+                                        "TO",
+                                        "TR",
+                                        "TT",
+                                        "TV",
+                                        "TW",
+                                        "TZ",
+                                        "UA",
+                                        "UG",
+                                        "UM",
+                                        "US",
+                                        "UY",
+                                        "UZ",
+                                        "VA",
+                                        "VC",
+                                        "VE",
+                                        "VG",
+                                        "VI",
+                                        "VN",
+                                        "VU",
+                                        "WF",
+                                        "WS",
+                                        "XK",
+                                        "YE",
+                                        "YT",
+                                        "ZA",
+                                        "ZM",
+                                        "ZW"
+                                      ]
+                                    }
+                                  },
+                                  "campuses": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "programs": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "admissionYears": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "integer",
+                                      "exclusiveMinimum": true,
+                                      "minimum": 2014,
+                                      "maximum": 2024
+                                    }
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "metadata",
+                      "payload",
+                      "author",
+                      "eligibility"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed/fetchRecent": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metadata": {
+                        "type": "object",
+                        "properties": {
+                          "uid": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "uid",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "type": "object",
+                            "properties": {
+                              "question": {
+                                "type": "string",
+                                "maxLength": 140,
+                                "minLength": 1
+                              },
+                              "option1": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option2": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option3": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option4": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option5": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option6": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              }
+                            },
+                            "required": [
+                              "question",
+                              "option1",
+                              "option2"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "result": {
+                            "type": "object",
+                            "properties": {
+                              "option1Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option2Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option3Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option4Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option5Response": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "option6Response": {
+                                "type": "number",
+                                "minimum": 0
+                              }
+                            },
+                            "required": [
+                              "option1Response",
+                              "option2Response"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "data",
+                          "result"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "author": {
+                        "type": "object",
+                        "properties": {
+                          "domain": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "university",
+                              "company"
+                            ]
+                          },
+                          "university": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "student": {
+                                "type": "object",
+                                "properties": {
+                                  "countries": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "enum": [
+                                        "AD",
+                                        "AE",
+                                        "AF",
+                                        "AG",
+                                        "AI",
+                                        "AL",
+                                        "AM",
+                                        "AO",
+                                        "AQ",
+                                        "AR",
+                                        "AS",
+                                        "AT",
+                                        "AU",
+                                        "AW",
+                                        "AX",
+                                        "AZ",
+                                        "BA",
+                                        "BB",
+                                        "BD",
+                                        "BE",
+                                        "BF",
+                                        "BG",
+                                        "BH",
+                                        "BI",
+                                        "BJ",
+                                        "BL",
+                                        "BM",
+                                        "BN",
+                                        "BO",
+                                        "BQ",
+                                        "BR",
+                                        "BS",
+                                        "BT",
+                                        "BV",
+                                        "BW",
+                                        "BY",
+                                        "BZ",
+                                        "CA",
+                                        "CC",
+                                        "CD",
+                                        "CF",
+                                        "CG",
+                                        "CH",
+                                        "CI",
+                                        "CK",
+                                        "CL",
+                                        "CM",
+                                        "CN",
+                                        "CO",
+                                        "CR",
+                                        "CU",
+                                        "CV",
+                                        "CW",
+                                        "CX",
+                                        "CY",
+                                        "CZ",
+                                        "DE",
+                                        "DJ",
+                                        "DK",
+                                        "DM",
+                                        "DO",
+                                        "DZ",
+                                        "EC",
+                                        "EE",
+                                        "EG",
+                                        "EH",
+                                        "ER",
+                                        "ES",
+                                        "ET",
+                                        "FI",
+                                        "FJ",
+                                        "FK",
+                                        "FM",
+                                        "FO",
+                                        "FR",
+                                        "GA",
+                                        "GB",
+                                        "GD",
+                                        "GE",
+                                        "GF",
+                                        "GG",
+                                        "GH",
+                                        "GI",
+                                        "GL",
+                                        "GM",
+                                        "GN",
+                                        "GP",
+                                        "GQ",
+                                        "GR",
+                                        "GS",
+                                        "GT",
+                                        "GU",
+                                        "GW",
+                                        "GY",
+                                        "HK",
+                                        "HM",
+                                        "HN",
+                                        "HR",
+                                        "HT",
+                                        "HU",
+                                        "ID",
+                                        "IE",
+                                        "IL",
+                                        "IM",
+                                        "IN",
+                                        "IO",
+                                        "IQ",
+                                        "IR",
+                                        "IS",
+                                        "IT",
+                                        "JE",
+                                        "JM",
+                                        "JO",
+                                        "JP",
+                                        "KE",
+                                        "KG",
+                                        "KH",
+                                        "KI",
+                                        "KM",
+                                        "KN",
+                                        "KP",
+                                        "KR",
+                                        "KW",
+                                        "KY",
+                                        "KZ",
+                                        "LA",
+                                        "LB",
+                                        "LC",
+                                        "LI",
+                                        "LK",
+                                        "LR",
+                                        "LS",
+                                        "LT",
+                                        "LU",
+                                        "LV",
+                                        "LY",
+                                        "MA",
+                                        "MC",
+                                        "MD",
+                                        "ME",
+                                        "MF",
+                                        "MG",
+                                        "MH",
+                                        "MK",
+                                        "ML",
+                                        "MM",
+                                        "MN",
+                                        "MO",
+                                        "MP",
+                                        "MQ",
+                                        "MR",
+                                        "MS",
+                                        "MT",
+                                        "MU",
+                                        "MV",
+                                        "MW",
+                                        "MX",
+                                        "MY",
+                                        "MZ",
+                                        "NA",
+                                        "NC",
+                                        "NE",
+                                        "NF",
+                                        "NG",
+                                        "NI",
+                                        "NL",
+                                        "NO",
+                                        "NP",
+                                        "NR",
+                                        "NU",
+                                        "NZ",
+                                        "OM",
+                                        "PA",
+                                        "PE",
+                                        "PF",
+                                        "PG",
+                                        "PH",
+                                        "PK",
+                                        "PL",
+                                        "PM",
+                                        "PN",
+                                        "PR",
+                                        "PS",
+                                        "PT",
+                                        "PW",
+                                        "PY",
+                                        "QA",
+                                        "RE",
+                                        "RO",
+                                        "RS",
+                                        "RU",
+                                        "RW",
+                                        "SA",
+                                        "SB",
+                                        "SC",
+                                        "SD",
+                                        "SE",
+                                        "SG",
+                                        "SH",
+                                        "SI",
+                                        "SJ",
+                                        "SK",
+                                        "SL",
+                                        "SM",
+                                        "SN",
+                                        "SO",
+                                        "SR",
+                                        "SS",
+                                        "ST",
+                                        "SV",
+                                        "SX",
+                                        "SY",
+                                        "SZ",
+                                        "TC",
+                                        "TD",
+                                        "TF",
+                                        "TG",
+                                        "TH",
+                                        "TJ",
+                                        "TK",
+                                        "TL",
+                                        "TM",
+                                        "TN",
+                                        "TO",
+                                        "TR",
+                                        "TT",
+                                        "TV",
+                                        "TW",
+                                        "TZ",
+                                        "UA",
+                                        "UG",
+                                        "UM",
+                                        "US",
+                                        "UY",
+                                        "UZ",
+                                        "VA",
+                                        "VC",
+                                        "VE",
+                                        "VG",
+                                        "VI",
+                                        "VN",
+                                        "VU",
+                                        "WF",
+                                        "WS",
+                                        "XK",
+                                        "YE",
+                                        "YT",
+                                        "ZA",
+                                        "ZM",
+                                        "ZW"
+                                      ]
+                                    }
+                                  },
+                                  "campus": {
+                                    "type": "string"
+                                  },
+                                  "program": {
+                                    "type": "string"
+                                  },
+                                  "admissionYear": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": true,
+                                    "minimum": 2014,
+                                    "maximum": 2024
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "domain",
+                          "type"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "eligibility": {
+                        "type": "object",
+                        "properties": {
+                          "domains": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "types": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "university",
+                                "company"
+                              ]
+                            }
+                          },
+                          "university": {
+                            "type": "object",
+                            "properties": {
+                              "types": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "student",
+                                    "alum",
+                                    "faculty"
+                                  ]
+                                }
+                              },
+                              "student": {
+                                "type": "object",
+                                "properties": {
+                                  "countries": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "enum": [
+                                        "AD",
+                                        "AE",
+                                        "AF",
+                                        "AG",
+                                        "AI",
+                                        "AL",
+                                        "AM",
+                                        "AO",
+                                        "AQ",
+                                        "AR",
+                                        "AS",
+                                        "AT",
+                                        "AU",
+                                        "AW",
+                                        "AX",
+                                        "AZ",
+                                        "BA",
+                                        "BB",
+                                        "BD",
+                                        "BE",
+                                        "BF",
+                                        "BG",
+                                        "BH",
+                                        "BI",
+                                        "BJ",
+                                        "BL",
+                                        "BM",
+                                        "BN",
+                                        "BO",
+                                        "BQ",
+                                        "BR",
+                                        "BS",
+                                        "BT",
+                                        "BV",
+                                        "BW",
+                                        "BY",
+                                        "BZ",
+                                        "CA",
+                                        "CC",
+                                        "CD",
+                                        "CF",
+                                        "CG",
+                                        "CH",
+                                        "CI",
+                                        "CK",
+                                        "CL",
+                                        "CM",
+                                        "CN",
+                                        "CO",
+                                        "CR",
+                                        "CU",
+                                        "CV",
+                                        "CW",
+                                        "CX",
+                                        "CY",
+                                        "CZ",
+                                        "DE",
+                                        "DJ",
+                                        "DK",
+                                        "DM",
+                                        "DO",
+                                        "DZ",
+                                        "EC",
+                                        "EE",
+                                        "EG",
+                                        "EH",
+                                        "ER",
+                                        "ES",
+                                        "ET",
+                                        "FI",
+                                        "FJ",
+                                        "FK",
+                                        "FM",
+                                        "FO",
+                                        "FR",
+                                        "GA",
+                                        "GB",
+                                        "GD",
+                                        "GE",
+                                        "GF",
+                                        "GG",
+                                        "GH",
+                                        "GI",
+                                        "GL",
+                                        "GM",
+                                        "GN",
+                                        "GP",
+                                        "GQ",
+                                        "GR",
+                                        "GS",
+                                        "GT",
+                                        "GU",
+                                        "GW",
+                                        "GY",
+                                        "HK",
+                                        "HM",
+                                        "HN",
+                                        "HR",
+                                        "HT",
+                                        "HU",
+                                        "ID",
+                                        "IE",
+                                        "IL",
+                                        "IM",
+                                        "IN",
+                                        "IO",
+                                        "IQ",
+                                        "IR",
+                                        "IS",
+                                        "IT",
+                                        "JE",
+                                        "JM",
+                                        "JO",
+                                        "JP",
+                                        "KE",
+                                        "KG",
+                                        "KH",
+                                        "KI",
+                                        "KM",
+                                        "KN",
+                                        "KP",
+                                        "KR",
+                                        "KW",
+                                        "KY",
+                                        "KZ",
+                                        "LA",
+                                        "LB",
+                                        "LC",
+                                        "LI",
+                                        "LK",
+                                        "LR",
+                                        "LS",
+                                        "LT",
+                                        "LU",
+                                        "LV",
+                                        "LY",
+                                        "MA",
+                                        "MC",
+                                        "MD",
+                                        "ME",
+                                        "MF",
+                                        "MG",
+                                        "MH",
+                                        "MK",
+                                        "ML",
+                                        "MM",
+                                        "MN",
+                                        "MO",
+                                        "MP",
+                                        "MQ",
+                                        "MR",
+                                        "MS",
+                                        "MT",
+                                        "MU",
+                                        "MV",
+                                        "MW",
+                                        "MX",
+                                        "MY",
+                                        "MZ",
+                                        "NA",
+                                        "NC",
+                                        "NE",
+                                        "NF",
+                                        "NG",
+                                        "NI",
+                                        "NL",
+                                        "NO",
+                                        "NP",
+                                        "NR",
+                                        "NU",
+                                        "NZ",
+                                        "OM",
+                                        "PA",
+                                        "PE",
+                                        "PF",
+                                        "PG",
+                                        "PH",
+                                        "PK",
+                                        "PL",
+                                        "PM",
+                                        "PN",
+                                        "PR",
+                                        "PS",
+                                        "PT",
+                                        "PW",
+                                        "PY",
+                                        "QA",
+                                        "RE",
+                                        "RO",
+                                        "RS",
+                                        "RU",
+                                        "RW",
+                                        "SA",
+                                        "SB",
+                                        "SC",
+                                        "SD",
+                                        "SE",
+                                        "SG",
+                                        "SH",
+                                        "SI",
+                                        "SJ",
+                                        "SK",
+                                        "SL",
+                                        "SM",
+                                        "SN",
+                                        "SO",
+                                        "SR",
+                                        "SS",
+                                        "ST",
+                                        "SV",
+                                        "SX",
+                                        "SY",
+                                        "SZ",
+                                        "TC",
+                                        "TD",
+                                        "TF",
+                                        "TG",
+                                        "TH",
+                                        "TJ",
+                                        "TK",
+                                        "TL",
+                                        "TM",
+                                        "TN",
+                                        "TO",
+                                        "TR",
+                                        "TT",
+                                        "TV",
+                                        "TW",
+                                        "TZ",
+                                        "UA",
+                                        "UG",
+                                        "UM",
+                                        "US",
+                                        "UY",
+                                        "UZ",
+                                        "VA",
+                                        "VC",
+                                        "VE",
+                                        "VG",
+                                        "VI",
+                                        "VN",
+                                        "VU",
+                                        "WF",
+                                        "WS",
+                                        "XK",
+                                        "YE",
+                                        "YT",
+                                        "ZA",
+                                        "ZM",
+                                        "ZW"
+                                      ]
+                                    }
+                                  },
+                                  "campuses": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "programs": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "admissionYears": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "integer",
+                                      "exclusiveMinimum": true,
+                                      "minimum": 2014,
+                                      "maximum": 2024
+                                    }
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "metadata",
+                      "payload",
+                      "author",
+                      "eligibility"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
           }
         }
       }

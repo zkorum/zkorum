@@ -1,21 +1,33 @@
 import { z } from "zod";
-import { ZodType } from "./shared/types/zod.js";
+import {
+    zodauthorizedEmail,
+    zodcode,
+    zoddevices,
+    zoddidKey,
+    zodemail,
+    zodemailCredentialsPerEmail,
+    zodextendedPollData,
+    zodformCredentialRequest,
+    zodformCredentialsPerEmail,
+    zodpoll,
+    zodsecretCredentialRequest,
+    zodsecretCredentialsPerType,
+    zoduserId,
+} from "./shared/types/zod.js";
 
 export class Dto {
     static authenticateRequestBody = z
         .object({
-            email: ZodType.authorizedEmail,
-            didExchange: ZodType.didKey,
+            email: zodauthorizedEmail,
+            didExchange: zoddidKey,
             isRequestingNewCode: z.boolean(),
         })
         .strict();
     static verifyOtpReqBody = z.object({
-        code: ZodType.code,
+        code: zodcode,
         encryptedSymmKey: z.string().optional(),
-        timeboundSecretCredentialRequest:
-            ZodType.secretCredentialRequest.optional(),
-        unboundSecretCredentialRequest:
-            ZodType.secretCredentialRequest.optional(),
+        timeboundSecretCredentialRequest: zodsecretCredentialRequest.optional(),
+        unboundSecretCredentialRequest: zodsecretCredentialRequest.optional(),
     });
     static authenticateResponse = z
         .object({
@@ -27,12 +39,12 @@ export class Dto {
         z
             .object({
                 success: z.literal(true),
-                userId: ZodType.userId,
+                userId: zoduserId,
                 encryptedSymmKey: z.string().optional(), // if undefined, device is awaiting synchronization
-                syncingDevices: ZodType.devices,
-                emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
-                formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
-                secretCredentialsPerType: ZodType.secretCredentialsPerType,
+                syncingDevices: zoddevices,
+                emailCredentialsPerEmail: zodemailCredentialsPerEmail,
+                formCredentialsPerEmail: zodformCredentialsPerEmail,
+                secretCredentialsPerType: zodsecretCredentialsPerType,
             })
             .strict(),
         z
@@ -53,29 +65,27 @@ export class Dto {
     static auth409 = z.discriminatedUnion("reason", [
         z.object({
             reason: z.literal("awaiting_syncing"),
-            userId: ZodType.userId,
+            userId: zoduserId,
         }),
         z.object({
             reason: z.literal("already_logged_in"),
-            userId: ZodType.userId,
+            userId: zoduserId,
             encryptedSymmKey: z.string(),
-            syncingDevices: ZodType.devices,
-            emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
-            formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
-            secretCredentialsPerType: ZodType.secretCredentialsPerType,
+            syncingDevices: zoddevices,
+            emailCredentialsPerEmail: zodemailCredentialsPerEmail,
+            formCredentialsPerEmail: zodformCredentialsPerEmail,
+            secretCredentialsPerType: zodsecretCredentialsPerType,
         }),
     ]);
 
     static sync409 = z
         .object({
             reason: z.literal("already_syncing"),
-            userId: ZodType.userId,
+            userId: zoduserId,
         })
         .strict();
     static isLoggedInResponse = z.discriminatedUnion("isLoggedIn", [
-        z
-            .object({ isLoggedIn: z.literal(true), userId: ZodType.userId })
-            .strict(),
+        z.object({ isLoggedIn: z.literal(true), userId: zoduserId }).strict(),
         z
             .object({
                 isLoggedIn: z.literal(false),
@@ -86,7 +96,7 @@ export class Dto {
         .discriminatedUnion("isSyncing", [
             z
                 .object({
-                    userId: ZodType.userId,
+                    userId: zoduserId,
                     isLoggedIn: z.boolean(),
                     isSyncing: z.literal(true),
                     encryptedSymmKey: z.string(),
@@ -94,7 +104,7 @@ export class Dto {
                 .strict(),
             z
                 .object({
-                    userId: ZodType.userId,
+                    userId: zoduserId,
                     isLoggedIn: z.boolean(),
                     isSyncing: z.literal(false),
                 })
@@ -103,28 +113,34 @@ export class Dto {
         .optional();
     static userCredentials = z
         .object({
-            emailCredentialsPerEmail: ZodType.formCredentialsPerEmail,
-            formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
-            secretCredentialsPerType: ZodType.secretCredentialsPerType,
+            emailCredentialsPerEmail: zodformCredentialsPerEmail,
+            formCredentialsPerEmail: zodformCredentialsPerEmail,
+            secretCredentialsPerType: zodsecretCredentialsPerType,
         })
         .strict();
     static emailSecretCredentials = z
         .object({
-            emailCredentialsPerEmail: ZodType.emailCredentialsPerEmail,
-            secretCredentialsPerType: ZodType.secretCredentialsPerType,
+            emailCredentialsPerEmail: zodemailCredentialsPerEmail,
+            secretCredentialsPerType: zodsecretCredentialsPerType,
         })
         .strict();
     static requestCredentials = z.object({
-        email: ZodType.email,
-        formCredentialRequest: ZodType.formCredentialRequest,
+        email: zodemail,
+        formCredentialRequest: zodformCredentialRequest,
     });
     static requestCredentials200 = z.object({
-        formCredentialsPerEmail: ZodType.formCredentialsPerEmail,
+        formCredentialsPerEmail: zodformCredentialsPerEmail,
     });
     static createPollRequest = z.object({
-        poll: ZodType.poll,
+        poll: zodpoll,
         pres: z.unknown(), // z.object() does not exist :(
     });
+    static fetchFeedRequest = z
+        .object({
+            updatedAt: z.string().datetime().optional(),
+        })
+        .strict();
+    static fetchFeed200 = z.array(zodextendedPollData);
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody

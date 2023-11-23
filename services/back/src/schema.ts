@@ -170,8 +170,16 @@ export const credentialSecretTable = pgTable("credential_secret", {
 
 // TODO: use zod or something to maintain one set of type only
 export const credentialType = pgEnum("credential_type", [
-    "UNIVERSITY",
-    "COMPANY",
+    "university",
+    "company",
+    // TODO
+]);
+
+// TODO: use zod or something to maintain one set of type only
+export const universityType = pgEnum("university_type", [
+    "student",
+    "alum",
+    "faculty",
     // TODO
 ]);
 
@@ -226,7 +234,7 @@ export const studentEligibilityTable = pgTable("student_eligibility", {
 
 export const universityPersonaTable = pgTable("university_persona", {
     id: serial("id").primaryKey(),
-    type: varchar("type", { length: 255 }).notNull(), // "student" or "faculty" for example
+    type: universityType("type").notNull(),
     countries: char("countries", { length: 2 }).array(), // holds TCountryCode
     studentPersonaId: integer("student_persona_id").references(
         () => studentPersonaTable.id
@@ -243,7 +251,7 @@ export const universityPersonaTable = pgTable("university_persona", {
 
 export const universityEligibilityTable = pgTable("university_eligibility", {
     id: serial("id").primaryKey(),
-    types: varchar("types", { length: 255 }).array(), // "student" or "faculty" for example
+    types: universityType("types").array(),
     countries: char("countries", { length: 2 }).array(), // holds TCountryCode
     studentEligibilityId: integer("student_eligibility_id").references(
         () => studentEligibilityTable.id
@@ -311,11 +319,22 @@ export const pollTable = pgTable("poll", {
         .references(() => eligibilityTable.id),
     question: varchar("question", { length: MAX_LENGTH_QUESTION }).notNull(),
     option1: varchar("option1", { length: MAX_LENGTH_OPTION }).notNull(),
+    option1Response: integer("option1_response").default(0).notNull(),
     option2: varchar("option2", { length: MAX_LENGTH_OPTION }).notNull(),
+    option2Response: integer("option2_response").default(0).notNull(),
     option3: varchar("option3", { length: MAX_LENGTH_OPTION }),
+    option3Response: integer("option3_response"),
     option4: varchar("option4", { length: MAX_LENGTH_OPTION }),
+    option4Response: integer("option4_response"),
     option5: varchar("option5", { length: MAX_LENGTH_OPTION }),
+    option5Response: integer("option5_response"),
     option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
+    option6Response: integer("option6_response"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", {
+        mode: "date",
+        precision: 0, // no milliseconds, to avoid weird bugs: https://github.com/drizzle-team/drizzle-orm/issues/1061#issuecomment-1824658436
+    })
+        .defaultNow()
+        .notNull(),
 });

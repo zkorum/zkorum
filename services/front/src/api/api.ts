@@ -583,7 +583,7 @@ export interface CredentialRequestPostRequest {
 export interface CredentialRequestPostRequestFormCredentialRequest {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof CredentialRequestPostRequestFormCredentialRequest
      */
     'type': CredentialRequestPostRequestFormCredentialRequestTypeEnum;
@@ -614,9 +614,9 @@ export interface CredentialRequestPostRequestFormCredentialRequest {
 }
 
 export const CredentialRequestPostRequestFormCredentialRequestTypeEnum = {
-    NUMBER_0: 0,
-    NUMBER_1: 1,
-    NUMBER_2: 2
+    Student: 'student',
+    Alum: 'alum',
+    Faculty: 'faculty'
 } as const;
 
 export type CredentialRequestPostRequestFormCredentialRequestTypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestTypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestTypeEnum];
@@ -646,7 +646,7 @@ export type CredentialRequestPostRequestFormCredentialRequestProgramEnum = typeo
 export interface CredentialRequestPostRequestFormCredentialRequestAnyOf {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
     'type': CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum;
@@ -677,7 +677,7 @@ export interface CredentialRequestPostRequestFormCredentialRequestAnyOf {
 }
 
 export const CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = {
-    NUMBER_0: 0
+    Student: 'student'
 } as const;
 
 export type CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum];
@@ -707,14 +707,14 @@ export type CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = 
 export interface CredentialRequestPostRequestFormCredentialRequestAnyOf1 {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf1
      */
     'type': CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum;
 }
 
 export const CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = {
-    NUMBER_1: 1
+    Alum: 'alum'
 } as const;
 
 export type CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum];
@@ -727,14 +727,14 @@ export type CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = ty
 export interface CredentialRequestPostRequestFormCredentialRequestAnyOf2 {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf2
      */
     'type': CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum;
 }
 
 export const CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = {
-    NUMBER_2: 2
+    Faculty: 'faculty'
 } as const;
 
 export type CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum];
@@ -2249,6 +2249,818 @@ export interface CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
 /**
  * 
  * @export
+ * @interface FeedFetchMorePost200ResponseInner
+ */
+export interface FeedFetchMorePost200ResponseInner {
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerMetadata}
+     * @memberof FeedFetchMorePost200ResponseInner
+     */
+    'metadata': FeedFetchMorePost200ResponseInnerMetadata;
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerPayload}
+     * @memberof FeedFetchMorePost200ResponseInner
+     */
+    'payload': FeedFetchMorePost200ResponseInnerPayload;
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerAuthor}
+     * @memberof FeedFetchMorePost200ResponseInner
+     */
+    'author': FeedFetchMorePost200ResponseInnerAuthor;
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerEligibility}
+     * @memberof FeedFetchMorePost200ResponseInner
+     */
+    'eligibility': FeedFetchMorePost200ResponseInnerEligibility;
+}
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerAuthor
+ */
+export interface FeedFetchMorePost200ResponseInnerAuthor {
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthor
+     */
+    'domain': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthor
+     */
+    'type': FeedFetchMorePost200ResponseInnerAuthorTypeEnum;
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerAuthorUniversity}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthor
+     */
+    'university'?: FeedFetchMorePost200ResponseInnerAuthorUniversity;
+}
+
+export const FeedFetchMorePost200ResponseInnerAuthorTypeEnum = {
+    University: 'university',
+    Company: 'company'
+} as const;
+
+export type FeedFetchMorePost200ResponseInnerAuthorTypeEnum = typeof FeedFetchMorePost200ResponseInnerAuthorTypeEnum[keyof typeof FeedFetchMorePost200ResponseInnerAuthorTypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerAuthorUniversity
+ */
+export interface FeedFetchMorePost200ResponseInnerAuthorUniversity {
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversity
+     */
+    'type': string;
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerAuthorUniversityStudent}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversity
+     */
+    'student'?: FeedFetchMorePost200ResponseInnerAuthorUniversityStudent;
+}
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
+ */
+export interface FeedFetchMorePost200ResponseInnerAuthorUniversityStudent {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
+     */
+    'countries'?: Array<FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum>;
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
+     */
+    'campus'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
+     */
+    'program'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
+     */
+    'admissionYear'?: number;
+}
+
+export const FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum = {
+    Ad: 'AD',
+    Ae: 'AE',
+    Af: 'AF',
+    Ag: 'AG',
+    Ai: 'AI',
+    Al: 'AL',
+    Am: 'AM',
+    Ao: 'AO',
+    Aq: 'AQ',
+    Ar: 'AR',
+    As: 'AS',
+    At: 'AT',
+    Au: 'AU',
+    Aw: 'AW',
+    Ax: 'AX',
+    Az: 'AZ',
+    Ba: 'BA',
+    Bb: 'BB',
+    Bd: 'BD',
+    Be: 'BE',
+    Bf: 'BF',
+    Bg: 'BG',
+    Bh: 'BH',
+    Bi: 'BI',
+    Bj: 'BJ',
+    Bl: 'BL',
+    Bm: 'BM',
+    Bn: 'BN',
+    Bo: 'BO',
+    Bq: 'BQ',
+    Br: 'BR',
+    Bs: 'BS',
+    Bt: 'BT',
+    Bv: 'BV',
+    Bw: 'BW',
+    By: 'BY',
+    Bz: 'BZ',
+    Ca: 'CA',
+    Cc: 'CC',
+    Cd: 'CD',
+    Cf: 'CF',
+    Cg: 'CG',
+    Ch: 'CH',
+    Ci: 'CI',
+    Ck: 'CK',
+    Cl: 'CL',
+    Cm: 'CM',
+    Cn: 'CN',
+    Co: 'CO',
+    Cr: 'CR',
+    Cu: 'CU',
+    Cv: 'CV',
+    Cw: 'CW',
+    Cx: 'CX',
+    Cy: 'CY',
+    Cz: 'CZ',
+    De: 'DE',
+    Dj: 'DJ',
+    Dk: 'DK',
+    Dm: 'DM',
+    Do: 'DO',
+    Dz: 'DZ',
+    Ec: 'EC',
+    Ee: 'EE',
+    Eg: 'EG',
+    Eh: 'EH',
+    Er: 'ER',
+    Es: 'ES',
+    Et: 'ET',
+    Fi: 'FI',
+    Fj: 'FJ',
+    Fk: 'FK',
+    Fm: 'FM',
+    Fo: 'FO',
+    Fr: 'FR',
+    Ga: 'GA',
+    Gb: 'GB',
+    Gd: 'GD',
+    Ge: 'GE',
+    Gf: 'GF',
+    Gg: 'GG',
+    Gh: 'GH',
+    Gi: 'GI',
+    Gl: 'GL',
+    Gm: 'GM',
+    Gn: 'GN',
+    Gp: 'GP',
+    Gq: 'GQ',
+    Gr: 'GR',
+    Gs: 'GS',
+    Gt: 'GT',
+    Gu: 'GU',
+    Gw: 'GW',
+    Gy: 'GY',
+    Hk: 'HK',
+    Hm: 'HM',
+    Hn: 'HN',
+    Hr: 'HR',
+    Ht: 'HT',
+    Hu: 'HU',
+    Id: 'ID',
+    Ie: 'IE',
+    Il: 'IL',
+    Im: 'IM',
+    In: 'IN',
+    Io: 'IO',
+    Iq: 'IQ',
+    Ir: 'IR',
+    Is: 'IS',
+    It: 'IT',
+    Je: 'JE',
+    Jm: 'JM',
+    Jo: 'JO',
+    Jp: 'JP',
+    Ke: 'KE',
+    Kg: 'KG',
+    Kh: 'KH',
+    Ki: 'KI',
+    Km: 'KM',
+    Kn: 'KN',
+    Kp: 'KP',
+    Kr: 'KR',
+    Kw: 'KW',
+    Ky: 'KY',
+    Kz: 'KZ',
+    La: 'LA',
+    Lb: 'LB',
+    Lc: 'LC',
+    Li: 'LI',
+    Lk: 'LK',
+    Lr: 'LR',
+    Ls: 'LS',
+    Lt: 'LT',
+    Lu: 'LU',
+    Lv: 'LV',
+    Ly: 'LY',
+    Ma: 'MA',
+    Mc: 'MC',
+    Md: 'MD',
+    Me: 'ME',
+    Mf: 'MF',
+    Mg: 'MG',
+    Mh: 'MH',
+    Mk: 'MK',
+    Ml: 'ML',
+    Mm: 'MM',
+    Mn: 'MN',
+    Mo: 'MO',
+    Mp: 'MP',
+    Mq: 'MQ',
+    Mr: 'MR',
+    Ms: 'MS',
+    Mt: 'MT',
+    Mu: 'MU',
+    Mv: 'MV',
+    Mw: 'MW',
+    Mx: 'MX',
+    My: 'MY',
+    Mz: 'MZ',
+    Na: 'NA',
+    Nc: 'NC',
+    Ne: 'NE',
+    Nf: 'NF',
+    Ng: 'NG',
+    Ni: 'NI',
+    Nl: 'NL',
+    No: 'NO',
+    Np: 'NP',
+    Nr: 'NR',
+    Nu: 'NU',
+    Nz: 'NZ',
+    Om: 'OM',
+    Pa: 'PA',
+    Pe: 'PE',
+    Pf: 'PF',
+    Pg: 'PG',
+    Ph: 'PH',
+    Pk: 'PK',
+    Pl: 'PL',
+    Pm: 'PM',
+    Pn: 'PN',
+    Pr: 'PR',
+    Ps: 'PS',
+    Pt: 'PT',
+    Pw: 'PW',
+    Py: 'PY',
+    Qa: 'QA',
+    Re: 'RE',
+    Ro: 'RO',
+    Rs: 'RS',
+    Ru: 'RU',
+    Rw: 'RW',
+    Sa: 'SA',
+    Sb: 'SB',
+    Sc: 'SC',
+    Sd: 'SD',
+    Se: 'SE',
+    Sg: 'SG',
+    Sh: 'SH',
+    Si: 'SI',
+    Sj: 'SJ',
+    Sk: 'SK',
+    Sl: 'SL',
+    Sm: 'SM',
+    Sn: 'SN',
+    So: 'SO',
+    Sr: 'SR',
+    Ss: 'SS',
+    St: 'ST',
+    Sv: 'SV',
+    Sx: 'SX',
+    Sy: 'SY',
+    Sz: 'SZ',
+    Tc: 'TC',
+    Td: 'TD',
+    Tf: 'TF',
+    Tg: 'TG',
+    Th: 'TH',
+    Tj: 'TJ',
+    Tk: 'TK',
+    Tl: 'TL',
+    Tm: 'TM',
+    Tn: 'TN',
+    To: 'TO',
+    Tr: 'TR',
+    Tt: 'TT',
+    Tv: 'TV',
+    Tw: 'TW',
+    Tz: 'TZ',
+    Ua: 'UA',
+    Ug: 'UG',
+    Um: 'UM',
+    Us: 'US',
+    Uy: 'UY',
+    Uz: 'UZ',
+    Va: 'VA',
+    Vc: 'VC',
+    Ve: 'VE',
+    Vg: 'VG',
+    Vi: 'VI',
+    Vn: 'VN',
+    Vu: 'VU',
+    Wf: 'WF',
+    Ws: 'WS',
+    Xk: 'XK',
+    Ye: 'YE',
+    Yt: 'YT',
+    Za: 'ZA',
+    Zm: 'ZM',
+    Zw: 'ZW'
+} as const;
+
+export type FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum = typeof FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum[keyof typeof FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum];
+
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerEligibility
+ */
+export interface FeedFetchMorePost200ResponseInnerEligibility {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibility
+     */
+    'domains'?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibility
+     */
+    'types'?: Array<FeedFetchMorePost200ResponseInnerEligibilityTypesEnum>;
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerEligibilityUniversity}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibility
+     */
+    'university'?: FeedFetchMorePost200ResponseInnerEligibilityUniversity;
+}
+
+export const FeedFetchMorePost200ResponseInnerEligibilityTypesEnum = {
+    University: 'university',
+    Company: 'company'
+} as const;
+
+export type FeedFetchMorePost200ResponseInnerEligibilityTypesEnum = typeof FeedFetchMorePost200ResponseInnerEligibilityTypesEnum[keyof typeof FeedFetchMorePost200ResponseInnerEligibilityTypesEnum];
+
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerEligibilityUniversity
+ */
+export interface FeedFetchMorePost200ResponseInnerEligibilityUniversity {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversity
+     */
+    'types'?: Array<FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum>;
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversity
+     */
+    'student'?: FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent;
+}
+
+export const FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum = {
+    Student: 'student',
+    Alum: 'alum',
+    Faculty: 'faculty'
+} as const;
+
+export type FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum = typeof FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum[keyof typeof FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum];
+
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
+ */
+export interface FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
+     */
+    'countries'?: Array<FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
+     */
+    'campuses'?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
+     */
+    'programs'?: Array<string>;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
+     */
+    'admissionYears'?: Array<number>;
+}
+
+export const FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum = {
+    Ad: 'AD',
+    Ae: 'AE',
+    Af: 'AF',
+    Ag: 'AG',
+    Ai: 'AI',
+    Al: 'AL',
+    Am: 'AM',
+    Ao: 'AO',
+    Aq: 'AQ',
+    Ar: 'AR',
+    As: 'AS',
+    At: 'AT',
+    Au: 'AU',
+    Aw: 'AW',
+    Ax: 'AX',
+    Az: 'AZ',
+    Ba: 'BA',
+    Bb: 'BB',
+    Bd: 'BD',
+    Be: 'BE',
+    Bf: 'BF',
+    Bg: 'BG',
+    Bh: 'BH',
+    Bi: 'BI',
+    Bj: 'BJ',
+    Bl: 'BL',
+    Bm: 'BM',
+    Bn: 'BN',
+    Bo: 'BO',
+    Bq: 'BQ',
+    Br: 'BR',
+    Bs: 'BS',
+    Bt: 'BT',
+    Bv: 'BV',
+    Bw: 'BW',
+    By: 'BY',
+    Bz: 'BZ',
+    Ca: 'CA',
+    Cc: 'CC',
+    Cd: 'CD',
+    Cf: 'CF',
+    Cg: 'CG',
+    Ch: 'CH',
+    Ci: 'CI',
+    Ck: 'CK',
+    Cl: 'CL',
+    Cm: 'CM',
+    Cn: 'CN',
+    Co: 'CO',
+    Cr: 'CR',
+    Cu: 'CU',
+    Cv: 'CV',
+    Cw: 'CW',
+    Cx: 'CX',
+    Cy: 'CY',
+    Cz: 'CZ',
+    De: 'DE',
+    Dj: 'DJ',
+    Dk: 'DK',
+    Dm: 'DM',
+    Do: 'DO',
+    Dz: 'DZ',
+    Ec: 'EC',
+    Ee: 'EE',
+    Eg: 'EG',
+    Eh: 'EH',
+    Er: 'ER',
+    Es: 'ES',
+    Et: 'ET',
+    Fi: 'FI',
+    Fj: 'FJ',
+    Fk: 'FK',
+    Fm: 'FM',
+    Fo: 'FO',
+    Fr: 'FR',
+    Ga: 'GA',
+    Gb: 'GB',
+    Gd: 'GD',
+    Ge: 'GE',
+    Gf: 'GF',
+    Gg: 'GG',
+    Gh: 'GH',
+    Gi: 'GI',
+    Gl: 'GL',
+    Gm: 'GM',
+    Gn: 'GN',
+    Gp: 'GP',
+    Gq: 'GQ',
+    Gr: 'GR',
+    Gs: 'GS',
+    Gt: 'GT',
+    Gu: 'GU',
+    Gw: 'GW',
+    Gy: 'GY',
+    Hk: 'HK',
+    Hm: 'HM',
+    Hn: 'HN',
+    Hr: 'HR',
+    Ht: 'HT',
+    Hu: 'HU',
+    Id: 'ID',
+    Ie: 'IE',
+    Il: 'IL',
+    Im: 'IM',
+    In: 'IN',
+    Io: 'IO',
+    Iq: 'IQ',
+    Ir: 'IR',
+    Is: 'IS',
+    It: 'IT',
+    Je: 'JE',
+    Jm: 'JM',
+    Jo: 'JO',
+    Jp: 'JP',
+    Ke: 'KE',
+    Kg: 'KG',
+    Kh: 'KH',
+    Ki: 'KI',
+    Km: 'KM',
+    Kn: 'KN',
+    Kp: 'KP',
+    Kr: 'KR',
+    Kw: 'KW',
+    Ky: 'KY',
+    Kz: 'KZ',
+    La: 'LA',
+    Lb: 'LB',
+    Lc: 'LC',
+    Li: 'LI',
+    Lk: 'LK',
+    Lr: 'LR',
+    Ls: 'LS',
+    Lt: 'LT',
+    Lu: 'LU',
+    Lv: 'LV',
+    Ly: 'LY',
+    Ma: 'MA',
+    Mc: 'MC',
+    Md: 'MD',
+    Me: 'ME',
+    Mf: 'MF',
+    Mg: 'MG',
+    Mh: 'MH',
+    Mk: 'MK',
+    Ml: 'ML',
+    Mm: 'MM',
+    Mn: 'MN',
+    Mo: 'MO',
+    Mp: 'MP',
+    Mq: 'MQ',
+    Mr: 'MR',
+    Ms: 'MS',
+    Mt: 'MT',
+    Mu: 'MU',
+    Mv: 'MV',
+    Mw: 'MW',
+    Mx: 'MX',
+    My: 'MY',
+    Mz: 'MZ',
+    Na: 'NA',
+    Nc: 'NC',
+    Ne: 'NE',
+    Nf: 'NF',
+    Ng: 'NG',
+    Ni: 'NI',
+    Nl: 'NL',
+    No: 'NO',
+    Np: 'NP',
+    Nr: 'NR',
+    Nu: 'NU',
+    Nz: 'NZ',
+    Om: 'OM',
+    Pa: 'PA',
+    Pe: 'PE',
+    Pf: 'PF',
+    Pg: 'PG',
+    Ph: 'PH',
+    Pk: 'PK',
+    Pl: 'PL',
+    Pm: 'PM',
+    Pn: 'PN',
+    Pr: 'PR',
+    Ps: 'PS',
+    Pt: 'PT',
+    Pw: 'PW',
+    Py: 'PY',
+    Qa: 'QA',
+    Re: 'RE',
+    Ro: 'RO',
+    Rs: 'RS',
+    Ru: 'RU',
+    Rw: 'RW',
+    Sa: 'SA',
+    Sb: 'SB',
+    Sc: 'SC',
+    Sd: 'SD',
+    Se: 'SE',
+    Sg: 'SG',
+    Sh: 'SH',
+    Si: 'SI',
+    Sj: 'SJ',
+    Sk: 'SK',
+    Sl: 'SL',
+    Sm: 'SM',
+    Sn: 'SN',
+    So: 'SO',
+    Sr: 'SR',
+    Ss: 'SS',
+    St: 'ST',
+    Sv: 'SV',
+    Sx: 'SX',
+    Sy: 'SY',
+    Sz: 'SZ',
+    Tc: 'TC',
+    Td: 'TD',
+    Tf: 'TF',
+    Tg: 'TG',
+    Th: 'TH',
+    Tj: 'TJ',
+    Tk: 'TK',
+    Tl: 'TL',
+    Tm: 'TM',
+    Tn: 'TN',
+    To: 'TO',
+    Tr: 'TR',
+    Tt: 'TT',
+    Tv: 'TV',
+    Tw: 'TW',
+    Tz: 'TZ',
+    Ua: 'UA',
+    Ug: 'UG',
+    Um: 'UM',
+    Us: 'US',
+    Uy: 'UY',
+    Uz: 'UZ',
+    Va: 'VA',
+    Vc: 'VC',
+    Ve: 'VE',
+    Vg: 'VG',
+    Vi: 'VI',
+    Vn: 'VN',
+    Vu: 'VU',
+    Wf: 'WF',
+    Ws: 'WS',
+    Xk: 'XK',
+    Ye: 'YE',
+    Yt: 'YT',
+    Za: 'ZA',
+    Zm: 'ZM',
+    Zw: 'ZW'
+} as const;
+
+export type FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum = typeof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum[keyof typeof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum];
+
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerMetadata
+ */
+export interface FeedFetchMorePost200ResponseInnerMetadata {
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'uid': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'updatedAt': string;
+}
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerPayload
+ */
+export interface FeedFetchMorePost200ResponseInnerPayload {
+    /**
+     * 
+     * @type {PollCreatePostRequestPollData}
+     * @memberof FeedFetchMorePost200ResponseInnerPayload
+     */
+    'data': PollCreatePostRequestPollData;
+    /**
+     * 
+     * @type {FeedFetchMorePost200ResponseInnerPayloadResult}
+     * @memberof FeedFetchMorePost200ResponseInnerPayload
+     */
+    'result': FeedFetchMorePost200ResponseInnerPayloadResult;
+}
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePost200ResponseInnerPayloadResult
+ */
+export interface FeedFetchMorePost200ResponseInnerPayloadResult {
+    /**
+     * 
+     * @type {number}
+     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
+     */
+    'option1Response': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
+     */
+    'option2Response': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
+     */
+    'option3Response'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
+     */
+    'option4Response'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
+     */
+    'option5Response'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
+     */
+    'option6Response'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface FeedFetchMorePostRequest
+ */
+export interface FeedFetchMorePostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedFetchMorePostRequest
+     */
+    'updatedAt'?: string;
+}
+/**
+ * 
+ * @export
  * @interface PollCreatePostRequest
  */
 export interface PollCreatePostRequest {
@@ -2273,52 +3085,65 @@ export interface PollCreatePostRequest {
 export interface PollCreatePostRequestPoll {
     /**
      * 
-     * @type {string}
+     * @type {PollCreatePostRequestPollData}
      * @memberof PollCreatePostRequestPoll
      */
-    'question': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PollCreatePostRequestPoll
-     */
-    'option1': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PollCreatePostRequestPoll
-     */
-    'option2': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PollCreatePostRequestPoll
-     */
-    'option3'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PollCreatePostRequestPoll
-     */
-    'option4'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PollCreatePostRequestPoll
-     */
-    'option5'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PollCreatePostRequestPoll
-     */
-    'option6'?: string;
+    'data': PollCreatePostRequestPollData;
     /**
      * 
      * @type {PollCreatePostRequestPollEligibility}
      * @memberof PollCreatePostRequestPoll
      */
     'eligibility'?: PollCreatePostRequestPollEligibility;
+}
+/**
+ * 
+ * @export
+ * @interface PollCreatePostRequestPollData
+ */
+export interface PollCreatePostRequestPollData {
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPollData
+     */
+    'question': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPollData
+     */
+    'option1': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPollData
+     */
+    'option2': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPollData
+     */
+    'option3'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPollData
+     */
+    'option4'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPollData
+     */
+    'option5'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollCreatePostRequestPollData
+     */
+    'option6'?: string;
 }
 /**
  * 
@@ -2619,6 +3444,80 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        feedFetchMorePost: async (feedFetchMorePostRequest?: FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/feed/fetchMore`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(feedFetchMorePostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        feedFetchRecentPost: async (feedFetchMorePostRequest?: FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/feed/fetchRecent`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(feedFetchMorePostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {PollCreatePostRequest} pollCreatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2725,6 +3624,26 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<FeedFetchMorePost200ResponseInner>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.feedFetchMorePost(feedFetchMorePostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<FeedFetchMorePost200ResponseInner>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.feedFetchRecentPost(feedFetchMorePostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {PollCreatePostRequest} pollCreatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2793,6 +3712,24 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: any): AxiosPromise<CredentialRequestPost200Response> {
             return localVarFp.credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<FeedFetchMorePost200ResponseInner>> {
+            return localVarFp.feedFetchMorePost(feedFetchMorePostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<FeedFetchMorePost200ResponseInner>> {
+            return localVarFp.feedFetchRecentPost(feedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2874,6 +3811,28 @@ export class DefaultApi extends BaseAPI {
      */
     public credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).feedFetchMorePost(feedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).feedFetchRecentPost(feedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

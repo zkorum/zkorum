@@ -16,8 +16,6 @@ import { countries as allCountries, type TCountryCode } from "countries-list";
 import {
     EssecCampus,
     EssecProgram,
-    UniversityType,
-    currentStudentsAdmissionYears,
     universityTypeToString,
 } from "@/shared/types/university";
 import Button from "@mui/material/Button";
@@ -26,6 +24,11 @@ import { useAppDispatch } from "@/hooks";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { credentialsIssued, genericError } from "../error/message";
 import { showError, showSuccess } from "@/store/reducers/snackbar";
+import {
+    currentStudentsAdmissionYears,
+    type UniversityType,
+    zoduniversityType,
+} from "@/shared/types/zod";
 
 interface GetFormProps {
     typeSpecificForm: JSX.Element;
@@ -39,7 +42,7 @@ interface CommunityFormProps {
 // and dynamically create the form from that.
 export function CommunityForm({ email }: CommunityFormProps) {
     const [type, setType] = React.useState<UniversityType>(
-        UniversityType.STUDENT
+        zoduniversityType.enum.student
     );
     const [studentCampus, setStudentCampus] = React.useState<EssecCampus>(
         EssecCampus.CERGY
@@ -60,7 +63,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
 
     React.useEffect(() => {
         switch (type) {
-            case UniversityType.STUDENT:
+            case zoduniversityType.enum.student:
                 if (
                     studentCountries.length === 0 ||
                     studentAdmissionYear === null
@@ -70,10 +73,10 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     setIsInvalid(false);
                 }
                 break;
-            case UniversityType.ALUM:
+            case zoduniversityType.enum.alum:
                 //TODO
                 break;
-            case UniversityType.FACULTY:
+            case zoduniversityType.enum.faculty:
                 //TODO
                 break;
         }
@@ -87,14 +90,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
     }, [allCountries, studentCountries]);
 
     const handleChangeType = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedType = parseInt(event.target.value);
-        if (isNaN(selectedType)) {
-            console.warn(
-                "Enum Type is not a number, this is not supposed to happen"
-            );
-            return;
-        }
-        setType(selectedType);
+        setType(event.target.value as UniversityType);
     };
 
     async function onSubmitForm(): Promise<void> {
@@ -103,7 +99,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
         }
         setStudentHasTriedSubmitting(true);
         switch (type) {
-            case UniversityType.STUDENT:
+            case zoduniversityType.enum.student:
                 const studentCountriesAsObj: Partial<
                     Record<TCountryCode, boolean>
                 > = {};
@@ -111,7 +107,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     studentCountriesAsObj[countryCode as TCountryCode] = true;
                 }
                 const emailCredentialRequest = {
-                    type: UniversityType.STUDENT,
+                    type: zoduniversityType.enum.student,
                     campus: studentCampus,
                     program: studentProgram,
                     countries: studentCountriesAsObj,
@@ -136,10 +132,10 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     dispatch(closeMainLoading());
                 }
                 break;
-            case UniversityType.ALUM:
+            case zoduniversityType.enum.alum:
                 //TODO
                 break;
-            case UniversityType.FACULTY:
+            case zoduniversityType.enum.faculty:
                 //TODO
                 break;
         }
@@ -199,24 +195,24 @@ export function CommunityForm({ email }: CommunityFormProps) {
                             onChange={handleChangeType}
                         >
                             <FormControlLabel
-                                value={UniversityType.STUDENT}
+                                value={zoduniversityType.enum.student}
                                 control={<Radio />}
                                 label={universityTypeToString(
-                                    UniversityType.STUDENT
+                                    zoduniversityType.enum.student
                                 )}
                             />
                             <FormControlLabel
-                                value={UniversityType.ALUM}
+                                value={zoduniversityType.enum.alum}
                                 control={<Radio />}
                                 label={universityTypeToString(
-                                    UniversityType.ALUM
+                                    zoduniversityType.enum.alum
                                 )}
                             />
                             <FormControlLabel
-                                value={UniversityType.FACULTY}
+                                value={zoduniversityType.enum.faculty}
                                 control={<Radio />}
                                 label={universityTypeToString(
-                                    UniversityType.FACULTY
+                                    zoduniversityType.enum.faculty
                                 )}
                             />
                         </RadioGroup>
@@ -237,7 +233,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
     }
 
     switch (type) {
-        case UniversityType.STUDENT:
+        case zoduniversityType.enum.student:
             return getForm({
                 typeSpecificForm: (
                     <StudentForm
@@ -255,10 +251,10 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     />
                 ),
             });
-        case UniversityType.ALUM:
+        case zoduniversityType.enum.alum:
             // TODO
             return getForm({ typeSpecificForm: <AlumForm /> });
-        case UniversityType.FACULTY:
+        case zoduniversityType.enum.faculty:
             // TODO
             return getForm({ typeSpecificForm: <FacultyForm /> });
     }

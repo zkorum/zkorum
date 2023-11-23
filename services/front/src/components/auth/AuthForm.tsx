@@ -1,13 +1,13 @@
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import React from "react";
-import { ZodType } from "../../shared/types/zod";
 import { handleOnAuthenticate } from "@/request/auth";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
 
 interface AuthFormProps {
     autoFocus: boolean;
@@ -38,13 +38,13 @@ export function AuthForm({
             setEmailHelper(" ");
             return;
         }
-        const result = ZodType.email.safeParse(emailToValidate);
+        const result = zodemail.safeParse(emailToValidate);
         if (!result.success) {
             const formatted = result.error.format();
             setIsEmailValid(false);
             setEmailHelper(formatted._errors[0]);
         } else {
-            const result = ZodType.authorizedEmail.safeParse(emailToValidate);
+            const result = zodauthorizedEmail.safeParse(emailToValidate);
             if (!result.success) {
                 setIsEmailValid(false);
                 if (emailToValidate.split("@")[1] === "essec.edu") {
