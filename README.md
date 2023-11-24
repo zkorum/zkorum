@@ -67,7 +67,7 @@ A Fastify application supported by a PostgreSQL database.
 
 ### OpenAPI
 
-We generate an `openapi-zkorum.yml` file from the backend, and then use [openapi-generator-cli](https://openapi-generator.tech/) to generate the corresponding front.
+We generate an `openapi-zkorum.json` file from the backend, and then use [openapi-generator-cli](https://openapi-generator.tech/) to generate the corresponding front.
 
 ### Shared
 
