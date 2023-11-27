@@ -267,7 +267,7 @@ export function isEligibleForList<T>(
 }
 
 export function isEligibleForCountries(
-    countries?: Record<TCountryCode, boolean>,
+    countries?: Partial<Record<TCountryCode, boolean>>,
     eligibilityCountries?: TCountryCode[],
     returnedValueIfListUndefined: boolean = true
 ): boolean {
