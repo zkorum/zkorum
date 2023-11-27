@@ -1,1 +1,0 @@
-ALTER TABLE "poll" ALTER COLUMN "updated_at" SET DATA TYPE timestamp (0);

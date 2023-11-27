@@ -15,6 +15,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@docknetwork/crypto-wasm-ts": "^0.50.0",
         "cborg": "^4.0.5",
         "countries-list": "^3.0.5",
         "keystore-idb": "^0.15.5",

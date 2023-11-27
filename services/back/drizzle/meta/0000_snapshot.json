@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "959a48df-1a79-4da9-a216-3af7abfb3cf0",
+  "id": "22ef9b85-9ee4-4292-ab46-d17f81910855",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "alum_eligibility": {
@@ -666,6 +666,87 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "poll_response": {
+      "name": "poll_response",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "presentation": {
+          "name": "presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "poll_id": {
+          "name": "poll_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "option_chosen": {
+          "name": "option_chosen",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "poll_response_author_id_pseudonym_id_fk": {
+          "name": "poll_response_author_id_pseudonym_id_fk",
+          "tableFrom": "poll_response",
+          "tableTo": "pseudonym",
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "poll_response_poll_id_poll_id_fk": {
+          "name": "poll_response_poll_id_poll_id_fk",
+          "tableFrom": "poll_response",
+          "tableTo": "poll",
+          "columnsFrom": [
+            "poll_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "poll": {
       "name": "poll",
       "schema": "",
@@ -789,7 +870,7 @@
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"

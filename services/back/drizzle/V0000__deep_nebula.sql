@@ -133,6 +133,16 @@ CREATE TABLE IF NOT EXISTS "persona" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "poll_response" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"presentation" jsonb NOT NULL,
+	"author_id" integer NOT NULL,
+	"poll_id" integer NOT NULL,
+	"option_chosen" integer NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "poll" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"presentation" jsonb NOT NULL,
@@ -153,7 +163,7 @@ CREATE TABLE IF NOT EXISTS "poll" (
 	"option6" varchar(30),
 	"option6_response" integer,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
 	CONSTRAINT "poll_time_pres_cid_unique" UNIQUE("time_pres_cid")
 );
 --> statement-breakpoint
@@ -253,6 +263,18 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "persona" ADD CONSTRAINT "persona_university_persona_id_university_persona_id_fk" FOREIGN KEY ("university_persona_id") REFERENCES "university_persona"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "poll_response" ADD CONSTRAINT "poll_response_author_id_pseudonym_id_fk" FOREIGN KEY ("author_id") REFERENCES "pseudonym"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "poll_response" ADD CONSTRAINT "poll_response_poll_id_poll_id_fk" FOREIGN KEY ("poll_id") REFERENCES "poll"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

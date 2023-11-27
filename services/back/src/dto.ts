@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+    zodResponseToPollPayload,
     zodauthorizedEmail,
     zodcode,
     zoddevices,
@@ -135,12 +136,17 @@ export class Dto {
         poll: zodpoll,
         pres: z.unknown(), // z.object() does not exist :(
     });
+    static respondPollRequest = z.object({
+        responseToPoll: zodResponseToPollPayload,
+        pres: z.unknown(), // z.object() does not exist :(
+    });
     static fetchFeedRequest = z
         .object({
             updatedAt: z.string().datetime().optional(),
         })
         .strict();
     static fetchFeed200 = z.array(zodextendedPollData);
+    static pollRespond200 = zodextendedPollData;
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody

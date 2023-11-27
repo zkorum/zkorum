@@ -24,6 +24,7 @@ import {
     webDomainTypes,
     zoduniversityType,
     minStudentYear,
+    type Eligibilities,
 } from "../shared/types/zod.js";
 import { log } from "../app.js";
 import {
@@ -35,7 +36,11 @@ import {
     essecProgramToString,
     universityTypeToString,
 } from "../shared/types/university.js";
-import { domainFromEmail } from "@/shared/shared.js";
+import {
+    domainFromEmail,
+    isEligibleForCountries,
+    isEligibleForList,
+} from "@/shared/shared.js";
 
 export function getWebDomainType(
     maybeWebDomain: string
@@ -100,7 +105,7 @@ function toCredProperties(formCredentialRequest: FormCredentialRequest) {
                 }
             }
             return {
-                type: universityTypeToString(formCredentialRequest.type),
+                type: formCredentialRequest.type,
                 campus: essecCampusToString(formCredentialRequest.campus),
                 program: essecProgramToString(formCredentialRequest.program),
                 countries: formCredentialRequest.countries,
@@ -553,4 +558,63 @@ export function revealedAttributesToPostAs({
         }
     }
     return postAs;
+}
+
+export function getIsEligible(
+    eligibility: Eligibilities,
+    postAs: PostAs
+): boolean {
+    if (
+        eligibility.university === undefined ||
+        eligibility.university.types === undefined
+    ) {
+        return true;
+    }
+    if (postAs.typeSpecific === undefined) {
+        return false;
+    }
+    const typeSpecific = postAs.typeSpecific;
+    const univType = typeSpecific.type;
+    switch (univType) {
+        case "alum":
+        case "faculty":
+            if (eligibility.university.types.includes(univType)) {
+                return true;
+            } else {
+                return false;
+            }
+        case "student":
+            if (eligibility.university.types.includes(univType)) {
+                if (eligibility.university.student === undefined) {
+                    return true;
+                } else if (
+                    isEligibleForCountries(
+                        typeSpecific.countries,
+                        eligibility.university.student.countries
+                    ) &&
+                    isEligibleForList(
+                        typeSpecific.campus !== undefined
+                            ? essecCampusToString(typeSpecific.campus)
+                            : undefined,
+                        eligibility.university.student.campuses
+                    ) &&
+                    isEligibleForList(
+                        typeSpecific.program !== undefined
+                            ? essecProgramToString(typeSpecific.program)
+                            : undefined,
+                        eligibility.university.student.programs
+                    ) &&
+                    isEligibleForList(
+                        typeSpecific.admissionYear,
+                        eligibility.university.student.admissionYears
+                    )
+                ) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+    }
 }

@@ -103,6 +103,8 @@ export function Topbar() {
                             </Grid>
                             <Grid flexGrow={1} maxWidth="50%">
                                 <TextField
+                                    disabled
+                                    placeholder="Coming soon..."
                                     margin="none"
                                     fullWidth
                                     id="standard-basic"
@@ -149,6 +151,7 @@ export function Topbar() {
                                 >
                                     <MenuList>
                                         <MenuItem
+                                            disabled
                                             onClick={() =>
                                                 handleOnClickDevices()
                                             }

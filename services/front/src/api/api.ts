@@ -2249,805 +2249,6 @@ export interface CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
 /**
  * 
  * @export
- * @interface FeedFetchMorePost200ResponseInner
- */
-export interface FeedFetchMorePost200ResponseInner {
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerMetadata}
-     * @memberof FeedFetchMorePost200ResponseInner
-     */
-    'metadata': FeedFetchMorePost200ResponseInnerMetadata;
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerPayload}
-     * @memberof FeedFetchMorePost200ResponseInner
-     */
-    'payload': FeedFetchMorePost200ResponseInnerPayload;
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerAuthor}
-     * @memberof FeedFetchMorePost200ResponseInner
-     */
-    'author': FeedFetchMorePost200ResponseInnerAuthor;
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerEligibility}
-     * @memberof FeedFetchMorePost200ResponseInner
-     */
-    'eligibility': FeedFetchMorePost200ResponseInnerEligibility;
-}
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerAuthor
- */
-export interface FeedFetchMorePost200ResponseInnerAuthor {
-    /**
-     * 
-     * @type {string}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthor
-     */
-    'domain': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthor
-     */
-    'type': FeedFetchMorePost200ResponseInnerAuthorTypeEnum;
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerAuthorUniversity}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthor
-     */
-    'university'?: FeedFetchMorePost200ResponseInnerAuthorUniversity;
-}
-
-export const FeedFetchMorePost200ResponseInnerAuthorTypeEnum = {
-    University: 'university',
-    Company: 'company'
-} as const;
-
-export type FeedFetchMorePost200ResponseInnerAuthorTypeEnum = typeof FeedFetchMorePost200ResponseInnerAuthorTypeEnum[keyof typeof FeedFetchMorePost200ResponseInnerAuthorTypeEnum];
-
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerAuthorUniversity
- */
-export interface FeedFetchMorePost200ResponseInnerAuthorUniversity {
-    /**
-     * 
-     * @type {string}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversity
-     */
-    'type': string;
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerAuthorUniversityStudent}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversity
-     */
-    'student'?: FeedFetchMorePost200ResponseInnerAuthorUniversityStudent;
-}
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
- */
-export interface FeedFetchMorePost200ResponseInnerAuthorUniversityStudent {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
-     */
-    'countries'?: Array<FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum>;
-    /**
-     * 
-     * @type {string}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
-     */
-    'campus'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
-     */
-    'program'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof FeedFetchMorePost200ResponseInnerAuthorUniversityStudent
-     */
-    'admissionYear'?: number;
-}
-
-export const FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum = {
-    Ad: 'AD',
-    Ae: 'AE',
-    Af: 'AF',
-    Ag: 'AG',
-    Ai: 'AI',
-    Al: 'AL',
-    Am: 'AM',
-    Ao: 'AO',
-    Aq: 'AQ',
-    Ar: 'AR',
-    As: 'AS',
-    At: 'AT',
-    Au: 'AU',
-    Aw: 'AW',
-    Ax: 'AX',
-    Az: 'AZ',
-    Ba: 'BA',
-    Bb: 'BB',
-    Bd: 'BD',
-    Be: 'BE',
-    Bf: 'BF',
-    Bg: 'BG',
-    Bh: 'BH',
-    Bi: 'BI',
-    Bj: 'BJ',
-    Bl: 'BL',
-    Bm: 'BM',
-    Bn: 'BN',
-    Bo: 'BO',
-    Bq: 'BQ',
-    Br: 'BR',
-    Bs: 'BS',
-    Bt: 'BT',
-    Bv: 'BV',
-    Bw: 'BW',
-    By: 'BY',
-    Bz: 'BZ',
-    Ca: 'CA',
-    Cc: 'CC',
-    Cd: 'CD',
-    Cf: 'CF',
-    Cg: 'CG',
-    Ch: 'CH',
-    Ci: 'CI',
-    Ck: 'CK',
-    Cl: 'CL',
-    Cm: 'CM',
-    Cn: 'CN',
-    Co: 'CO',
-    Cr: 'CR',
-    Cu: 'CU',
-    Cv: 'CV',
-    Cw: 'CW',
-    Cx: 'CX',
-    Cy: 'CY',
-    Cz: 'CZ',
-    De: 'DE',
-    Dj: 'DJ',
-    Dk: 'DK',
-    Dm: 'DM',
-    Do: 'DO',
-    Dz: 'DZ',
-    Ec: 'EC',
-    Ee: 'EE',
-    Eg: 'EG',
-    Eh: 'EH',
-    Er: 'ER',
-    Es: 'ES',
-    Et: 'ET',
-    Fi: 'FI',
-    Fj: 'FJ',
-    Fk: 'FK',
-    Fm: 'FM',
-    Fo: 'FO',
-    Fr: 'FR',
-    Ga: 'GA',
-    Gb: 'GB',
-    Gd: 'GD',
-    Ge: 'GE',
-    Gf: 'GF',
-    Gg: 'GG',
-    Gh: 'GH',
-    Gi: 'GI',
-    Gl: 'GL',
-    Gm: 'GM',
-    Gn: 'GN',
-    Gp: 'GP',
-    Gq: 'GQ',
-    Gr: 'GR',
-    Gs: 'GS',
-    Gt: 'GT',
-    Gu: 'GU',
-    Gw: 'GW',
-    Gy: 'GY',
-    Hk: 'HK',
-    Hm: 'HM',
-    Hn: 'HN',
-    Hr: 'HR',
-    Ht: 'HT',
-    Hu: 'HU',
-    Id: 'ID',
-    Ie: 'IE',
-    Il: 'IL',
-    Im: 'IM',
-    In: 'IN',
-    Io: 'IO',
-    Iq: 'IQ',
-    Ir: 'IR',
-    Is: 'IS',
-    It: 'IT',
-    Je: 'JE',
-    Jm: 'JM',
-    Jo: 'JO',
-    Jp: 'JP',
-    Ke: 'KE',
-    Kg: 'KG',
-    Kh: 'KH',
-    Ki: 'KI',
-    Km: 'KM',
-    Kn: 'KN',
-    Kp: 'KP',
-    Kr: 'KR',
-    Kw: 'KW',
-    Ky: 'KY',
-    Kz: 'KZ',
-    La: 'LA',
-    Lb: 'LB',
-    Lc: 'LC',
-    Li: 'LI',
-    Lk: 'LK',
-    Lr: 'LR',
-    Ls: 'LS',
-    Lt: 'LT',
-    Lu: 'LU',
-    Lv: 'LV',
-    Ly: 'LY',
-    Ma: 'MA',
-    Mc: 'MC',
-    Md: 'MD',
-    Me: 'ME',
-    Mf: 'MF',
-    Mg: 'MG',
-    Mh: 'MH',
-    Mk: 'MK',
-    Ml: 'ML',
-    Mm: 'MM',
-    Mn: 'MN',
-    Mo: 'MO',
-    Mp: 'MP',
-    Mq: 'MQ',
-    Mr: 'MR',
-    Ms: 'MS',
-    Mt: 'MT',
-    Mu: 'MU',
-    Mv: 'MV',
-    Mw: 'MW',
-    Mx: 'MX',
-    My: 'MY',
-    Mz: 'MZ',
-    Na: 'NA',
-    Nc: 'NC',
-    Ne: 'NE',
-    Nf: 'NF',
-    Ng: 'NG',
-    Ni: 'NI',
-    Nl: 'NL',
-    No: 'NO',
-    Np: 'NP',
-    Nr: 'NR',
-    Nu: 'NU',
-    Nz: 'NZ',
-    Om: 'OM',
-    Pa: 'PA',
-    Pe: 'PE',
-    Pf: 'PF',
-    Pg: 'PG',
-    Ph: 'PH',
-    Pk: 'PK',
-    Pl: 'PL',
-    Pm: 'PM',
-    Pn: 'PN',
-    Pr: 'PR',
-    Ps: 'PS',
-    Pt: 'PT',
-    Pw: 'PW',
-    Py: 'PY',
-    Qa: 'QA',
-    Re: 'RE',
-    Ro: 'RO',
-    Rs: 'RS',
-    Ru: 'RU',
-    Rw: 'RW',
-    Sa: 'SA',
-    Sb: 'SB',
-    Sc: 'SC',
-    Sd: 'SD',
-    Se: 'SE',
-    Sg: 'SG',
-    Sh: 'SH',
-    Si: 'SI',
-    Sj: 'SJ',
-    Sk: 'SK',
-    Sl: 'SL',
-    Sm: 'SM',
-    Sn: 'SN',
-    So: 'SO',
-    Sr: 'SR',
-    Ss: 'SS',
-    St: 'ST',
-    Sv: 'SV',
-    Sx: 'SX',
-    Sy: 'SY',
-    Sz: 'SZ',
-    Tc: 'TC',
-    Td: 'TD',
-    Tf: 'TF',
-    Tg: 'TG',
-    Th: 'TH',
-    Tj: 'TJ',
-    Tk: 'TK',
-    Tl: 'TL',
-    Tm: 'TM',
-    Tn: 'TN',
-    To: 'TO',
-    Tr: 'TR',
-    Tt: 'TT',
-    Tv: 'TV',
-    Tw: 'TW',
-    Tz: 'TZ',
-    Ua: 'UA',
-    Ug: 'UG',
-    Um: 'UM',
-    Us: 'US',
-    Uy: 'UY',
-    Uz: 'UZ',
-    Va: 'VA',
-    Vc: 'VC',
-    Ve: 'VE',
-    Vg: 'VG',
-    Vi: 'VI',
-    Vn: 'VN',
-    Vu: 'VU',
-    Wf: 'WF',
-    Ws: 'WS',
-    Xk: 'XK',
-    Ye: 'YE',
-    Yt: 'YT',
-    Za: 'ZA',
-    Zm: 'ZM',
-    Zw: 'ZW'
-} as const;
-
-export type FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum = typeof FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum[keyof typeof FeedFetchMorePost200ResponseInnerAuthorUniversityStudentCountriesEnum];
-
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerEligibility
- */
-export interface FeedFetchMorePost200ResponseInnerEligibility {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibility
-     */
-    'domains'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibility
-     */
-    'types'?: Array<FeedFetchMorePost200ResponseInnerEligibilityTypesEnum>;
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerEligibilityUniversity}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibility
-     */
-    'university'?: FeedFetchMorePost200ResponseInnerEligibilityUniversity;
-}
-
-export const FeedFetchMorePost200ResponseInnerEligibilityTypesEnum = {
-    University: 'university',
-    Company: 'company'
-} as const;
-
-export type FeedFetchMorePost200ResponseInnerEligibilityTypesEnum = typeof FeedFetchMorePost200ResponseInnerEligibilityTypesEnum[keyof typeof FeedFetchMorePost200ResponseInnerEligibilityTypesEnum];
-
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerEligibilityUniversity
- */
-export interface FeedFetchMorePost200ResponseInnerEligibilityUniversity {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversity
-     */
-    'types'?: Array<FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum>;
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversity
-     */
-    'student'?: FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent;
-}
-
-export const FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum = {
-    Student: 'student',
-    Alum: 'alum',
-    Faculty: 'faculty'
-} as const;
-
-export type FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum = typeof FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum[keyof typeof FeedFetchMorePost200ResponseInnerEligibilityUniversityTypesEnum];
-
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
- */
-export interface FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
-     */
-    'countries'?: Array<FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
-     */
-    'campuses'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
-     */
-    'programs'?: Array<string>;
-    /**
-     * 
-     * @type {Array<number>}
-     * @memberof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudent
-     */
-    'admissionYears'?: Array<number>;
-}
-
-export const FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum = {
-    Ad: 'AD',
-    Ae: 'AE',
-    Af: 'AF',
-    Ag: 'AG',
-    Ai: 'AI',
-    Al: 'AL',
-    Am: 'AM',
-    Ao: 'AO',
-    Aq: 'AQ',
-    Ar: 'AR',
-    As: 'AS',
-    At: 'AT',
-    Au: 'AU',
-    Aw: 'AW',
-    Ax: 'AX',
-    Az: 'AZ',
-    Ba: 'BA',
-    Bb: 'BB',
-    Bd: 'BD',
-    Be: 'BE',
-    Bf: 'BF',
-    Bg: 'BG',
-    Bh: 'BH',
-    Bi: 'BI',
-    Bj: 'BJ',
-    Bl: 'BL',
-    Bm: 'BM',
-    Bn: 'BN',
-    Bo: 'BO',
-    Bq: 'BQ',
-    Br: 'BR',
-    Bs: 'BS',
-    Bt: 'BT',
-    Bv: 'BV',
-    Bw: 'BW',
-    By: 'BY',
-    Bz: 'BZ',
-    Ca: 'CA',
-    Cc: 'CC',
-    Cd: 'CD',
-    Cf: 'CF',
-    Cg: 'CG',
-    Ch: 'CH',
-    Ci: 'CI',
-    Ck: 'CK',
-    Cl: 'CL',
-    Cm: 'CM',
-    Cn: 'CN',
-    Co: 'CO',
-    Cr: 'CR',
-    Cu: 'CU',
-    Cv: 'CV',
-    Cw: 'CW',
-    Cx: 'CX',
-    Cy: 'CY',
-    Cz: 'CZ',
-    De: 'DE',
-    Dj: 'DJ',
-    Dk: 'DK',
-    Dm: 'DM',
-    Do: 'DO',
-    Dz: 'DZ',
-    Ec: 'EC',
-    Ee: 'EE',
-    Eg: 'EG',
-    Eh: 'EH',
-    Er: 'ER',
-    Es: 'ES',
-    Et: 'ET',
-    Fi: 'FI',
-    Fj: 'FJ',
-    Fk: 'FK',
-    Fm: 'FM',
-    Fo: 'FO',
-    Fr: 'FR',
-    Ga: 'GA',
-    Gb: 'GB',
-    Gd: 'GD',
-    Ge: 'GE',
-    Gf: 'GF',
-    Gg: 'GG',
-    Gh: 'GH',
-    Gi: 'GI',
-    Gl: 'GL',
-    Gm: 'GM',
-    Gn: 'GN',
-    Gp: 'GP',
-    Gq: 'GQ',
-    Gr: 'GR',
-    Gs: 'GS',
-    Gt: 'GT',
-    Gu: 'GU',
-    Gw: 'GW',
-    Gy: 'GY',
-    Hk: 'HK',
-    Hm: 'HM',
-    Hn: 'HN',
-    Hr: 'HR',
-    Ht: 'HT',
-    Hu: 'HU',
-    Id: 'ID',
-    Ie: 'IE',
-    Il: 'IL',
-    Im: 'IM',
-    In: 'IN',
-    Io: 'IO',
-    Iq: 'IQ',
-    Ir: 'IR',
-    Is: 'IS',
-    It: 'IT',
-    Je: 'JE',
-    Jm: 'JM',
-    Jo: 'JO',
-    Jp: 'JP',
-    Ke: 'KE',
-    Kg: 'KG',
-    Kh: 'KH',
-    Ki: 'KI',
-    Km: 'KM',
-    Kn: 'KN',
-    Kp: 'KP',
-    Kr: 'KR',
-    Kw: 'KW',
-    Ky: 'KY',
-    Kz: 'KZ',
-    La: 'LA',
-    Lb: 'LB',
-    Lc: 'LC',
-    Li: 'LI',
-    Lk: 'LK',
-    Lr: 'LR',
-    Ls: 'LS',
-    Lt: 'LT',
-    Lu: 'LU',
-    Lv: 'LV',
-    Ly: 'LY',
-    Ma: 'MA',
-    Mc: 'MC',
-    Md: 'MD',
-    Me: 'ME',
-    Mf: 'MF',
-    Mg: 'MG',
-    Mh: 'MH',
-    Mk: 'MK',
-    Ml: 'ML',
-    Mm: 'MM',
-    Mn: 'MN',
-    Mo: 'MO',
-    Mp: 'MP',
-    Mq: 'MQ',
-    Mr: 'MR',
-    Ms: 'MS',
-    Mt: 'MT',
-    Mu: 'MU',
-    Mv: 'MV',
-    Mw: 'MW',
-    Mx: 'MX',
-    My: 'MY',
-    Mz: 'MZ',
-    Na: 'NA',
-    Nc: 'NC',
-    Ne: 'NE',
-    Nf: 'NF',
-    Ng: 'NG',
-    Ni: 'NI',
-    Nl: 'NL',
-    No: 'NO',
-    Np: 'NP',
-    Nr: 'NR',
-    Nu: 'NU',
-    Nz: 'NZ',
-    Om: 'OM',
-    Pa: 'PA',
-    Pe: 'PE',
-    Pf: 'PF',
-    Pg: 'PG',
-    Ph: 'PH',
-    Pk: 'PK',
-    Pl: 'PL',
-    Pm: 'PM',
-    Pn: 'PN',
-    Pr: 'PR',
-    Ps: 'PS',
-    Pt: 'PT',
-    Pw: 'PW',
-    Py: 'PY',
-    Qa: 'QA',
-    Re: 'RE',
-    Ro: 'RO',
-    Rs: 'RS',
-    Ru: 'RU',
-    Rw: 'RW',
-    Sa: 'SA',
-    Sb: 'SB',
-    Sc: 'SC',
-    Sd: 'SD',
-    Se: 'SE',
-    Sg: 'SG',
-    Sh: 'SH',
-    Si: 'SI',
-    Sj: 'SJ',
-    Sk: 'SK',
-    Sl: 'SL',
-    Sm: 'SM',
-    Sn: 'SN',
-    So: 'SO',
-    Sr: 'SR',
-    Ss: 'SS',
-    St: 'ST',
-    Sv: 'SV',
-    Sx: 'SX',
-    Sy: 'SY',
-    Sz: 'SZ',
-    Tc: 'TC',
-    Td: 'TD',
-    Tf: 'TF',
-    Tg: 'TG',
-    Th: 'TH',
-    Tj: 'TJ',
-    Tk: 'TK',
-    Tl: 'TL',
-    Tm: 'TM',
-    Tn: 'TN',
-    To: 'TO',
-    Tr: 'TR',
-    Tt: 'TT',
-    Tv: 'TV',
-    Tw: 'TW',
-    Tz: 'TZ',
-    Ua: 'UA',
-    Ug: 'UG',
-    Um: 'UM',
-    Us: 'US',
-    Uy: 'UY',
-    Uz: 'UZ',
-    Va: 'VA',
-    Vc: 'VC',
-    Ve: 'VE',
-    Vg: 'VG',
-    Vi: 'VI',
-    Vn: 'VN',
-    Vu: 'VU',
-    Wf: 'WF',
-    Ws: 'WS',
-    Xk: 'XK',
-    Ye: 'YE',
-    Yt: 'YT',
-    Za: 'ZA',
-    Zm: 'ZM',
-    Zw: 'ZW'
-} as const;
-
-export type FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum = typeof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum[keyof typeof FeedFetchMorePost200ResponseInnerEligibilityUniversityStudentCountriesEnum];
-
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerMetadata
- */
-export interface FeedFetchMorePost200ResponseInnerMetadata {
-    /**
-     * 
-     * @type {string}
-     * @memberof FeedFetchMorePost200ResponseInnerMetadata
-     */
-    'uid': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FeedFetchMorePost200ResponseInnerMetadata
-     */
-    'updatedAt': string;
-}
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerPayload
- */
-export interface FeedFetchMorePost200ResponseInnerPayload {
-    /**
-     * 
-     * @type {PollCreatePostRequestPollData}
-     * @memberof FeedFetchMorePost200ResponseInnerPayload
-     */
-    'data': PollCreatePostRequestPollData;
-    /**
-     * 
-     * @type {FeedFetchMorePost200ResponseInnerPayloadResult}
-     * @memberof FeedFetchMorePost200ResponseInnerPayload
-     */
-    'result': FeedFetchMorePost200ResponseInnerPayloadResult;
-}
-/**
- * 
- * @export
- * @interface FeedFetchMorePost200ResponseInnerPayloadResult
- */
-export interface FeedFetchMorePost200ResponseInnerPayloadResult {
-    /**
-     * 
-     * @type {number}
-     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
-     */
-    'option1Response': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
-     */
-    'option2Response': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
-     */
-    'option3Response'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
-     */
-    'option4Response'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
-     */
-    'option5Response'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof FeedFetchMorePost200ResponseInnerPayloadResult
-     */
-    'option6Response'?: number;
-}
-/**
- * 
- * @export
  * @interface FeedFetchMorePostRequest
  */
 export interface FeedFetchMorePostRequest {
@@ -3219,6 +2420,852 @@ export const PollCreatePostRequestPollEligibilityProgramsEnum = {
 
 export type PollCreatePostRequestPollEligibilityProgramsEnum = typeof PollCreatePostRequestPollEligibilityProgramsEnum[keyof typeof PollCreatePostRequestPollEligibilityProgramsEnum];
 
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200Response
+ */
+export interface PollRespondPost200Response {
+    /**
+     * 
+     * @type {PollRespondPost200ResponseMetadata}
+     * @memberof PollRespondPost200Response
+     */
+    'metadata': PollRespondPost200ResponseMetadata;
+    /**
+     * 
+     * @type {PollRespondPost200ResponsePayload}
+     * @memberof PollRespondPost200Response
+     */
+    'payload': PollRespondPost200ResponsePayload;
+    /**
+     * 
+     * @type {PollRespondPost200ResponseAuthor}
+     * @memberof PollRespondPost200Response
+     */
+    'author': PollRespondPost200ResponseAuthor;
+    /**
+     * 
+     * @type {PollRespondPost200ResponseEligibility}
+     * @memberof PollRespondPost200Response
+     */
+    'eligibility': PollRespondPost200ResponseEligibility;
+}
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponseAuthor
+ */
+export interface PollRespondPost200ResponseAuthor {
+    /**
+     * 
+     * @type {string}
+     * @memberof PollRespondPost200ResponseAuthor
+     */
+    'domain': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollRespondPost200ResponseAuthor
+     */
+    'type': PollRespondPost200ResponseAuthorTypeEnum;
+    /**
+     * 
+     * @type {PollRespondPost200ResponseAuthorUniversity}
+     * @memberof PollRespondPost200ResponseAuthor
+     */
+    'university'?: PollRespondPost200ResponseAuthorUniversity;
+}
+
+export const PollRespondPost200ResponseAuthorTypeEnum = {
+    University: 'university',
+    Company: 'company'
+} as const;
+
+export type PollRespondPost200ResponseAuthorTypeEnum = typeof PollRespondPost200ResponseAuthorTypeEnum[keyof typeof PollRespondPost200ResponseAuthorTypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponseAuthorUniversity
+ */
+export interface PollRespondPost200ResponseAuthorUniversity {
+    /**
+     * 
+     * @type {string}
+     * @memberof PollRespondPost200ResponseAuthorUniversity
+     */
+    'type': PollRespondPost200ResponseAuthorUniversityTypeEnum;
+    /**
+     * 
+     * @type {PollRespondPost200ResponseAuthorUniversityStudent}
+     * @memberof PollRespondPost200ResponseAuthorUniversity
+     */
+    'student'?: PollRespondPost200ResponseAuthorUniversityStudent;
+}
+
+export const PollRespondPost200ResponseAuthorUniversityTypeEnum = {
+    Student: 'student',
+    Alum: 'alum',
+    Faculty: 'faculty'
+} as const;
+
+export type PollRespondPost200ResponseAuthorUniversityTypeEnum = typeof PollRespondPost200ResponseAuthorUniversityTypeEnum[keyof typeof PollRespondPost200ResponseAuthorUniversityTypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponseAuthorUniversityStudent
+ */
+export interface PollRespondPost200ResponseAuthorUniversityStudent {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PollRespondPost200ResponseAuthorUniversityStudent
+     */
+    'countries'?: Array<PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum>;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollRespondPost200ResponseAuthorUniversityStudent
+     */
+    'campus'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollRespondPost200ResponseAuthorUniversityStudent
+     */
+    'program'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof PollRespondPost200ResponseAuthorUniversityStudent
+     */
+    'admissionYear'?: number;
+}
+
+export const PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum = {
+    Ad: 'AD',
+    Ae: 'AE',
+    Af: 'AF',
+    Ag: 'AG',
+    Ai: 'AI',
+    Al: 'AL',
+    Am: 'AM',
+    Ao: 'AO',
+    Aq: 'AQ',
+    Ar: 'AR',
+    As: 'AS',
+    At: 'AT',
+    Au: 'AU',
+    Aw: 'AW',
+    Ax: 'AX',
+    Az: 'AZ',
+    Ba: 'BA',
+    Bb: 'BB',
+    Bd: 'BD',
+    Be: 'BE',
+    Bf: 'BF',
+    Bg: 'BG',
+    Bh: 'BH',
+    Bi: 'BI',
+    Bj: 'BJ',
+    Bl: 'BL',
+    Bm: 'BM',
+    Bn: 'BN',
+    Bo: 'BO',
+    Bq: 'BQ',
+    Br: 'BR',
+    Bs: 'BS',
+    Bt: 'BT',
+    Bv: 'BV',
+    Bw: 'BW',
+    By: 'BY',
+    Bz: 'BZ',
+    Ca: 'CA',
+    Cc: 'CC',
+    Cd: 'CD',
+    Cf: 'CF',
+    Cg: 'CG',
+    Ch: 'CH',
+    Ci: 'CI',
+    Ck: 'CK',
+    Cl: 'CL',
+    Cm: 'CM',
+    Cn: 'CN',
+    Co: 'CO',
+    Cr: 'CR',
+    Cu: 'CU',
+    Cv: 'CV',
+    Cw: 'CW',
+    Cx: 'CX',
+    Cy: 'CY',
+    Cz: 'CZ',
+    De: 'DE',
+    Dj: 'DJ',
+    Dk: 'DK',
+    Dm: 'DM',
+    Do: 'DO',
+    Dz: 'DZ',
+    Ec: 'EC',
+    Ee: 'EE',
+    Eg: 'EG',
+    Eh: 'EH',
+    Er: 'ER',
+    Es: 'ES',
+    Et: 'ET',
+    Fi: 'FI',
+    Fj: 'FJ',
+    Fk: 'FK',
+    Fm: 'FM',
+    Fo: 'FO',
+    Fr: 'FR',
+    Ga: 'GA',
+    Gb: 'GB',
+    Gd: 'GD',
+    Ge: 'GE',
+    Gf: 'GF',
+    Gg: 'GG',
+    Gh: 'GH',
+    Gi: 'GI',
+    Gl: 'GL',
+    Gm: 'GM',
+    Gn: 'GN',
+    Gp: 'GP',
+    Gq: 'GQ',
+    Gr: 'GR',
+    Gs: 'GS',
+    Gt: 'GT',
+    Gu: 'GU',
+    Gw: 'GW',
+    Gy: 'GY',
+    Hk: 'HK',
+    Hm: 'HM',
+    Hn: 'HN',
+    Hr: 'HR',
+    Ht: 'HT',
+    Hu: 'HU',
+    Id: 'ID',
+    Ie: 'IE',
+    Il: 'IL',
+    Im: 'IM',
+    In: 'IN',
+    Io: 'IO',
+    Iq: 'IQ',
+    Ir: 'IR',
+    Is: 'IS',
+    It: 'IT',
+    Je: 'JE',
+    Jm: 'JM',
+    Jo: 'JO',
+    Jp: 'JP',
+    Ke: 'KE',
+    Kg: 'KG',
+    Kh: 'KH',
+    Ki: 'KI',
+    Km: 'KM',
+    Kn: 'KN',
+    Kp: 'KP',
+    Kr: 'KR',
+    Kw: 'KW',
+    Ky: 'KY',
+    Kz: 'KZ',
+    La: 'LA',
+    Lb: 'LB',
+    Lc: 'LC',
+    Li: 'LI',
+    Lk: 'LK',
+    Lr: 'LR',
+    Ls: 'LS',
+    Lt: 'LT',
+    Lu: 'LU',
+    Lv: 'LV',
+    Ly: 'LY',
+    Ma: 'MA',
+    Mc: 'MC',
+    Md: 'MD',
+    Me: 'ME',
+    Mf: 'MF',
+    Mg: 'MG',
+    Mh: 'MH',
+    Mk: 'MK',
+    Ml: 'ML',
+    Mm: 'MM',
+    Mn: 'MN',
+    Mo: 'MO',
+    Mp: 'MP',
+    Mq: 'MQ',
+    Mr: 'MR',
+    Ms: 'MS',
+    Mt: 'MT',
+    Mu: 'MU',
+    Mv: 'MV',
+    Mw: 'MW',
+    Mx: 'MX',
+    My: 'MY',
+    Mz: 'MZ',
+    Na: 'NA',
+    Nc: 'NC',
+    Ne: 'NE',
+    Nf: 'NF',
+    Ng: 'NG',
+    Ni: 'NI',
+    Nl: 'NL',
+    No: 'NO',
+    Np: 'NP',
+    Nr: 'NR',
+    Nu: 'NU',
+    Nz: 'NZ',
+    Om: 'OM',
+    Pa: 'PA',
+    Pe: 'PE',
+    Pf: 'PF',
+    Pg: 'PG',
+    Ph: 'PH',
+    Pk: 'PK',
+    Pl: 'PL',
+    Pm: 'PM',
+    Pn: 'PN',
+    Pr: 'PR',
+    Ps: 'PS',
+    Pt: 'PT',
+    Pw: 'PW',
+    Py: 'PY',
+    Qa: 'QA',
+    Re: 'RE',
+    Ro: 'RO',
+    Rs: 'RS',
+    Ru: 'RU',
+    Rw: 'RW',
+    Sa: 'SA',
+    Sb: 'SB',
+    Sc: 'SC',
+    Sd: 'SD',
+    Se: 'SE',
+    Sg: 'SG',
+    Sh: 'SH',
+    Si: 'SI',
+    Sj: 'SJ',
+    Sk: 'SK',
+    Sl: 'SL',
+    Sm: 'SM',
+    Sn: 'SN',
+    So: 'SO',
+    Sr: 'SR',
+    Ss: 'SS',
+    St: 'ST',
+    Sv: 'SV',
+    Sx: 'SX',
+    Sy: 'SY',
+    Sz: 'SZ',
+    Tc: 'TC',
+    Td: 'TD',
+    Tf: 'TF',
+    Tg: 'TG',
+    Th: 'TH',
+    Tj: 'TJ',
+    Tk: 'TK',
+    Tl: 'TL',
+    Tm: 'TM',
+    Tn: 'TN',
+    To: 'TO',
+    Tr: 'TR',
+    Tt: 'TT',
+    Tv: 'TV',
+    Tw: 'TW',
+    Tz: 'TZ',
+    Ua: 'UA',
+    Ug: 'UG',
+    Um: 'UM',
+    Us: 'US',
+    Uy: 'UY',
+    Uz: 'UZ',
+    Va: 'VA',
+    Vc: 'VC',
+    Ve: 'VE',
+    Vg: 'VG',
+    Vi: 'VI',
+    Vn: 'VN',
+    Vu: 'VU',
+    Wf: 'WF',
+    Ws: 'WS',
+    Xk: 'XK',
+    Ye: 'YE',
+    Yt: 'YT',
+    Za: 'ZA',
+    Zm: 'ZM',
+    Zw: 'ZW'
+} as const;
+
+export type PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum = typeof PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum[keyof typeof PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum];
+
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponseEligibility
+ */
+export interface PollRespondPost200ResponseEligibility {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PollRespondPost200ResponseEligibility
+     */
+    'domains'?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PollRespondPost200ResponseEligibility
+     */
+    'types'?: Array<PollRespondPost200ResponseEligibilityTypesEnum>;
+    /**
+     * 
+     * @type {PollRespondPost200ResponseEligibilityUniversity}
+     * @memberof PollRespondPost200ResponseEligibility
+     */
+    'university'?: PollRespondPost200ResponseEligibilityUniversity;
+}
+
+export const PollRespondPost200ResponseEligibilityTypesEnum = {
+    University: 'university',
+    Company: 'company'
+} as const;
+
+export type PollRespondPost200ResponseEligibilityTypesEnum = typeof PollRespondPost200ResponseEligibilityTypesEnum[keyof typeof PollRespondPost200ResponseEligibilityTypesEnum];
+
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponseEligibilityUniversity
+ */
+export interface PollRespondPost200ResponseEligibilityUniversity {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PollRespondPost200ResponseEligibilityUniversity
+     */
+    'types'?: Array<PollRespondPost200ResponseEligibilityUniversityTypesEnum>;
+    /**
+     * 
+     * @type {PollRespondPost200ResponseEligibilityUniversityStudent}
+     * @memberof PollRespondPost200ResponseEligibilityUniversity
+     */
+    'student'?: PollRespondPost200ResponseEligibilityUniversityStudent;
+}
+
+export const PollRespondPost200ResponseEligibilityUniversityTypesEnum = {
+    Student: 'student',
+    Alum: 'alum',
+    Faculty: 'faculty'
+} as const;
+
+export type PollRespondPost200ResponseEligibilityUniversityTypesEnum = typeof PollRespondPost200ResponseEligibilityUniversityTypesEnum[keyof typeof PollRespondPost200ResponseEligibilityUniversityTypesEnum];
+
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponseEligibilityUniversityStudent
+ */
+export interface PollRespondPost200ResponseEligibilityUniversityStudent {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PollRespondPost200ResponseEligibilityUniversityStudent
+     */
+    'countries'?: Array<PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PollRespondPost200ResponseEligibilityUniversityStudent
+     */
+    'campuses'?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PollRespondPost200ResponseEligibilityUniversityStudent
+     */
+    'programs'?: Array<string>;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof PollRespondPost200ResponseEligibilityUniversityStudent
+     */
+    'admissionYears'?: Array<number>;
+}
+
+export const PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum = {
+    Ad: 'AD',
+    Ae: 'AE',
+    Af: 'AF',
+    Ag: 'AG',
+    Ai: 'AI',
+    Al: 'AL',
+    Am: 'AM',
+    Ao: 'AO',
+    Aq: 'AQ',
+    Ar: 'AR',
+    As: 'AS',
+    At: 'AT',
+    Au: 'AU',
+    Aw: 'AW',
+    Ax: 'AX',
+    Az: 'AZ',
+    Ba: 'BA',
+    Bb: 'BB',
+    Bd: 'BD',
+    Be: 'BE',
+    Bf: 'BF',
+    Bg: 'BG',
+    Bh: 'BH',
+    Bi: 'BI',
+    Bj: 'BJ',
+    Bl: 'BL',
+    Bm: 'BM',
+    Bn: 'BN',
+    Bo: 'BO',
+    Bq: 'BQ',
+    Br: 'BR',
+    Bs: 'BS',
+    Bt: 'BT',
+    Bv: 'BV',
+    Bw: 'BW',
+    By: 'BY',
+    Bz: 'BZ',
+    Ca: 'CA',
+    Cc: 'CC',
+    Cd: 'CD',
+    Cf: 'CF',
+    Cg: 'CG',
+    Ch: 'CH',
+    Ci: 'CI',
+    Ck: 'CK',
+    Cl: 'CL',
+    Cm: 'CM',
+    Cn: 'CN',
+    Co: 'CO',
+    Cr: 'CR',
+    Cu: 'CU',
+    Cv: 'CV',
+    Cw: 'CW',
+    Cx: 'CX',
+    Cy: 'CY',
+    Cz: 'CZ',
+    De: 'DE',
+    Dj: 'DJ',
+    Dk: 'DK',
+    Dm: 'DM',
+    Do: 'DO',
+    Dz: 'DZ',
+    Ec: 'EC',
+    Ee: 'EE',
+    Eg: 'EG',
+    Eh: 'EH',
+    Er: 'ER',
+    Es: 'ES',
+    Et: 'ET',
+    Fi: 'FI',
+    Fj: 'FJ',
+    Fk: 'FK',
+    Fm: 'FM',
+    Fo: 'FO',
+    Fr: 'FR',
+    Ga: 'GA',
+    Gb: 'GB',
+    Gd: 'GD',
+    Ge: 'GE',
+    Gf: 'GF',
+    Gg: 'GG',
+    Gh: 'GH',
+    Gi: 'GI',
+    Gl: 'GL',
+    Gm: 'GM',
+    Gn: 'GN',
+    Gp: 'GP',
+    Gq: 'GQ',
+    Gr: 'GR',
+    Gs: 'GS',
+    Gt: 'GT',
+    Gu: 'GU',
+    Gw: 'GW',
+    Gy: 'GY',
+    Hk: 'HK',
+    Hm: 'HM',
+    Hn: 'HN',
+    Hr: 'HR',
+    Ht: 'HT',
+    Hu: 'HU',
+    Id: 'ID',
+    Ie: 'IE',
+    Il: 'IL',
+    Im: 'IM',
+    In: 'IN',
+    Io: 'IO',
+    Iq: 'IQ',
+    Ir: 'IR',
+    Is: 'IS',
+    It: 'IT',
+    Je: 'JE',
+    Jm: 'JM',
+    Jo: 'JO',
+    Jp: 'JP',
+    Ke: 'KE',
+    Kg: 'KG',
+    Kh: 'KH',
+    Ki: 'KI',
+    Km: 'KM',
+    Kn: 'KN',
+    Kp: 'KP',
+    Kr: 'KR',
+    Kw: 'KW',
+    Ky: 'KY',
+    Kz: 'KZ',
+    La: 'LA',
+    Lb: 'LB',
+    Lc: 'LC',
+    Li: 'LI',
+    Lk: 'LK',
+    Lr: 'LR',
+    Ls: 'LS',
+    Lt: 'LT',
+    Lu: 'LU',
+    Lv: 'LV',
+    Ly: 'LY',
+    Ma: 'MA',
+    Mc: 'MC',
+    Md: 'MD',
+    Me: 'ME',
+    Mf: 'MF',
+    Mg: 'MG',
+    Mh: 'MH',
+    Mk: 'MK',
+    Ml: 'ML',
+    Mm: 'MM',
+    Mn: 'MN',
+    Mo: 'MO',
+    Mp: 'MP',
+    Mq: 'MQ',
+    Mr: 'MR',
+    Ms: 'MS',
+    Mt: 'MT',
+    Mu: 'MU',
+    Mv: 'MV',
+    Mw: 'MW',
+    Mx: 'MX',
+    My: 'MY',
+    Mz: 'MZ',
+    Na: 'NA',
+    Nc: 'NC',
+    Ne: 'NE',
+    Nf: 'NF',
+    Ng: 'NG',
+    Ni: 'NI',
+    Nl: 'NL',
+    No: 'NO',
+    Np: 'NP',
+    Nr: 'NR',
+    Nu: 'NU',
+    Nz: 'NZ',
+    Om: 'OM',
+    Pa: 'PA',
+    Pe: 'PE',
+    Pf: 'PF',
+    Pg: 'PG',
+    Ph: 'PH',
+    Pk: 'PK',
+    Pl: 'PL',
+    Pm: 'PM',
+    Pn: 'PN',
+    Pr: 'PR',
+    Ps: 'PS',
+    Pt: 'PT',
+    Pw: 'PW',
+    Py: 'PY',
+    Qa: 'QA',
+    Re: 'RE',
+    Ro: 'RO',
+    Rs: 'RS',
+    Ru: 'RU',
+    Rw: 'RW',
+    Sa: 'SA',
+    Sb: 'SB',
+    Sc: 'SC',
+    Sd: 'SD',
+    Se: 'SE',
+    Sg: 'SG',
+    Sh: 'SH',
+    Si: 'SI',
+    Sj: 'SJ',
+    Sk: 'SK',
+    Sl: 'SL',
+    Sm: 'SM',
+    Sn: 'SN',
+    So: 'SO',
+    Sr: 'SR',
+    Ss: 'SS',
+    St: 'ST',
+    Sv: 'SV',
+    Sx: 'SX',
+    Sy: 'SY',
+    Sz: 'SZ',
+    Tc: 'TC',
+    Td: 'TD',
+    Tf: 'TF',
+    Tg: 'TG',
+    Th: 'TH',
+    Tj: 'TJ',
+    Tk: 'TK',
+    Tl: 'TL',
+    Tm: 'TM',
+    Tn: 'TN',
+    To: 'TO',
+    Tr: 'TR',
+    Tt: 'TT',
+    Tv: 'TV',
+    Tw: 'TW',
+    Tz: 'TZ',
+    Ua: 'UA',
+    Ug: 'UG',
+    Um: 'UM',
+    Us: 'US',
+    Uy: 'UY',
+    Uz: 'UZ',
+    Va: 'VA',
+    Vc: 'VC',
+    Ve: 'VE',
+    Vg: 'VG',
+    Vi: 'VI',
+    Vn: 'VN',
+    Vu: 'VU',
+    Wf: 'WF',
+    Ws: 'WS',
+    Xk: 'XK',
+    Ye: 'YE',
+    Yt: 'YT',
+    Za: 'ZA',
+    Zm: 'ZM',
+    Zw: 'ZW'
+} as const;
+
+export type PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum = typeof PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum[keyof typeof PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum];
+
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponseMetadata
+ */
+export interface PollRespondPost200ResponseMetadata {
+    /**
+     * 
+     * @type {string}
+     * @memberof PollRespondPost200ResponseMetadata
+     */
+    'uid': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PollRespondPost200ResponseMetadata
+     */
+    'updatedAt': string;
+}
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponsePayload
+ */
+export interface PollRespondPost200ResponsePayload {
+    /**
+     * 
+     * @type {PollCreatePostRequestPollData}
+     * @memberof PollRespondPost200ResponsePayload
+     */
+    'data': PollCreatePostRequestPollData;
+    /**
+     * 
+     * @type {PollRespondPost200ResponsePayloadResult}
+     * @memberof PollRespondPost200ResponsePayload
+     */
+    'result': PollRespondPost200ResponsePayloadResult;
+}
+/**
+ * 
+ * @export
+ * @interface PollRespondPost200ResponsePayloadResult
+ */
+export interface PollRespondPost200ResponsePayloadResult {
+    /**
+     * 
+     * @type {number}
+     * @memberof PollRespondPost200ResponsePayloadResult
+     */
+    'option1Response': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PollRespondPost200ResponsePayloadResult
+     */
+    'option2Response': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PollRespondPost200ResponsePayloadResult
+     */
+    'option3Response'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PollRespondPost200ResponsePayloadResult
+     */
+    'option4Response'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PollRespondPost200ResponsePayloadResult
+     */
+    'option5Response'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PollRespondPost200ResponsePayloadResult
+     */
+    'option6Response'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface PollRespondPostRequest
+ */
+export interface PollRespondPostRequest {
+    /**
+     * 
+     * @type {PollRespondPostRequestResponseToPoll}
+     * @memberof PollRespondPostRequest
+     */
+    'responseToPoll': PollRespondPostRequestResponseToPoll;
+    /**
+     * 
+     * @type {any}
+     * @memberof PollRespondPostRequest
+     */
+    'pres'?: any;
+}
+/**
+ * 
+ * @export
+ * @interface PollRespondPostRequestResponseToPoll
+ */
+export interface PollRespondPostRequestResponseToPoll {
+    /**
+     * 
+     * @type {string}
+     * @memberof PollRespondPostRequestResponseToPoll
+     */
+    'pollUid': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof PollRespondPostRequestResponseToPoll
+     */
+    'optionChosen': number;
+}
 
 /**
  * DefaultApi - axios parameter creator
@@ -3555,6 +3602,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {PollRespondPostRequest} pollRespondPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        pollRespondPost: async (pollRespondPostRequest: PollRespondPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'pollRespondPostRequest' is not null or undefined
+            assertParamExists('pollRespondPost', 'pollRespondPostRequest', pollRespondPostRequest)
+            const localVarPath = `/poll/respond`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(pollRespondPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -3628,7 +3714,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<FeedFetchMorePost200ResponseInner>>> {
+        async feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<PollRespondPost200Response>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.feedFetchMorePost(feedFetchMorePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -3638,7 +3724,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<FeedFetchMorePost200ResponseInner>>> {
+        async feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<PollRespondPost200Response>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.feedFetchRecentPost(feedFetchMorePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -3650,6 +3736,16 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          */
         async pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.pollCreatePost(pollCreatePostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {PollRespondPostRequest} pollRespondPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async pollRespondPost(pollRespondPostRequest: PollRespondPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PollRespondPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.pollRespondPost(pollRespondPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -3719,7 +3815,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<FeedFetchMorePost200ResponseInner>> {
+        feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<PollRespondPost200Response>> {
             return localVarFp.feedFetchMorePost(feedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -3728,7 +3824,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<FeedFetchMorePost200ResponseInner>> {
+        feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<PollRespondPost200Response>> {
             return localVarFp.feedFetchRecentPost(feedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -3739,6 +3835,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.pollCreatePost(pollCreatePostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {PollRespondPostRequest} pollRespondPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        pollRespondPost(pollRespondPostRequest: PollRespondPostRequest, options?: any): AxiosPromise<PollRespondPost200Response> {
+            return localVarFp.pollRespondPost(pollRespondPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -3844,6 +3949,17 @@ export class DefaultApi extends BaseAPI {
      */
     public pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).pollCreatePost(pollCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {PollRespondPostRequest} pollRespondPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public pollRespondPost(pollRespondPostRequest: PollRespondPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).pollRespondPost(pollRespondPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

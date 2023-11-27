@@ -466,6 +466,50 @@ export const zodpoll = z
     })
     .strict();
 export const zodpollUID = z.string(); // TODO it's a CID actually
+export const zodPostAs = z
+    .object({
+        domain: z.string(), // TODO: a domain like acme.edu
+        type: zodwebDomainType,
+        university: z
+            .object({
+                type: zoduniversityType, //TODO it's an enum...!
+                student: z
+                    .object({
+                        countries: z.array(zodcountryCode).optional(),
+                        campus: z.string().optional(),
+                        program: z.string().optional(),
+                        admissionYear: zodstudentAdmissionYear.optional(),
+                    })
+                    .strict()
+                    .optional(),
+            })
+            .strict()
+            .optional(),
+    })
+    .strict();
+export const zodEligibilities = z // TODO merge this with zodeligibility
+    .object({
+        domains: z.array(z.string()).optional(),
+        types: z.array(zodwebDomainType).optional(),
+        university: z
+            .object({
+                types: z.array(zoduniversityType).optional(),
+                student: z
+                    .object({
+                        countries: z.array(zodcountryCode).optional(),
+                        campuses: z.array(z.string()).optional(),
+                        programs: z.array(z.string()).optional(),
+                        admissionYears: z
+                            .array(zodstudentAdmissionYear)
+                            .optional(),
+                    })
+                    .strict()
+                    .optional(),
+            })
+            .strict()
+            .optional(),
+    })
+    .strict();
 export const zodextendedPollData = z
     .object({
         metadata: z
@@ -480,53 +524,31 @@ export const zodextendedPollData = z
                 result: zodpollResult,
             })
             .strict(),
-        author: z // TODO: this is just a postAs! pseudonym isn't even shared
-            .object({
-                domain: z.string(), // TODO: a domain like acme.edu
-                type: zodwebDomainType,
-                university: z
-                    .object({
-                        type: z.string(), //TODO it's an enum...!
-                        student: z
-                            .object({
-                                countries: z.array(zodcountryCode).optional(),
-                                campus: z.string().optional(),
-                                program: z.string().optional(),
-                                admissionYear:
-                                    zodstudentAdmissionYear.optional(),
-                            })
-                            .strict()
-                            .optional(),
-                    })
-                    .strict()
-                    .optional(),
-            })
-            .strict(),
-        eligibility: z
-            .object({
-                domains: z.array(z.string()).optional(),
-                types: z.array(zodwebDomainType).optional(),
-                university: z
-                    .object({
-                        types: z.array(zoduniversityType).optional(),
-                        student: z
-                            .object({
-                                countries: z.array(zodcountryCode).optional(),
-                                campuses: z.array(z.string()).optional(),
-                                programs: z.array(z.string()).optional(),
-                                admissionYears: z
-                                    .array(zodstudentAdmissionYear)
-                                    .optional(),
-                            })
-                            .strict()
-                            .optional(),
-                    })
-                    .strict()
-                    .optional(),
-            })
-            .strict(),
+        author: zodPostAs,
+        eligibility: zodEligibilities,
     })
     .strict();
+const zodOptionChosen = z.number().int().positive();
+export const zodResponseToPollPayload = z
+    .object({ pollUid: zodpollUID, optionChosen: zodOptionChosen })
+    .strict();
+export const zodResponseToPoll = z
+    .object({
+        payload: zodResponseToPollPayload,
+        metadata: z.object({ action: z.literal("respondToPoll") }),
+    })
+    .strict();
+export const zodPollOptionChosenAndPseudonym = z
+    .object({
+        respondentPseudonym: z.string().nonempty(),
+        optionChosen: zodOptionChosen,
+    })
+    .strict();
+
+export const zodPollResponsesByPollUid = z.record(
+    zodpollUID,
+    zodPollOptionChosenAndPseudonym
+);
 
 type Email = z.infer<typeof zodemail>;
 export type FormAndBlindedCredentials = z.infer<
@@ -575,3 +597,14 @@ export type WebDomainType = z.infer<typeof zodwebDomainType>;
 export const webDomainTypes = zodwebDomainType.options;
 export type UniversityType = z.infer<typeof zoduniversityType>;
 export const universityTypes = zoduniversityType.options;
+export type PostAs = z.infer<typeof zodPostAs>;
+export type Eligibilities = z.infer<typeof zodEligibilities>; // TODO merge this with Eligibility
+export type PollResult = z.infer<typeof zodpollResult>;
+export type PollData = z.infer<typeof zodpollData>;
+export type ResponseToPollPayload = z.infer<typeof zodResponseToPollPayload>;
+export type ResponseToPoll = z.infer<typeof zodResponseToPoll>;
+export type PollOptionAndPseudonym = z.infer<
+    typeof zodPollOptionChosenAndPseudonym
+>;
+export type PollResponsesByPollUid = z.infer<typeof zodPollResponsesByPollUid>;
+export type PollUid = z.infer<typeof zodpollUID>;

@@ -5,8 +5,12 @@ import {
 } from "@/api";
 import { unblindedSecretCredentialsPerTypeFrom } from "@/crypto/vc/credential";
 import { activeSessionUcanAxios, noAuthAxios } from "@/interceptors";
-import type { FormCredentialRequest } from "@/shared/types/zod";
+import type {
+    FormCredentialRequest,
+    ResponseToPollPayload,
+} from "@/shared/types/zod";
 import {
+    insertOrUpdateResponseToPoll,
     updateCredentials,
     updateFormCredentials,
 } from "@/store/reducers/session";
@@ -79,4 +83,36 @@ export async function createPoll(
         poll: pollContent,
         pres: presentation.toJSON(),
     });
+}
+
+export async function doRespondToPoll(
+    presentation: Presentation,
+    responseToPoll: ResponseToPollPayload,
+    updatePost: (responseToPoll: ResponseToPollPayload) => void
+): Promise<void> {
+    const generatedPseudonym =
+        presentation.spec.boundedPseudonyms === undefined
+            ? undefined
+            : Object.keys(presentation.spec.boundedPseudonyms)[0];
+    if (generatedPseudonym === undefined) {
+        throw new Error("Pseudonym was not generated in the proof");
+    }
+    const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        noAuthAxios
+    ).pollRespondPost({
+        responseToPoll: responseToPoll,
+        pres: presentation.toJSON(),
+    });
+    if (response.status >= 200 && response.status <= 299) {
+        // update local DB with the presentation
+        store.dispatch(
+            insertOrUpdateResponseToPoll({
+                respondentPseudonym: generatedPseudonym,
+                responsePayload: responseToPoll,
+            })
+        );
+        updatePost(responseToPoll);
+    }
 }

@@ -4,6 +4,7 @@ import { uint8ArrayToJSON } from "@/shared/common/arrbufs";
 import { base64 } from "@/shared/common/index";
 import { BBSPlusCredential as Credential } from "@docknetwork/crypto-wasm-ts";
 import type { SessionStatus } from "./reducers/session";
+import type { PollUid } from "@/shared/types/zod";
 
 const selectSessionsData = (state: RootState) => {
     return Object.values(state.sessions.sessions).sort((s1, s2) => {
@@ -54,6 +55,10 @@ export const selectSortedSessionsData = createSelector(
 
 export const selectActiveSessionEmail = (state: RootState) => {
     return state.sessions.activeSessionEmail;
+};
+
+export const forwardPollUid = (_state: RootState, pollUid: PollUid) => {
+    return pollUid;
 };
 
 export const selectSessions = (state: RootState) => {
@@ -123,6 +128,17 @@ export const selectActiveEncodedUnboundSecretCredential = createSelector(
     }
 );
 
+export const selectActiveEncodedTimeboundSecretCredential = createSelector(
+    [selectUnblindedSecretCredentialsPerType],
+    function (unblindedSecretCredentialsPerType) {
+        if (unblindedSecretCredentialsPerType === undefined) {
+            return undefined;
+        } else {
+            return unblindedSecretCredentialsPerType["timebound"]?.active;
+        }
+    }
+);
+
 export const selectActiveFormCredential = createSelector(
     [selectActiveEncodedFormCredential],
     function (activeEncodedFormCredential) {
@@ -180,7 +196,35 @@ export const selectActiveUnboundSecretCredential = createSelector(
             } catch (e) {
                 // TODO: better error handling
                 // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
-                console.error("Error while parsing secret credential", e);
+                console.error(
+                    "Error while parsing unbound secret credential",
+                    e
+                );
+                return undefined;
+            }
+        }
+    }
+);
+
+export const selectActiveTimeboundSecretCredential = createSelector(
+    [selectActiveEncodedTimeboundSecretCredential],
+    function (activeEncodedTimeboundSecretCredential) {
+        if (activeEncodedTimeboundSecretCredential === undefined) {
+            return undefined;
+        } else {
+            try {
+                return Credential.fromJSON(
+                    uint8ArrayToJSON(
+                        base64.decode(activeEncodedTimeboundSecretCredential)
+                    )
+                );
+            } catch (e) {
+                // TODO: better error handling
+                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
+                console.error(
+                    "Error while parsing timebound secret credential",
+                    e
+                );
                 return undefined;
             }
         }
@@ -207,3 +251,27 @@ export const selectActiveSessionStatus = (
     }
     return state.sessions.sessions[activeSessionEmail]?.status;
 };
+
+export const selectPollResponsesPerPollUid = createSelector(
+    [selectActiveSessionEmail, selectSessions],
+    function (activeSessionEmail, sessions) {
+        if (activeSessionEmail === undefined || activeSessionEmail === "") {
+            return undefined;
+        } else {
+            return sessions[activeSessionEmail]?.pollResponsesByPollUid;
+        }
+    }
+);
+
+export const selectPollResponsePerPollUid = createSelector(
+    [selectPollResponsesPerPollUid, forwardPollUid],
+    function (pollResponsesPerPollUid, pollUid) {
+        if (pollResponsesPerPollUid === undefined) {
+            return undefined;
+        } else if (!(pollUid in pollResponsesPerPollUid)) {
+            return undefined;
+        } else {
+            return pollResponsesPerPollUid[pollUid];
+        }
+    }
+);

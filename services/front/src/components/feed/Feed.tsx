@@ -5,7 +5,10 @@ import Container from "@mui/material/Container";
 import { Virtuoso } from "react-virtuoso";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Unstable_Grid2";
-import type { ExtendedPollData } from "@/shared/types/zod";
+import type {
+    ExtendedPollData,
+    ResponseToPollPayload,
+} from "@/shared/types/zod";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { doLoadMore, doLoadRecent, usePostsAndMeta } from "@/feed";
@@ -90,6 +93,50 @@ export function Feed() {
         }
     }, [activeSessionEmail]);
 
+    function updatePost(responseToPoll: ResponseToPollPayload): void {
+        const newPosts = [...posts];
+        console.log(posts);
+        for (const post of newPosts) {
+            if (post.metadata.uid === responseToPoll.pollUid) {
+                switch (responseToPoll.optionChosen) {
+                    case 1:
+                        post.payload.result.option1Response =
+                            post.payload.result.option1Response + 1;
+                        break;
+                    case 2:
+                        post.payload.result.option2Response =
+                            post.payload.result.option2Response + 1;
+                        break;
+                    case 3:
+                        post.payload.result.option3Response =
+                            post.payload.result.option3Response !== undefined
+                                ? post.payload.result.option3Response + 1
+                                : 1;
+                        break;
+                    case 4:
+                        post.payload.result.option4Response =
+                            post.payload.result.option4Response !== undefined
+                                ? post.payload.result.option4Response + 1
+                                : 1;
+                        break;
+                    case 3:
+                        post.payload.result.option5Response =
+                            post.payload.result.option5Response !== undefined
+                                ? post.payload.result.option5Response + 1
+                                : 1;
+                        break;
+                    case 3:
+                        post.payload.result.option6Response =
+                            post.payload.result.option6Response !== undefined
+                                ? post.payload.result.option6Response + 1
+                                : 1;
+                        break;
+                }
+            }
+        }
+        setPosts(newPosts);
+    }
+
     interface LoadingContext {
         loadingMore: boolean;
         loadingRecent: boolean;
@@ -106,7 +153,9 @@ export function Feed() {
             <Grid container justifyContent="center" alignItems="center">
                 <Grid>
                     {context?.loadingRecent ? (
-                        <CircularProgress color="inherit" />
+                        <Box sx={{ mt: 1, color: "#fff" }}>
+                            <CircularProgress size="1em" color="inherit" />
+                        </Box>
                     ) : null}
                 </Grid>
             </Grid>
@@ -118,7 +167,12 @@ export function Feed() {
             <Grid container justifyContent="center" alignItems="center">
                 <Grid>
                     {context?.loadingMore ? (
-                        <CircularProgress color="inherit" />
+                        <Box sx={{ mt: 1, color: "#fff" }}>
+                            <CircularProgress size="1em" color="inherit" />
+                        </Box>
+                    ) : context?.posts.length === undefined ||
+                      context?.posts.length === 0 ? (
+                        <Typography>Initializing...</Typography>
                     ) : context?.posts.length !== undefined &&
                       context.posts.length <= 4 ? (
                         <Button
@@ -172,7 +226,7 @@ export function Feed() {
                 itemContent={(_index, post) => {
                     return (
                         <Box key={`postview-${post.metadata.uid}`}>
-                            <PostView post={post} />
+                            <PostView post={post} updatePost={updatePost} />
                         </Box>
                     );
                 }}

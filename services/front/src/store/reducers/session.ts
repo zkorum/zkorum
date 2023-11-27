@@ -2,7 +2,9 @@ import type {
     Devices,
     EmailCredentialsPerEmail,
     FormCredentialsPerEmail,
+    ResponseToPollPayload,
     UnblindedSecretCredentialsPerType,
+    PollResponsesByPollUid,
 } from "@/shared/types/zod";
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
@@ -35,6 +37,7 @@ export interface SessionData {
     emailCredentialsPerEmail?: EmailCredentialsPerEmail;
     formCredentialsPerEmail?: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType?: UnblindedSecretCredentialsPerType;
+    pollResponsesByPollUid?: PollResponsesByPollUid;
 }
 
 interface VerifyProps {
@@ -72,6 +75,11 @@ interface UpdateCredentialsProps {
 
 interface UpdateFormCredentialsProps {
     formCredentialsPerEmail: FormCredentialsPerEmail;
+}
+
+interface InsertOrUpdateResponseToPollProps {
+    respondentPseudonym: string;
+    responsePayload: ResponseToPollPayload;
 }
 
 // Define the initial state using that type
@@ -231,6 +239,40 @@ export const sessionSlice = createSlice({
                     action.payload.unblindedSecretCredentialsPerType;
             }
         },
+        insertOrUpdateResponseToPoll: (
+            state,
+            action: PayloadAction<InsertOrUpdateResponseToPollProps>
+        ) => {
+            if (
+                state.activeSessionEmail in state.sessions &&
+                state.sessions[state.activeSessionEmail].status === "logged-in"
+            ) {
+                if (
+                    state.sessions[state.activeSessionEmail]
+                        .pollResponsesByPollUid === undefined
+                ) {
+                    state.sessions[
+                        state.activeSessionEmail
+                    ].pollResponsesByPollUid = {
+                        [action.payload.responsePayload.pollUid]: {
+                            optionChosen:
+                                action.payload.responsePayload.optionChosen,
+                            respondentPseudonym:
+                                action.payload.respondentPseudonym,
+                        },
+                    };
+                } else {
+                    (
+                        state.sessions[state.activeSessionEmail]
+                            .pollResponsesByPollUid as PollResponsesByPollUid
+                    )[action.payload.responsePayload.pollUid] = {
+                        optionChosen:
+                            action.payload.responsePayload.optionChosen,
+                        respondentPseudonym: action.payload.respondentPseudonym,
+                    };
+                }
+            }
+        },
         updateFormCredentials: (
             state,
             action: PayloadAction<UpdateFormCredentialsProps>
@@ -261,6 +303,7 @@ export const {
     setPendingSessionCodeExpiry,
     updateCredentials,
     updateFormCredentials,
+    insertOrUpdateResponseToPoll,
 } = sessionSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type

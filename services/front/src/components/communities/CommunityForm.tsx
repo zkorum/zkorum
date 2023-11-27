@@ -162,8 +162,8 @@ export function CommunityForm({ email }: CommunityFormProps) {
                         students!
                     </Typography>
                     <Typography component="div" sx={{ mb: 1 }}>
-                        The forms result will only be visible to ZKorum and to
-                        the other members of your community.
+                        The forms result will only be visible to ZKorum the
+                        other members of your community.
                     </Typography>
                     <Typography component="div" sx={{ mb: 1 }}>
                         For now,{" "}
@@ -184,14 +184,15 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     </Typography>
                 </Box>
                 <Box sx={{ my: 2 }}>
-                    <FormControl required>
+                    <FormControl disabled required>
                         <FormLabel id="form-label-which-type-form">
-                            Are you a ...
+                            Are you a ... (only student supported for now)
                         </FormLabel>
                         <RadioGroup
                             aria-labelledby="radio-group-which-type-form"
                             name="radio-group-which-type-form"
                             value={type}
+                            defaultValue={zoduniversityType.enum.student}
                             onChange={handleChangeType}
                         >
                             <FormControlLabel

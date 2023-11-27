@@ -156,6 +156,7 @@ export function BottomNavbar() {
                         sx={{ minWidth: "60px" }}
                     />
                     <BottomNavigationAction
+                        disabled
                         label={Nav.Notifications}
                         value={Nav.Notifications}
                         icon={
@@ -167,9 +168,9 @@ export function BottomNavbar() {
                                         top: 3,
                                     },
                                 }}
-                                badgeContent={4}
+                                // badgeContent={4}
                             >
-                                <NotificationsIcon />
+                                <NotificationsIcon color="disabled" />
                             </Badge>
                         }
                         sx={{ minWidth: "60px" }}

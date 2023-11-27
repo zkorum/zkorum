@@ -307,7 +307,6 @@ export const pseudonymTable = pgTable("pseudonym", {
 export const pollTable = pgTable("poll", {
     id: serial("id").primaryKey(),
     presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
-    // TODO add the other fields - maybe create tables for author, postAs, eligibility and pollContent
     timestampedPresentationCID: char("time_pres_cid", { length: 61 }) // see shared/test/common/cid.test.ts for length
         .notNull()
         .unique(), // CID calculated from stringified object representing pres+created_at. This is the unique identifier representing the poll globally.
@@ -330,6 +329,25 @@ export const pollTable = pgTable("poll", {
     option5Response: integer("option5_response"),
     option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
     option6Response: integer("option6_response"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", {
+        mode: "date",
+        precision: 0, // no milliseconds, to avoid weird bugs: https://github.com/drizzle-team/drizzle-orm/issues/1061#issuecomment-1824658436
+    })
+        .defaultNow()
+        .notNull(),
+});
+
+export const pollResponseTable = pgTable("poll_response", {
+    id: serial("id").primaryKey(),
+    presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
+    authorId: integer("author_id") // "postAs"
+        .notNull()
+        .references(() => pseudonymTable.id), // the author of the poll
+    pollId: integer("poll_id")
+        .notNull()
+        .references(() => pollTable.id),
+    optionChosen: integer("option_chosen").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at", {
         mode: "date",

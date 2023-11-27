@@ -51,6 +51,7 @@ import { toCID, decodeCID } from "./shared/common/cid.js";
 import isEqual from "lodash/isEqual.js";
 import { stringToBytes } from "./shared/common/arrbufs.js";
 import { scopeWith } from "./shared/common/util.js";
+import { buildResponseToPollFromPayload } from "./shared/shared.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -822,6 +823,32 @@ server.after(() => {
                 poll: request.body.poll,
                 pseudonym: pseudonym,
                 postAs: postAs,
+            });
+        },
+    });
+    server.withTypeProvider<ZodTypeProvider>().post("/poll/respond", {
+        schema: {
+            body: Dto.respondPollRequest,
+            response: {
+                200: Dto.pollRespond200,
+            },
+        },
+        handler: async (request, _reply) => {
+            const { pseudonym, postAs, presentation } =
+                await verifyPresentation({
+                    pres: request.body.pres,
+                    content: buildResponseToPollFromPayload(
+                        request.body.responseToPoll
+                    ),
+                    expectedSecretCredentialType: "timebound",
+                });
+            return await Service.respondToPoll({
+                db: db,
+                presentation: presentation,
+                response: request.body.responseToPoll,
+                pseudonym: pseudonym,
+                postAs: postAs,
+                httpErrors: server.httpErrors,
             });
         },
     });

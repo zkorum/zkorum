@@ -36,7 +36,10 @@ import {
     essecProgramStrToEnum,
     essecProgramToString,
 } from "@/shared/types/university";
-import { currentStudentsAdmissionYears } from "@/shared/types/zod";
+import {
+    currentStudentsAdmissionYears,
+    type UniversityType,
+} from "@/shared/types/zod";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -59,16 +62,19 @@ import {
     BBSPlusPublicKeyG2 as PublicKey,
     randomFieldElement,
     BBSPlusCredential as Credential,
-    SUBJECT_STR,
 } from "@docknetwork/crypto-wasm-ts";
 import { stringToBytes } from "@/shared/common/arrbufs";
 import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
-import { toEncodedCID } from "@/shared/common/cid";
-import { MAX_LENGTH_OPTION, MAX_LENGTH_QUESTION } from "@/shared/shared";
+import {
+    MAX_LENGTH_OPTION,
+    MAX_LENGTH_QUESTION,
+    attributesFormRevealedFromPostAs,
+    scopeFromPostAs,
+    buildContext,
+} from "@/shared/shared";
 import { maybeInitWasm } from "@/crypto/vc/credential";
 import { createPoll } from "@/request/credential";
 import type { PollCreatePostRequestPoll } from "@/api";
-import { scopeWith } from "@/shared/common/util";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { doLoadMore, doLoadRecent, type PostsType } from "@/feed";
 
@@ -444,19 +450,6 @@ export function PostDialog({
         }
     }
 
-    interface PostAsProps {
-        postAsStudent: boolean;
-        postAsCampus: boolean;
-        postAsProgram: boolean;
-        postAsAdmissionYear: boolean;
-        postAsCountries: boolean;
-    }
-
-    interface AttributesFormRevealedFromPostAsProps {
-        postAs: PostAsProps;
-        credential: Credential;
-    }
-
     // const [postAsStudentChecked, setPostAsStudentChecked] =
     //     React.useState<boolean>(false);
     // const [postAsCampusChecked, setPostAsCampusChecked] =
@@ -468,118 +461,6 @@ export function PostDialog({
     // const [postAsFrench, setPostAsFrench] = React.useState<boolean>(false);
     // const [postAsInternational, setPostAsInternational] =
     //     React.useState<boolean>(false);
-
-    function scopeFromPostAs({
-        postAsStudent,
-        postAsCampus,
-        postAsProgram,
-        postAsAdmissionYear,
-        postAsCountries,
-    }: PostAsProps): string {
-        let scope = "base";
-        if (postAsStudent) {
-            scope = scopeWith(scope, "student");
-        }
-        if (postAsCampus) {
-            scope = scopeWith(scope, "campus");
-        }
-        if (postAsProgram) {
-            scope = scopeWith(scope, "program");
-        }
-        if (postAsAdmissionYear) {
-            scope = scopeWith(scope, "admissionYear");
-        }
-        if (postAsCountries) {
-            scope = scopeWith(scope, "countries");
-        }
-        return scope;
-    }
-
-    interface AddIfExistsProps {
-        credential: Credential;
-        attribute: string;
-        set: Set<string>;
-    }
-
-    function addIfExists({ credential, attribute, set }: AddIfExistsProps) {
-        const flattenedSchemaAttributes = credential.schema.flatten()[0];
-        const flattenedSchemaAttributesFiltered =
-            flattenedSchemaAttributes.filter((attr) =>
-                attr.includes(attribute)
-            );
-        if (flattenedSchemaAttributesFiltered.length !== 0) {
-            set.add(attribute);
-        } else {
-            console.warn(
-                `Cannot reveal attribute '${attribute}' that is not in schema`,
-                flattenedSchemaAttributes
-            );
-        }
-    }
-
-    function attributesFormRevealedFromPostAs({
-        postAs,
-        credential,
-    }: AttributesFormRevealedFromPostAsProps): Set<string> {
-        const {
-            postAsStudent,
-            postAsCampus,
-            postAsProgram,
-            postAsAdmissionYear,
-            postAsCountries,
-        } = postAs;
-        const attributesRevealed = new Set<string>();
-        if (postAsStudent) {
-            addIfExists({
-                attribute: `${SUBJECT_STR}.typeSpecific.type`,
-                credential: credential,
-                set: attributesRevealed,
-            });
-        }
-        if (postAsCampus) {
-            addIfExists({
-                attribute: `${SUBJECT_STR}.typeSpecific.campus`,
-                credential: credential,
-                set: attributesRevealed,
-            });
-        }
-        if (postAsProgram) {
-            addIfExists({
-                attribute: `${SUBJECT_STR}.typeSpecific.program`,
-                credential: credential,
-                set: attributesRevealed,
-            });
-        }
-        if (postAsAdmissionYear) {
-            addIfExists({
-                attribute: `${SUBJECT_STR}.typeSpecific.admissionYear`,
-                credential: credential,
-                set: attributesRevealed,
-            });
-        }
-        if (postAsCountries) {
-            const attrCountries = (
-                (credential.subject as any)["typeSpecific"] as any
-            )[ // TODO: countries should not be in typeSpecific
-                `countries`
-            ];
-            const justMyCountries = Object.keys(
-                attrCountries as { [key: string]: boolean }
-            ).filter((key) => attrCountries[key] === true);
-            for (const countryCode of justMyCountries) {
-                addIfExists({
-                    attribute: `${SUBJECT_STR}.typeSpecific.countries.${countryCode}`,
-                    credential: credential,
-                    set: attributesRevealed,
-                });
-            }
-        }
-        return attributesRevealed;
-    }
-
-    async function buildContext(content: string): Promise<string> {
-        return await toEncodedCID(content);
-    }
 
     async function onCreate() {
         setHasModifiedQuestion(true);
@@ -810,7 +691,10 @@ export function PostDialog({
                 const presentation = builder.finalize();
                 dispatch(showInfo(sendingPost));
                 await createPoll(presentation, newPoll);
-                asyncLoadRecent(); // refresh feed to show newly created post
+                if (posts.length > 0) {
+                    // only act when feed is not empty! because loadMore will already fetch first data
+                    asyncLoadRecent(); // refresh feed to show newly created post
+                }
                 dispatch(showSuccess(pollCreated));
             } else {
                 console.warn(
@@ -854,15 +738,15 @@ export function PostDialog({
         ) {
             const typeSpecific = (activeFormCredential?.subject as any)
                 ?.typeSpecific;
-            const univType = typeSpecific.type as string;
+            const univType = typeSpecific.type as UniversityType;
             switch (univType) {
-                case "Student":
+                case "student":
                     postAsStudent = getPostAsStudent(typeSpecific);
                     break;
-                case "Alum":
+                case "alum":
                     postAsAlum = getPostAsAlum(typeSpecific);
                     break;
-                case "Faculty/Staff member":
+                case "faculty":
                     postAsFaculty = getPostAsFaculty(typeSpecific);
                     break;
             }
@@ -1460,6 +1344,8 @@ export function PostDialog({
                                                 fullWidth
                                                 required
                                                 multiline
+                                                minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
+                                                maxRows={4} //  https://stackoverflow.com/a/72789474/11046178c
                                                 id="question-poll"
                                                 label="Your question...❓"
                                                 placeholder="E.g., How often do you hang out with people from other cultures?"
@@ -1511,6 +1397,8 @@ export function PostDialog({
                                                 variant="standard"
                                                 fullWidth
                                                 multiline
+                                                minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
+                                                maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
                                                 required
                                                 id={`option-1-poll`}
                                                 label={`Option 1`}
@@ -1558,6 +1446,8 @@ export function PostDialog({
                                                 variant="standard"
                                                 fullWidth
                                                 multiline
+                                                minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
+                                                maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
                                                 required
                                                 id={`option-2-poll`}
                                                 label={`Option 2`}
@@ -1619,6 +1509,8 @@ export function PostDialog({
                                                     variant="standard"
                                                     fullWidth
                                                     multiline
+                                                    minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
+                                                    maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
                                                     id={`option-3-poll`}
                                                     label={`Option 3`}
                                                     placeholder="E.g., Sometimes"
@@ -1660,6 +1552,8 @@ export function PostDialog({
                                                     variant="standard"
                                                     fullWidth
                                                     multiline
+                                                    minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
+                                                    maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
                                                     id={`option-4-poll`}
                                                     label={
                                                         option3Shown
@@ -1705,6 +1599,8 @@ export function PostDialog({
                                                     variant="standard"
                                                     fullWidth
                                                     multiline
+                                                    minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
+                                                    maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
                                                     id={`option-5-poll`}
                                                     label={
                                                         option4Shown &&
@@ -1754,6 +1650,8 @@ export function PostDialog({
                                                     variant="standard"
                                                     fullWidth
                                                     multiline
+                                                    minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
+                                                    maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
                                                     id={`option-6-poll`}
                                                     label={
                                                         option5Shown &&

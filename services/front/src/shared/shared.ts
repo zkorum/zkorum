@@ -3,6 +3,18 @@
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
 import localforage from "localforage";
+import {
+    BBSPlusCredential as Credential,
+    SUBJECT_STR,
+} from "@docknetwork/crypto-wasm-ts";
+import { scopeWith } from "./common/util.js";
+import type {
+    Eligibilities,
+    ResponseToPoll,
+    ResponseToPollPayload,
+} from "./types/zod.js";
+import type { TCountryCode } from "countries-list";
+import { toEncodedCID } from "./common/cid.js";
 
 /**
  * Is this browser supported?
@@ -66,4 +78,229 @@ export function toUnionUndefined<T>(value: T | null): T | undefined {
         return undefined;
     }
     return value;
+}
+
+interface AddIfExistsProps {
+    credential: Credential;
+    attribute: string;
+    set: Set<string>;
+}
+
+function addIfExists({ credential, attribute, set }: AddIfExistsProps) {
+    const flattenedSchemaAttributes = credential.schema.flatten()[0];
+    const flattenedSchemaAttributesFiltered = flattenedSchemaAttributes.filter(
+        (attr) => attr.includes(attribute)
+    );
+    if (flattenedSchemaAttributesFiltered.length !== 0) {
+        set.add(attribute);
+    } else {
+        console.warn(
+            `Cannot reveal attribute '${attribute}' that is not in schema`,
+            flattenedSchemaAttributes
+        );
+    }
+}
+
+export interface PostAsProps {
+    postAsStudent: boolean;
+    postAsCampus: boolean;
+    postAsProgram: boolean;
+    postAsAdmissionYear: boolean;
+    postAsCountries: boolean;
+}
+
+interface AttributesFormRevealedFromPostAsProps {
+    postAs: PostAsProps;
+    credential: Credential;
+}
+
+export function attributesFormRevealedFromPostAs({
+    postAs,
+    credential,
+}: AttributesFormRevealedFromPostAsProps): Set<string> {
+    const {
+        postAsStudent,
+        postAsCampus,
+        postAsProgram,
+        postAsAdmissionYear,
+        postAsCountries,
+    } = postAs;
+    const attributesRevealed = new Set<string>();
+    if (postAsStudent) {
+        addIfExists({
+            attribute: `${SUBJECT_STR}.typeSpecific.type`,
+            credential: credential,
+            set: attributesRevealed,
+        });
+    }
+    if (postAsCampus) {
+        addIfExists({
+            attribute: `${SUBJECT_STR}.typeSpecific.campus`,
+            credential: credential,
+            set: attributesRevealed,
+        });
+    }
+    if (postAsProgram) {
+        addIfExists({
+            attribute: `${SUBJECT_STR}.typeSpecific.program`,
+            credential: credential,
+            set: attributesRevealed,
+        });
+    }
+    if (postAsAdmissionYear) {
+        addIfExists({
+            attribute: `${SUBJECT_STR}.typeSpecific.admissionYear`,
+            credential: credential,
+            set: attributesRevealed,
+        });
+    }
+    if (postAsCountries) {
+        const attrCountries = (
+            (credential.subject as any)["typeSpecific"] as any
+        )[ // TODO: countries should not be in typeSpecific
+            `countries`
+        ];
+        const justMyCountries = Object.keys(
+            attrCountries as { [key: string]: boolean }
+        ).filter((key) => attrCountries[key] === true);
+        for (const countryCode of justMyCountries) {
+            addIfExists({
+                attribute: `${SUBJECT_STR}.typeSpecific.countries.${countryCode}`,
+                credential: credential,
+                set: attributesRevealed,
+            });
+        }
+    }
+    return attributesRevealed;
+}
+
+export function scopeFromPostAs({
+    postAsStudent,
+    postAsCampus,
+    postAsProgram,
+    postAsAdmissionYear,
+    postAsCountries,
+}: PostAsProps): string {
+    let scope = "base";
+    if (postAsStudent) {
+        scope = scopeWith(scope, "student");
+    }
+    if (postAsCampus) {
+        scope = scopeWith(scope, "campus");
+    }
+    if (postAsProgram) {
+        scope = scopeWith(scope, "program");
+    }
+    if (postAsAdmissionYear) {
+        scope = scopeWith(scope, "admissionYear");
+    }
+    if (postAsCountries) {
+        scope = scopeWith(scope, "countries");
+    }
+    return scope;
+}
+
+interface PostAsFromEligibility {
+    eligibility: Eligibilities;
+    mustPostAsForCampus: boolean;
+    mustPostAsForProgram: boolean;
+    mustPostAsForAdmissionYear: boolean;
+    mustPostAsForCountries: boolean;
+}
+export function postAsFromEligibility({
+    eligibility,
+    mustPostAsForCampus,
+    mustPostAsForProgram,
+    mustPostAsForAdmissionYear,
+    mustPostAsForCountries,
+}: PostAsFromEligibility): PostAsProps {
+    const postAs = {
+        postAsStudent: false,
+        postAsCampus: false,
+        postAsProgram: false,
+        postAsAdmissionYear: false,
+        postAsCountries: false,
+    };
+    if (eligibility?.university?.student === undefined) {
+        return postAs;
+    }
+    return {
+        postAsStudent: true,
+        postAsCampus: mustPostAsForCampus,
+        postAsProgram: mustPostAsForProgram,
+        postAsAdmissionYear: mustPostAsForAdmissionYear,
+        postAsCountries: mustPostAsForCountries,
+    };
+    // TODO: alum and faculty
+}
+
+export function mustPostAsForList<T>(
+    value?: T,
+    eligibilityList?: T[]
+): boolean {
+    return isEligibleForList(value, eligibilityList, false);
+}
+
+export function mustPostAsForCountries(
+    countries?: Record<TCountryCode, boolean>,
+    eligibilityCountries?: TCountryCode[]
+): boolean {
+    return isEligibleForCountries(countries, eligibilityCountries, false);
+}
+
+export function isEligibleForList<T>(
+    value: T,
+    eligibilityList: T[] | undefined,
+    returnedValueIfListUndefined: boolean = true
+): boolean {
+    if (eligibilityList === undefined) {
+        return returnedValueIfListUndefined;
+    }
+    if (value === undefined) {
+        return false;
+    } else {
+        if (eligibilityList.includes(value)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+export function isEligibleForCountries(
+    countries?: Record<TCountryCode, boolean>,
+    eligibilityCountries?: TCountryCode[],
+    returnedValueIfListUndefined: boolean = true
+): boolean {
+    if (eligibilityCountries === undefined) {
+        return returnedValueIfListUndefined;
+    }
+    if (countries === undefined) {
+        return false;
+    } else {
+        const myCountryCodes = Object.keys(countries).filter(
+            (countryCode) => countries[countryCode as TCountryCode] === true
+        );
+        for (const eligibilityCountryCode of eligibilityCountries) {
+            if (myCountryCodes.includes(eligibilityCountryCode)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+export async function buildContext(content: string): Promise<string> {
+    return await toEncodedCID(content);
+}
+
+export function buildResponseToPollFromPayload(
+    payload: ResponseToPollPayload
+): ResponseToPoll {
+    return {
+        metadata: {
+            action: "respondToPoll",
+        },
+        payload: payload,
+    };
 }
