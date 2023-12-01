@@ -628,308 +628,338 @@ async function verifyPresentation({
     }
 }
 
+const apiVersion = "v1";
+
 server.after(() => {
-    server.withTypeProvider<ZodTypeProvider>().post("/auth/authenticate", {
-        schema: {
-            body: Dto.authenticateRequestBody,
-            response: { 200: Dto.authenticateResponse, 409: Dto.auth409 },
-        },
-        handler: async (request, _reply) => {
-            // This endpoint is accessible without being logged in
-            // this endpoint could be especially subject to attacks such as DDoS or man-in-the-middle (to associate their own DID instead of the legitimate user's ones for example)
-            // => TODO: restrict this endpoint and the "verifyOtp" endpoint to use same IP Address: the correct IP Address must part of the UCAN
-            // => TODO: allow email owners to report spam/attacks and to request blocking the IP Addresses that attempted access
-            // The web infrastructure is as it is and IP Addresses are the backbone over which our HTTP endpoints function, we can avoid storing/logging IP Addresses as much as possible, but we can't fix it magically
-            // As a social network (hopefully) subject to heavy traffic, the whole app will need to be protected via a privacy-preserving alternative to CAPTCHA anyway, such as Turnstile: https://developers.cloudflare.com/turnstile/
-            // => TODO: encourage users to use a mixnet such as Tor to preserve their privacy.
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: undefined,
-            });
-            const { type, userId } = await Service.getAuthenticateType(
-                db,
-                request.body,
-                didWrite,
-                server.httpErrors
-            );
-            return await Service.authenticateAttempt(
-                db,
-                type,
-                request.body,
-                userId,
-                config.MINUTES_BEFORE_EMAIL_OTP_EXPIRY,
-                didWrite,
-                config.THROTTLE_EMAIL_MINUTES_INTERVAL,
-                server.httpErrors
-            ).then(({ codeExpiry, nextCodeSoonestTime }) => {
-                // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
-                return {
-                    codeExpiry: codeExpiry,
-                    nextCodeSoonestTime: nextCodeSoonestTime,
-                };
-            });
-        },
-    });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/auth/authenticate`, {
+            schema: {
+                body: Dto.authenticateRequestBody,
+                response: { 200: Dto.authenticateResponse, 409: Dto.auth409 },
+            },
+            handler: async (request, _reply) => {
+                // This endpoint is accessible without being logged in
+                // this endpoint could be especially subject to attacks such as DDoS or man-in-the-middle (to associate their own DID instead of the legitimate user's ones for example)
+                // => TODO: restrict this endpoint and the "verifyOtp" endpoint to use same IP Address: the correct IP Address must part of the UCAN
+                // => TODO: allow email owners to report spam/attacks and to request blocking the IP Addresses that attempted access
+                // The web infrastructure is as it is and IP Addresses are the backbone over which our HTTP endpoints function, we can avoid storing/logging IP Addresses as much as possible, but we can't fix it magically
+                // As a social network (hopefully) subject to heavy traffic, the whole app will need to be protected via a privacy-preserving alternative to CAPTCHA anyway, such as Turnstile: https://developers.cloudflare.com/turnstile/
+                // => TODO: encourage users to use a mixnet such as Tor to preserve their privacy.
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
+                const { type, userId } = await Service.getAuthenticateType(
+                    db,
+                    request.body,
+                    didWrite,
+                    server.httpErrors
+                );
+                return await Service.authenticateAttempt(
+                    db,
+                    type,
+                    request.body,
+                    userId,
+                    config.MINUTES_BEFORE_EMAIL_OTP_EXPIRY,
+                    didWrite,
+                    config.THROTTLE_EMAIL_MINUTES_INTERVAL,
+                    server.httpErrors
+                ).then(({ codeExpiry, nextCodeSoonestTime }) => {
+                    // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
+                    return {
+                        codeExpiry: codeExpiry,
+                        nextCodeSoonestTime: nextCodeSoonestTime,
+                    };
+                });
+            },
+        });
 
     // TODO: for now, there is no 2FA so when this returns true, it means the user has finished logging in/registering - but it will change
     // TODO: for now there is no way to communicate "isTrusted", it's set to true automatically - but it will change
-    server.withTypeProvider<ZodTypeProvider>().post("/auth/verifyOtp", {
-        schema: {
-            body: Dto.verifyOtpReqBody,
-            response: { 200: Dto.verifyOtp200, 409: Dto.auth409 },
-        },
-        handler: async (request, _reply) => {
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: undefined,
-            });
-            return await Service.verifyOtp({
-                db,
-                maxAttempt: config.EMAIL_OTP_MAX_ATTEMPT_AMOUNT,
-
-                didWrite,
-                code: request.body.code,
-                encryptedSymmKey: request.body.encryptedSymmKey,
-                sk,
-                httpErrors: server.httpErrors,
-                unboundSecretCredentialRequest:
-                    request.body.unboundSecretCredentialRequest,
-                timeboundSecretCredentialRequest:
-                    request.body.timeboundSecretCredentialRequest,
-            });
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().post("/auth/logout", {
-        handler: async (request, _reply) => {
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: {
-                    isLoggedIn: true,
-                },
-            });
-            await Service.logout(db, didWrite);
-        },
-    });
-    // TODO
-    server.withTypeProvider<ZodTypeProvider>().post("/auth/sync", {
-        schema: {
-            // body: Dto.createOrGetEmailCredentialsReq,
-            response: {
-                // TODO 200: Dto.createOrGetEmailCredentialsRes,
-                409: Dto.sync409,
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/auth/verifyOtp`, {
+            schema: {
+                body: Dto.verifyOtpReqBody,
+                response: { 200: Dto.verifyOtp200, 409: Dto.auth409 },
             },
-        },
-        handler: async (request, _reply) => {
-            const _didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: {
-                    isLoggedIn: true,
-                    isSyncing: false,
-                },
-            });
-            // TODO
-            // return await AuthService.syncAttempt(db, didWrite);
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().post("/credential/get", {
-        schema: {
-            response: {
-                200: Dto.userCredentials,
-            },
-        },
-        handler: async (request, _reply) => {
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: {
-                    isLoggedIn: true,
-                    isSyncing: true,
-                },
-            });
-            return await Service.getUserCredentials(db, didWrite);
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().post("/credential/request", {
-        schema: {
-            body: Dto.requestCredentials,
-            response: {
-                200: Dto.requestCredentials200,
-            },
-        },
-        handler: async (request, _reply) => {
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: {
-                    isLoggedIn: true,
-                    isSyncing: true,
-                },
-            });
-            const email = request.body.email;
-            const isEmailAssociatedWithDevice =
-                await Service.isEmailAssociatedWithDevice(db, didWrite, email);
-            if (!isEmailAssociatedWithDevice) {
-                throw server.httpErrors.forbidden(
-                    `Email ${email} is not associated with this didWrite ${didWrite}`
-                );
-            }
-
-            const existingFormCredentialsPerEmail: FormCredentialsPerEmail =
-                await Service.getFormCredentialsPerEmailFromDidWrite(
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
+                return await Service.verifyOtp({
                     db,
-                    didWrite
-                );
-            if (
-                hasActiveEmailOrFormCredential(
-                    email,
-                    existingFormCredentialsPerEmail
-                )
-            ) {
-                server.log.warn("Form credentials requested but already exist");
-                return {
-                    formCredentialsPerEmail: existingFormCredentialsPerEmail,
-                };
-            } else {
-                const uid = await Service.getUidFromDevice(db, didWrite);
-                const encodedFormCredential =
-                    await Service.createAndStoreFormCredential({
-                        db,
-                        email,
-                        formCredentialRequest:
-                            request.body.formCredentialRequest,
-                        uid,
-                        sk,
-                    });
-                const formCredentialsPerEmail = addActiveEmailOrFormCredential(
-                    email,
-                    encodedFormCredential,
-                    existingFormCredentialsPerEmail
-                );
-                return {
-                    formCredentialsPerEmail,
-                };
-            }
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().post("/poll/create", {
-        schema: {
-            body: Dto.createPollRequest,
-            // response: {
-            //     200: Dto.createPollRequest,
-            // },
-        },
-        handler: async (request, _reply) => {
-            const { pseudonym, postAs, presentation } =
-                await verifyPresentation({
-                    pres: request.body.pres,
-                    content: request.body.poll,
-                    expectedSecretCredentialType: "unbound",
+                    maxAttempt: config.EMAIL_OTP_MAX_ATTEMPT_AMOUNT,
+
+                    didWrite,
+                    code: request.body.code,
+                    encryptedSymmKey: request.body.encryptedSymmKey,
+                    sk,
+                    httpErrors: server.httpErrors,
+                    unboundSecretCredentialRequest:
+                        request.body.unboundSecretCredentialRequest,
+                    timeboundSecretCredentialRequest:
+                        request.body.timeboundSecretCredentialRequest,
                 });
-            await Service.createPoll({
-                db: db,
-                presentation: presentation,
-                poll: request.body.poll,
-                pseudonym: pseudonym,
-                postAs: postAs,
-            });
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().post("/poll/respond", {
-        schema: {
-            body: Dto.respondPollRequest,
-            response: {
-                200: Dto.pollRespond200,
             },
-        },
-        handler: async (request, _reply) => {
-            const { pseudonym, postAs, presentation } =
-                await verifyPresentation({
-                    pres: request.body.pres,
-                    content: buildResponseToPollFromPayload(
-                        request.body.responseToPoll
-                    ),
-                    expectedSecretCredentialType: "timebound",
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/auth/logout`, {
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                    },
                 });
-            return await Service.respondToPoll({
-                db: db,
-                presentation: presentation,
-                response: request.body.responseToPoll,
-                pseudonym: pseudonym,
-                postAs: postAs,
-                httpErrors: server.httpErrors,
-            });
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().post("/feed/fetchMore", {
-        schema: {
-            body: Dto.fetchFeedRequest,
-            response: {
-                200: Dto.fetchFeed200,
+                await Service.logout(db, didWrite);
             },
-        },
-        handler: async (request, _reply) => {
-            // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
-            try {
-                await verifyUCAN(db, request, {
+        });
+    // TODO
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/auth/sync`, {
+            schema: {
+                // body: Dto.createOrGetEmailCredentialsReq,
+                response: {
+                    // TODO 200: Dto.createOrGetEmailCredentialsRes,
+                    409: Dto.sync409,
+                },
+            },
+            handler: async (request, _reply) => {
+                const _didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                        isSyncing: false,
+                    },
+                });
+                // TODO
+                // return await AuthService.syncAttempt(db, didWrite);
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/credential/get`, {
+            schema: {
+                response: {
+                    200: Dto.userCredentials,
+                },
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
                         isLoggedIn: true,
                         isSyncing: true,
                     },
                 });
-            } catch (e) {
-                // TODO: rate-limit by IP Address
-                if (request.body.updatedAt !== undefined) {
-                    return []; // we don't return more feed unless logged-in
+                return await Service.getUserCredentials(db, didWrite);
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/credential/request`, {
+            schema: {
+                body: Dto.requestCredentials,
+                response: {
+                    200: Dto.requestCredentials200,
+                },
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                        isSyncing: true,
+                    },
+                });
+                const email = request.body.email;
+                const isEmailAssociatedWithDevice =
+                    await Service.isEmailAssociatedWithDevice(
+                        db,
+                        didWrite,
+                        email
+                    );
+                if (!isEmailAssociatedWithDevice) {
+                    throw server.httpErrors.forbidden(
+                        `Email ${email} is not associated with this didWrite ${didWrite}`
+                    );
                 }
-                // only show limited feed
+
+                const existingFormCredentialsPerEmail: FormCredentialsPerEmail =
+                    await Service.getFormCredentialsPerEmailFromDidWrite(
+                        db,
+                        didWrite
+                    );
+                if (
+                    hasActiveEmailOrFormCredential(
+                        email,
+                        existingFormCredentialsPerEmail
+                    )
+                ) {
+                    server.log.warn(
+                        "Form credentials requested but already exist"
+                    );
+                    return {
+                        formCredentialsPerEmail:
+                            existingFormCredentialsPerEmail,
+                    };
+                } else {
+                    const uid = await Service.getUidFromDevice(db, didWrite);
+                    const encodedFormCredential =
+                        await Service.createAndStoreFormCredential({
+                            db,
+                            email,
+                            formCredentialRequest:
+                                request.body.formCredentialRequest,
+                            uid,
+                            sk,
+                        });
+                    const formCredentialsPerEmail =
+                        addActiveEmailOrFormCredential(
+                            email,
+                            encodedFormCredential,
+                            existingFormCredentialsPerEmail
+                        );
+                    return {
+                        formCredentialsPerEmail,
+                    };
+                }
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/poll/create`, {
+            schema: {
+                body: Dto.createPollRequest,
+                // response: {
+                //     200: Dto.createPollRequest,
+                // },
+            },
+            handler: async (request, _reply) => {
+                const { pseudonym, postAs, presentation } =
+                    await verifyPresentation({
+                        pres: request.body.pres,
+                        content: request.body.poll,
+                        expectedSecretCredentialType: "unbound",
+                    });
+                await Service.createPoll({
+                    db: db,
+                    presentation: presentation,
+                    poll: request.body.poll,
+                    pseudonym: pseudonym,
+                    postAs: postAs,
+                });
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/poll/respond`, {
+            schema: {
+                body: Dto.respondPollRequest,
+                response: {
+                    200: Dto.pollRespond200,
+                },
+            },
+            handler: async (request, _reply) => {
+                const { pseudonym, postAs, presentation } =
+                    await verifyPresentation({
+                        pres: request.body.pres,
+                        content: buildResponseToPollFromPayload(
+                            request.body.responseToPoll
+                        ),
+                        expectedSecretCredentialType: "timebound",
+                    });
+                return await Service.respondToPoll({
+                    db: db,
+                    presentation: presentation,
+                    response: request.body.responseToPoll,
+                    pseudonym: pseudonym,
+                    postAs: postAs,
+                    httpErrors: server.httpErrors,
+                });
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/feed/fetchMore`, {
+            schema: {
+                body: Dto.fetchFeedRequest,
+                response: {
+                    200: Dto.fetchFeed200,
+                },
+            },
+            handler: async (request, _reply) => {
+                // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
+                try {
+                    await verifyUCAN(db, request, {
+                        expectedDeviceStatus: {
+                            isLoggedIn: true,
+                            isSyncing: true,
+                        },
+                    });
+                } catch (e) {
+                    // TODO: rate-limit by IP Address
+                    if (request.body.updatedAt !== undefined) {
+                        return []; // we don't return more feed unless logged-in
+                    }
+                    // only show limited feed
+                    return await Service.fetchFeed({
+                        db: db,
+                        order: "more",
+                        updatedAt: undefined,
+                        limit: 6,
+                    });
+                }
                 return await Service.fetchFeed({
                     db: db,
                     order: "more",
-                    updatedAt: undefined,
-                    limit: 6,
+                    updatedAt:
+                        request.body.updatedAt !== undefined
+                            ? new Date(request.body.updatedAt)
+                            : undefined,
                 });
-            }
-            return await Service.fetchFeed({
-                db: db,
-                order: "more",
-                updatedAt:
-                    request.body.updatedAt !== undefined
-                        ? new Date(request.body.updatedAt)
-                        : undefined,
-            });
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().post("/feed/fetchRecent", {
-        schema: {
-            body: Dto.fetchFeedRequest,
-            response: {
-                200: Dto.fetchFeed200,
             },
-        },
-        handler: async (request, _reply) => {
-            // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
-            try {
-                await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                        isSyncing: true,
-                    },
-                });
-            } catch (e) {
-                // TODO: rate-limit by IP Address
-                if (request.body.updatedAt !== undefined) {
-                    return []; // we don't return more feed unless logged-in
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/feed/fetchRecent`, {
+            schema: {
+                body: Dto.fetchFeedRequest,
+                response: {
+                    200: Dto.fetchFeed200,
+                },
+            },
+            handler: async (request, _reply) => {
+                // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
+                try {
+                    await verifyUCAN(db, request, {
+                        expectedDeviceStatus: {
+                            isLoggedIn: true,
+                            isSyncing: true,
+                        },
+                    });
+                } catch (e) {
+                    // TODO: rate-limit by IP Address
+                    if (request.body.updatedAt !== undefined) {
+                        return []; // we don't return more feed unless logged-in
+                    }
+                    // only show limited feed
+                    return await Service.fetchFeed({
+                        db: db,
+                        order: "recent",
+                        updatedAt: undefined,
+                        limit: 6,
+                    });
                 }
-                // only show limited feed
                 return await Service.fetchFeed({
                     db: db,
                     order: "recent",
-                    updatedAt: undefined,
-                    limit: 6,
+                    updatedAt:
+                        request.body.updatedAt !== undefined
+                            ? new Date(request.body.updatedAt)
+                            : undefined,
                 });
-            }
-            return await Service.fetchFeed({
-                db: db,
-                order: "recent",
-                updatedAt:
-                    request.body.updatedAt !== undefined
-                        ? new Date(request.body.updatedAt)
-                        : undefined,
-            });
-        },
-    });
+            },
+        });
 });
 
 server.ready((e) => {
@@ -947,7 +977,10 @@ server.ready((e) => {
     }
 });
 
-server.listen({ port: config.PORT }, (err) => {
+const host =
+    config.NODE_ENV === Environment.Development ? "127.0.0.1" : "0.0.0.0";
+
+server.listen({ port: config.PORT, host: host }, (err) => {
     if (err) {
         server.log.error(err);
         process.exit(1);

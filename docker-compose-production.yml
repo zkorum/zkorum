@@ -1,0 +1,58 @@
+version: "3.8"
+services:
+  postgres:
+    container_name: zkorum_postgres
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 7QPgtYETx4EdzvqUeNfo
+      POSTGRES_DB: zkorum
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+      - ./services/back/database/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    expose:
+      - "5432"
+    restart: unless-stopped
+  pgadmin:
+    container_name: zkorum_pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@zkorum.com
+      PGADMIN_DEFAULT_PASSWORD: UsXWq98V68DxGEhfGvBa
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:5050"
+    restart: unless-stopped
+  back:
+    container_name: zkorum_back
+    image: zkorum/back:0.1.1
+    environment:
+      CONNECTION_STRING: "postgres://postgres:7QPgtYETx4EdzvqUeNfo@postgres:5432/zkorum"
+      NODE_ENV: "production"
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+  front:
+    container_name: zkorum_front
+    image: zkorum/front:0.1.4
+    expose:
+      - "80"
+    restart: unless-stopped
+  nginx:
+    image: nginx:stable-alpine
+    container_name: zkorum_nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+      - 443:443
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      # - /home/ubuntu/ssl:/ssl/
+
+volumes:
+  postgres:
+  pgadmin:

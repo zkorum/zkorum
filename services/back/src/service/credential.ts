@@ -34,7 +34,6 @@ import {
     essecCampusToString,
     essecProgramStrToEnum,
     essecProgramToString,
-    universityTypeToString,
 } from "../shared/types/university.js";
 import {
     domainFromEmail,

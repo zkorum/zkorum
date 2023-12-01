@@ -26,350 +26,350 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost200Response
+ * @interface ApiV1AuthAuthenticatePost200Response
  */
-export interface AuthAuthenticatePost200Response {
+export interface ApiV1AuthAuthenticatePost200Response {
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost200Response
+     * @memberof ApiV1AuthAuthenticatePost200Response
      */
     'codeExpiry': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost200Response
+     * @memberof ApiV1AuthAuthenticatePost200Response
      */
     'nextCodeSoonestTime': string;
 }
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409Response
+ * @interface ApiV1AuthAuthenticatePost409Response
  */
-export interface AuthAuthenticatePost409Response {
+export interface ApiV1AuthAuthenticatePost409Response {
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409Response
+     * @memberof ApiV1AuthAuthenticatePost409Response
      */
-    'reason': AuthAuthenticatePost409ResponseReasonEnum;
+    'reason': ApiV1AuthAuthenticatePost409ResponseReasonEnum;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409Response
+     * @memberof ApiV1AuthAuthenticatePost409Response
      */
     'userId': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409Response
+     * @memberof ApiV1AuthAuthenticatePost409Response
      */
     'encryptedSymmKey': string;
     /**
      * 
      * @type {Array<string>}
-     * @memberof AuthAuthenticatePost409Response
+     * @memberof ApiV1AuthAuthenticatePost409Response
      */
     'syncingDevices': Array<string>;
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof AuthAuthenticatePost409Response
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthAuthenticatePost409Response
      */
-    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'emailCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof AuthAuthenticatePost409Response
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthAuthenticatePost409Response
      */
-    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
-     * @memberof AuthAuthenticatePost409Response
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof ApiV1AuthAuthenticatePost409Response
      */
-    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
+    'secretCredentialsPerType': ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
 }
 
-export const AuthAuthenticatePost409ResponseReasonEnum = {
+export const ApiV1AuthAuthenticatePost409ResponseReasonEnum = {
     AlreadyLoggedIn: 'already_logged_in'
 } as const;
 
-export type AuthAuthenticatePost409ResponseReasonEnum = typeof AuthAuthenticatePost409ResponseReasonEnum[keyof typeof AuthAuthenticatePost409ResponseReasonEnum];
+export type ApiV1AuthAuthenticatePost409ResponseReasonEnum = typeof ApiV1AuthAuthenticatePost409ResponseReasonEnum[keyof typeof ApiV1AuthAuthenticatePost409ResponseReasonEnum];
 
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409ResponseAnyOf
+ * @interface ApiV1AuthAuthenticatePost409ResponseAnyOf
  */
-export interface AuthAuthenticatePost409ResponseAnyOf {
+export interface ApiV1AuthAuthenticatePost409ResponseAnyOf {
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf
      */
-    'reason': AuthAuthenticatePost409ResponseAnyOfReasonEnum;
+    'reason': ApiV1AuthAuthenticatePost409ResponseAnyOfReasonEnum;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf
      */
     'userId': string;
 }
 
-export const AuthAuthenticatePost409ResponseAnyOfReasonEnum = {
+export const ApiV1AuthAuthenticatePost409ResponseAnyOfReasonEnum = {
     AwaitingSyncing: 'awaiting_syncing'
 } as const;
 
-export type AuthAuthenticatePost409ResponseAnyOfReasonEnum = typeof AuthAuthenticatePost409ResponseAnyOfReasonEnum[keyof typeof AuthAuthenticatePost409ResponseAnyOfReasonEnum];
+export type ApiV1AuthAuthenticatePost409ResponseAnyOfReasonEnum = typeof ApiV1AuthAuthenticatePost409ResponseAnyOfReasonEnum[keyof typeof ApiV1AuthAuthenticatePost409ResponseAnyOfReasonEnum];
 
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409ResponseAnyOf1
+ * @interface ApiV1AuthAuthenticatePost409ResponseAnyOf1
  */
-export interface AuthAuthenticatePost409ResponseAnyOf1 {
+export interface ApiV1AuthAuthenticatePost409ResponseAnyOf1 {
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
-    'reason': AuthAuthenticatePost409ResponseAnyOf1ReasonEnum;
+    'reason': ApiV1AuthAuthenticatePost409ResponseAnyOf1ReasonEnum;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
     'userId': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
     'encryptedSymmKey': string;
     /**
      * 
      * @type {Array<string>}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
     'syncingDevices': Array<string>;
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
-    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'emailCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
-    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
-    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
+    'secretCredentialsPerType': ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
 }
 
-export const AuthAuthenticatePost409ResponseAnyOf1ReasonEnum = {
+export const ApiV1AuthAuthenticatePost409ResponseAnyOf1ReasonEnum = {
     AlreadyLoggedIn: 'already_logged_in'
 } as const;
 
-export type AuthAuthenticatePost409ResponseAnyOf1ReasonEnum = typeof AuthAuthenticatePost409ResponseAnyOf1ReasonEnum[keyof typeof AuthAuthenticatePost409ResponseAnyOf1ReasonEnum];
+export type ApiV1AuthAuthenticatePost409ResponseAnyOf1ReasonEnum = typeof ApiV1AuthAuthenticatePost409ResponseAnyOf1ReasonEnum[keyof typeof ApiV1AuthAuthenticatePost409ResponseAnyOf1ReasonEnum];
 
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
+ * @interface ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
  */
-export interface AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue {
+export interface ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue {
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
      */
     'active'?: string;
     /**
      * 
      * @type {Array<string>}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue
      */
     'revoked': Array<string>;
 }
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
+ * @interface ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
  */
-export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType {
+export interface ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType {
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
      */
-    'unbound': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound;
+    'unbound': ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound;
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType
      */
-    'timebound': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound;
+    'timebound': ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound;
 }
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
+ * @interface ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
  */
-export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound {
+export interface ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound {
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
      */
-    'active'?: AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive;
+    'active'?: ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive;
     /**
      * 
-     * @type {Array<AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive>}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
+     * @type {Array<ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive>}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnbound
      */
-    'revoked': Array<AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive>;
+    'revoked': Array<ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive>;
 }
 /**
  * 
  * @export
- * @interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
+ * @interface ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
  */
-export interface AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive {
+export interface ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive {
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
      */
     'blindedCredential': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
      */
     'encryptedBlinding': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerTypeUnboundActive
      */
     'encryptedBlindedSubject': string;
 }
 /**
  * 
  * @export
- * @interface AuthAuthenticatePostRequest
+ * @interface ApiV1AuthAuthenticatePostRequest
  */
-export interface AuthAuthenticatePostRequest {
+export interface ApiV1AuthAuthenticatePostRequest {
     /**
      * Email address
      * @type {string}
-     * @memberof AuthAuthenticatePostRequest
+     * @memberof ApiV1AuthAuthenticatePostRequest
      */
     'email': string;
     /**
      * Decentralized Identifier with did:key method
      * @type {string}
-     * @memberof AuthAuthenticatePostRequest
+     * @memberof ApiV1AuthAuthenticatePostRequest
      */
     'didExchange': string;
     /**
      * 
      * @type {boolean}
-     * @memberof AuthAuthenticatePostRequest
+     * @memberof ApiV1AuthAuthenticatePostRequest
      */
     'isRequestingNewCode': boolean;
 }
 /**
  * 
  * @export
- * @interface AuthSyncPost409Response
+ * @interface ApiV1AuthSyncPost409Response
  */
-export interface AuthSyncPost409Response {
+export interface ApiV1AuthSyncPost409Response {
     /**
      * 
      * @type {string}
-     * @memberof AuthSyncPost409Response
+     * @memberof ApiV1AuthSyncPost409Response
      */
-    'reason': AuthSyncPost409ResponseReasonEnum;
+    'reason': ApiV1AuthSyncPost409ResponseReasonEnum;
     /**
      * 
      * @type {string}
-     * @memberof AuthSyncPost409Response
+     * @memberof ApiV1AuthSyncPost409Response
      */
     'userId': string;
 }
 
-export const AuthSyncPost409ResponseReasonEnum = {
+export const ApiV1AuthSyncPost409ResponseReasonEnum = {
     AlreadySyncing: 'already_syncing'
 } as const;
 
-export type AuthSyncPost409ResponseReasonEnum = typeof AuthSyncPost409ResponseReasonEnum[keyof typeof AuthSyncPost409ResponseReasonEnum];
+export type ApiV1AuthSyncPost409ResponseReasonEnum = typeof ApiV1AuthSyncPost409ResponseReasonEnum[keyof typeof ApiV1AuthSyncPost409ResponseReasonEnum];
 
 /**
  * 
  * @export
- * @interface AuthVerifyOtpPost200Response
+ * @interface ApiV1AuthVerifyOtpPost200Response
  */
-export interface AuthVerifyOtpPost200Response {
+export interface ApiV1AuthVerifyOtpPost200Response {
     /**
      * 
      * @type {boolean}
-     * @memberof AuthVerifyOtpPost200Response
+     * @memberof ApiV1AuthVerifyOtpPost200Response
      */
     'success': boolean;
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPost200Response
+     * @memberof ApiV1AuthVerifyOtpPost200Response
      */
     'userId': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPost200Response
+     * @memberof ApiV1AuthVerifyOtpPost200Response
      */
     'encryptedSymmKey'?: string;
     /**
      * 
      * @type {Array<string>}
-     * @memberof AuthVerifyOtpPost200Response
+     * @memberof ApiV1AuthVerifyOtpPost200Response
      */
     'syncingDevices': Array<string>;
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof AuthVerifyOtpPost200Response
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthVerifyOtpPost200Response
      */
-    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'emailCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof AuthVerifyOtpPost200Response
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthVerifyOtpPost200Response
      */
-    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
-     * @memberof AuthVerifyOtpPost200Response
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof ApiV1AuthVerifyOtpPost200Response
      */
-    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
+    'secretCredentialsPerType': ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPost200Response
+     * @memberof ApiV1AuthVerifyOtpPost200Response
      */
-    'reason': AuthVerifyOtpPost200ResponseReasonEnum;
+    'reason': ApiV1AuthVerifyOtpPost200ResponseReasonEnum;
 }
 
-export const AuthVerifyOtpPost200ResponseReasonEnum = {
+export const ApiV1AuthVerifyOtpPost200ResponseReasonEnum = {
     ExpiredCode: 'expired_code',
     WrongGuess: 'wrong_guess',
     TooManyWrongGuess: 'too_many_wrong_guess',
@@ -379,78 +379,78 @@ export const AuthVerifyOtpPost200ResponseReasonEnum = {
     SecretCredentialRequestsRequired: 'secret_credential_requests_required'
 } as const;
 
-export type AuthVerifyOtpPost200ResponseReasonEnum = typeof AuthVerifyOtpPost200ResponseReasonEnum[keyof typeof AuthVerifyOtpPost200ResponseReasonEnum];
+export type ApiV1AuthVerifyOtpPost200ResponseReasonEnum = typeof ApiV1AuthVerifyOtpPost200ResponseReasonEnum[keyof typeof ApiV1AuthVerifyOtpPost200ResponseReasonEnum];
 
 /**
  * 
  * @export
- * @interface AuthVerifyOtpPost200ResponseAnyOf
+ * @interface ApiV1AuthVerifyOtpPost200ResponseAnyOf
  */
-export interface AuthVerifyOtpPost200ResponseAnyOf {
+export interface ApiV1AuthVerifyOtpPost200ResponseAnyOf {
     /**
      * 
      * @type {boolean}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
      */
     'success': boolean;
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
      */
     'userId': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
      */
     'encryptedSymmKey'?: string;
     /**
      * 
      * @type {Array<string>}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
      */
     'syncingDevices': Array<string>;
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
      */
-    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'emailCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
      */
-    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
      */
-    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
+    'secretCredentialsPerType': ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
 }
 /**
  * 
  * @export
- * @interface AuthVerifyOtpPost200ResponseAnyOf1
+ * @interface ApiV1AuthVerifyOtpPost200ResponseAnyOf1
  */
-export interface AuthVerifyOtpPost200ResponseAnyOf1 {
+export interface ApiV1AuthVerifyOtpPost200ResponseAnyOf1 {
     /**
      * 
      * @type {boolean}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf1
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf1
      */
     'success': boolean;
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPost200ResponseAnyOf1
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf1
      */
-    'reason': AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum;
+    'reason': ApiV1AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum;
 }
 
-export const AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = {
+export const ApiV1AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = {
     ExpiredCode: 'expired_code',
     WrongGuess: 'wrong_guess',
     TooManyWrongGuess: 'too_many_wrong_guess',
@@ -460,174 +460,174 @@ export const AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = {
     SecretCredentialRequestsRequired: 'secret_credential_requests_required'
 } as const;
 
-export type AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = typeof AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum[keyof typeof AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum];
+export type ApiV1AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum = typeof ApiV1AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum[keyof typeof ApiV1AuthVerifyOtpPost200ResponseAnyOf1ReasonEnum];
 
 /**
  * 
  * @export
- * @interface AuthVerifyOtpPostRequest
+ * @interface ApiV1AuthVerifyOtpPostRequest
  */
-export interface AuthVerifyOtpPostRequest {
+export interface ApiV1AuthVerifyOtpPostRequest {
     /**
      * 
      * @type {number}
-     * @memberof AuthVerifyOtpPostRequest
+     * @memberof ApiV1AuthVerifyOtpPostRequest
      */
     'code': number;
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPostRequest
+     * @memberof ApiV1AuthVerifyOtpPostRequest
      */
     'encryptedSymmKey'?: string;
     /**
      * 
-     * @type {AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
-     * @memberof AuthVerifyOtpPostRequest
+     * @type {ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
+     * @memberof ApiV1AuthVerifyOtpPostRequest
      */
-    'timeboundSecretCredentialRequest'?: AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
+    'timeboundSecretCredentialRequest'?: ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
     /**
      * 
-     * @type {AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
-     * @memberof AuthVerifyOtpPostRequest
+     * @type {ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
+     * @memberof ApiV1AuthVerifyOtpPostRequest
      */
-    'unboundSecretCredentialRequest'?: AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
+    'unboundSecretCredentialRequest'?: ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
 }
 /**
  * 
  * @export
- * @interface AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
+ * @interface ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
  */
-export interface AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest {
+export interface ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest {
     /**
      * 
      * @type {{ [key: string]: any; }}
-     * @memberof AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
+     * @memberof ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
      */
     'blindedRequest': { [key: string]: any; };
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
+     * @memberof ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
      */
     'encryptedEncodedBlindedSubject': string;
     /**
      * 
      * @type {string}
-     * @memberof AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
+     * @memberof ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest
      */
     'encryptedEncodedBlinding': string;
 }
 /**
  * 
  * @export
- * @interface CredentialGetPost200Response
+ * @interface ApiV1CredentialGetPost200Response
  */
-export interface CredentialGetPost200Response {
+export interface ApiV1CredentialGetPost200Response {
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof CredentialGetPost200Response
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1CredentialGetPost200Response
      */
-    'emailCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'emailCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof CredentialGetPost200Response
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1CredentialGetPost200Response
      */
-    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
     /**
      * 
-     * @type {AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
-     * @memberof CredentialGetPost200Response
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof ApiV1CredentialGetPost200Response
      */
-    'secretCredentialsPerType': AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
+    'secretCredentialsPerType': ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
 }
 /**
  * 
  * @export
- * @interface CredentialRequestPost200Response
+ * @interface ApiV1CredentialRequestPost200Response
  */
-export interface CredentialRequestPost200Response {
+export interface ApiV1CredentialRequestPost200Response {
     /**
      * 
-     * @type {{ [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof CredentialRequestPost200Response
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1CredentialRequestPost200Response
      */
-    'formCredentialsPerEmail': { [key: string]: AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
 }
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequest
+ * @interface ApiV1CredentialRequestPostRequest
  */
-export interface CredentialRequestPostRequest {
+export interface ApiV1CredentialRequestPostRequest {
     /**
      * Email address
      * @type {string}
-     * @memberof CredentialRequestPostRequest
+     * @memberof ApiV1CredentialRequestPostRequest
      */
     'email': string;
     /**
      * 
-     * @type {CredentialRequestPostRequestFormCredentialRequest}
-     * @memberof CredentialRequestPostRequest
+     * @type {ApiV1CredentialRequestPostRequestFormCredentialRequest}
+     * @memberof ApiV1CredentialRequestPostRequest
      */
-    'formCredentialRequest': CredentialRequestPostRequestFormCredentialRequest;
+    'formCredentialRequest': ApiV1CredentialRequestPostRequestFormCredentialRequest;
 }
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestFormCredentialRequest
+ * @interface ApiV1CredentialRequestPostRequestFormCredentialRequest
  */
-export interface CredentialRequestPostRequestFormCredentialRequest {
+export interface ApiV1CredentialRequestPostRequestFormCredentialRequest {
     /**
      * 
      * @type {string}
-     * @memberof CredentialRequestPostRequestFormCredentialRequest
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
      */
-    'type': CredentialRequestPostRequestFormCredentialRequestTypeEnum;
+    'type': ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestFormCredentialRequest
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
      */
-    'campus': CredentialRequestPostRequestFormCredentialRequestCampusEnum;
+    'campus': ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestFormCredentialRequest
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
      */
-    'program': CredentialRequestPostRequestFormCredentialRequestProgramEnum;
+    'program': ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum;
     /**
      * 
-     * @type {CredentialRequestPostRequestFormCredentialRequestAnyOfCountries}
-     * @memberof CredentialRequestPostRequestFormCredentialRequest
+     * @type {ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries}
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
      */
-    'countries': CredentialRequestPostRequestFormCredentialRequestAnyOfCountries;
+    'countries': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestFormCredentialRequest
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
      */
     'admissionYear': number;
 }
 
-export const CredentialRequestPostRequestFormCredentialRequestTypeEnum = {
+export const ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum = {
     Student: 'student',
     Alum: 'alum',
     Faculty: 'faculty'
 } as const;
 
-export type CredentialRequestPostRequestFormCredentialRequestTypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestTypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestTypeEnum];
-export const CredentialRequestPostRequestFormCredentialRequestCampusEnum = {
+export type ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum];
+export const ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2
 } as const;
 
-export type CredentialRequestPostRequestFormCredentialRequestCampusEnum = typeof CredentialRequestPostRequestFormCredentialRequestCampusEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestCampusEnum];
-export const CredentialRequestPostRequestFormCredentialRequestProgramEnum = {
+export type ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum];
+export const ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2,
@@ -636,59 +636,59 @@ export const CredentialRequestPostRequestFormCredentialRequestProgramEnum = {
     NUMBER_5: 5
 } as const;
 
-export type CredentialRequestPostRequestFormCredentialRequestProgramEnum = typeof CredentialRequestPostRequestFormCredentialRequestProgramEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestProgramEnum];
+export type ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum];
 
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestFormCredentialRequestAnyOf
+ * @interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
  */
-export interface CredentialRequestPostRequestFormCredentialRequestAnyOf {
+export interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf {
     /**
      * 
      * @type {string}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
-    'type': CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum;
+    'type': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
-    'campus': CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum;
+    'campus': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
-    'program': CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum;
+    'program': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum;
     /**
      * 
-     * @type {CredentialRequestPostRequestFormCredentialRequestAnyOfCountries}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
+     * @type {ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries}
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
-    'countries': CredentialRequestPostRequestFormCredentialRequestAnyOfCountries;
+    'countries': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries;
     /**
      * 
      * @type {number}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
      */
     'admissionYear': number;
 }
 
-export const CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = {
+export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = {
     Student: 'student'
 } as const;
 
-export type CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum];
-export const CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum = {
+export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum];
+export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2
 } as const;
 
-export type CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum];
-export const CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = {
+export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum];
+export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2,
@@ -697,1719 +697,1719 @@ export const CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum =
     NUMBER_5: 5
 } as const;
 
-export type CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum];
+export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum];
 
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestFormCredentialRequestAnyOf1
+ * @interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1
  */
-export interface CredentialRequestPostRequestFormCredentialRequestAnyOf1 {
+export interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1 {
     /**
      * 
      * @type {string}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf1
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1
      */
-    'type': CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum;
+    'type': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum;
 }
 
-export const CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = {
+export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = {
     Alum: 'alum'
 } as const;
 
-export type CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum];
+export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum];
 
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestFormCredentialRequestAnyOf2
+ * @interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2
  */
-export interface CredentialRequestPostRequestFormCredentialRequestAnyOf2 {
+export interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2 {
     /**
      * 
      * @type {string}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOf2
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2
      */
-    'type': CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum;
+    'type': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum;
 }
 
-export const CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = {
+export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = {
     Faculty: 'faculty'
 } as const;
 
-export type CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = typeof CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum[keyof typeof CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum];
+export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum];
 
 /**
  * 
  * @export
- * @interface CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+ * @interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
  */
-export interface CredentialRequestPostRequestFormCredentialRequestAnyOfCountries {
+export interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries {
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AX': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'AZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BB': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'BZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CX': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'CZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'DZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'EC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'EE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'EG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'EH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ER': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ES': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ET': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'FR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GB': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'GY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'HU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ID': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'IT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'JE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'JM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'JO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'JP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'KZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LB': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'LY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ME': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ML': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MQ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MX': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'MZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NP': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'NZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'OM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'PY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'QA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'RW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SB': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ST': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SX': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'SZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TD': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TH': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TJ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TL': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TO': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TR': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TV': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TW': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'TZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'US': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UY': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'UZ': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VC': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VG': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VI': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VN': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'VU': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'WF': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'WS': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'XK': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'YE': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'YT': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ZA': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ZM': boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
+     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
      */
     'ZW': boolean;
 }
 /**
  * 
  * @export
- * @interface FeedFetchMorePostRequest
+ * @interface ApiV1FeedFetchMorePostRequest
  */
-export interface FeedFetchMorePostRequest {
+export interface ApiV1FeedFetchMorePostRequest {
     /**
      * 
      * @type {string}
-     * @memberof FeedFetchMorePostRequest
+     * @memberof ApiV1FeedFetchMorePostRequest
      */
     'updatedAt'?: string;
 }
 /**
  * 
  * @export
- * @interface PollCreatePostRequest
+ * @interface ApiV1PollCreatePostRequest
  */
-export interface PollCreatePostRequest {
+export interface ApiV1PollCreatePostRequest {
     /**
      * 
-     * @type {PollCreatePostRequestPoll}
-     * @memberof PollCreatePostRequest
+     * @type {ApiV1PollCreatePostRequestPoll}
+     * @memberof ApiV1PollCreatePostRequest
      */
-    'poll': PollCreatePostRequestPoll;
+    'poll': ApiV1PollCreatePostRequestPoll;
     /**
      * 
      * @type {any}
-     * @memberof PollCreatePostRequest
+     * @memberof ApiV1PollCreatePostRequest
      */
     'pres'?: any;
 }
 /**
  * 
  * @export
- * @interface PollCreatePostRequestPoll
+ * @interface ApiV1PollCreatePostRequestPoll
  */
-export interface PollCreatePostRequestPoll {
+export interface ApiV1PollCreatePostRequestPoll {
     /**
      * 
-     * @type {PollCreatePostRequestPollData}
-     * @memberof PollCreatePostRequestPoll
+     * @type {ApiV1PollCreatePostRequestPollData}
+     * @memberof ApiV1PollCreatePostRequestPoll
      */
-    'data': PollCreatePostRequestPollData;
+    'data': ApiV1PollCreatePostRequestPollData;
     /**
      * 
-     * @type {PollCreatePostRequestPollEligibility}
-     * @memberof PollCreatePostRequestPoll
+     * @type {ApiV1PollCreatePostRequestPollEligibility}
+     * @memberof ApiV1PollCreatePostRequestPoll
      */
-    'eligibility'?: PollCreatePostRequestPollEligibility;
+    'eligibility'?: ApiV1PollCreatePostRequestPollEligibility;
 }
 /**
  * 
  * @export
- * @interface PollCreatePostRequestPollData
+ * @interface ApiV1PollCreatePostRequestPollData
  */
-export interface PollCreatePostRequestPollData {
+export interface ApiV1PollCreatePostRequestPollData {
     /**
      * 
      * @type {string}
-     * @memberof PollCreatePostRequestPollData
+     * @memberof ApiV1PollCreatePostRequestPollData
      */
     'question': string;
     /**
      * 
      * @type {string}
-     * @memberof PollCreatePostRequestPollData
+     * @memberof ApiV1PollCreatePostRequestPollData
      */
     'option1': string;
     /**
      * 
      * @type {string}
-     * @memberof PollCreatePostRequestPollData
+     * @memberof ApiV1PollCreatePostRequestPollData
      */
     'option2': string;
     /**
      * 
      * @type {string}
-     * @memberof PollCreatePostRequestPollData
+     * @memberof ApiV1PollCreatePostRequestPollData
      */
     'option3'?: string;
     /**
      * 
      * @type {string}
-     * @memberof PollCreatePostRequestPollData
+     * @memberof ApiV1PollCreatePostRequestPollData
      */
     'option4'?: string;
     /**
      * 
      * @type {string}
-     * @memberof PollCreatePostRequestPollData
+     * @memberof ApiV1PollCreatePostRequestPollData
      */
     'option5'?: string;
     /**
      * 
      * @type {string}
-     * @memberof PollCreatePostRequestPollData
+     * @memberof ApiV1PollCreatePostRequestPollData
      */
     'option6'?: string;
 }
 /**
  * 
  * @export
- * @interface PollCreatePostRequestPollEligibility
+ * @interface ApiV1PollCreatePostRequestPollEligibility
  */
-export interface PollCreatePostRequestPollEligibility {
+export interface ApiV1PollCreatePostRequestPollEligibility {
     /**
      * 
      * @type {boolean}
-     * @memberof PollCreatePostRequestPollEligibility
+     * @memberof ApiV1PollCreatePostRequestPollEligibility
      */
     'student'?: boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof PollCreatePostRequestPollEligibility
+     * @memberof ApiV1PollCreatePostRequestPollEligibility
      */
     'alum'?: boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof PollCreatePostRequestPollEligibility
+     * @memberof ApiV1PollCreatePostRequestPollEligibility
      */
     'faculty'?: boolean;
     /**
      * 
      * @type {Array<string>}
-     * @memberof PollCreatePostRequestPollEligibility
+     * @memberof ApiV1PollCreatePostRequestPollEligibility
      */
-    'countries'?: Array<PollCreatePostRequestPollEligibilityCountriesEnum>;
+    'countries'?: Array<ApiV1PollCreatePostRequestPollEligibilityCountriesEnum>;
     /**
      * 
      * @type {Array<number>}
-     * @memberof PollCreatePostRequestPollEligibility
+     * @memberof ApiV1PollCreatePostRequestPollEligibility
      */
-    'campuses'?: Array<PollCreatePostRequestPollEligibilityCampusesEnum>;
+    'campuses'?: Array<ApiV1PollCreatePostRequestPollEligibilityCampusesEnum>;
     /**
      * 
      * @type {Array<number>}
-     * @memberof PollCreatePostRequestPollEligibility
+     * @memberof ApiV1PollCreatePostRequestPollEligibility
      */
-    'programs'?: Array<PollCreatePostRequestPollEligibilityProgramsEnum>;
+    'programs'?: Array<ApiV1PollCreatePostRequestPollEligibilityProgramsEnum>;
     /**
      * 
      * @type {Array<number>}
-     * @memberof PollCreatePostRequestPollEligibility
+     * @memberof ApiV1PollCreatePostRequestPollEligibility
      */
     'admissionYears'?: Array<number>;
 }
 
-export const PollCreatePostRequestPollEligibilityCountriesEnum = {
+export const ApiV1PollCreatePostRequestPollEligibilityCountriesEnum = {
     Fr: 'FR',
     Int: 'INT'
 } as const;
 
-export type PollCreatePostRequestPollEligibilityCountriesEnum = typeof PollCreatePostRequestPollEligibilityCountriesEnum[keyof typeof PollCreatePostRequestPollEligibilityCountriesEnum];
-export const PollCreatePostRequestPollEligibilityCampusesEnum = {
+export type ApiV1PollCreatePostRequestPollEligibilityCountriesEnum = typeof ApiV1PollCreatePostRequestPollEligibilityCountriesEnum[keyof typeof ApiV1PollCreatePostRequestPollEligibilityCountriesEnum];
+export const ApiV1PollCreatePostRequestPollEligibilityCampusesEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2
 } as const;
 
-export type PollCreatePostRequestPollEligibilityCampusesEnum = typeof PollCreatePostRequestPollEligibilityCampusesEnum[keyof typeof PollCreatePostRequestPollEligibilityCampusesEnum];
-export const PollCreatePostRequestPollEligibilityProgramsEnum = {
+export type ApiV1PollCreatePostRequestPollEligibilityCampusesEnum = typeof ApiV1PollCreatePostRequestPollEligibilityCampusesEnum[keyof typeof ApiV1PollCreatePostRequestPollEligibilityCampusesEnum];
+export const ApiV1PollCreatePostRequestPollEligibilityProgramsEnum = {
     NUMBER_0: 0,
     NUMBER_1: 1,
     NUMBER_2: 2,
@@ -2418,133 +2418,133 @@ export const PollCreatePostRequestPollEligibilityProgramsEnum = {
     NUMBER_5: 5
 } as const;
 
-export type PollCreatePostRequestPollEligibilityProgramsEnum = typeof PollCreatePostRequestPollEligibilityProgramsEnum[keyof typeof PollCreatePostRequestPollEligibilityProgramsEnum];
+export type ApiV1PollCreatePostRequestPollEligibilityProgramsEnum = typeof ApiV1PollCreatePostRequestPollEligibilityProgramsEnum[keyof typeof ApiV1PollCreatePostRequestPollEligibilityProgramsEnum];
 
 /**
  * 
  * @export
- * @interface PollRespondPost200Response
+ * @interface ApiV1PollRespondPost200Response
  */
-export interface PollRespondPost200Response {
+export interface ApiV1PollRespondPost200Response {
     /**
      * 
-     * @type {PollRespondPost200ResponseMetadata}
-     * @memberof PollRespondPost200Response
+     * @type {ApiV1PollRespondPost200ResponseMetadata}
+     * @memberof ApiV1PollRespondPost200Response
      */
-    'metadata': PollRespondPost200ResponseMetadata;
+    'metadata': ApiV1PollRespondPost200ResponseMetadata;
     /**
      * 
-     * @type {PollRespondPost200ResponsePayload}
-     * @memberof PollRespondPost200Response
+     * @type {ApiV1PollRespondPost200ResponsePayload}
+     * @memberof ApiV1PollRespondPost200Response
      */
-    'payload': PollRespondPost200ResponsePayload;
+    'payload': ApiV1PollRespondPost200ResponsePayload;
     /**
      * 
-     * @type {PollRespondPost200ResponseAuthor}
-     * @memberof PollRespondPost200Response
+     * @type {ApiV1PollRespondPost200ResponseAuthor}
+     * @memberof ApiV1PollRespondPost200Response
      */
-    'author': PollRespondPost200ResponseAuthor;
+    'author': ApiV1PollRespondPost200ResponseAuthor;
     /**
      * 
-     * @type {PollRespondPost200ResponseEligibility}
-     * @memberof PollRespondPost200Response
+     * @type {ApiV1PollRespondPost200ResponseEligibility}
+     * @memberof ApiV1PollRespondPost200Response
      */
-    'eligibility': PollRespondPost200ResponseEligibility;
+    'eligibility': ApiV1PollRespondPost200ResponseEligibility;
 }
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponseAuthor
+ * @interface ApiV1PollRespondPost200ResponseAuthor
  */
-export interface PollRespondPost200ResponseAuthor {
+export interface ApiV1PollRespondPost200ResponseAuthor {
     /**
      * 
      * @type {string}
-     * @memberof PollRespondPost200ResponseAuthor
+     * @memberof ApiV1PollRespondPost200ResponseAuthor
      */
     'domain': string;
     /**
      * 
      * @type {string}
-     * @memberof PollRespondPost200ResponseAuthor
+     * @memberof ApiV1PollRespondPost200ResponseAuthor
      */
-    'type': PollRespondPost200ResponseAuthorTypeEnum;
+    'type': ApiV1PollRespondPost200ResponseAuthorTypeEnum;
     /**
      * 
-     * @type {PollRespondPost200ResponseAuthorUniversity}
-     * @memberof PollRespondPost200ResponseAuthor
+     * @type {ApiV1PollRespondPost200ResponseAuthorUniversity}
+     * @memberof ApiV1PollRespondPost200ResponseAuthor
      */
-    'university'?: PollRespondPost200ResponseAuthorUniversity;
+    'university'?: ApiV1PollRespondPost200ResponseAuthorUniversity;
 }
 
-export const PollRespondPost200ResponseAuthorTypeEnum = {
+export const ApiV1PollRespondPost200ResponseAuthorTypeEnum = {
     University: 'university',
     Company: 'company'
 } as const;
 
-export type PollRespondPost200ResponseAuthorTypeEnum = typeof PollRespondPost200ResponseAuthorTypeEnum[keyof typeof PollRespondPost200ResponseAuthorTypeEnum];
+export type ApiV1PollRespondPost200ResponseAuthorTypeEnum = typeof ApiV1PollRespondPost200ResponseAuthorTypeEnum[keyof typeof ApiV1PollRespondPost200ResponseAuthorTypeEnum];
 
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponseAuthorUniversity
+ * @interface ApiV1PollRespondPost200ResponseAuthorUniversity
  */
-export interface PollRespondPost200ResponseAuthorUniversity {
+export interface ApiV1PollRespondPost200ResponseAuthorUniversity {
     /**
      * 
      * @type {string}
-     * @memberof PollRespondPost200ResponseAuthorUniversity
+     * @memberof ApiV1PollRespondPost200ResponseAuthorUniversity
      */
-    'type': PollRespondPost200ResponseAuthorUniversityTypeEnum;
+    'type': ApiV1PollRespondPost200ResponseAuthorUniversityTypeEnum;
     /**
      * 
-     * @type {PollRespondPost200ResponseAuthorUniversityStudent}
-     * @memberof PollRespondPost200ResponseAuthorUniversity
+     * @type {ApiV1PollRespondPost200ResponseAuthorUniversityStudent}
+     * @memberof ApiV1PollRespondPost200ResponseAuthorUniversity
      */
-    'student'?: PollRespondPost200ResponseAuthorUniversityStudent;
+    'student'?: ApiV1PollRespondPost200ResponseAuthorUniversityStudent;
 }
 
-export const PollRespondPost200ResponseAuthorUniversityTypeEnum = {
+export const ApiV1PollRespondPost200ResponseAuthorUniversityTypeEnum = {
     Student: 'student',
     Alum: 'alum',
     Faculty: 'faculty'
 } as const;
 
-export type PollRespondPost200ResponseAuthorUniversityTypeEnum = typeof PollRespondPost200ResponseAuthorUniversityTypeEnum[keyof typeof PollRespondPost200ResponseAuthorUniversityTypeEnum];
+export type ApiV1PollRespondPost200ResponseAuthorUniversityTypeEnum = typeof ApiV1PollRespondPost200ResponseAuthorUniversityTypeEnum[keyof typeof ApiV1PollRespondPost200ResponseAuthorUniversityTypeEnum];
 
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponseAuthorUniversityStudent
+ * @interface ApiV1PollRespondPost200ResponseAuthorUniversityStudent
  */
-export interface PollRespondPost200ResponseAuthorUniversityStudent {
+export interface ApiV1PollRespondPost200ResponseAuthorUniversityStudent {
     /**
      * 
      * @type {Array<string>}
-     * @memberof PollRespondPost200ResponseAuthorUniversityStudent
+     * @memberof ApiV1PollRespondPost200ResponseAuthorUniversityStudent
      */
-    'countries'?: Array<PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum>;
+    'countries'?: Array<ApiV1PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum>;
     /**
      * 
      * @type {string}
-     * @memberof PollRespondPost200ResponseAuthorUniversityStudent
+     * @memberof ApiV1PollRespondPost200ResponseAuthorUniversityStudent
      */
     'campus'?: string;
     /**
      * 
      * @type {string}
-     * @memberof PollRespondPost200ResponseAuthorUniversityStudent
+     * @memberof ApiV1PollRespondPost200ResponseAuthorUniversityStudent
      */
     'program'?: string;
     /**
      * 
      * @type {number}
-     * @memberof PollRespondPost200ResponseAuthorUniversityStudent
+     * @memberof ApiV1PollRespondPost200ResponseAuthorUniversityStudent
      */
     'admissionYear'?: number;
 }
 
-export const PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum = {
+export const ApiV1PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum = {
     Ad: 'AD',
     Ae: 'AE',
     Af: 'AF',
@@ -2797,102 +2797,102 @@ export const PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum = {
     Zw: 'ZW'
 } as const;
 
-export type PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum = typeof PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum[keyof typeof PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum];
+export type ApiV1PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum = typeof ApiV1PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum[keyof typeof ApiV1PollRespondPost200ResponseAuthorUniversityStudentCountriesEnum];
 
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponseEligibility
+ * @interface ApiV1PollRespondPost200ResponseEligibility
  */
-export interface PollRespondPost200ResponseEligibility {
+export interface ApiV1PollRespondPost200ResponseEligibility {
     /**
      * 
      * @type {Array<string>}
-     * @memberof PollRespondPost200ResponseEligibility
+     * @memberof ApiV1PollRespondPost200ResponseEligibility
      */
     'domains'?: Array<string>;
     /**
      * 
      * @type {Array<string>}
-     * @memberof PollRespondPost200ResponseEligibility
+     * @memberof ApiV1PollRespondPost200ResponseEligibility
      */
-    'types'?: Array<PollRespondPost200ResponseEligibilityTypesEnum>;
+    'types'?: Array<ApiV1PollRespondPost200ResponseEligibilityTypesEnum>;
     /**
      * 
-     * @type {PollRespondPost200ResponseEligibilityUniversity}
-     * @memberof PollRespondPost200ResponseEligibility
+     * @type {ApiV1PollRespondPost200ResponseEligibilityUniversity}
+     * @memberof ApiV1PollRespondPost200ResponseEligibility
      */
-    'university'?: PollRespondPost200ResponseEligibilityUniversity;
+    'university'?: ApiV1PollRespondPost200ResponseEligibilityUniversity;
 }
 
-export const PollRespondPost200ResponseEligibilityTypesEnum = {
+export const ApiV1PollRespondPost200ResponseEligibilityTypesEnum = {
     University: 'university',
     Company: 'company'
 } as const;
 
-export type PollRespondPost200ResponseEligibilityTypesEnum = typeof PollRespondPost200ResponseEligibilityTypesEnum[keyof typeof PollRespondPost200ResponseEligibilityTypesEnum];
+export type ApiV1PollRespondPost200ResponseEligibilityTypesEnum = typeof ApiV1PollRespondPost200ResponseEligibilityTypesEnum[keyof typeof ApiV1PollRespondPost200ResponseEligibilityTypesEnum];
 
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponseEligibilityUniversity
+ * @interface ApiV1PollRespondPost200ResponseEligibilityUniversity
  */
-export interface PollRespondPost200ResponseEligibilityUniversity {
+export interface ApiV1PollRespondPost200ResponseEligibilityUniversity {
     /**
      * 
      * @type {Array<string>}
-     * @memberof PollRespondPost200ResponseEligibilityUniversity
+     * @memberof ApiV1PollRespondPost200ResponseEligibilityUniversity
      */
-    'types'?: Array<PollRespondPost200ResponseEligibilityUniversityTypesEnum>;
+    'types'?: Array<ApiV1PollRespondPost200ResponseEligibilityUniversityTypesEnum>;
     /**
      * 
-     * @type {PollRespondPost200ResponseEligibilityUniversityStudent}
-     * @memberof PollRespondPost200ResponseEligibilityUniversity
+     * @type {ApiV1PollRespondPost200ResponseEligibilityUniversityStudent}
+     * @memberof ApiV1PollRespondPost200ResponseEligibilityUniversity
      */
-    'student'?: PollRespondPost200ResponseEligibilityUniversityStudent;
+    'student'?: ApiV1PollRespondPost200ResponseEligibilityUniversityStudent;
 }
 
-export const PollRespondPost200ResponseEligibilityUniversityTypesEnum = {
+export const ApiV1PollRespondPost200ResponseEligibilityUniversityTypesEnum = {
     Student: 'student',
     Alum: 'alum',
     Faculty: 'faculty'
 } as const;
 
-export type PollRespondPost200ResponseEligibilityUniversityTypesEnum = typeof PollRespondPost200ResponseEligibilityUniversityTypesEnum[keyof typeof PollRespondPost200ResponseEligibilityUniversityTypesEnum];
+export type ApiV1PollRespondPost200ResponseEligibilityUniversityTypesEnum = typeof ApiV1PollRespondPost200ResponseEligibilityUniversityTypesEnum[keyof typeof ApiV1PollRespondPost200ResponseEligibilityUniversityTypesEnum];
 
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponseEligibilityUniversityStudent
+ * @interface ApiV1PollRespondPost200ResponseEligibilityUniversityStudent
  */
-export interface PollRespondPost200ResponseEligibilityUniversityStudent {
+export interface ApiV1PollRespondPost200ResponseEligibilityUniversityStudent {
     /**
      * 
      * @type {Array<string>}
-     * @memberof PollRespondPost200ResponseEligibilityUniversityStudent
+     * @memberof ApiV1PollRespondPost200ResponseEligibilityUniversityStudent
      */
-    'countries'?: Array<PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum>;
+    'countries'?: Array<ApiV1PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum>;
     /**
      * 
      * @type {Array<string>}
-     * @memberof PollRespondPost200ResponseEligibilityUniversityStudent
+     * @memberof ApiV1PollRespondPost200ResponseEligibilityUniversityStudent
      */
     'campuses'?: Array<string>;
     /**
      * 
      * @type {Array<string>}
-     * @memberof PollRespondPost200ResponseEligibilityUniversityStudent
+     * @memberof ApiV1PollRespondPost200ResponseEligibilityUniversityStudent
      */
     'programs'?: Array<string>;
     /**
      * 
      * @type {Array<number>}
-     * @memberof PollRespondPost200ResponseEligibilityUniversityStudent
+     * @memberof ApiV1PollRespondPost200ResponseEligibilityUniversityStudent
      */
     'admissionYears'?: Array<number>;
 }
 
-export const PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum = {
+export const ApiV1PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum = {
     Ad: 'AD',
     Ae: 'AE',
     Af: 'AF',
@@ -3145,124 +3145,124 @@ export const PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum
     Zw: 'ZW'
 } as const;
 
-export type PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum = typeof PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum[keyof typeof PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum];
+export type ApiV1PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum = typeof ApiV1PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum[keyof typeof ApiV1PollRespondPost200ResponseEligibilityUniversityStudentCountriesEnum];
 
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponseMetadata
+ * @interface ApiV1PollRespondPost200ResponseMetadata
  */
-export interface PollRespondPost200ResponseMetadata {
+export interface ApiV1PollRespondPost200ResponseMetadata {
     /**
      * 
      * @type {string}
-     * @memberof PollRespondPost200ResponseMetadata
+     * @memberof ApiV1PollRespondPost200ResponseMetadata
      */
     'uid': string;
     /**
      * 
      * @type {string}
-     * @memberof PollRespondPost200ResponseMetadata
+     * @memberof ApiV1PollRespondPost200ResponseMetadata
      */
     'updatedAt': string;
 }
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponsePayload
+ * @interface ApiV1PollRespondPost200ResponsePayload
  */
-export interface PollRespondPost200ResponsePayload {
+export interface ApiV1PollRespondPost200ResponsePayload {
     /**
      * 
-     * @type {PollCreatePostRequestPollData}
-     * @memberof PollRespondPost200ResponsePayload
+     * @type {ApiV1PollCreatePostRequestPollData}
+     * @memberof ApiV1PollRespondPost200ResponsePayload
      */
-    'data': PollCreatePostRequestPollData;
+    'data': ApiV1PollCreatePostRequestPollData;
     /**
      * 
-     * @type {PollRespondPost200ResponsePayloadResult}
-     * @memberof PollRespondPost200ResponsePayload
+     * @type {ApiV1PollRespondPost200ResponsePayloadResult}
+     * @memberof ApiV1PollRespondPost200ResponsePayload
      */
-    'result': PollRespondPost200ResponsePayloadResult;
+    'result': ApiV1PollRespondPost200ResponsePayloadResult;
 }
 /**
  * 
  * @export
- * @interface PollRespondPost200ResponsePayloadResult
+ * @interface ApiV1PollRespondPost200ResponsePayloadResult
  */
-export interface PollRespondPost200ResponsePayloadResult {
+export interface ApiV1PollRespondPost200ResponsePayloadResult {
     /**
      * 
      * @type {number}
-     * @memberof PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
      */
     'option1Response': number;
     /**
      * 
      * @type {number}
-     * @memberof PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
      */
     'option2Response': number;
     /**
      * 
      * @type {number}
-     * @memberof PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
      */
     'option3Response'?: number;
     /**
      * 
      * @type {number}
-     * @memberof PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
      */
     'option4Response'?: number;
     /**
      * 
      * @type {number}
-     * @memberof PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
      */
     'option5Response'?: number;
     /**
      * 
      * @type {number}
-     * @memberof PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
      */
     'option6Response'?: number;
 }
 /**
  * 
  * @export
- * @interface PollRespondPostRequest
+ * @interface ApiV1PollRespondPostRequest
  */
-export interface PollRespondPostRequest {
+export interface ApiV1PollRespondPostRequest {
     /**
      * 
-     * @type {PollRespondPostRequestResponseToPoll}
-     * @memberof PollRespondPostRequest
+     * @type {ApiV1PollRespondPostRequestResponseToPoll}
+     * @memberof ApiV1PollRespondPostRequest
      */
-    'responseToPoll': PollRespondPostRequestResponseToPoll;
+    'responseToPoll': ApiV1PollRespondPostRequestResponseToPoll;
     /**
      * 
      * @type {any}
-     * @memberof PollRespondPostRequest
+     * @memberof ApiV1PollRespondPostRequest
      */
     'pres'?: any;
 }
 /**
  * 
  * @export
- * @interface PollRespondPostRequestResponseToPoll
+ * @interface ApiV1PollRespondPostRequestResponseToPoll
  */
-export interface PollRespondPostRequestResponseToPoll {
+export interface ApiV1PollRespondPostRequestResponseToPoll {
     /**
      * 
      * @type {string}
-     * @memberof PollRespondPostRequestResponseToPoll
+     * @memberof ApiV1PollRespondPostRequestResponseToPoll
      */
     'pollUid': string;
     /**
      * 
      * @type {number}
-     * @memberof PollRespondPostRequestResponseToPoll
+     * @memberof ApiV1PollRespondPostRequestResponseToPoll
      */
     'optionChosen': number;
 }
@@ -3275,14 +3275,14 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
     return {
         /**
          * 
-         * @param {AuthAuthenticatePostRequest} authAuthenticatePostRequest 
+         * @param {ApiV1AuthAuthenticatePostRequest} apiV1AuthAuthenticatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authAuthenticatePost: async (authAuthenticatePostRequest: AuthAuthenticatePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'authAuthenticatePostRequest' is not null or undefined
-            assertParamExists('authAuthenticatePost', 'authAuthenticatePostRequest', authAuthenticatePostRequest)
-            const localVarPath = `/auth/authenticate`;
+        apiV1AuthAuthenticatePost: async (apiV1AuthAuthenticatePostRequest: ApiV1AuthAuthenticatePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1AuthAuthenticatePostRequest' is not null or undefined
+            assertParamExists('apiV1AuthAuthenticatePost', 'apiV1AuthAuthenticatePostRequest', apiV1AuthAuthenticatePostRequest)
+            const localVarPath = `/api/v1/auth/authenticate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3305,7 +3305,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(authAuthenticatePostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1AuthAuthenticatePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3317,8 +3317,8 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authLogoutPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/auth/logout`;
+        apiV1AuthLogoutPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/auth/logout`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3350,8 +3350,8 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authSyncPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/auth/sync`;
+        apiV1AuthSyncPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/auth/sync`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3380,86 +3380,14 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
+         * @param {ApiV1AuthVerifyOtpPostRequest} apiV1AuthVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authVerifyOtpPost: async (authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'authVerifyOtpPostRequest' is not null or undefined
-            assertParamExists('authVerifyOtpPost', 'authVerifyOtpPostRequest', authVerifyOtpPostRequest)
-            const localVarPath = `/auth/verifyOtp`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(authVerifyOtpPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        credentialGetPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/credential/get`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {CredentialRequestPostRequest} credentialRequestPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        credentialRequestPost: async (credentialRequestPostRequest: CredentialRequestPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'credentialRequestPostRequest' is not null or undefined
-            assertParamExists('credentialRequestPost', 'credentialRequestPostRequest', credentialRequestPostRequest)
-            const localVarPath = `/credential/request`;
+        apiV1AuthVerifyOtpPost: async (apiV1AuthVerifyOtpPostRequest: ApiV1AuthVerifyOtpPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1AuthVerifyOtpPostRequest' is not null or undefined
+            assertParamExists('apiV1AuthVerifyOtpPost', 'apiV1AuthVerifyOtpPostRequest', apiV1AuthVerifyOtpPostRequest)
+            const localVarPath = `/api/v1/auth/verifyOtp`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3482,7 +3410,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(credentialRequestPostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1AuthVerifyOtpPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3491,12 +3419,47 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        feedFetchMorePost: async (feedFetchMorePostRequest?: FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/feed/fetchMore`;
+        apiV1CredentialGetPost: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/credential/get`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiV1CredentialRequestPostRequest} apiV1CredentialRequestPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CredentialRequestPost: async (apiV1CredentialRequestPostRequest: ApiV1CredentialRequestPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1CredentialRequestPostRequest' is not null or undefined
+            assertParamExists('apiV1CredentialRequestPost', 'apiV1CredentialRequestPostRequest', apiV1CredentialRequestPostRequest)
+            const localVarPath = `/api/v1/credential/request`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3519,7 +3482,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(feedFetchMorePostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CredentialRequestPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3528,12 +3491,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        feedFetchRecentPost: async (feedFetchMorePostRequest?: FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/feed/fetchRecent`;
+        apiV1FeedFetchMorePost: async (apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/feed/fetchMore`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3556,7 +3519,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(feedFetchMorePostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchMorePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3565,14 +3528,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {PollCreatePostRequest} pollCreatePostRequest 
+         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pollCreatePost: async (pollCreatePostRequest: PollCreatePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'pollCreatePostRequest' is not null or undefined
-            assertParamExists('pollCreatePost', 'pollCreatePostRequest', pollCreatePostRequest)
-            const localVarPath = `/poll/create`;
+        apiV1FeedFetchRecentPost: async (apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/feed/fetchRecent`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3595,7 +3556,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(pollCreatePostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchMorePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3604,14 +3565,14 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {PollRespondPostRequest} pollRespondPostRequest 
+         * @param {ApiV1PollCreatePostRequest} apiV1PollCreatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pollRespondPost: async (pollRespondPostRequest: PollRespondPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'pollRespondPostRequest' is not null or undefined
-            assertParamExists('pollRespondPost', 'pollRespondPostRequest', pollRespondPostRequest)
-            const localVarPath = `/poll/respond`;
+        apiV1PollCreatePost: async (apiV1PollCreatePostRequest: ApiV1PollCreatePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1PollCreatePostRequest' is not null or undefined
+            assertParamExists('apiV1PollCreatePost', 'apiV1PollCreatePostRequest', apiV1PollCreatePostRequest)
+            const localVarPath = `/api/v1/poll/create`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3634,7 +3595,46 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(pollRespondPostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PollCreatePostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PollRespondPost: async (apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1PollRespondPostRequest' is not null or undefined
+            assertParamExists('apiV1PollRespondPost', 'apiV1PollRespondPostRequest', apiV1PollRespondPostRequest)
+            const localVarPath = `/api/v1/poll/respond`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PollRespondPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3653,12 +3653,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @param {AuthAuthenticatePostRequest} authAuthenticatePostRequest 
+         * @param {ApiV1AuthAuthenticatePostRequest} apiV1AuthAuthenticatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authAuthenticatePost(authAuthenticatePostRequest: AuthAuthenticatePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthAuthenticatePost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authAuthenticatePost(authAuthenticatePostRequest, options);
+        async apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest: ApiV1AuthAuthenticatePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1AuthAuthenticatePost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3666,8 +3666,8 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authLogoutPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authLogoutPost(options);
+        async apiV1AuthLogoutPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthLogoutPost(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3675,18 +3675,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authSyncPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authSyncPost(options);
+        async apiV1AuthSyncPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthSyncPost(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
+         * @param {ApiV1AuthVerifyOtpPostRequest} apiV1AuthVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthVerifyOtpPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authVerifyOtpPost(authVerifyOtpPostRequest, options);
+        async apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest: ApiV1AuthVerifyOtpPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1AuthVerifyOtpPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3694,58 +3694,58 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async credentialGetPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialGetPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.credentialGetPost(options);
+        async apiV1CredentialGetPost(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialGetPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialGetPost(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {CredentialRequestPostRequest} credentialRequestPostRequest 
+         * @param {ApiV1CredentialRequestPostRequest} apiV1CredentialRequestPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CredentialRequestPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.credentialRequestPost(credentialRequestPostRequest, options);
+        async apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest: ApiV1CredentialRequestPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialRequestPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<PollRespondPost200Response>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.feedFetchMorePost(feedFetchMorePostRequest, options);
+        async apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollRespondPost200Response>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<PollRespondPost200Response>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.feedFetchRecentPost(feedFetchMorePostRequest, options);
+        async apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollRespondPost200Response>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {PollCreatePostRequest} pollCreatePostRequest 
+         * @param {ApiV1PollCreatePostRequest} apiV1PollCreatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.pollCreatePost(pollCreatePostRequest, options);
+        async apiV1PollCreatePost(apiV1PollCreatePostRequest: ApiV1PollCreatePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollCreatePost(apiV1PollCreatePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {PollRespondPostRequest} pollRespondPostRequest 
+         * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async pollRespondPost(pollRespondPostRequest: PollRespondPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PollRespondPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.pollRespondPost(pollRespondPostRequest, options);
+        async apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1PollRespondPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollRespondPost(apiV1PollRespondPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -3760,90 +3760,90 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * 
-         * @param {AuthAuthenticatePostRequest} authAuthenticatePostRequest 
+         * @param {ApiV1AuthAuthenticatePostRequest} apiV1AuthAuthenticatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authAuthenticatePost(authAuthenticatePostRequest: AuthAuthenticatePostRequest, options?: any): AxiosPromise<AuthAuthenticatePost200Response> {
-            return localVarFp.authAuthenticatePost(authAuthenticatePostRequest, options).then((request) => request(axios, basePath));
+        apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest: ApiV1AuthAuthenticatePostRequest, options?: any): AxiosPromise<ApiV1AuthAuthenticatePost200Response> {
+            return localVarFp.apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authLogoutPost(options?: any): AxiosPromise<void> {
-            return localVarFp.authLogoutPost(options).then((request) => request(axios, basePath));
+        apiV1AuthLogoutPost(options?: any): AxiosPromise<void> {
+            return localVarFp.apiV1AuthLogoutPost(options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authSyncPost(options?: any): AxiosPromise<void> {
-            return localVarFp.authSyncPost(options).then((request) => request(axios, basePath));
+        apiV1AuthSyncPost(options?: any): AxiosPromise<void> {
+            return localVarFp.apiV1AuthSyncPost(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
+         * @param {ApiV1AuthVerifyOtpPostRequest} apiV1AuthVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: any): AxiosPromise<AuthVerifyOtpPost200Response> {
-            return localVarFp.authVerifyOtpPost(authVerifyOtpPostRequest, options).then((request) => request(axios, basePath));
+        apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest: ApiV1AuthVerifyOtpPostRequest, options?: any): AxiosPromise<ApiV1AuthVerifyOtpPost200Response> {
+            return localVarFp.apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        credentialGetPost(options?: any): AxiosPromise<CredentialGetPost200Response> {
-            return localVarFp.credentialGetPost(options).then((request) => request(axios, basePath));
+        apiV1CredentialGetPost(options?: any): AxiosPromise<ApiV1CredentialGetPost200Response> {
+            return localVarFp.apiV1CredentialGetPost(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {CredentialRequestPostRequest} credentialRequestPostRequest 
+         * @param {ApiV1CredentialRequestPostRequest} apiV1CredentialRequestPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: any): AxiosPromise<CredentialRequestPost200Response> {
-            return localVarFp.credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(axios, basePath));
+        apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest: ApiV1CredentialRequestPostRequest, options?: any): AxiosPromise<ApiV1CredentialRequestPost200Response> {
+            return localVarFp.apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<PollRespondPost200Response>> {
-            return localVarFp.feedFetchMorePost(feedFetchMorePostRequest, options).then((request) => request(axios, basePath));
+        apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1PollRespondPost200Response>> {
+            return localVarFp.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<PollRespondPost200Response>> {
-            return localVarFp.feedFetchRecentPost(feedFetchMorePostRequest, options).then((request) => request(axios, basePath));
+        apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1PollRespondPost200Response>> {
+            return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {PollCreatePostRequest} pollCreatePostRequest 
+         * @param {ApiV1PollCreatePostRequest} apiV1PollCreatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.pollCreatePost(pollCreatePostRequest, options).then((request) => request(axios, basePath));
+        apiV1PollCreatePost(apiV1PollCreatePostRequest: ApiV1PollCreatePostRequest, options?: any): AxiosPromise<void> {
+            return localVarFp.apiV1PollCreatePost(apiV1PollCreatePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {PollRespondPostRequest} pollRespondPostRequest 
+         * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pollRespondPost(pollRespondPostRequest: PollRespondPostRequest, options?: any): AxiosPromise<PollRespondPost200Response> {
-            return localVarFp.pollRespondPost(pollRespondPostRequest, options).then((request) => request(axios, basePath));
+        apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: any): AxiosPromise<ApiV1PollRespondPost200Response> {
+            return localVarFp.apiV1PollRespondPost(apiV1PollRespondPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -3857,13 +3857,13 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
 export class DefaultApi extends BaseAPI {
     /**
      * 
-     * @param {AuthAuthenticatePostRequest} authAuthenticatePostRequest 
+     * @param {ApiV1AuthAuthenticatePostRequest} apiV1AuthAuthenticatePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authAuthenticatePost(authAuthenticatePostRequest: AuthAuthenticatePostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authAuthenticatePost(authAuthenticatePostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest: ApiV1AuthAuthenticatePostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3872,8 +3872,8 @@ export class DefaultApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authLogoutPost(options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authLogoutPost(options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthLogoutPost(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AuthLogoutPost(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3882,19 +3882,19 @@ export class DefaultApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authSyncPost(options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authSyncPost(options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthSyncPost(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AuthSyncPost(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {AuthVerifyOtpPostRequest} authVerifyOtpPostRequest 
+     * @param {ApiV1AuthVerifyOtpPostRequest} apiV1AuthVerifyOtpPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public authVerifyOtpPost(authVerifyOtpPostRequest: AuthVerifyOtpPostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).authVerifyOtpPost(authVerifyOtpPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest: ApiV1AuthVerifyOtpPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3903,63 +3903,63 @@ export class DefaultApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public credentialGetPost(options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).credentialGetPost(options).then((request) => request(this.axios, this.basePath));
+    public apiV1CredentialGetPost(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1CredentialGetPost(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {CredentialRequestPostRequest} credentialRequestPostRequest 
+     * @param {ApiV1CredentialRequestPostRequest} apiV1CredentialRequestPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public credentialRequestPost(credentialRequestPostRequest: CredentialRequestPostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).credentialRequestPost(credentialRequestPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest: ApiV1CredentialRequestPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+     * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public feedFetchMorePost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).feedFetchMorePost(feedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {FeedFetchMorePostRequest} [feedFetchMorePostRequest] 
+     * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public feedFetchRecentPost(feedFetchMorePostRequest?: FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).feedFetchRecentPost(feedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {PollCreatePostRequest} pollCreatePostRequest 
+     * @param {ApiV1PollCreatePostRequest} apiV1PollCreatePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public pollCreatePost(pollCreatePostRequest: PollCreatePostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).pollCreatePost(pollCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PollCreatePost(apiV1PollCreatePostRequest: ApiV1PollCreatePostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1PollCreatePost(apiV1PollCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {PollRespondPostRequest} pollRespondPostRequest 
+     * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public pollRespondPost(pollRespondPostRequest: PollRespondPostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).pollRespondPost(pollRespondPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1PollRespondPost(apiV1PollRespondPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

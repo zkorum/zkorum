@@ -33,7 +33,7 @@
         "module": "Node16" /* Specify what module code is generated. */,
         // "rootDir": "./",                                  /* Specify the root folder within your source files. */
         "moduleResolution": "Node16" /* Specify how TypeScript looks up a file from a given module specifier. */,
-        "baseUrl": "src",
+        "baseUrl": "src", // only work in dev mode, doesn't work when running production build, so must be kept in sync with `aliases` in package.json
         "paths": {
           "@/*": [
             "*"

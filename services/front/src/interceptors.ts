@@ -11,20 +11,24 @@ import { loggedOut, openAuthModal } from "./store/reducers/session";
 import { showWarning } from "./store/reducers/snackbar";
 import { sessionExpired } from "./components/error/message";
 
+const VITE_BACK_BASE_URL = import.meta.env.PROD
+    ? import.meta.env.VITE_BACK_BASE_URL_PROD
+    : import.meta.env.VITE_BACK_BASE_URL_DEV;
+
 export const noAuthAxios = axios.create({
-    baseURL: import.meta.env.VITE_BACK_BASE_URL,
+    baseURL: VITE_BACK_BASE_URL,
 });
 
 export const activeSessionUcanAxios = axios.create({
-    baseURL: import.meta.env.VITE_BACK_BASE_URL,
+    baseURL: VITE_BACK_BASE_URL,
 });
 
 export const activeSessionUcanAxiosNoLog = axios.create({
-    baseURL: import.meta.env.VITE_BACK_BASE_URL,
+    baseURL: VITE_BACK_BASE_URL,
 });
 
 export const pendingSessionUcanAxios = axios.create({
-    baseURL: import.meta.env.VITE_BACK_BASE_URL,
+    baseURL: VITE_BACK_BASE_URL,
 });
 
 async function buildUcan(
@@ -76,7 +80,7 @@ async function buildUcan(
     //   capabilities: [
     //     {
     //       // this must match with backend expectation
-    //       with: httpUrlToResourcePointer(import.meta.env.VITE_BACK_BASE_URL),
+    //       with: httpUrlToResourcePointer(VITE_BACK_BASE_URL),
     //       can: { namespace: `http/${method}`, segments: [pathname] },
     //     },
     //   ],

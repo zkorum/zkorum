@@ -119,13 +119,13 @@ export function Feed() {
                                 ? post.payload.result.option4Response + 1
                                 : 1;
                         break;
-                    case 3:
+                    case 5:
                         post.payload.result.option5Response =
                             post.payload.result.option5Response !== undefined
                                 ? post.payload.result.option5Response + 1
                                 : 1;
                         break;
-                    case 3:
+                    case 6:
                         post.payload.result.option6Response =
                             post.payload.result.option6Response !== undefined
                                 ? post.payload.result.option6Response + 1

@@ -2,11 +2,16 @@ import { defineConfig } from "@julr/vite-plugin-validate-env";
 import { z } from "zod";
 
 const configSchema = {
-    VITE_BACK_BASE_URL: z
+    VITE_BACK_BASE_URL_DEV: z
         .string()
         .url()
         .nonempty()
         .default("http://localhost:8080"),
+    VITE_BACK_BASE_URL_PROD: z
+        .string()
+        .url()
+        .nonempty()
+        .default("https://zkorum.com"),
     VITE_BACK_DID: z
         .string()
         .describe("Decentralized Identifier with did:web method")

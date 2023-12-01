@@ -15,7 +15,7 @@
     "schemas": {}
   },
   "paths": {
-    "/auth/authenticate": {
+    "/api/v1/auth/authenticate": {
       "post": {
         "requestBody": {
           "content": {
@@ -302,7 +302,7 @@
         }
       }
     },
-    "/auth/verifyOtp": {
+    "/api/v1/auth/verifyOtp": {
       "post": {
         "requestBody": {
           "content": {
@@ -826,7 +826,7 @@
         }
       }
     },
-    "/auth/logout": {
+    "/api/v1/auth/logout": {
       "post": {
         "responses": {
           "200": {
@@ -835,7 +835,7 @@
         }
       }
     },
-    "/auth/sync": {
+    "/api/v1/auth/sync": {
       "post": {
         "responses": {
           "409": {
@@ -869,7 +869,7 @@
         }
       }
     },
-    "/credential/get": {
+    "/api/v1/credential/get": {
       "post": {
         "responses": {
           "200": {
@@ -1049,7 +1049,7 @@
         }
       }
     },
-    "/credential/request": {
+    "/api/v1/credential/request": {
       "post": {
         "requestBody": {
           "content": {
@@ -2202,7 +2202,7 @@
         }
       }
     },
-    "/poll/create": {
+    "/api/v1/poll/create": {
       "post": {
         "requestBody": {
           "content": {
@@ -2342,7 +2342,7 @@
         }
       }
     },
-    "/poll/respond": {
+    "/api/v1/poll/respond": {
       "post": {
         "requestBody": {
           "content": {
@@ -3146,7 +3146,7 @@
         }
       }
     },
-    "/feed/fetchMore": {
+    "/api/v1/feed/fetchMore": {
       "post": {
         "requestBody": {
           "content": {
@@ -3934,7 +3934,7 @@
         }
       }
     },
-    "/feed/fetchRecent": {
+    "/api/v1/feed/fetchRecent": {
       "post": {
         "requestBody": {
           "content": {
