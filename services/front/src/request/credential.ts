@@ -1,7 +1,7 @@
 import {
     DefaultApiFactory,
-    type CredentialRequestPostRequestFormCredentialRequest,
-    type PollCreatePostRequestPoll,
+    type ApiV1CredentialRequestPostRequestFormCredentialRequest,
+    type ApiV1PollCreatePostRequestPoll,
 } from "@/api";
 import { unblindedSecretCredentialsPerTypeFrom } from "@/crypto/vc/credential";
 import { activeSessionUcanAxios, noAuthAxios } from "@/interceptors";
@@ -25,10 +25,10 @@ export async function requestAnonymousCredentials(
         undefined,
         undefined,
         activeSessionUcanAxios
-    ).credentialRequestPost({
+    ).apiV1CredentialRequestPost({
         email: email,
         formCredentialRequest:
-            formCredentialRequest as CredentialRequestPostRequestFormCredentialRequest,
+            formCredentialRequest as ApiV1CredentialRequestPostRequestFormCredentialRequest,
     });
     if (response.data !== undefined) {
         const credentials = response.data;
@@ -52,7 +52,7 @@ export async function fetchAndUpdateCredentials(userId: string): Promise<void> {
         undefined,
         undefined,
         activeSessionUcanAxios
-    ).credentialGetPost();
+    ).apiV1CredentialGetPost();
     const credentials = response?.data;
     if (credentials !== undefined) {
         store.dispatch(
@@ -71,7 +71,7 @@ export async function fetchAndUpdateCredentials(userId: string): Promise<void> {
 
 export async function createPoll(
     presentation: Presentation,
-    pollContent: PollCreatePostRequestPoll
+    pollContent: ApiV1PollCreatePostRequestPoll
 ): Promise<void> {
     // const bearerToken = encodeCbor(presentation.toJSON());
     // console.log(
@@ -79,7 +79,11 @@ export async function createPoll(
     //     bearerToken,
     //     new Blob([bearerToken]).size
     // );
-    await DefaultApiFactory(undefined, undefined, noAuthAxios).pollCreatePost({
+    await DefaultApiFactory(
+        undefined,
+        undefined,
+        noAuthAxios
+    ).apiV1PollCreatePost({
         poll: pollContent,
         pres: presentation.toJSON(),
     });
@@ -101,7 +105,7 @@ export async function doRespondToPoll(
         undefined,
         undefined,
         noAuthAxios
-    ).pollRespondPost({
+    ).apiV1PollRespondPost({
         responseToPoll: responseToPoll,
         pres: presentation.toJSON(),
     });

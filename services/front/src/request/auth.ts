@@ -11,10 +11,10 @@ import {
 import * as DID from "../crypto/ucan/did/index";
 import {
     DefaultApiFactory,
-    type AuthAuthenticatePost200Response,
-    type AuthVerifyOtpPost200Response,
-    type AuthAuthenticatePost409Response,
-    AuthVerifyOtpPost200ResponseReasonEnum,
+    type ApiV1AuthAuthenticatePost200Response,
+    type ApiV1AuthVerifyOtpPost200Response,
+    type ApiV1AuthAuthenticatePost409Response,
+    ApiV1AuthVerifyOtpPost200ResponseReasonEnum,
 } from "../api/api";
 import {
     activeSessionUcanAxios,
@@ -49,7 +49,7 @@ export async function authenticate(
     isRequestingNewCode: boolean,
     userId?: string
 ): Promise<
-    | AuthAuthenticatePost200Response
+    | ApiV1AuthAuthenticatePost200Response
     | "logged-in"
     | "awaiting-syncing"
     | "throttled"
@@ -80,7 +80,7 @@ export async function authenticate(
             undefined,
             undefined,
             pendingSessionUcanAxios
-        ).authAuthenticatePost({
+        ).apiV1AuthAuthenticatePost({
             email: email,
             didExchange: didExchange,
             isRequestingNewCode: isRequestingNewCode,
@@ -97,8 +97,8 @@ export async function authenticate(
     } catch (e) {
         if (axios.isAxiosError(e)) {
             if (e.response?.status === 409) {
-                const auth409: AuthAuthenticatePost409Response = e.response
-                    .data as AuthAuthenticatePost409Response;
+                const auth409: ApiV1AuthAuthenticatePost409Response = e.response
+                    .data as ApiV1AuthAuthenticatePost409Response;
                 if (auth409.reason === "already_logged_in") {
                     await onLoggedIn({
                         email: email,
@@ -130,7 +130,7 @@ export async function authenticate(
 }
 
 interface VerifyOtpResult {
-    verifyOtpData: AuthVerifyOtpPost200Response;
+    verifyOtpData: ApiV1AuthVerifyOtpPost200Response;
     tempEncryptedSymmKey: string | undefined;
 }
 
@@ -159,7 +159,7 @@ export async function verifyOtp(
         undefined,
         undefined,
         pendingSessionUcanAxios
-    ).authVerifyOtpPost({
+    ).apiV1AuthVerifyOtpPost({
         code: code,
         encryptedSymmKey: tempEncryptedSymmKey,
         unboundSecretCredentialRequest: unboundSecretCredentialRequest,
@@ -168,13 +168,13 @@ export async function verifyOtp(
     if (
         verifyOtpResult.data.success === false &&
         (verifyOtpResult.data.reason ===
-            AuthVerifyOtpPost200ResponseReasonEnum.SecretCredentialRequestsRequired ||
+            ApiV1AuthVerifyOtpPost200ResponseReasonEnum.SecretCredentialRequestsRequired ||
             verifyOtpResult.data.reason ===
-                AuthVerifyOtpPost200ResponseReasonEnum.UnboundSecretCredentialRequestRequired ||
+                ApiV1AuthVerifyOtpPost200ResponseReasonEnum.UnboundSecretCredentialRequestRequired ||
             verifyOtpResult.data.reason ===
-                AuthVerifyOtpPost200ResponseReasonEnum.TimeboundSecretCredentialRequestRequired ||
+                ApiV1AuthVerifyOtpPost200ResponseReasonEnum.TimeboundSecretCredentialRequestRequired ||
             verifyOtpResult.data.reason ===
-                AuthVerifyOtpPost200ResponseReasonEnum.EncryptedSymmKeyRequired)
+                ApiV1AuthVerifyOtpPost200ResponseReasonEnum.EncryptedSymmKeyRequired)
     ) {
         const { exportedSymmKey, encodedEncryptedSymmKey } =
             await generateAndEncryptSymmKey(pendingEmail);
@@ -188,7 +188,7 @@ export async function verifyOtp(
             undefined,
             undefined,
             pendingSessionUcanAxios
-        ).authVerifyOtpPost({
+        ).apiV1AuthVerifyOtpPost({
             code: code,
             encryptedSymmKey: tempEncryptedSymmKey,
             unboundSecretCredentialRequest: unboundSecretCredentialRequest,
@@ -204,7 +204,7 @@ export async function logout() {
         undefined,
         undefined,
         activeSessionUcanAxios
-    ).authLogoutPost();
+    ).apiV1AuthLogoutPost();
     store.dispatch(loggedOut({ email: activeSessionEmail }));
 }
 

@@ -177,7 +177,7 @@ export function Topbar() {
                                             <Link
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                href="https://zkorum.com"
+                                                href="https://about.zkorum.com"
                                                 color="inherit"
                                                 underline="none"
                                             >

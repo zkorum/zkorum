@@ -74,7 +74,7 @@ import {
 } from "@/shared/shared";
 import { maybeInitWasm } from "@/crypto/vc/credential";
 import { createPoll } from "@/request/credential";
-import type { PollCreatePostRequestPoll } from "@/api";
+import type { ApiV1PollCreatePostRequestPoll } from "@/api";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { doLoadMore, doLoadRecent, type PostsType } from "@/feed";
 
@@ -631,7 +631,7 @@ export function PostDialog({
                     eligibilityCampus.length === 0 &&
                     eligibilityProgram.length === 0 &&
                     eligibilityAdmissionYear.length === 0;
-                const newPoll: PollCreatePostRequestPoll = {
+                const newPoll: ApiV1PollCreatePostRequestPoll = {
                     data: {
                         question: questionInputRef.current?.value,
                         option1: option1InputRef.current?.value,

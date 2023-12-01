@@ -162,8 +162,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                         students!
                     </Typography>
                     <Typography component="div" sx={{ mb: 1 }}>
-                        The forms result will only be visible to ZKorum the
-                        other members of your community.
+                        The forms result will only be visible to ZKorum.
                     </Typography>
                     <Typography component="div" sx={{ mb: 1 }}>
                         For now,{" "}

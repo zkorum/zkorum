@@ -13,7 +13,7 @@ export async function fetchFeedMore({
         undefined,
         undefined,
         activeSessionUcanAxiosNoLog // TODO <= use another UCAN
-    ).feedFetchMorePost({
+    ).apiV1FeedFetchMorePost({
         updatedAt: updatedAt?.toISOString(),
     });
     if (response.data !== undefined) {
@@ -41,7 +41,7 @@ export async function fetchFeedRecent({
         undefined,
         undefined,
         activeSessionUcanAxiosNoLog // TODO <= use another UCAN
-    ).feedFetchRecentPost({
+    ).apiV1FeedFetchRecentPost({
         updatedAt: updatedAt?.toISOString(),
     });
     if (response.data !== undefined) {

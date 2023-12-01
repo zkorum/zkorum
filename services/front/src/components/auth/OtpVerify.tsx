@@ -5,8 +5,8 @@ import { MuiOtpInput } from "mui-one-time-password-input";
 import React from "react";
 import { useCountdown } from "usehooks-ts";
 import {
-    AuthVerifyOtpPost200ResponseReasonEnum,
-    type AuthAuthenticatePost409Response,
+    ApiV1AuthVerifyOtpPost200ResponseReasonEnum,
+    type ApiV1AuthAuthenticatePost409Response,
 } from "../../api";
 import { authenticate, onLoggedIn, verifyOtp } from "@/request/auth";
 import { useAppDispatch, useAppSelector } from "../../hooks";
@@ -169,16 +169,16 @@ export function OtpVerify() {
                     }
                 } else {
                     switch (verifyOtpData.reason) {
-                        case AuthVerifyOtpPost200ResponseReasonEnum.ExpiredCode:
+                        case ApiV1AuthVerifyOtpPost200ResponseReasonEnum.ExpiredCode:
                             setIsCurrentCodeActive(false);
                             dispatch(
                                 showWarning("Code expired - request a new one")
                             );
                             break;
-                        case AuthVerifyOtpPost200ResponseReasonEnum.WrongGuess:
+                        case ApiV1AuthVerifyOtpPost200ResponseReasonEnum.WrongGuess:
                             dispatch(showWarning("Wrong guess"));
                             break;
-                        case AuthVerifyOtpPost200ResponseReasonEnum.TooManyWrongGuess:
+                        case ApiV1AuthVerifyOtpPost200ResponseReasonEnum.TooManyWrongGuess:
                             setIsCurrentCodeActive(false);
                             setOtp("");
                             dispatch(
@@ -198,8 +198,9 @@ export function OtpVerify() {
                 console.error(e);
                 if (axios.isAxiosError(e)) {
                     if (e.response?.status === 409) {
-                        const auth409: AuthAuthenticatePost409Response = e
-                            .response.data as AuthAuthenticatePost409Response;
+                        const auth409: ApiV1AuthAuthenticatePost409Response = e
+                            .response
+                            .data as ApiV1AuthAuthenticatePost409Response;
                         if (auth409.reason === "already_logged_in") {
                             await onLoggedIn({
                                 email: pendingEmail,
