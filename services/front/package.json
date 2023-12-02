@@ -12,7 +12,8 @@
         "format:write": "prettier . --write",
         "preview": "vite preview",
         "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-        "build:image": "docker build -f Dockerfile.prod -t zkorum-front ."
+        "image:build": "docker build -f Dockerfile.prod -t zkorum-front .",
+        "image:tag": "docker tag zkorum-front:latest zkorum/front:0.1.7"
     },
     "keywords": [
         "trust-minimized infrastructure",
