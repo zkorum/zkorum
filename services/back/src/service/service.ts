@@ -90,6 +90,9 @@ import { type TCountryCode, countries as allCountries } from "countries-list";
 import isEqual from "lodash/isEqual.js";
 import { toUnionUndefined } from "@/shared/shared.js";
 import type { PgTransaction, QueryResultHKT } from "drizzle-orm/pg-core";
+import { Environment } from "@/app.js";
+import sesClientModule from "@aws-sdk/client-ses";
+import nodemailer from "nodemailer";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -283,6 +286,49 @@ interface FetchExtendedPollDataProps<
     db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
     pollUid: PollUid;
     httpErrors: HttpErrors;
+}
+
+interface InsertAuthAttemptCodeProps {
+    db: PostgresDatabase;
+    type: AuthenticateType;
+    userId: string;
+    minutesBeforeCodeExpiry: number;
+    didWrite: string;
+    now: Date;
+    authenticateRequestBody: AuthenticateRequestBody;
+    throttleMinutesInterval: number;
+    httpErrors: HttpErrors;
+    env: Environment;
+}
+
+interface SendOtpEmailProps {
+    email: string;
+    otp: number;
+}
+
+interface AuthenticateAttemptProps {
+    db: PostgresDatabase;
+    type: AuthenticateType;
+    authenticateRequestBody: AuthenticateRequestBody;
+    userId: string;
+    minutesBeforeCodeExpiry: number;
+    didWrite: string;
+    throttleMinutesInterval: number;
+    httpErrors: HttpErrors;
+    env: Environment;
+}
+
+interface UpdateAuthAttemptCodeProps {
+    db: PostgresDatabase;
+    type: AuthenticateType;
+    userId: string;
+    minutesBeforeCodeExpiry: number;
+    didWrite: string;
+    now: Date;
+    authenticateRequestBody: AuthenticateRequestBody;
+    throttleMinutesInterval: number;
+    httpErrors: HttpErrors;
+    env: Environment;
 }
 
 function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
@@ -795,16 +841,17 @@ export class Service {
         }
     }
 
-    static async authenticateAttempt(
-        db: PostgresDatabase,
-        type: AuthenticateType,
-        authenticateRequestBody: AuthenticateRequestBody,
-        userId: string,
-        minutesBeforeCodeExpiry: number,
-        didWrite: string,
-        throttleMinutesInterval: number,
-        httpErrors: HttpErrors
-    ): Promise<AuthenticateOtp> {
+    static async authenticateAttempt({
+        db,
+        type,
+        authenticateRequestBody,
+        userId,
+        minutesBeforeCodeExpiry,
+        didWrite,
+        throttleMinutesInterval,
+        httpErrors,
+        env,
+    }: AuthenticateAttemptProps): Promise<AuthenticateOtp> {
         const now = new Date();
         const resultHasAttempted = await db
             .select({
@@ -815,7 +862,7 @@ export class Service {
             .where(eq(authAttemptTable.didWrite, didWrite));
         if (resultHasAttempted.length === 0) {
             // this is a first attempt, generate new code, insert data and send email in one transaction
-            return await this.insertAuthAttemptCode(
+            return await this.insertAuthAttemptCode({
                 db,
                 type,
                 userId,
@@ -824,11 +871,12 @@ export class Service {
                 now,
                 authenticateRequestBody,
                 throttleMinutesInterval,
-                httpErrors
-            );
+                httpErrors,
+                env,
+            });
         } else if (authenticateRequestBody.isRequestingNewCode) {
             // if user wants to regenerate new code, do it (if possible according to throttling rules)
-            return await this.updateAuthAttemptCode(
+            return await this.updateAuthAttemptCode({
                 db,
                 type,
                 userId,
@@ -837,8 +885,9 @@ export class Service {
                 now,
                 authenticateRequestBody,
                 throttleMinutesInterval,
-                httpErrors
-            );
+                httpErrors,
+                env,
+            });
         } else if (resultHasAttempted[0].codeExpiry > now) {
             // code hasn't expired
             const nextCodeSoonestTime = resultHasAttempted[0].lastEmailSentAt;
@@ -851,7 +900,7 @@ export class Service {
             };
         } else {
             // code has expired, generate a new one if not throttled
-            return await this.updateAuthAttemptCode(
+            return await this.updateAuthAttemptCode({
                 db,
                 type,
                 userId,
@@ -860,22 +909,51 @@ export class Service {
                 now,
                 authenticateRequestBody,
                 throttleMinutesInterval,
-                httpErrors
-            );
+                httpErrors,
+                env,
+            });
         }
     }
 
-    static async insertAuthAttemptCode(
-        db: PostgresDatabase,
-        type: AuthenticateType,
-        userId: string,
-        minutesBeforeCodeExpiry: number,
-        didWrite: string,
-        now: Date,
-        authenticateRequestBody: AuthenticateRequestBody,
-        throttleMinutesInterval: number,
-        httpErrors: HttpErrors
-    ): Promise<AuthenticateOtp> {
+    static async sendOtpEmail({ email, otp }: SendOtpEmailProps) {
+        // TODO: verify if email does exist and is reachable to avoid bounce. Use: https://github.com/reacherhq/check-if-email-exists
+
+        const ses = new sesClientModule.SESClient({});
+        const transporter = nodemailer.createTransport({
+            SES: { ses, aws: sesClientModule },
+        });
+
+        return new Promise((resolve, reject) => {
+            transporter.sendMail(
+                {
+                    from: "noreply@notify.zkorum.com", // TODO: make this configurable
+                    to: email,
+                    subject: "ZKorum confirmation code", // TODO make this configurable
+                    text: `Your confirmation code is\n${otp}\n\nEnter it shortly in the same browser/device that you used for your authentication request.\n\nIf you didn’t request this email, there’s nothing to worry about — you can safely ignore it.`, // TODO: use a beaauautiful HTML template
+                },
+                (err, info) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(info);
+                    }
+                }
+            );
+        });
+    }
+
+    static async insertAuthAttemptCode({
+        db,
+        type,
+        userId,
+        minutesBeforeCodeExpiry,
+        didWrite,
+        now,
+        authenticateRequestBody,
+        throttleMinutesInterval,
+        httpErrors,
+        env,
+    }: InsertAuthAttemptCodeProps): Promise<AuthenticateOtp> {
         await Service.throttleByEmail(
             db,
             authenticateRequestBody.email,
@@ -888,9 +966,20 @@ export class Service {
         codeExpiry.setMinutes(
             codeExpiry.getMinutes() + minutesBeforeCodeExpiry
         );
-        // TODO: transaction to actually send the email + update DB && remove the logging below!
-        // TODO: verify if email does exist and is reachable to avoid bounce. Use: https://github.com/reacherhq/check-if-email-exists
-        console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
+        if (env === Environment.Production) {
+            // may throw errors and return 500 :)
+            await Service.sendOtpEmail({
+                email: authenticateRequestBody.email,
+                otp: oneTimeCode,
+            });
+        } else {
+            console.log(
+                "\n\nCode:",
+                codeToString(oneTimeCode),
+                codeExpiry,
+                "\n\n"
+            );
+        }
         await db.insert(authAttemptTable).values({
             didWrite: didWrite,
             type: type,
@@ -912,17 +1001,18 @@ export class Service {
         };
     }
 
-    static async updateAuthAttemptCode(
-        db: PostgresDatabase,
-        type: AuthenticateType,
-        userId: string,
-        minutesBeforeCodeExpiry: number,
-        didWrite: string,
-        now: Date,
-        authenticateRequestBody: AuthenticateRequestBody,
-        throttleMinutesInterval: number,
-        httpErrors: HttpErrors
-    ): Promise<AuthenticateOtp> {
+    static async updateAuthAttemptCode({
+        db,
+        type,
+        userId,
+        minutesBeforeCodeExpiry,
+        didWrite,
+        now,
+        authenticateRequestBody,
+        throttleMinutesInterval,
+        httpErrors,
+        env,
+    }: UpdateAuthAttemptCodeProps): Promise<AuthenticateOtp> {
         await Service.throttleByEmail(
             db,
             authenticateRequestBody.email,
@@ -935,9 +1025,19 @@ export class Service {
         codeExpiry.setMinutes(
             codeExpiry.getMinutes() + minutesBeforeCodeExpiry
         );
-        // TODO: transaction to actually send the email + update DB && remove the logging below!
-        // TODO: verify if email does exist and is reachable to avoid bounce. Use: https://github.com/reacherhq/check-if-email-exists
-        console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
+        if (env === Environment.Production) {
+            await Service.sendOtpEmail({
+                email: authenticateRequestBody.email,
+                otp: oneTimeCode,
+            });
+        } else {
+            console.log(
+                "\n\nCode:",
+                codeToString(oneTimeCode),
+                codeExpiry,
+                "\n\n"
+            );
+        }
         await db
             .update(authAttemptTable)
             .set({

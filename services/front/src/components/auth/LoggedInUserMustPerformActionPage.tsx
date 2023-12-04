@@ -102,8 +102,13 @@ export function LoggedInUserMustPerformActionPage({
                 >
                     {isTheOnlyDevice ? (
                         <Grid>
-                            <Button onClick={handleOnSync} variant="contained">
-                                Link new device
+                            <Button
+                                disabled
+                                size="small"
+                                onClick={handleOnSync}
+                                variant="contained"
+                            >
+                                Link new device (under development)
                             </Button>
                         </Grid>
                     ) : null}

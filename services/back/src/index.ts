@@ -655,16 +655,19 @@ server.after(() => {
                     didWrite,
                     server.httpErrors
                 );
-                return await Service.authenticateAttempt(
+                return await Service.authenticateAttempt({
                     db,
                     type,
-                    request.body,
+                    authenticateRequestBody: request.body,
                     userId,
-                    config.MINUTES_BEFORE_EMAIL_OTP_EXPIRY,
+                    minutesBeforeCodeExpiry:
+                        config.MINUTES_BEFORE_EMAIL_OTP_EXPIRY,
                     didWrite,
-                    config.THROTTLE_EMAIL_MINUTES_INTERVAL,
-                    server.httpErrors
-                ).then(({ codeExpiry, nextCodeSoonestTime }) => {
+                    throttleMinutesInterval:
+                        config.THROTTLE_EMAIL_MINUTES_INTERVAL,
+                    httpErrors: server.httpErrors,
+                    env: config.NODE_ENV,
+                }).then(({ codeExpiry, nextCodeSoonestTime }) => {
                     // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
                     return {
                         codeExpiry: codeExpiry,

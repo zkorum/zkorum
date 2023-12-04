@@ -8,8 +8,8 @@ export function httpUrlToResourcePointer(url: URL | string): {
     } else {
         urlVal = new URL(url);
     }
-    const scheme = urlVal.protocol.slice(0, -1);
-    const hierPart = `//${urlVal.hostname}:${urlVal.port}${urlVal.pathname}`;
+    const scheme = "https";
+    const hierPart = `//zkorum.com${urlVal.pathname}`;
     return { scheme, hierPart };
 }
 

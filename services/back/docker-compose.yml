@@ -22,6 +22,7 @@ services:
             PGDATA: /data/postgres
         volumes:
             - postgres:/data/postgres
+            - ./database/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
         ports:
             - "5432:5432"
         restart: unless-stopped
