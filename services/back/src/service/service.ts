@@ -918,7 +918,7 @@ export class Service {
     static async sendOtpEmail({ email, otp }: SendOtpEmailProps) {
         // TODO: verify if email does exist and is reachable to avoid bounce. Use: https://github.com/reacherhq/check-if-email-exists
 
-        const ses = new sesClientModule.SESClient({});
+        const ses = new sesClientModule.SESClient({ region: "eu-north-1" });
         const transporter = nodemailer.createTransport({
             SES: { ses, aws: sesClientModule },
         });
