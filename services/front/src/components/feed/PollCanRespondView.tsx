@@ -149,7 +149,6 @@ export function PollCanRespondView({
                 ? getOptionView(
                       data.option6,
                       6,
-
                       button6IsLoading,
                       setButton6IsLoading,
                       button6LoadingText,

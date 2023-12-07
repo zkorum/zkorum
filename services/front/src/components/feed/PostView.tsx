@@ -306,7 +306,10 @@ export function PostView({ post, updatePost }: PostViewProps) {
                 }
         }
     }
-    const isEligible = getIsEligible(post, activeFormCredential?.subject);
+    const isEligible =
+        activeEmailCredential === undefined
+            ? false
+            : getIsEligible(post, activeFormCredential?.subject);
     return (
         // lines
         <Paper elevation={0}>

@@ -221,7 +221,7 @@ export function postAsFromEligibility({
         postAsAdmissionYear: false,
         postAsCountries: false,
     };
-    if (eligibility?.university?.student === undefined) {
+    if (!eligibility?.university?.types?.includes("student")) {
         return postAs;
     }
     return {

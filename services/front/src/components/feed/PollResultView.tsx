@@ -109,7 +109,7 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
                           pollResponse.optionChosen === 3
                   )
                 : null}
-            {data.option4 !== undefined && result.option4Response !== undefined
+            {data.option4 !== undefined
                 ? getOptionView(
                       data.option4,
                       totalCount === 0 || result.option4Response === undefined
@@ -122,7 +122,7 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
                           pollResponse.optionChosen === 4
                   )
                 : null}
-            {data.option5 !== undefined && result.option5Response !== undefined
+            {data.option5 !== undefined
                 ? getOptionView(
                       data.option5,
                       totalCount === 0 || result.option5Response === undefined
@@ -134,7 +134,7 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
                           pollResponse.optionChosen === 5
                   )
                 : null}
-            {data.option6 !== undefined && result.option6Response !== undefined
+            {data.option6 !== undefined
                 ? getOptionView(
                       data.option6,
                       totalCount === 0 || result.option6Response === undefined

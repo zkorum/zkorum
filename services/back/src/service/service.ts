@@ -2729,7 +2729,7 @@ export class Service {
             await tx
                 .update(pollTable)
                 .set({
-                    [optionChosenResponseColumnName]: sql`${optionChosenResponseColumn} + 1`,
+                    [optionChosenResponseColumnName]: sql`coalesce(${optionChosenResponseColumn}, 0) + 1`,
                 })
                 .where(
                     eq(pollTable.timestampedPresentationCID, response.pollUid)
