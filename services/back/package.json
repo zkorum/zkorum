@@ -16,7 +16,7 @@
         "format:write": "prettier . --write",
         "generate-dev-keys": "NODE_OPTIONS=--experimental-vm-modules GENERATE_DEV_KEYS=true jest -t 'generate-dev-keys'",
         "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-        "build:image": "docker build -f Dockerfile.prod -t zkorum-back ."
+        "image:build": "docker build -f Dockerfile.prod -t zkorum-back ."
     },
     "type": "module",
     "engines": {
