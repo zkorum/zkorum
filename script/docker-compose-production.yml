@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
   back:
     container_name: zkorum_back
-    image: zkorum/back:0.1.6
+    image: zkorum/back:0.1.7
     environment:
       CONNECTION_STRING: "postgres://postgres:CHANGEME@postgres:5432/zkorum"
       NODE_ENV: "production"
