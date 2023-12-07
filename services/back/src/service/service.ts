@@ -299,11 +299,18 @@ interface InsertAuthAttemptCodeProps {
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
     env: Environment;
+    awsMailConf: AwsMailConf;
+}
+
+export interface AwsMailConf {
+    accessKeyId: string;
+    secretAccessKey: string;
 }
 
 interface SendOtpEmailProps {
     email: string;
     otp: number;
+    awsMailConf: AwsMailConf;
 }
 
 interface AuthenticateAttemptProps {
@@ -316,6 +323,7 @@ interface AuthenticateAttemptProps {
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
     env: Environment;
+    awsMailConf: AwsMailConf;
 }
 
 interface UpdateAuthAttemptCodeProps {
@@ -329,6 +337,7 @@ interface UpdateAuthAttemptCodeProps {
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
     env: Environment;
+    awsMailConf: AwsMailConf;
 }
 
 function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
@@ -851,6 +860,7 @@ export class Service {
         throttleMinutesInterval,
         httpErrors,
         env,
+        awsMailConf,
     }: AuthenticateAttemptProps): Promise<AuthenticateOtp> {
         const now = new Date();
         const resultHasAttempted = await db
@@ -873,6 +883,7 @@ export class Service {
                 throttleMinutesInterval,
                 httpErrors,
                 env,
+                awsMailConf,
             });
         } else if (authenticateRequestBody.isRequestingNewCode) {
             // if user wants to regenerate new code, do it (if possible according to throttling rules)
@@ -887,6 +898,7 @@ export class Service {
                 throttleMinutesInterval,
                 httpErrors,
                 env,
+                awsMailConf,
             });
         } else if (resultHasAttempted[0].codeExpiry > now) {
             // code hasn't expired
@@ -911,14 +923,21 @@ export class Service {
                 throttleMinutesInterval,
                 httpErrors,
                 env,
+                awsMailConf,
             });
         }
     }
 
-    static async sendOtpEmail({ email, otp }: SendOtpEmailProps) {
+    static async sendOtpEmail({ email, otp, awsMailConf }: SendOtpEmailProps) {
         // TODO: verify if email does exist and is reachable to avoid bounce. Use: https://github.com/reacherhq/check-if-email-exists
 
-        const ses = new sesClientModule.SESClient({ region: "eu-north-1" });
+        const ses = new sesClientModule.SESClient({
+            region: "eu-north-1",
+            credentials: {
+                accessKeyId: awsMailConf.accessKeyId,
+                secretAccessKey: awsMailConf.secretAccessKey,
+            },
+        });
         const transporter = nodemailer.createTransport({
             SES: { ses, aws: sesClientModule },
         });
@@ -953,6 +972,7 @@ export class Service {
         throttleMinutesInterval,
         httpErrors,
         env,
+        awsMailConf,
     }: InsertAuthAttemptCodeProps): Promise<AuthenticateOtp> {
         await Service.throttleByEmail(
             db,
@@ -971,6 +991,7 @@ export class Service {
             await Service.sendOtpEmail({
                 email: authenticateRequestBody.email,
                 otp: oneTimeCode,
+                awsMailConf,
             });
         } else {
             console.log(
@@ -1012,6 +1033,7 @@ export class Service {
         throttleMinutesInterval,
         httpErrors,
         env,
+        awsMailConf,
     }: UpdateAuthAttemptCodeProps): Promise<AuthenticateOtp> {
         await Service.throttleByEmail(
             db,
@@ -1029,6 +1051,7 @@ export class Service {
             await Service.sendOtpEmail({
                 email: authenticateRequestBody.email,
                 otp: oneTimeCode,
+                awsMailConf,
             });
         } else {
             console.log(

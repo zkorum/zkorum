@@ -630,6 +630,11 @@ async function verifyPresentation({
 
 const apiVersion = "v1";
 
+const awsMailConf = {
+    accessKeyId: config.AWS_ACCESS_KEY_ID,
+    secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
+};
+
 server.after(() => {
     server
         .withTypeProvider<ZodTypeProvider>()
@@ -667,6 +672,7 @@ server.after(() => {
                         config.THROTTLE_EMAIL_MINUTES_INTERVAL,
                     httpErrors: server.httpErrors,
                     env: config.NODE_ENV,
+                    awsMailConf: awsMailConf,
                 }).then(({ codeExpiry, nextCodeSoonestTime }) => {
                     // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
                     return {

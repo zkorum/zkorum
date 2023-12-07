@@ -25,6 +25,8 @@ const configSchema = z.object({
         .min(3)
         .max(60)
         .default(10),
+    AWS_ACCESS_KEY_ID: z.string().default("CHANGEME"), // only use for prod
+    AWS_SECRET_ACCESS_KEY: z.string().default("CHANGEME"),
 });
 
 export const config = configSchema.parse(process.env);
