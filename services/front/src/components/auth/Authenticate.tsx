@@ -9,10 +9,17 @@ import {
 } from "../../store/selector";
 import React from "react";
 
+export type EmailValidity =
+    | "valid_authorized"
+    | "valid_unauthorized"
+    | "invalid_authorized" // authorized domain but invalid email format
+    | "incorrect"; // syntaxically incorrect email
+
 export function Authenticate() {
     const [email, setEmail] = React.useState<string>("");
     const [userId, setUserId] = React.useState<string | undefined>(undefined);
-    const [isEmailValid, setIsEmailValid] = React.useState<boolean>(false);
+    const [isEmailValid, setIsEmailValid] =
+        React.useState<EmailValidity>("incorrect");
     const [emailHelper, setEmailHelper] = React.useState<string>(" "); // we must have a helper set to not change form height: https://stackoverflow.com/questions/72510035/error-message-affects-the-height-of-the-text-field-helpertext-material-ui
     const sessionsData = useAppSelector(selectSortedSessionsData);
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);

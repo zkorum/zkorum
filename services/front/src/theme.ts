@@ -12,7 +12,7 @@ const text = {
 };
 
 // Create a theme instance.
-const theme = createTheme({
+let theme = createTheme({
     typography: {
         fontFamily: [
             "-apple-system",
@@ -54,6 +54,18 @@ const theme = createTheme({
                 },
             },
         },
+    },
+});
+
+theme = createTheme(theme, {
+    // Custom colors created with augmentColor go here
+    palette: {
+        discord: theme.palette.augmentColor({
+            color: {
+                main: "#7289DA",
+            },
+            name: "discord",
+        }),
     },
 });
 
