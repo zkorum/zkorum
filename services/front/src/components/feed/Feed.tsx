@@ -172,26 +172,28 @@ export function Feed() {
                     ) : context?.posts.length === undefined ||
                       context?.posts.length === 0 ? (
                         <Typography>Initializing...</Typography>
-                    ) : context?.posts.length !== undefined &&
-                      context.posts.length <= 4 ? (
-                        <Button
-                            size="small"
-                            color={"inherit"}
-                            onClick={() =>
-                                doLoadMore(
-                                    posts,
-                                    setPosts,
-                                    setLoadingMore,
-                                    posts.length === 0
-                                        ? undefined
-                                        : posts.length - 1
-                                )
-                            }
-                        >
-                            Load more
-                        </Button>
                     ) : context?.isLoggedIn ? (
-                        <Typography>No more posts</Typography>
+                        context?.posts.length !== undefined &&
+                        context.posts.length <= 4 ? (
+                            <Button
+                                size="small"
+                                color={"inherit"}
+                                onClick={() =>
+                                    doLoadMore(
+                                        posts,
+                                        setPosts,
+                                        setLoadingMore,
+                                        posts.length === 0
+                                            ? undefined
+                                            : posts.length - 1
+                                    )
+                                }
+                            >
+                                Load more
+                            </Button>
+                        ) : (
+                            <Typography>No more posts</Typography>
+                        )
                     ) : (
                         <Button
                             size="small"
