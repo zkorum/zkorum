@@ -125,7 +125,8 @@ export function LoggedInUserMustPerformActionPage({
                     <Grid>
                         <Button
                             onClick={handleOnSkip}
-                            variant={isTheOnlyDevice ? "outlined" : "contained"}
+                            // variant={isTheOnlyDevice ? "outlined" : "contained"}
+                            variant={"contained"}
                         >
                             Skip for now
                         </Button>
