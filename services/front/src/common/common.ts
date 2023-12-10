@@ -53,7 +53,16 @@ export function getFromAuthor(postAs: PostAs): string {
         return "a member";
     }
     const university = postAs.university;
-    return `a ${universityTypeToString(university.type).toLowerCase()}`;
+    switch (university.type) {
+        case "student":
+            return `a ${universityTypeToString(university.type).toLowerCase()}`;
+        case "alum":
+            return `an ${universityTypeToString(
+                university.type
+            ).toLowerCase()}`;
+        case "faculty":
+            return `a ${universityTypeToString(university.type).toLowerCase()}`;
+    }
 }
 
 export function getToEligibility(eligibility: Eligibilities): string {

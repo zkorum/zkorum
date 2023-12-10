@@ -85,8 +85,9 @@ export function AuthForm({
                     value={email}
                     onChange={(event: React.FocusEvent<HTMLInputElement>) => {
                         if (event.target.value !== email) {
-                            setEmail(event.target.value);
-                            validateEmail(event.target.value);
+                            const newEmail = event.target.value.toLowerCase();
+                            setEmail(newEmail);
+                            validateEmail(newEmail);
                         }
                     }}
                 />
