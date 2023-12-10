@@ -273,17 +273,7 @@ function basesFromRevealedAttributes(revealedAttributes?: any): string[] {
             const universityType = typeSpecificAttribute[
                 typeStr
             ] as UniversityType; // TODO this can throw errors
-            switch (universityType) {
-                case zoduniversityType.enum.student:
-                    scope = scopeWith(scope, "student");
-                    break;
-                case zoduniversityType.enum.faculty:
-                    //TODO
-                    break;
-                case zoduniversityType.enum.alum:
-                    // TODO
-                    break;
-            }
+            scope = scopeWith(scope, universityType);
         }
         const campusStr = "campus";
         if (campusStr in typeSpecificAttribute) {

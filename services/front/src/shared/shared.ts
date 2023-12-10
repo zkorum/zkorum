@@ -12,6 +12,7 @@ import type {
     Eligibilities,
     ResponseToPoll,
     ResponseToPollPayload,
+    UniversityType,
 } from "./types/zod.js";
 import type { TCountryCode } from "countries-list";
 import { toEncodedCID } from "./common/cid.js";
@@ -103,6 +104,8 @@ function addIfExists({ credential, attribute, set }: AddIfExistsProps) {
 
 export interface PostAsProps {
     postAsStudent: boolean;
+    postAsAlum: boolean;
+    postAsFaculty: boolean;
     postAsCampus: boolean;
     postAsProgram: boolean;
     postAsAdmissionYear: boolean;
@@ -120,13 +123,15 @@ export function attributesFormRevealedFromPostAs({
 }: AttributesFormRevealedFromPostAsProps): Set<string> {
     const {
         postAsStudent,
+        postAsAlum,
+        postAsFaculty,
         postAsCampus,
         postAsProgram,
         postAsAdmissionYear,
         postAsCountries,
     } = postAs;
     const attributesRevealed = new Set<string>();
-    if (postAsStudent) {
+    if (postAsStudent || postAsAlum || postAsFaculty) {
         addIfExists({
             attribute: `${SUBJECT_STR}.typeSpecific.type`,
             credential: credential,
@@ -176,6 +181,8 @@ export function attributesFormRevealedFromPostAs({
 
 export function scopeFromPostAs({
     postAsStudent,
+    postAsAlum,
+    postAsFaculty,
     postAsCampus,
     postAsProgram,
     postAsAdmissionYear,
@@ -184,6 +191,12 @@ export function scopeFromPostAs({
     let scope = "base";
     if (postAsStudent) {
         scope = scopeWith(scope, "student");
+    }
+    if (postAsAlum) {
+        scope = scopeWith(scope, "alum");
+    }
+    if (postAsFaculty) {
+        scope = scopeWith(scope, "faculty");
     }
     if (postAsCampus) {
         scope = scopeWith(scope, "campus");
@@ -202,13 +215,16 @@ export function scopeFromPostAs({
 
 interface PostAsFromEligibility {
     eligibility: Eligibilities;
+    type: UniversityType | undefined;
     mustPostAsForCampus: boolean;
     mustPostAsForProgram: boolean;
     mustPostAsForAdmissionYear: boolean;
     mustPostAsForCountries: boolean;
 }
+
 export function postAsFromEligibility({
     eligibility,
+    type,
     mustPostAsForCampus,
     mustPostAsForProgram,
     mustPostAsForAdmissionYear,
@@ -216,22 +232,25 @@ export function postAsFromEligibility({
 }: PostAsFromEligibility): PostAsProps {
     const postAs = {
         postAsStudent: false,
+        postAsFaculty: false,
+        postAsAlum: false,
         postAsCampus: false,
         postAsProgram: false,
         postAsAdmissionYear: false,
         postAsCountries: false,
     };
-    if (!eligibility?.university?.types?.includes("student")) {
+    if (eligibility?.university?.types === undefined || type === undefined) {
         return postAs;
     }
     return {
-        postAsStudent: true,
+        postAsStudent: type === "student" ? true : false,
+        postAsFaculty: type === "faculty" ? true : false,
+        postAsAlum: type === "alum" ? true : false,
         postAsCampus: mustPostAsForCampus,
         postAsProgram: mustPostAsForProgram,
         postAsAdmissionYear: mustPostAsForAdmissionYear,
         postAsCountries: mustPostAsForCountries,
     };
-    // TODO: alum and faculty
 }
 
 export function mustPostAsForList<T>(

@@ -111,11 +111,13 @@ function toCredProperties(formCredentialRequest: FormCredentialRequest) {
                 admissionYear: formCredentialRequest.admissionYear,
             };
         case zoduniversityType.enum.alum:
-            // TODO
-            return {};
+            return {
+                type: formCredentialRequest.type,
+            };
         case zoduniversityType.enum.faculty:
-            // TODO
-            return {};
+            return {
+                type: formCredentialRequest.type,
+            };
     }
 }
 
@@ -229,10 +231,34 @@ export function buildFormCredential({
             };
             break;
         case zoduniversityType.enum.alum:
-            // TODO
+            schema.properties[SUBJECT_STR] = {
+                type: "object",
+                properties: {
+                    uid: { type: "string" },
+                    email: { type: "string" },
+                    typeSpecific: {
+                        type: "object",
+                        properties: {
+                            type: { type: "string" },
+                        },
+                    },
+                },
+            };
             break;
         case zoduniversityType.enum.faculty:
-            // TODO
+            schema.properties[SUBJECT_STR] = {
+                type: "object",
+                properties: {
+                    uid: { type: "string" },
+                    email: { type: "string" },
+                    typeSpecific: {
+                        type: "object",
+                        properties: {
+                            type: { type: "string" },
+                        },
+                    },
+                },
+            };
             break;
     }
     const credSchema = new CredentialSchema(schema);

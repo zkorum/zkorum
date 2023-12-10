@@ -28,6 +28,7 @@ export function LoggedInUserMustPerformActionPage({
         }
     }, []);
 
+    // @ts-ignore - TODO this is unused TEMPORARILY
     function handleOnSync() {
         navigate(NOTIFICATIONS);
         dispatch(closeAuthModal());
@@ -53,28 +54,29 @@ export function LoggedInUserMustPerformActionPage({
                 alignItems: "left",
             }}
         >
-            {isTheOnlyDevice ? (
-                <>
-                    <Box sx={{ my: 2 }}>
-                        <Typography variant={"h6"}>
-                            Add a new device (recommended)
-                        </Typography>{" "}
-                    </Box>
-                    <Box sx={{ my: 2 }}>
-                        <Typography component="div">
-                            This is the only device connected to your account.{" "}
-                            <Box fontWeight="fontWeightMedium" display="inline">
-                                If you lose access to this device, uninstall the
-                                app or delete its cache,
-                            </Box>{" "}
-                            the secret keys will be lost. As a consequence, you
-                            would not be able to respond to polls/votes created
-                            before you lost your device, and ZKorum will not be
-                            able to tell what posts you created.
-                        </Typography>
-                    </Box>
-                </>
-            ) : null}
+            {isTheOnlyDevice
+                ? null
+                : // <>
+                  //     <Box sx={{ my: 2 }}>
+                  //         <Typography variant={"h6"}>
+                  //             Add a new device (recommended)
+                  //         </Typography>{" "}
+                  //     </Box>
+                  //     <Box sx={{ my: 2 }}>
+                  //         <Typography component="div">
+                  //             This is the only device connected to your account.{" "}
+                  //             <Box fontWeight="fontWeightMedium" display="inline">
+                  //                 If you lose access to this device, uninstall the
+                  //                 app or delete its cache,
+                  //             </Box>{" "}
+                  //             the secret keys will be lost. As a consequence, you
+                  //             would not be able to respond to polls/votes created
+                  //             before you lost your device, and ZKorum will not be
+                  //             able to tell what posts you created.
+                  //         </Typography>
+                  //     </Box>
+                  // </>
+                  null}
             {!hasFilledForms ? (
                 <>
                     <Box sx={{ my: 2 }}>
@@ -100,18 +102,19 @@ export function LoggedInUserMustPerformActionPage({
                     justifyContent="center"
                     spacing={2}
                 >
-                    {isTheOnlyDevice ? (
-                        <Grid>
-                            <Button
-                                disabled
-                                size="small"
-                                onClick={handleOnSync}
-                                variant="contained"
-                            >
-                                Link new device (under development)
-                            </Button>
-                        </Grid>
-                    ) : null}
+                    {isTheOnlyDevice
+                        ? null
+                        : // <Grid>
+                          //     <Button
+                          //         disabled
+                          //         size="small"
+                          //         onClick={handleOnSync}
+                          //         variant="contained"
+                          //     >
+                          //         Link new device (under development)
+                          //     </Button>
+                          // </Grid>
+                          null}
                     {!hasFilledForms ? (
                         <Grid>
                             <Button onClick={handleOnForms} variant="outlined">

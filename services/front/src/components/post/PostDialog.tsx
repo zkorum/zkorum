@@ -109,6 +109,10 @@ export function PostDialog({
 
     const [postAsStudentChecked, setPostAsStudentChecked] =
         React.useState<boolean>(false);
+    const [postAsAlumChecked, setPostAsAlumChecked] =
+        React.useState<boolean>(false);
+    const [postAsFacultyChecked, setPostAsFacultyChecked] =
+        React.useState<boolean>(false);
     const [postAsCampusChecked, setPostAsCampusChecked] =
         React.useState<boolean>(false);
     const [postAsProgramChecked, setPostAsProgramChecked] =
@@ -388,39 +392,35 @@ export function PostDialog({
 
     function getPostAsAlum(_alumAttributes: any) {
         return (
-            <>
-                <FormControlLabel
-                    control={<Checkbox />}
-                    disabled
-                    checked
-                    label="an anonymous ESSEC member"
-                    required
-                />
-                <FormControlLabel
-                    required
-                    control={<Checkbox />}
-                    label="an alum"
-                />
-            </>
+            <FormControlLabel
+                checked={postAsAlumChecked}
+                control={
+                    <Checkbox
+                        value={postAsAlumChecked}
+                        onChange={() =>
+                            setPostAsAlumChecked(!postAsAlumChecked)
+                        }
+                    />
+                }
+                label="an alum..."
+            />
         );
     }
 
     function getPostAsFaculty(_facultyAttributes: any) {
         return (
-            <>
-                <FormControlLabel
-                    control={<Checkbox />}
-                    disabled
-                    checked
-                    label="an anonymous  ESSEC member"
-                    required
-                />
-                <FormControlLabel
-                    required
-                    control={<Checkbox />}
-                    label="a faculty/staff member"
-                />
-            </>
+            <FormControlLabel
+                checked={postAsFacultyChecked}
+                control={
+                    <Checkbox
+                        value={postAsFacultyChecked}
+                        onChange={() =>
+                            setPostAsFacultyChecked(!postAsFacultyChecked)
+                        }
+                    />
+                }
+                label="an alum..."
+            />
         );
     }
 
@@ -536,6 +536,8 @@ export function PostDialog({
                 const attributesRevealed = attributesFormRevealedFromPostAs({
                     postAs: {
                         postAsStudent: postAsStudentChecked,
+                        postAsAlum: postAsAlumChecked,
+                        postAsFaculty: postAsFacultyChecked,
                         postAsCampus: postAsCampusChecked,
                         postAsProgram: postAsProgramChecked,
                         postAsAdmissionYear: postAsAdmissionYearChecked,
@@ -558,6 +560,8 @@ export function PostDialog({
             const scope = stringToBytes(
                 scopeFromPostAs({
                     postAsStudent: postAsStudentChecked,
+                    postAsAlum: postAsAlumChecked,
+                    postAsFaculty: postAsFacultyChecked,
                     postAsCampus: postAsCampusChecked,
                     postAsProgram: postAsProgramChecked,
                     postAsAdmissionYear: postAsAdmissionYearChecked,
@@ -826,7 +830,7 @@ export function PostDialog({
                         flexWrap={"wrap"}
                     >
                         <Grid mt={"1em"} width={"100%"}>
-                            <Accordion defaultExpanded={true}>
+                            <Accordion defaultExpanded={false}>
                                 <AccordionSummary
                                     expandIcon={<ExpandMoreIcon />}
                                     aria-controls="panel1a-content"
@@ -849,7 +853,7 @@ export function PostDialog({
                             </Accordion>
                         </Grid>
                         <Grid width={"100%"}>
-                            <Accordion defaultExpanded={true}>
+                            <Accordion defaultExpanded={false}>
                                 <AccordionSummary
                                     expandIcon={<ExpandMoreIcon />}
                                     aria-controls="panel1a-content"

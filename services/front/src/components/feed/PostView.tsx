@@ -145,6 +145,8 @@ export function PostView({ post, updatePost }: PostViewProps) {
                 );
                 postAs = postAsFromEligibility({
                     eligibility: poll.eligibility,
+                    type: (activeFormCredential.subject as any)?.typeSpecific
+                        ?.type as UniversityType | undefined,
                     mustPostAsForCampus,
                     mustPostAsForProgram,
                     mustPostAsForAdmissionYear,
@@ -165,6 +167,8 @@ export function PostView({ post, updatePost }: PostViewProps) {
                 }
             } else {
                 postAs = {
+                    postAsAlum: false,
+                    postAsFaculty: false,
                     postAsStudent: false,
                     postAsCampus: false,
                     postAsProgram: false,

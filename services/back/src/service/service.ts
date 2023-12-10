@@ -12,6 +12,8 @@ import {
     sql,
 } from "drizzle-orm";
 import {
+    alumEligibilityTable,
+    alumPersonaTable,
     authAttemptTable,
     credentialEmailTable,
     credentialFormTable,
@@ -19,6 +21,8 @@ import {
     deviceTable,
     eligibilityTable,
     emailTable,
+    facultyEligibilityTable,
+    facultyPersonaTable,
     personaTable,
     pollResponseTable,
     pollTable,
@@ -199,6 +203,22 @@ interface SelectStudentPersonaIdFromAttributesProps<
     admissionYear: number | undefined;
 }
 
+interface SelectAlumPersonaIdFromAttributesProps<
+    TQueryResult extends QueryResultHKT,
+    TFullSchema extends Record<string, unknown>,
+    TSchema extends TablesRelationalConfig,
+> {
+    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
+}
+
+interface SelectFacultyPersonaIdFromAttributesProps<
+    TQueryResult extends QueryResultHKT,
+    TFullSchema extends Record<string, unknown>,
+    TSchema extends TablesRelationalConfig,
+> {
+    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
+}
+
 interface SelectUniversityPersonaIdFromAttributesProps<
     TQueryResult extends QueryResultHKT,
     TFullSchema extends Record<string, unknown>,
@@ -235,6 +255,14 @@ interface SelectStudentEligibilityIdFromAttributesProps {
     campuses: string[] | undefined;
     programs: string[] | undefined;
     admissionYears: number[] | undefined;
+}
+
+interface SelectAlumEligibilityIdFromAttributesProps {
+    db: PostgresDatabase;
+}
+
+interface SelectFacultyEligibilityIdFromAttributesProps {
+    db: PostgresDatabase;
 }
 
 interface SelectUniversityEligibilityIdFromAttributesProps {
@@ -947,8 +975,9 @@ export class Service {
                 {
                     from: "noreply@notify.zkorum.com", // TODO: make this configurable
                     to: email,
-                    subject: "ZKorum confirmation code", // TODO make this configurable
-                    text: `Your confirmation code is\n${otp}\n\nEnter it shortly in the same browser/device that you used for your authentication request.\n\nIf you didn’t request this email, there’s nothing to worry about — you can safely ignore it.`, // TODO: use a beaauautiful HTML template
+                    subject: `ZKorum confirmation code: ${codeToString(otp)}`, // TODO make this configurable
+                    text: `Your confirmation code is ${codeToString(otp)}
+                    \n\nEnter it shortly in the same browser/device that you used for your authentication request.\n\nIf you didn’t request this email, there’s nothing to worry about — you can safely ignore it.`, // TODO: use a beaauautiful HTML template
                 },
                 (err, info) => {
                     if (err) {
@@ -1655,6 +1684,40 @@ export class Service {
         };
     }
 
+    static async selectFacultyEligibilityIdFromAttributes({
+        db,
+    }: SelectFacultyEligibilityIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const results = await db
+            .select({
+                facultyEligibilityId: facultyEligibilityTable.id,
+            })
+            .from(facultyEligibilityTable);
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].facultyEligibilityId;
+        }
+    }
+
+    static async selectAlumEligibilityIdFromAttributes({
+        db,
+    }: SelectAlumEligibilityIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const results = await db
+            .select({
+                alumEligibilityId: alumEligibilityTable.id,
+            })
+            .from(alumEligibilityTable);
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].alumEligibilityId;
+        }
+    }
+
     static async selectStudentEligibilityIdFromAttributes({
         db,
         campuses,
@@ -1686,6 +1749,44 @@ export class Service {
             return undefined;
         } else {
             return results[0].studentEligibilityId;
+        }
+    }
+
+    static async selectAlumPersonaIdFromAttributes({
+        db,
+    }: SelectAlumPersonaIdFromAttributesProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<number | undefined> {
+        const results = await db
+            .select({
+                alumPersonaId: alumPersonaTable.id,
+            })
+            .from(alumPersonaTable);
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].alumPersonaId;
+        }
+    }
+
+    static async selectFacultyPersonaIdFromAttributes({
+        db,
+    }: SelectFacultyPersonaIdFromAttributesProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<number | undefined> {
+        const results = await db
+            .select({
+                facultyPersonaId: facultyPersonaTable.id,
+            })
+            .from(facultyPersonaTable);
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].facultyPersonaId;
         }
     }
 
@@ -1924,14 +2025,30 @@ export class Service {
             let facultyPersonaId: number | undefined = undefined;
             switch (postAs.typeSpecific.type) {
                 case zoduniversityType.enum.student:
-                    if (
-                        postAs.typeSpecific.campus !== undefined ||
-                        postAs.typeSpecific.program !== undefined ||
-                        postAs.typeSpecific.admissionYear !== undefined
-                    ) {
-                        const selectedStudentPersonaId: number | undefined =
-                            await Service.selectStudentPersonaIdFromAttributes({
-                                db: tx,
+                    const selectedStudentPersonaId: number | undefined =
+                        await Service.selectStudentPersonaIdFromAttributes({
+                            db: tx,
+                            campus:
+                                postAs.typeSpecific.campus !== undefined
+                                    ? essecCampusToString(
+                                          postAs.typeSpecific.campus
+                                      )
+                                    : undefined,
+                            program:
+                                postAs.typeSpecific.program !== undefined
+                                    ? essecProgramToString(
+                                          postAs.typeSpecific.program
+                                      )
+                                    : undefined,
+                            admissionYear:
+                                postAs.typeSpecific.admissionYear !== undefined
+                                    ? postAs.typeSpecific.admissionYear
+                                    : undefined,
+                        });
+                    if (selectedStudentPersonaId === undefined) {
+                        const insertedStudentPersona = await tx
+                            .insert(studentPersonaTable)
+                            .values({
                                 campus:
                                     postAs.typeSpecific.campus !== undefined
                                         ? essecCampusToString(
@@ -1949,45 +2066,48 @@ export class Service {
                                     undefined
                                         ? postAs.typeSpecific.admissionYear
                                         : undefined,
+                            })
+                            .returning({
+                                insertedId: studentPersonaTable.id,
                             });
-                        if (selectedStudentPersonaId === undefined) {
-                            const insertedStudentPersona = await tx
-                                .insert(studentPersonaTable)
-                                .values({
-                                    campus:
-                                        postAs.typeSpecific.campus !== undefined
-                                            ? essecCampusToString(
-                                                  postAs.typeSpecific.campus
-                                              )
-                                            : undefined,
-                                    program:
-                                        postAs.typeSpecific.program !==
-                                        undefined
-                                            ? essecProgramToString(
-                                                  postAs.typeSpecific.program
-                                              )
-                                            : undefined,
-                                    admissionYear:
-                                        postAs.typeSpecific.admissionYear !==
-                                        undefined
-                                            ? postAs.typeSpecific.admissionYear
-                                            : undefined,
-                                })
-                                .returning({
-                                    insertedId: studentPersonaTable.id,
-                                });
-                            studentPersonaId =
-                                insertedStudentPersona[0].insertedId;
-                        } else {
-                            studentPersonaId = selectedStudentPersonaId;
-                        }
+                        studentPersonaId = insertedStudentPersona[0].insertedId;
+                    } else {
+                        studentPersonaId = selectedStudentPersonaId;
                     }
                     break;
                 case zoduniversityType.enum.alum:
-                    // TODO
+                    const selectedAlumPersonaId: number | undefined =
+                        await Service.selectAlumPersonaIdFromAttributes({
+                            db: tx,
+                        });
+                    if (selectedAlumPersonaId === undefined) {
+                        const insertedAlumPersona = await tx
+                            .insert(alumPersonaTable)
+                            .values({ id: undefined }) // inserts default values, see https://github.com/drizzle-team/drizzle-orm/issues/1629
+                            .returning({
+                                insertedId: alumPersonaTable.id,
+                            });
+                        alumPersonaId = insertedAlumPersona[0].insertedId;
+                    } else {
+                        alumPersonaId = selectedAlumPersonaId;
+                    }
                     break;
                 case zoduniversityType.enum.faculty:
-                    // TODO
+                    const selectedFacultyPersonaId: number | undefined =
+                        await Service.selectFacultyPersonaIdFromAttributes({
+                            db: tx,
+                        });
+                    if (selectedFacultyPersonaId === undefined) {
+                        const insertedFacultyPersona = await tx
+                            .insert(facultyPersonaTable)
+                            .values({ id: undefined })
+                            .returning({
+                                insertedId: facultyPersonaTable.id,
+                            });
+                        facultyPersonaId = insertedFacultyPersona[0].insertedId;
+                    } else {
+                        facultyPersonaId = selectedFacultyPersonaId;
+                    }
                     break;
             }
             let personaCountries = undefined;
@@ -2189,7 +2309,9 @@ export class Service {
                                             ? poll.eligibility.admissionYears
                                             : undefined,
                                 })
-                                .returning({ insertedId: eligibilityTable.id });
+                                .returning({
+                                    insertedId: studentEligibilityTable.id,
+                                });
                             studentEligibilityId =
                                 insertedStudentEligibility[0].insertedId;
                         } else {
@@ -2199,11 +2321,39 @@ export class Service {
                 }
                 if (poll.eligibility.alum === true) {
                     eligibilityTypes.push(zoduniversityType.enum.alum);
-                    // TODO ALUM info
+                    const selectedAlumEligibilityId: number | undefined =
+                        await Service.selectAlumEligibilityIdFromAttributes({
+                            db: tx,
+                        });
+                    if (selectedAlumEligibilityId === undefined) {
+                        const insertedAlumEligibility = await tx
+                            .insert(alumEligibilityTable)
+                            .values({ id: undefined })
+                            .returning({ insertedId: alumEligibilityTable.id });
+                        alumEligibilityId =
+                            insertedAlumEligibility[0].insertedId;
+                    } else {
+                        alumEligibilityId = selectedAlumEligibilityId;
+                    }
                 }
                 if (poll.eligibility.faculty === true) {
                     eligibilityTypes.push(zoduniversityType.enum.faculty);
-                    // TODO FACULTY info
+                    const selectedFacultyEligibilityId: number | undefined =
+                        await Service.selectFacultyEligibilityIdFromAttributes({
+                            db: tx,
+                        });
+                    if (selectedFacultyEligibilityId === undefined) {
+                        const insertedFacultyEligibility = await tx
+                            .insert(facultyEligibilityTable)
+                            .values({ id: undefined })
+                            .returning({
+                                insertedId: facultyEligibilityTable.id,
+                            });
+                        facultyEligibilityId =
+                            insertedFacultyEligibility[0].insertedId;
+                    } else {
+                        facultyEligibilityId = selectedFacultyEligibilityId;
+                    }
                 }
             }
             if (
@@ -2614,7 +2764,6 @@ export class Service {
             );
         }
         if (results.length > 1) {
-            console.log(results, JSON.stringify(results), results.length);
             throw httpErrors.internalServerError(
                 "There are more than one poll corresponding to this UID"
             );

@@ -65,8 +65,10 @@ export function CommunitiesLayout() {
                 }}
             >
                 <Box sx={{ my: 2 }}>
-                    <Typography variant={"h4"}>
-                        Your {communityName} community
+                    <Typography variant={"h5"}>
+                        {activeFormCredential !== undefined
+                            ? `Your ${communityName} community`
+                            : `Complete Your ${communityName} Profile`}
                     </Typography>
                 </Box>
                 {activeSessionEmail !== undefined &&

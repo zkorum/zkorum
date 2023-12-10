@@ -74,10 +74,10 @@ export function CommunityForm({ email }: CommunityFormProps) {
                 }
                 break;
             case zoduniversityType.enum.alum:
-                //TODO
+                setIsInvalid(false);
                 break;
             case zoduniversityType.enum.faculty:
-                //TODO
+                setIsInvalid(false);
                 break;
         }
     }, [type, studentCountries, studentAdmissionYear]);
@@ -97,9 +97,9 @@ export function CommunityForm({ email }: CommunityFormProps) {
         if (isInvalid) {
             return;
         }
-        setStudentHasTriedSubmitting(true);
         switch (type) {
             case zoduniversityType.enum.student:
+                setStudentHasTriedSubmitting(true);
                 const studentCountriesAsObj: Partial<
                     Record<TCountryCode, boolean>
                 > = {};
@@ -132,11 +132,52 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     dispatch(closeMainLoading());
                 }
                 break;
-            case zoduniversityType.enum.alum:
-                //TODO
+            case zoduniversityType.enum.alum: {
+                const formCredentialRequest = {
+                    type: zoduniversityType.enum.alum,
+                };
+                dispatch(openMainLoading());
+                try {
+                    // this will eventually update redux emailCredential and hence the parent to show CommunityFormFilled instead
+                    await requestAnonymousCredentials(
+                        email,
+                        formCredentialRequest
+                    );
+                    //... if it gets through, we redirect to the feed
+                    dispatch(showSuccess(credentialsIssued));
+                } catch (e) {
+                    console.warn(
+                        "Error while attempting to request credentials",
+                        e
+                    );
+                    dispatch(showError(genericError));
+                } finally {
+                    dispatch(closeMainLoading());
+                }
                 break;
+            }
             case zoduniversityType.enum.faculty:
-                //TODO
+                const formCredentialRequest = {
+                    type: zoduniversityType.enum.faculty,
+                };
+                dispatch(openMainLoading());
+                try {
+                    // this will eventually update redux emailCredential and hence the parent to show CommunityFormFilled instead
+                    await requestAnonymousCredentials(
+                        email,
+                        formCredentialRequest
+                    );
+                    //... if it gets through, we redirect to the feed
+                    dispatch(showSuccess(credentialsIssued));
+                } catch (e) {
+                    console.warn(
+                        "Error while attempting to request credentials",
+                        e
+                    );
+                    dispatch(showError(genericError));
+                } finally {
+                    dispatch(closeMainLoading());
+                }
                 break;
         }
         // TODO actually send the request to backend to create credentials
@@ -151,47 +192,21 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     alignItems: "left",
                 }}
             >
-                <Box sx={{ mt: 2 }}>
+                <Box>
                     <Typography component="div" sx={{ mb: 1 }}>
-                        Self-attest attributes to connect with your community
-                        with more granularity than just belonging to ESSEC.
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 1 }}>
-                        For example, If you are a student, you'll be able to
-                        post "as a student" and respond to posts only for
-                        students!
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 1 }}>
-                        The forms result will only be visible to ZKorum.
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 1 }}>
-                        For now,{" "}
-                        <Box fontWeight="fontWeightMedium" display="inline">
-                            you can't change the forms once it's done! Your best
-                            interest is to be genuine
-                        </Box>
-                        , so you can connect with your real community.
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 1 }}>
-                        Thanks to Zero-Knowledge proofs,{" "}
-                        <Box fontWeight="fontWeightMedium" display="inline">
-                            the posts you will create cannot trace back to your
-                            account or to the forms, even for ZKorum
-                        </Box>
-                        , yet we can verify they originated from some anonymous
-                        invididual in your community.
+                        Once you fill this form, you won’t be able to change it
+                        for this MVP Alpha.
                     </Typography>
                 </Box>
                 <Box sx={{ my: 2 }}>
-                    <FormControl disabled required>
+                    <FormControl required>
                         <FormLabel id="form-label-which-type-form">
-                            Are you a ... (only student supported for now)
+                            Are you a ...
                         </FormLabel>
                         <RadioGroup
                             aria-labelledby="radio-group-which-type-form"
                             name="radio-group-which-type-form"
                             value={type}
-                            defaultValue={zoduniversityType.enum.student}
                             onChange={handleChangeType}
                         >
                             <FormControlLabel
@@ -252,10 +267,8 @@ export function CommunityForm({ email }: CommunityFormProps) {
                 ),
             });
         case zoduniversityType.enum.alum:
-            // TODO
             return getForm({ typeSpecificForm: <AlumForm /> });
         case zoduniversityType.enum.faculty:
-            // TODO
             return getForm({ typeSpecificForm: <FacultyForm /> });
     }
 }

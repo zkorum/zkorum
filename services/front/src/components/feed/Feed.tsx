@@ -95,7 +95,6 @@ export function Feed() {
 
     function updatePost(responseToPoll: ResponseToPollPayload): void {
         const newPosts = [...posts];
-        console.log(posts);
         for (const post of newPosts) {
             if (post.metadata.uid === responseToPoll.pollUid) {
                 switch (responseToPoll.optionChosen) {

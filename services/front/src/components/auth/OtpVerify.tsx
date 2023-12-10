@@ -350,12 +350,6 @@ export function OtpVerify() {
                 </Typography>
             </Box>
             <Box alignSelf="center">
-                <CircularProgressCountdown
-                    value={secondsUntilAllowingNewCode}
-                    unit={"s"}
-                />
-            </Box>
-            <Box alignSelf="center">
                 <LoadingButton
                     size="small"
                     disabled={!canRequestNewCode}
