@@ -1,34 +1,36 @@
 // for now we assume the same form for every commmunity
 // TODO: we need the backend to send a specific form for each community later
 
-import Radio from "@mui/material/Radio";
-import Box from "@mui/material/Box";
-import FormControl from "@mui/material/FormControl";
-import FormLabel from "@mui/material/FormLabel";
-import RadioGroup from "@mui/material/RadioGroup";
-import Typography from "@mui/material/Typography";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import React from "react";
-import { StudentForm } from "./StudentForm";
-import { AlumForm } from "./AlumForm";
-import { FacultyForm } from "./FacultyForm";
-import { countries as allCountries, type TCountryCode } from "countries-list";
+import { useAppDispatch } from "@/hooks";
+import { requestAnonymousCredentials } from "@/request/credential";
 import {
     EssecCampus,
     EssecProgram,
     universityTypeToString,
 } from "@/shared/types/university";
-import Button from "@mui/material/Button";
-import { requestAnonymousCredentials } from "@/request/credential";
-import { useAppDispatch } from "@/hooks";
-import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
-import { credentialsIssued, genericError } from "../error/message";
-import { showError, showSuccess } from "@/store/reducers/snackbar";
 import {
     currentStudentsAdmissionYears,
-    type UniversityType,
     zoduniversityType,
+    type UniversityType,
 } from "@/shared/types/zod";
+import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
+import { showError, showSuccess } from "@/store/reducers/snackbar";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormLabel from "@mui/material/FormLabel";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import Typography from "@mui/material/Typography";
+import { countries as allCountries, type TCountryCode } from "countries-list";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { credentialsIssued, genericError } from "../error/message";
+import { AlumForm } from "./AlumForm";
+import { FacultyForm } from "./FacultyForm";
+import { StudentForm } from "./StudentForm";
+import { FEED } from "@/common/navigation";
 
 interface GetFormProps {
     typeSpecificForm: JSX.Element;
@@ -41,6 +43,8 @@ interface CommunityFormProps {
 // TODO: To support abitrary communities, move the form schema to a standardized JSON schema or something that's fetched from the backend
 // and dynamically create the form from that.
 export function CommunityForm({ email }: CommunityFormProps) {
+    const navigate = useNavigate();
+
     const [type, setType] = React.useState<UniversityType>(
         zoduniversityType.enum.student
     );
@@ -121,6 +125,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                         emailCredentialRequest
                     );
                     //... if it gets through, we redirect to the feed
+                    navigate(FEED);
                     dispatch(showSuccess(credentialsIssued));
                 } catch (e) {
                     console.warn(
@@ -144,6 +149,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                         formCredentialRequest
                     );
                     //... if it gets through, we redirect to the feed
+                    navigate(FEED);
                     dispatch(showSuccess(credentialsIssued));
                 } catch (e) {
                     console.warn(
@@ -168,6 +174,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                         formCredentialRequest
                     );
                     //... if it gets through, we redirect to the feed
+                    navigate(FEED);
                     dispatch(showSuccess(credentialsIssued));
                 } catch (e) {
                     console.warn(
