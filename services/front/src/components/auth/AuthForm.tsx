@@ -106,8 +106,7 @@ export function AuthForm({
                             }
                             label={
                                 <Typography variant={"body2"}>
-                                    This is a private & trusted device - stay
-                                    logged-in
+                                    This is not a shared device - stay logged-in
                                 </Typography>
                             }
                         />
