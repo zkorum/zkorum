@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
   front:
     container_name: zkorum_front
-    image: zkorum/front:0.1.12
+    image: zkorum/front:0.1.13
     expose:
       - "80"
     restart: unless-stopped

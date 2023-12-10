@@ -46,6 +46,7 @@ export const zodauthorizedEmail = z
     .max(254)
     .nonempty()
     .describe("Email address")
+    .toLowerCase()
     .refine((email: string) => {
         return isAuthorizedEmail(email);
     });
