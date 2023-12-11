@@ -320,6 +320,9 @@ export function OtpVerify() {
                         }}
                         TextFieldsProps={{
                             disabled: !isCurrentCodeActive,
+                            type: "text",
+                            inputMode: "numeric",
+                            size: "medium",
                         }}
                         length={6}
                         autoFocus
@@ -332,6 +335,9 @@ export function OtpVerify() {
                     <MuiOtpInput
                         TextFieldsProps={{
                             disabled: !isCurrentCodeActive,
+                            type: "text",
+                            inputMode: "numeric",
+                            size: "medium",
                         }}
                         length={6}
                         autoFocus

@@ -37,7 +37,7 @@ export function LoggedInPage({
     } else if (isTheOnlyDevice || hasFilledForms) {
         return (
             <LoggedInUserMustPerformActionPage
-                isTheOnlyDevice={isTheOnlyDevice}
+                isTheOnlyDevice={false} // TODO: implement linking device and change that
                 hasFilledForms={hasFilledForms}
             />
         );
