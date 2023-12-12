@@ -11,6 +11,7 @@ import {
     zodformCredentialRequest,
     zodformCredentialsPerEmail,
     zodpoll,
+    zodpollUID,
     zodsecretCredentialRequest,
     zodsecretCredentialsPerType,
     zoduserId,
@@ -147,6 +148,9 @@ export class Dto {
         .strict();
     static fetchFeed200 = z.array(zodextendedPollData);
     static pollRespond200 = zodextendedPollData;
+    static moderateRequest = z.object({
+        pollUid: zodpollUID,
+    });
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody

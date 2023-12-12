@@ -43,6 +43,7 @@ export const bytea = customType<{
 export const userTable = pgTable("user", {
     id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
     uid: char("uid", { length: 64 }).unique().notNull(), // @see generateRandomHex() - crypto random hex number for anonymous credential - should be kept secret. We cannot use the already existing UUID because it is not secured across the stack the same way and UUID is too long (36 bytes) to be used by the Dock crypto-wasm-ts library that we use for ZKP and anonymous credentials
+    isAdmin: boolean("is_admin").notNull().default(false), // if true, can moderate content
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -329,6 +330,7 @@ export const pollTable = pgTable("poll", {
     option5Response: integer("option5_response"),
     option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
     option6Response: integer("option6_response"),
+    isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at", {
         mode: "date",

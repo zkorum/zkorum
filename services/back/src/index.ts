@@ -51,7 +51,10 @@ import { toCID, decodeCID } from "./shared/common/cid.js";
 import isEqual from "lodash/isEqual.js";
 import { stringToBytes } from "./shared/common/arrbufs.js";
 import { scopeWith } from "./shared/common/util.js";
-import { buildResponseToPollFromPayload } from "./shared/shared.js";
+import {
+    buildResponseToPollFromPayload,
+    domainFromEmail,
+} from "./shared/shared.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -448,6 +451,12 @@ async function verifyPresentation({
                 );
             }
 
+            if (emailSubjectRevealedAttrs["domain"] !== "essec.edu") {
+                throw server.httpErrors.unauthorized(
+                    `Only members of ESSEC can create content right now`
+                );
+            }
+
             let formSubjectRevealedAttrs: object | undefined = undefined;
             if (presentation.spec.credentials.length === 3) {
                 const formCredentialRevealedAttributes =
@@ -771,6 +780,12 @@ server.after(() => {
                     },
                 });
                 const email = request.body.email;
+                const domain = domainFromEmail(email);
+                if (domain === undefined || domain === "zkorum.com") {
+                    throw server.httpErrors.forbidden(
+                        "Admin cannot request credentials"
+                    );
+                }
                 const isEmailAssociatedWithDevice =
                     await Service.isEmailAssociatedWithDevice(
                         db,
@@ -889,11 +904,21 @@ server.after(() => {
             handler: async (request, _reply) => {
                 // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
                 try {
-                    await verifyUCAN(db, request, {
+                    const didWrite = await verifyUCAN(db, request, {
                         expectedDeviceStatus: {
                             isLoggedIn: true,
                             isSyncing: true,
                         },
+                    });
+                    const isAdmin = await Service.isAdmin(db, didWrite);
+                    return await Service.fetchFeed({
+                        db: db,
+                        order: "more",
+                        showHidden: isAdmin === true,
+                        updatedAt:
+                            request.body.updatedAt !== undefined
+                                ? new Date(request.body.updatedAt)
+                                : undefined,
                     });
                 } catch (e) {
                     // TODO: rate-limit by IP Address
@@ -908,14 +933,6 @@ server.after(() => {
                         limit: 6,
                     });
                 }
-                return await Service.fetchFeed({
-                    db: db,
-                    order: "more",
-                    updatedAt:
-                        request.body.updatedAt !== undefined
-                            ? new Date(request.body.updatedAt)
-                            : undefined,
-                });
             },
         });
     server
@@ -930,11 +947,21 @@ server.after(() => {
             handler: async (request, _reply) => {
                 // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
                 try {
-                    await verifyUCAN(db, request, {
+                    const didWrite = await verifyUCAN(db, request, {
                         expectedDeviceStatus: {
                             isLoggedIn: true,
                             isSyncing: true,
                         },
+                    });
+                    const isAdmin = await Service.isAdmin(db, didWrite);
+                    return await Service.fetchFeed({
+                        db: db,
+                        order: "recent",
+                        showHidden: isAdmin === true,
+                        updatedAt:
+                            request.body.updatedAt !== undefined
+                                ? new Date(request.body.updatedAt)
+                                : undefined,
                     });
                 } catch (e) {
                     // TODO: rate-limit by IP Address
@@ -949,13 +976,53 @@ server.after(() => {
                         limit: 6,
                     });
                 }
-                return await Service.fetchFeed({
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/moderation/hide`, {
+            schema: {
+                body: Dto.moderateRequest,
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                    },
+                });
+                const isAdmin = await Service.isAdmin(db, didWrite);
+                if (isAdmin !== true) {
+                    throw server.httpErrors.forbidden(
+                        "Only admin can moderate content"
+                    );
+                }
+                await Service.hidePoll({
                     db: db,
-                    order: "recent",
-                    updatedAt:
-                        request.body.updatedAt !== undefined
-                            ? new Date(request.body.updatedAt)
-                            : undefined,
+                    pollUid: request.body.pollUid,
+                });
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/moderation/unhide`, {
+            schema: {
+                body: Dto.moderateRequest,
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                    },
+                });
+                const isAdmin = await Service.isAdmin(db, didWrite);
+                if (isAdmin !== true) {
+                    throw server.httpErrors.forbidden(
+                        "Only admin can moderate content"
+                    );
+                }
+                await Service.unhidePoll({
+                    db: db,
+                    pollUid: request.body.pollUid,
                 });
             },
         });

@@ -92,7 +92,7 @@ import {
 } from "@/shared/types/university.js";
 import { type TCountryCode, countries as allCountries } from "countries-list";
 import isEqual from "lodash/isEqual.js";
-import { toUnionUndefined } from "@/shared/shared.js";
+import { domainFromEmail, toUnionUndefined } from "@/shared/shared.js";
 import type { PgTransaction, QueryResultHKT } from "drizzle-orm/pg-core";
 import { Environment } from "@/app.js";
 import sesClientModule from "@aws-sdk/client-ses";
@@ -284,6 +284,7 @@ interface FetchFeedProps<
     order: "more" | "recent";
     limit?: number;
     pollUid?: PollUid | undefined;
+    showHidden?: boolean;
 }
 
 interface RespondToPollProps {
@@ -368,6 +369,11 @@ interface UpdateAuthAttemptCodeProps {
     awsMailConf: AwsMailConf;
 }
 
+interface ModeratePollProps {
+    db: PostgresDatabase;
+    pollUid: PollUid;
+}
+
 function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
     for (const result of results) {
         const credential = result.credential;
@@ -423,7 +429,10 @@ export class Service {
             // we can now safely ignore isDidExchangeAvailable in our AND clauses because it is equal to isDidWriteAvailable
         }
 
-        const userId = await Service.getUserId(db, authenticateBody.email);
+        const userId = await Service.getOrGenerateUserId(
+            db,
+            authenticateBody.email
+        );
         if (isEmailAvailable && isDidWriteAvailable) {
             return { type: AuthenticateType.REGISTER, userId: userId };
         } else if (!isEmailAvailable && isDidWriteAvailable) {
@@ -446,7 +455,7 @@ export class Service {
         }
     }
 
-    static async getUserId(
+    static async getOrGenerateUserId(
         db: PostgresDatabase,
         email: string
     ): Promise<string> {
@@ -471,6 +480,23 @@ export class Service {
             }
         } else {
             return result[0].userId;
+        }
+    }
+
+    static async isAdmin(
+        db: PostgresDatabase,
+        didWrite: string
+    ): Promise<boolean | undefined> {
+        const result = await db
+            .select({ isAdmin: userTable.isAdmin })
+            .from(userTable)
+            .leftJoin(deviceTable, eq(deviceTable.userId, userTable.id))
+            .where(eq(deviceTable.didWrite, didWrite));
+        if (result.length === 0) {
+            // user does not exist
+            return undefined;
+        } else {
+            return result[0].isAdmin;
         }
     }
 
@@ -1150,9 +1176,12 @@ export class Service {
                     updatedAt: now,
                 })
                 .where(eq(authAttemptTable.didWrite, didWrite));
-            await tx
-                .insert(userTable)
-                .values({ uid: uid, id: authAttemptResult[0].userId });
+            const domain = domainFromEmail(authAttemptResult[0].email);
+            await tx.insert(userTable).values({
+                uid: uid,
+                id: authAttemptResult[0].userId,
+                isAdmin: domain === "zkorum.com",
+            });
             await tx.insert(deviceTable).values({
                 userId: authAttemptResult[0].userId,
                 didWrite: didWrite,
@@ -2459,6 +2488,7 @@ export class Service {
         order,
         limit,
         pollUid,
+        showHidden,
     }: FetchFeedProps<
         QueryResultHKT,
         Record<string, unknown>,
@@ -2508,6 +2538,7 @@ export class Service {
                     studentEligibilityTable.admissionYears,
                 // metadata
                 pollUID: pollTable.timestampedPresentationCID,
+                isHidden: pollTable.isHidden,
                 updatedAt: pollTable.updatedAt,
             })
             .from(pollTable)
@@ -2564,16 +2595,34 @@ export class Service {
             .orderBy(desc(pollTable.updatedAt))
             .limit(actualLimit)
             .where(
-                pollUid === undefined
-                    ? whereUpdatedAt
-                    : eq(pollTable.timestampedPresentationCID, pollUid)
+                showHidden === true
+                    ? pollUid === undefined
+                        ? whereUpdatedAt
+                        : eq(pollTable.timestampedPresentationCID, pollUid)
+                    : and(
+                          pollUid === undefined
+                              ? whereUpdatedAt
+                              : eq(
+                                    pollTable.timestampedPresentationCID,
+                                    pollUid
+                                ),
+                          eq(pollTable.isHidden, false)
+                      )
             );
         const polls: ExtendedPollData[] = results.map((result) => {
+            const metadata =
+                showHidden === true
+                    ? {
+                          uid: result.pollUID,
+                          isHidden: result.isHidden,
+                          updatedAt: result.updatedAt,
+                      }
+                    : {
+                          uid: result.pollUID,
+                          updatedAt: result.updatedAt,
+                      };
             return {
-                metadata: {
-                    uid: result.pollUID,
-                    updatedAt: result.updatedAt,
-                },
+                metadata: metadata,
                 payload: {
                     data: {
                         question: result.question,
@@ -2912,5 +2961,23 @@ export class Service {
                 httpErrors,
             });
         });
+    }
+
+    static async hidePoll({ db, pollUid }: ModeratePollProps): Promise<void> {
+        await db
+            .update(pollTable)
+            .set({
+                isHidden: true,
+            })
+            .where(eq(pollTable.timestampedPresentationCID, pollUid));
+    }
+
+    static async unhidePoll({ db, pollUid }: ModeratePollProps): Promise<void> {
+        await db
+            .update(pollTable)
+            .set({
+                isHidden: false,
+            })
+            .where(eq(pollTable.timestampedPresentationCID, pollUid));
     }
 }

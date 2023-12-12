@@ -21,6 +21,7 @@ export async function fetchFeedMore({
             return {
                 metadata: {
                     uid: value.metadata.uid,
+                    isHidden: value.metadata.isHidden,
                     updatedAt: new Date(value.metadata.updatedAt),
                 },
                 payload: value.payload,
@@ -49,6 +50,7 @@ export async function fetchFeedRecent({
             return {
                 metadata: {
                     uid: value.metadata.uid,
+                    isHidden: value.metadata.isHidden,
                     updatedAt: new Date(value.metadata.updatedAt),
                 },
                 payload: value.payload,

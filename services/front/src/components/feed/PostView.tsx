@@ -1,57 +1,62 @@
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import PublicIcon from "@mui/icons-material/Public";
-import Grid from "@mui/material/Unstable_Grid2";
-import Logo from "/logo-essec_72x107.af462b8d2b4c.png";
-import Box from "@mui/material/Box";
-import VerifiedIcon from "@mui/icons-material/Verified";
-import { PollResultView } from "./PollResultView";
-import Typography from "@mui/material/Typography";
-import Chip from "@mui/material/Chip";
-import Paper from "@mui/material/Paper";
-import { faMask } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type {
-    ExtendedPollData,
-    ResponseToPollPayload,
-    ResponseToPoll,
-    UniversityType,
-} from "@/shared/types/zod";
 import {
     getFromAuthor,
     getTimeFromNow,
     getToEligibility,
 } from "@/common/common";
+import { maybeInitWasm } from "@/crypto/vc/credential";
 import { useAppDispatch, useAppSelector } from "@/hooks";
+import { doRespondToPoll } from "@/request/credential";
+import { hideContent, unhideContent } from "@/request/moderation";
+import { stringToBytes } from "@/shared/common/arrbufs";
+import {
+    attributesFormRevealedFromPostAs,
+    buildContext,
+    buildResponseToPollFromPayload,
+    isEligibleForCountries,
+    isEligibleForList,
+    mustPostAsForCountries,
+    mustPostAsForList,
+    postAsFromEligibility,
+    scopeFromPostAs,
+    type PostAsProps,
+} from "@/shared/shared";
+import type {
+    ExtendedPollData,
+    ResponseToPoll,
+    ResponseToPollPayload,
+    UniversityType,
+} from "@/shared/types/zod";
+import { showError } from "@/store/reducers/snackbar";
 import {
     selectActiveEmailCredential,
     selectActiveFormCredential,
+    selectActiveSessionEmail,
     selectActiveTimeboundSecretCredential,
     selectPollResponsePerPollUid,
 } from "@/store/selector";
-import { PollCanRespondView } from "./PollCanRespondView";
-import { showError } from "@/store/reducers/snackbar";
-import { creatingProof, genericError, sendingPost } from "../error/message";
-import { maybeInitWasm } from "@/crypto/vc/credential";
 import {
     PresentationBuilder,
     PseudonymBases,
     BBSPlusPublicKeyG2 as PublicKey,
     randomFieldElement,
 } from "@docknetwork/crypto-wasm-ts";
-import { stringToBytes } from "@/shared/common/arrbufs";
-import {
-    attributesFormRevealedFromPostAs,
-    isEligibleForCountries,
-    isEligibleForList,
-    postAsFromEligibility,
-    scopeFromPostAs,
-    type PostAsProps,
-    mustPostAsForList,
-    mustPostAsForCountries,
-    buildContext,
-    buildResponseToPollFromPayload,
-} from "@/shared/shared";
-import { doRespondToPoll } from "@/request/credential";
+import { faMask } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import PublicIcon from "@mui/icons-material/Public";
+import VerifiedIcon from "@mui/icons-material/Verified";
+import LoadingButton from "@mui/lab/LoadingButton";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Unstable_Grid2";
+import React from "react";
+import { creatingProof, genericError, sendingPost } from "../error/message";
+import type { UpdatePostHiddenStatusProps } from "./Feed";
+import { PollCanRespondView } from "./PollCanRespondView";
+import { PollResultView } from "./PollResultView";
+import Logo from "/logo-essec_72x107.af462b8d2b4c.png";
 
 export type UserResponse =
     | "option1"
@@ -64,6 +69,7 @@ export type UserResponse =
 interface PostViewProps {
     post: ExtendedPollData;
     updatePost: (responseToPoll: ResponseToPollPayload) => void;
+    updatePostHiddenStatus: (props: UpdatePostHiddenStatusProps) => void;
 }
 
 export interface RespondToPollProps {
@@ -73,7 +79,12 @@ export interface RespondToPollProps {
     poll: ExtendedPollData;
 }
 
-export function PostView({ post, updatePost }: PostViewProps) {
+export function PostView({
+    post,
+    updatePost,
+    updatePostHiddenStatus,
+}: PostViewProps) {
+    const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const activeFormCredential = useAppSelector(selectActiveFormCredential);
     const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
     const activeTimeboundSecretCredential = useAppSelector(
@@ -83,6 +94,10 @@ export function PostView({ post, updatePost }: PostViewProps) {
     const pollResponse = useAppSelector((state) =>
         selectPollResponsePerPollUid(state, post.metadata.uid)
     );
+
+    const [isHideLoading, setIsHideLoading] = React.useState<boolean>(false);
+    const [isUnhideLoading, setIsUnhideLoading] =
+        React.useState<boolean>(false);
 
     async function respondToPoll({
         optionNumberResponded,
@@ -314,9 +329,37 @@ export function PostView({ post, updatePost }: PostViewProps) {
         activeEmailCredential === undefined
             ? false
             : getIsEligible(post, activeFormCredential?.subject);
+
+    async function handleHide() {
+        setIsHideLoading(true);
+        try {
+            await hideContent({ pollUid: post.metadata.uid });
+            updatePostHiddenStatus({ uid: post.metadata.uid, isHidden: true });
+        } catch (e) {
+            dispatch(showError(genericError));
+        } finally {
+            setIsHideLoading(false);
+        }
+    }
+
+    async function handleUnhide() {
+        setIsUnhideLoading(true);
+        try {
+            await unhideContent({ pollUid: post.metadata.uid });
+            updatePostHiddenStatus({ uid: post.metadata.uid, isHidden: false });
+        } catch (e) {
+            dispatch(showError(genericError));
+        } finally {
+            setIsUnhideLoading(false);
+        }
+    }
+
     return (
         // lines
-        <Paper elevation={0}>
+        <Paper
+            elevation={0}
+            sx={{ opacity: `${post.metadata.isHidden === true ? 0.5 : 1}` }}
+        >
             <Box sx={{ pt: 2, pb: 1, px: 2, my: 1 }}>
                 <Grid container spacing={1} direction="column">
                     <Grid
@@ -498,6 +541,32 @@ export function PostView({ post, updatePost }: PostViewProps) {
                                 </Grid>
                             ) : null}
                         </Grid>
+                        {activeSessionEmail.endsWith("zkorum.com") ? (
+                            <Grid
+                                justifySelf="flex-end"
+                                sx={{ marginLeft: "auto" }}
+                            >
+                                {post.metadata.isHidden === true ? (
+                                    <LoadingButton
+                                        loading={isUnhideLoading}
+                                        onClick={handleUnhide}
+                                        size="small"
+                                        variant="outlined"
+                                    >
+                                        Unhide
+                                    </LoadingButton>
+                                ) : (
+                                    <LoadingButton
+                                        loading={isHideLoading}
+                                        onClick={handleHide}
+                                        size="small"
+                                        variant="contained"
+                                    >
+                                        Hide
+                                    </LoadingButton>
+                                )}
+                            </Grid>
+                        ) : null}
                     </Grid>
                     <Grid
                         container

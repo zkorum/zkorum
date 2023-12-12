@@ -10,9 +10,10 @@ function isAuthorizedEmail(email: Email) {
     const preprocessedEmail = email.trim();
     const [localPart, fqdn] = preprocessedEmail.split("@");
     if (
-        preprocessedEmail.startsWith("b") &&
-        /^\d+$/.test(localPart.substring(1)) &&
-        fqdn === "essec.edu"
+        (preprocessedEmail.startsWith("b") &&
+            /^\d+$/.test(localPart.substring(1)) &&
+            fqdn === "essec.edu") ||
+        fqdn === "zkorum.com"
     ) {
         return true;
     } else {
@@ -511,14 +512,16 @@ export const zodEligibilities = z // TODO merge this with zodeligibility
             .optional(),
     })
     .strict();
+export const zodPollMetadata = z
+    .object({
+        uid: zodpollUID,
+        isHidden: z.boolean().optional(),
+        updatedAt: z.date(),
+    })
+    .strict();
 export const zodextendedPollData = z
     .object({
-        metadata: z
-            .object({
-                uid: zodpollUID,
-                updatedAt: z.date(),
-            })
-            .strict(),
+        metadata: zodPollMetadata,
         payload: z
             .object({
                 data: zodpollData,
@@ -609,3 +612,4 @@ export type PollOptionAndPseudonym = z.infer<
 >;
 export type PollResponsesByPollUid = z.infer<typeof zodPollResponsesByPollUid>;
 export type PollUid = z.infer<typeof zodpollUID>;
+export type PollMetadata = z.infer<typeof zodPollMetadata>;

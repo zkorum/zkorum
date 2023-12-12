@@ -7,6 +7,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Unstable_Grid2";
 import type {
     ExtendedPollData,
+    PollUid,
     ResponseToPollPayload,
 } from "@/shared/types/zod";
 import Button from "@mui/material/Button";
@@ -15,6 +16,11 @@ import { doLoadMore, doLoadRecent, usePostsAndMeta } from "@/feed";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { selectActiveSessionEmail } from "@/store/selector";
 import { openAuthModal } from "@/store/reducers/session";
+
+export interface UpdatePostHiddenStatusProps {
+    uid: PollUid;
+    isHidden: boolean;
+}
 
 export function Feed() {
     const {
@@ -92,6 +98,19 @@ export function Feed() {
             };
         }
     }, [activeSessionEmail]);
+
+    function updatePostHiddenStatus({
+        uid,
+        isHidden,
+    }: UpdatePostHiddenStatusProps): void {
+        const newPosts = [...posts];
+        for (const post of newPosts) {
+            if (post.metadata.uid === uid) {
+                post.metadata.isHidden = isHidden;
+            }
+        }
+        setPosts(newPosts);
+    }
 
     function updatePost(responseToPoll: ResponseToPollPayload): void {
         const newPosts = [...posts];
@@ -227,7 +246,11 @@ export function Feed() {
                 itemContent={(_index, post) => {
                     return (
                         <Box key={`postview-${post.metadata.uid}`}>
-                            <PostView post={post} updatePost={updatePost} />
+                            <PostView
+                                post={post}
+                                updatePost={updatePost}
+                                updatePostHiddenStatus={updatePostHiddenStatus}
+                            />
                         </Box>
                     );
                 }}

@@ -2393,6 +2393,9 @@
                         "uid": {
                           "type": "string"
                         },
+                        "isHidden": {
+                          "type": "boolean"
+                        },
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
@@ -3179,6 +3182,9 @@
                         "properties": {
                           "uid": {
                             "type": "string"
+                          },
+                          "isHidden": {
+                            "type": "boolean"
                           },
                           "updatedAt": {
                             "type": "string",
@@ -3968,6 +3974,9 @@
                           "uid": {
                             "type": "string"
                           },
+                          "isHidden": {
+                            "type": "boolean"
+                          },
                           "updatedAt": {
                             "type": "string",
                             "format": "date-time"
@@ -4718,6 +4727,62 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/moderation/hide": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pollUid": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pollUid"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/moderation/unhide": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pollUid": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pollUid"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
           }
         }
       }
