@@ -10,7 +10,7 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 export default defineConfig({
     plugins: [
         react(),
-        VitePWA({ registerType: "autoUpdate" }),
+        VitePWA({ registerType: "autoUpdate", selfDestroying: true }),
         svgr(),
         checker({
             typescript: true,
