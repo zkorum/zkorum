@@ -6,3 +6,8 @@ emailrecovery
 
 # ide
 .lvimrc
+
+# keys
+*.age
+*.prod.key
+*.staging.key

@@ -73,6 +73,10 @@ We generate an `openapi-zkorum.json` file from the backend, and then use [openap
 
 Some typescript source files are shared directly without using npm packages - by copy-pasting using rsync.
 
+### ZKLI
+
+CLI for ZKorum.
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md)
