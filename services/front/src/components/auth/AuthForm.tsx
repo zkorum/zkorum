@@ -57,7 +57,7 @@ export function AuthForm({
                 } else {
                     setIsEmailValid("valid_unauthorized");
                     setEmailHelper(
-                        "This version is invite-only. Stay tuned for future releases!"
+                        "This version is currently reserved to ESSEC Business School. Stay tuned for future releases!"
                     );
                 }
             } else {
@@ -82,7 +82,8 @@ export function AuthForm({
                     required
                     fullWidth
                     id="email"
-                    label="Email Address"
+                    label="Community Email Address"
+                    placeholder="bXXXXXXXX@essec.edu"
                     name="email"
                     error={
                         email !== "" &&
