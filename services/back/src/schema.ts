@@ -136,7 +136,9 @@ export const credentialEmailTable = pgTable(
     },
     (table) => {
         return {
-            uniqueEmailNotRevoked: uniqueIndex("unique_email_not_revoked")
+            credEmUniqueEmailNotRevoked: uniqueIndex(
+                "cred_em_unique_email_not_revoked"
+            )
                 .on(table.email)
                 .where(eq(table.isRevoked, false)),
         };
@@ -161,7 +163,9 @@ export const credentialFormTable = pgTable(
     },
     (table) => {
         return {
-            uniqueEmailNotRevoked: uniqueIndex("unique_email_not_revoked")
+            credFoUniqueEmailNotRevoked: uniqueIndex(
+                "cred_fo_unique_email_not_revoked"
+            )
                 .on(table.email)
                 .where(eq(table.isRevoked, false)),
         };
@@ -198,7 +202,9 @@ export const credentialSecretTable = pgTable(
 
     (table) => {
         return {
-            uniqueUserIdNotRevoked: uniqueIndex("unique_user_id_not_revoked")
+            credSeuniqueUserIdNotRevoked: uniqueIndex(
+                "cred_se_unique_user_id_not_revoked"
+            )
                 .on(table.userId, table.type)
                 .where(eq(table.isRevoked, false)),
         };
