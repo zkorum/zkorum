@@ -96,3 +96,10 @@ export function getToEligibility(eligibility: Eligibilities): string {
     }
     return `any ${universityTypes.join(" or ")} member`;
 }
+
+export function zeroIfUndefined(value: number | undefined): number {
+    if (value === undefined) {
+        return 0;
+    }
+    return value;
+}

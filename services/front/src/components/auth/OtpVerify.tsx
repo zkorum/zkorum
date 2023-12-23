@@ -320,8 +320,11 @@ export function OtpVerify() {
                         }}
                         TextFieldsProps={{
                             disabled: !isCurrentCodeActive,
-                            type: "text",
-                            inputMode: "numeric",
+                            type: "number",
+                            inputProps: {
+                                inputMode: "numeric",
+                                pattern: "[0-9]*",
+                            },
                             size: "medium",
                         }}
                         length={6}
@@ -335,8 +338,11 @@ export function OtpVerify() {
                     <MuiOtpInput
                         TextFieldsProps={{
                             disabled: !isCurrentCodeActive,
-                            type: "text",
-                            inputMode: "numeric",
+                            type: "number",
+                            inputProps: {
+                                inputMode: "numeric",
+                                pattern: "[0-9]*",
+                            },
                             size: "medium",
                         }}
                         length={6}

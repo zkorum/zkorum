@@ -1,3 +1,4 @@
+import { zeroIfUndefined } from "@/common/common";
 import type {
     PollResult,
     PollData,
@@ -61,12 +62,6 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
                 </Grid>
             </Grid>
         );
-    }
-    function zeroIfUndefined(value: number | undefined): number {
-        if (value === undefined) {
-            return 0;
-        }
-        return value;
     }
     const totalCount =
         result.option1Response +

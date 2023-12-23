@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import {
     char,
     pgEnum,
@@ -11,6 +12,7 @@ import {
     customType,
     text,
     jsonb,
+    uniqueIndex,
 } from "drizzle-orm/pg-core";
 // import { MAX_LENGTH_OPTION, MAX_LENGTH_QUESTION } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 const MAX_LENGTH_OPTION = 30;
@@ -119,30 +121,52 @@ export const authAttemptTable = pgTable("auth_attempt", {
 // "emailCredential" is an Email-specific verifiable credential only containing the email and issued by ZKorum, as opposed to a VC issued by an external authority. It contains the result of the forms filled by the associated user.
 // this table may contain revoke credentials
 // TODO: make sure there are always one and only one active credential (not revoked)
-export const credentialEmailTable = pgTable("credential_email", {
-    id: serial("id").primaryKey(),
-    credential: jsonb("credential").$type<object>().notNull(), // encoded credential
-    isRevoked: boolean("is_revoked").notNull().default(false),
-    email: varchar("email", { length: 254 })
-        .references(() => emailTable.email)
-        .notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const credentialEmailTable = pgTable(
+    "credential_email",
+    {
+        id: serial("id").primaryKey(),
+        credential: jsonb("credential").$type<object>().notNull(), // encoded credential
+        isRevoked: boolean("is_revoked").notNull().default(false),
+        email: varchar("email", { length: 254 })
+            .references(() => emailTable.email)
+            .notNull(),
+        pkVersion: integer("pk_version").default(1).notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    },
+    (table) => {
+        return {
+            uniqueEmailNotRevoked: uniqueIndex("unique_email_not_revoked")
+                .on(table.email)
+                .where(eq(table.isRevoked, false)),
+        };
+    }
+);
 
 // formCredential" is an Email-specific Form verifiable credential issued by ZKorum, as opposed to a VC issued by an external authority. It contains the result of the forms filled by the associated user.
 // this table may contain revoke credentials
 // TODO: make sure there are always one and only one active credential (not revoked)
-export const credentialFormTable = pgTable("credential_form", {
-    id: serial("id").primaryKey(),
-    credential: jsonb("credential").$type<object>().notNull(), // encoded credential
-    isRevoked: boolean("is_revoked").notNull().default(false),
-    email: varchar("email", { length: 254 })
-        .references(() => emailTable.email)
-        .notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const credentialFormTable = pgTable(
+    "credential_form",
+    {
+        id: serial("id").primaryKey(),
+        credential: jsonb("credential").$type<object>().notNull(), // encoded credential
+        isRevoked: boolean("is_revoked").notNull().default(false),
+        email: varchar("email", { length: 254 })
+            .references(() => emailTable.email)
+            .notNull(),
+        pkVersion: integer("pk_version").default(1).notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    },
+    (table) => {
+        return {
+            uniqueEmailNotRevoked: uniqueIndex("unique_email_not_revoked")
+                .on(table.email)
+                .where(eq(table.isRevoked, false)),
+        };
+    }
+);
 
 // TODO: merge with the value in zod...
 export const secretCredentialType = pgEnum("credential_secret_type", [
@@ -155,19 +179,31 @@ export const secretCredentialType = pgEnum("credential_secret_type", [
 // this table may contained revoke credentials
 // it is necessary to keep them for the frontend to be able to regenerate to revoked pseudonyms.
 // pollId: the UUID for responding to the poll. If null, it is the global secret
-export const credentialSecretTable = pgTable("credential_secret", {
-    id: serial("id").primaryKey(),
-    type: secretCredentialType("type").notNull(),
-    credential: jsonb("credential").$type<object>().notNull(),
-    encryptedBlinding: text("encrypted_blinding").notNull(),
-    encryptedBlindedSubject: text("encrypted_blinded_subject").notNull(),
-    isRevoked: boolean("is_revoked").notNull().default(false),
-    userId: uuid("user_id")
-        .references(() => userTable.id)
-        .notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const credentialSecretTable = pgTable(
+    "credential_secret",
+    {
+        id: serial("id").primaryKey(),
+        type: secretCredentialType("type").notNull(),
+        credential: jsonb("credential").$type<object>().notNull(),
+        encryptedBlinding: text("encrypted_blinding").notNull(),
+        encryptedBlindedSubject: text("encrypted_blinded_subject").notNull(),
+        isRevoked: boolean("is_revoked").notNull().default(false),
+        userId: uuid("user_id")
+            .references(() => userTable.id)
+            .notNull(),
+        pkVersion: integer("pk_version").default(1).notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    },
+
+    (table) => {
+        return {
+            uniqueUserIdNotRevoked: uniqueIndex("unique_user_id_not_revoked")
+                .on(table.userId, table.type)
+                .where(eq(table.isRevoked, false)),
+        };
+    }
+);
 
 // TODO: use zod or something to maintain one set of type only
 export const credentialType = pgEnum("credential_type", [

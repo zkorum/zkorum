@@ -10,10 +10,7 @@ import { store, getCryptoStore } from "./store/store";
 import { loggedOut, openAuthModal } from "./store/reducers/session";
 import { showWarning } from "./store/reducers/snackbar";
 import { sessionExpired } from "./components/error/message";
-
-const VITE_BACK_BASE_URL = import.meta.env.PROD
-    ? import.meta.env.VITE_BACK_BASE_URL_PROD
-    : import.meta.env.VITE_BACK_BASE_URL_DEV;
+import { VITE_BACK_BASE_URL, VITE_BACK_DID } from "./common/conf";
 
 export const noAuthAxios = axios.create({
     baseURL: VITE_BACK_BASE_URL,
@@ -59,7 +56,7 @@ async function buildUcan(
             sign: (msg: Uint8Array) =>
                 cryptoStore.keystore.sign(msg, emailOrUserId),
         })
-        .toAudience(import.meta.env.VITE_BACK_DID)
+        .toAudience(VITE_BACK_DID)
         .withLifetimeInSeconds(30)
         .claimCapability({
             // with: { scheme: "wnfs", hierPart: "//boris.fission.name/public/photos/" },

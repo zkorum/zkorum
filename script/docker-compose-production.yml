@@ -30,7 +30,13 @@ services:
     image: zkorum/back:0.1.9
     environment:
       CONNECTION_STRING: "postgres://postgres:CHANGEME@postgres:5432/zkorum"
+      AWS_ACCESS_KEY_ID: "CHANGEME"
+      AWS_SECRET_ACCESS_KEY: "CHANGEME"
+      PK_VERSION: 2
+      PRIVATE_KEY_FILEPATH: /run/secrets/iss_sk_v2
       NODE_ENV: "production"
+    secrets:
+      - iss_sk_v2
     expose:
       - "8080"
     restart: unless-stopped
@@ -63,3 +69,7 @@ services:
 volumes:
   postgres:
   pgadmin:
+
+secrets:
+  iss_sk_v2:
+    external: true

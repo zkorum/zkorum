@@ -1049,7 +1049,176 @@
         }
       }
     },
-    "/api/v1/credential/request": {
+    "/api/v1/credential/email/renew": {
+      "post": {
+        "description": "Renew an active email credential - fails if already exists. Used when rotating issuer public key.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254,
+                    "minLength": 1,
+                    "description": "Email address"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "emailCredential": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "emailCredential"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/credential/form/renew": {
+      "post": {
+        "description": "Renew an active form credential - fails if already exists. Used when rotating issuer public key.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254,
+                    "minLength": 1,
+                    "description": "Email address"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formCredential": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "formCredential"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/credential/secret/renew": {
+      "post": {
+        "description": "Renew an active secret credential - fails if already exists. Used when rotating issuer public key.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "secretCredentialRequest": {
+                    "type": "object",
+                    "properties": {
+                      "blindedRequest": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "encryptedEncodedBlindedSubject": {
+                        "type": "string"
+                      },
+                      "encryptedEncodedBlinding": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "blindedRequest",
+                      "encryptedEncodedBlindedSubject",
+                      "encryptedEncodedBlinding"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "unbound",
+                      "timebound"
+                    ]
+                  }
+                },
+                "required": [
+                  "secretCredentialRequest",
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "signedBlindedCredential": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "signedBlindedCredential"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/credential/form/request": {
       "post": {
         "requestBody": {
           "content": {

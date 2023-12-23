@@ -1,19 +1,23 @@
 import { randomNumbers } from "@/crypto/ucan/implementation/browser";
 import { anyToUint8Array, uint8ArrayToJSON } from "@/shared/common/arrbufs";
 import { arrbufs, base64 } from "@/shared/common/index";
-import type {
-    EmailCredentialsPerEmail,
-    SecretCredential,
-    SecretCredentialRequest,
-    SecretCredentialType,
-    SecretCredentialsPerType,
-    UnblindedSecretCredential,
-    UnblindedSecretCredentials,
-    UnblindedSecretCredentialsPerType,
+import {
+    type EmailCredential,
+    type EmailCredentialsPerEmail,
+    type FormCredential,
+    type SecretCredential,
+    type SecretCredentialRequest,
+    type SecretCredentialType,
+    type SecretCredentialsPerType,
+    type UnblindedSecretCredential,
+    type UnblindedSecretCredentials,
+    type UnblindedSecretCredentialsPerType,
 } from "@/shared/types/zod";
 import { getCryptoStore } from "@/store/store";
 import {
     BBSPlusBlindedCredentialRequestBuilder,
+    BBSPlusCredential,
+    BBSPlusPublicKeyG2,
     BBSPlusBlindedCredential as BlindedCredential,
     BBSPlusBlinding as Blinding,
     CredentialSchema,
@@ -22,6 +26,7 @@ import {
     isWasmInitialized,
 } from "@docknetwork/crypto-wasm-ts";
 import { DEFAULT_AES_ALG } from "../basic";
+import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
 
 function secretCredSchema() {
     const schema = CredentialSchema.essential();
@@ -87,11 +92,14 @@ function newReqBuilder(
 // }
 //
 
-export async function buildBlindedSecretCredential() {
+export async function buildBlindedSecretCredential(secret?: string) {
     await maybeInitWasm();
-    const secret = base64.encode(randomNumbers({ amount: 32 }));
+    let actualSecret = secret;
+    if (actualSecret === undefined) {
+        actualSecret = base64.encode(randomNumbers({ amount: 32 }));
+    }
     const blindedSubject = {
-        secret: secret,
+        secret: actualSecret,
     };
 
     const schema = secretCredSchema();
@@ -103,10 +111,12 @@ export async function buildBlindedSecretCredential() {
 }
 
 export async function buildSecretCredentialRequest(
-    symmKey: Uint8Array
+    symmKey: Uint8Array,
+    secret?: string
 ): Promise<SecretCredentialRequest> {
+    await maybeInitWasm();
     const { req, blindedSubject, blinding } =
-        await buildBlindedSecretCredential();
+        await buildBlindedSecretCredential(secret);
     const blindedSubjectBinary = arrbufs.anyToUint8Array(blindedSubject);
     const encryptedBlindedSubject = await encryptAndEncodeWithSymmKey(
         blindedSubjectBinary,
@@ -124,7 +134,70 @@ export async function buildSecretCredentialRequest(
     return secretCredentialRequest;
 }
 
-async function unblindedCredentialFrom(
+export async function isNotSignedByLatestPublicKey(
+    credential: EmailCredential | FormCredential
+): Promise<boolean> {
+    await maybeInitWasm();
+    const publicKey = BBSPlusPublicKeyG2.fromHex(VITE_BACK_PUBLIC_KEY);
+    const credObj = BBSPlusCredential.fromJSON(
+        uint8ArrayToJSON(base64.decode(credential))
+    );
+    const result = credObj.verify(publicKey as BBSPlusPublicKeyG2);
+    return !result.verified;
+}
+
+export async function isSecretNotSignedByLatestPublicKey(
+    credential: SecretCredential,
+    userId: string
+): Promise<boolean> {
+    await maybeInitWasm();
+    const publicKey = BBSPlusPublicKeyG2.fromHex(VITE_BACK_PUBLIC_KEY);
+    const unblindedCredential = await decodedUnblindedCredentialFrom(
+        credential as SecretCredential,
+        userId
+    );
+    const result = unblindedCredential.verify(publicKey as BBSPlusPublicKeyG2);
+    return !result.verified;
+}
+
+export async function getSecretFromSecretCredential(
+    secretCredential: SecretCredential,
+    userId: string
+): Promise<string> {
+    await maybeInitWasm();
+    const unblindedCredential = await decodedUnblindedCredentialFrom(
+        secretCredential,
+        userId
+    );
+    //TODO make this type-safe
+    return (unblindedCredential.subject as any).secret;
+}
+
+async function decodedUnblindedCredentialFrom(
+    secretCredential: SecretCredential,
+    userId: string
+): Promise<BBSPlusCredential> {
+    const blindedCredential = BlindedCredential.fromJSON(
+        uint8ArrayToJSON(base64.decode(secretCredential.blindedCredential))
+    );
+    const blindedSubjectBinary = await decodeAndDecrypt(
+        secretCredential.encryptedBlindedSubject,
+        userId
+    );
+    const blindedSubject = uint8ArrayToJSON(blindedSubjectBinary);
+    const blindingBinary = await decodeAndDecrypt(
+        secretCredential.encryptedBlinding,
+        userId
+    );
+    const blinding = Blinding.fromBytes(blindingBinary);
+    const unblindedCredential = blindedCredential.toCredential(
+        blindedSubject,
+        blinding
+    );
+    return unblindedCredential;
+}
+
+export async function unblindedCredentialFrom(
     secretCredential: SecretCredential,
     userId: string
 ): Promise<UnblindedSecretCredential> {

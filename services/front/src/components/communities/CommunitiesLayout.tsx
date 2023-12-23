@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import {
     selectActiveFormCredential,
     selectActiveSessionEmail,
@@ -10,15 +10,10 @@ import Box from "@mui/material/Box";
 import React from "react";
 import { CommunityPage } from "./CommunityPage";
 import { redirectToLogin } from "@/request/auth";
-import { fetchAndUpdateCredentials } from "@/request/credential";
-import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
-import { showError } from "@/store/reducers/snackbar";
-import { genericError } from "../error/message";
 import { domainNameAndExtensionFromEmail } from "@/shared/shared";
 
 // for now we just assume there's one community from one unique email
 export function CommunitiesLayout() {
-    const dispatch = useAppDispatch();
     const activeFormCredential = useAppSelector(selectActiveFormCredential);
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const activeSessionUserId = useAppSelector(selectActiveSessionUserId);
@@ -35,25 +30,7 @@ export function CommunitiesLayout() {
         if (domainName !== undefined) {
             setCommunityName(domainName.toUpperCase());
         }
-
-        // this will set the values in redux store and eventually update this page
-        const fetchData = async function () {
-            if (activeSessionUserId !== undefined) {
-                try {
-                    dispatch(openMainLoading());
-                    await fetchAndUpdateCredentials(activeSessionUserId);
-                } catch (e) {
-                    dispatch(showError(genericError));
-                } finally {
-                    dispatch(closeMainLoading());
-                }
-            }
-        };
-        fetchData();
-        return () => {
-            dispatch(closeMainLoading());
-        };
-    }, [activeSessionEmail, activeSessionUserId]);
+    }, [activeSessionEmail]);
 
     return (
         <Container maxWidth="md" sx={{ backgroundColor: "#ffff" }}>

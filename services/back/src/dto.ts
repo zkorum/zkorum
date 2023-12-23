@@ -2,17 +2,21 @@ import { z } from "zod";
 import {
     zodResponseToPollPayload,
     zodauthorizedEmail,
+    zodblindedCredential,
     zodcode,
     zoddevices,
     zoddidKey,
     zodemail,
+    zodemailCredential,
     zodemailCredentialsPerEmail,
     zodextendedPollData,
+    zodformCredential,
     zodformCredentialRequest,
     zodformCredentialsPerEmail,
     zodpoll,
     zodpollUID,
     zodsecretCredentialRequest,
+    zodsecretCredentialType,
     zodsecretCredentialsPerType,
     zoduserId,
 } from "./shared/types/zod.js";
@@ -126,11 +130,11 @@ export class Dto {
             secretCredentialsPerType: zodsecretCredentialsPerType,
         })
         .strict();
-    static requestCredentials = z.object({
+    static requestFormCredential = z.object({
         email: zodemail,
         formCredentialRequest: zodformCredentialRequest,
     });
-    static requestCredentials200 = z.object({
+    static requestFormCredential200 = z.object({
         formCredentialsPerEmail: zodformCredentialsPerEmail,
     });
     static createPollRequest = z.object({
@@ -150,6 +154,25 @@ export class Dto {
     static pollRespond200 = zodextendedPollData;
     static moderateRequest = z.object({
         pollUid: zodpollUID,
+    });
+    static renewSecretCredential = z.object({
+        secretCredentialRequest: zodsecretCredentialRequest,
+        type: zodsecretCredentialType,
+    });
+    static renewSecretCredential200 = z.object({
+        signedBlindedCredential: zodblindedCredential,
+    });
+    static renewEmailCredential = z.object({
+        email: zodemail,
+    });
+    static renewEmailCredential200 = z.object({
+        emailCredential: zodemailCredential,
+    });
+    static renewFormCredential = z.object({
+        email: zodemail,
+    });
+    static renewFormCredential200 = z.object({
+        formCredential: zodformCredential,
     });
 }
 export type AuthenticateRequestBody = z.infer<

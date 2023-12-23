@@ -1,16 +1,51 @@
-import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
+import { Environment } from "@/app.js";
+import { toEncodedCID } from "@/shared/common/cid.js";
+import { domainFromEmail, toUnionUndefined } from "@/shared/shared.js";
+import {
+    essecCampusStrToEnum,
+    essecCampusToString,
+    essecProgramStrToEnum,
+    essecProgramToString,
+} from "@/shared/types/university.js";
+import sesClientModule from "@aws-sdk/client-ses";
+import {
+    BBSPlusCredential as Credential,
+    BBSPlusBlindedCredentialRequest as BlindedCredentialRequest,
+    Presentation,
+    BBSPlusSecretKey as SecretKey,
+} from "@docknetwork/crypto-wasm-ts";
+import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
+import { countries as allCountries, type TCountryCode } from "countries-list";
 import {
     and,
+    desc,
     eq,
     gt,
-    lt,
     inArray,
     isNotNull,
     isNull,
-    desc,
-    type TablesRelationalConfig,
+    lt,
     sql,
+    type TablesRelationalConfig,
 } from "drizzle-orm";
+import type { PgTransaction, QueryResultHKT } from "drizzle-orm/pg-core";
+import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
+import isEqual from "lodash/isEqual.js";
+import nodemailer from "nodemailer";
+import {
+    codeToString,
+    generateOneTimeCode,
+    generateRandomHex,
+    generateUUID,
+} from "../crypto.js";
+import {
+    type AuthenticateRequestBody,
+    type EmailSecretCredentials,
+    type GetDeviceStatusResp,
+    type IsLoggedInResponse,
+    type UserCredentials,
+    type VerifyOtp200,
+} from "../dto.js";
 import {
     alumEligibilityTable,
     alumPersonaTable,
@@ -33,25 +68,30 @@ import {
     universityPersonaTable,
     userTable,
 } from "../schema.js";
+import { anyToUint8Array } from "../shared/common/arrbufs.js";
+import { base64 } from "../shared/common/index.js";
 import {
-    type AuthenticateRequestBody,
-    type GetDeviceStatusResp,
-    type IsLoggedInResponse,
-    type VerifyOtp200,
-    type EmailSecretCredentials,
-    type UserCredentials,
-} from "../dto.js";
-import {
-    codeToString,
-    generateOneTimeCode,
-    generateRandomHex,
-    generateUUID,
-} from "../crypto.js";
-import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
-import {
-    Presentation,
-    BBSPlusSecretKey as SecretKey,
-} from "@docknetwork/crypto-wasm-ts";
+    zoduniversityType,
+    type BlindedCredentialType,
+    type Devices,
+    type Eligibilities,
+    type EmailCredential,
+    type EmailCredentialsPerEmail,
+    type EmailFormCredentialsPerEmail,
+    type ExtendedPollData,
+    type FormCredential,
+    type FormCredentialRequest,
+    type FormCredentialsPerEmail,
+    type Poll,
+    type PollUid,
+    type ResponseToPollPayload,
+    type SecretCredentialRequest,
+    type SecretCredentialType,
+    type SecretCredentials,
+    type SecretCredentialsPerType,
+    type UniversityType,
+    type WebDomainType,
+} from "../shared/types/zod.js";
 import {
     buildEmailCredential,
     buildFormCredential,
@@ -60,43 +100,6 @@ import {
     parseSecretCredentialRequest,
     type PostAs,
 } from "./credential.js";
-import {
-    type Devices,
-    type SecretCredentialRequest,
-    type FormCredentialRequest,
-    type EmailCredentialsPerEmail,
-    type EmailCredential,
-    type BlindedCredentialType,
-    type SecretCredentialType,
-    type SecretCredentialsPerType,
-    type Poll,
-    type FormCredentialsPerEmail,
-    type EmailFormCredentialsPerEmail,
-    type FormCredential,
-    type SecretCredentials,
-    type WebDomainType,
-    type UniversityType,
-    type ExtendedPollData,
-    zoduniversityType,
-    type ResponseToPollPayload,
-    type Eligibilities,
-    type PollUid,
-} from "../shared/types/zod.js";
-import { base64 } from "../shared/common/index.js";
-import { anyToUint8Array } from "../shared/common/arrbufs.js";
-import { BBSPlusBlindedCredentialRequest as BlindedCredentialRequest } from "@docknetwork/crypto-wasm-ts";
-import { toEncodedCID } from "@/shared/common/cid.js";
-import {
-    essecCampusToString,
-    essecProgramToString,
-} from "@/shared/types/university.js";
-import { type TCountryCode, countries as allCountries } from "countries-list";
-import isEqual from "lodash/isEqual.js";
-import { domainFromEmail, toUnionUndefined } from "@/shared/shared.js";
-import type { PgTransaction, QueryResultHKT } from "drizzle-orm/pg-core";
-import { Environment } from "@/app.js";
-import sesClientModule from "@aws-sdk/client-ses";
-import nodemailer from "nodemailer";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -129,6 +132,7 @@ interface VerifyOtpProps {
     maxAttempt: number;
     didWrite: string;
     code: number;
+    pkVersion: number;
     encryptedSymmKey?: string;
     sk: SecretKey;
     httpErrors: HttpErrors;
@@ -140,6 +144,7 @@ interface RegisterProps {
     db: PostgresDatabase;
     didWrite: string;
     encryptedSymmKey: string;
+    pkVersion: number;
     sk: SecretKey;
     unboundSecretCredentialRequest: SecretCredentialRequest;
     timeboundSecretCredentialRequest: SecretCredentialRequest;
@@ -150,6 +155,7 @@ interface CreateSecretCredentialsProps {
     db: PostgresDatabase;
     uid: string;
     userId: string;
+    pkVersion: number;
     timeboundSecretCredentialRequest: SecretCredentialRequest;
     unboundSecretCredentialRequest: SecretCredentialRequest;
     httpErrors: HttpErrors;
@@ -160,6 +166,7 @@ interface CreateAndStoreSecretCredentialProps {
     db: PostgresDatabase;
     uid: string;
     userId: string;
+    pkVersion: number;
     secretCredentialRequest: SecretCredentialRequest;
     type: SecretCredentialType;
     httpErrors: HttpErrors;
@@ -172,19 +179,29 @@ interface GetCredentialsResult {
     isRevoked: boolean | null;
 }
 
+interface GetLatestFormCredentialRequestProps {
+    db: PostgresDatabase;
+    email: string;
+    httpErrors: HttpErrors;
+}
+
 interface CreateAndStoreEmailCredentialsProps {
     db: PostgresDatabase;
     email: string;
+    pkVersion: number;
     uid: string;
     sk: SecretKey;
+    httpErrors: HttpErrors;
 }
 
 interface CreateAndStoreFormCredentialProps {
     db: PostgresDatabase;
     email: string;
+    pkVersion: number;
     formCredentialRequest: FormCredentialRequest;
     uid: string;
     sk: SecretKey;
+    httpErrors: HttpErrors;
 }
 
 interface AddCredentialProps {
@@ -658,6 +675,7 @@ export class Service {
         code,
         encryptedSymmKey,
         sk,
+        pkVersion,
         httpErrors,
         unboundSecretCredentialRequest,
         timeboundSecretCredentialRequest,
@@ -721,6 +739,7 @@ export class Service {
                     } = await Service.register({
                         db,
                         didWrite,
+                        pkVersion,
                         encryptedSymmKey,
                         sk,
                         unboundSecretCredentialRequest,
@@ -1147,6 +1166,7 @@ export class Service {
         didWrite,
         encryptedSymmKey,
         sk,
+        pkVersion,
         unboundSecretCredentialRequest,
         timeboundSecretCredentialRequest,
         httpErrors,
@@ -1198,8 +1218,10 @@ export class Service {
                 {
                     db: tx,
                     email: authAttemptResult[0].email,
+                    pkVersion,
                     sk: sk,
                     uid: uid,
+                    httpErrors,
                 }
             );
             const emailCredentialsPerEmail: EmailCredentialsPerEmail = {
@@ -1213,6 +1235,7 @@ export class Service {
                     db: tx,
                     uid: uid,
                     userId: authAttemptResult[0].userId,
+                    pkVersion: pkVersion,
                     unboundSecretCredentialRequest,
                     timeboundSecretCredentialRequest,
                     httpErrors,
@@ -1389,6 +1412,7 @@ export class Service {
                 isRevoked: credentialFormTable.isRevoked,
             })
             .from(credentialFormTable)
+            .orderBy(credentialFormTable.createdAt)
             .where(inArray(credentialFormTable.email, emails));
         if (results.length === 0) {
             return {};
@@ -1413,6 +1437,7 @@ export class Service {
                 isRevoked: credentialEmailTable.isRevoked,
             })
             .from(credentialEmailTable)
+            .orderBy(credentialEmailTable.createdAt)
             .where(inArray(credentialEmailTable.email, emails));
         if (results.length === 0) {
             return {};
@@ -1441,17 +1466,77 @@ export class Service {
         email,
         uid,
         sk,
+        pkVersion,
+        httpErrors,
     }: CreateAndStoreEmailCredentialsProps): Promise<EmailCredential> {
-        const credential = buildEmailCredential({ email, uid, sk });
-        const encodedCredential = base64.encode(
-            anyToUint8Array(credential.toJSON())
-        );
-        await db.insert(credentialEmailTable).values({
-            email: email,
-            isRevoked: false,
-            credential: credential.toJSON(),
+        return await db.transaction(async (tx) => {
+            const results = await tx
+                .select({ id: credentialEmailTable.id })
+                .from(credentialEmailTable)
+                .where(
+                    and(
+                        eq(credentialEmailTable.email, email),
+                        eq(credentialEmailTable.isRevoked, false)
+                    )
+                );
+            if (results.length !== 0) {
+                throw httpErrors.forbidden(
+                    `Attempt to create multiple active email credential`
+                );
+            }
+            const credential = buildEmailCredential({ email, uid, sk });
+            const encodedCredential = base64.encode(
+                anyToUint8Array(credential.toJSON())
+            );
+            await tx.insert(credentialEmailTable).values({
+                email: email,
+                isRevoked: false,
+                pkVersion: pkVersion,
+                credential: credential.toJSON(),
+            });
+            return encodedCredential;
         });
-        return encodedCredential;
+    }
+
+    static async getLatestFormCredentialRequest({
+        db,
+        email,
+        httpErrors,
+    }: GetLatestFormCredentialRequestProps): Promise<FormCredentialRequest> {
+        const results = await db
+            .select({ credential: credentialFormTable.credential })
+            .from(credentialFormTable)
+            .orderBy(credentialFormTable.createdAt)
+            .where(and(eq(credentialFormTable.email, email)));
+        if (results.length === 0) {
+            throw httpErrors.forbidden(`The form has never been filled`);
+        }
+        const latestFormCredential = Credential.fromJSON(
+            results[results.length - 1].credential
+        ) as any; // TODO type this...
+        const type: UniversityType = latestFormCredential.subject.typeSpecific
+            .type as UniversityType;
+        switch (type) {
+            case "student":
+                return {
+                    type: type,
+                    campus: essecCampusStrToEnum(
+                        latestFormCredential.subject.typeSpecific.campus
+                    ),
+                    program: essecProgramStrToEnum(
+                        latestFormCredential.subject.typeSpecific.program
+                    ),
+                    countries:
+                        latestFormCredential.subject.typeSpecific.countries,
+                    admissionYear:
+                        latestFormCredential.subject.typeSpecific.admissionYear,
+                };
+            case "alum":
+            case "faculty":
+                return {
+                    type: type,
+                };
+        }
     }
 
     static async createAndStoreFormCredential({
@@ -1459,28 +1544,48 @@ export class Service {
         email,
         formCredentialRequest,
         uid,
+        pkVersion,
         sk,
+        httpErrors,
     }: CreateAndStoreFormCredentialProps): Promise<FormCredential> {
-        const credential = buildFormCredential({
-            email,
-            formCredentialRequest,
-            sk,
-            uid,
+        return await db.transaction(async (tx) => {
+            const results = await tx
+                .select({ id: credentialFormTable.id })
+                .from(credentialFormTable)
+                .where(
+                    and(
+                        eq(credentialFormTable.email, email),
+                        eq(credentialFormTable.isRevoked, false)
+                    )
+                );
+            if (results.length !== 0) {
+                throw httpErrors.forbidden(
+                    `Attempt to create multiple active form credential`
+                );
+            }
+            const credential = buildFormCredential({
+                email,
+                formCredentialRequest,
+                sk,
+                uid,
+            });
+            const encodedCredential = base64.encode(
+                anyToUint8Array(credential.toJSON())
+            );
+            await tx.insert(credentialFormTable).values({
+                email: email,
+                pkVersion: pkVersion,
+                isRevoked: false,
+                credential: credential.toJSON(),
+            });
+            return encodedCredential;
         });
-        const encodedCredential = base64.encode(
-            anyToUint8Array(credential.toJSON())
-        );
-        await db.insert(credentialFormTable).values({
-            email: email,
-            isRevoked: false,
-            credential: credential.toJSON(),
-        });
-        return encodedCredential;
     }
 
     static async createAndStoreSecretCredentials({
         db,
         unboundSecretCredentialRequest,
+        pkVersion,
         userId,
         uid,
         timeboundSecretCredentialRequest,
@@ -1491,6 +1596,7 @@ export class Service {
             await Service.createAndStoreSecretCredential({
                 db,
                 secretCredentialRequest: unboundSecretCredentialRequest,
+                pkVersion,
                 type: "unbound",
                 uid,
                 userId,
@@ -1503,6 +1609,7 @@ export class Service {
                 userId,
                 uid,
                 secretCredentialRequest: timeboundSecretCredentialRequest,
+                pkVersion,
                 httpErrors,
                 sk,
                 type: "timebound",
@@ -1536,38 +1643,58 @@ export class Service {
         db,
         secretCredentialRequest,
         type,
+        pkVersion,
         uid,
         userId,
         httpErrors,
         sk,
     }: CreateAndStoreSecretCredentialProps): Promise<BlindedCredentialType> {
-        let blindedCredentialRequest: BlindedCredentialRequest;
-        try {
-            blindedCredentialRequest = parseSecretCredentialRequest(
-                secretCredentialRequest.blindedRequest
+        return await db.transaction(async (tx) => {
+            const results = await tx
+                .select({ id: credentialSecretTable.id })
+                .from(credentialSecretTable)
+                .where(
+                    and(
+                        eq(credentialSecretTable.userId, userId),
+                        eq(credentialSecretTable.type, type),
+                        eq(credentialSecretTable.isRevoked, false)
+                    )
+                );
+            if (results.length !== 0) {
+                throw httpErrors.forbidden(
+                    `Attempt to create multiple active ${type} secret credential`
+                );
+            }
+            let blindedCredentialRequest: BlindedCredentialRequest;
+            try {
+                blindedCredentialRequest = parseSecretCredentialRequest(
+                    secretCredentialRequest.blindedRequest
+                );
+            } catch (e) {
+                throw httpErrors.createError(400, e as Error);
+            }
+            const credential = buildSecretCredential({
+                blindedCredentialRequest,
+                uid,
+                type,
+                sk,
+            });
+            const encodedCredential = base64.encode(
+                anyToUint8Array(credential.toJSON())
             );
-        } catch (e) {
-            throw httpErrors.createError(400, e as Error);
-        }
-        const credential = buildSecretCredential({
-            blindedCredentialRequest,
-            uid,
-            type,
-            sk,
+            await tx.insert(credentialSecretTable).values({
+                userId: userId,
+                type: type,
+                pkVersion: pkVersion,
+                isRevoked: false,
+                credential: credential.toJSON(),
+                encryptedBlinding:
+                    secretCredentialRequest.encryptedEncodedBlinding,
+                encryptedBlindedSubject:
+                    secretCredentialRequest.encryptedEncodedBlindedSubject,
+            });
+            return encodedCredential;
         });
-        const encodedCredential = base64.encode(
-            anyToUint8Array(credential.toJSON())
-        );
-        await db.insert(credentialSecretTable).values({
-            userId: userId,
-            type: type,
-            isRevoked: false,
-            credential: credential.toJSON(),
-            encryptedBlinding: secretCredentialRequest.encryptedEncodedBlinding,
-            encryptedBlindedSubject:
-                secretCredentialRequest.encryptedEncodedBlindedSubject,
-        });
-        return encodedCredential;
     }
 
     static async getUserIdFromDevice(
@@ -1614,6 +1741,7 @@ export class Service {
                 isRevoked: credentialSecretTable.isRevoked,
             })
             .from(credentialSecretTable)
+            .orderBy(credentialSecretTable.createdAt)
             .where(eq(credentialSecretTable.userId, userId));
         if (results.length === 0) {
             return {};
@@ -2951,6 +3079,7 @@ export class Service {
                 .update(pollTable)
                 .set({
                     [optionChosenResponseColumnName]: sql`coalesce(${optionChosenResponseColumn}, 0) + 1`,
+                    updatedAt: now,
                 })
                 .where(
                     eq(pollTable.timestampedPresentationCID, response.pollUid)

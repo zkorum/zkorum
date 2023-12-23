@@ -77,6 +77,7 @@ import { createPoll } from "@/request/credential";
 import type { ApiV1PollCreatePostRequestPoll } from "@/api";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { doLoadMore, doLoadRecent, type PostsType } from "@/feed";
+import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
 
 interface PostDialogProps {
     posts: PostsType;
@@ -419,7 +420,7 @@ export function PostDialog({
                         }
                     />
                 }
-                label="an alum..."
+                label="a faculty/staff member..."
             />
         );
     }
@@ -512,7 +513,7 @@ export function PostDialog({
 
             // create Verifiable Presentation containing Attribute-Bound Pseudonym from global secret and email credential ID (== email address)
             const backendPublicKey = new PublicKey(
-                PublicKey.fromHex(import.meta.env.VITE_BACK_PUBLIC_KEY).bytes
+                PublicKey.fromHex(VITE_BACK_PUBLIC_KEY).bytes
             ); // no DID resolution for now
             const builder = new PresentationBuilder();
             builder.addCredential(

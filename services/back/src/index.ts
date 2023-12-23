@@ -45,7 +45,6 @@ import {
     type SecretCredentialType,
     type WebDomainType,
     type UniversityType,
-    zoduniversityType,
 } from "./shared/types/zod.js";
 import { toCID, decodeCID } from "./shared/common/cid.js";
 import isEqual from "lodash/isEqual.js";
@@ -130,21 +129,11 @@ const db = drizzle(client, {
 await initializeWasm();
 const sk: SecretKey = getSecretKey(config.NODE_ENV);
 function getSecretKey(env: Environment): SecretKey {
-    if (env === Environment.Development) {
-        const skAsHex = fs.readFileSync("./private.dev.key", {
-            encoding: "utf8",
-            flag: "r",
-        });
-        return new SecretKey(SecretKey.fromHex(skAsHex).bytes);
-    } else {
-        // TODO modify that to load it from an encrypted S3 value.
-        // Not very safe, but no KMS supports BBSPlus secret key at this time: WIP
-        const skAsHex = fs.readFileSync("./private.dev.key", {
-            encoding: "utf8",
-            flag: "r",
-        });
-        return new SecretKey(SecretKey.fromHex(skAsHex).bytes);
-    }
+    const skAsHex = fs.readFileSync(config.PRIVATE_KEY_FILEPATH, {
+        encoding: "utf8",
+        flag: "r",
+    });
+    return new SecretKey(SecretKey.fromHex(skAsHex).bytes);
 }
 const params = SignatureParams.generate(100, SIGNATURE_PARAMS_LABEL_BYTES);
 const pk = sk.generatePublicKeyG2(params);
@@ -158,6 +147,16 @@ interface ExpectedDeviceStatus {
 interface OptionsVerifyUcan {
     expectedDeviceStatus?: ExpectedDeviceStatus;
 }
+
+const SERVER_URL =
+    config.NODE_ENV === Environment.Production
+        ? config.SERVER_URL_PROD
+        : config.SERVER_URL_DEV;
+
+const SERVER_DID =
+    config.NODE_ENV === Environment.Production
+        ? config.SERVER_DID_PROD
+        : config.SERVER_DID_DEV;
 
 // auth for account profile interaction
 // TODO: store UCAN in ucan table at the end and check whether UCAN has already been seen in the ucan table on the first place - if yes, throw unauthorized error and log the potential replay attack attempt.
@@ -178,12 +177,12 @@ async function verifyUCAN(
         throw server.httpErrors.unauthorized();
     } else {
         const { scheme, hierPart } = httpUrlToResourcePointer(
-            new URL(request.originalUrl, config.SERVER_URL)
+            new URL(request.originalUrl, SERVER_URL)
         );
         const encodedUcan = authHeader.substring(7, authHeader.length);
         const rootIssuerDid = ucans.parse(encodedUcan).payload.iss;
         const result = await ucans.verify(encodedUcan, {
-            audience: config.SERVER_DID,
+            audience: SERVER_DID,
             isRevoked: async (_ucan) => false, // users' generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
             requiredCapabilities: [
                 {
@@ -698,11 +697,11 @@ server.after(() => {
                 return await Service.verifyOtp({
                     db,
                     maxAttempt: config.EMAIL_OTP_MAX_ATTEMPT_AMOUNT,
-
                     didWrite,
                     code: request.body.code,
                     encryptedSymmKey: request.body.encryptedSymmKey,
                     sk,
+                    pkVersion: config.PK_VERSION,
                     httpErrors: server.httpErrors,
                     unboundSecretCredentialRequest:
                         request.body.unboundSecretCredentialRequest,
@@ -765,11 +764,157 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/credential/request`, {
+        .post(`/api/${apiVersion}/credential/email/renew`, {
             schema: {
-                body: Dto.requestCredentials,
+                body: Dto.renewEmailCredential,
+                description:
+                    "Renew an active email credential - fails if already exists. Used when rotating issuer public key.",
                 response: {
-                    200: Dto.requestCredentials200,
+                    200: Dto.renewEmailCredential200,
+                },
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                        isSyncing: true,
+                    },
+                });
+                const isAdmin = await Service.isAdmin(db, didWrite);
+                if (isAdmin) {
+                    throw server.httpErrors.forbidden(
+                        "Admin cannot renew credentials"
+                    );
+                }
+                const email = request.body.email;
+                const isEmailAssociatedWithDevice =
+                    await Service.isEmailAssociatedWithDevice(
+                        db,
+                        didWrite,
+                        email
+                    );
+                if (!isEmailAssociatedWithDevice) {
+                    throw server.httpErrors.forbidden(
+                        `Email ${email} is not associated with this didWrite ${didWrite}`
+                    );
+                }
+                const uid = await Service.getUidFromDevice(db, didWrite);
+                const emailCredential =
+                    await Service.createAndStoreEmailCredential({
+                        db,
+                        email,
+                        pkVersion: config.PK_VERSION,
+                        uid,
+                        sk,
+                        httpErrors: server.httpErrors,
+                    });
+                return { emailCredential };
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/credential/form/renew`, {
+            schema: {
+                body: Dto.renewFormCredential,
+                description:
+                    "Renew an active form credential - fails if already exists. Used when rotating issuer public key.",
+                response: {
+                    200: Dto.renewFormCredential200,
+                },
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                        isSyncing: true,
+                    },
+                });
+                const isAdmin = await Service.isAdmin(db, didWrite);
+                if (isAdmin) {
+                    throw server.httpErrors.forbidden(
+                        "Admin cannot renew credentials"
+                    );
+                }
+                const email = request.body.email;
+                const isEmailAssociatedWithDevice =
+                    await Service.isEmailAssociatedWithDevice(
+                        db,
+                        didWrite,
+                        email
+                    );
+                if (!isEmailAssociatedWithDevice) {
+                    throw server.httpErrors.forbidden(
+                        `Email ${email} is not associated with this didWrite ${didWrite}`
+                    );
+                }
+                const uid = await Service.getUidFromDevice(db, didWrite);
+                const formCredentialRequest =
+                    await Service.getLatestFormCredentialRequest({
+                        db,
+                        email,
+                        httpErrors: server.httpErrors,
+                    });
+                const formCredential =
+                    await Service.createAndStoreFormCredential({
+                        db,
+                        email,
+                        pkVersion: config.PK_VERSION,
+                        formCredentialRequest,
+                        uid,
+                        sk,
+                        httpErrors: server.httpErrors,
+                    });
+                return { formCredential };
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/credential/secret/renew`, {
+            schema: {
+                body: Dto.renewSecretCredential,
+                description:
+                    "Renew an active secret credential - fails if already exists. Used when rotating issuer public key.",
+                response: {
+                    200: Dto.renewSecretCredential200,
+                },
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                        isSyncing: true,
+                    },
+                });
+                const isAdmin = await Service.isAdmin(db, didWrite);
+                if (isAdmin) {
+                    throw server.httpErrors.forbidden(
+                        "Admin cannot renew credentials"
+                    );
+                }
+                const userId = await Service.getUserIdFromDevice(db, didWrite);
+                const uid = await Service.getUidFromDevice(db, didWrite);
+                const secretCredential =
+                    await Service.createAndStoreSecretCredential({
+                        db,
+                        userId,
+                        uid,
+                        pkVersion: config.PK_VERSION,
+                        secretCredentialRequest:
+                            request.body.secretCredentialRequest,
+                        httpErrors: server.httpErrors,
+                        sk,
+                        type: request.body.type,
+                    });
+                return { signedBlindedCredential: secretCredential };
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/credential/form/request`, {
+            schema: {
+                body: Dto.requestFormCredential,
+                response: {
+                    200: Dto.requestFormCredential200,
                 },
             },
             handler: async (request, _reply) => {
@@ -824,8 +969,10 @@ server.after(() => {
                             email,
                             formCredentialRequest:
                                 request.body.formCredentialRequest,
+                            pkVersion: config.PK_VERSION,
                             uid,
                             sk,
+                            httpErrors: server.httpErrors,
                         });
                     const formCredentialsPerEmail =
                         addActiveEmailOrFormCredential(

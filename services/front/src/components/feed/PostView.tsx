@@ -2,6 +2,7 @@ import {
     getFromAuthor,
     getTimeFromNow,
     getToEligibility,
+    zeroIfUndefined,
 } from "@/common/common";
 import { maybeInitWasm } from "@/crypto/vc/credential";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -57,6 +58,7 @@ import type { UpdatePostHiddenStatusProps } from "./Feed";
 import { PollCanRespondView } from "./PollCanRespondView";
 import { PollResultView } from "./PollResultView";
 import Logo from "/logo-essec_72x107.af462b8d2b4c.png";
+import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
 
 export type UserResponse =
     | "option1"
@@ -117,7 +119,7 @@ export function PostView({
             await maybeInitWasm();
             // create Verifiable Presentation containing Attribute-Bound Pseudonym from global secret and email credential ID (== email address)
             const backendPublicKey = new PublicKey(
-                PublicKey.fromHex(import.meta.env.VITE_BACK_PUBLIC_KEY).bytes
+                PublicKey.fromHex(VITE_BACK_PUBLIC_KEY).bytes
             ); // no DID resolution for now
             const builder = new PresentationBuilder();
             builder.addCredential(
@@ -353,6 +355,14 @@ export function PostView({
             setIsUnhideLoading(false);
         }
     }
+
+    const numberOfResponses =
+        post.payload.result.option1Response +
+        post.payload.result.option2Response +
+        zeroIfUndefined(post.payload.result.option3Response) +
+        zeroIfUndefined(post.payload.result.option4Response) +
+        zeroIfUndefined(post.payload.result.option5Response) +
+        zeroIfUndefined(post.payload.result.option6Response);
 
     return (
         // lines
@@ -593,11 +603,18 @@ export function PostView({
                             </Typography>
                         </Grid>
                         {!isEligible || pollResponse !== undefined ? (
-                            <PollResultView
-                                result={post.payload.result}
-                                data={post.payload.data}
-                                pollResponse={pollResponse}
-                            />
+                            <>
+                                <PollResultView
+                                    result={post.payload.result}
+                                    data={post.payload.data}
+                                    pollResponse={pollResponse}
+                                />
+                                <Grid sx={{ px: 1, pb: 1 }}>
+                                    <Typography variant="body2">
+                                        {numberOfResponses} votes
+                                    </Typography>
+                                </Grid>
+                            </>
                         ) : (
                             <PollCanRespondView
                                 data={post.payload.data}

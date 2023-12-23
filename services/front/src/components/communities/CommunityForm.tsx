@@ -102,7 +102,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
             return;
         }
         switch (type) {
-            case zoduniversityType.enum.student:
+            case zoduniversityType.enum.student: {
                 setStudentHasTriedSubmitting(true);
                 const studentCountriesAsObj: Partial<
                     Record<TCountryCode, boolean>
@@ -110,7 +110,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                 for (const countryCode of studentCountries) {
                     studentCountriesAsObj[countryCode as TCountryCode] = true;
                 }
-                const emailCredentialRequest = {
+                const formCredentialRequest = {
                     type: zoduniversityType.enum.student,
                     campus: studentCampus,
                     program: studentProgram,
@@ -122,7 +122,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     // this will eventually update redux emailCredential and hence the parent to show CommunityFormFilled instead
                     await requestAnonymousCredentials(
                         email,
-                        emailCredentialRequest
+                        formCredentialRequest
                     );
                     //... if it gets through, we redirect to the feed
                     navigate(FEED);
@@ -137,6 +137,7 @@ export function CommunityForm({ email }: CommunityFormProps) {
                     dispatch(closeMainLoading());
                 }
                 break;
+            }
             case zoduniversityType.enum.alum: {
                 const formCredentialRequest = {
                     type: zoduniversityType.enum.alum,

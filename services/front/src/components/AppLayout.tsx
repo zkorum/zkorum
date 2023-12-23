@@ -8,6 +8,11 @@ import { BottomNavbar } from "./BottomNavbar";
 import Alert from "@mui/material/Alert";
 import React from "react";
 import { usePostsAndMeta } from "@/feed";
+import {
+    selectActiveSessionEmail,
+    selectActiveSessionUserId,
+} from "@/store/selector";
+import { fetchAndUpdateCredentials } from "@/request/credential";
 
 export function AppLayout() {
     const snackbarState = useAppSelector((state) => {
@@ -23,6 +28,8 @@ export function AppLayout() {
         }
         dispatch(closeSnackbar());
     }
+    const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
+    const activeSessionUserId = useAppSelector(selectActiveSessionUserId);
 
     const {
         posts,
@@ -32,6 +39,23 @@ export function AppLayout() {
         loadingRecent,
         setLoadingRecent,
     } = usePostsAndMeta();
+
+    React.useEffect(() => {
+        // this will set the values in redux store and eventually update this page
+        const fetchData = async function () {
+            if (activeSessionUserId !== undefined) {
+                try {
+                    await fetchAndUpdateCredentials(
+                        activeSessionUserId,
+                        activeSessionEmail
+                    );
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        };
+        fetchData();
+    }, []);
 
     /* <Container maxWidth={false} disableGutters> */
     return (

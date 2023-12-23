@@ -1,6 +1,6 @@
 // This file is temporary and will be replaced by i18n
 export const genericError =
-    "There was an error. Please try re-authenticating or try again later."; // TODO => solve re-authentication issues directly
+    "There was an error. Try refreshing the page or re-authenticating. If the problem persists, contact us or try again later."; // TODO => solve re-authentication issues directly
 export const authSuccess = "Authentication successful";
 export const authAlreadyLoggedIn = "Already logged-in";
 export const authWarning =

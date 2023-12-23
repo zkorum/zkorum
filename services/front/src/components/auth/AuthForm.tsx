@@ -57,7 +57,7 @@ export function AuthForm({
                 } else {
                     setIsEmailValid("valid_unauthorized");
                     setEmailHelper(
-                        "This version is currently reserved to ESSEC Business School. Stay tuned for future releases!"
+                        "This version is currently reserved for ESSEC Business School. Stay tuned for future releases!"
                     );
                 }
             } else {

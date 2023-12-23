@@ -521,6 +521,1748 @@ export interface ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest {
 /**
  * 
  * @export
+ * @interface ApiV1CredentialEmailRenewPost200Response
+ */
+export interface ApiV1CredentialEmailRenewPost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CredentialEmailRenewPost200Response
+     */
+    'emailCredential': string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialEmailRenewPostRequest
+ */
+export interface ApiV1CredentialEmailRenewPostRequest {
+    /**
+     * Email address
+     * @type {string}
+     * @memberof ApiV1CredentialEmailRenewPostRequest
+     */
+    'email': string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialFormRenewPost200Response
+ */
+export interface ApiV1CredentialFormRenewPost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CredentialFormRenewPost200Response
+     */
+    'formCredential': string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialFormRequestPost200Response
+ */
+export interface ApiV1CredentialFormRequestPost200Response {
+    /**
+     * 
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1CredentialFormRequestPost200Response
+     */
+    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialFormRequestPostRequest
+ */
+export interface ApiV1CredentialFormRequestPostRequest {
+    /**
+     * Email address
+     * @type {string}
+     * @memberof ApiV1CredentialFormRequestPostRequest
+     */
+    'email': string;
+    /**
+     * 
+     * @type {ApiV1CredentialFormRequestPostRequestFormCredentialRequest}
+     * @memberof ApiV1CredentialFormRequestPostRequest
+     */
+    'formCredentialRequest': ApiV1CredentialFormRequestPostRequestFormCredentialRequest;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialFormRequestPostRequestFormCredentialRequest
+ */
+export interface ApiV1CredentialFormRequestPostRequestFormCredentialRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequest
+     */
+    'type': ApiV1CredentialFormRequestPostRequestFormCredentialRequestTypeEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequest
+     */
+    'campus': ApiV1CredentialFormRequestPostRequestFormCredentialRequestCampusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequest
+     */
+    'program': ApiV1CredentialFormRequestPostRequestFormCredentialRequestProgramEnum;
+    /**
+     * 
+     * @type {ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequest
+     */
+    'countries': ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequest
+     */
+    'admissionYear': number;
+}
+
+export const ApiV1CredentialFormRequestPostRequestFormCredentialRequestTypeEnum = {
+    Student: 'student',
+    Alum: 'alum',
+    Faculty: 'faculty'
+} as const;
+
+export type ApiV1CredentialFormRequestPostRequestFormCredentialRequestTypeEnum = typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestTypeEnum[keyof typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestTypeEnum];
+export const ApiV1CredentialFormRequestPostRequestFormCredentialRequestCampusEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2
+} as const;
+
+export type ApiV1CredentialFormRequestPostRequestFormCredentialRequestCampusEnum = typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestCampusEnum[keyof typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestCampusEnum];
+export const ApiV1CredentialFormRequestPostRequestFormCredentialRequestProgramEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2,
+    NUMBER_3: 3,
+    NUMBER_4: 4,
+    NUMBER_5: 5
+} as const;
+
+export type ApiV1CredentialFormRequestPostRequestFormCredentialRequestProgramEnum = typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestProgramEnum[keyof typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestProgramEnum];
+
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf
+ */
+export interface ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf
+     */
+    'type': ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfTypeEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf
+     */
+    'campus': ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCampusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf
+     */
+    'program': ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfProgramEnum;
+    /**
+     * 
+     * @type {ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf
+     */
+    'countries': ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf
+     */
+    'admissionYear': number;
+}
+
+export const ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfTypeEnum = {
+    Student: 'student'
+} as const;
+
+export type ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfTypeEnum = typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfTypeEnum[keyof typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfTypeEnum];
+export const ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCampusEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2
+} as const;
+
+export type ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCampusEnum = typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCampusEnum[keyof typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCampusEnum];
+export const ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfProgramEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2,
+    NUMBER_3: 3,
+    NUMBER_4: 4,
+    NUMBER_5: 5
+} as const;
+
+export type ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfProgramEnum = typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfProgramEnum[keyof typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfProgramEnum];
+
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf1
+ */
+export interface ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf1
+     */
+    'type': ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf1TypeEnum;
+}
+
+export const ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = {
+    Alum: 'alum'
+} as const;
+
+export type ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf1TypeEnum[keyof typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf1TypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf2
+ */
+export interface ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf2 {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf2
+     */
+    'type': ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf2TypeEnum;
+}
+
+export const ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = {
+    Faculty: 'faculty'
+} as const;
+
+export type ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf2TypeEnum[keyof typeof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOf2TypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+ */
+export interface ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AX': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'AZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BB': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'BZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CX': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'CZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'DE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'DJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'DK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'DM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'DO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'DZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'EC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'EE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'EG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'EH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ER': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ES': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ET': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'FI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'FJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'FK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'FM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'FO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'FR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GB': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'GY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'HK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'HM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'HN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'HR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'HT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'HU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ID': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'IT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'JE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'JM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'JO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'JP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'KZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LB': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'LY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ME': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ML': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MQ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MX': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'MZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NP': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'NZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'OM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'PY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'QA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'RE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'RO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'RS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'RU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'RW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SB': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ST': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SX': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'SZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TD': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TH': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TJ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TL': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TO': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TR': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TV': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TW': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'TZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'UA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'UG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'UM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'US': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'UY': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'UZ': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'VA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'VC': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'VE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'VG': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'VI': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'VN': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'VU': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'WF': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'WS': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'XK': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'YE': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'YT': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ZA': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ZM': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CredentialFormRequestPostRequestFormCredentialRequestAnyOfCountries
+     */
+    'ZW': boolean;
+}
+/**
+ * 
+ * @export
  * @interface ApiV1CredentialGetPost200Response
  */
 export interface ApiV1CredentialGetPost200Response {
@@ -546,1706 +2288,43 @@ export interface ApiV1CredentialGetPost200Response {
 /**
  * 
  * @export
- * @interface ApiV1CredentialRequestPost200Response
+ * @interface ApiV1CredentialSecretRenewPost200Response
  */
-export interface ApiV1CredentialRequestPost200Response {
-    /**
-     * 
-     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
-     * @memberof ApiV1CredentialRequestPost200Response
-     */
-    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
-}
-/**
- * 
- * @export
- * @interface ApiV1CredentialRequestPostRequest
- */
-export interface ApiV1CredentialRequestPostRequest {
-    /**
-     * Email address
-     * @type {string}
-     * @memberof ApiV1CredentialRequestPostRequest
-     */
-    'email': string;
-    /**
-     * 
-     * @type {ApiV1CredentialRequestPostRequestFormCredentialRequest}
-     * @memberof ApiV1CredentialRequestPostRequest
-     */
-    'formCredentialRequest': ApiV1CredentialRequestPostRequestFormCredentialRequest;
-}
-/**
- * 
- * @export
- * @interface ApiV1CredentialRequestPostRequestFormCredentialRequest
- */
-export interface ApiV1CredentialRequestPostRequestFormCredentialRequest {
+export interface ApiV1CredentialSecretRenewPost200Response {
     /**
      * 
      * @type {string}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
+     * @memberof ApiV1CredentialSecretRenewPost200Response
      */
-    'type': ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
-     */
-    'campus': ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
-     */
-    'program': ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum;
-    /**
-     * 
-     * @type {ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
-     */
-    'countries': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequest
-     */
-    'admissionYear': number;
+    'signedBlindedCredential': string;
 }
-
-export const ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum = {
-    Student: 'student',
-    Alum: 'alum',
-    Faculty: 'faculty'
-} as const;
-
-export type ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestTypeEnum];
-export const ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum = {
-    NUMBER_0: 0,
-    NUMBER_1: 1,
-    NUMBER_2: 2
-} as const;
-
-export type ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestCampusEnum];
-export const ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum = {
-    NUMBER_0: 0,
-    NUMBER_1: 1,
-    NUMBER_2: 2,
-    NUMBER_3: 3,
-    NUMBER_4: 4,
-    NUMBER_5: 5
-} as const;
-
-export type ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestProgramEnum];
-
 /**
  * 
  * @export
- * @interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
+ * @interface ApiV1CredentialSecretRenewPostRequest
  */
-export interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf {
+export interface ApiV1CredentialSecretRenewPostRequest {
+    /**
+     * 
+     * @type {ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
+     * @memberof ApiV1CredentialSecretRenewPostRequest
+     */
+    'secretCredentialRequest': ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
+     * @memberof ApiV1CredentialSecretRenewPostRequest
      */
-    'type': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
-     */
-    'campus': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
-     */
-    'program': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum;
-    /**
-     * 
-     * @type {ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
-     */
-    'countries': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf
-     */
-    'admissionYear': number;
+    'type': ApiV1CredentialSecretRenewPostRequestTypeEnum;
 }
 
-export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = {
-    Student: 'student'
+export const ApiV1CredentialSecretRenewPostRequestTypeEnum = {
+    Unbound: 'unbound',
+    Timebound: 'timebound'
 } as const;
 
-export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfTypeEnum];
-export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum = {
-    NUMBER_0: 0,
-    NUMBER_1: 1,
-    NUMBER_2: 2
-} as const;
+export type ApiV1CredentialSecretRenewPostRequestTypeEnum = typeof ApiV1CredentialSecretRenewPostRequestTypeEnum[keyof typeof ApiV1CredentialSecretRenewPostRequestTypeEnum];
 
-export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCampusEnum];
-export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = {
-    NUMBER_0: 0,
-    NUMBER_1: 1,
-    NUMBER_2: 2,
-    NUMBER_3: 3,
-    NUMBER_4: 4,
-    NUMBER_5: 5
-} as const;
-
-export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfProgramEnum];
-
-/**
- * 
- * @export
- * @interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1
- */
-export interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1 {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1
-     */
-    'type': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum;
-}
-
-export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = {
-    Alum: 'alum'
-} as const;
-
-export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf1TypeEnum];
-
-/**
- * 
- * @export
- * @interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2
- */
-export interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2 {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2
-     */
-    'type': ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum;
-}
-
-export const ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = {
-    Faculty: 'faculty'
-} as const;
-
-export type ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum = typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum[keyof typeof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOf2TypeEnum];
-
-/**
- * 
- * @export
- * @interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
- */
-export interface ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AD': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AQ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AX': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'AZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BB': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BD': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BJ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BQ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BV': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'BZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CC': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CD': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CV': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CX': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'CZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'DE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'DJ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'DK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'DM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'DO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'DZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'EC': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'EE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'EG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'EH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ER': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ES': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ET': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'FI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'FJ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'FK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'FM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'FO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'FR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GB': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GD': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GP': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GQ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'GY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'HK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'HM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'HN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'HR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'HT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'HU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ID': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IQ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'IT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'JE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'JM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'JO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'JP': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KP': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'KZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LB': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LC': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LV': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'LY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MC': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MD': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ME': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ML': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MP': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MQ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MV': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MX': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'MZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NC': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NP': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'NZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'OM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'PY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'QA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'RE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'RO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'RS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'RU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'RW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SB': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SC': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SD': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SJ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ST': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SV': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SX': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'SZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TC': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TD': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TH': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TJ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TL': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TO': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TR': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TV': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TW': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'TZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'UA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'UG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'UM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'US': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'UY': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'UZ': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'VA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'VC': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'VE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'VG': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'VI': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'VN': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'VU': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'WF': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'WS': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'XK': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'YE': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'YT': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ZA': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ZM': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CredentialRequestPostRequestFormCredentialRequestAnyOfCountries
-     */
-    'ZW': boolean;
-}
 /**
  * 
  * @export
@@ -3437,6 +3516,123 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
+         * Renew an active email credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CredentialEmailRenewPost: async (apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1CredentialEmailRenewPostRequest' is not null or undefined
+            assertParamExists('apiV1CredentialEmailRenewPost', 'apiV1CredentialEmailRenewPostRequest', apiV1CredentialEmailRenewPostRequest)
+            const localVarPath = `/api/v1/credential/email/renew`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CredentialEmailRenewPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Renew an active form credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CredentialFormRenewPost: async (apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1CredentialEmailRenewPostRequest' is not null or undefined
+            assertParamExists('apiV1CredentialFormRenewPost', 'apiV1CredentialEmailRenewPostRequest', apiV1CredentialEmailRenewPostRequest)
+            const localVarPath = `/api/v1/credential/form/renew`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CredentialEmailRenewPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiV1CredentialFormRequestPostRequest} apiV1CredentialFormRequestPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CredentialFormRequestPost: async (apiV1CredentialFormRequestPostRequest: ApiV1CredentialFormRequestPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1CredentialFormRequestPostRequest' is not null or undefined
+            assertParamExists('apiV1CredentialFormRequestPost', 'apiV1CredentialFormRequestPostRequest', apiV1CredentialFormRequestPostRequest)
+            const localVarPath = `/api/v1/credential/form/request`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CredentialFormRequestPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3470,15 +3666,15 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
-         * @param {ApiV1CredentialRequestPostRequest} apiV1CredentialRequestPostRequest 
+         * Renew an active secret credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialSecretRenewPostRequest} apiV1CredentialSecretRenewPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CredentialRequestPost: async (apiV1CredentialRequestPostRequest: ApiV1CredentialRequestPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1CredentialRequestPostRequest' is not null or undefined
-            assertParamExists('apiV1CredentialRequestPost', 'apiV1CredentialRequestPostRequest', apiV1CredentialRequestPostRequest)
-            const localVarPath = `/api/v1/credential/request`;
+        apiV1CredentialSecretRenewPost: async (apiV1CredentialSecretRenewPostRequest: ApiV1CredentialSecretRenewPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1CredentialSecretRenewPostRequest' is not null or undefined
+            assertParamExists('apiV1CredentialSecretRenewPost', 'apiV1CredentialSecretRenewPostRequest', apiV1CredentialSecretRenewPostRequest)
+            const localVarPath = `/api/v1/credential/secret/renew`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3501,7 +3697,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CredentialRequestPostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CredentialSecretRenewPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3787,6 +3983,36 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
+         * Renew an active email credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialEmailRenewPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * Renew an active form credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1CredentialFormRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialFormRenewPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialFormRenewPost(apiV1CredentialEmailRenewPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {ApiV1CredentialFormRequestPostRequest} apiV1CredentialFormRequestPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1CredentialFormRequestPost(apiV1CredentialFormRequestPostRequest: ApiV1CredentialFormRequestPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialFormRequestPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialFormRequestPost(apiV1CredentialFormRequestPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3796,13 +4022,13 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
-         * 
-         * @param {ApiV1CredentialRequestPostRequest} apiV1CredentialRequestPostRequest 
+         * Renew an active secret credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialSecretRenewPostRequest} apiV1CredentialSecretRenewPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest: ApiV1CredentialRequestPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialRequestPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest, options);
+        async apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest: ApiV1CredentialSecretRenewPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialSecretRenewPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3910,6 +4136,33 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Renew an active email credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: any): AxiosPromise<ApiV1CredentialEmailRenewPost200Response> {
+            return localVarFp.apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Renew an active form credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CredentialFormRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: any): AxiosPromise<ApiV1CredentialFormRenewPost200Response> {
+            return localVarFp.apiV1CredentialFormRenewPost(apiV1CredentialEmailRenewPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1CredentialFormRequestPostRequest} apiV1CredentialFormRequestPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CredentialFormRequestPost(apiV1CredentialFormRequestPostRequest: ApiV1CredentialFormRequestPostRequest, options?: any): AxiosPromise<ApiV1CredentialFormRequestPost200Response> {
+            return localVarFp.apiV1CredentialFormRequestPost(apiV1CredentialFormRequestPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3918,13 +4171,13 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.apiV1CredentialGetPost(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
-         * @param {ApiV1CredentialRequestPostRequest} apiV1CredentialRequestPostRequest 
+         * Renew an active secret credential - fails if already exists. Used when rotating issuer public key.
+         * @param {ApiV1CredentialSecretRenewPostRequest} apiV1CredentialSecretRenewPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest: ApiV1CredentialRequestPostRequest, options?: any): AxiosPromise<ApiV1CredentialRequestPost200Response> {
-            return localVarFp.apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest, options).then((request) => request(axios, basePath));
+        apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest: ApiV1CredentialSecretRenewPostRequest, options?: any): AxiosPromise<ApiV1CredentialSecretRenewPost200Response> {
+            return localVarFp.apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4033,6 +4286,39 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
+     * Renew an active email credential - fails if already exists. Used when rotating issuer public key.
+     * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Renew an active form credential - fails if already exists. Used when rotating issuer public key.
+     * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1CredentialFormRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1CredentialFormRenewPost(apiV1CredentialEmailRenewPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1CredentialFormRequestPostRequest} apiV1CredentialFormRequestPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1CredentialFormRequestPost(apiV1CredentialFormRequestPostRequest: ApiV1CredentialFormRequestPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1CredentialFormRequestPost(apiV1CredentialFormRequestPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -4043,14 +4329,14 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * 
-     * @param {ApiV1CredentialRequestPostRequest} apiV1CredentialRequestPostRequest 
+     * Renew an active secret credential - fails if already exists. Used when rotating issuer public key.
+     * @param {ApiV1CredentialSecretRenewPostRequest} apiV1CredentialSecretRenewPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest: ApiV1CredentialRequestPostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1CredentialRequestPost(apiV1CredentialRequestPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest: ApiV1CredentialSecretRenewPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
