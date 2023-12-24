@@ -611,11 +611,10 @@ export function PostView({
                                 />
                                 <Grid sx={{ px: 1, pb: 1 }}>
                                     <Typography variant="body2">
-                                        `${numberOfResponses} $
+                                        {numberOfResponses}{" "}
                                         {numberOfResponses <= 1
                                             ? "vote"
                                             : "votes"}
-                                        `
                                     </Typography>
                                 </Grid>
                             </>
