@@ -2274,8 +2274,8 @@
                           "admissionYear": {
                             "type": "integer",
                             "exclusiveMinimum": true,
-                            "minimum": 2014,
-                            "maximum": 2024
+                            "minimum": 2015,
+                            "maximum": 2025
                           }
                         },
                         "required": [
@@ -2480,8 +2480,8 @@
                             "items": {
                               "type": "integer",
                               "exclusiveMinimum": true,
-                              "minimum": 2014,
-                              "maximum": 2024
+                              "minimum": 2015,
+                              "maximum": 2025
                             }
                           }
                         },
@@ -2960,8 +2960,8 @@
                                 "admissionYear": {
                                   "type": "integer",
                                   "exclusiveMinimum": true,
-                                  "minimum": 2014,
-                                  "maximum": 2024
+                                  "minimum": 2015,
+                                  "maximum": 2025
                                 }
                               },
                               "additionalProperties": false
@@ -3290,8 +3290,8 @@
                                   "items": {
                                     "type": "integer",
                                     "exclusiveMinimum": true,
-                                    "minimum": 2014,
-                                    "maximum": 2024
+                                    "minimum": 2015,
+                                    "maximum": 2025
                                   }
                                 }
                               },
@@ -3750,8 +3750,8 @@
                                   "admissionYear": {
                                     "type": "integer",
                                     "exclusiveMinimum": true,
-                                    "minimum": 2014,
-                                    "maximum": 2024
+                                    "minimum": 2015,
+                                    "maximum": 2025
                                   }
                                 },
                                 "additionalProperties": false
@@ -4080,8 +4080,8 @@
                                     "items": {
                                       "type": "integer",
                                       "exclusiveMinimum": true,
-                                      "minimum": 2014,
-                                      "maximum": 2024
+                                      "minimum": 2015,
+                                      "maximum": 2025
                                     }
                                   }
                                 },
@@ -4541,8 +4541,8 @@
                                   "admissionYear": {
                                     "type": "integer",
                                     "exclusiveMinimum": true,
-                                    "minimum": 2014,
-                                    "maximum": 2024
+                                    "minimum": 2015,
+                                    "maximum": 2025
                                   }
                                 },
                                 "additionalProperties": false
@@ -4871,8 +4871,8 @@
                                     "items": {
                                       "type": "integer",
                                       "exclusiveMinimum": true,
-                                      "minimum": 2014,
-                                      "maximum": 2024
+                                      "minimum": 2015,
+                                      "maximum": 2025
                                     }
                                   }
                                 },

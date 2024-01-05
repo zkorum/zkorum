@@ -18,7 +18,12 @@ import {
     showWarning,
 } from "../../store/reducers/snackbar";
 import { setPendingSessionCodeExpiry } from "../../store/reducers/session";
-import { authAlreadyLoggedIn, genericError, throttled } from "../error/message";
+import {
+    authAlreadyLoggedIn,
+    genericError,
+    linkingDevice,
+    throttled,
+} from "../error/message";
 import axios from "axios";
 import Alert from "@mui/material/Alert";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
@@ -146,6 +151,7 @@ export function OtpVerify() {
                 );
                 if (verifyOtpData.success) {
                     if (verifyOtpData.encryptedSymmKey === undefined) {
+                        dispatch(showError(linkingDevice));
                         // this is login from a new device or a known unsynced device
                         // device is awaiting syncing: TODO show corresponding screen and update redux user status
                         // then when syncing is OK - steps as in "else"
@@ -244,6 +250,7 @@ export function OtpVerify() {
                     dispatch(showSuccess(authAlreadyLoggedIn));
                     return;
                 } else if (response === "awaiting-syncing") {
+                    dispatch(showError(linkingDevice));
                     // TODO
                     return;
                 } else if (response === "throttled") {

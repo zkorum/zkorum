@@ -15,3 +15,5 @@ export const fieldRequired = "This field is required";
 export const creatingProof = "Creating zero-knowledge proof locally... 🧾";
 export const sendingPost = "Sending... 🕓";
 export const pollCreated = "Poll successfully created! 🎉";
+export const linkingDevice =
+    "Please try with the browser you used when you registered, sorry for the inconvenience! Linking device is under development.";
