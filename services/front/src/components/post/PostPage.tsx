@@ -15,6 +15,9 @@ import { Virtuoso } from "react-virtuoso";
 import { ErrorPage } from "../error/ErrorPage";
 import { PostView } from "../feed/PostView";
 import { CommentView } from "./CommentView";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { selectActiveSessionEmail } from "@/store/selector";
+import { openAuthModal } from "@/store/reducers/session";
 
 export interface UpdateCommentHiddenStatusProps {
     slugId: PostSlugId;
@@ -34,6 +37,8 @@ export function PostPage() {
     } = usePost();
     const [loadingRecent, setLoadingRecent] = React.useState<boolean>(false);
     const [loadingMore, setLoadingMore] = React.useState<boolean>(false);
+    const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
+    const dispatch = useAppDispatch();
 
     function updateCommentHiddenStatus({
         slugId,
@@ -156,7 +161,12 @@ export function PostPage() {
                     {context?.loadingMore ? null : context?.comments.length ===
                           undefined || context?.comments.length === 0 ? (
                         <Button
-                            onClick={() => commentInputRef.current?.focus()}
+                            onClick={() =>
+                                activeSessionEmail === "" ||
+                                activeSessionEmail === undefined
+                                    ? dispatch(openAuthModal())
+                                    : commentInputRef.current?.focus()
+                            }
                         >
                             Be the first to comment
                         </Button>

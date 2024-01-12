@@ -336,7 +336,6 @@ interface SelectOrInsertPseudonymProps<
     tx: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
     pseudonym: string;
     postAs: PostAs;
-    now: Date;
 }
 
 interface FetchPostByUidOrSlugIdProps<
@@ -2296,13 +2295,19 @@ export class Service {
         tx,
         postAs,
         pseudonym,
-        now,
     }: SelectOrInsertPseudonymProps<
         QueryResultHKT,
         Record<string, unknown>,
         TablesRelationalConfig
     >): Promise<number> {
         ////////////// PERSONA - POST AS ///////////
+        const resultSelectPseudonymId = await tx
+            .select({ id: pseudonymTable.id })
+            .from(pseudonymTable)
+            .where(eq(pseudonymTable.pseudonym, pseudonym));
+        if (resultSelectPseudonymId.length !== 0) {
+            return resultSelectPseudonymId[0].id;
+        }
         let universityPersonaId: number | undefined = undefined;
         let personaId: number | undefined = undefined;
         // TODO: switch case depending on value of postAs.type - here we only do work for universities
@@ -2459,14 +2464,7 @@ export class Service {
                 pseudonym: pseudonym,
                 personaId: personaId, // TODO: maybe we could allow posting just as a member of ZKorum? Then this could be undefined
             })
-            .returning({ insertedId: pseudonymTable.id })
-            .onConflictDoNothing({
-                target: pseudonymTable.pseudonym,
-            })
-            .onConflictDoUpdate({
-                target: pseudonymTable.personaId,
-                set: { personaId: personaId, updatedAt: now },
-            }); // TODO: how to log a warning when that happen?, it should not!
+            .returning({ insertedId: pseudonymTable.id });
         return insertedAuthor[0].insertedId;
         /////////////////////////////////////////////////////////////////////////////////////////
     }
@@ -2503,7 +2501,6 @@ export class Service {
                 tx: tx,
                 postAs: postAs,
                 pseudonym: pseudonym,
-                now: now,
             });
             /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2995,7 +2992,7 @@ export class Service {
             type === "postUid"
                 ? eq(pollTable.timestampedPresentationCID, postUidOrSlugId)
                 : eq(pollTable.slugId, postUidOrSlugId);
-        const results = await fetchPostBy({ db }).where(whereClause);
+        const results = await fetchPostQuery.where(whereClause);
         if (results.length === 0) {
             throw httpErrors.internalServerError(
                 `There is no post for ${type} '${postUidOrSlugId}'`
@@ -3250,7 +3247,6 @@ export class Service {
                 tx: tx,
                 postAs: postAs,
                 pseudonym: pseudonym,
-                now: now,
             });
             // in any case, insert the poll response in the dedicated table
             await tx.insert(pollResponseTable).values({
@@ -3411,7 +3407,6 @@ export class Service {
             tx: db,
             postAs: postAs,
             pseudonym: pseudonym,
-            now: now,
         });
         await db.insert(commentTable).values({
             presentation: presentation.toJSON(),
