@@ -14,6 +14,8 @@ interface BottomAddCommentBarProps {
     onSendComment: () => Promise<void>;
     isSendingComment: boolean;
     isContextNotLoaded: boolean;
+    isLoggedIn: boolean;
+    onLoggingIn: () => void;
     wasCommentSent: boolean;
     setWasCommentSent: (value: boolean) => void;
     commentInputRef: React.MutableRefObject<HTMLInputElement | undefined>;
@@ -24,6 +26,8 @@ export function BottomAddCommentBar({
     isSendingComment,
     onSendComment,
     isContextNotLoaded,
+    isLoggedIn,
+    onLoggingIn,
     wasCommentSent,
     setWasCommentSent,
     commentInputRef,
@@ -72,6 +76,7 @@ export function BottomAddCommentBar({
     return (
         <>
             <AppBar
+                onClick={isLoggedIn ? undefined : onLoggingIn}
                 position="fixed"
                 color="primary"
                 sx={{ top: "auto", bottom: 0 }}
@@ -97,7 +102,9 @@ export function BottomAddCommentBar({
                                 setFocused(false);
                                 setComment(localComment);
                             }}
-                            disabled={shouldWritingBeDisabled}
+                            disabled={
+                                isLoggedIn ? shouldWritingBeDisabled : false
+                            }
                             fullWidth
                             multiline
                             helperText={
@@ -114,10 +121,14 @@ export function BottomAddCommentBar({
                             onChange={(
                                 event: React.FocusEvent<HTMLInputElement>
                             ) => {
-                                if (wasCommentSent) {
-                                    setWasCommentSent(false);
+                                if (!isLoggedIn) {
+                                    onLoggingIn();
+                                } else {
+                                    if (wasCommentSent) {
+                                        setWasCommentSent(false);
+                                    }
+                                    setLocalComment(event.target.value);
                                 }
-                                setLocalComment(event.target.value);
                             }}
                             minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
                             maxRows={20} //  https://stackoverflow.com/a/72789474/11046178c
@@ -133,10 +144,11 @@ export function BottomAddCommentBar({
                                 : "inherit"
                         }
                         sx={{
-                            display:
-                                focused || localComment.length !== 0
+                            display: isLoggedIn
+                                ? focused || localComment.length !== 0
                                     ? "inherit"
-                                    : "none",
+                                    : "none"
+                                : "inherit",
                         }}
                         container
                         justifyContent="flex-end"
@@ -160,10 +172,16 @@ export function BottomAddCommentBar({
                         <Grid sx={{ mb: 1 }}>
                             <LoadingButton
                                 loading={isSendingComment}
-                                onClick={async () => await onSendComment()}
-                                disabled={shouldSendingBeDisabled}
+                                onClick={
+                                    isLoggedIn
+                                        ? async () => await onSendComment()
+                                        : onLoggingIn
+                                }
+                                disabled={
+                                    isLoggedIn ? shouldSendingBeDisabled : false
+                                }
                             >
-                                Post
+                                {isLoggedIn ? "Post" : "Log in"}
                             </LoadingButton>
                         </Grid>
                     </Grid>

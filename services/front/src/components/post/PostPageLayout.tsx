@@ -19,6 +19,7 @@ import type {
 import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
 import {
     selectActiveEmailCredential,
+    selectActiveSessionEmail,
     selectActiveUnboundSecretCredential,
 } from "@/store/selector";
 import {
@@ -38,6 +39,7 @@ import {
 } from "../error/message";
 import { BottomAddCommentBar } from "./BottomAddCommentBar";
 import { PostPageTopbar } from "./PostPageTopbar";
+import { openAuthModal } from "@/store/reducers/session";
 
 export function PostPageLayout() {
     let { postSlugId } = useParams();
@@ -53,6 +55,7 @@ export function PostPageLayout() {
     const commentInputRef = React.useRef<HTMLInputElement>();
 
     const dispatch = useAppDispatch();
+    const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
     const activeUnboundSecretCredential = useAppSelector(
         selectActiveUnboundSecretCredential
@@ -98,9 +101,16 @@ export function PostPageLayout() {
         fetchData();
     }, [postSlugId]);
 
+    const isLoggedIn =
+        activeSessionEmail !== undefined && activeSessionEmail !== "";
+
     async function handleOnSendComment() {
+        if (!isLoggedIn) {
+            dispatch(openAuthModal());
+            return;
+        }
         if (shouldSendingBeDisabled) {
-            return; // for typescript...
+            return; // this is already given because of how the child component called this function, but it is for typescript to pick up
         }
         try {
             setIsSendingComment(true);
@@ -225,6 +235,8 @@ export function PostPageLayout() {
                 isSendingComment={isSendingComment}
                 onSendComment={handleOnSendComment}
                 isContextNotLoaded={isContextNotLoaded}
+                isLoggedIn={isLoggedIn}
+                onLoggingIn={() => dispatch(openAuthModal())}
                 wasCommentSent={wasCommentSent}
                 setWasCommentSent={setWasCommentSent}
                 commentInputRef={commentInputRef}
