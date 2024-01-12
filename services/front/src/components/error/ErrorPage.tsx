@@ -6,7 +6,7 @@ export function ErrorPage() {
 
     function getErrorMessage(error: unknown): string {
         if (isRouteErrorResponse(error)) {
-            return error.error?.message || error.statusText;
+            return error.data || error.statusText;
         } else if (error instanceof Error) {
             return error.message;
         } else if (typeof error === "string") {

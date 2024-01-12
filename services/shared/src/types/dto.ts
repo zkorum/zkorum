@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+    zodCreateCommentPayload,
     zodResponseToPollPayload,
     zodauthorizedEmail,
     zodblindedCredential,
@@ -14,12 +15,14 @@ import {
     zodformCredentialRequest,
     zodformCredentialsPerEmail,
     zodpoll,
-    zodpollUID,
+    zodPollUID,
     zodsecretCredentialRequest,
     zodsecretCredentialType,
     zodsecretCredentialsPerType,
     zoduserId,
-} from "./shared/types/zod.js";
+    zodSlugId,
+    zodComment,
+} from "./zod.js";
 
 export class Dto {
     static authenticateRequestBody = z
@@ -152,8 +155,11 @@ export class Dto {
         .strict();
     static fetchFeed200 = z.array(zodextendedPollData);
     static pollRespond200 = zodextendedPollData;
-    static moderateRequest = z.object({
-        pollUid: zodpollUID,
+    static moderatePostRequest = z.object({
+        pollUid: zodPollUID,
+    });
+    static moderateCommentRequest = z.object({
+        commentSlugId: zodSlugId,
     });
     static renewSecretCredential = z.object({
         secretCredentialRequest: zodsecretCredentialRequest,
@@ -174,6 +180,22 @@ export class Dto {
     static renewFormCredential200 = z.object({
         formCredential: zodformCredential,
     });
+    static commentRequest = z.object({
+        pres: z.unknown(), // z.object() does not exist :(
+        payload: zodCreateCommentPayload,
+    });
+    static postFetchRequest = z.object({
+        postSlugId: zodSlugId, // z.object() does not exist :(
+    });
+    static postFetch200 = z.object({
+        post: zodextendedPollData, // z.object() does not exist :(
+        comments: z.array(zodComment),
+    });
+    static commentFetchFeedRequest = z.object({
+        postSlugId: zodSlugId, // z.object() does not exist :(
+        updatedAt: z.string().datetime().optional(),
+    });
+    static commentFetchFeed200 = z.object({ comments: z.array(zodComment) });
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
@@ -185,3 +207,4 @@ export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;
 export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type UserCredentials = z.infer<typeof Dto.userCredentials>;
 export type EmailSecretCredentials = z.infer<typeof Dto.emailSecretCredentials>;
+export type PostFetch200 = z.infer<typeof Dto.postFetch200>;

@@ -97,7 +97,7 @@ export function CommunityFormFilled({
             }}
         >
             <Box sx={{ mt: 2 }}>
-                <Accordion defaultExpanded={true}>
+                <Accordion expanded={true}>
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
                         aria-controls="panel1a-content"

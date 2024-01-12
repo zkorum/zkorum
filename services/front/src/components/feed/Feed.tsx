@@ -5,11 +5,7 @@ import Container from "@mui/material/Container";
 import { Virtuoso } from "react-virtuoso";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Unstable_Grid2";
-import type {
-    ExtendedPollData,
-    PollUid,
-    ResponseToPollPayload,
-} from "@/shared/types/zod";
+import type { ExtendedPollData } from "@/shared/types/zod";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { doLoadMore, doLoadRecent, usePostsAndMeta } from "@/feed";
@@ -17,14 +13,11 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { selectActiveSessionEmail } from "@/store/selector";
 import { openAuthModal } from "@/store/reducers/session";
 
-export interface UpdatePostHiddenStatusProps {
-    uid: PollUid;
-    isHidden: boolean;
-}
-
 export function Feed() {
     const {
         posts,
+        updatePost,
+        updatePostHiddenStatus,
         setPosts,
         loadingMore,
         setLoadingMore,
@@ -39,6 +32,7 @@ export function Feed() {
         (minUpdatedAt: Date) => {
             return setTimeout(async () => {
                 return await doLoadRecent(
+                    posts,
                     setPosts,
                     setLoadingRecent,
                     minUpdatedAt
@@ -99,62 +93,6 @@ export function Feed() {
         }
     }, [activeSessionEmail]);
 
-    function updatePostHiddenStatus({
-        uid,
-        isHidden,
-    }: UpdatePostHiddenStatusProps): void {
-        const newPosts = [...posts];
-        for (const post of newPosts) {
-            if (post.metadata.uid === uid) {
-                post.metadata.isHidden = isHidden;
-            }
-        }
-        setPosts(newPosts);
-    }
-
-    function updatePost(responseToPoll: ResponseToPollPayload): void {
-        const newPosts = [...posts];
-        for (const post of newPosts) {
-            if (post.metadata.uid === responseToPoll.pollUid) {
-                switch (responseToPoll.optionChosen) {
-                    case 1:
-                        post.payload.result.option1Response =
-                            post.payload.result.option1Response + 1;
-                        break;
-                    case 2:
-                        post.payload.result.option2Response =
-                            post.payload.result.option2Response + 1;
-                        break;
-                    case 3:
-                        post.payload.result.option3Response =
-                            post.payload.result.option3Response !== undefined
-                                ? post.payload.result.option3Response + 1
-                                : 1;
-                        break;
-                    case 4:
-                        post.payload.result.option4Response =
-                            post.payload.result.option4Response !== undefined
-                                ? post.payload.result.option4Response + 1
-                                : 1;
-                        break;
-                    case 5:
-                        post.payload.result.option5Response =
-                            post.payload.result.option5Response !== undefined
-                                ? post.payload.result.option5Response + 1
-                                : 1;
-                        break;
-                    case 6:
-                        post.payload.result.option6Response =
-                            post.payload.result.option6Response !== undefined
-                                ? post.payload.result.option6Response + 1
-                                : 1;
-                        break;
-                }
-            }
-        }
-        setPosts(newPosts);
-    }
-
     interface LoadingContext {
         loadingMore: boolean;
         loadingRecent: boolean;
@@ -182,7 +120,7 @@ export function Feed() {
 
     const LoadingMore = ({ context }: LoadingProps) => {
         return (
-            <Grid container justifyContent="center" alignItems="center">
+            <Grid pt={1} container justifyContent="center" alignItems="center">
                 <Grid>
                     {context?.loadingMore ? (
                         <Box sx={{ mt: 1, color: "#fff" }}>
@@ -230,7 +168,6 @@ export function Feed() {
     return (
         <Container maxWidth="sm" disableGutters>
             <Virtuoso
-                style={{ height: "100vh" }}
                 useWindowScroll
                 data={posts}
                 endReached={(index) => loadMore(true, index)}
@@ -245,7 +182,7 @@ export function Feed() {
                 overscan={200}
                 itemContent={(_index, post) => {
                     return (
-                        <Box key={`postview-${post.metadata.uid}`}>
+                        <Box pt={1} key={`commentview-${post.metadata.slugId}`}>
                             <PostView
                                 post={post}
                                 updatePost={updatePost}

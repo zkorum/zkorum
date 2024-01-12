@@ -1,10 +1,16 @@
-import type { ExtendedPollData } from "@/shared/types/zod";
+import type {
+    ExtendedPollData,
+    ResponseToPollPayload,
+} from "@/shared/types/zod";
 import { fetchFeedMore, fetchFeedRecent } from "@/request/feed";
 import { useOutletContext } from "react-router-dom";
+import type { UpdatePostHiddenStatusProps } from "./RootDialog";
 
-export type ContextType = {
+export type FeedContextType = {
     posts: PostsType;
     setPosts: React.Dispatch<React.SetStateAction<PostsType>>;
+    updatePost: (responseToPoll: ResponseToPollPayload) => void;
+    updatePostHiddenStatus: (props: UpdatePostHiddenStatusProps) => void;
     loadingMore: boolean;
     setLoadingMore: React.Dispatch<React.SetStateAction<boolean>>;
     loadingRecent: boolean;
@@ -12,7 +18,7 @@ export type ContextType = {
 };
 
 export function usePostsAndMeta() {
-    return useOutletContext<ContextType>();
+    return useOutletContext<FeedContextType>();
 }
 
 // https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
@@ -33,8 +39,15 @@ export async function doLoadMore(
         const newPosts = await fetchFeedMore({
             updatedAt: lastPostUpdatedAt,
         });
-        if (newPosts.length !== 0) {
-            setPosts((prevPosts) => [...prevPosts, ...newPosts]);
+        const actualNewPosts = newPosts.filter(
+            (post) =>
+                !posts.some(
+                    (existingPost) =>
+                        existingPost.metadata.uid === post.metadata.uid
+                )
+        );
+        if (actualNewPosts.length !== 0) {
+            setPosts((prevPosts) => [...prevPosts, ...actualNewPosts]);
         }
     } finally {
         setLoadingMore(false);
@@ -42,6 +55,7 @@ export async function doLoadMore(
 }
 
 export async function doLoadRecent(
+    posts: ExtendedPollData[],
     setPosts: React.Dispatch<React.SetStateAction<PostsType>>,
     setLoadingRecent: React.Dispatch<React.SetStateAction<boolean>>,
     minUpdatedAt: Date
@@ -51,8 +65,15 @@ export async function doLoadRecent(
         const newPosts = await fetchFeedRecent({
             updatedAt: minUpdatedAt,
         });
-        if (newPosts.length !== 0) {
-            setPosts((prevPosts) => [...newPosts, ...prevPosts]);
+        const actualNewPosts = newPosts.filter(
+            (post) =>
+                !posts.some(
+                    (existingPost) =>
+                        existingPost.metadata.uid === post.metadata.uid
+                )
+        );
+        if (actualNewPosts.length !== 0) {
+            setPosts((prevPosts) => [...actualNewPosts, ...prevPosts]);
         }
     } finally {
         setLoadingRecent(false);

@@ -14,3 +14,9 @@ export function removeUndefinedFields(obj: { [key: string]: any }) {
 export function scopeWith(scope: string, withValue: string): string {
     return `${scope}.${withValue}`;
 }
+
+export function nowZeroMs(): Date {
+    const now = new Date();
+    now.setMilliseconds(0);
+    return now;
+}

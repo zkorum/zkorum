@@ -9,6 +9,7 @@ import {
 } from "@docknetwork/crypto-wasm-ts";
 import { scopeWith } from "./common/util.js";
 import type {
+    CreateCommentPayload,
     Eligibilities,
     ResponseToPoll,
     ResponseToPollPayload,
@@ -323,3 +324,16 @@ export function buildResponseToPollFromPayload(
         payload: payload,
     };
 }
+
+export function buildCreateCommentContextFromPayload(
+    payload: CreateCommentPayload
+) {
+    return {
+        metadata: {
+            action: "createComment",
+        },
+        payload: payload,
+    };
+}
+
+export const MAX_COMMENT_LENGTH = 1250; // LinkedIn limit

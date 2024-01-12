@@ -6,8 +6,8 @@ import {
 } from "@/common/common";
 import { maybeInitWasm } from "@/crypto/vc/credential";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { doRespondToPoll } from "@/request/credential";
-import { hideContent, unhideContent } from "@/request/moderation";
+import { doRespondToPoll } from "@/request/post";
+import { hidePost, unhidePost } from "@/request/moderation";
 import { stringToBytes } from "@/shared/common/arrbufs";
 import {
     attributesFormRevealedFromPostAs,
@@ -54,11 +54,13 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Unstable_Grid2";
 import React from "react";
 import { creatingProof, genericError, sendingPost } from "../error/message";
-import type { UpdatePostHiddenStatusProps } from "./Feed";
 import { PollCanRespondView } from "./PollCanRespondView";
 import { PollResultView } from "./PollResultView";
 import Logo from "/logo-essec_72x107.af462b8d2b4c.png";
 import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
+import { useNavigate } from "react-router-dom";
+import { POST } from "@/common/navigation";
+import type { UpdatePostHiddenStatusProps } from "@/RootDialog";
 
 export type UserResponse =
     | "option1"
@@ -100,6 +102,7 @@ export function PostView({
     const [isHideLoading, setIsHideLoading] = React.useState<boolean>(false);
     const [isUnhideLoading, setIsUnhideLoading] =
         React.useState<boolean>(false);
+    const navigate = useNavigate();
 
     async function respondToPoll({
         optionNumberResponded,
@@ -270,6 +273,10 @@ export function PostView({
         }
     }
 
+    function navigateToPostPage() {
+        navigate(`${POST}/${post.metadata.slugId}`);
+    }
+
     function getIsEligible(
         post: ExtendedPollData,
         formCredentialObj: object | undefined
@@ -332,10 +339,11 @@ export function PostView({
             ? false
             : getIsEligible(post, activeFormCredential?.subject);
 
-    async function handleHide() {
+    async function handleHide(event: React.MouseEvent<HTMLElement>) {
         setIsHideLoading(true);
+        event.stopPropagation();
         try {
-            await hideContent({ pollUid: post.metadata.uid });
+            await hidePost({ pollUid: post.metadata.uid });
             updatePostHiddenStatus({ uid: post.metadata.uid, isHidden: true });
         } catch (e) {
             dispatch(showError(genericError));
@@ -344,10 +352,11 @@ export function PostView({
         }
     }
 
-    async function handleUnhide() {
+    async function handleUnhide(event: React.MouseEvent<HTMLElement>) {
         setIsUnhideLoading(true);
+        event.stopPropagation();
         try {
-            await unhideContent({ pollUid: post.metadata.uid });
+            await unhidePost({ pollUid: post.metadata.uid });
             updatePostHiddenStatus({ uid: post.metadata.uid, isHidden: false });
         } catch (e) {
             dispatch(showError(genericError));
@@ -367,10 +376,11 @@ export function PostView({
     return (
         // lines
         <Paper
+            onClick={() => navigateToPostPage()}
             elevation={0}
             sx={{ opacity: `${post.metadata.isHidden === true ? 0.5 : 1}` }}
         >
-            <Box sx={{ pt: 2, pb: 1, px: 2, my: 1 }}>
+            <Box sx={{ pt: 2, pb: 1, px: 2 }}>
                 <Grid container spacing={1} direction="column">
                     <Grid
                         container

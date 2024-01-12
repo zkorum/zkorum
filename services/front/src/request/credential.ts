@@ -1,7 +1,6 @@
 import {
     DefaultApiFactory,
     type ApiV1CredentialFormRequestPostRequestFormCredentialRequest,
-    type ApiV1PollCreatePostRequestPoll,
 } from "@/api";
 import { retrieveSymmKey } from "@/crypto/ucan/ucan";
 import {
@@ -11,18 +10,13 @@ import {
     isSecretNotSignedByLatestPublicKey,
     unblindedSecretCredentialsPerTypeFrom,
 } from "@/crypto/vc/credential";
-import { activeSessionUcanAxios, noAuthAxios } from "@/interceptors";
-import type {
-    FormCredentialRequest,
-    ResponseToPollPayload,
-} from "@/shared/types/zod";
+import { activeSessionUcanAxios } from "@/interceptors";
+import type { FormCredentialRequest } from "@/shared/types/zod";
 import {
-    insertOrUpdateResponseToPoll,
     updateCredentials,
     updateFormCredentials,
 } from "@/store/reducers/session";
 import { store } from "@/store/store";
-import { type Presentation } from "@docknetwork/crypto-wasm-ts";
 
 export async function requestAnonymousCredentials(
     email: string,
@@ -210,57 +204,5 @@ export async function fetchAndUpdateCredentials(
                     ),
             })
         );
-    }
-}
-
-export async function createPoll(
-    presentation: Presentation,
-    pollContent: ApiV1PollCreatePostRequestPoll
-): Promise<void> {
-    // const bearerToken = encodeCbor(presentation.toJSON());
-    // console.log(
-    //     presentation.toJSON(),
-    //     bearerToken,
-    //     new Blob([bearerToken]).size
-    // );
-    await DefaultApiFactory(
-        undefined,
-        undefined,
-        noAuthAxios
-    ).apiV1PollCreatePost({
-        poll: pollContent,
-        pres: presentation.toJSON(),
-    });
-}
-
-export async function doRespondToPoll(
-    presentation: Presentation,
-    responseToPoll: ResponseToPollPayload,
-    updatePost: (responseToPoll: ResponseToPollPayload) => void
-): Promise<void> {
-    const generatedPseudonym =
-        presentation.spec.boundedPseudonyms === undefined
-            ? undefined
-            : Object.keys(presentation.spec.boundedPseudonyms)[0];
-    if (generatedPseudonym === undefined) {
-        throw new Error("Pseudonym was not generated in the proof");
-    }
-    const response = await DefaultApiFactory(
-        undefined,
-        undefined,
-        noAuthAxios
-    ).apiV1PollRespondPost({
-        responseToPoll: responseToPoll,
-        pres: presentation.toJSON(),
-    });
-    if (response.status >= 200 && response.status <= 299) {
-        // update local DB with the presentation
-        store.dispatch(
-            insertOrUpdateResponseToPoll({
-                respondentPseudonym: generatedPseudonym,
-                responsePayload: responseToPoll,
-            })
-        );
-        updatePost(responseToPoll);
     }
 }

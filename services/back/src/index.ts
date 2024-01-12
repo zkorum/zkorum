@@ -12,7 +12,7 @@ import {
     type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { DrizzleFastifyLogger } from "./logger.js";
-import { Dto } from "./dto.js";
+import { Dto } from "@/shared/types/dto.js";
 import * as ucans from "@ucans/ucans";
 import {
     httpMethodToAbility,
@@ -51,6 +51,7 @@ import isEqual from "lodash/isEqual.js";
 import { stringToBytes } from "./shared/common/arrbufs.js";
 import { scopeWith } from "./shared/common/util.js";
 import {
+    buildCreateCommentContextFromPayload,
     buildResponseToPollFromPayload,
     domainFromEmail,
 } from "./shared/shared.js";
@@ -308,7 +309,7 @@ interface VerifyPresentationResult {
 }
 
 // auth for anonymous posting
-// TODO: check for replay attacks
+// !important replay attacks are checked on the database level
 async function verifyPresentation({
     pres,
     content,
@@ -1127,9 +1128,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/moderation/hide`, {
+        .post(`/api/${apiVersion}/moderation/hidePost`, {
             schema: {
-                body: Dto.moderateRequest,
+                body: Dto.moderatePostRequest,
             },
             handler: async (request, _reply) => {
                 const didWrite = await verifyUCAN(db, request, {
@@ -1143,7 +1144,7 @@ server.after(() => {
                         "Only admin can moderate content"
                     );
                 }
-                await Service.hidePoll({
+                await Service.hidePost({
                     db: db,
                     pollUid: request.body.pollUid,
                 });
@@ -1151,9 +1152,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/moderation/unhide`, {
+        .post(`/api/${apiVersion}/moderation/unhidePost`, {
             schema: {
-                body: Dto.moderateRequest,
+                body: Dto.moderatePostRequest,
             },
             handler: async (request, _reply) => {
                 const didWrite = await verifyUCAN(db, request, {
@@ -1167,10 +1168,168 @@ server.after(() => {
                         "Only admin can moderate content"
                     );
                 }
-                await Service.unhidePoll({
+                await Service.unhidePost({
                     db: db,
                     pollUid: request.body.pollUid,
                 });
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/moderation/hideComment`, {
+            schema: {
+                body: Dto.moderateCommentRequest,
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                    },
+                });
+                const isAdmin = await Service.isAdmin(db, didWrite);
+                if (isAdmin !== true) {
+                    throw server.httpErrors.forbidden(
+                        "Only admin can moderate content"
+                    );
+                }
+                await Service.hideComment({
+                    db: db,
+                    commentSlugId: request.body.commentSlugId,
+                });
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/moderation/unhideComment`, {
+            schema: {
+                body: Dto.moderateCommentRequest,
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                    },
+                });
+                const isAdmin = await Service.isAdmin(db, didWrite);
+                if (isAdmin !== true) {
+                    throw server.httpErrors.forbidden(
+                        "Only admin can moderate content"
+                    );
+                }
+                await Service.unhideComment({
+                    db: db,
+                    commentSlugId: request.body.commentSlugId,
+                });
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/comment/create`, {
+            schema: {
+                body: Dto.commentRequest,
+            },
+            handler: async (request, _reply) => {
+                const { pseudonym, postAs, presentation } =
+                    await verifyPresentation({
+                        pres: request.body.pres,
+                        content: buildCreateCommentContextFromPayload(
+                            request.body.payload
+                        ),
+                        expectedSecretCredentialType: "unbound",
+                    });
+                await Service.createComment({
+                    db: db,
+                    pseudonym: pseudonym,
+                    postAs: postAs,
+                    presentation: presentation,
+                    payload: request.body.payload,
+                    httpErrors: server.httpErrors,
+                });
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/post/fetch`, {
+            schema: {
+                body: Dto.postFetchRequest,
+                response: {
+                    200: Dto.postFetch200,
+                },
+            },
+            handler: async (request, _reply) => {
+                // anonymous request, no auth
+                const { post, postId } = await Service.fetchPostByUidOrSlugId({
+                    db: db,
+                    postUidOrSlugId: request.body.postSlugId,
+                    type: "slugId",
+                    httpErrors: server.httpErrors,
+                });
+                const comments = await Service.fetchCommentsByPostId({
+                    db: db,
+                    postId: postId,
+                    order: "more",
+                    showHidden: true,
+                    updatedAt: undefined,
+                });
+                return { post, comments };
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/comment/fetchMore`, {
+            schema: {
+                body: Dto.commentFetchFeedRequest,
+                response: {
+                    200: Dto.commentFetchFeed200,
+                },
+            },
+            handler: async (request, _reply) => {
+                // anonymous request, no auth
+                const postId = await Service.getPostIdFromSlugId({
+                    db,
+                    slugId: request.body.postSlugId,
+                    httpErrors: server.httpErrors,
+                });
+                const comments = await Service.fetchCommentsByPostId({
+                    db: db,
+                    postId: postId,
+                    order: "more",
+                    showHidden: true,
+                    updatedAt:
+                        request.body.updatedAt !== undefined
+                            ? new Date(request.body.updatedAt)
+                            : undefined,
+                });
+                return { comments };
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/comment/fetchRecent`, {
+            schema: {
+                body: Dto.commentFetchFeedRequest,
+                response: {
+                    200: Dto.commentFetchFeed200,
+                },
+            },
+            handler: async (request, _reply) => {
+                // anonymous request, no auth
+                const postId = await Service.getPostIdFromSlugId({
+                    db,
+                    slugId: request.body.postSlugId,
+                    httpErrors: server.httpErrors,
+                });
+                const comments = await Service.fetchCommentsByPostId({
+                    db: db,
+                    postId: postId,
+                    order: "recent",
+                    showHidden: true,
+                    updatedAt:
+                        request.body.updatedAt !== undefined
+                            ? new Date(request.body.updatedAt)
+                            : undefined,
+                });
+                return { comments };
             },
         });
 });

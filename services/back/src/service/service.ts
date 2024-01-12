@@ -35,6 +35,7 @@ import nodemailer from "nodemailer";
 import {
     codeToString,
     generateOneTimeCode,
+    generateRandomSlugId,
     generateRandomHex,
     generateUUID,
 } from "../crypto.js";
@@ -45,11 +46,12 @@ import {
     type IsLoggedInResponse,
     type UserCredentials,
     type VerifyOtp200,
-} from "../dto.js";
+} from "@/shared/types/dto.js";
 import {
     alumEligibilityTable,
     alumPersonaTable,
     authAttemptTable,
+    commentTable,
     credentialEmailTable,
     credentialFormTable,
     credentialSecretTable,
@@ -91,6 +93,10 @@ import {
     type SecretCredentialsPerType,
     type UniversityType,
     type WebDomainType,
+    type CreateCommentPayload,
+    type PostSlugId,
+    type PostId,
+    type PostComment,
 } from "../shared/types/zod.js";
 import {
     buildEmailCredential,
@@ -100,6 +106,7 @@ import {
     parseSecretCredentialRequest,
     type PostAs,
 } from "./credential.js";
+import { nowZeroMs } from "@/shared/common/util.js";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -300,7 +307,6 @@ interface FetchFeedProps<
     updatedAt: Date | undefined;
     order: "more" | "recent";
     limit?: number;
-    pollUid?: PollUid | undefined;
     showHidden?: boolean;
 }
 
@@ -313,24 +319,34 @@ interface RespondToPollProps {
     httpErrors: HttpErrors;
 }
 
+interface CreateCommentProps {
+    db: PostgresDatabase;
+    pseudonym: string;
+    postAs: PostAs;
+    presentation: Presentation;
+    payload: CreateCommentPayload;
+    httpErrors: HttpErrors;
+}
+
 interface SelectOrInsertPseudonymProps<
     TQueryResult extends QueryResultHKT,
     TFullSchema extends Record<string, unknown>,
     TSchema extends TablesRelationalConfig,
 > {
-    tx: PgTransaction<TQueryResult, TFullSchema, TSchema>;
+    tx: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
     pseudonym: string;
     postAs: PostAs;
     now: Date;
 }
 
-interface FetchExtendedPollDataProps<
+interface FetchPostByUidOrSlugIdProps<
     TQueryResult extends QueryResultHKT,
     TFullSchema extends Record<string, unknown>,
     TSchema extends TablesRelationalConfig,
 > {
     db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
-    pollUid: PollUid;
+    postUidOrSlugId: PollUid | PostSlugId;
+    type: "slugId" | "postUid";
     httpErrors: HttpErrors;
 }
 
@@ -386,9 +402,42 @@ interface UpdateAuthAttemptCodeProps {
     awsMailConf: AwsMailConf;
 }
 
-interface ModeratePollProps {
+interface ModeratePostProps {
     db: PostgresDatabase;
     pollUid: PollUid;
+}
+
+interface ModerateCommentProps {
+    db: PostgresDatabase;
+    commentSlugId: PostSlugId;
+}
+
+interface PostAndId {
+    post: ExtendedPollData;
+    postId: PostId;
+}
+
+interface FetchPostByProps<
+    TQueryResult extends QueryResultHKT,
+    TFullSchema extends Record<string, unknown>,
+    TSchema extends TablesRelationalConfig,
+> {
+    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
+}
+
+interface FetchCommentsByPostIdProps {
+    db: PostgresDatabase;
+    postId: PostId;
+    updatedAt: Date | undefined;
+    order: "more" | "recent";
+    limit?: number;
+    showHidden?: boolean;
+}
+
+interface GetPostIdFromSlugIdProps {
+    db: PostgresDatabase;
+    slugId: PostSlugId;
+    httpErrors: HttpErrors;
 }
 
 function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
@@ -417,6 +466,87 @@ function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
             }
         }
     }
+}
+
+function fetchPostBy({
+    db,
+}: FetchPostByProps<
+    QueryResultHKT,
+    Record<string, unknown>,
+    TablesRelationalConfig
+>) {
+    return db
+        .selectDistinct({
+            // id
+            id: pollTable.id,
+            // poll payload
+            question: pollTable.question,
+            option1: pollTable.option1,
+            option1Response: pollTable.option1Response,
+            option2: pollTable.option2,
+            option2Response: pollTable.option2Response,
+            option3: pollTable.option3,
+            option3Response: pollTable.option3Response,
+            option4: pollTable.option4,
+            option4Response: pollTable.option4Response,
+            option5: pollTable.option5,
+            option5Response: pollTable.option5Response,
+            option6: pollTable.option6,
+            option6Response: pollTable.option6Response,
+            // post as
+            pseudonym: pseudonymTable.pseudonym,
+            domain: personaTable.domain,
+            type: personaTable.type,
+            universityType: universityPersonaTable.type,
+            universityCountries: universityPersonaTable.countries,
+            studentCampus: studentPersonaTable.campus,
+            studentProgram: studentPersonaTable.program,
+            studentAdmissionYear: studentPersonaTable.admissionYear,
+            // eligibility
+            eligibilityDomains: eligibilityTable.domains,
+            eligibilityTypes: eligibilityTable.types,
+            eligibilityUniversityTypes: universityEligibilityTable.types,
+            eligibilityUniversityCountries:
+                universityEligibilityTable.countries,
+            eligibilityStudentCampuses: studentEligibilityTable.campuses,
+            eligibilityStudentPrograms: studentEligibilityTable.programs,
+            eligibilityStudentAdmissionYears:
+                studentEligibilityTable.admissionYears,
+            // metadata
+            pollUid: pollTable.timestampedPresentationCID,
+            slugId: pollTable.slugId,
+            isHidden: pollTable.isHidden,
+            updatedAt: pollTable.updatedAt,
+        })
+        .from(pollTable)
+        .innerJoin(pseudonymTable, eq(pseudonymTable.id, pollTable.authorId))
+        .innerJoin(personaTable, eq(personaTable.id, pseudonymTable.personaId))
+        .leftJoin(
+            universityPersonaTable,
+            eq(universityPersonaTable.id, personaTable.universityPersonaId)
+        )
+        .leftJoin(
+            studentPersonaTable,
+            eq(studentPersonaTable.id, universityPersonaTable.studentPersonaId)
+        )
+        .leftJoin(
+            eligibilityTable,
+            eq(pollTable.eligibilityId, eligibilityTable.id)
+        )
+        .leftJoin(
+            universityEligibilityTable,
+            eq(
+                eligibilityTable.universityEligibilityId,
+                universityEligibilityTable.id
+            )
+        )
+        .leftJoin(
+            studentEligibilityTable,
+            eq(
+                universityEligibilityTable.studentEligibilityId,
+                studentEligibilityTable.id
+            )
+        );
 }
 
 // No need to validate data, it has been done in the controller level
@@ -521,7 +651,7 @@ export class Service {
         db: PostgresDatabase,
         didWrite: string
     ): Promise<GetDeviceStatusResp> {
-        const now = new Date();
+        const now = nowZeroMs();
         const resultDevice = await db
             .select({
                 userId: deviceTable.userId,
@@ -594,7 +724,7 @@ export class Service {
         db: PostgresDatabase,
         didWrite: string
     ): Promise<IsLoggedInResponse> {
-        const now = new Date();
+        const now = nowZeroMs();
         const resultDevice = await db
             .select({ userId: deviceTable.userId })
             .from(deviceTable)
@@ -636,11 +766,12 @@ export class Service {
         didWrite: string,
         attemptAmount: number
     ) {
+        const now = nowZeroMs();
         return await db
             .update(authAttemptTable)
             .set({
                 guessAttemptAmount: attemptAmount,
-                updatedAt: new Date(),
+                updatedAt: now,
             })
             .where(eq(authAttemptTable.didWrite, didWrite));
     }
@@ -698,7 +829,7 @@ export class Service {
                 "Device has never made an authentication attempt"
             );
         }
-        const now = new Date();
+        const now = nowZeroMs();
         if (resultOtp[0].codeExpiry <= now) {
             return { success: false, reason: "expired_code" };
         } else if (resultOtp[0].code === code) {
@@ -828,7 +959,7 @@ export class Service {
     }
 
     static async expireCode(db: PostgresDatabase, didWrite: string) {
-        const now = new Date();
+        const now = nowZeroMs();
         await db
             .update(authAttemptTable)
             .set({
@@ -935,7 +1066,7 @@ export class Service {
         env,
         awsMailConf,
     }: AuthenticateAttemptProps): Promise<AuthenticateOtp> {
-        const now = new Date();
+        const now = nowZeroMs();
         const resultHasAttempted = await db
             .select({
                 codeExpiry: authAttemptTable.codeExpiry,
@@ -1085,8 +1216,7 @@ export class Service {
             codeExpiry: codeExpiry,
             lastEmailSentAt: now,
         });
-        const nextCodeSoonestTime = new Date();
-        nextCodeSoonestTime.setTime(now.getTime());
+        const nextCodeSoonestTime = new Date(now);
         nextCodeSoonestTime.setMinutes(
             nextCodeSoonestTime.getMinutes() + throttleMinutesInterval
         );
@@ -1149,8 +1279,7 @@ export class Service {
                 updatedAt: now,
             })
             .where(eq(authAttemptTable.didWrite, didWrite));
-        const nextCodeSoonestTime = new Date();
-        nextCodeSoonestTime.setTime(now.getTime());
+        const nextCodeSoonestTime = new Date(now);
         nextCodeSoonestTime.setMinutes(
             nextCodeSoonestTime.getMinutes() + throttleMinutesInterval
         );
@@ -1172,8 +1301,8 @@ export class Service {
         httpErrors,
     }: RegisterProps): Promise<EmailSecretCredentials> {
         const uid = generateRandomHex();
-        const now = new Date();
-        const in1000years = new Date();
+        const now = nowZeroMs();
+        const in1000years = new Date(now);
         in1000years.setFullYear(in1000years.getFullYear() + 1000);
         return await db.transaction(async (tx) => {
             const authAttemptResult = await tx
@@ -1247,7 +1376,7 @@ export class Service {
 
     // ! WARN we assume the OTP was verified for login new device at this point
     static async awaitSyncingNewDevice(db: PostgresDatabase, didWrite: string) {
-        const now = new Date();
+        const now = nowZeroMs();
         await db.transaction(async (tx) => {
             const authAttemptResult = await tx
                 .select({
@@ -1280,8 +1409,8 @@ export class Service {
 
     // ! WARN we assume the OTP was verified and the device is already syncing
     static async login(db: PostgresDatabase, didWrite: string) {
-        const now = new Date();
-        const in1000years = new Date();
+        const now = nowZeroMs();
+        const in1000years = new Date(now);
         in1000years.setFullYear(in1000years.getFullYear() + 1000);
         await db.transaction(async (tx) => {
             await tx
@@ -1309,8 +1438,9 @@ export class Service {
         minutesBeforeCodeExpiry: number,
         httpErrors: HttpErrors
     ) {
+        const now = nowZeroMs();
         // now - 3 minutes if minutesInterval == 3
-        const minutesIntervalAgo = new Date();
+        const minutesIntervalAgo = new Date(now);
         minutesIntervalAgo.setMinutes(
             minutesIntervalAgo.getMinutes() - minutesInterval
         );
@@ -1341,7 +1471,7 @@ export class Service {
 
     // ! WARNING check should already been done that the device exists and is logged in
     static async logout(db: PostgresDatabase, didWrite: string) {
-        const now = new Date();
+        const now = nowZeroMs();
         return await db
             .update(deviceTable)
             .set({
@@ -2348,7 +2478,8 @@ export class Service {
         pseudonym,
         postAs,
     }: CreatePollProps): Promise<string> {
-        const now = new Date();
+        const presentationCID = await toEncodedCID(presentation);
+        const now = nowZeroMs();
         const timestampedPresentation = {
             timestamp: now.getTime(),
             presentation: presentation,
@@ -2582,6 +2713,8 @@ export class Service {
 
             await tx.insert(pollTable).values({
                 presentation: presentation.toJSON(),
+                presentationCID: presentationCID, // Check for replay attack (same presentation) - done by the database *unique* rule
+                slugId: generateRandomSlugId(),
                 timestampedPresentationCID: timestampedPresentationCID,
                 question: poll.data.question,
                 option1: poll.data.option1,
@@ -2604,6 +2737,8 @@ export class Service {
                         : undefined,
                 authorId: authorId,
                 eligibilityId: eligibilityId,
+                createdAt: now,
+                updatedAt: now,
             });
         });
         // TODO: broadcast timestampedPresentation to Nostr or custom libp2p node
@@ -2615,7 +2750,6 @@ export class Service {
         updatedAt,
         order,
         limit,
-        pollUid,
         showHidden,
     }: FetchFeedProps<
         QueryResultHKT,
@@ -2631,7 +2765,7 @@ export class Service {
                 ? lt(pollTable.updatedAt, updatedAt)
                 : gt(pollTable.updatedAt, updatedAt);
         const results = await db
-            .selectDistinct({
+            .selectDistinctOn([pollTable.updatedAt, pollTable.id], {
                 // poll payload
                 question: pollTable.question,
                 option1: pollTable.option1,
@@ -2647,6 +2781,7 @@ export class Service {
                 option6: pollTable.option6,
                 option6Response: pollTable.option6Response,
                 // post as
+                pseudonym: pseudonymTable.pseudonym,
                 domain: personaTable.domain,
                 type: personaTable.type,
                 universityType: universityPersonaTable.type,
@@ -2665,7 +2800,8 @@ export class Service {
                 eligibilityStudentAdmissionYears:
                     studentEligibilityTable.admissionYears,
                 // metadata
-                pollUID: pollTable.timestampedPresentationCID,
+                pollUid: pollTable.timestampedPresentationCID,
+                slugId: pollTable.slugId,
                 isHidden: pollTable.isHidden,
                 updatedAt: pollTable.updatedAt,
             })
@@ -2720,33 +2856,25 @@ export class Service {
                 )
             )
             // TODO: alum and faculty eligibility when specific attributes will be created
-            .orderBy(desc(pollTable.updatedAt))
+            .orderBy(desc(pollTable.updatedAt), desc(pollTable.id))
             .limit(actualLimit)
             .where(
                 showHidden === true
-                    ? pollUid === undefined
-                        ? whereUpdatedAt
-                        : eq(pollTable.timestampedPresentationCID, pollUid)
-                    : and(
-                          pollUid === undefined
-                              ? whereUpdatedAt
-                              : eq(
-                                    pollTable.timestampedPresentationCID,
-                                    pollUid
-                                ),
-                          eq(pollTable.isHidden, false)
-                      )
+                    ? whereUpdatedAt
+                    : and(whereUpdatedAt, eq(pollTable.isHidden, false))
             );
         const polls: ExtendedPollData[] = results.map((result) => {
             const metadata =
                 showHidden === true
                     ? {
-                          uid: result.pollUID,
+                          uid: result.pollUid,
+                          slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
                           isHidden: result.isHidden,
                           updatedAt: result.updatedAt,
                       }
                     : {
-                          uid: result.pollUID,
+                          uid: result.pollUid,
+                          slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
                           updatedAt: result.updatedAt,
                       };
             return {
@@ -2779,6 +2907,7 @@ export class Service {
                     },
                 },
                 author: {
+                    pseudonym: result.pseudonym,
                     domain: result.domain,
                     type: result.type,
                     university:
@@ -2851,32 +2980,128 @@ export class Service {
         return polls;
     }
 
-    static async fetchExtendedPollData({
+    static async fetchPostByUidOrSlugId({
         db,
-        pollUid,
+        postUidOrSlugId,
+        type,
         httpErrors,
-    }: FetchExtendedPollDataProps<
+    }: FetchPostByUidOrSlugIdProps<
         QueryResultHKT,
         Record<string, unknown>,
         TablesRelationalConfig
-    >): Promise<ExtendedPollData> {
-        const polls = await Service.fetchFeed({
-            db,
-            pollUid,
-            order: "more",
-            updatedAt: undefined,
-        });
-        if (polls.length === 0) {
+    >): Promise<PostAndId> {
+        const fetchPostQuery = fetchPostBy({ db });
+        const whereClause =
+            type === "postUid"
+                ? eq(pollTable.timestampedPresentationCID, postUidOrSlugId)
+                : eq(pollTable.slugId, postUidOrSlugId);
+        const results = await fetchPostBy({ db }).where(whereClause);
+        if (results.length === 0) {
             throw httpErrors.internalServerError(
-                `There are no poll for UID '${pollUid}'`
+                `There is no post for ${type} '${postUidOrSlugId}'`
             );
         }
-        if (polls.length > 1) {
+        if (results.length > 1) {
             throw httpErrors.internalServerError(
-                `There are more than one polls for UID '${pollUid}'`
+                `There are more than one post for ${type} '${postUidOrSlugId}'`
             );
         }
-        return polls[0];
+        const result = results[0];
+        const post: ExtendedPollData = {
+            metadata: {
+                uid: result.pollUid,
+                slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
+                isHidden: result.isHidden,
+                updatedAt: result.updatedAt,
+            },
+            payload: {
+                data: {
+                    question: result.question,
+                    option1: result.option1,
+                    option2: result.option2,
+                    option3: toUnionUndefined(result.option3),
+                    option4: toUnionUndefined(result.option4),
+                    option5: toUnionUndefined(result.option5),
+                    option6: toUnionUndefined(result.option6),
+                },
+                result: {
+                    option1Response: result.option1Response,
+                    option2Response: result.option2Response,
+                    option3Response: toUnionUndefined(result.option3Response),
+                    option4Response: toUnionUndefined(result.option4Response),
+                    option5Response: toUnionUndefined(result.option5Response),
+                    option6Response: toUnionUndefined(result.option6Response),
+                },
+            },
+            author: {
+                pseudonym: result.pseudonym,
+                domain: result.domain,
+                type: result.type,
+                university:
+                    result.universityType !== null
+                        ? {
+                              type: result.universityType,
+                              student:
+                                  result.studentCampus !== null ||
+                                  result.studentProgram !== null ||
+                                  result.studentAdmissionYear !== null ||
+                                  result.universityCountries !== null
+                                      ? {
+                                            countries: toUnionUndefined(
+                                                result.universityCountries
+                                            ) as TCountryCode[] | undefined,
+                                            campus: toUnionUndefined(
+                                                result.studentCampus
+                                            ),
+                                            program: toUnionUndefined(
+                                                result.studentProgram
+                                            ),
+                                            admissionYear: toUnionUndefined(
+                                                result.studentAdmissionYear
+                                            ),
+                                        }
+                                      : undefined,
+                          }
+                        : undefined,
+            },
+            eligibility: {
+                domains: toUnionUndefined(result.eligibilityDomains),
+                types: toUnionUndefined(result.eligibilityTypes),
+
+                university:
+                    result.eligibilityUniversityTypes !== null
+                        ? {
+                              types: toUnionUndefined(
+                                  result.eligibilityUniversityTypes
+                              ),
+                              student:
+                                  result.eligibilityUniversityCountries !==
+                                      null ||
+                                  result.eligibilityStudentPrograms !== null ||
+                                  result.eligibilityStudentPrograms !== null ||
+                                  result.eligibilityStudentAdmissionYears !==
+                                      null
+                                      ? {
+                                            countries: toUnionUndefined(
+                                                result.eligibilityUniversityCountries
+                                            ) as TCountryCode[] | undefined,
+                                            campuses: toUnionUndefined(
+                                                result.eligibilityStudentCampuses
+                                            ),
+                                            programs: toUnionUndefined(
+                                                result.eligibilityStudentPrograms
+                                            ),
+                                            admissionYears: toUnionUndefined(
+                                                result.eligibilityStudentAdmissionYears
+                                            ),
+                                        }
+                                      : undefined,
+                          }
+                        : undefined,
+            },
+        };
+        const postId = result.id;
+        return { post, postId };
     }
 
     static async respondToPoll({
@@ -3010,7 +3235,15 @@ export class Service {
                 )}\n'postAs = '${JSON.stringify(postAs)}'`
             );
         }
-        const now = new Date();
+        const presentationCID = await toEncodedCID(presentation);
+        const now = nowZeroMs();
+        const timestampedPresentation = {
+            timestamp: now.getTime(),
+            presentation: presentation,
+        }; // TODO: use a TimeStamp Authority Server to get this data from the presentation's CID, instead of creating it ourselves
+        const timestampedPresentationCID = await toEncodedCID(
+            timestampedPresentation
+        );
         return await db.transaction(async (tx) => {
             const authorId = await Service.selectOrInsertPseudonym({
                 // we need to know if inserted or already existing - for below TODO
@@ -3022,12 +3255,15 @@ export class Service {
             // in any case, insert the poll response in the dedicated table
             await tx.insert(pollResponseTable).values({
                 presentation: presentation.toJSON(),
+                presentationCID: presentationCID,
+                timestampedPresentationCID: timestampedPresentationCID,
                 authorId: authorId,
                 pollId: result.pollId,
                 optionChosen: response.optionChosen,
+                createdAt: now,
+                updatedAt: now,
             });
-            // check if poll has already been responded by this pseudonym, if yes, update it by getting the previous response, delete the old one and add the new one
-            // TODO ^
+            // TODO: check if poll has already been responded by this pseudonym, if yes, update it by getting the previous response, delete the old one and add the new one
             // else, just add +1 to the chosen response
             let optionChosenResponseColumnName:
                 | "option1Response"
@@ -3084,15 +3320,17 @@ export class Service {
                 .where(
                     eq(pollTable.timestampedPresentationCID, response.pollUid)
                 );
-            return await Service.fetchExtendedPollData({
+            const { post } = await Service.fetchPostByUidOrSlugId({
                 db,
-                pollUid: response.pollUid,
+                postUidOrSlugId: response.pollUid,
+                type: "postUid",
                 httpErrors,
             });
+            return post;
         });
     }
 
-    static async hidePoll({ db, pollUid }: ModeratePollProps): Promise<void> {
+    static async hidePost({ db, pollUid }: ModeratePostProps): Promise<void> {
         await db
             .update(pollTable)
             .set({
@@ -3101,12 +3339,224 @@ export class Service {
             .where(eq(pollTable.timestampedPresentationCID, pollUid));
     }
 
-    static async unhidePoll({ db, pollUid }: ModeratePollProps): Promise<void> {
+    static async unhidePost({ db, pollUid }: ModeratePostProps): Promise<void> {
         await db
             .update(pollTable)
             .set({
                 isHidden: false,
             })
             .where(eq(pollTable.timestampedPresentationCID, pollUid));
+    }
+
+    static async hideComment({
+        db,
+        commentSlugId,
+    }: ModerateCommentProps): Promise<void> {
+        await db
+            .update(commentTable)
+            .set({
+                isHidden: true,
+            })
+            .where(eq(commentTable.slugId, commentSlugId));
+    }
+
+    static async unhideComment({
+        db,
+        commentSlugId,
+    }: ModerateCommentProps): Promise<void> {
+        await db
+            .update(commentTable)
+            .set({
+                isHidden: false,
+            })
+            .where(eq(commentTable.slugId, commentSlugId));
+    }
+
+    static async createComment({
+        db,
+        pseudonym,
+        postAs,
+        presentation,
+        payload,
+        httpErrors,
+    }: CreateCommentProps): Promise<PollUid> {
+        // Check whether post the user responds to actually exists
+        const results = await db
+            .select({
+                pollId: pollTable.id,
+            })
+            .from(pollTable)
+            .where(eq(pollTable.timestampedPresentationCID, payload.postUid));
+        if (results.length === 0) {
+            throw httpErrors.notFound(
+                "The post UID you tried to answer to does not exist"
+            );
+        }
+        if (results.length > 1) {
+            throw httpErrors.internalServerError(
+                "There are more than one post corresponding to this UID"
+            );
+        }
+        const result = results[0];
+        const presentationCID = await toEncodedCID(presentation);
+        const now = nowZeroMs();
+        const timestampedPresentation = {
+            timestamp: now.getTime(),
+            presentation: presentation,
+        }; // TODO: use a TimeStamp Authority Server to get this data from the presentation's CID, instead of creating it ourselves
+        const timestampedPresentationCID = await toEncodedCID(
+            timestampedPresentation
+        );
+        const authorId = await Service.selectOrInsertPseudonym({
+            tx: db,
+            postAs: postAs,
+            pseudonym: pseudonym,
+            now: now,
+        });
+        await db.insert(commentTable).values({
+            presentation: presentation.toJSON(),
+            presentationCID: presentationCID, // Check for replay attack (same presentation) - done by the database *unique* rule
+            timestampedPresentationCID: timestampedPresentationCID,
+            slugId: generateRandomSlugId(),
+            authorId: authorId,
+            content: payload.content,
+            postId: result.pollId,
+            createdAt: now,
+            updatedAt: now,
+        });
+        return timestampedPresentationCID;
+    }
+
+    static async fetchCommentsByPostId({
+        db,
+        postId,
+        order,
+        showHidden,
+        updatedAt,
+        limit,
+    }: FetchCommentsByPostIdProps): Promise<PostComment[]> {
+        const actualLimit = limit === undefined ? 30 : limit;
+        const whereUpdatedAt =
+            updatedAt === undefined
+                ? eq(commentTable.postId, postId)
+                : order === "more"
+                ? and(
+                      eq(commentTable.postId, postId),
+                      lt(commentTable.updatedAt, updatedAt)
+                  )
+                : and(
+                      eq(commentTable.postId, postId),
+                      gt(commentTable.updatedAt, updatedAt)
+                  );
+        const results = await db
+            .selectDistinctOn([commentTable.updatedAt, commentTable.id], {
+                // comment payload
+                content: commentTable.content,
+                // post as
+                pseudonym: pseudonymTable.pseudonym,
+                domain: personaTable.domain,
+                type: personaTable.type,
+                universityType: universityPersonaTable.type,
+                universityCountries: universityPersonaTable.countries,
+                studentCampus: studentPersonaTable.campus,
+                studentProgram: studentPersonaTable.program,
+                studentAdmissionYear: studentPersonaTable.admissionYear,
+                // metadata
+                commentUid: commentTable.timestampedPresentationCID,
+                slugId: commentTable.slugId,
+                isHidden: commentTable.isHidden,
+                updatedAt: commentTable.updatedAt,
+            })
+            .from(commentTable)
+            .innerJoin(
+                pseudonymTable,
+                eq(pseudonymTable.id, commentTable.authorId)
+            )
+            .innerJoin(
+                personaTable,
+                eq(personaTable.id, pseudonymTable.personaId)
+            )
+            .leftJoin(
+                universityPersonaTable,
+                eq(universityPersonaTable.id, personaTable.universityPersonaId)
+            )
+            .leftJoin(
+                studentPersonaTable,
+                eq(
+                    studentPersonaTable.id,
+                    universityPersonaTable.studentPersonaId
+                )
+            )
+            .orderBy(desc(commentTable.updatedAt), desc(commentTable.id))
+            .limit(actualLimit)
+            .where(
+                showHidden === true
+                    ? whereUpdatedAt
+                    : and(whereUpdatedAt, eq(commentTable.isHidden, false))
+            );
+        return results.map((result) => {
+            return {
+                metadata: {
+                    uid: result.commentUid,
+                    slugId: result.slugId,
+                    isHidden: result.isHidden,
+                    updatedAt: result.updatedAt,
+                },
+                content: result.content,
+                author: {
+                    pseudonym: result.pseudonym,
+                    domain: result.domain,
+                    type: result.type,
+                    university:
+                        result.universityType !== null
+                            ? {
+                                  type: result.universityType,
+                                  student:
+                                      result.studentCampus !== null ||
+                                      result.studentProgram !== null ||
+                                      result.studentAdmissionYear !== null ||
+                                      result.universityCountries !== null
+                                          ? {
+                                                countries: toUnionUndefined(
+                                                    result.universityCountries
+                                                ) as TCountryCode[] | undefined,
+                                                campus: toUnionUndefined(
+                                                    result.studentCampus
+                                                ),
+                                                program: toUnionUndefined(
+                                                    result.studentProgram
+                                                ),
+                                                admissionYear: toUnionUndefined(
+                                                    result.studentAdmissionYear
+                                                ),
+                                            }
+                                          : undefined,
+                              }
+                            : undefined,
+                },
+            };
+        });
+    }
+
+    static async getPostIdFromSlugId({
+        db,
+        slugId,
+        httpErrors,
+    }: GetPostIdFromSlugIdProps): Promise<PostId> {
+        const results = await db
+            .select({ id: pollTable.id })
+            .from(pollTable)
+            .where(eq(pollTable.slugId, slugId));
+        if (results.length === 0) {
+            throw httpErrors.notFound(
+                `The post slug id ${slugId} does not exist`
+            );
+        }
+        if (results.length > 1) {
+            throw httpErrors.internalServerError(
+                `There are more than one post corresponding to the slug id ${slugId}`
+            );
+        }
+        return results[0].id;
     }
 }

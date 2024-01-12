@@ -119,6 +119,7 @@ export function BottomNavbar() {
                 sx={{
                     position: "fixed",
                     bottom: 0,
+                    height: "56px",
                     width: "100%",
                     zIndex: 999,
                 }}

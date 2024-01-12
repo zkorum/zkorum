@@ -103,3 +103,25 @@ export function zeroIfUndefined(value: number | undefined): number {
     }
     return value;
 }
+
+export function getTrimmedPseudonym(pseudo: string) {
+    return pseudo.substring(0, 7);
+}
+
+export async function persistData(): Promise<boolean> {
+    if (navigator.storage && navigator.storage.persist) {
+        return await navigator.storage.persist();
+    } else {
+        console.warn("The browser does not support persistence");
+        return false;
+    }
+}
+
+export async function isDataPersisted(): Promise<boolean> {
+    if (navigator.storage && navigator.storage.persisted) {
+        return await navigator.storage.persisted();
+    } else {
+        console.warn("The browser does not support persistence");
+        return false;
+    }
+}

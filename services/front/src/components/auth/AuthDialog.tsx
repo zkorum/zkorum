@@ -14,9 +14,13 @@ import {
 } from "../../store/reducers/session";
 import { Authenticate } from "./Authenticate";
 import { OtpVerify } from "./OtpVerify";
-import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 import { LoggedInPage } from "./LoggedInPage";
 import Container from "@mui/material/Container";
+import { GoBackButton } from "../shared/GoBackButton";
+import React from "react";
+import { isDataPersisted, persistData } from "@/common/common";
+import { dataNotPersisted } from "../error/message";
+import { showError } from "@/store/reducers/snackbar";
 
 // TODO: maybe refactor this as routable dialog or something?
 export function AuthDialog() {
@@ -51,6 +55,23 @@ export function AuthDialog() {
         return pendingSessionEmail in formCredentialsPerEmail;
     });
 
+    // TODO: prompt users to download the app to home screen
+    // force especially iOS people to do so, otherwise this is useless
+    // we should detect capabilities we need first, before allowing to add to home screen with that device
+    React.useEffect(() => {
+        const persistIfNotAlreadyPersisted = async () => {
+            const isPersisted = await isDataPersisted();
+            if (!isPersisted) {
+                await persistData();
+            }
+        };
+
+        persistIfNotAlreadyPersisted().catch((e) => {
+            dispatch(showError(dataNotPersisted));
+            console.error(e);
+        });
+    }, []);
+
     function handleClose() {
         dispatch(closeAuthModal());
     }
@@ -58,18 +79,7 @@ export function AuthDialog() {
     function getGoBackButton(): JSX.Element | null {
         if (pendingSessionStatus === "verifying") {
             return (
-                <IconButton
-                    aria-label="close"
-                    onClick={() => dispatch(resetPendingSession())}
-                    sx={{
-                        position: "absolute",
-                        left: 8,
-                        top: 8,
-                        color: (theme) => theme.palette.grey[500],
-                    }}
-                >
-                    <KeyboardBackspaceIcon />
-                </IconButton>
+                <GoBackButton onClick={() => dispatch(resetPendingSession())} />
             );
         } else {
             return null;

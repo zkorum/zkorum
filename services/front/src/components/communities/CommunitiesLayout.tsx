@@ -33,7 +33,10 @@ export function CommunitiesLayout() {
     }, [activeSessionEmail]);
 
     return (
-        <Container maxWidth="md" sx={{ backgroundColor: "#ffff" }}>
+        <Container
+            maxWidth="md"
+            sx={{ height: "100%", backgroundColor: "#ffff" }}
+        >
             <Box
                 sx={{
                     display: "flex",

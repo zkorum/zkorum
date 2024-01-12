@@ -73,7 +73,7 @@ import {
     buildContext,
 } from "@/shared/shared";
 import { maybeInitWasm } from "@/crypto/vc/credential";
-import { createPoll } from "@/request/credential";
+import { createPoll } from "@/request/post";
 import type { ApiV1PollCreatePostRequestPoll } from "@/api";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { doLoadMore, doLoadRecent, type PostsType } from "@/feed";
@@ -176,6 +176,7 @@ export function PostDialog({
         (minUpdatedAt: Date) => {
             return setTimeout(async () => {
                 return await doLoadRecent(
+                    posts,
                     setPosts,
                     setLoadingRecent,
                     minUpdatedAt

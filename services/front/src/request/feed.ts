@@ -21,6 +21,7 @@ export async function fetchFeedMore({
             return {
                 metadata: {
                     uid: value.metadata.uid,
+                    slugId: value.metadata.slugId,
                     isHidden: value.metadata.isHidden,
                     updatedAt: new Date(value.metadata.updatedAt),
                 },
@@ -50,6 +51,7 @@ export async function fetchFeedRecent({
             return {
                 metadata: {
                     uid: value.metadata.uid,
+                    slugId: value.metadata.slugId,
                     isHidden: value.metadata.isHidden,
                     updatedAt: new Date(value.metadata.updatedAt),
                 },
