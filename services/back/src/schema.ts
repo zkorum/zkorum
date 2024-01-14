@@ -511,8 +511,7 @@ export const pseudonymTable = pgTable("pseudonym", {
     pseudonym: text("pseudonym").unique().notNull(), // should be unique, unless we mess up with the scopes... Change type to varchar? I don't know how long a pseudonym can be...
     personaId: integer("persona_id")
         .references(() => personaTable.id)
-        .notNull()
-        .unique(), // to preserve privacy we should enforce different pseudonyms for different personas (via scope)
+        .notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,

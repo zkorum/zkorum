@@ -1,8 +1,8 @@
 {
+  "id": "aefddf38-0737-4544-8a8b-8b603bbb5939",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
-  "id": "22ef9b85-9ee4-4292-ab46-d17f81910855",
-  "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "alum_eligibility": {
       "name": "alum_eligibility",
@@ -16,14 +16,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -46,14 +46,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -125,14 +125,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -142,6 +142,136 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
+    },
+    "comment": {
+      "name": "comment",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug_id": {
+          "name": "slug_id",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "presentation": {
+          "name": "presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pres_cid": {
+          "name": "pres_cid",
+          "type": "char(61)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "time_pres_cid": {
+          "name": "time_pres_cid",
+          "type": "char(61)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "varchar(1250)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_hidden": {
+          "name": "is_hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "comment_author_id_pseudonym_id_fk": {
+          "name": "comment_author_id_pseudonym_id_fk",
+          "tableFrom": "comment",
+          "tableTo": "pseudonym",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comment_post_id_poll_id_fk": {
+          "name": "comment_post_id_poll_id_fk",
+          "tableFrom": "comment",
+          "tableTo": "poll",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "post_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "comment_slug_id_unique": {
+          "name": "comment_slug_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug_id"
+          ]
+        },
+        "comment_pres_cid_unique": {
+          "name": "comment_pres_cid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "pres_cid"
+          ]
+        },
+        "comment_time_pres_cid_unique": {
+          "name": "comment_time_pres_cid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "time_pres_cid"
+          ]
+        }
+      }
     },
     "credential_email": {
       "name": "credential_email",
@@ -172,27 +302,43 @@
           "primaryKey": false,
           "notNull": true
         },
+        "pk_version": {
+          "name": "pk_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "cred_em_unique_email_not_revoked": {
+          "name": "cred_em_unique_email_not_revoked",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "credential_email_email_email_email_fk": {
           "name": "credential_email_email_email_email_fk",
           "tableFrom": "credential_email",
           "tableTo": "email",
+          "schemaTo": "public",
           "columnsFrom": [
             "email"
           ],
@@ -235,27 +381,43 @@
           "primaryKey": false,
           "notNull": true
         },
+        "pk_version": {
+          "name": "pk_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "cred_fo_unique_email_not_revoked": {
+          "name": "cred_fo_unique_email_not_revoked",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "credential_form_email_email_email_fk": {
           "name": "credential_form_email_email_email_fk",
           "tableFrom": "credential_form",
           "tableTo": "email",
+          "schemaTo": "public",
           "columnsFrom": [
             "email"
           ],
@@ -316,27 +478,44 @@
           "primaryKey": false,
           "notNull": true
         },
+        "pk_version": {
+          "name": "pk_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "cred_se_unique_user_id_not_revoked": {
+          "name": "cred_se_unique_user_id_not_revoked",
+          "columns": [
+            "user_id",
+            "type"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "credential_secret_user_id_user_id_fk": {
           "name": "credential_secret_user_id_user_id_fk",
           "tableFrom": "credential_secret",
           "tableTo": "user",
+          "schemaTo": "public",
           "columnsFrom": [
             "user_id"
           ],
@@ -386,14 +565,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -405,6 +584,7 @@
           "name": "device_user_id_user_id_fk",
           "tableFrom": "device",
           "tableTo": "user",
+          "schemaTo": "public",
           "columnsFrom": [
             "user_id"
           ],
@@ -456,14 +636,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -475,6 +655,7 @@
           "name": "eligibility_university_eligibility_id_university_eligibility_id_fk",
           "tableFrom": "eligibility",
           "tableTo": "university_eligibility",
+          "schemaTo": "public",
           "columnsFrom": [
             "university_eligibility_id"
           ],
@@ -512,14 +693,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -531,6 +712,7 @@
           "name": "email_user_id_user_id_fk",
           "tableFrom": "email",
           "tableTo": "user",
+          "schemaTo": "public",
           "columnsFrom": [
             "user_id"
           ],
@@ -556,14 +738,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -586,14 +768,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -634,14 +816,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -653,6 +835,7 @@
           "name": "persona_university_persona_id_university_persona_id_fk",
           "tableFrom": "persona",
           "tableTo": "university_persona",
+          "schemaTo": "public",
           "columnsFrom": [
             "university_persona_id"
           ],
@@ -682,6 +865,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "pres_cid": {
+          "name": "pres_cid",
+          "type": "char(61)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "time_pres_cid": {
+          "name": "time_pres_cid",
+          "type": "char(61)",
+          "primaryKey": false,
+          "notNull": true
+        },
         "author_id": {
           "name": "author_id",
           "type": "integer",
@@ -702,7 +897,7 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -721,6 +916,7 @@
           "name": "poll_response_author_id_pseudonym_id_fk",
           "tableFrom": "poll_response",
           "tableTo": "pseudonym",
+          "schemaTo": "public",
           "columnsFrom": [
             "author_id"
           ],
@@ -734,6 +930,7 @@
           "name": "poll_response_poll_id_poll_id_fk",
           "tableFrom": "poll_response",
           "tableTo": "poll",
+          "schemaTo": "public",
           "columnsFrom": [
             "poll_id"
           ],
@@ -745,7 +942,22 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "poll_response_pres_cid_unique": {
+          "name": "poll_response_pres_cid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "pres_cid"
+          ]
+        },
+        "poll_response_time_pres_cid_unique": {
+          "name": "poll_response_time_pres_cid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "time_pres_cid"
+          ]
+        }
+      }
     },
     "poll": {
       "name": "poll",
@@ -757,9 +969,21 @@
           "primaryKey": true,
           "notNull": true
         },
+        "slug_id": {
+          "name": "slug_id",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "presentation": {
           "name": "presentation",
           "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pres_cid": {
+          "name": "pres_cid",
+          "type": "char(61)",
           "primaryKey": false,
           "notNull": true
         },
@@ -861,9 +1085,16 @@
           "primaryKey": false,
           "notNull": false
         },
+        "is_hidden": {
+          "name": "is_hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -882,6 +1113,7 @@
           "name": "poll_author_id_pseudonym_id_fk",
           "tableFrom": "poll",
           "tableTo": "pseudonym",
+          "schemaTo": "public",
           "columnsFrom": [
             "author_id"
           ],
@@ -895,6 +1127,7 @@
           "name": "poll_eligibility_id_eligibility_id_fk",
           "tableFrom": "poll",
           "tableTo": "eligibility",
+          "schemaTo": "public",
           "columnsFrom": [
             "eligibility_id"
           ],
@@ -907,6 +1140,13 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
+        "poll_pres_cid_unique": {
+          "name": "poll_pres_cid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "pres_cid"
+          ]
+        },
         "poll_time_pres_cid_unique": {
           "name": "poll_time_pres_cid_unique",
           "nullsNotDistinct": false,
@@ -940,14 +1180,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -959,6 +1199,7 @@
           "name": "pseudonym_persona_id_persona_id_fk",
           "tableFrom": "pseudonym",
           "tableTo": "persona",
+          "schemaTo": "public",
           "columnsFrom": [
             "persona_id"
           ],
@@ -1017,14 +1258,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1065,14 +1306,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1125,14 +1366,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1144,6 +1385,7 @@
           "name": "university_eligibility_student_eligibility_id_student_eligibility_id_fk",
           "tableFrom": "university_eligibility",
           "tableTo": "student_eligibility",
+          "schemaTo": "public",
           "columnsFrom": [
             "student_eligibility_id"
           ],
@@ -1157,6 +1399,7 @@
           "name": "university_eligibility_alum_eligibility_id_alum_eligibility_id_fk",
           "tableFrom": "university_eligibility",
           "tableTo": "alum_eligibility",
+          "schemaTo": "public",
           "columnsFrom": [
             "alum_eligibility_id"
           ],
@@ -1170,6 +1413,7 @@
           "name": "university_eligibility_faculty_eligibility_id_faculty_eligibility_id_fk",
           "tableFrom": "university_eligibility",
           "tableTo": "faculty_eligibility",
+          "schemaTo": "public",
           "columnsFrom": [
             "faculty_eligibility_id"
           ],
@@ -1225,14 +1469,14 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1244,6 +1488,7 @@
           "name": "university_persona_student_persona_id_student_persona_id_fk",
           "tableFrom": "university_persona",
           "tableTo": "student_persona",
+          "schemaTo": "public",
           "columnsFrom": [
             "student_persona_id"
           ],
@@ -1257,6 +1502,7 @@
           "name": "university_persona_alum_persona_id_alum_persona_id_fk",
           "tableFrom": "university_persona",
           "tableTo": "alum_persona",
+          "schemaTo": "public",
           "columnsFrom": [
             "alum_persona_id"
           ],
@@ -1270,6 +1516,7 @@
           "name": "university_persona_faculty_persona_id_faculty_persona_id_fk",
           "tableFrom": "university_persona",
           "tableTo": "faculty_persona",
+          "schemaTo": "public",
           "columnsFrom": [
             "faculty_persona_id"
           ],
@@ -1299,16 +1546,23 @@
           "primaryKey": false,
           "notNull": true
         },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1371,8 +1625,8 @@
   },
   "schemas": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
+    "tables": {}
   }
 }
