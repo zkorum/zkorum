@@ -25,6 +25,7 @@ export function usePostsAndMeta() {
 export type PostsType = ExtendedPollData[];
 
 export async function doLoadMore(
+    isAdmin: boolean,
     posts: ExtendedPollData[],
     setPosts: React.Dispatch<React.SetStateAction<PostsType>>,
     setLoadingMore: React.Dispatch<React.SetStateAction<boolean>>,
@@ -37,6 +38,7 @@ export async function doLoadMore(
                 ? undefined
                 : posts[lastIndex].metadata.updatedAt;
         const newPosts = await fetchFeedMore({
+            showHidden: isAdmin === true,
             updatedAt: lastPostUpdatedAt,
         });
         const actualNewPosts = newPosts.filter(
@@ -55,6 +57,7 @@ export async function doLoadMore(
 }
 
 export async function doLoadRecent(
+    isAdmin: boolean,
     posts: ExtendedPollData[],
     setPosts: React.Dispatch<React.SetStateAction<PostsType>>,
     setLoadingRecent: React.Dispatch<React.SetStateAction<boolean>>,
@@ -63,6 +66,7 @@ export async function doLoadRecent(
     try {
         setLoadingRecent(true);
         const newPosts = await fetchFeedRecent({
+            showHidden: isAdmin === true,
             updatedAt: minUpdatedAt,
         });
         const actualNewPosts = newPosts.filter(

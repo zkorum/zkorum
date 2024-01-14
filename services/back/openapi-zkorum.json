@@ -3336,15 +3336,22 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "showHidden": {
+                    "type": "boolean"
+                  },
                   "updatedAt": {
                     "type": "string",
                     "format": "date-time"
                   }
                 },
+                "required": [
+                  "showHidden"
+                ],
                 "additionalProperties": false
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -4137,15 +4144,22 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "showHidden": {
+                    "type": "boolean"
+                  },
                   "updatedAt": {
                     "type": "string",
                     "format": "date-time"
                   }
                 },
+                "required": [
+                  "showHidden"
+                ],
                 "additionalProperties": false
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {

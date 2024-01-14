@@ -15,6 +15,7 @@ import React from "react";
 import {
     selectActiveEmailCredential,
     selectActiveFormCredential,
+    selectActiveSessionEmail,
     selectActiveUnboundSecretCredential,
 } from "@/store/selector";
 import type { TCountryCode } from "countries-list";
@@ -102,6 +103,8 @@ export function PostDialog({
         setHasModifiedQuestion(false);
         dispatch(closePostModal());
     }
+    const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
+    const isAdmin = activeSessionEmail.endsWith("zkorum.com");
     const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
     const activeFormCredential = useAppSelector(selectActiveFormCredential);
     const activeUnboundSecretCredential = useAppSelector(
@@ -176,6 +179,7 @@ export function PostDialog({
         (minUpdatedAt: Date) => {
             return setTimeout(async () => {
                 return await doLoadRecent(
+                    isAdmin,
                     posts,
                     setPosts,
                     setLoadingRecent,
@@ -190,6 +194,7 @@ export function PostDialog({
         (lastIndex?: number) => {
             return setTimeout(async () => {
                 return await doLoadMore(
+                    isAdmin,
                     posts,
                     setPosts,
                     setLoadingMore,

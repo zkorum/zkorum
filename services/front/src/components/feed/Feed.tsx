@@ -1,17 +1,16 @@
-import Box from "@mui/material/Box";
-import { PostView } from "./PostView";
-import React from "react";
-import Container from "@mui/material/Container";
-import { Virtuoso } from "react-virtuoso";
-import CircularProgress from "@mui/material/CircularProgress";
-import Grid from "@mui/material/Unstable_Grid2";
-import type { ExtendedPollData } from "@/shared/types/zod";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import { doLoadMore, doLoadRecent, usePostsAndMeta } from "@/feed";
-import { useAppDispatch, useAppSelector } from "@/hooks";
+import { useAppSelector } from "@/hooks";
+import type { ExtendedPollData } from "@/shared/types/zod";
 import { selectActiveSessionEmail } from "@/store/selector";
-import { openAuthModal } from "@/store/reducers/session";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Unstable_Grid2";
+import React from "react";
+import { Virtuoso } from "react-virtuoso";
+import { PostView } from "./PostView";
 
 export function Feed() {
     const {
@@ -26,12 +25,13 @@ export function Feed() {
     } = usePostsAndMeta();
 
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
-    const dispatch = useAppDispatch();
+    const isAdmin = activeSessionEmail.endsWith("zkorum.com");
 
     const loadRecent = React.useCallback(
         (minUpdatedAt: Date) => {
             return setTimeout(async () => {
                 return await doLoadRecent(
+                    isAdmin,
                     posts,
                     setPosts,
                     setLoadingRecent,
@@ -53,6 +53,7 @@ export function Feed() {
                     return;
                 }
                 return await doLoadMore(
+                    isAdmin,
                     posts,
                     setPosts,
                     setLoadingMore,
@@ -129,36 +130,27 @@ export function Feed() {
                     ) : context?.posts.length === undefined ||
                       context?.posts.length === 0 ? (
                         <Typography>Initializing...</Typography>
-                    ) : context?.isLoggedIn ? (
-                        context?.posts.length !== undefined &&
-                        context.posts.length <= 4 ? (
-                            <Button
-                                size="small"
-                                color={"inherit"}
-                                onClick={() =>
-                                    doLoadMore(
-                                        posts,
-                                        setPosts,
-                                        setLoadingMore,
-                                        posts.length === 0
-                                            ? undefined
-                                            : posts.length - 1
-                                    )
-                                }
-                            >
-                                Load more
-                            </Button>
-                        ) : (
-                            <Typography>No more posts</Typography>
-                        )
-                    ) : (
+                    ) : context?.posts.length !== undefined &&
+                      context.posts.length <= 4 ? (
                         <Button
                             size="small"
                             color={"inherit"}
-                            onClick={() => dispatch(openAuthModal())}
+                            onClick={() =>
+                                doLoadMore(
+                                    isAdmin,
+                                    posts,
+                                    setPosts,
+                                    setLoadingMore,
+                                    posts.length === 0
+                                        ? undefined
+                                        : posts.length - 1
+                                )
+                            }
                         >
-                            Log in to load more
+                            Load more
                         </Button>
+                    ) : (
+                        <Typography>No more posts</Typography>
                     )}
                 </Grid>
             </Grid>

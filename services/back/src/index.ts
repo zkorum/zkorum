@@ -1050,37 +1050,15 @@ server.after(() => {
                 },
             },
             handler: async (request, _reply) => {
-                // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
-                try {
-                    const didWrite = await verifyUCAN(db, request, {
-                        expectedDeviceStatus: {
-                            isLoggedIn: true,
-                            isSyncing: true,
-                        },
-                    });
-                    const isAdmin = await Service.isAdmin(db, didWrite);
-                    return await Service.fetchFeed({
-                        db: db,
-                        order: "more",
-                        showHidden: isAdmin === true,
-                        updatedAt:
-                            request.body.updatedAt !== undefined
-                                ? new Date(request.body.updatedAt)
-                                : undefined,
-                    });
-                } catch (e) {
-                    // TODO: rate-limit by IP Address
-                    if (request.body.updatedAt !== undefined) {
-                        return []; // we don't return more feed unless logged-in
-                    }
-                    // only show limited feed
-                    return await Service.fetchFeed({
-                        db: db,
-                        order: "more",
-                        updatedAt: undefined,
-                        limit: 6,
-                    });
-                }
+                return await Service.fetchFeed({
+                    db: db,
+                    order: "more",
+                    showHidden: request.body.showHidden,
+                    updatedAt:
+                        request.body.updatedAt !== undefined
+                            ? new Date(request.body.updatedAt)
+                            : undefined,
+                });
             },
         });
     server
@@ -1093,37 +1071,15 @@ server.after(() => {
                 },
             },
             handler: async (request, _reply) => {
-                // TODO: to preserve privacy, use a UCAN issued by backend from an anonymous pseudonym instead
-                try {
-                    const didWrite = await verifyUCAN(db, request, {
-                        expectedDeviceStatus: {
-                            isLoggedIn: true,
-                            isSyncing: true,
-                        },
-                    });
-                    const isAdmin = await Service.isAdmin(db, didWrite);
-                    return await Service.fetchFeed({
-                        db: db,
-                        order: "recent",
-                        showHidden: isAdmin === true,
-                        updatedAt:
-                            request.body.updatedAt !== undefined
-                                ? new Date(request.body.updatedAt)
-                                : undefined,
-                    });
-                } catch (e) {
-                    // TODO: rate-limit by IP Address
-                    if (request.body.updatedAt !== undefined) {
-                        return []; // we don't return more feed unless logged-in
-                    }
-                    // only show limited feed
-                    return await Service.fetchFeed({
-                        db: db,
-                        order: "recent",
-                        updatedAt: undefined,
-                        limit: 6,
-                    });
-                }
+                return await Service.fetchFeed({
+                    db: db,
+                    order: "recent",
+                    showHidden: true,
+                    updatedAt:
+                        request.body.updatedAt !== undefined
+                            ? new Date(request.body.updatedAt)
+                            : undefined,
+                });
             },
         });
     server

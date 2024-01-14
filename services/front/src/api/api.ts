@@ -2403,6 +2403,12 @@ export type ApiV1CredentialSecretRenewPostRequestTypeEnum = typeof ApiV1Credenti
 export interface ApiV1FeedFetchMorePostRequest {
     /**
      * 
+     * @type {boolean}
+     * @memberof ApiV1FeedFetchMorePostRequest
+     */
+    'showHidden': boolean;
+    /**
+     * 
      * @type {string}
      * @memberof ApiV1FeedFetchMorePostRequest
      */
@@ -3975,11 +3981,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchMorePost: async (apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1FeedFetchMorePost: async (apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1FeedFetchMorePostRequest' is not null or undefined
+            assertParamExists('apiV1FeedFetchMorePost', 'apiV1FeedFetchMorePostRequest', apiV1FeedFetchMorePostRequest)
             const localVarPath = `/api/v1/feed/fetchMore`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4012,11 +4020,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchRecentPost: async (apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1FeedFetchRecentPost: async (apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1FeedFetchMorePostRequest' is not null or undefined
+            assertParamExists('apiV1FeedFetchRecentPost', 'apiV1FeedFetchMorePostRequest', apiV1FeedFetchMorePostRequest)
             const localVarPath = `/api/v1/feed/fetchRecent`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4449,21 +4459,21 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollRespondPost200Response>>> {
+        async apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollRespondPost200Response>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollRespondPost200Response>>> {
+        async apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollRespondPost200Response>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -4654,20 +4664,20 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1PollRespondPost200Response>> {
+        apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1PollRespondPost200Response>> {
             return localVarFp.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
+         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1PollRespondPost200Response>> {
+        apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1PollRespondPost200Response>> {
             return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -4874,23 +4884,23 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
+     * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
+    public apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {ApiV1FeedFetchMorePostRequest} [apiV1FeedFetchMorePostRequest] 
+     * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest?: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
+    public apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 

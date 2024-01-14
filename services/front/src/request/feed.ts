@@ -1,19 +1,22 @@
 import { DefaultApiFactory } from "@/api";
-import { activeSessionUcanAxiosNoLog } from "@/interceptors";
+import { noAuthAxios } from "@/interceptors";
 import type { ExtendedPollData } from "@/shared/types/zod";
 
 interface FetchFeedProps {
+    showHidden: boolean;
     updatedAt: Date | undefined;
 }
 
 export async function fetchFeedMore({
+    showHidden,
     updatedAt,
 }: FetchFeedProps): Promise<ExtendedPollData[]> {
     const response = await DefaultApiFactory(
         undefined,
         undefined,
-        activeSessionUcanAxiosNoLog // TODO <= use another UCAN
+        noAuthAxios
     ).apiV1FeedFetchMorePost({
+        showHidden: showHidden,
         updatedAt: updatedAt?.toISOString(),
     });
     if (response.data !== undefined) {
@@ -37,13 +40,15 @@ export async function fetchFeedMore({
 }
 
 export async function fetchFeedRecent({
+    showHidden,
     updatedAt,
 }: FetchFeedProps): Promise<ExtendedPollData[]> {
     const response = await DefaultApiFactory(
         undefined,
         undefined,
-        activeSessionUcanAxiosNoLog // TODO <= use another UCAN
+        noAuthAxios
     ).apiV1FeedFetchRecentPost({
+        showHidden: showHidden,
         updatedAt: updatedAt?.toISOString(),
     });
     if (response.data !== undefined) {

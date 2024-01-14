@@ -151,6 +151,7 @@ export class Dto {
     });
     static fetchFeedRequest = z
         .object({
+            showHidden: z.boolean(),
             updatedAt: z.string().datetime().optional(),
         })
         .strict();
