@@ -6,7 +6,7 @@ For some background, check the [organization page](https://github.com/zkorum) or
 
 ### Prerequisites
 
-Install:
+Install:d
 
 - rsync
 - make
