@@ -5,9 +5,9 @@
     "description": "ZKorum frontend",
     "scripts": {
         "dev": "vite",
-        "dev:force": "vite --force",
-        "build": "tsc && vite build",
         "build:staging1": "tsc && NODE_ENV=development vite build --mode staging1",
+        "dev:force": "NODE_ENV='development' && vite --force",
+        "build": "NODE_ENV='production' && tsc && vite build",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format:check": "prettier . --check",
         "format:write": "prettier . --write",
