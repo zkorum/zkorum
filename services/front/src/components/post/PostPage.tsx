@@ -33,7 +33,8 @@ export function PostPage() {
         updatePost,
         updatePostHiddenStatus,
         wasCommentSent,
-        commentInputRef,
+        commentFocused,
+        setCommentFocused,
     } = usePost();
     const [loadingRecent, setLoadingRecent] = React.useState<boolean>(false);
     const [loadingMore, setLoadingMore] = React.useState<boolean>(false);
@@ -161,12 +162,13 @@ export function PostPage() {
                     {context?.loadingMore ? null : context?.comments.length ===
                           undefined || context?.comments.length === 0 ? (
                         <Button
-                            onClick={() =>
+                            onClick={() => {
                                 activeSessionEmail === "" ||
                                 activeSessionEmail === undefined
                                     ? dispatch(openAuthModal())
-                                    : commentInputRef.current?.focus()
-                            }
+                                    : setCommentFocused(true);
+                                console.log("called");
+                            }}
                         >
                             Be the first to comment
                         </Button>
@@ -182,6 +184,10 @@ export function PostPage() {
                 <Box my={1}>
                     <PostView
                         post={post}
+                        onComment={(event: React.MouseEvent<HTMLElement>) => {
+                            event.stopPropagation(); // necessary to avoid registering routing - go back should not be affected
+                            setCommentFocused(!commentFocused);
+                        }}
                         updatePost={updatePost}
                         updatePostHiddenStatus={updatePostHiddenStatus}
                     />

@@ -15,7 +15,8 @@ export type PostContextType = {
     updatePost: (responseToPoll: ResponseToPollPayload) => void;
     updatePostHiddenStatus: (props: UpdatePostHiddenStatusProps) => void;
     wasCommentSent: boolean;
-    commentInputRef: React.MutableRefObject<HTMLInputElement | undefined>;
+    commentFocused: boolean;
+    setCommentFocused: (value: boolean) => void;
 };
 
 export function usePost() {

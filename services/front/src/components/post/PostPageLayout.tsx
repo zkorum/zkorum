@@ -30,7 +30,7 @@ import {
 } from "@docknetwork/crypto-wasm-ts";
 import Box from "@mui/material/Box";
 import React from "react";
-import { Outlet, useParams } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
     commentCreated,
     creatingProof,
@@ -40,9 +40,12 @@ import {
 import { BottomAddCommentBar } from "./BottomAddCommentBar";
 import { PostPageTopbar } from "./PostPageTopbar";
 import { openAuthModal } from "@/store/reducers/session";
+import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
 
 export function PostPageLayout() {
     let { postSlugId } = useParams();
+    const { hash } = useLocation();
+
     const { updatePost, updatePostHiddenStatus, posts } = usePostsAndMeta();
     const [loadedPost, setLoadedPost] = React.useState<
         ExtendedPollData | undefined | null
@@ -52,7 +55,20 @@ export function PostPageLayout() {
     const [comment, setComment] = React.useState<string>("");
     const [comments, setComments] = React.useState<PostComment[]>([]);
     const [wasCommentSent, setWasCommentSent] = React.useState<boolean>(false);
-    const commentInputRef = React.useRef<HTMLInputElement>();
+    const [commentFocused, setCommentFocused] = React.useState<boolean>(
+        hash === HASH_IS_COMMENTING
+    );
+    const navigate = useNavigate();
+
+    React.useEffect(() => {
+        if (commentFocused && hash !== HASH_IS_COMMENTING) {
+            navigate(`${POST}/${postSlugId}${HASH_IS_COMMENTING}`, {
+                replace: true,
+            });
+        } else if (!commentFocused && hash === HASH_IS_COMMENTING) {
+            navigate(`${POST}/${postSlugId}`, { replace: true });
+        }
+    }, [commentFocused]);
 
     const dispatch = useAppDispatch();
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
@@ -223,7 +239,8 @@ export function PostPageLayout() {
                     updatePost,
                     updatePostHiddenStatus,
                     wasCommentSent,
-                    commentInputRef,
+                    commentFocused,
+                    setCommentFocused,
                 }}
             />
             <Box sx={{ backgroundColor: "#ffff" }}>
@@ -239,7 +256,8 @@ export function PostPageLayout() {
                 onLoggingIn={() => dispatch(openAuthModal())}
                 wasCommentSent={wasCommentSent}
                 setWasCommentSent={setWasCommentSent}
-                commentInputRef={commentInputRef}
+                focused={commentFocused}
+                setFocused={setCommentFocused}
             />
         </Box>
     );

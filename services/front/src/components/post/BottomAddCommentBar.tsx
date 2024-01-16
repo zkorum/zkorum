@@ -18,7 +18,8 @@ interface BottomAddCommentBarProps {
     onLoggingIn: () => void;
     wasCommentSent: boolean;
     setWasCommentSent: (value: boolean) => void;
-    commentInputRef: React.MutableRefObject<HTMLInputElement | undefined>;
+    focused: boolean;
+    setFocused: (value: boolean) => void;
 }
 
 export function BottomAddCommentBar({
@@ -30,10 +31,24 @@ export function BottomAddCommentBar({
     onLoggingIn,
     wasCommentSent,
     setWasCommentSent,
-    commentInputRef,
+    focused,
+    setFocused,
 }: BottomAddCommentBarProps) {
+    const inputRef = React.useRef<HTMLInputElement>();
     const [localComment, setLocalComment] = React.useState<string>("");
-    const [focused, setFocused] = React.useState<boolean>(false);
+
+    React.useEffect(() => {
+        if (focused) {
+            const timeout = setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+
+            return () => {
+                clearTimeout(timeout);
+            };
+        } else {
+        }
+    }, [focused]);
 
     const shouldSendingBeDisabled =
         localComment.length === 0 ||
@@ -93,7 +108,7 @@ export function BottomAddCommentBar({
                 >
                     <Grid width="100%" flexGrow={1} mb={1}>
                         <TextField
-                            inputRef={commentInputRef}
+                            inputRef={inputRef}
                             sx={{ color: "#e6e9ec" }}
                             variant="standard"
                             focused={focused}

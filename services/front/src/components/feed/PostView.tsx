@@ -61,6 +61,7 @@ import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
 import { useNavigate } from "react-router-dom";
 import { POST } from "@/common/navigation";
 import type { UpdatePostHiddenStatusProps } from "@/RootDialog";
+import { CommentsViewsLikesView } from "./CommentsViewsLikesView";
 
 export type UserResponse =
     | "option1"
@@ -74,6 +75,7 @@ interface PostViewProps {
     post: ExtendedPollData;
     updatePost: (responseToPoll: ResponseToPollPayload) => void;
     updatePostHiddenStatus: (props: UpdatePostHiddenStatusProps) => void;
+    onComment: (event: React.MouseEvent<HTMLElement>) => void;
 }
 
 export interface RespondToPollProps {
@@ -85,6 +87,7 @@ export interface RespondToPollProps {
 
 export function PostView({
     post,
+    onComment,
     updatePost,
     updatePostHiddenStatus,
 }: PostViewProps) {
@@ -593,6 +596,7 @@ export function PostView({
                         direction="row"
                         justifyContent="flex-start"
                         alignItems="center"
+                        key={`pollQuestionResponse-${post.metadata.slugId}`}
                         spacing={1}
                         sx={{
                             borderRadius: "8px",
@@ -646,6 +650,12 @@ export function PostView({
                             />
                         )}
                     </Grid>
+                </Grid>
+                <Grid mt={1}>
+                    <CommentsViewsLikesView
+                        onComment={onComment}
+                        commentCount={0}
+                    />
                 </Grid>
             </Box>
         </Paper>

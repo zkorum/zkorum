@@ -1,5 +1,7 @@
 import { createTheme } from "@mui/material/styles";
 import { red } from "@mui/material/colors";
+import { LinkBehavior } from "./Router";
+import type { LinkProps } from "@mui/material/Link";
 
 const background = {
     paper: "#fff",
@@ -52,6 +54,16 @@ let theme = createTheme({
                     backgroundColor: background.default,
                     color: text.primary,
                 },
+            },
+        },
+        MuiLink: {
+            defaultProps: {
+                component: LinkBehavior,
+            } as LinkProps,
+        },
+        MuiButtonBase: {
+            defaultProps: {
+                LinkComponent: LinkBehavior,
             },
         },
     },

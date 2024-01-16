@@ -11,6 +11,8 @@ import Grid from "@mui/material/Unstable_Grid2";
 import React from "react";
 import { Virtuoso } from "react-virtuoso";
 import { PostView } from "./PostView";
+import { useLocation, useNavigate } from "react-router-dom";
+import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
 
 export function Feed() {
     const {
@@ -25,7 +27,12 @@ export function Feed() {
     } = usePostsAndMeta();
 
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
+    const isLoggedIn =
+        activeSessionEmail !== "" && activeSessionEmail !== undefined;
     const isAdmin = activeSessionEmail.endsWith("zkorum.com");
+
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const loadRecent = React.useCallback(
         (minUpdatedAt: Date) => {
@@ -105,20 +112,6 @@ export function Feed() {
         context?: LoadingContext;
     }
 
-    const LoadingRecent = ({ context }: LoadingProps) => {
-        return (
-            <Grid container justifyContent="center" alignItems="center">
-                <Grid>
-                    {context?.loadingRecent ? (
-                        <Box sx={{ mt: 1, color: "#fff" }}>
-                            <CircularProgress size="1em" color="inherit" />
-                        </Box>
-                    ) : null}
-                </Grid>
-            </Grid>
-        );
-    };
-
     const LoadingMore = ({ context }: LoadingProps) => {
         return (
             <Grid pt={1} container justifyContent="center" alignItems="center">
@@ -173,9 +166,24 @@ export function Feed() {
                 }}
                 overscan={200}
                 itemContent={(_index, post) => {
+                    const routeToNavigateToWithoutHash = `${POST}/${post.metadata.slugId}`;
+                    const routeToNavigateTo = isLoggedIn
+                        ? `${routeToNavigateToWithoutHash}${HASH_IS_COMMENTING}`
+                        : `${routeToNavigateToWithoutHash}`;
+                    const replace =
+                        `${location.pathname}` === routeToNavigateToWithoutHash;
+
                     return (
                         <Box pt={1} key={`commentview-${post.metadata.slugId}`}>
                             <PostView
+                                onComment={(
+                                    event: React.MouseEvent<HTMLElement>
+                                ) => {
+                                    event.stopPropagation();
+                                    navigate(routeToNavigateTo, {
+                                        replace: replace,
+                                    });
+                                }}
                                 post={post}
                                 updatePost={updatePost}
                                 updatePostHiddenStatus={updatePostHiddenStatus}
@@ -183,7 +191,7 @@ export function Feed() {
                         </Box>
                     );
                 }}
-                components={{ Footer: LoadingMore, Header: LoadingRecent }}
+                components={{ Footer: LoadingMore }}
             />
         </Container>
     );

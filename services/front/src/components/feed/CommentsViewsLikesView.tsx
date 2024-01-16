@@ -1,19 +1,17 @@
-import { Typography } from "@mui/material";
-import Grid from "@mui/material/Unstable_Grid2";
-import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import CommentOutlinedIcon from "@mui/icons-material/CommentOutlined";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Unstable_Grid2";
+import React from "react";
 
 interface CommentsViewsLikesViewProps {
-    viewCount: number;
     commentCount: number;
-    likeCount: number;
+    onComment: (event: React.MouseEvent<HTMLElement>) => void;
 }
 
 export function CommentsViewsLikesView({
-    viewCount,
     commentCount,
-    likeCount,
+    onComment,
 }: CommentsViewsLikesViewProps) {
     return (
         <Grid
@@ -23,64 +21,45 @@ export function CommentsViewsLikesView({
             justifyContent={"space-between"}
             alignItems="center"
         >
-            <Grid
-                container
-                justifyContent="center"
-                flexWrap={"wrap"}
-                spacing={0.5}
+            <Button
+                color="inherit"
+                onMouseDown={(e) => e.preventDefault()} // https://stackoverflow.com/questions/15196352/prevent-onblur-code-to-execute-if-clicked-on-submit-button prevents onBlur from BottomAddCommentBar that would setCommentFocused to false... and then back to true!
+                onClick={onComment}
+                sx={{
+                    textTransform: "none", // remove all caps
+                    "&:hover": {
+                        cursor: "pointer",
+                    },
+                }}
             >
-                <Grid>
-                    <FavoriteBorderOutlinedIcon fontSize="small" />
-                </Grid>
-                <Grid>
-                    <Typography
-                        variant="body2"
-                        sx={{ color: "rgba(0, 0, 0, 0.6)" }}
-                    >
-                        {likeCount}
-                    </Typography>
-                </Grid>
-            </Grid>
-            <Grid>
                 <Grid
                     container
                     justifyContent="center"
+                    alignItems={"center"}
                     flexWrap={"wrap"}
-                    spacing={0.5}
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                        p: 0.5,
+                        // border: "1px solid #e6e9ec",
+                        // borderRadius: "8px",
+                    }}
                 >
-                    <Grid>
-                        <CommentOutlinedIcon fontSize="small" />
-                    </Grid>
+                    <CommentOutlinedIcon fontSize="small" />
                     <Grid>
                         <Typography
                             variant="body2"
                             sx={{ color: "rgba(0, 0, 0, 0.6)" }}
                         >
-                            {commentCount}
+                            {commentCount === 1
+                                ? `${commentCount} Comment`
+                                : commentCount === 0
+                                ? "Comment"
+                                : `${commentCount} Comments`}
                         </Typography>
                     </Grid>
                 </Grid>
-            </Grid>
-            <Grid>
-                <Grid
-                    container
-                    justifyContent="center"
-                    flexWrap={"wrap"}
-                    spacing={0.5}
-                >
-                    <Grid>
-                        <VisibilityOutlinedIcon fontSize="small" />
-                    </Grid>
-                    <Grid>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: "rgba(0, 0, 0, 0.6)" }}
-                        >
-                            {viewCount}
-                        </Typography>
-                    </Grid>
-                </Grid>
-            </Grid>
+            </Button>
         </Grid>
     );
 }
