@@ -33,13 +33,13 @@ export async function doLoadMore(
 ) {
     try {
         setLoadingMore(true);
-        const lastPostUpdatedAt =
+        const lastPostReactedAt =
             lastIndex === undefined || lastIndex === 0
                 ? undefined
-                : posts[lastIndex].metadata.updatedAt;
+                : posts[lastIndex].metadata.lastReactedAt;
         const newPosts = await fetchFeedMore({
             showHidden: isAdmin === true,
-            updatedAt: lastPostUpdatedAt,
+            lastReactedAt: lastPostReactedAt,
         });
         const actualNewPosts = newPosts.filter(
             (post) =>
@@ -61,13 +61,13 @@ export async function doLoadRecent(
     posts: ExtendedPollData[],
     setPosts: React.Dispatch<React.SetStateAction<PostsType>>,
     setLoadingRecent: React.Dispatch<React.SetStateAction<boolean>>,
-    minUpdatedAt: Date
+    minLastReactedAt: Date
 ) {
     try {
         setLoadingRecent(true);
         const newPosts = await fetchFeedRecent({
             showHidden: isAdmin === true,
-            updatedAt: minUpdatedAt,
+            lastReactedAt: minLastReactedAt,
         });
         const actualNewPosts = newPosts.filter(
             (post) =>

@@ -2412,7 +2412,7 @@ export interface ApiV1FeedFetchMorePostRequest {
      * @type {string}
      * @memberof ApiV1FeedFetchMorePostRequest
      */
-    'updatedAt'?: string;
+    'lastReactedAt'?: string;
 }
 /**
  * 
@@ -3364,6 +3364,12 @@ export interface ApiV1PollRespondPost200ResponseMetadata {
      * @memberof ApiV1PollRespondPost200ResponseMetadata
      */
     'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PollRespondPost200ResponseMetadata
+     */
+    'lastReactedAt': string;
 }
 /**
  * 
@@ -3492,10 +3498,10 @@ export interface ApiV1PostFetchPost200Response {
 export interface ApiV1PostFetchPost200ResponseCommentsInner {
     /**
      * 
-     * @type {ApiV1PollRespondPost200ResponseMetadata}
+     * @type {ApiV1PostFetchPost200ResponseCommentsInnerMetadata}
      * @memberof ApiV1PostFetchPost200ResponseCommentsInner
      */
-    'metadata': ApiV1PollRespondPost200ResponseMetadata;
+    'metadata': ApiV1PostFetchPost200ResponseCommentsInnerMetadata;
     /**
      * 
      * @type {string}
@@ -3508,6 +3514,37 @@ export interface ApiV1PostFetchPost200ResponseCommentsInner {
      * @memberof ApiV1PostFetchPost200ResponseCommentsInner
      */
     'author': ApiV1PollRespondPost200ResponseAuthor;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostFetchPost200ResponseCommentsInnerMetadata
+ */
+export interface ApiV1PostFetchPost200ResponseCommentsInnerMetadata {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostFetchPost200ResponseCommentsInnerMetadata
+     */
+    'uid': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostFetchPost200ResponseCommentsInnerMetadata
+     */
+    'slugId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostFetchPost200ResponseCommentsInnerMetadata
+     */
+    'isHidden'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostFetchPost200ResponseCommentsInnerMetadata
+     */
+    'updatedAt': string;
 }
 /**
  * 

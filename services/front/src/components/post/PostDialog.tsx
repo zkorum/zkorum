@@ -176,14 +176,14 @@ export function PostDialog({
     const [isOption2Valid, setIsOption2Valid] = React.useState<boolean>(false);
 
     const loadRecent = React.useCallback(
-        (minUpdatedAt: Date) => {
+        (minLastReactedAt: Date) => {
             return setTimeout(async () => {
                 return await doLoadRecent(
                     isAdmin,
                     posts,
                     setPosts,
                     setLoadingRecent,
-                    minUpdatedAt
+                    minLastReactedAt
                 );
             }, 200);
         },
@@ -210,7 +210,7 @@ export function PostDialog({
         if (posts.length === 0) {
             timeout = loadMore();
         } else {
-            timeout = loadRecent(posts[0].metadata.updatedAt);
+            timeout = loadRecent(posts[0].metadata.lastReactedAt);
         }
         return () => {
             clearTimeout(timeout);

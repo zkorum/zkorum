@@ -521,6 +521,7 @@ export const zodPollMetadata = z
         slugId: zodSlugId,
         isHidden: z.boolean().optional(),
         updatedAt: z.date(),
+        lastReactedAt: z.date(),
     })
     .strict();
 export const zodextendedPollData = z
@@ -558,9 +559,17 @@ export const zodPollResponsesByPollUid = z.record(
     zodPollOptionChosenAndPseudonym
 );
 export const zodCommentContent = z.string().nonempty().max(1250);
+export const zodCommentMetadata = z
+    .object({
+        uid: zodPollUID,
+        slugId: zodSlugId,
+        isHidden: z.boolean().optional(),
+        updatedAt: z.date(),
+    })
+    .strict();
 export const zodComment = z
     .object({
-        metadata: zodPollMetadata,
+        metadata: zodCommentMetadata,
         content: zodCommentContent,
         author: zodPostAs,
     })

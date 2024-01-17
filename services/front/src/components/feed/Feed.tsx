@@ -1,3 +1,4 @@
+import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
 import { doLoadMore, doLoadRecent, usePostsAndMeta } from "@/feed";
 import { useAppSelector } from "@/hooks";
 import type { ExtendedPollData } from "@/shared/types/zod";
@@ -6,13 +7,13 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
+import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Unstable_Grid2";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import { PostView } from "./PostView";
-import { useLocation, useNavigate } from "react-router-dom";
-import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
 
 export function Feed() {
     const {
@@ -32,17 +33,16 @@ export function Feed() {
     const isAdmin = activeSessionEmail.endsWith("zkorum.com");
 
     const navigate = useNavigate();
-    const location = useLocation();
 
     const loadRecent = React.useCallback(
-        (minUpdatedAt: Date) => {
+        (lastReactedAt: Date) => {
             return setTimeout(async () => {
                 return await doLoadRecent(
                     isAdmin,
                     posts,
                     setPosts,
                     setLoadingRecent,
-                    minUpdatedAt
+                    lastReactedAt
                 );
             }, 200);
         },
@@ -80,7 +80,7 @@ export function Feed() {
             activeSessionEmail !== "" &&
             activeSessionEmail !== undefined
         ) {
-            recentTimeout = loadRecent(posts[0].metadata.updatedAt);
+            recentTimeout = loadRecent(posts[0].metadata.lastReactedAt);
             if (posts.length === 0) {
                 moreTimeout = loadMore(true);
             } else {
@@ -166,28 +166,33 @@ export function Feed() {
                 }}
                 overscan={200}
                 itemContent={(_index, post) => {
-                    const routeToNavigateToWithoutHash = `${POST}/${post.metadata.slugId}`;
+                    const postPage = `${POST}/${post.metadata.slugId}`;
                     const routeToNavigateTo = isLoggedIn
-                        ? `${routeToNavigateToWithoutHash}${HASH_IS_COMMENTING}`
-                        : `${routeToNavigateToWithoutHash}`;
-                    const replace =
-                        `${location.pathname}` === routeToNavigateToWithoutHash;
+                        ? `${postPage}${HASH_IS_COMMENTING}`
+                        : `${postPage}`;
 
                     return (
-                        <Box pt={1} key={`commentview-${post.metadata.slugId}`}>
-                            <PostView
-                                onComment={(
-                                    event: React.MouseEvent<HTMLElement>
-                                ) => {
-                                    event.stopPropagation();
-                                    navigate(routeToNavigateTo, {
-                                        replace: replace,
-                                    });
-                                }}
-                                post={post}
-                                updatePost={updatePost}
-                                updatePostHiddenStatus={updatePostHiddenStatus}
-                            />
+                        <Box
+                            key={`commentview-${post.metadata.slugId}`}
+                            pt={1}
+                            width="100%"
+                        >
+                            <Link href={postPage} underline="none">
+                                <PostView
+                                    dateToShow={"lastReactedAt"}
+                                    onComment={(
+                                        event: React.MouseEvent<HTMLElement>
+                                    ) => {
+                                        event.preventDefault();
+                                        navigate(routeToNavigateTo);
+                                    }}
+                                    post={post}
+                                    updatePost={updatePost}
+                                    updatePostHiddenStatus={
+                                        updatePostHiddenStatus
+                                    }
+                                />
+                            </Link>
                         </Box>
                     );
                 }}

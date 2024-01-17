@@ -511,8 +511,7 @@ export const pseudonymTable = pgTable("pseudonym", {
     pseudonym: text("pseudonym").unique().notNull(), // should be unique, unless we mess up with the scopes... Change type to varchar? I don't know how long a pseudonym can be...
     personaId: integer("persona_id")
         .references(() => personaTable.id)
-        .notNull()
-        .unique(), // to preserve privacy we should enforce different pseudonyms for different personas (via scope)
+        .notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -531,7 +530,7 @@ export const pollTable = pgTable("poll", {
     id: serial("id").primaryKey(),
     slugId: varchar("slug_id", { length: 10 }), // used for permanent URL, should be not null and unique, a script will populate them...
     presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
-    presentationCID: char("pres_cid", { length: 61 }), // unique and notNull are !important for avoiding replay attacks, we will do it in a later release
+    presentationCID: char("pres_cid", { length: 61 }).unique().notNull(), // unique and notNull are !important for avoiding replay attacks, we will do it in a later release
     timestampedPresentationCID: char("time_pres_cid", { length: 61 }) // see shared/test/common/cid.test.ts for length
         .notNull()
         .unique(), // CID calculated from stringified object representing pres+created_at. This is the unique identifier representing the poll globally.
@@ -567,15 +566,22 @@ export const pollTable = pgTable("poll", {
     })
         .defaultNow()
         .notNull(),
+    lastReactedAt: timestamp("last_reacted_at", {
+        // latest response to poll or comment
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
 });
 
 export const pollResponseTable = pgTable("poll_response", {
     id: serial("id").primaryKey(),
     presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
-    presentationCID: char("pres_cid", { length: 61 }), // unique and notNull are !important for avoiding replay attacks, we will do it in a later release
-    timestampedPresentationCID: char("time_pres_cid", { length: 61 }), // CID calculated from stringified object representing pres+created_at. This is the unique identifier representing the response globally.
-    // .notNull()
-    // .unique(),
+    presentationCID: char("pres_cid", { length: 61 }).unique().notNull(), // unique and notNull are !important for avoiding replay attacks, we will do it in a later release
+    timestampedPresentationCID: char("time_pres_cid", { length: 61 })
+        .unique()
+        .notNull(), // CID calculated from stringified object representing pres+created_at. This is the unique identifier representing the response globally.
     authorId: integer("author_id") // "postAs"
         .notNull()
         .references(() => pseudonymTable.id), // the author of the poll

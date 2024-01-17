@@ -9,7 +9,7 @@ const db = drizzle(client);
 
 (async () => {
     try {
-        await Service.createSlugIdAndPresentationCID({ db });
+        await Service.updateLastReactedAt({ db });
         console.log("Database updated");
     } catch (e) {
         console.error(e);

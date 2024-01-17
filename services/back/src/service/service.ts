@@ -304,7 +304,7 @@ interface FetchFeedProps<
     TSchema extends TablesRelationalConfig,
 > {
     db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
-    updatedAt: Date | undefined;
+    lastReactedAt: Date | undefined;
     order: "more" | "recent";
     limit?: number;
     showHidden?: boolean;
@@ -516,6 +516,7 @@ function fetchPostBy({
             slugId: pollTable.slugId,
             isHidden: pollTable.isHidden,
             updatedAt: pollTable.updatedAt,
+            lastReactedAt: pollTable.lastReactedAt,
         })
         .from(pollTable)
         .innerJoin(pseudonymTable, eq(pseudonymTable.id, pollTable.authorId))
@@ -2736,6 +2737,7 @@ export class Service {
                 eligibilityId: eligibilityId,
                 createdAt: now,
                 updatedAt: now,
+                lastReactedAt: now,
             });
         });
         // TODO: broadcast timestampedPresentation to Nostr or custom libp2p node
@@ -2744,7 +2746,7 @@ export class Service {
 
     static async fetchFeed({
         db,
-        updatedAt,
+        lastReactedAt,
         order,
         limit,
         showHidden,
@@ -2756,11 +2758,11 @@ export class Service {
         const defaultLimit = 30;
         const actualLimit = limit === undefined ? defaultLimit : limit;
         const whereUpdatedAt =
-            updatedAt === undefined
+            lastReactedAt === undefined
                 ? undefined
                 : order === "more"
-                ? lt(pollTable.updatedAt, updatedAt)
-                : gt(pollTable.updatedAt, updatedAt);
+                ? lt(pollTable.updatedAt, lastReactedAt)
+                : gt(pollTable.updatedAt, lastReactedAt);
         const results = await db
             .selectDistinctOn([pollTable.updatedAt, pollTable.id], {
                 // poll payload
@@ -2801,6 +2803,7 @@ export class Service {
                 slugId: pollTable.slugId,
                 isHidden: pollTable.isHidden,
                 updatedAt: pollTable.updatedAt,
+                lastReactedAt: pollTable.lastReactedAt,
             })
             .from(pollTable)
             .innerJoin(
@@ -2868,11 +2871,13 @@ export class Service {
                           slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
                           isHidden: result.isHidden,
                           updatedAt: result.updatedAt,
+                          lastReactedAt: result.lastReactedAt,
                       }
                     : {
                           uid: result.pollUid,
                           slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
                           updatedAt: result.updatedAt,
+                          lastReactedAt: result.lastReactedAt,
                       };
             return {
                 metadata: metadata,
@@ -3010,6 +3015,7 @@ export class Service {
                 slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
                 isHidden: result.isHidden,
                 updatedAt: result.updatedAt,
+                lastReactedAt: result.lastReactedAt,
             },
             payload: {
                 data: {
@@ -3311,7 +3317,7 @@ export class Service {
                 .update(pollTable)
                 .set({
                     [optionChosenResponseColumnName]: sql`coalesce(${optionChosenResponseColumn}, 0) + 1`,
-                    updatedAt: now,
+                    lastReactedAt: now,
                 })
                 .where(
                     eq(pollTable.timestampedPresentationCID, response.pollUid)
@@ -3403,21 +3409,29 @@ export class Service {
         const timestampedPresentationCID = await toEncodedCID(
             timestampedPresentation
         );
-        const authorId = await Service.selectOrInsertPseudonym({
-            tx: db,
-            postAs: postAs,
-            pseudonym: pseudonym,
-        });
-        await db.insert(commentTable).values({
-            presentation: presentation.toJSON(),
-            presentationCID: presentationCID, // Check for replay attack (same presentation) - done by the database *unique* rule
-            timestampedPresentationCID: timestampedPresentationCID,
-            slugId: generateRandomSlugId(),
-            authorId: authorId,
-            content: payload.content,
-            postId: result.pollId,
-            createdAt: now,
-            updatedAt: now,
+        await db.transaction(async (tx) => {
+            const authorId = await Service.selectOrInsertPseudonym({
+                tx: tx,
+                postAs: postAs,
+                pseudonym: pseudonym,
+            });
+            await tx.insert(commentTable).values({
+                presentation: presentation.toJSON(),
+                presentationCID: presentationCID, // Check for replay attack (same presentation) - done by the database *unique* rule
+                timestampedPresentationCID: timestampedPresentationCID,
+                slugId: generateRandomSlugId(),
+                authorId: authorId,
+                content: payload.content,
+                postId: result.pollId,
+                createdAt: now,
+                updatedAt: now,
+            });
+            await tx
+                .update(pollTable)
+                .set({
+                    lastReactedAt: now,
+                })
+                .where(eq(pollTable.id, result.pollId));
         });
         return timestampedPresentationCID;
     }

@@ -1054,9 +1054,9 @@ server.after(() => {
                     db: db,
                     order: "more",
                     showHidden: request.body.showHidden,
-                    updatedAt:
-                        request.body.updatedAt !== undefined
-                            ? new Date(request.body.updatedAt)
+                    lastReactedAt:
+                        request.body.lastReactedAt !== undefined
+                            ? new Date(request.body.lastReactedAt)
                             : undefined,
                 });
             },
@@ -1074,10 +1074,10 @@ server.after(() => {
                 return await Service.fetchFeed({
                     db: db,
                     order: "recent",
-                    showHidden: true,
-                    updatedAt:
-                        request.body.updatedAt !== undefined
-                            ? new Date(request.body.updatedAt)
+                    showHidden: request.body.showHidden,
+                    lastReactedAt:
+                        request.body.lastReactedAt !== undefined
+                            ? new Date(request.body.lastReactedAt)
                             : undefined,
                 });
             },

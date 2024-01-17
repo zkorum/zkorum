@@ -114,6 +114,7 @@ export async function fetchPost(postSlugId: PostSlugId): Promise<PostFetch200> {
             slugId: postResponse.metadata.slugId,
             isHidden: postResponse.metadata.isHidden,
             updatedAt: new Date(postResponse.metadata.updatedAt),
+            lastReactedAt: new Date(postResponse.metadata.lastReactedAt),
         },
         payload: postResponse.payload,
         author: postResponse.author,

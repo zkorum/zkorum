@@ -36,8 +36,12 @@ export function PostPage() {
         commentFocused,
         setCommentFocused,
     } = usePost();
-    const [loadingRecent, setLoadingRecent] = React.useState<boolean>(false);
-    const [loadingMore, setLoadingMore] = React.useState<boolean>(false);
+    const [loadingRecent, setLoadingRecent] = React.useState<
+        boolean | undefined
+    >(undefined);
+    const [loadingMore, setLoadingMore] = React.useState<boolean | undefined>(
+        undefined
+    );
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const dispatch = useAppDispatch();
 
@@ -146,8 +150,8 @@ export function PostPage() {
     }
 
     interface LoadingContext {
-        loadingMore: boolean;
-        loadingRecent: boolean;
+        loadingMore: boolean | undefined;
+        loadingRecent: boolean | undefined;
         comments: PostComment[];
     }
 
@@ -159,15 +163,18 @@ export function PostPage() {
         return (
             <Grid container justifyContent="center" alignItems="center">
                 <Grid>
-                    {context?.loadingMore ? null : context?.comments.length ===
-                          undefined || context?.comments.length === 0 ? (
+                    {context?.loadingMore ||
+                    context?.loadingRecent ||
+                    (context?.loadingMore === undefined &&
+                        context?.loadingRecent === undefined) ? null : context
+                          ?.comments.length === undefined ||
+                      context?.comments.length === 0 ? (
                         <Button
                             onClick={() => {
                                 activeSessionEmail === "" ||
                                 activeSessionEmail === undefined
                                     ? dispatch(openAuthModal())
                                     : setCommentFocused(true);
-                                console.log("called");
                             }}
                         >
                             Be the first to comment
@@ -183,6 +190,7 @@ export function PostPage() {
             <Container maxWidth="sm" disableGutters>
                 <Box my={1}>
                     <PostView
+                        dateToShow={"updatedAt"}
                         post={post}
                         onComment={(event: React.MouseEvent<HTMLElement>) => {
                             event.stopPropagation(); // necessary to avoid registering routing - go back should not be affected

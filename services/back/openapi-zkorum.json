@@ -2572,12 +2572,17 @@
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "lastReactedAt": {
+                          "type": "string",
+                          "format": "date-time"
                         }
                       },
                       "required": [
                         "uid",
                         "slugId",
-                        "updatedAt"
+                        "updatedAt",
+                        "lastReactedAt"
                       ],
                       "additionalProperties": false
                     },
@@ -3339,7 +3344,7 @@
                   "showHidden": {
                     "type": "boolean"
                   },
-                  "updatedAt": {
+                  "lastReactedAt": {
                     "type": "string",
                     "format": "date-time"
                   }
@@ -3379,12 +3384,17 @@
                           "updatedAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "lastReactedAt": {
+                            "type": "string",
+                            "format": "date-time"
                           }
                         },
                         "required": [
                           "uid",
                           "slugId",
-                          "updatedAt"
+                          "updatedAt",
+                          "lastReactedAt"
                         ],
                         "additionalProperties": false
                       },
@@ -4147,7 +4157,7 @@
                   "showHidden": {
                     "type": "boolean"
                   },
-                  "updatedAt": {
+                  "lastReactedAt": {
                     "type": "string",
                     "format": "date-time"
                   }
@@ -4187,12 +4197,17 @@
                           "updatedAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "lastReactedAt": {
+                            "type": "string",
+                            "format": "date-time"
                           }
                         },
                         "required": [
                           "uid",
                           "slugId",
-                          "updatedAt"
+                          "updatedAt",
+                          "lastReactedAt"
                         ],
                         "additionalProperties": false
                       },
@@ -5151,12 +5166,17 @@
                             "updatedAt": {
                               "type": "string",
                               "format": "date-time"
+                            },
+                            "lastReactedAt": {
+                              "type": "string",
+                              "format": "date-time"
                             }
                           },
                           "required": [
                             "uid",
                             "slugId",
-                            "updatedAt"
+                            "updatedAt",
+                            "lastReactedAt"
                           ],
                           "additionalProperties": false
                         },

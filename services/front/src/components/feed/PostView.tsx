@@ -1,13 +1,15 @@
+import type { UpdatePostHiddenStatusProps } from "@/RootDialog";
 import {
     getFromAuthor,
     getTimeFromNow,
     getToEligibility,
     zeroIfUndefined,
 } from "@/common/common";
+import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
 import { maybeInitWasm } from "@/crypto/vc/credential";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { doRespondToPoll } from "@/request/post";
 import { hidePost, unhidePost } from "@/request/moderation";
+import { doRespondToPoll } from "@/request/post";
 import { stringToBytes } from "@/shared/common/arrbufs";
 import {
     attributesFormRevealedFromPostAs,
@@ -23,6 +25,7 @@ import {
 } from "@/shared/shared";
 import type {
     ExtendedPollData,
+    PollMetadata,
     ResponseToPoll,
     ResponseToPollPayload,
     UniversityType,
@@ -54,14 +57,10 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Unstable_Grid2";
 import React from "react";
 import { creatingProof, genericError, sendingPost } from "../error/message";
+import { CommentsViewsLikesView } from "./CommentsViewsLikesView";
 import { PollCanRespondView } from "./PollCanRespondView";
 import { PollResultView } from "./PollResultView";
 import Logo from "/logo-essec_72x107.af462b8d2b4c.png";
-import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
-import { useNavigate } from "react-router-dom";
-import { POST } from "@/common/navigation";
-import type { UpdatePostHiddenStatusProps } from "@/RootDialog";
-import { CommentsViewsLikesView } from "./CommentsViewsLikesView";
 
 export type UserResponse =
     | "option1"
@@ -72,6 +71,7 @@ export type UserResponse =
     | "option6";
 
 interface PostViewProps {
+    dateToShow: "updatedAt" | "lastReactedAt";
     post: ExtendedPollData;
     updatePost: (responseToPoll: ResponseToPollPayload) => void;
     updatePostHiddenStatus: (props: UpdatePostHiddenStatusProps) => void;
@@ -86,6 +86,7 @@ export interface RespondToPollProps {
 }
 
 export function PostView({
+    dateToShow,
     post,
     onComment,
     updatePost,
@@ -105,7 +106,6 @@ export function PostView({
     const [isHideLoading, setIsHideLoading] = React.useState<boolean>(false);
     const [isUnhideLoading, setIsUnhideLoading] =
         React.useState<boolean>(false);
-    const navigate = useNavigate();
 
     async function respondToPoll({
         optionNumberResponded,
@@ -276,10 +276,6 @@ export function PostView({
         }
     }
 
-    function navigateToPostPage() {
-        navigate(`${POST}/${post.metadata.slugId}`);
-    }
-
     function getIsEligible(
         post: ExtendedPollData,
         formCredentialObj: object | undefined
@@ -376,10 +372,18 @@ export function PostView({
         zeroIfUndefined(post.payload.result.option5Response) +
         zeroIfUndefined(post.payload.result.option6Response);
 
+    function showDate(postMetadata: PollMetadata): string {
+        switch (dateToShow) {
+            case "updatedAt":
+                return getTimeFromNow(postMetadata.updatedAt);
+            case "lastReactedAt":
+                return getTimeFromNow(postMetadata.lastReactedAt);
+        }
+    }
+
     return (
         // lines
         <Paper
-            onClick={() => navigateToPostPage()}
             elevation={0}
             sx={{ opacity: `${post.metadata.isHidden === true ? 0.5 : 1}` }}
         >
@@ -455,9 +459,7 @@ export function PostView({
                                             }}
                                             variant="body2"
                                         >
-                                            {getTimeFromNow(
-                                                post.metadata.updatedAt
-                                            )}
+                                            {showDate(post.metadata)}
                                         </Typography>
                                     </Grid>
                                     <Grid>

@@ -9,7 +9,24 @@ interface CreateSlugProps {
     db: PostgresJsDatabase;
 }
 
+interface UpdateLastReactedAtProps {
+    db: PostgresJsDatabase;
+}
+
 export class Service {
+    static async updateLastReactedAt({ db }: UpdateLastReactedAtProps) {
+        const results = await db
+            .select({
+                updatedAt: pollTable.updatedAt,
+                lastReactedAt: pollTable.lastReactedAt,
+            })
+            .from(pollTable);
+        for (const result of results) {
+            await db.update(pollTable).set({
+                lastReactedAt: result.updatedAt,
+            });
+        }
+    }
     static async createSlugIdAndPresentationCID({
         db,
     }: CreateSlugProps): Promise<void> {

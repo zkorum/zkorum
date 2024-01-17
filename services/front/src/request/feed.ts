@@ -4,12 +4,12 @@ import type { ExtendedPollData } from "@/shared/types/zod";
 
 interface FetchFeedProps {
     showHidden: boolean;
-    updatedAt: Date | undefined;
+    lastReactedAt: Date | undefined;
 }
 
 export async function fetchFeedMore({
     showHidden,
-    updatedAt,
+    lastReactedAt,
 }: FetchFeedProps): Promise<ExtendedPollData[]> {
     const response = await DefaultApiFactory(
         undefined,
@@ -17,7 +17,7 @@ export async function fetchFeedMore({
         noAuthAxios
     ).apiV1FeedFetchMorePost({
         showHidden: showHidden,
-        updatedAt: updatedAt?.toISOString(),
+        lastReactedAt: lastReactedAt?.toISOString(),
     });
     if (response.data !== undefined) {
         return response.data.map((value) => {
@@ -27,6 +27,7 @@ export async function fetchFeedMore({
                     slugId: value.metadata.slugId,
                     isHidden: value.metadata.isHidden,
                     updatedAt: new Date(value.metadata.updatedAt),
+                    lastReactedAt: new Date(value.metadata.lastReactedAt),
                 },
                 payload: value.payload,
                 author: value.author,
@@ -41,7 +42,7 @@ export async function fetchFeedMore({
 
 export async function fetchFeedRecent({
     showHidden,
-    updatedAt,
+    lastReactedAt,
 }: FetchFeedProps): Promise<ExtendedPollData[]> {
     const response = await DefaultApiFactory(
         undefined,
@@ -49,7 +50,7 @@ export async function fetchFeedRecent({
         noAuthAxios
     ).apiV1FeedFetchRecentPost({
         showHidden: showHidden,
-        updatedAt: updatedAt?.toISOString(),
+        lastReactedAt: lastReactedAt?.toISOString(),
     });
     if (response.data !== undefined) {
         return response.data.map((value) => {
@@ -59,6 +60,7 @@ export async function fetchFeedRecent({
                     slugId: value.metadata.slugId,
                     isHidden: value.metadata.isHidden,
                     updatedAt: new Date(value.metadata.updatedAt),
+                    lastReactedAt: new Date(value.metadata.lastReactedAt),
                 },
                 payload: value.payload,
                 author: value.author,

@@ -566,6 +566,13 @@ export const pollTable = pgTable("poll", {
     })
         .defaultNow()
         .notNull(),
+    lastReactedAt: timestamp("last_reacted_at", {
+        // latest response to poll or comment
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
 });
 
 export const pollResponseTable = pgTable("poll_response", {

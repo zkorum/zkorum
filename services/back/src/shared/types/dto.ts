@@ -152,7 +152,7 @@ export class Dto {
     static fetchFeedRequest = z
         .object({
             showHidden: z.boolean(),
-            updatedAt: z.string().datetime().optional(),
+            lastReactedAt: z.string().datetime().optional(),
         })
         .strict();
     static fetchFeed200 = z.array(zodextendedPollData);
