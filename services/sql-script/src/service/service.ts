@@ -44,14 +44,18 @@ export class Service {
     static async updateLastReactedAt({ db }: UpdateLastReactedAtProps) {
         const results = await db
             .select({
+                id: pollTable.id,
                 updatedAt: pollTable.updatedAt,
                 lastReactedAt: pollTable.lastReactedAt,
             })
             .from(pollTable);
         for (const result of results) {
-            await db.update(pollTable).set({
-                lastReactedAt: result.updatedAt,
-            });
+            await db
+                .update(pollTable)
+                .set({
+                    lastReactedAt: result.updatedAt,
+                })
+                .where(eq(pollTable.id, result.id));
         }
     }
 
