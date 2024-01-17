@@ -150,7 +150,8 @@ export class Dto {
     });
     static fetchFeedRequest = z
         .object({
-            updatedAt: z.string().datetime().optional(),
+            showHidden: z.boolean(),
+            lastReactedAt: z.string().datetime().optional(),
         })
         .strict();
     static fetchFeed200 = z.array(zodextendedPollData);

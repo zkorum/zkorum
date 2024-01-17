@@ -3370,6 +3370,12 @@ export interface ApiV1PollRespondPost200ResponseMetadata {
      * @memberof ApiV1PollRespondPost200ResponseMetadata
      */
     'lastReactedAt': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1PollRespondPost200ResponseMetadata
+     */
+    'commentCount': number;
 }
 /**
  * 

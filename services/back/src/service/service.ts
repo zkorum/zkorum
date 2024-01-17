@@ -517,6 +517,7 @@ function fetchPostBy({
             isHidden: pollTable.isHidden,
             updatedAt: pollTable.updatedAt,
             lastReactedAt: pollTable.lastReactedAt,
+            commentCount: pollTable.commentCount,
         })
         .from(pollTable)
         .innerJoin(pseudonymTable, eq(pseudonymTable.id, pollTable.authorId))
@@ -2804,6 +2805,7 @@ export class Service {
                 isHidden: pollTable.isHidden,
                 updatedAt: pollTable.updatedAt,
                 lastReactedAt: pollTable.lastReactedAt,
+                commentCount: pollTable.commentCount,
             })
             .from(pollTable)
             .innerJoin(
@@ -2868,16 +2870,18 @@ export class Service {
                 showHidden === true
                     ? {
                           uid: result.pollUid,
-                          slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
+                          slugId: result.slugId,
                           isHidden: result.isHidden,
                           updatedAt: result.updatedAt,
                           lastReactedAt: result.lastReactedAt,
+                          commentCount: result.commentCount,
                       }
                     : {
                           uid: result.pollUid,
-                          slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
+                          slugId: result.slugId,
                           updatedAt: result.updatedAt,
                           lastReactedAt: result.lastReactedAt,
+                          commentCount: result.commentCount,
                       };
             return {
                 metadata: metadata,
@@ -3012,10 +3016,11 @@ export class Service {
         const post: ExtendedPollData = {
             metadata: {
                 uid: result.pollUid,
-                slugId: result.slugId === null ? "" : result.slugId, // TODO change that when slug is notnull
+                slugId: result.slugId,
                 isHidden: result.isHidden,
                 updatedAt: result.updatedAt,
                 lastReactedAt: result.lastReactedAt,
+                commentCount: result.commentCount,
             },
             payload: {
                 data: {
@@ -3430,6 +3435,7 @@ export class Service {
                 .update(pollTable)
                 .set({
                     lastReactedAt: now,
+                    commentCount: sql`coalesce(${pollTable.commentCount}, 0) + 1`,
                 })
                 .where(eq(pollTable.id, result.pollId));
         });

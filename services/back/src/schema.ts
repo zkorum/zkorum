@@ -528,7 +528,7 @@ export const pseudonymTable = pgTable("pseudonym", {
 
 export const pollTable = pgTable("poll", {
     id: serial("id").primaryKey(),
-    slugId: varchar("slug_id", { length: 10 }), // used for permanent URL, should be not null and unique, a script will populate them...
+    slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL, should be not null and unique, a script will populate them...
     presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
     presentationCID: char("pres_cid", { length: 61 }).unique().notNull(), // unique and notNull are !important for avoiding replay attacks, we will do it in a later release
     timestampedPresentationCID: char("time_pres_cid", { length: 61 }) // see shared/test/common/cid.test.ts for length
@@ -573,6 +573,7 @@ export const pollTable = pgTable("poll", {
     })
         .defaultNow()
         .notNull(),
+    commentCount: integer("comment_count").notNull().default(0),
 });
 
 export const pollResponseTable = pgTable("poll_response", {

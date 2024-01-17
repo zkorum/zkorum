@@ -656,7 +656,7 @@ export function PostView({
                 <Grid mt={1}>
                     <CommentsViewsLikesView
                         onComment={onComment}
-                        commentCount={0}
+                        commentCount={post.metadata.commentCount}
                     />
                 </Grid>
             </Box>

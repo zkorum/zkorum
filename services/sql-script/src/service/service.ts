@@ -1,8 +1,8 @@
 import { toEncodedCID } from "@/shared/common/cid.js";
-import { eq } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { generateRandomSlugId } from "../crypto.js";
-import { pollResponseTable, pollTable } from "../schema.js";
+import { commentTable, pollResponseTable, pollTable } from "../schema.js";
 import { Presentation, initializeWasm } from "@docknetwork/crypto-wasm-ts";
 
 interface CreateSlugProps {
@@ -13,7 +13,34 @@ interface UpdateLastReactedAtProps {
     db: PostgresJsDatabase;
 }
 
+interface UpdateCommentAmountProps {
+    db: PostgresJsDatabase;
+}
+
 export class Service {
+    static async updateCommentAmount({ db }: UpdateCommentAmountProps) {
+        const results = await db
+            .select({
+                id: pollTable.id,
+            })
+            .from(pollTable);
+        for (const result of results) {
+            const resultsComment = await db
+                .select({
+                    commentCount: count(commentTable.id),
+                })
+                .from(commentTable)
+                .where(eq(commentTable.postId, result.id));
+            const resultComment = resultsComment[0];
+            await db
+                .update(pollTable)
+                .set({
+                    commentCount: resultComment.commentCount,
+                })
+                .where(eq(pollTable.id, result.id));
+        }
+    }
+
     static async updateLastReactedAt({ db }: UpdateLastReactedAtProps) {
         const results = await db
             .select({
@@ -27,6 +54,7 @@ export class Service {
             });
         }
     }
+
     static async createSlugIdAndPresentationCID({
         db,
     }: CreateSlugProps): Promise<void> {

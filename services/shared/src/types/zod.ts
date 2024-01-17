@@ -515,6 +515,7 @@ export const zodEligibilities = z // TODO merge this with zodeligibility
     })
     .strict();
 export const zodSlugId = z.string().max(10);
+export const zodCommentCount = z.number().int().nonnegative();
 export const zodPollMetadata = z
     .object({
         uid: zodPollUID,
@@ -522,6 +523,7 @@ export const zodPollMetadata = z
         isHidden: z.boolean().optional(),
         updatedAt: z.date(),
         lastReactedAt: z.date(),
+        commentCount: zodCommentCount,
     })
     .strict();
 export const zodextendedPollData = z

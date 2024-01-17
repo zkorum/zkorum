@@ -573,6 +573,7 @@ export const pollTable = pgTable("poll", {
     })
         .defaultNow()
         .notNull(),
+    commentCount: integer("comment_count").notNull().default(0),
 });
 
 export const pollResponseTable = pgTable("poll_response", {

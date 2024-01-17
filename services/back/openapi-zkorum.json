@@ -2576,13 +2576,18 @@
                         "lastReactedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "commentCount": {
+                          "type": "integer",
+                          "minimum": 0
                         }
                       },
                       "required": [
                         "uid",
                         "slugId",
                         "updatedAt",
-                        "lastReactedAt"
+                        "lastReactedAt",
+                        "commentCount"
                       ],
                       "additionalProperties": false
                     },
@@ -3388,13 +3393,18 @@
                           "lastReactedAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "commentCount": {
+                            "type": "integer",
+                            "minimum": 0
                           }
                         },
                         "required": [
                           "uid",
                           "slugId",
                           "updatedAt",
-                          "lastReactedAt"
+                          "lastReactedAt",
+                          "commentCount"
                         ],
                         "additionalProperties": false
                       },
@@ -4201,13 +4211,18 @@
                           "lastReactedAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "commentCount": {
+                            "type": "integer",
+                            "minimum": 0
                           }
                         },
                         "required": [
                           "uid",
                           "slugId",
                           "updatedAt",
-                          "lastReactedAt"
+                          "lastReactedAt",
+                          "commentCount"
                         ],
                         "additionalProperties": false
                       },
@@ -5170,13 +5185,18 @@
                             "lastReactedAt": {
                               "type": "string",
                               "format": "date-time"
+                            },
+                            "commentCount": {
+                              "type": "integer",
+                              "minimum": 0
                             }
                           },
                           "required": [
                             "uid",
                             "slugId",
                             "updatedAt",
-                            "lastReactedAt"
+                            "lastReactedAt",
+                            "commentCount"
                           ],
                           "additionalProperties": false
                         },
