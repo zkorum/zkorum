@@ -59,12 +59,12 @@ export function PollCanRespondView({
                     py: 0.5,
                 }}
                 onClick={(event: React.MouseEvent<HTMLElement>) => {
+                    event.preventDefault();
                     onRespond(
                         optionNumber,
                         setButtonIsLoading,
                         setButtonLoadingText
                     );
-                    event.stopPropagation();
                 }}
                 loading={buttonIsLoading}
                 loadingIndicator={

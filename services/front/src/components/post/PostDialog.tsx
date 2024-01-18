@@ -1,6 +1,42 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { ApiV1PollCreatePostRequestPoll } from "@/api";
+import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
+import {
+    creatingProof,
+    fieldRequired,
+    genericError,
+    pollCreated,
+    sendingPost,
+} from "@/components/error/message";
+import { maybeInitWasm } from "@/crypto/vc/credential";
+import { doLoadMore, doLoadRecent, type PostsType } from "@/feed";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { createPoll } from "@/request/post";
+import { stringToBytes } from "@/shared/common/arrbufs";
+import {
+    attributesFormRevealedFromPostAs,
+    buildContext,
+    scopeFromPostAs,
+} from "@/shared/shared";
+import { EssecCampus, EssecProgram } from "@/shared/types/university";
+import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
+import { closePostModal } from "@/store/reducers/post";
+import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
+import {
+    selectActiveEmailCredential,
+    selectActiveFormCredential,
+    selectActiveSessionEmail,
+    selectActiveUnboundSecretCredential,
+} from "@/store/selector";
+import {
+    PresentationBuilder,
+    PseudonymBases,
+    BBSPlusPublicKeyG2 as PublicKey,
+    randomFieldElement,
+} from "@docknetwork/crypto-wasm-ts";
 import { faMask } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import CloseIcon from "@mui/icons-material/Close";
+import Container from "@mui/material/Container";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -9,76 +45,10 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
 import useTheme from "@mui/material/styles/useTheme";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { closePostModal } from "@/store/reducers/post";
-import { useAppDispatch, useAppSelector } from "@/hooks";
 import React from "react";
-import {
-    selectActiveEmailCredential,
-    selectActiveFormCredential,
-    selectActiveSessionEmail,
-    selectActiveUnboundSecretCredential,
-} from "@/store/selector";
-import type { TCountryCode } from "countries-list";
-import Container from "@mui/material/Container";
-import FormGroup from "@mui/material/FormGroup";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import InputLabel from "@mui/material/InputLabel";
-import Select, { type SelectChangeEvent } from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import ListItemText from "@mui/material/ListItemText";
-import Chip from "@mui/material/Chip";
-import Box from "@mui/material/Box";
-import {
-    EssecCampus,
-    EssecProgram,
-    essecCampusStrToEnum,
-    essecCampusToString,
-    essecProgramStrToEnum,
-    essecProgramToString,
-} from "@/shared/types/university";
-import {
-    currentStudentsAdmissionYears,
-    type UniversityType,
-} from "@/shared/types/zod";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import FormControl from "@mui/material/FormControl";
-import TextField from "@mui/material/TextField";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { PollCreateView } from "./PollCreateView";
 import Button from "@mui/material/Button";
-import DeleteIcon from "@mui/icons-material/Delete";
-import {
-    creatingProof,
-    fieldRequired,
-    genericError,
-    pollCreated,
-    sendingPost,
-} from "@/components/error/message";
-import {
-    PresentationBuilder,
-    PseudonymBases,
-    BBSPlusPublicKeyG2 as PublicKey,
-    randomFieldElement,
-    BBSPlusCredential as Credential,
-} from "@docknetwork/crypto-wasm-ts";
-import { stringToBytes } from "@/shared/common/arrbufs";
-import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
-import {
-    MAX_LENGTH_OPTION,
-    MAX_LENGTH_QUESTION,
-    attributesFormRevealedFromPostAs,
-    scopeFromPostAs,
-    buildContext,
-} from "@/shared/shared";
-import { maybeInitWasm } from "@/crypto/vc/credential";
-import { createPoll } from "@/request/post";
-import type { ApiV1PollCreatePostRequestPoll } from "@/api";
-import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
-import { doLoadMore, doLoadRecent, type PostsType } from "@/feed";
-import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
+import Box from "@mui/material/Box";
 
 interface PostDialogProps {
     posts: PostsType;
@@ -129,7 +99,6 @@ export function PostDialog({
     const [eligibilityCountries, setEligibilityCountries] = React.useState<
         [] | ["FR"] | ["INT"] | ["FR", "INT"]
     >([]);
-    const frenchOrInternational = ["FR", "INT"];
     const [eligibilityAlum, setEligibilityAlum] =
         React.useState<boolean>(false);
     const [eligibilityStudent, setEligibilityStudent] =
@@ -266,15 +235,6 @@ export function PostDialog({
         }
     }, [eligibilityStudent]);
 
-    function eligibilityCountryToStr(value: "FR" | "INT"): string {
-        switch (value) {
-            case "FR":
-                return "France";
-            case "INT":
-                return "International";
-        }
-    }
-
     // function studentDataFromCredential(
     //     subjectStudent?: any
     // ): StudentData | null {
@@ -297,166 +257,6 @@ export function PostDialog({
     //     };
     // }
 
-    function getPostAsStudent(studentAttributes: any) {
-        return (
-            <>
-                <FormControlLabel
-                    checked={postAsStudentChecked}
-                    control={
-                        <Checkbox
-                            value={postAsStudentChecked}
-                            onChange={() =>
-                                setPostAsStudentChecked(!postAsStudentChecked)
-                            }
-                        />
-                    }
-                    label="a student..."
-                />
-                {getPostAsCountries(studentAttributes.countries)}
-                <FormControlLabel
-                    sx={{ ml: 1 }}
-                    checked={postAsCampusChecked}
-                    control={
-                        <Checkbox
-                            value={postAsCampusChecked}
-                            onChange={() =>
-                                setPostAsCampusChecked(!postAsCampusChecked)
-                            }
-                        />
-                    }
-                    label={`of ${studentAttributes.campus} campus`}
-                />
-                <FormControlLabel
-                    sx={{ ml: 1 }}
-                    checked={postAsProgramChecked}
-                    control={
-                        <Checkbox
-                            value={postAsProgramChecked}
-                            onChange={() =>
-                                setPostAsProgramChecked(!postAsProgramChecked)
-                            }
-                        />
-                    }
-                    label={`from the ${studentAttributes.program} program`}
-                />
-                <FormControlLabel
-                    sx={{ ml: 1 }}
-                    checked={postAsAdmissionYearChecked}
-                    control={
-                        <Checkbox
-                            value={postAsAdmissionYearChecked}
-                            onChange={() =>
-                                setPostAsAdmissionYearChecked(
-                                    !postAsAdmissionYearChecked
-                                )
-                            }
-                        />
-                    }
-                    label={`admitted in ${studentAttributes.admissionYear}`}
-                />
-            </>
-        );
-    }
-
-    function getPostAsCountries(countries: Record<TCountryCode, boolean>) {
-        const presentCountries = Object.entries(countries)
-            .filter(([_countryCode, isPresent]) => isPresent)
-            .map(([countryCode, _isPresent]) => countryCode);
-        return (
-            <>
-                {"FR" in presentCountries ? (
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={postAsFrench}
-                                value={postAsFrench}
-                                onChange={() => setPostAsFrench(!postAsFrench)}
-                            />
-                        }
-                        label="from France"
-                    />
-                ) : null}
-                {presentCountries.length >= 2 ||
-                (presentCountries.length <= 1 &&
-                    !presentCountries.includes("FR")) ? (
-                    <FormControlLabel
-                        sx={{ ml: 1 }}
-                        control={
-                            <Checkbox
-                                checked={postAsInternational}
-                                value={postAsInternational}
-                                onChange={() =>
-                                    setPostAsInternational(!postAsInternational)
-                                }
-                            />
-                        }
-                        label="from a country other than France"
-                    />
-                ) : null}
-            </>
-        );
-    }
-
-    function getPostAsAlum(_alumAttributes: any) {
-        return (
-            <FormControlLabel
-                checked={postAsAlumChecked}
-                control={
-                    <Checkbox
-                        value={postAsAlumChecked}
-                        onChange={() =>
-                            setPostAsAlumChecked(!postAsAlumChecked)
-                        }
-                    />
-                }
-                label="an alum..."
-            />
-        );
-    }
-
-    function getPostAsFaculty(_facultyAttributes: any) {
-        return (
-            <FormControlLabel
-                checked={postAsFacultyChecked}
-                control={
-                    <Checkbox
-                        value={postAsFacultyChecked}
-                        onChange={() =>
-                            setPostAsFacultyChecked(!postAsFacultyChecked)
-                        }
-                    />
-                }
-                label="a faculty/staff member..."
-            />
-        );
-    }
-
-    function deleteItem(item: number) {
-        if (item === 3) {
-            setOption3Shown(false);
-            if (option3InputRef.current?.value !== undefined) {
-                option3InputRef.current.value = "";
-            }
-        } else if (item === 4) {
-            setOption4Shown(false);
-            if (option4InputRef.current?.value !== undefined) {
-                option4InputRef.current.value = "";
-            }
-        } else if (item === 5) {
-            setOption5Shown(false);
-            if (option5InputRef.current?.value !== undefined) {
-                option5InputRef.current.value = "";
-            }
-        } else if (item === 6) {
-            setOption6Shown(false);
-            if (option6InputRef.current?.value !== undefined) {
-                option6InputRef.current.value = "";
-            }
-        } else {
-            console.warn("Unexpected attempt to delete item");
-        }
-    }
-
     // const [postAsStudentChecked, setPostAsStudentChecked] =
     //     React.useState<boolean>(false);
     // const [postAsCampusChecked, setPostAsCampusChecked] =
@@ -469,7 +269,7 @@ export function PostDialog({
     // const [postAsInternational, setPostAsInternational] =
     //     React.useState<boolean>(false);
 
-    async function onCreate() {
+    async function onCreatePoll() {
         setHasModifiedQuestion(true);
         setHasModifiedOption1(true);
         setHasModifiedOption2(true);
@@ -723,55 +523,6 @@ export function PostDialog({
         }
     }
 
-    function getOtherPostAs(
-        activeFormCredential: Credential | undefined
-    ): JSX.Element | null {
-        if (activeFormCredential === undefined) {
-            return null;
-        }
-        let postAsCountries: null | JSX.Element = null;
-        let postAsStudent: null | JSX.Element = null;
-        let postAsAlum: null | JSX.Element = null;
-        let postAsFaculty: null | JSX.Element = null;
-
-        // TODO add countries and other general info
-        // if (
-        //     (activeFormCredential?.subject as any)?.typeSpecific.countries !==
-        //     undefined
-        // ) {
-        //     postAsCountries = getPostAsCountries(
-        //         (activeFormCredential?.subject as any)?.typeSpecific.countries
-        //     );
-        // }
-        if (
-            (activeFormCredential?.subject as any)?.typeSpecific?.type !==
-            undefined
-        ) {
-            const typeSpecific = (activeFormCredential?.subject as any)
-                ?.typeSpecific;
-            const univType = typeSpecific.type as UniversityType;
-            switch (univType) {
-                case "student":
-                    postAsStudent = getPostAsStudent(typeSpecific);
-                    break;
-                case "alum":
-                    postAsAlum = getPostAsAlum(typeSpecific);
-                    break;
-                case "faculty":
-                    postAsFaculty = getPostAsFaculty(typeSpecific);
-                    break;
-            }
-        }
-        return (
-            <>
-                <>{postAsCountries}</>
-                <>{postAsStudent}</>
-                <>{postAsAlum}</>
-                <>{postAsFaculty}</>
-            </>
-        );
-    }
-
     return (
         <Dialog
             maxWidth={fullScreen ? undefined : "sm"}
@@ -836,922 +587,81 @@ export function PostDialog({
                         spacing={2}
                         flexWrap={"wrap"}
                     >
-                        <Grid mt={"1em"} width={"100%"}>
-                            <Accordion defaultExpanded={false}>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    aria-controls="panel1a-content"
-                                    id="panel1a-header"
-                                >
-                                    <Typography>Post as... 🎭</Typography>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <FormGroup>
-                                        <FormControlLabel
-                                            control={<Checkbox />}
-                                            disabled
-                                            checked
-                                            label="an anonymous ESSEC member"
-                                            required
-                                        />
-                                        {getOtherPostAs(activeFormCredential)}
-                                    </FormGroup>
-                                </AccordionDetails>
-                            </Accordion>
-                        </Grid>
-                        <Grid width={"100%"}>
-                            <Accordion defaultExpanded={false}>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    aria-controls="panel1a-content"
-                                    id="panel1a-header"
-                                >
-                                    <Typography>
-                                        Respondents eligibility... 🕵
-                                    </Typography>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <Grid
-                                        container
-                                        direction="column"
-                                        justifyContent="center"
-                                        alignItems="flex-start"
-                                    >
-                                        <Grid>
-                                            <FormControlLabel
-                                                control={<Checkbox />}
-                                                disabled
-                                                checked
-                                                label="an anonymous ESSEC member"
-                                                required
-                                            />
-                                        </Grid>
-                                        <Grid width="100%">
-                                            <FormControl
-                                                fullWidth
-                                                variant="standard"
-                                                sx={{ m: 1 }}
-                                            >
-                                                <InputLabel id="eligibility-countries-input-label">
-                                                    From...
-                                                </InputLabel>
-                                                <Select
-                                                    labelId="eligibility-countries-input-label"
-                                                    label="From..."
-                                                    multiple
-                                                    value={eligibilityCountries}
-                                                    onChange={(
-                                                        event: SelectChangeEvent<
-                                                            typeof eligibilityCountries
-                                                        >
-                                                    ) => {
-                                                        const {
-                                                            target: { value },
-                                                        } = event;
-                                                        setEligibilityCountries(
-                                                            typeof value ===
-                                                                "string"
-                                                                ? (value.split(
-                                                                      ","
-                                                                  ) as typeof eligibilityCountries)
-                                                                : value
-                                                        );
-                                                    }}
-                                                    renderValue={(selected) => (
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                flexWrap:
-                                                                    "wrap",
-                                                                gap: 0.5,
-                                                            }}
-                                                        >
-                                                            {selected.map(
-                                                                (value) => (
-                                                                    <Chip
-                                                                        key={
-                                                                            value
-                                                                        }
-                                                                        label={eligibilityCountryToStr(
-                                                                            value
-                                                                        )}
-                                                                    />
-                                                                )
-                                                            )}
-                                                        </Box>
-                                                    )}
-                                                >
-                                                    {frenchOrInternational.map(
-                                                        (name) => (
-                                                            <MenuItem
-                                                                key={name}
-                                                                value={name}
-                                                            >
-                                                                <Checkbox
-                                                                    checked={(
-                                                                        eligibilityCountries as Array<string>
-                                                                    ).includes(
-                                                                        name
-                                                                    )}
-                                                                />
-                                                                <ListItemText
-                                                                    primary={eligibilityCountryToStr(
-                                                                        name as any
-                                                                    )}
-                                                                />
-                                                            </MenuItem>
-                                                        )
-                                                    )}
-                                                </Select>
-                                            </FormControl>
-                                        </Grid>
-                                        <Grid width="100%">
-                                            <FormGroup>
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            checked={
-                                                                eligibilityAlum
-                                                            }
-                                                            value={
-                                                                eligibilityAlum
-                                                            }
-                                                            onChange={() =>
-                                                                setEligibilityAlum(
-                                                                    !eligibilityAlum
-                                                                )
-                                                            }
-                                                        />
-                                                    }
-                                                    label="an alum"
-                                                />
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            checked={
-                                                                eligibilityFaculty
-                                                            }
-                                                            value={
-                                                                eligibilityFaculty
-                                                            }
-                                                            onChange={() =>
-                                                                setEligibilityFaculty(
-                                                                    !eligibilityFaculty
-                                                                )
-                                                            }
-                                                        />
-                                                    }
-                                                    label="a faculty/staff member"
-                                                />
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            checked={
-                                                                eligibilityStudent
-                                                            }
-                                                            value={
-                                                                eligibilityStudent
-                                                            }
-                                                            onChange={() =>
-                                                                setEligibilityStudent(
-                                                                    !eligibilityStudent
-                                                                )
-                                                            }
-                                                        />
-                                                    }
-                                                    label="a student"
-                                                />
-                                            </FormGroup>
-                                        </Grid>
-                                        <Grid
-                                            width="100%"
-                                            sx={{
-                                                my: 0.5,
-                                                mx: 2,
-                                                display: eligibilityStudent
-                                                    ? "inherit"
-                                                    : "none",
-                                            }}
-                                        >
-                                            <FormControl
-                                                fullWidth
-                                                variant="standard"
-                                            >
-                                                <InputLabel id="eligibility-campus-input-label">
-                                                    At campus...
-                                                </InputLabel>
-                                                <Select
-                                                    labelId="eligibility-campus-input-label"
-                                                    label="At campus..."
-                                                    multiple
-                                                    value={eligibilityCampus}
-                                                    onChange={(
-                                                        event: SelectChangeEvent<
-                                                            typeof eligibilityCampus
-                                                        >
-                                                    ) => {
-                                                        const {
-                                                            target: { value },
-                                                        } = event;
-                                                        setEligibilityCampus(
-                                                            typeof value ===
-                                                                "string"
-                                                                ? (value
-                                                                      .split(
-                                                                          ","
-                                                                      )
-                                                                      .map(
-                                                                          (v) =>
-                                                                              essecCampusStrToEnum(
-                                                                                  v
-                                                                              )
-                                                                      ) as typeof eligibilityCampus)
-                                                                : value
-                                                        );
-                                                    }}
-                                                    renderValue={(selected) => (
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                flexWrap:
-                                                                    "wrap",
-                                                                gap: 0.5,
-                                                            }}
-                                                        >
-                                                            {selected.map(
-                                                                (value) => (
-                                                                    <Chip
-                                                                        key={
-                                                                            value
-                                                                        }
-                                                                        label={essecCampusToString(
-                                                                            value
-                                                                        )}
-                                                                    />
-                                                                )
-                                                            )}
-                                                        </Box>
-                                                    )}
-                                                >
-                                                    {Object.keys(EssecCampus)
-                                                        .filter(
-                                                            (key) =>
-                                                                !isNaN(
-                                                                    parseInt(
-                                                                        key
-                                                                    )
-                                                                )
-                                                        )
-                                                        .map((campusKey) => (
-                                                            <MenuItem
-                                                                key={`menu-campus-${campusKey}`}
-                                                                value={parseInt(
-                                                                    campusKey
-                                                                )}
-                                                            >
-                                                                <Checkbox
-                                                                    checked={eligibilityCampus.includes(
-                                                                        parseInt(
-                                                                            campusKey
-                                                                        )
-                                                                    )}
-                                                                />
-                                                                <ListItemText
-                                                                    primary={essecCampusToString(
-                                                                        parseInt(
-                                                                            campusKey
-                                                                        )
-                                                                    )}
-                                                                />
-                                                            </MenuItem>
-                                                        ))}
-                                                </Select>
-                                            </FormControl>
-                                        </Grid>
-                                        <Grid
-                                            width="100%"
-                                            sx={{
-                                                my: 0.5,
-                                                mx: 2,
-                                                display: eligibilityStudent
-                                                    ? "inherit"
-                                                    : "none",
-                                            }}
-                                        >
-                                            <FormControl
-                                                fullWidth
-                                                variant="standard"
-                                            >
-                                                <InputLabel id="eligibility-program-input-label">
-                                                    In program...
-                                                </InputLabel>
-                                                <Select
-                                                    labelId="eligibility-program-input-label"
-                                                    label="In program..."
-                                                    multiple
-                                                    value={eligibilityProgram}
-                                                    onChange={(
-                                                        event: SelectChangeEvent<
-                                                            typeof eligibilityProgram
-                                                        >
-                                                    ) => {
-                                                        const {
-                                                            target: { value },
-                                                        } = event;
-                                                        setEligibilityProgram(
-                                                            typeof value ===
-                                                                "string"
-                                                                ? (value
-                                                                      .split(
-                                                                          ","
-                                                                      )
-                                                                      .map(
-                                                                          (v) =>
-                                                                              essecProgramStrToEnum(
-                                                                                  v
-                                                                              )
-                                                                      ) as typeof eligibilityProgram)
-                                                                : value
-                                                        );
-                                                    }}
-                                                    renderValue={(selected) => (
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                flexWrap:
-                                                                    "wrap",
-                                                                gap: 0.5,
-                                                            }}
-                                                        >
-                                                            {selected.map(
-                                                                (value) => (
-                                                                    <Chip
-                                                                        key={
-                                                                            value
-                                                                        }
-                                                                        label={essecProgramToString(
-                                                                            value
-                                                                        )}
-                                                                    />
-                                                                )
-                                                            )}
-                                                        </Box>
-                                                    )}
-                                                >
-                                                    {Object.keys(EssecProgram)
-                                                        .filter(
-                                                            (key) =>
-                                                                !isNaN(
-                                                                    parseInt(
-                                                                        key
-                                                                    )
-                                                                )
-                                                        )
-                                                        .map((programKey) => (
-                                                            <MenuItem
-                                                                key={`menu-program-${programKey}`}
-                                                                value={parseInt(
-                                                                    programKey
-                                                                )}
-                                                            >
-                                                                <Checkbox
-                                                                    checked={eligibilityProgram.includes(
-                                                                        parseInt(
-                                                                            programKey
-                                                                        )
-                                                                    )}
-                                                                />
-                                                                <ListItemText
-                                                                    primary={essecProgramToString(
-                                                                        parseInt(
-                                                                            programKey
-                                                                        )
-                                                                    )}
-                                                                />
-                                                            </MenuItem>
-                                                        ))}
-                                                </Select>
-                                            </FormControl>
-                                        </Grid>
-                                        <Grid
-                                            width="100%"
-                                            sx={{
-                                                my: 0.5,
-                                                mx: 2,
-                                                display: eligibilityStudent
-                                                    ? "inherit"
-                                                    : "none",
-                                            }}
-                                        >
-                                            <FormControl
-                                                fullWidth
-                                                variant="standard"
-                                            >
-                                                <InputLabel id="eligibility-admission-year-input-label">
-                                                    Admitted in...
-                                                </InputLabel>
-                                                <Select
-                                                    labelId="eligibility-admission-year-input-label"
-                                                    label="Admitted in..."
-                                                    multiple
-                                                    value={
-                                                        eligibilityAdmissionYear
-                                                    }
-                                                    onChange={(
-                                                        event: SelectChangeEvent<
-                                                            typeof eligibilityAdmissionYear
-                                                        >
-                                                    ) => {
-                                                        const {
-                                                            target: { value },
-                                                        } = event;
-                                                        setEligibilityAdmissionYear(
-                                                            typeof value ===
-                                                                "string"
-                                                                ? value
-                                                                      .split(
-                                                                          ","
-                                                                      )
-                                                                      .map(
-                                                                          (v) =>
-                                                                              parseInt(
-                                                                                  v
-                                                                              )
-                                                                      )
-                                                                : value
-                                                        );
-                                                    }}
-                                                    renderValue={(selected) => (
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                flexWrap:
-                                                                    "wrap",
-                                                                gap: 0.5,
-                                                            }}
-                                                        >
-                                                            {selected.map(
-                                                                (value) => (
-                                                                    <Chip
-                                                                        key={
-                                                                            value
-                                                                        }
-                                                                        label={
-                                                                            value
-                                                                        }
-                                                                    />
-                                                                )
-                                                            )}
-                                                        </Box>
-                                                    )}
-                                                >
-                                                    {currentStudentsAdmissionYears.map(
-                                                        (admissionYear) => (
-                                                            <MenuItem
-                                                                key={`menu-admission-year-${admissionYear}`}
-                                                                value={
-                                                                    admissionYear
-                                                                }
-                                                            >
-                                                                <Checkbox
-                                                                    checked={eligibilityAdmissionYear.includes(
-                                                                        admissionYear
-                                                                    )}
-                                                                />
-                                                                <ListItemText
-                                                                    primary={
-                                                                        admissionYear
-                                                                    }
-                                                                />
-                                                            </MenuItem>
-                                                        )
-                                                    )}
-                                                </Select>
-                                            </FormControl>
-                                        </Grid>
-                                    </Grid>
-                                </AccordionDetails>
-                            </Accordion>
-                        </Grid>
-                        <Grid width="100%">
-                            <Accordion expanded={true}>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    aria-controls="panel1a-content"
-                                    id="panel1a-header"
-                                >
-                                    <Typography>Your poll... 📊</Typography>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <Grid
-                                        container
-                                        direction="column"
-                                        justifyContent="center"
-                                        alignItems="flex-start"
-                                    >
-                                        <Grid width="100%">
-                                            <TextField
-                                                variant="standard"
-                                                fullWidth
-                                                required
-                                                multiline
-                                                minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
-                                                maxRows={4} //  https://stackoverflow.com/a/72789474/11046178c
-                                                id="question-poll"
-                                                label="Your question...❓"
-                                                placeholder="E.g., How often do you hang out with people from other cultures?"
-                                                inputProps={{
-                                                    maxLength:
-                                                        MAX_LENGTH_QUESTION,
-                                                }}
-                                                inputRef={questionInputRef}
-                                                error={
-                                                    !isQuestionValid &&
-                                                    hasModifiedQuestion
-                                                }
-                                                onBlur={() => {
-                                                    if (
-                                                        questionInputRef
-                                                            ?.current?.value !==
-                                                            undefined &&
-                                                        questionInputRef
-                                                            ?.current?.value !==
-                                                            ""
-                                                    ) {
-                                                        setIsQuestionValid(
-                                                            true
-                                                        );
-                                                        setQuestionHelper(
-                                                            undefined
-                                                        );
-                                                    } else {
-                                                        setIsQuestionValid(
-                                                            false
-                                                        );
-                                                        setQuestionHelper(
-                                                            fieldRequired
-                                                        );
-                                                    }
-                                                    setHasModifiedQuestion(
-                                                        true
-                                                    );
-                                                }}
-                                                helperText={
-                                                    hasModifiedQuestion
-                                                        ? questionHelper
-                                                        : undefined
-                                                } // must always be set to keep same height (see link at variable definition)
-                                            />
-                                        </Grid>
-                                        <Grid width="100%" ml={1} mt={2}>
-                                            <TextField
-                                                variant="standard"
-                                                fullWidth
-                                                multiline
-                                                minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
-                                                maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
-                                                required
-                                                id={`option-1-poll`}
-                                                label={`Option 1`}
-                                                placeholder="E.g., Often"
-                                                inputProps={{
-                                                    maxLength:
-                                                        MAX_LENGTH_OPTION,
-                                                }}
-                                                inputRef={option1InputRef}
-                                                error={
-                                                    !isOption1Valid &&
-                                                    hasModifiedOption1
-                                                }
-                                                onBlur={() => {
-                                                    if (
-                                                        option1InputRef?.current
-                                                            ?.value !==
-                                                            undefined &&
-                                                        option1InputRef?.current
-                                                            ?.value !== ""
-                                                    ) {
-                                                        setIsOption1Valid(true);
-                                                        setOption1Helper(
-                                                            undefined
-                                                        );
-                                                    } else {
-                                                        setIsOption1Valid(
-                                                            false
-                                                        );
-                                                        setOption1Helper(
-                                                            fieldRequired
-                                                        );
-                                                    }
-                                                    setHasModifiedOption1(true);
-                                                }}
-                                                helperText={
-                                                    hasModifiedOption1
-                                                        ? option1Helper
-                                                        : undefined
-                                                } // must always be set to keep same height (see link at variable definition)
-                                            />
-                                        </Grid>
-                                        <Grid width="100%" ml={1} mt={1}>
-                                            <TextField
-                                                variant="standard"
-                                                fullWidth
-                                                multiline
-                                                minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
-                                                maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
-                                                required
-                                                id={`option-2-poll`}
-                                                label={`Option 2`}
-                                                placeholder="E.g., Rarely"
-                                                inputProps={{
-                                                    maxLength:
-                                                        MAX_LENGTH_OPTION,
-                                                }}
-                                                inputRef={option2InputRef}
-                                                error={
-                                                    !isOption2Valid &&
-                                                    hasModifiedOption2
-                                                }
-                                                onBlur={() => {
-                                                    if (
-                                                        option2InputRef?.current
-                                                            ?.value !==
-                                                            undefined &&
-                                                        option2InputRef?.current
-                                                            ?.value !== ""
-                                                    ) {
-                                                        setIsOption2Valid(true);
-                                                        setOption2Helper(
-                                                            undefined
-                                                        );
-                                                    } else {
-                                                        setIsOption2Valid(
-                                                            false
-                                                        );
-                                                        setOption2Helper(
-                                                            fieldRequired
-                                                        );
-                                                    }
-                                                    setHasModifiedOption2(true);
-                                                }}
-                                                helperText={
-                                                    hasModifiedOption2
-                                                        ? option2Helper
-                                                        : undefined
-                                                } // must always be set to keep same height (see link at variable definition)
-                                            />
-                                        </Grid>
-                                        <Grid
-                                            container
-                                            direction="row"
-                                            alignItems="center"
-                                            justifyContent="space-between"
-                                            width="100%"
-                                            sx={{
-                                                display: option3Shown
-                                                    ? "inherit"
-                                                    : "none",
-                                            }}
-                                            ml={1}
-                                            mt={1}
-                                        >
-                                            <Grid flexGrow={1} mr={1}>
-                                                <TextField
-                                                    variant="standard"
-                                                    fullWidth
-                                                    multiline
-                                                    minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
-                                                    maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
-                                                    id={`option-3-poll`}
-                                                    label={`Option 3`}
-                                                    placeholder="E.g., Sometimes"
-                                                    inputProps={{
-                                                        maxLength:
-                                                            MAX_LENGTH_OPTION,
-                                                    }}
-                                                    inputRef={option3InputRef}
-                                                />
-                                            </Grid>
-                                            <Grid>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                        deleteItem(3)
-                                                    }
-                                                    aria-label="delete"
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Grid>
-                                        </Grid>
-                                        <Grid
-                                            container
-                                            direction="row"
-                                            alignItems="center"
-                                            justifyContent="space-between"
-                                            width="100%"
-                                            sx={{
-                                                display: option4Shown
-                                                    ? "inherit"
-                                                    : "none",
-                                            }}
-                                            ml={1}
-                                            mt={1}
-                                        >
-                                            <Grid flexGrow={1} mr={1}>
-                                                <TextField
-                                                    variant="standard"
-                                                    fullWidth
-                                                    multiline
-                                                    minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
-                                                    maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
-                                                    id={`option-4-poll`}
-                                                    label={
-                                                        option3Shown
-                                                            ? `Option 4`
-                                                            : `Option 3`
-                                                    }
-                                                    placeholder="E.g., Never"
-                                                    inputProps={{
-                                                        maxLength:
-                                                            MAX_LENGTH_OPTION,
-                                                    }}
-                                                    inputRef={option4InputRef}
-                                                />
-                                            </Grid>
-                                            <Grid>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                        deleteItem(4)
-                                                    }
-                                                    aria-label="delete"
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Grid>
-                                        </Grid>
-                                        <Grid
-                                            container
-                                            direction="row"
-                                            alignItems="center"
-                                            justifyContent="space-between"
-                                            width="100%"
-                                            sx={{
-                                                display: option5Shown
-                                                    ? "inherit"
-                                                    : "none",
-                                            }}
-                                            ml={1}
-                                            mt={1}
-                                        >
-                                            <Grid flexGrow={1} mr={1}>
-                                                <TextField
-                                                    variant="standard"
-                                                    fullWidth
-                                                    multiline
-                                                    minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
-                                                    maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
-                                                    id={`option-5-poll`}
-                                                    label={
-                                                        option4Shown &&
-                                                        option3Shown
-                                                            ? `Option 5`
-                                                            : option4Shown ||
-                                                              option3Shown
-                                                            ? `Option 4`
-                                                            : `Option 3`
-                                                    }
-                                                    placeholder="E.g., All the time"
-                                                    inputProps={{
-                                                        maxLength:
-                                                            MAX_LENGTH_OPTION,
-                                                    }}
-                                                    inputRef={option5InputRef}
-                                                />
-                                            </Grid>
-                                            <Grid>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                        deleteItem(5)
-                                                    }
-                                                    aria-label="delete"
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Grid>
-                                        </Grid>
-                                        <Grid
-                                            container
-                                            direction="row"
-                                            alignItems="center"
-                                            justifyContent="space-between"
-                                            width="100%"
-                                            sx={{
-                                                display: option6Shown
-                                                    ? "inherit"
-                                                    : "none",
-                                            }}
-                                            ml={1}
-                                            mt={1}
-                                        >
-                                            <Grid flexGrow={1} mr={1}>
-                                                <TextField
-                                                    variant="standard"
-                                                    fullWidth
-                                                    multiline
-                                                    minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
-                                                    maxRows={2} //  https://stackoverflow.com/a/72789474/11046178c
-                                                    id={`option-6-poll`}
-                                                    label={
-                                                        option5Shown &&
-                                                        option4Shown &&
-                                                        option3Shown
-                                                            ? `Option 6`
-                                                            : (option5Shown &&
-                                                                  option3Shown) ||
-                                                              (option5Shown &&
-                                                                  option4Shown) ||
-                                                              (option4Shown &&
-                                                                  option3Shown)
-                                                            ? `Option 5`
-                                                            : option5Shown ||
-                                                              option4Shown ||
-                                                              option3Shown
-                                                            ? `Option 4`
-                                                            : `Option 3`
-                                                    }
-                                                    placeholder="E.g., Eating baozi"
-                                                    inputProps={{
-                                                        maxLength:
-                                                            MAX_LENGTH_OPTION,
-                                                    }}
-                                                    inputRef={option6InputRef}
-                                                />
-                                            </Grid>
-                                            <Grid>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                        deleteItem(6)
-                                                    }
-                                                    aria-label="delete"
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Grid>
-                                        </Grid>
-                                        <Grid
-                                            ml={1}
-                                            mt={3}
-                                            width="100%"
-                                            sx={{
-                                                display:
-                                                    option3Shown &&
-                                                    option4Shown &&
-                                                    option5Shown &&
-                                                    option6Shown
-                                                        ? "none"
-                                                        : "inherit",
-                                            }}
-                                        >
-                                            <Button
-                                                onClick={() => {
-                                                    if (!option3Shown) {
-                                                        setOption3Shown(true);
-                                                        return;
-                                                    }
-                                                    if (!option4Shown) {
-                                                        setOption4Shown(true);
-                                                        return;
-                                                    }
-                                                    if (!option5Shown) {
-                                                        setOption5Shown(true);
-                                                        return;
-                                                    }
-                                                    if (!option6Shown) {
-                                                        setOption6Shown(true);
-                                                        return;
-                                                    }
-                                                }}
-                                                component="label"
-                                                variant="outlined"
-                                                size={"small"}
-                                                startIcon={
-                                                    <AddCircleOutlineIcon />
-                                                }
-                                            >
-                                                Add option
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
-                                </AccordionDetails>
-                            </Accordion>
-                        </Grid>
+                        <PollCreateView
+                            activeFormCredential={activeFormCredential}
+                            postAsStudentChecked={postAsStudentChecked}
+                            setPostAsStudentChecked={setPostAsStudentChecked}
+                            postAsAlumChecked={postAsAlumChecked}
+                            setPostAsAlumChecked={setPostAsAlumChecked}
+                            postAsFacultyChecked={postAsFacultyChecked}
+                            setPostAsFacultyChecked={setPostAsFacultyChecked}
+                            postAsCampusChecked={postAsCampusChecked}
+                            setPostAsCampusChecked={setPostAsCampusChecked}
+                            postAsProgramChecked={postAsProgramChecked}
+                            setPostAsProgramChecked={setPostAsProgramChecked}
+                            postAsAdmissionYearChecked={
+                                postAsAdmissionYearChecked
+                            }
+                            setPostAsAdmissionYearChecked={
+                                setPostAsAdmissionYearChecked
+                            }
+                            postAsFrench={postAsFrench}
+                            setPostAsFrench={setPostAsFrench}
+                            postAsInternational={postAsInternational}
+                            setPostAsInternational={setPostAsInternational}
+                            eligibilityCountries={eligibilityCountries}
+                            setEligibilityCountries={setEligibilityCountries}
+                            eligibilityAlum={eligibilityAlum}
+                            setEligibilityAlum={setEligibilityAlum}
+                            eligibilityStudent={eligibilityStudent}
+                            setEligibilityStudent={setEligibilityStudent}
+                            eligibilityFaculty={eligibilityFaculty}
+                            setEligibilityFaculty={setEligibilityFaculty}
+                            eligibilityCampus={eligibilityCampus}
+                            setEligibilityCampus={setEligibilityCampus}
+                            eligibilityProgram={eligibilityProgram}
+                            setEligibilityProgram={setEligibilityProgram}
+                            eligibilityAdmissionYear={eligibilityAdmissionYear}
+                            setEligibilityAdmissionYear={
+                                setEligibilityAdmissionYear
+                            }
+                            questionInputRef={questionInputRef}
+                            option1InputRef={option1InputRef}
+                            option2InputRef={option2InputRef}
+                            option3InputRef={option3InputRef}
+                            option4InputRef={option4InputRef}
+                            option5InputRef={option5InputRef}
+                            option6InputRef={option6InputRef}
+                            option3Shown={option3Shown}
+                            setOption3Shown={setOption3Shown}
+                            option4Shown={option4Shown}
+                            setOption4Shown={setOption4Shown}
+                            option5Shown={option5Shown}
+                            setOption5Shown={setOption5Shown}
+                            option6Shown={option6Shown}
+                            setOption6Shown={setOption6Shown}
+                            hasModifiedQuestion={hasModifiedQuestion}
+                            setHasModifiedQuestion={setHasModifiedQuestion}
+                            hasModifiedOption1={hasModifiedOption1}
+                            setHasModifiedOption1={setHasModifiedOption1}
+                            hasModifiedOption2={hasModifiedOption2}
+                            setHasModifiedOption2={setHasModifiedOption2}
+                            questionHelper={questionHelper}
+                            setQuestionHelper={setQuestionHelper}
+                            isQuestionValid={isQuestionValid}
+                            setIsQuestionValid={setIsQuestionValid}
+                            option1Helper={option1Helper}
+                            setOption1Helper={setOption1Helper}
+                            isOption1Valid={isOption1Valid}
+                            setIsOption1Valid={setIsOption1Valid}
+                            option2Helper={option2Helper}
+                            setOption2Helper={setOption2Helper}
+                            isOption2Valid={isOption2Valid}
+                            setIsOption2Valid={setIsOption2Valid}
+                        />
                         <Grid my={1} alignSelf="flex-end">
                             <Button
-                                onClick={async () => await onCreate()}
+                                onClick={async () => await onCreatePoll()}
                                 variant="contained"
                                 startIcon={<Box>📊</Box>}
                             >
