@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { createComment, fetchMoreComments, fetchPost } from "@/request/post";
 import { stringToBytes } from "@/shared/common/arrbufs";
 import {
-    MAX_COMMENT_LENGTH,
+    MAX_LENGTH_COMMENT,
     buildContext,
     buildCreateCommentContextFromPayload,
     scopeFromPostAs,
@@ -13,7 +13,7 @@ import {
 } from "@/shared/shared";
 import type {
     CreateCommentPayload,
-    ExtendedPollData,
+    ExtendedPostData,
     PostComment,
 } from "@/shared/types/zod";
 import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
@@ -48,7 +48,7 @@ export function PostPageLayout() {
 
     const { updatePost, updatePostHiddenStatus, posts } = usePostsAndMeta();
     const [loadedPost, setLoadedPost] = React.useState<
-        ExtendedPollData | undefined | null
+        ExtendedPostData | undefined | null
     >(undefined);
     const [isSendingComment, setIsSendingComment] =
         React.useState<boolean>(false);
@@ -80,7 +80,7 @@ export function PostPageLayout() {
     function getPost(
         posts: PostsType,
         postSlugId: string
-    ): ExtendedPollData | undefined {
+    ): ExtendedPostData | undefined {
         return posts.find((post) => post.metadata.slugId === postSlugId);
     }
 
@@ -92,7 +92,7 @@ export function PostPageLayout() {
 
     const shouldSendingBeDisabled =
         comment.length === 0 ||
-        comment.length > MAX_COMMENT_LENGTH ||
+        comment.length > MAX_LENGTH_COMMENT ||
         isContextNotLoaded;
 
     React.useEffect(() => {

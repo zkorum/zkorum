@@ -1,7 +1,7 @@
 import { usePost } from "@/post";
 import { fetchMoreComments, fetchRecentComments } from "@/request/post";
 import type {
-    ExtendedPollData,
+    ExtendedPostData,
     PostComment,
     PostSlugId,
 } from "@/shared/types/zod";
@@ -185,11 +185,12 @@ export function PostPage() {
         );
     };
 
-    function getRegularPage(post: ExtendedPollData) {
+    function getRegularPage(post: ExtendedPostData) {
         return (
             <Container maxWidth="sm" disableGutters>
                 <Box my={1}>
                     <PostView
+                        viewMode={"post"}
                         dateToShow={"updatedAt"}
                         post={post}
                         onComment={(event: React.MouseEvent<HTMLElement>) => {

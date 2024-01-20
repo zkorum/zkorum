@@ -52,6 +52,7 @@ import { stringToBytes } from "./shared/common/arrbufs.js";
 import { scopeWith } from "./shared/common/util.js";
 import {
     buildCreateCommentContextFromPayload,
+    buildCreatePostContextFromPayload,
     buildResponseToPollFromPayload,
     domainFromEmail,
 } from "./shared/shared.js";
@@ -989,9 +990,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/poll/create`, {
+        .post(`/api/${apiVersion}/post/create`, {
             schema: {
-                body: Dto.createPollRequest,
+                body: Dto.createPostRequest,
                 // response: {
                 //     200: Dto.createPollRequest,
                 // },
@@ -1000,13 +1001,15 @@ server.after(() => {
                 const { pseudonym, postAs, presentation } =
                     await verifyPresentation({
                         pres: request.body.pres,
-                        content: request.body.poll,
+                        content: buildCreatePostContextFromPayload(
+                            request.body.post
+                        ),
                         expectedSecretCredentialType: "unbound",
                     });
-                await Service.createPoll({
+                await Service.createPost({
                     db: db,
                     presentation: presentation,
-                    poll: request.body.poll,
+                    post: request.body.post,
                     pseudonym: pseudonym,
                     postAs: postAs,
                 });

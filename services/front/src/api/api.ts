@@ -2443,167 +2443,6 @@ export interface ApiV1ModerationHidePostPostRequest {
 /**
  * 
  * @export
- * @interface ApiV1PollCreatePostRequest
- */
-export interface ApiV1PollCreatePostRequest {
-    /**
-     * 
-     * @type {ApiV1PollCreatePostRequestPoll}
-     * @memberof ApiV1PollCreatePostRequest
-     */
-    'poll': ApiV1PollCreatePostRequestPoll;
-    /**
-     * 
-     * @type {any}
-     * @memberof ApiV1PollCreatePostRequest
-     */
-    'pres'?: any;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollCreatePostRequestPoll
- */
-export interface ApiV1PollCreatePostRequestPoll {
-    /**
-     * 
-     * @type {ApiV1PollCreatePostRequestPollData}
-     * @memberof ApiV1PollCreatePostRequestPoll
-     */
-    'data': ApiV1PollCreatePostRequestPollData;
-    /**
-     * 
-     * @type {ApiV1PollCreatePostRequestPollEligibility}
-     * @memberof ApiV1PollCreatePostRequestPoll
-     */
-    'eligibility'?: ApiV1PollCreatePostRequestPollEligibility;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollCreatePostRequestPollData
- */
-export interface ApiV1PollCreatePostRequestPollData {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollCreatePostRequestPollData
-     */
-    'question': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollCreatePostRequestPollData
-     */
-    'option1': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollCreatePostRequestPollData
-     */
-    'option2': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollCreatePostRequestPollData
-     */
-    'option3'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollCreatePostRequestPollData
-     */
-    'option4'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollCreatePostRequestPollData
-     */
-    'option5'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollCreatePostRequestPollData
-     */
-    'option6'?: string;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollCreatePostRequestPollEligibility
- */
-export interface ApiV1PollCreatePostRequestPollEligibility {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PollCreatePostRequestPollEligibility
-     */
-    'student'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PollCreatePostRequestPollEligibility
-     */
-    'alum'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PollCreatePostRequestPollEligibility
-     */
-    'faculty'?: boolean;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof ApiV1PollCreatePostRequestPollEligibility
-     */
-    'countries'?: Array<ApiV1PollCreatePostRequestPollEligibilityCountriesEnum>;
-    /**
-     * 
-     * @type {Array<number>}
-     * @memberof ApiV1PollCreatePostRequestPollEligibility
-     */
-    'campuses'?: Array<ApiV1PollCreatePostRequestPollEligibilityCampusesEnum>;
-    /**
-     * 
-     * @type {Array<number>}
-     * @memberof ApiV1PollCreatePostRequestPollEligibility
-     */
-    'programs'?: Array<ApiV1PollCreatePostRequestPollEligibilityProgramsEnum>;
-    /**
-     * 
-     * @type {Array<number>}
-     * @memberof ApiV1PollCreatePostRequestPollEligibility
-     */
-    'admissionYears'?: Array<number>;
-}
-
-export const ApiV1PollCreatePostRequestPollEligibilityCountriesEnum = {
-    Fr: 'FR',
-    Int: 'INT'
-} as const;
-
-export type ApiV1PollCreatePostRequestPollEligibilityCountriesEnum = typeof ApiV1PollCreatePostRequestPollEligibilityCountriesEnum[keyof typeof ApiV1PollCreatePostRequestPollEligibilityCountriesEnum];
-export const ApiV1PollCreatePostRequestPollEligibilityCampusesEnum = {
-    NUMBER_0: 0,
-    NUMBER_1: 1,
-    NUMBER_2: 2
-} as const;
-
-export type ApiV1PollCreatePostRequestPollEligibilityCampusesEnum = typeof ApiV1PollCreatePostRequestPollEligibilityCampusesEnum[keyof typeof ApiV1PollCreatePostRequestPollEligibilityCampusesEnum];
-export const ApiV1PollCreatePostRequestPollEligibilityProgramsEnum = {
-    NUMBER_0: 0,
-    NUMBER_1: 1,
-    NUMBER_2: 2,
-    NUMBER_3: 3,
-    NUMBER_4: 4,
-    NUMBER_5: 5
-} as const;
-
-export type ApiV1PollCreatePostRequestPollEligibilityProgramsEnum = typeof ApiV1PollCreatePostRequestPollEligibilityProgramsEnum[keyof typeof ApiV1PollCreatePostRequestPollEligibilityProgramsEnum];
-
-/**
- * 
- * @export
  * @interface ApiV1PollRespondPost200Response
  */
 export interface ApiV1PollRespondPost200Response {
@@ -3385,57 +3224,82 @@ export interface ApiV1PollRespondPost200ResponseMetadata {
 export interface ApiV1PollRespondPost200ResponsePayload {
     /**
      * 
-     * @type {ApiV1PollCreatePostRequestPollData}
+     * @type {string}
      * @memberof ApiV1PollRespondPost200ResponsePayload
      */
-    'data': ApiV1PollCreatePostRequestPollData;
+    'title': string;
     /**
      * 
-     * @type {ApiV1PollRespondPost200ResponsePayloadResult}
+     * @type {string}
      * @memberof ApiV1PollRespondPost200ResponsePayload
      */
-    'result': ApiV1PollRespondPost200ResponsePayloadResult;
+    'body'?: string;
+    /**
+     * 
+     * @type {ApiV1PollRespondPost200ResponsePayloadPoll}
+     * @memberof ApiV1PollRespondPost200ResponsePayload
+     */
+    'poll'?: ApiV1PollRespondPost200ResponsePayloadPoll;
 }
 /**
  * 
  * @export
- * @interface ApiV1PollRespondPost200ResponsePayloadResult
+ * @interface ApiV1PollRespondPost200ResponsePayloadPoll
  */
-export interface ApiV1PollRespondPost200ResponsePayloadResult {
+export interface ApiV1PollRespondPost200ResponsePayloadPoll {
+    /**
+     * 
+     * @type {ApiV1PostCreatePostRequestPostDataPoll}
+     * @memberof ApiV1PollRespondPost200ResponsePayloadPoll
+     */
+    'options': ApiV1PostCreatePostRequestPostDataPoll;
+    /**
+     * 
+     * @type {ApiV1PollRespondPost200ResponsePayloadPollResult}
+     * @memberof ApiV1PollRespondPost200ResponsePayloadPoll
+     */
+    'result': ApiV1PollRespondPost200ResponsePayloadPollResult;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PollRespondPost200ResponsePayloadPollResult
+ */
+export interface ApiV1PollRespondPost200ResponsePayloadPollResult {
     /**
      * 
      * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
      */
     'option1Response': number;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
      */
     'option2Response': number;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
      */
     'option3Response'?: number;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
      */
     'option4Response'?: number;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
      */
     'option5Response'?: number;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadResult
+     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
      */
     'option6Response'?: number;
 }
@@ -3469,7 +3333,7 @@ export interface ApiV1PollRespondPostRequestResponseToPoll {
      * @type {string}
      * @memberof ApiV1PollRespondPostRequestResponseToPoll
      */
-    'pollUid': string;
+    'postUid': string;
     /**
      * 
      * @type {number}
@@ -3477,6 +3341,186 @@ export interface ApiV1PollRespondPostRequestResponseToPoll {
      */
     'optionChosen': number;
 }
+/**
+ * 
+ * @export
+ * @interface ApiV1PostCreatePostRequest
+ */
+export interface ApiV1PostCreatePostRequest {
+    /**
+     * 
+     * @type {ApiV1PostCreatePostRequestPost}
+     * @memberof ApiV1PostCreatePostRequest
+     */
+    'post': ApiV1PostCreatePostRequestPost;
+    /**
+     * 
+     * @type {any}
+     * @memberof ApiV1PostCreatePostRequest
+     */
+    'pres'?: any;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostCreatePostRequestPost
+ */
+export interface ApiV1PostCreatePostRequestPost {
+    /**
+     * 
+     * @type {ApiV1PostCreatePostRequestPostData}
+     * @memberof ApiV1PostCreatePostRequestPost
+     */
+    'data': ApiV1PostCreatePostRequestPostData;
+    /**
+     * 
+     * @type {ApiV1PostCreatePostRequestPostEligibility}
+     * @memberof ApiV1PostCreatePostRequestPost
+     */
+    'eligibility'?: ApiV1PostCreatePostRequestPostEligibility;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostCreatePostRequestPostData
+ */
+export interface ApiV1PostCreatePostRequestPostData {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequestPostData
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequestPostData
+     */
+    'body'?: string;
+    /**
+     * 
+     * @type {ApiV1PostCreatePostRequestPostDataPoll}
+     * @memberof ApiV1PostCreatePostRequestPostData
+     */
+    'poll'?: ApiV1PostCreatePostRequestPostDataPoll;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostCreatePostRequestPostDataPoll
+ */
+export interface ApiV1PostCreatePostRequestPostDataPoll {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequestPostDataPoll
+     */
+    'option1': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequestPostDataPoll
+     */
+    'option2': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequestPostDataPoll
+     */
+    'option3'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequestPostDataPoll
+     */
+    'option4'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequestPostDataPoll
+     */
+    'option5'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequestPostDataPoll
+     */
+    'option6'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostCreatePostRequestPostEligibility
+ */
+export interface ApiV1PostCreatePostRequestPostEligibility {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostCreatePostRequestPostEligibility
+     */
+    'student'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostCreatePostRequestPostEligibility
+     */
+    'alum'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostCreatePostRequestPostEligibility
+     */
+    'faculty'?: boolean;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ApiV1PostCreatePostRequestPostEligibility
+     */
+    'countries'?: Array<ApiV1PostCreatePostRequestPostEligibilityCountriesEnum>;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof ApiV1PostCreatePostRequestPostEligibility
+     */
+    'campuses'?: Array<ApiV1PostCreatePostRequestPostEligibilityCampusesEnum>;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof ApiV1PostCreatePostRequestPostEligibility
+     */
+    'programs'?: Array<ApiV1PostCreatePostRequestPostEligibilityProgramsEnum>;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof ApiV1PostCreatePostRequestPostEligibility
+     */
+    'admissionYears'?: Array<number>;
+}
+
+export const ApiV1PostCreatePostRequestPostEligibilityCountriesEnum = {
+    Fr: 'FR',
+    Int: 'INT'
+} as const;
+
+export type ApiV1PostCreatePostRequestPostEligibilityCountriesEnum = typeof ApiV1PostCreatePostRequestPostEligibilityCountriesEnum[keyof typeof ApiV1PostCreatePostRequestPostEligibilityCountriesEnum];
+export const ApiV1PostCreatePostRequestPostEligibilityCampusesEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2
+} as const;
+
+export type ApiV1PostCreatePostRequestPostEligibilityCampusesEnum = typeof ApiV1PostCreatePostRequestPostEligibilityCampusesEnum[keyof typeof ApiV1PostCreatePostRequestPostEligibilityCampusesEnum];
+export const ApiV1PostCreatePostRequestPostEligibilityProgramsEnum = {
+    NUMBER_0: 0,
+    NUMBER_1: 1,
+    NUMBER_2: 2,
+    NUMBER_3: 3,
+    NUMBER_4: 4,
+    NUMBER_5: 5
+} as const;
+
+export type ApiV1PostCreatePostRequestPostEligibilityProgramsEnum = typeof ApiV1PostCreatePostRequestPostEligibilityProgramsEnum[keyof typeof ApiV1PostCreatePostRequestPostEligibilityProgramsEnum];
+
 /**
  * 
  * @export
@@ -4258,45 +4302,6 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {ApiV1PollCreatePostRequest} apiV1PollCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1PollCreatePost: async (apiV1PollCreatePostRequest: ApiV1PollCreatePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1PollCreatePostRequest' is not null or undefined
-            assertParamExists('apiV1PollCreatePost', 'apiV1PollCreatePostRequest', apiV1PollCreatePostRequest)
-            const localVarPath = `/api/v1/poll/create`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PollCreatePostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
          * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -4328,6 +4333,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1PollRespondPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PostCreatePost: async (apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1PostCreatePostRequest' is not null or undefined
+            assertParamExists('apiV1PostCreatePost', 'apiV1PostCreatePostRequest', apiV1PostCreatePostRequest)
+            const localVarPath = `/api/v1/post/create`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PostCreatePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4562,22 +4606,22 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {ApiV1PollCreatePostRequest} apiV1PollCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1PollCreatePost(apiV1PollCreatePostRequest: ApiV1PollCreatePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollCreatePost(apiV1PollCreatePostRequest, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
          * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         async apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1PollRespondPost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollRespondPost(apiV1PollRespondPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostCreatePost(apiV1PostCreatePostRequest, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -4761,21 +4805,21 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {ApiV1PollCreatePostRequest} apiV1PollCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1PollCreatePost(apiV1PollCreatePostRequest: ApiV1PollCreatePostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1PollCreatePost(apiV1PollCreatePostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: any): AxiosPromise<ApiV1PollRespondPost200Response> {
             return localVarFp.apiV1PollRespondPost(apiV1PollRespondPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: any): AxiosPromise<void> {
+            return localVarFp.apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4993,17 +5037,6 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {ApiV1PollCreatePostRequest} apiV1PollCreatePostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1PollCreatePost(apiV1PollCreatePostRequest: ApiV1PollCreatePostRequest, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1PollCreatePost(apiV1PollCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
      * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -5011,6 +5044,17 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1PollRespondPost(apiV1PollRespondPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

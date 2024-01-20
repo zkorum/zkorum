@@ -1,7 +1,7 @@
 import { zeroIfUndefined } from "@/common/common";
 import type {
     PollResult,
-    PollData,
+    PollOptions,
     PollOptionAndPseudonym,
 } from "@/shared/types/zod";
 import Typography from "@mui/material/Typography";
@@ -10,13 +10,17 @@ import Grid from "@mui/material/Unstable_Grid2";
 interface PollResultView {
     result: PollResult;
     pollResponse: PollOptionAndPseudonym | undefined;
-    data: PollData;
+    options: PollOptions;
 }
 
 // linkedin poll color: #2596be
 // https://stackoverflow.com/a/35270047/11046178 for marginLeft usage
 
-export function PollResultView({ result, data, pollResponse }: PollResultView) {
+export function PollResultView({
+    result,
+    options,
+    pollResponse,
+}: PollResultView) {
     function getOptionView(
         option: string,
         optionPercentage: number,
@@ -30,7 +34,6 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
                 direction="row"
                 sx={{
                     my: 0.5,
-                    borderRadius: "8px",
                     px: 1,
                     py: 0.5,
                     background:
@@ -79,22 +82,22 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
             direction="column"
         >
             {getOptionView(
-                data.option1,
+                options.option1,
                 totalCount === 0
                     ? 0
                     : Math.round((result.option1Response * 100) / totalCount),
                 pollResponse !== undefined && pollResponse.optionChosen === 1
             )}
             {getOptionView(
-                data.option2,
+                options.option2,
                 totalCount === 0
                     ? 0
                     : Math.round((result.option2Response * 100) / totalCount),
                 pollResponse !== undefined && pollResponse.optionChosen === 2
             )}
-            {data.option3 !== undefined
+            {options.option3 !== undefined
                 ? getOptionView(
-                      data.option3,
+                      options.option3,
                       totalCount === 0 || result.option3Response === undefined
                           ? 0
                           : Math.round(
@@ -104,9 +107,9 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
                           pollResponse.optionChosen === 3
                   )
                 : null}
-            {data.option4 !== undefined
+            {options.option4 !== undefined
                 ? getOptionView(
-                      data.option4,
+                      options.option4,
                       totalCount === 0 || result.option4Response === undefined
                           ? 0
                           : Math.round(
@@ -117,9 +120,9 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
                           pollResponse.optionChosen === 4
                   )
                 : null}
-            {data.option5 !== undefined
+            {options.option5 !== undefined
                 ? getOptionView(
-                      data.option5,
+                      options.option5,
                       totalCount === 0 || result.option5Response === undefined
                           ? 0
                           : Math.round(
@@ -129,9 +132,9 @@ export function PollResultView({ result, data, pollResponse }: PollResultView) {
                           pollResponse.optionChosen === 5
                   )
                 : null}
-            {data.option6 !== undefined
+            {options.option6 !== undefined
                 ? getOptionView(
-                      data.option6,
+                      options.option6,
                       totalCount === 0 || result.option6Response === undefined
                           ? 0
                           : Math.round(

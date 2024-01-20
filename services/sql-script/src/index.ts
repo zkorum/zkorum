@@ -9,8 +9,7 @@ const db = drizzle(client);
 
 (async () => {
     try {
-        await Service.updateCommentAmount({ db });
-        await Service.updateLastReactedAt({ db });
+        await Service.updatePollOptions({ db });
         console.log("Database updated");
     } catch (e) {
         console.error(e);

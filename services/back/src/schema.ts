@@ -14,9 +14,11 @@ import {
     jsonb,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
-// import { MAX_LENGTH_OPTION, MAX_LENGTH_QUESTION } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
+// import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 const MAX_LENGTH_OPTION = 30;
-const MAX_LENGTH_QUESTION = 140;
+const MAX_LENGTH_TITLE = 140;
+const MAX_LENGTH_COMMENT = 1250;
+const MAX_LENGTH_BODY = 3000;
 
 export const bytea = customType<{
     data: string;
@@ -528,19 +530,10 @@ export const pseudonymTable = pgTable("pseudonym", {
 
 export const pollTable = pgTable("poll", {
     id: serial("id").primaryKey(),
-    slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL, should be not null and unique, a script will populate them...
-    presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
-    presentationCID: char("pres_cid", { length: 61 }).unique().notNull(), // unique and notNull are !important for avoiding replay attacks, we will do it in a later release
-    timestampedPresentationCID: char("time_pres_cid", { length: 61 }) // see shared/test/common/cid.test.ts for length
+    postId: integer("post_id") // "postAs"
         .notNull()
-        .unique(), // CID calculated from stringified object representing pres+created_at. This is the unique identifier representing the poll globally.
-    authorId: integer("author_id") // "postAs"
-        .notNull()
-        .references(() => pseudonymTable.id), // the author of the poll
-    eligibilityId: integer("eligibility_id")
-        .notNull()
-        .references(() => eligibilityTable.id),
-    question: varchar("question", { length: MAX_LENGTH_QUESTION }).notNull(),
+        .unique() // currently, a poll can only be associated with one post
+        .references(() => postTable.id), // the author of the poll
     option1: varchar("option1", { length: MAX_LENGTH_OPTION }).notNull(),
     option1Response: integer("option1_response").default(0).notNull(),
     option2: varchar("option2", { length: MAX_LENGTH_OPTION }).notNull(),
@@ -553,6 +546,36 @@ export const pollTable = pgTable("poll", {
     option5Response: integer("option5_response"),
     option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
     option6Response: integer("option6_response"),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+    updatedAt: timestamp("updated_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+});
+
+export const postTable = pgTable("post", {
+    id: serial("id").primaryKey(),
+    slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL, should be not null and unique, a script will populate them...
+    presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
+    presentationCID: char("pres_cid", { length: 61 }).unique().notNull(), // unique and notNull are !important for avoiding replay attacks, we will do it in a later release
+    timestampedPresentationCID: char("time_pres_cid", { length: 61 }) // see shared/test/common/cid.test.ts for length
+        .notNull()
+        .unique(), // CID calculated from stringified object representing pres+created_at. This is the unique identifier representing the poll globally.
+    authorId: integer("author_id") // "postAs"
+        .notNull()
+        .references(() => pseudonymTable.id), // the author of the poll
+    eligibilityId: integer("eligibility_id")
+        .notNull()
+        .references(() => eligibilityTable.id),
+    title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
+    body: varchar("body", { length: MAX_LENGTH_BODY }),
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -615,9 +638,9 @@ export const commentTable = pgTable("comment", {
     authorId: integer("author_id") // "postAs"
         .notNull()
         .references(() => pseudonymTable.id), // the author of the poll
-    content: varchar("content", { length: 1250 }).notNull(),
+    content: varchar("content", { length: MAX_LENGTH_COMMENT }).notNull(),
     postId: integer("post_id")
-        .references(() => pollTable.id)
+        .references(() => postTable.id)
         .notNull(),
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {

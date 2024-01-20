@@ -11,12 +11,12 @@ import {
     zodemail,
     zodemailCredential,
     zodemailCredentialsPerEmail,
-    zodextendedPollData,
+    zodExtendedPostData,
     zodformCredential,
     zodformCredentialRequest,
     zodformCredentialsPerEmail,
-    zodpoll,
-    zodPollUID,
+    zodPost,
+    zodPostUid,
     zodsecretCredentialRequest,
     zodsecretCredentialType,
     zodsecretCredentialsPerType,
@@ -141,8 +141,8 @@ export class Dto {
     static requestFormCredential200 = z.object({
         formCredentialsPerEmail: zodformCredentialsPerEmail,
     });
-    static createPollRequest = z.object({
-        poll: zodpoll,
+    static createPostRequest = z.object({
+        post: zodPost,
         pres: z.unknown(), // z.object() does not exist :(
     });
     static respondPollRequest = z.object({
@@ -155,10 +155,10 @@ export class Dto {
             lastReactedAt: z.string().datetime().optional(),
         })
         .strict();
-    static fetchFeed200 = z.array(zodextendedPollData);
-    static pollRespond200 = zodextendedPollData;
+    static fetchFeed200 = z.array(zodExtendedPostData);
+    static pollRespond200 = zodExtendedPostData;
     static moderatePostRequest = z.object({
-        pollUid: zodPollUID,
+        pollUid: zodPostUid,
     });
     static moderateCommentRequest = z.object({
         commentSlugId: zodSlugId,
@@ -190,7 +190,7 @@ export class Dto {
         postSlugId: zodSlugId, // z.object() does not exist :(
     });
     static postFetch200 = z.object({
-        post: zodextendedPollData, // z.object() does not exist :(
+        post: zodExtendedPostData, // z.object() does not exist :(
         comments: z.array(zodComment),
     });
     static commentFetchFeedRequest = z.object({
@@ -210,3 +210,4 @@ export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type UserCredentials = z.infer<typeof Dto.userCredentials>;
 export type EmailSecretCredentials = z.infer<typeof Dto.emailSecretCredentials>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
+export type CreatePostRequest = z.infer<typeof Dto.createPostRequest>;

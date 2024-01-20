@@ -72,7 +72,7 @@ export function domainFromEmail(email: string): string | undefined {
 // WARNING: this is also used in schema.ts and cannot be imported there so it was copy-pasted
 // IF YOU CHANGE THESE VALUES ALSO CHANGE THEM IN SCHEMA.TS
 export const MAX_LENGTH_OPTION = 30;
-export const MAX_LENGTH_QUESTION = 140;
+export const MAX_LENGTH_TITLE = 140;
 
 export function toUnionUndefined<T>(value: T | null): T | undefined {
     if (value === null) {

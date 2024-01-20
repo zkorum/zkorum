@@ -4,7 +4,7 @@ import { validateDidKey, validateDidWeb } from "../did/util.js";
 import { range } from "../common/util.js";
 import { EssecCampus, EssecProgram } from "./university.js";
 import { type TCountryCode } from "countries-list";
-import { MAX_LENGTH_QUESTION, MAX_LENGTH_OPTION } from "../shared.js";
+import { MAX_LENGTH_TITLE, MAX_LENGTH_OPTION } from "../shared.js";
 
 // Alpha only for ESSEC
 function isAuthorizedEmail(email: Email) {
@@ -438,7 +438,7 @@ export const zodeligibility = z
         admissionYears: z.array(zodstudentAdmissionYear).optional(),
     })
     .strict();
-export const zodpollQuestion = z.string().max(MAX_LENGTH_QUESTION).nonempty();
+export const zodpollQuestion = z.string().max(MAX_LENGTH_TITLE).nonempty();
 export const zodpollOption = z.string().max(MAX_LENGTH_OPTION).nonempty();
 export const zodpollOptionResponse = z.number().nonnegative();
 export const zodpollData = z

@@ -1,7 +1,7 @@
 import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
 import { doLoadMore, doLoadRecent, usePostsAndMeta } from "@/feed";
 import { useAppSelector } from "@/hooks";
-import type { ExtendedPollData } from "@/shared/types/zod";
+import type { ExtendedPostData } from "@/shared/types/zod";
 import { selectActiveSessionEmail } from "@/store/selector";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -104,7 +104,7 @@ export function Feed() {
     interface LoadingContext {
         loadingMore: boolean;
         loadingRecent: boolean;
-        posts: ExtendedPollData[];
+        posts: ExtendedPostData[];
         isLoggedIn: boolean;
     }
 
@@ -177,8 +177,15 @@ export function Feed() {
                             pt={1}
                             width="100%"
                         >
-                            <Link href={postPage} underline="none">
+                            <Link
+                                href={postPage}
+                                underline="none"
+                                sx={{
+                                    WebkitTapHighlightColor: "transparent",
+                                }}
+                            >
                                 <PostView
+                                    viewMode={"feed"}
                                     dateToShow={"lastReactedAt"}
                                     onComment={(
                                         event: React.MouseEvent<HTMLElement>

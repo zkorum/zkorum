@@ -1,14 +1,14 @@
 import { useOutletContext } from "react-router-dom";
 import type { UpdatePostHiddenStatusProps } from "./RootDialog";
 import type {
-    ExtendedPollData,
+    ExtendedPostData,
     PostComment,
     ResponseToPollPayload,
 } from "./shared/types/zod";
 
 export type PostContextType = {
     postSlugId: string;
-    post?: ExtendedPollData;
+    post?: ExtendedPostData;
     postHasError: boolean;
     comments: PostComment[];
     setComments: React.Dispatch<React.SetStateAction<PostComment[]>>;

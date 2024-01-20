@@ -1,6 +1,6 @@
 import { DefaultApiFactory } from "@/api";
 import { noAuthAxios } from "@/interceptors";
-import type { ExtendedPollData } from "@/shared/types/zod";
+import type { ExtendedPostData } from "@/shared/types/zod";
 
 interface FetchFeedProps {
     showHidden: boolean;
@@ -10,7 +10,7 @@ interface FetchFeedProps {
 export async function fetchFeedMore({
     showHidden,
     lastReactedAt,
-}: FetchFeedProps): Promise<ExtendedPollData[]> {
+}: FetchFeedProps): Promise<ExtendedPostData[]> {
     const response = await DefaultApiFactory(
         undefined,
         undefined,
@@ -44,7 +44,7 @@ export async function fetchFeedMore({
 export async function fetchFeedRecent({
     showHidden,
     lastReactedAt,
-}: FetchFeedProps): Promise<ExtendedPollData[]> {
+}: FetchFeedProps): Promise<ExtendedPostData[]> {
     const response = await DefaultApiFactory(
         undefined,
         undefined,

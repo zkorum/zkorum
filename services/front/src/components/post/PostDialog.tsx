@@ -1,4 +1,3 @@
-import type { ApiV1PollCreatePostRequestPoll } from "@/api";
 import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
 import {
     creatingProof,
@@ -10,20 +9,20 @@ import {
 import { maybeInitWasm } from "@/crypto/vc/credential";
 import { doLoadMore, doLoadRecent, type PostsType } from "@/feed";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { createPoll } from "@/request/post";
+import { createPost } from "@/request/post";
 import { stringToBytes } from "@/shared/common/arrbufs";
 import {
-    attributesFormRevealedFromPostAs,
+    BASE_SCOPE,
+    MAX_LENGTH_BODY,
+    MAX_LENGTH_TITLE,
     buildContext,
-    scopeFromPostAs,
+    buildCreatePostContextFromPayload,
 } from "@/shared/shared";
-import { EssecCampus, EssecProgram } from "@/shared/types/university";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { closePostModal } from "@/store/reducers/post";
 import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
 import {
     selectActiveEmailCredential,
-    selectActiveFormCredential,
     selectActiveSessionEmail,
     selectActiveUnboundSecretCredential,
 } from "@/store/selector";
@@ -33,22 +32,23 @@ import {
     BBSPlusPublicKeyG2 as PublicKey,
     randomFieldElement,
 } from "@docknetwork/crypto-wasm-ts";
-import { faMask } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import CloseIcon from "@mui/icons-material/Close";
-import Container from "@mui/material/Container";
+import PollIcon from "@mui/icons-material/Poll";
+import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
 import useTheme from "@mui/material/styles/useTheme";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import React from "react";
 import { PollCreateView } from "./PollCreateView";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import type { Post } from "@/shared/types/zod";
 
 interface PostDialogProps {
     posts: PostsType;
@@ -70,50 +70,18 @@ export function PostDialog({
     function onClose() {
         setHasModifiedOption1(false);
         setHasModifiedOption2(false);
-        setHasModifiedQuestion(false);
+        setHasModifiedTitle(false);
         dispatch(closePostModal());
     }
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const isAdmin = activeSessionEmail.endsWith("zkorum.com");
     const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
-    const activeFormCredential = useAppSelector(selectActiveFormCredential);
     const activeUnboundSecretCredential = useAppSelector(
         selectActiveUnboundSecretCredential
     );
 
-    const [postAsStudentChecked, setPostAsStudentChecked] =
-        React.useState<boolean>(false);
-    const [postAsAlumChecked, setPostAsAlumChecked] =
-        React.useState<boolean>(false);
-    const [postAsFacultyChecked, setPostAsFacultyChecked] =
-        React.useState<boolean>(false);
-    const [postAsCampusChecked, setPostAsCampusChecked] =
-        React.useState<boolean>(false);
-    const [postAsProgramChecked, setPostAsProgramChecked] =
-        React.useState<boolean>(false);
-    const [postAsAdmissionYearChecked, setPostAsAdmissionYearChecked] =
-        React.useState<boolean>(false);
-    const [postAsFrench, setPostAsFrench] = React.useState<boolean>(false);
-    const [postAsInternational, setPostAsInternational] =
-        React.useState<boolean>(false);
-    const [eligibilityCountries, setEligibilityCountries] = React.useState<
-        [] | ["FR"] | ["INT"] | ["FR", "INT"]
-    >([]);
-    const [eligibilityAlum, setEligibilityAlum] =
-        React.useState<boolean>(false);
-    const [eligibilityStudent, setEligibilityStudent] =
-        React.useState<boolean>(false);
-    const [eligibilityFaculty, setEligibilityFaculty] =
-        React.useState<boolean>(false);
-    const [eligibilityCampus, setEligibilityCampus] = React.useState<
-        EssecCampus[]
-    >([]);
-    const [eligibilityProgram, setEligibilityProgram] = React.useState<
-        EssecProgram[]
-    >([]);
-    const [eligibilityAdmissionYear, setEligibilityAdmissionYear] =
-        React.useState<number[]>([]);
-    const questionInputRef = React.useRef<HTMLInputElement>();
+    const titleInputRef = React.useRef<HTMLInputElement>();
+    const bodyInputRef = React.useRef<HTMLInputElement>();
     const option1InputRef = React.useRef<HTMLInputElement>();
     const option2InputRef = React.useRef<HTMLInputElement>();
     const option3InputRef = React.useRef<HTMLInputElement>();
@@ -124,17 +92,16 @@ export function PostDialog({
     const [option4Shown, setOption4Shown] = React.useState<boolean>(false);
     const [option5Shown, setOption5Shown] = React.useState<boolean>(false);
     const [option6Shown, setOption6Shown] = React.useState<boolean>(false);
-    const [hasModifiedQuestion, setHasModifiedQuestion] =
+    const [hasModifiedTitle, setHasModifiedTitle] =
         React.useState<boolean>(false);
     const [hasModifiedOption1, setHasModifiedOption1] =
         React.useState<boolean>(false);
     const [hasModifiedOption2, setHasModifiedOption2] =
         React.useState<boolean>(false);
-    const [questionHelper, setQuestionHelper] = React.useState<
-        string | undefined
-    >(undefined);
-    const [isQuestionValid, setIsQuestionValid] =
-        React.useState<boolean>(false);
+    const [titleHelper, setTitleHelper] = React.useState<string | undefined>(
+        undefined
+    );
+    const [isTitleValid, setIsTitleValid] = React.useState<boolean>(false);
     const [option1Helper, setOption1Helper] = React.useState<
         string | undefined
     >(undefined);
@@ -143,6 +110,7 @@ export function PostDialog({
         string | undefined
     >(undefined);
     const [isOption2Valid, setIsOption2Valid] = React.useState<boolean>(false);
+    const [hasPoll, setHasPoll] = React.useState<boolean>(false);
 
     const loadRecent = React.useCallback(
         (minLastReactedAt: Date) => {
@@ -191,50 +159,6 @@ export function PostDialog({
         };
     }
 
-    React.useEffect(() => {
-        if (
-            postAsCampusChecked ||
-            postAsProgramChecked ||
-            postAsAdmissionYearChecked ||
-            postAsFrench || // TODO: countries should not be here!
-            postAsInternational
-        ) {
-            setPostAsStudentChecked(true);
-        }
-    }, [
-        postAsCampusChecked,
-        postAsProgramChecked,
-        postAsAdmissionYearChecked,
-        postAsFrench,
-        postAsInternational,
-    ]);
-
-    React.useEffect(() => {
-        if (!postAsStudentChecked) {
-            setPostAsCampusChecked(false);
-            setPostAsProgramChecked(false);
-            setPostAsAdmissionYearChecked(false);
-        }
-    }, [postAsStudentChecked]);
-
-    React.useEffect(() => {
-        if (
-            eligibilityCampus.length > 0 ||
-            eligibilityProgram.length > 0 ||
-            eligibilityAdmissionYear.length > 0
-        ) {
-            setEligibilityStudent(true);
-        }
-    }, [eligibilityCampus, eligibilityProgram, eligibilityAdmissionYear]);
-
-    React.useEffect(() => {
-        if (!eligibilityStudent) {
-            setEligibilityCampus([]);
-            setEligibilityProgram([]);
-            setEligibilityAdmissionYear([]);
-        }
-    }, [eligibilityStudent]);
-
     // function studentDataFromCredential(
     //     subjectStudent?: any
     // ): StudentData | null {
@@ -269,24 +193,27 @@ export function PostDialog({
     // const [postAsInternational, setPostAsInternational] =
     //     React.useState<boolean>(false);
 
-    async function onCreatePoll() {
-        setHasModifiedQuestion(true);
-        setHasModifiedOption1(true);
-        setHasModifiedOption2(true);
-        if (
-            questionInputRef.current?.value === undefined ||
-            questionInputRef.current?.value === ""
-        ) {
-            setIsQuestionValid(false);
-            setQuestionHelper(fieldRequired);
-            return;
-        } else {
-            setIsQuestionValid(true);
-            setQuestionHelper(undefined);
+    async function onCreatePost() {
+        setHasModifiedTitle(true);
+        if (hasPoll) {
+            setHasModifiedOption1(true);
+            setHasModifiedOption2(true);
         }
         if (
-            option1InputRef.current?.value === undefined ||
-            option1InputRef.current?.value === ""
+            titleInputRef.current?.value === undefined ||
+            titleInputRef.current?.value === ""
+        ) {
+            setIsTitleValid(false);
+            setTitleHelper(fieldRequired);
+            return;
+        } else {
+            setIsTitleValid(true);
+            setTitleHelper(undefined);
+        }
+        if (
+            hasPoll &&
+            (option1InputRef.current?.value === undefined ||
+                option1InputRef.current?.value === "")
         ) {
             setIsOption1Valid(false);
             setOption1Helper(fieldRequired);
@@ -296,8 +223,9 @@ export function PostDialog({
             setOption1Helper(undefined);
         }
         if (
-            option2InputRef.current?.value === undefined ||
-            option2InputRef.current?.value === ""
+            hasPoll &&
+            (option2InputRef.current?.value === undefined ||
+                option2InputRef.current?.value === "")
         ) {
             setIsOption2Valid(false);
             setOption2Helper(fieldRequired);
@@ -338,43 +266,8 @@ export function PostDialog({
                     "credentialSubject.type",
                 ])
             ); // second credential added was email credential
-            let formCredentialIsUsed = false;
-            if (activeFormCredential !== undefined) {
-                const attributesRevealed = attributesFormRevealedFromPostAs({
-                    postAs: {
-                        postAsStudent: postAsStudentChecked,
-                        postAsAlum: postAsAlumChecked,
-                        postAsFaculty: postAsFacultyChecked,
-                        postAsCampus: postAsCampusChecked,
-                        postAsProgram: postAsProgramChecked,
-                        postAsAdmissionYear: postAsAdmissionYearChecked,
-                        postAsCountries: postAsFrench || postAsInternational,
-                    },
-                    credential: activeFormCredential,
-                });
-                if (attributesRevealed.size > 0) {
-                    // at least one specific postAs has been selected: even if the formCredential exist, it might not be used!
-                    formCredentialIsUsed = true;
-                    builder.addCredential(
-                        activeFormCredential,
-                        backendPublicKey
-                    );
-                    builder.markAttributesRevealed(2, attributesRevealed); // third credential added is form credential
-                }
-            }
-
             //////// PSEUDONYMS /////
-            const scope = stringToBytes(
-                scopeFromPostAs({
-                    postAsStudent: postAsStudentChecked,
-                    postAsAlum: postAsAlumChecked,
-                    postAsFaculty: postAsFacultyChecked,
-                    postAsCampus: postAsCampusChecked,
-                    postAsProgram: postAsProgramChecked,
-                    postAsAdmissionYear: postAsAdmissionYearChecked,
-                    postAsCountries: postAsFrench || postAsInternational,
-                })
-            ); // the scope and thus the pseudonym will be different for each combination of attributes revealed. @see doc/anonymous_pseudonym.md
+            const scope = stringToBytes(BASE_SCOPE);
             const attributeNames = new Map();
 
             const secretSubject = "credentialSubject.secret";
@@ -410,110 +303,81 @@ export function PostDialog({
                 );
             builder.addBoundedPseudonym(basesForAttributes, attributeNames);
 
-            // meta equalities
-            if (formCredentialIsUsed) {
-                builder.markAttributesEqual(
-                    [0, "credentialSubject.uid"],
-                    [1, "credentialSubject.uid"],
-                    [2, "credentialSubject.uid"]
-                );
-                builder.markAttributesEqual(
-                    // email in email and form credentials are equal
-                    [1, "credentialSubject.email"],
-                    [2, "credentialSubject.email"]
-                );
-            } else {
-                builder.markAttributesEqual(
-                    [0, "credentialSubject.uid"],
-                    [1, "credentialSubject.uid"]
-                );
-            }
+            builder.markAttributesEqual(
+                [0, "credentialSubject.uid"],
+                [1, "credentialSubject.uid"]
+            );
 
-            if (
-                questionInputRef.current?.value !== undefined &&
-                option1InputRef.current?.value !== undefined &&
-                option2InputRef.current?.value !== undefined
-            ) {
-                const noEligibility =
-                    !eligibilityStudent &&
-                    !eligibilityAlum &&
-                    !eligibilityFaculty &&
-                    eligibilityCountries.length === 0 &&
-                    eligibilityCampus.length === 0 &&
-                    eligibilityProgram.length === 0 &&
-                    eligibilityAdmissionYear.length === 0;
-                const newPoll: ApiV1PollCreatePostRequestPoll = {
-                    data: {
-                        question: questionInputRef.current?.value,
-                        option1: option1InputRef.current?.value,
-                        option2: option2InputRef.current?.value,
-                        option3:
-                            option3InputRef.current?.value === ""
-                                ? undefined
-                                : option3InputRef.current?.value,
-                        option4:
-                            option4InputRef.current?.value === ""
-                                ? undefined
-                                : option4InputRef.current?.value,
-                        option5:
-                            option5InputRef.current?.value === ""
-                                ? undefined
-                                : option5InputRef.current?.value,
-                        option6:
-                            option6InputRef.current?.value === ""
-                                ? undefined
-                                : option6InputRef.current?.value,
-                    },
-                    eligibility: noEligibility
-                        ? undefined
-                        : {
-                              student:
-                                  eligibilityStudent === false
-                                      ? undefined
-                                      : true,
-                              alum:
-                                  eligibilityAlum === false ? undefined : true,
-                              faculty:
-                                  eligibilityFaculty === false
-                                      ? undefined
-                                      : true,
-                              countries:
-                                  eligibilityCountries.length === 0
-                                      ? undefined
-                                      : eligibilityCountries,
-                              campuses:
-                                  eligibilityCampus.length === 0
-                                      ? undefined
-                                      : eligibilityCampus,
-                              programs:
-                                  eligibilityProgram.length === 0
-                                      ? undefined
-                                      : eligibilityProgram,
-                              admissionYears:
-                                  eligibilityAdmissionYear.length === 0
-                                      ? undefined
-                                      : eligibilityAdmissionYear,
-                          },
-                };
-                const context = await buildContext(JSON.stringify(newPoll));
-                builder.context = context;
-                builder.nonce = randomFieldElement();
-                builder.version = "0.1.0";
-                const presentation = builder.finalize();
-                dispatch(showInfo(sendingPost));
-                await createPoll(presentation, newPoll);
-                if (posts.length > 0) {
-                    // only act when feed is not empty! because loadMore will already fetch first data
-                    asyncLoadRecent(); // refresh feed to show newly created post
-                }
-                dispatch(showSuccess(pollCreated));
-            } else {
+            let newPost: Post;
+            if (titleInputRef.current?.value === undefined) {
                 console.warn(
-                    "[Should not happen] Poll form invalid while creating context, cannot create poll"
+                    "[Should not happen] Title is missing, cannot post"
                 );
                 dispatch(showError(genericError));
                 return;
+            } else if (hasPoll) {
+                if (
+                    option1InputRef.current?.value === undefined ||
+                    option2InputRef.current?.value === undefined
+                ) {
+                    console.warn(
+                        "[Should not happen] option1 or option2 is null, cannot create poll"
+                    );
+                    dispatch(showError(genericError));
+                    return;
+                }
+                newPost = {
+                    data: {
+                        title: titleInputRef.current?.value,
+                        body: bodyInputRef.current?.value,
+                        poll: {
+                            option1: option1InputRef.current?.value,
+                            option2: option2InputRef.current?.value,
+                            option3:
+                                option3InputRef.current?.value === ""
+                                    ? undefined
+                                    : option3InputRef.current?.value,
+                            option4:
+                                option4InputRef.current?.value === ""
+                                    ? undefined
+                                    : option4InputRef.current?.value,
+                            option5:
+                                option5InputRef.current?.value === ""
+                                    ? undefined
+                                    : option5InputRef.current?.value,
+                            option6:
+                                option6InputRef.current?.value === ""
+                                    ? undefined
+                                    : option6InputRef.current?.value,
+                        },
+                    },
+                    eligibility: undefined,
+                };
+            } else {
+                newPost = {
+                    data: {
+                        title: titleInputRef.current?.value,
+                        body: bodyInputRef.current?.value,
+                    },
+                    eligibility: undefined,
+                };
             }
+            const newPostForContext =
+                buildCreatePostContextFromPayload(newPost);
+            const context = await buildContext(
+                JSON.stringify(newPostForContext)
+            );
+            builder.context = context;
+            builder.nonce = randomFieldElement();
+            builder.version = "0.1.0";
+            const presentation = builder.finalize();
+            dispatch(showInfo(sendingPost));
+            await createPost(presentation, newPost);
+            if (posts.length > 0) {
+                // only act when feed is not empty! because loadMore will already fetch first data
+                asyncLoadRecent(); // refresh feed to show newly created post
+            }
+            dispatch(showSuccess(pollCreated));
         } catch (e) {
             console.warn("Error while creating post", e);
             dispatch(showError(genericError));
@@ -529,6 +393,8 @@ export function PostDialog({
             fullWidth={!fullScreen}
             fullScreen={fullScreen}
             open={isModalOpen}
+            scroll={"paper"}
+            disableRestoreFocus // https://stackoverflow.com/a/76533962/11046178
             onClose={onClose}
             sx={{
                 "& .MuiDialogTitle-root": {
@@ -544,27 +410,7 @@ export function PostDialog({
                     justifyContent="space-between"
                     alignItems="center"
                 >
-                    <Grid
-                        container
-                        direction="row"
-                        alignItems="center"
-                        justifyContent="center"
-                        spacing={1}
-                    >
-                        <Grid>
-                            <FontAwesomeIcon
-                                color="rgba(0, 0, 0, 0.6)"
-                                size="lg"
-                                icon={faMask}
-                            />
-                        </Grid>
-                    </Grid>
-                    <Grid justifySelf="flex-start">
-                        <Typography variant="h6">
-                            Create an anonymous poll
-                        </Typography>
-                    </Grid>
-                    <Grid alignSelf="flex-start">
+                    <Grid>
                         <IconButton
                             aria-label="close"
                             onClick={onClose}
@@ -575,57 +421,90 @@ export function PostDialog({
                             <CloseIcon />
                         </IconButton>
                     </Grid>
+                    <Grid alignSelf="flex-start">
+                        <Button
+                            onClick={async () => {
+                                await onCreatePost();
+                            }}
+                            variant="contained"
+                        >
+                            Post
+                        </Button>
+                    </Grid>
                 </Grid>
             </DialogTitle>
             <DialogContent>
-                <Container>
-                    <Grid
-                        container
-                        justifyContent="center"
-                        alignItems="flex-start"
-                        direction="column"
-                        spacing={2}
-                        flexWrap={"wrap"}
-                    >
+                <Grid
+                    container
+                    justifyContent="center"
+                    alignItems="space-between"
+                    direction="column"
+                    spacing={2}
+                    flexWrap={"wrap"}
+                >
+                    <Grid>
+                        <TextField
+                            variant="standard"
+                            fullWidth
+                            required
+                            autoFocus
+                            multiline
+                            minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
+                            maxRows={4} //  https://stackoverflow.com/a/72789474/11046178c
+                            id="title-poll"
+                            label="Title"
+                            placeholder="E.g., How often do you hang out with people from other cultures?"
+                            inputProps={{
+                                maxLength: MAX_LENGTH_TITLE,
+                            }}
+                            InputProps={{
+                                sx: { fontWeight: "bold", fontSize: "large" },
+                            }}
+                            InputLabelProps={{
+                                sx: { fontWeight: "bold", fontSize: "large" },
+                            }}
+                            inputRef={titleInputRef}
+                            error={!isTitleValid && hasModifiedTitle}
+                            onBlur={() => {
+                                if (
+                                    titleInputRef?.current?.value !==
+                                        undefined &&
+                                    titleInputRef?.current?.value !== ""
+                                ) {
+                                    setIsTitleValid(true);
+                                    setTitleHelper(undefined);
+                                } else {
+                                    setIsTitleValid(false);
+                                    setTitleHelper(fieldRequired);
+                                }
+                            }}
+                            helperText={
+                                hasModifiedTitle ? titleHelper : undefined
+                            } // must always be set to keep same height (see link at variable definition)
+                        />
+                    </Grid>
+                    <Grid height={"100%"}>
+                        <TextField
+                            variant="standard"
+                            fullWidth
+                            multiline
+                            sx={{ overflow: "hidden" }}
+                            minRows={5} //  https://stackoverflow.com/a/72789474/11046178c
+                            maxRows={1500} // long size is necessary to avoid the apparition of an unwanted scroll in the textarea html component
+                            id="body-poll"
+                            label="Body"
+                            placeholder={`Speak Boldly, Listen Kindly\n\nGround rules:\n\t1. Be civil and respectful\n\t2. Do not share any personally identifiable information (names, etc)`}
+                            inputProps={{
+                                maxLength: MAX_LENGTH_BODY,
+                            }}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            inputRef={bodyInputRef}
+                        />
+                    </Grid>
+                    {hasPoll ? (
                         <PollCreateView
-                            activeFormCredential={activeFormCredential}
-                            postAsStudentChecked={postAsStudentChecked}
-                            setPostAsStudentChecked={setPostAsStudentChecked}
-                            postAsAlumChecked={postAsAlumChecked}
-                            setPostAsAlumChecked={setPostAsAlumChecked}
-                            postAsFacultyChecked={postAsFacultyChecked}
-                            setPostAsFacultyChecked={setPostAsFacultyChecked}
-                            postAsCampusChecked={postAsCampusChecked}
-                            setPostAsCampusChecked={setPostAsCampusChecked}
-                            postAsProgramChecked={postAsProgramChecked}
-                            setPostAsProgramChecked={setPostAsProgramChecked}
-                            postAsAdmissionYearChecked={
-                                postAsAdmissionYearChecked
-                            }
-                            setPostAsAdmissionYearChecked={
-                                setPostAsAdmissionYearChecked
-                            }
-                            postAsFrench={postAsFrench}
-                            setPostAsFrench={setPostAsFrench}
-                            postAsInternational={postAsInternational}
-                            setPostAsInternational={setPostAsInternational}
-                            eligibilityCountries={eligibilityCountries}
-                            setEligibilityCountries={setEligibilityCountries}
-                            eligibilityAlum={eligibilityAlum}
-                            setEligibilityAlum={setEligibilityAlum}
-                            eligibilityStudent={eligibilityStudent}
-                            setEligibilityStudent={setEligibilityStudent}
-                            eligibilityFaculty={eligibilityFaculty}
-                            setEligibilityFaculty={setEligibilityFaculty}
-                            eligibilityCampus={eligibilityCampus}
-                            setEligibilityCampus={setEligibilityCampus}
-                            eligibilityProgram={eligibilityProgram}
-                            setEligibilityProgram={setEligibilityProgram}
-                            eligibilityAdmissionYear={eligibilityAdmissionYear}
-                            setEligibilityAdmissionYear={
-                                setEligibilityAdmissionYear
-                            }
-                            questionInputRef={questionInputRef}
                             option1InputRef={option1InputRef}
                             option2InputRef={option2InputRef}
                             option3InputRef={option3InputRef}
@@ -640,16 +519,8 @@ export function PostDialog({
                             setOption5Shown={setOption5Shown}
                             option6Shown={option6Shown}
                             setOption6Shown={setOption6Shown}
-                            hasModifiedQuestion={hasModifiedQuestion}
-                            setHasModifiedQuestion={setHasModifiedQuestion}
                             hasModifiedOption1={hasModifiedOption1}
-                            setHasModifiedOption1={setHasModifiedOption1}
                             hasModifiedOption2={hasModifiedOption2}
-                            setHasModifiedOption2={setHasModifiedOption2}
-                            questionHelper={questionHelper}
-                            setQuestionHelper={setQuestionHelper}
-                            isQuestionValid={isQuestionValid}
-                            setIsQuestionValid={setIsQuestionValid}
                             option1Helper={option1Helper}
                             setOption1Helper={setOption1Helper}
                             isOption1Valid={isOption1Valid}
@@ -659,18 +530,27 @@ export function PostDialog({
                             isOption2Valid={isOption2Valid}
                             setIsOption2Valid={setIsOption2Valid}
                         />
-                        <Grid my={1} alignSelf="flex-end">
-                            <Button
-                                onClick={async () => await onCreatePoll()}
-                                variant="contained"
-                                startIcon={<Box>📊</Box>}
-                            >
-                                Create poll
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Container>
+                    ) : null}
+                </Grid>
             </DialogContent>
+            <DialogActions>
+                <Box>
+                    <Button
+                        startIcon={
+                            hasPoll ? (
+                                <PollIcon fontSize="medium" />
+                            ) : (
+                                <PollOutlinedIcon fontSize="medium" />
+                            )
+                        }
+                        size="medium"
+                        variant="text"
+                        onClick={() => setHasPoll(!hasPoll)}
+                    >
+                        {hasPoll ? "Remove the poll" : "Add a poll"}
+                    </Button>
+                </Box>
+            </DialogActions>
         </Dialog>
     );
 }

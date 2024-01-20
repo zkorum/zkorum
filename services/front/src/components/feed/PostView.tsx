@@ -1,8 +1,7 @@
 import type { UpdatePostHiddenStatusProps } from "@/RootDialog";
 import {
-    getFromAuthor,
     getTimeFromNow,
-    getToEligibility,
+    getTrimmedPseudonym,
     zeroIfUndefined,
 } from "@/common/common";
 import { VITE_BACK_PUBLIC_KEY } from "@/common/conf";
@@ -24,7 +23,7 @@ import {
     type PostAsProps,
 } from "@/shared/shared";
 import type {
-    ExtendedPollData,
+    ExtendedPostData,
     PollMetadata,
     ResponseToPoll,
     ResponseToPollPayload,
@@ -36,7 +35,7 @@ import {
     selectActiveFormCredential,
     selectActiveSessionEmail,
     selectActiveTimeboundSecretCredential,
-    selectPollResponsePerPollUid,
+    selectPollResponsePerPostUid,
 } from "@/store/selector";
 import {
     PresentationBuilder,
@@ -44,14 +43,10 @@ import {
     BBSPlusPublicKeyG2 as PublicKey,
     randomFieldElement,
 } from "@docknetwork/crypto-wasm-ts";
-import { faMask } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import PublicIcon from "@mui/icons-material/Public";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -72,21 +67,23 @@ export type UserResponse =
 
 interface PostViewProps {
     dateToShow: "updatedAt" | "lastReactedAt";
-    post: ExtendedPollData;
+    post: ExtendedPostData;
     updatePost: (responseToPoll: ResponseToPollPayload) => void;
     updatePostHiddenStatus: (props: UpdatePostHiddenStatusProps) => void;
     onComment: (event: React.MouseEvent<HTMLElement>) => void;
+    viewMode: "feed" | "post";
 }
 
 export interface RespondToPollProps {
     optionNumberResponded: number;
     setButtonIsLoading: (isLoading: boolean) => void;
     setButtonLoadingText: (loadingText: string) => void;
-    poll: ExtendedPollData;
+    poll: ExtendedPostData;
 }
 
 export function PostView({
     dateToShow,
+    viewMode,
     post,
     onComment,
     updatePost,
@@ -100,7 +97,7 @@ export function PostView({
     );
     const dispatch = useAppDispatch();
     const pollResponse = useAppSelector((state) =>
-        selectPollResponsePerPollUid(state, post.metadata.uid)
+        selectPollResponsePerPostUid(state, post.metadata.uid)
     );
 
     const [isHideLoading, setIsHideLoading] = React.useState<boolean>(false);
@@ -251,7 +248,7 @@ export function PostView({
                 );
             }
             const payloadResponseToPoll: ResponseToPollPayload = {
-                pollUid: poll.metadata.uid,
+                postUid: poll.metadata.uid,
                 optionChosen: optionNumberResponded,
             };
             const responseToPoll: ResponseToPoll =
@@ -277,7 +274,7 @@ export function PostView({
     }
 
     function getIsEligible(
-        post: ExtendedPollData,
+        post: ExtendedPostData,
         formCredentialObj: object | undefined
     ): boolean {
         if (
@@ -364,20 +361,75 @@ export function PostView({
         }
     }
 
-    const numberOfResponses =
-        post.payload.result.option1Response +
-        post.payload.result.option2Response +
-        zeroIfUndefined(post.payload.result.option3Response) +
-        zeroIfUndefined(post.payload.result.option4Response) +
-        zeroIfUndefined(post.payload.result.option5Response) +
-        zeroIfUndefined(post.payload.result.option6Response);
-
     function showDate(postMetadata: PollMetadata): string {
         switch (dateToShow) {
             case "updatedAt":
                 return getTimeFromNow(postMetadata.updatedAt);
             case "lastReactedAt":
                 return getTimeFromNow(postMetadata.lastReactedAt);
+        }
+    }
+
+    function getPollView() {
+        if (post.payload.poll !== undefined) {
+            const numberOfResponses =
+                post.payload.poll.result.option1Response +
+                post.payload.poll.result.option2Response +
+                zeroIfUndefined(post.payload.poll.result.option3Response) +
+                zeroIfUndefined(post.payload.poll.result.option4Response) +
+                zeroIfUndefined(post.payload.poll.result.option5Response) +
+                zeroIfUndefined(post.payload.poll.result.option6Response);
+            if (!isEligible || pollResponse !== undefined) {
+                return (
+                    <Grid
+                        sx={
+                            viewMode === "post"
+                                ? {
+                                      py: 1,
+                                      borderRadius: "8px",
+                                      border: "1px solid #e6e9ec",
+                                  }
+                                : { py: 1 }
+                        }
+                    >
+                        <PollResultView
+                            result={post.payload.poll.result}
+                            options={post.payload.poll.options}
+                            pollResponse={pollResponse}
+                        />
+                        <Grid sx={{ px: 1, pb: 1 }}>
+                            <Typography variant="body2">
+                                {numberOfResponses}{" "}
+                                {numberOfResponses <= 1 ? "vote" : "votes"}
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                );
+            } else {
+                return (
+                    <Grid
+                        sx={{
+                            my: 0.5,
+                        }}
+                    >
+                        <PollCanRespondView
+                            options={post.payload.poll.options}
+                            onRespond={async (
+                                optionNumberResponded,
+                                setButtonIsLoading,
+                                setButtonLoadingText
+                            ) =>
+                                await respondToPoll({
+                                    optionNumberResponded,
+                                    setButtonIsLoading,
+                                    setButtonLoadingText,
+                                    poll: post,
+                                })
+                            }
+                        />
+                    </Grid>
+                );
+            }
         }
     }
 
@@ -414,9 +466,8 @@ export function PostView({
                             gap={0}
                             spacing={0}
                         >
-                            <Grid>
+                            <Grid height={20}>
                                 <Grid
-                                    sx={{ height: 20 }}
                                     container
                                     direction="row"
                                     spacing={0.5}
@@ -440,86 +491,23 @@ export function PostView({
                                             color="primary"
                                         />
                                     </Grid>
-                                    <Grid>
-                                        <Typography
-                                            sx={{
-                                                color: "rgba(0, 0, 0, 0.6)",
-                                                fontSize: 12,
-                                            }}
-                                            variant="body2"
-                                        >
-                                            •
-                                        </Typography>
-                                    </Grid>
-                                    <Grid>
-                                        <Typography
-                                            sx={{
-                                                color: "rgba(0, 0, 0, 0.6)",
-                                                fontSize: 12,
-                                            }}
-                                            variant="body2"
-                                        >
-                                            {showDate(post.metadata)}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid>
-                                        <Typography
-                                            sx={{
-                                                color: "rgba(0, 0, 0, 0.6)",
-                                                fontSize: 12,
-                                            }}
-                                            variant="body2"
-                                        >
-                                            •
-                                        </Typography>
-                                    </Grid>
-                                    <Grid>
-                                        <PublicIcon
-                                            sx={{
-                                                color: "rgba(0, 0, 0, 0.6)",
-                                                fontSize: 12,
-                                            }}
-                                        />
-                                    </Grid>
                                 </Grid>
                             </Grid>
-                            <Grid
-                                sx={{ height: 20 }}
-                                alignItems="center"
-                                container
-                                direction="row"
-                                spacing={0.5}
-                            >
-                                <Grid
-                                    container
-                                    direction="row"
-                                    justifyContent="center"
-                                    alignItems="center"
+                            <Grid height={13}>
+                                <Typography
+                                    sx={{
+                                        color: "rgba(0, 0, 0, 0.6)",
+                                        fontSize: 12,
+                                    }}
+                                    variant="body2"
                                 >
-                                    <Grid>
-                                        <Typography
-                                            sx={{
-                                                color: "rgba(0, 0, 0, 0.6)",
-                                                fontSize: 12,
-                                            }}
-                                            variant="body2"
-                                        >
-                                            {`From ${getFromAuthor(
-                                                post.author
-                                            )}`}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid>
-                                        <FontAwesomeIcon
-                                            color="rgba(0, 0, 0, 0.6)"
-                                            size="xs"
-                                            icon={faMask}
-                                        />
-                                    </Grid>
-                                </Grid>
+                                    {`${getTrimmedPseudonym(
+                                        post.author.pseudonym
+                                    )}`}
+                                </Typography>
                             </Grid>
                             <Grid
-                                sx={{ height: 20 }}
+                                height={13}
                                 alignItems="center"
                                 justifyContent="center"
                                 container
@@ -534,37 +522,29 @@ export function PostView({
                                         }}
                                         variant="body2"
                                     >
-                                        {`To ${getToEligibility(
-                                            post.eligibility
-                                        )}`}
+                                        {showDate(post.metadata)}
                                     </Typography>
                                 </Grid>
-                            </Grid>
-                            {isEligible ? (
-                                <Grid
-                                    sx={{ height: 15 }}
-                                    alignItems="center"
-                                    justifyContent="center"
-                                    container
-                                    direction="row"
-                                    spacing={0.5}
-                                >
-                                    <Chip
+                                <Grid>
+                                    <Typography
                                         sx={{
-                                            fontSize: 10,
-                                            height: 12,
+                                            color: "rgba(0, 0, 0, 0.6)",
+                                            fontSize: 12,
                                         }}
-                                        icon={
-                                            <AdminPanelSettingsIcon
-                                                sx={{ fontSize: 10 }}
-                                                color="success"
-                                            />
-                                        }
-                                        label="You are eligible"
-                                        color="success"
+                                        variant="body2"
+                                    >
+                                        •
+                                    </Typography>
+                                </Grid>
+                                <Grid>
+                                    <PublicIcon
+                                        sx={{
+                                            color: "rgba(0, 0, 0, 0.6)",
+                                            fontSize: 12,
+                                        }}
                                     />
                                 </Grid>
-                            ) : null}
+                            </Grid>
                         </Grid>
                         {activeSessionEmail.endsWith("zkorum.com") ? (
                             <Grid
@@ -593,65 +573,53 @@ export function PostView({
                             </Grid>
                         ) : null}
                     </Grid>
-                    <Grid
-                        container
-                        direction="row"
-                        justifyContent="flex-start"
-                        alignItems="center"
-                        key={`pollQuestionResponse-${post.metadata.slugId}`}
-                        spacing={1}
-                        sx={{
-                            borderRadius: "8px",
-                            my: 0.5,
-                            border: "1px solid #e6e9ec",
-                        }}
-                    >
-                        <Grid sx={{ p: 1 }}>
+                </Grid>
+                <Grid
+                    sx={
+                        viewMode === "feed"
+                            ? {
+                                  borderRadius: "8px",
+                                  border: "1px solid #e6e9ec",
+                              }
+                            : undefined
+                    }
+                    p={1}
+                    mt={2}
+                >
+                    <Grid px={viewMode === "feed" ? 1 : 0} py={1}>
+                        <Typography
+                            variant="body1"
+                            sx={{
+                                fontWeight: "bold",
+                                fontSize: "1.125rem",
+                                lineHeight: "1.5rem",
+                            }}
+                        >
+                            {post.payload.title}
+                        </Typography>
+                    </Grid>
+                    {post.payload.body !== undefined ? (
+                        <Grid px={viewMode === "feed" ? 1 : 0} py={1}>
                             <Typography
-                                variant="body1"
                                 sx={{
-                                    fontWeight: "bold",
-                                    fontSize: "1.125rem",
-                                    lineHeight: "1.5rem",
+                                    color:
+                                        viewMode === "feed"
+                                            ? "rgba(0, 0, 0, 0.6)"
+                                            : "inherit",
                                 }}
+                                variant={
+                                    viewMode === "feed" ? "body2" : "body1"
+                                }
                             >
-                                {post.payload.data.question}
+                                {post.payload.body.length <= 60
+                                    ? post.payload.body
+                                    : viewMode === "feed"
+                                    ? `${post.payload.body.slice(0, 60)}...`
+                                    : post.payload.body}
                             </Typography>
                         </Grid>
-                        {!isEligible || pollResponse !== undefined ? (
-                            <>
-                                <PollResultView
-                                    result={post.payload.result}
-                                    data={post.payload.data}
-                                    pollResponse={pollResponse}
-                                />
-                                <Grid sx={{ px: 1, pb: 1 }}>
-                                    <Typography variant="body2">
-                                        {numberOfResponses}{" "}
-                                        {numberOfResponses <= 1
-                                            ? "vote"
-                                            : "votes"}
-                                    </Typography>
-                                </Grid>
-                            </>
-                        ) : (
-                            <PollCanRespondView
-                                data={post.payload.data}
-                                onRespond={async (
-                                    optionNumberResponded,
-                                    setButtonIsLoading,
-                                    setButtonLoadingText
-                                ) =>
-                                    await respondToPoll({
-                                        optionNumberResponded,
-                                        setButtonIsLoading,
-                                        setButtonLoadingText,
-                                        poll: post,
-                                    })
-                                }
-                            />
-                        )}
-                    </Grid>
+                    ) : null}
+                    <Grid mt={1}>{getPollView()}</Grid>
                 </Grid>
                 <Grid mt={1}>
                     <CommentsViewsLikesView

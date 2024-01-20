@@ -1,5 +1,5 @@
 import type {
-    ExtendedPollData,
+    ExtendedPostData,
     ResponseToPollPayload,
 } from "@/shared/types/zod";
 import { fetchFeedMore, fetchFeedRecent } from "@/request/feed";
@@ -22,11 +22,11 @@ export function usePostsAndMeta() {
 }
 
 // https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
-export type PostsType = ExtendedPollData[];
+export type PostsType = ExtendedPostData[];
 
 export async function doLoadMore(
     isAdmin: boolean,
-    posts: ExtendedPollData[],
+    posts: ExtendedPostData[],
     setPosts: React.Dispatch<React.SetStateAction<PostsType>>,
     setLoadingMore: React.Dispatch<React.SetStateAction<boolean>>,
     lastIndex?: number
@@ -58,7 +58,7 @@ export async function doLoadMore(
 
 export async function doLoadRecent(
     isAdmin: boolean,
-    posts: ExtendedPollData[],
+    posts: ExtendedPostData[],
     setPosts: React.Dispatch<React.SetStateAction<PostsType>>,
     setLoadingRecent: React.Dispatch<React.SetStateAction<boolean>>,
     minLastReactedAt: Date

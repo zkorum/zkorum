@@ -4,7 +4,7 @@ import type {
     FormCredentialsPerEmail,
     ResponseToPollPayload,
     UnblindedSecretCredentialsPerType,
-    PollResponsesByPollUid,
+    PollResponsesByPostUid,
 } from "@/shared/types/zod";
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
@@ -37,7 +37,7 @@ export interface SessionData {
     emailCredentialsPerEmail?: EmailCredentialsPerEmail;
     formCredentialsPerEmail?: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType?: UnblindedSecretCredentialsPerType;
-    pollResponsesByPollUid?: PollResponsesByPollUid;
+    pollResponsesByPostUid?: PollResponsesByPostUid;
 }
 
 interface VerifyProps {
@@ -249,12 +249,12 @@ export const sessionSlice = createSlice({
             ) {
                 if (
                     state.sessions[state.activeSessionEmail]
-                        .pollResponsesByPollUid === undefined
+                        .pollResponsesByPostUid === undefined
                 ) {
                     state.sessions[
                         state.activeSessionEmail
-                    ].pollResponsesByPollUid = {
-                        [action.payload.responsePayload.pollUid]: {
+                    ].pollResponsesByPostUid = {
+                        [action.payload.responsePayload.postUid]: {
                             optionChosen:
                                 action.payload.responsePayload.optionChosen,
                             respondentPseudonym:
@@ -264,8 +264,8 @@ export const sessionSlice = createSlice({
                 } else {
                     (
                         state.sessions[state.activeSessionEmail]
-                            .pollResponsesByPollUid as PollResponsesByPollUid
-                    )[action.payload.responsePayload.pollUid] = {
+                            .pollResponsesByPostUid as PollResponsesByPostUid
+                    )[action.payload.responsePayload.postUid] = {
                         optionChosen:
                             action.payload.responsePayload.optionChosen,
                         respondentPseudonym: action.payload.respondentPseudonym,

@@ -2371,7 +2371,7 @@
         }
       }
     },
-    "/api/v1/poll/create": {
+    "/api/v1/post/create": {
       "post": {
         "requestBody": {
           "content": {
@@ -2379,52 +2379,65 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "poll": {
+                  "post": {
                     "type": "object",
                     "properties": {
                       "data": {
                         "type": "object",
                         "properties": {
-                          "question": {
+                          "title": {
                             "type": "string",
                             "maxLength": 140,
                             "minLength": 1
                           },
-                          "option1": {
+                          "body": {
                             "type": "string",
-                            "maxLength": 30,
+                            "maxLength": 3000,
                             "minLength": 1
                           },
-                          "option2": {
-                            "type": "string",
-                            "maxLength": 30,
-                            "minLength": 1
-                          },
-                          "option3": {
-                            "type": "string",
-                            "maxLength": 30,
-                            "minLength": 1
-                          },
-                          "option4": {
-                            "type": "string",
-                            "maxLength": 30,
-                            "minLength": 1
-                          },
-                          "option5": {
-                            "type": "string",
-                            "maxLength": 30,
-                            "minLength": 1
-                          },
-                          "option6": {
-                            "type": "string",
-                            "maxLength": 30,
-                            "minLength": 1
+                          "poll": {
+                            "type": "object",
+                            "properties": {
+                              "option1": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option2": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option3": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option4": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option5": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              },
+                              "option6": {
+                                "type": "string",
+                                "maxLength": 30,
+                                "minLength": 1
+                              }
+                            },
+                            "required": [
+                              "option1",
+                              "option2"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "required": [
-                          "question",
-                          "option1",
-                          "option2"
+                          "title"
                         ],
                         "additionalProperties": false
                       },
@@ -2496,7 +2509,7 @@
                   "pres": {}
                 },
                 "required": [
-                  "poll"
+                  "post"
                 ],
                 "additionalProperties": false
               }
@@ -2522,7 +2535,7 @@
                   "responseToPoll": {
                     "type": "object",
                     "properties": {
-                      "pollUid": {
+                      "postUid": {
                         "type": "string"
                       },
                       "optionChosen": {
@@ -2532,7 +2545,7 @@
                       }
                     },
                     "required": [
-                      "pollUid",
+                      "postUid",
                       "optionChosen"
                     ],
                     "additionalProperties": false
@@ -2594,90 +2607,103 @@
                     "payload": {
                       "type": "object",
                       "properties": {
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "question": {
-                              "type": "string",
-                              "maxLength": 140,
-                              "minLength": 1
-                            },
-                            "option1": {
-                              "type": "string",
-                              "maxLength": 30,
-                              "minLength": 1
-                            },
-                            "option2": {
-                              "type": "string",
-                              "maxLength": 30,
-                              "minLength": 1
-                            },
-                            "option3": {
-                              "type": "string",
-                              "maxLength": 30,
-                              "minLength": 1
-                            },
-                            "option4": {
-                              "type": "string",
-                              "maxLength": 30,
-                              "minLength": 1
-                            },
-                            "option5": {
-                              "type": "string",
-                              "maxLength": 30,
-                              "minLength": 1
-                            },
-                            "option6": {
-                              "type": "string",
-                              "maxLength": 30,
-                              "minLength": 1
-                            }
-                          },
-                          "required": [
-                            "question",
-                            "option1",
-                            "option2"
-                          ],
-                          "additionalProperties": false
+                        "title": {
+                          "type": "string",
+                          "maxLength": 140,
+                          "minLength": 1
                         },
-                        "result": {
+                        "body": {
+                          "type": "string",
+                          "maxLength": 3000,
+                          "minLength": 1
+                        },
+                        "poll": {
                           "type": "object",
                           "properties": {
-                            "option1Response": {
-                              "type": "number",
-                              "minimum": 0
+                            "options": {
+                              "type": "object",
+                              "properties": {
+                                "option1": {
+                                  "type": "string",
+                                  "maxLength": 30,
+                                  "minLength": 1
+                                },
+                                "option2": {
+                                  "type": "string",
+                                  "maxLength": 30,
+                                  "minLength": 1
+                                },
+                                "option3": {
+                                  "type": "string",
+                                  "maxLength": 30,
+                                  "minLength": 1
+                                },
+                                "option4": {
+                                  "type": "string",
+                                  "maxLength": 30,
+                                  "minLength": 1
+                                },
+                                "option5": {
+                                  "type": "string",
+                                  "maxLength": 30,
+                                  "minLength": 1
+                                },
+                                "option6": {
+                                  "type": "string",
+                                  "maxLength": 30,
+                                  "minLength": 1
+                                }
+                              },
+                              "required": [
+                                "option1",
+                                "option2"
+                              ],
+                              "additionalProperties": false
                             },
-                            "option2Response": {
-                              "type": "number",
-                              "minimum": 0
-                            },
-                            "option3Response": {
-                              "type": "number",
-                              "minimum": 0
-                            },
-                            "option4Response": {
-                              "type": "number",
-                              "minimum": 0
-                            },
-                            "option5Response": {
-                              "type": "number",
-                              "minimum": 0
-                            },
-                            "option6Response": {
-                              "type": "number",
-                              "minimum": 0
+                            "result": {
+                              "type": "object",
+                              "properties": {
+                                "option1Response": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "option2Response": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "option3Response": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "option4Response": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "option5Response": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "option6Response": {
+                                  "type": "number",
+                                  "minimum": 0
+                                }
+                              },
+                              "required": [
+                                "option1Response",
+                                "option2Response"
+                              ],
+                              "additionalProperties": false
                             }
                           },
                           "required": [
-                            "option1Response",
-                            "option2Response"
+                            "options",
+                            "result"
                           ],
                           "additionalProperties": false
                         }
                       },
                       "required": [
-                        "data",
-                        "result"
+                        "title"
                       ],
                       "additionalProperties": false
                     },
@@ -3411,90 +3437,103 @@
                       "payload": {
                         "type": "object",
                         "properties": {
-                          "data": {
-                            "type": "object",
-                            "properties": {
-                              "question": {
-                                "type": "string",
-                                "maxLength": 140,
-                                "minLength": 1
-                              },
-                              "option1": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option2": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option3": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option4": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option5": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option6": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              }
-                            },
-                            "required": [
-                              "question",
-                              "option1",
-                              "option2"
-                            ],
-                            "additionalProperties": false
+                          "title": {
+                            "type": "string",
+                            "maxLength": 140,
+                            "minLength": 1
                           },
-                          "result": {
+                          "body": {
+                            "type": "string",
+                            "maxLength": 3000,
+                            "minLength": 1
+                          },
+                          "poll": {
                             "type": "object",
                             "properties": {
-                              "option1Response": {
-                                "type": "number",
-                                "minimum": 0
+                              "options": {
+                                "type": "object",
+                                "properties": {
+                                  "option1": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option2": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option3": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option4": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option5": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option6": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  }
+                                },
+                                "required": [
+                                  "option1",
+                                  "option2"
+                                ],
+                                "additionalProperties": false
                               },
-                              "option2Response": {
-                                "type": "number",
-                                "minimum": 0
-                              },
-                              "option3Response": {
-                                "type": "number",
-                                "minimum": 0
-                              },
-                              "option4Response": {
-                                "type": "number",
-                                "minimum": 0
-                              },
-                              "option5Response": {
-                                "type": "number",
-                                "minimum": 0
-                              },
-                              "option6Response": {
-                                "type": "number",
-                                "minimum": 0
+                              "result": {
+                                "type": "object",
+                                "properties": {
+                                  "option1Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option2Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option3Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option4Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option5Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option6Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "option1Response",
+                                  "option2Response"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": [
-                              "option1Response",
-                              "option2Response"
+                              "options",
+                              "result"
                             ],
                             "additionalProperties": false
                           }
                         },
                         "required": [
-                          "data",
-                          "result"
+                          "title"
                         ],
                         "additionalProperties": false
                       },
@@ -4229,90 +4268,103 @@
                       "payload": {
                         "type": "object",
                         "properties": {
-                          "data": {
-                            "type": "object",
-                            "properties": {
-                              "question": {
-                                "type": "string",
-                                "maxLength": 140,
-                                "minLength": 1
-                              },
-                              "option1": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option2": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option3": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option4": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option5": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              },
-                              "option6": {
-                                "type": "string",
-                                "maxLength": 30,
-                                "minLength": 1
-                              }
-                            },
-                            "required": [
-                              "question",
-                              "option1",
-                              "option2"
-                            ],
-                            "additionalProperties": false
+                          "title": {
+                            "type": "string",
+                            "maxLength": 140,
+                            "minLength": 1
                           },
-                          "result": {
+                          "body": {
+                            "type": "string",
+                            "maxLength": 3000,
+                            "minLength": 1
+                          },
+                          "poll": {
                             "type": "object",
                             "properties": {
-                              "option1Response": {
-                                "type": "number",
-                                "minimum": 0
+                              "options": {
+                                "type": "object",
+                                "properties": {
+                                  "option1": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option2": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option3": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option4": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option5": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  },
+                                  "option6": {
+                                    "type": "string",
+                                    "maxLength": 30,
+                                    "minLength": 1
+                                  }
+                                },
+                                "required": [
+                                  "option1",
+                                  "option2"
+                                ],
+                                "additionalProperties": false
                               },
-                              "option2Response": {
-                                "type": "number",
-                                "minimum": 0
-                              },
-                              "option3Response": {
-                                "type": "number",
-                                "minimum": 0
-                              },
-                              "option4Response": {
-                                "type": "number",
-                                "minimum": 0
-                              },
-                              "option5Response": {
-                                "type": "number",
-                                "minimum": 0
-                              },
-                              "option6Response": {
-                                "type": "number",
-                                "minimum": 0
+                              "result": {
+                                "type": "object",
+                                "properties": {
+                                  "option1Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option2Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option3Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option4Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option5Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "option6Response": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "option1Response",
+                                  "option2Response"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": [
-                              "option1Response",
-                              "option2Response"
+                              "options",
+                              "result"
                             ],
                             "additionalProperties": false
                           }
                         },
                         "required": [
-                          "data",
-                          "result"
+                          "title"
                         ],
                         "additionalProperties": false
                       },
@@ -5203,90 +5255,103 @@
                         "payload": {
                           "type": "object",
                           "properties": {
-                            "data": {
-                              "type": "object",
-                              "properties": {
-                                "question": {
-                                  "type": "string",
-                                  "maxLength": 140,
-                                  "minLength": 1
-                                },
-                                "option1": {
-                                  "type": "string",
-                                  "maxLength": 30,
-                                  "minLength": 1
-                                },
-                                "option2": {
-                                  "type": "string",
-                                  "maxLength": 30,
-                                  "minLength": 1
-                                },
-                                "option3": {
-                                  "type": "string",
-                                  "maxLength": 30,
-                                  "minLength": 1
-                                },
-                                "option4": {
-                                  "type": "string",
-                                  "maxLength": 30,
-                                  "minLength": 1
-                                },
-                                "option5": {
-                                  "type": "string",
-                                  "maxLength": 30,
-                                  "minLength": 1
-                                },
-                                "option6": {
-                                  "type": "string",
-                                  "maxLength": 30,
-                                  "minLength": 1
-                                }
-                              },
-                              "required": [
-                                "question",
-                                "option1",
-                                "option2"
-                              ],
-                              "additionalProperties": false
+                            "title": {
+                              "type": "string",
+                              "maxLength": 140,
+                              "minLength": 1
                             },
-                            "result": {
+                            "body": {
+                              "type": "string",
+                              "maxLength": 3000,
+                              "minLength": 1
+                            },
+                            "poll": {
                               "type": "object",
                               "properties": {
-                                "option1Response": {
-                                  "type": "number",
-                                  "minimum": 0
+                                "options": {
+                                  "type": "object",
+                                  "properties": {
+                                    "option1": {
+                                      "type": "string",
+                                      "maxLength": 30,
+                                      "minLength": 1
+                                    },
+                                    "option2": {
+                                      "type": "string",
+                                      "maxLength": 30,
+                                      "minLength": 1
+                                    },
+                                    "option3": {
+                                      "type": "string",
+                                      "maxLength": 30,
+                                      "minLength": 1
+                                    },
+                                    "option4": {
+                                      "type": "string",
+                                      "maxLength": 30,
+                                      "minLength": 1
+                                    },
+                                    "option5": {
+                                      "type": "string",
+                                      "maxLength": 30,
+                                      "minLength": 1
+                                    },
+                                    "option6": {
+                                      "type": "string",
+                                      "maxLength": 30,
+                                      "minLength": 1
+                                    }
+                                  },
+                                  "required": [
+                                    "option1",
+                                    "option2"
+                                  ],
+                                  "additionalProperties": false
                                 },
-                                "option2Response": {
-                                  "type": "number",
-                                  "minimum": 0
-                                },
-                                "option3Response": {
-                                  "type": "number",
-                                  "minimum": 0
-                                },
-                                "option4Response": {
-                                  "type": "number",
-                                  "minimum": 0
-                                },
-                                "option5Response": {
-                                  "type": "number",
-                                  "minimum": 0
-                                },
-                                "option6Response": {
-                                  "type": "number",
-                                  "minimum": 0
+                                "result": {
+                                  "type": "object",
+                                  "properties": {
+                                    "option1Response": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    "option2Response": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    "option3Response": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    "option4Response": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    "option5Response": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    "option6Response": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    }
+                                  },
+                                  "required": [
+                                    "option1Response",
+                                    "option2Response"
+                                  ],
+                                  "additionalProperties": false
                                 }
                               },
                               "required": [
-                                "option1Response",
-                                "option2Response"
+                                "options",
+                                "result"
                               ],
                               "additionalProperties": false
                             }
                           },
                           "required": [
-                            "data",
-                            "result"
+                            "title"
                           ],
                           "additionalProperties": false
                         },

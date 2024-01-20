@@ -10,6 +10,7 @@ import { scopeWith } from "./common/util.js";
 import type {
     CreateCommentPayload,
     Eligibilities,
+    Post,
     ResponseToPoll,
     ResponseToPollPayload,
     UniversityType,
@@ -72,7 +73,9 @@ export function domainFromEmail(email: string): string | undefined {
 // WARNING: this is also used in schema.ts and cannot be imported there so it was copy-pasted
 // IF YOU CHANGE THESE VALUES ALSO CHANGE THEM IN SCHEMA.TS
 export const MAX_LENGTH_OPTION = 30;
-export const MAX_LENGTH_QUESTION = 140;
+export const MAX_LENGTH_TITLE = 140;
+export const MAX_LENGTH_COMMENT = 1250; // LinkedIn limit
+export const MAX_LENGTH_BODY = 3000; // LinkedIn limit
 
 export function toUnionUndefined<T>(value: T | null): T | undefined {
     if (value === null) {
@@ -179,6 +182,8 @@ export function attributesFormRevealedFromPostAs({
     return attributesRevealed;
 }
 
+export const BASE_SCOPE = "base";
+
 export function scopeFromPostAs({
     postAsStudent,
     postAsAlum,
@@ -188,7 +193,7 @@ export function scopeFromPostAs({
     postAsAdmissionYear,
     postAsCountries,
 }: PostAsProps): string {
-    let scope = "base";
+    let scope = BASE_SCOPE;
     if (postAsStudent) {
         scope = scopeWith(scope, "student");
     }
@@ -313,6 +318,15 @@ export async function buildContext(content: string): Promise<string> {
     return await toEncodedCID(content);
 }
 
+export function buildCreatePostContextFromPayload(payload: Post) {
+    return {
+        metadata: {
+            action: "create",
+        },
+        payload: payload,
+    };
+}
+
 export function buildResponseToPollFromPayload(
     payload: ResponseToPollPayload
 ): ResponseToPoll {
@@ -334,5 +348,3 @@ export function buildCreateCommentContextFromPayload(
         payload: payload,
     };
 }
-
-export const MAX_COMMENT_LENGTH = 1250; // LinkedIn limit

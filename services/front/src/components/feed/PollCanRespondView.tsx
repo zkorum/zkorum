@@ -1,4 +1,4 @@
-import type { PollData } from "@/shared/types/zod";
+import type { PollOptions } from "@/shared/types/zod";
 import Grid from "@mui/material/Unstable_Grid2";
 import React from "react";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 
 interface PollCanRespondViewProps {
-    data: PollData;
+    options: PollOptions;
     onRespond: (
         optionNumberResponded: number,
         setButtonIsLoading: (isLoading: boolean) => void,
@@ -15,7 +15,7 @@ interface PollCanRespondViewProps {
 }
 
 export function PollCanRespondView({
-    data,
+    options,
     onRespond,
 }: PollCanRespondViewProps) {
     const [button1IsLoading, setButton1IsLoading] =
@@ -101,7 +101,7 @@ export function PollCanRespondView({
             direction="column"
         >
             {getOptionView(
-                data.option1,
+                options.option1,
                 1,
                 button1IsLoading,
                 setButton1IsLoading,
@@ -109,16 +109,16 @@ export function PollCanRespondView({
                 setButton1LoadingText
             )}
             {getOptionView(
-                data.option2,
+                options.option2,
                 2,
                 button2IsLoading,
                 setButton2IsLoading,
                 button2LoadingText,
                 setButton2LoadingText
             )}
-            {data.option3 !== undefined
+            {options.option3 !== undefined
                 ? getOptionView(
-                      data.option3,
+                      options.option3,
                       3,
                       button3IsLoading,
                       setButton3IsLoading,
@@ -126,9 +126,9 @@ export function PollCanRespondView({
                       setButton3LoadingText
                   )
                 : null}
-            {data.option4 !== undefined
+            {options.option4 !== undefined
                 ? getOptionView(
-                      data.option4,
+                      options.option4,
                       4,
                       button4IsLoading,
                       setButton4IsLoading,
@@ -136,9 +136,9 @@ export function PollCanRespondView({
                       setButton4LoadingText
                   )
                 : null}
-            {data.option5 !== undefined
+            {options.option5 !== undefined
                 ? getOptionView(
-                      data.option5,
+                      options.option5,
                       5,
                       button5IsLoading,
                       setButton5IsLoading,
@@ -146,9 +146,9 @@ export function PollCanRespondView({
                       setButton5LoadingText
                   )
                 : null}
-            {data.option6 !== undefined
+            {options.option6 !== undefined
                 ? getOptionView(
-                      data.option6,
+                      options.option6,
                       6,
                       button6IsLoading,
                       setButton6IsLoading,

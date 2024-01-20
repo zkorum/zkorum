@@ -1,9 +1,14 @@
+/** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/
 import { z } from "zod";
 import { validateDidKey, validateDidWeb } from "../did/util.js";
 import { range } from "../common/util.js";
 import { EssecCampus, EssecProgram } from "./university.js";
 import { type TCountryCode } from "countries-list";
-import { MAX_LENGTH_QUESTION, MAX_LENGTH_OPTION } from "../shared.js";
+import {
+    MAX_LENGTH_TITLE,
+    MAX_LENGTH_OPTION,
+    MAX_LENGTH_BODY,
+} from "../shared.js";
 
 // Alpha only for ESSEC
 function isAuthorizedEmail(email: Email) {
@@ -437,37 +442,57 @@ export const zodeligibility = z
         admissionYears: z.array(zodstudentAdmissionYear).optional(),
     })
     .strict();
-export const zodpollQuestion = z.string().max(MAX_LENGTH_QUESTION).nonempty();
-export const zodpollOption = z.string().max(MAX_LENGTH_OPTION).nonempty();
-export const zodpollOptionResponse = z.number().nonnegative();
-export const zodpollData = z
+export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).nonempty();
+export const zodPostBody = z.string().max(MAX_LENGTH_BODY).nonempty();
+export const zodPollOption = z.string().max(MAX_LENGTH_OPTION).nonempty();
+export const zodPollOptionResponse = z.number().nonnegative();
+export const zodPollOptions = z
     .object({
-        question: zodpollQuestion,
-        option1: zodpollOption,
-        option2: zodpollOption,
-        option3: zodpollOption.optional(),
-        option4: zodpollOption.optional(),
-        option5: zodpollOption.optional(),
-        option6: zodpollOption.optional(),
+        option1: zodPollOption,
+        option2: zodPollOption,
+        option3: zodPollOption.optional(),
+        option4: zodPollOption.optional(),
+        option5: zodPollOption.optional(),
+        option6: zodPollOption.optional(),
     })
     .strict();
-export const zodpollResult = z
+export const zodPollResult = z
     .object({
-        option1Response: zodpollOptionResponse,
-        option2Response: zodpollOptionResponse,
-        option3Response: zodpollOptionResponse.optional(),
-        option4Response: zodpollOptionResponse.optional(),
-        option5Response: zodpollOptionResponse.optional(),
-        option6Response: zodpollOptionResponse.optional(),
+        option1Response: zodPollOptionResponse,
+        option2Response: zodPollOptionResponse,
+        option3Response: zodPollOptionResponse.optional(),
+        option4Response: zodPollOptionResponse.optional(),
+        option5Response: zodPollOptionResponse.optional(),
+        option6Response: zodPollOptionResponse.optional(),
     })
     .strict();
-export const zodpoll = z
+export const zodPollWithResults = z
     .object({
-        data: zodpollData,
+        options: zodPollOptions,
+        result: zodPollResult,
+    })
+    .strict();
+export const zodPostData = z
+    .object({
+        title: zodPostTitle,
+        body: zodPostBody.optional(),
+        poll: zodPollOptions.optional(),
+    })
+    .strict();
+export const zodPostDataWithResult = z
+    .object({
+        title: zodPostTitle,
+        body: zodPostBody.optional(),
+        poll: zodPollWithResults.optional(),
+    })
+    .strict();
+export const zodPost = z
+    .object({
+        data: zodPostData,
         eligibility: zodeligibility.optional(),
     })
     .strict();
-export const zodPollUID = z.string(); // TODO it's a CID actually
+export const zodPostUid = z.string(); // TODO it's a CID actually
 export const zodPseudonym = z.string().nonempty();
 export const zodPostAs = z
     .object({
@@ -516,9 +541,9 @@ export const zodEligibilities = z // TODO merge this with zodeligibility
     .strict();
 export const zodSlugId = z.string().max(10);
 export const zodCommentCount = z.number().int().nonnegative();
-export const zodPollMetadata = z
+export const zodPostMetadata = z
     .object({
-        uid: zodPollUID,
+        uid: zodPostUid,
         slugId: zodSlugId,
         isHidden: z.boolean().optional(),
         updatedAt: z.date(),
@@ -526,22 +551,17 @@ export const zodPollMetadata = z
         commentCount: zodCommentCount,
     })
     .strict();
-export const zodextendedPollData = z
+export const zodExtendedPostData = z
     .object({
-        metadata: zodPollMetadata,
-        payload: z
-            .object({
-                data: zodpollData,
-                result: zodpollResult,
-            })
-            .strict(),
+        metadata: zodPostMetadata,
+        payload: zodPostDataWithResult,
         author: zodPostAs,
         eligibility: zodEligibilities,
     })
     .strict();
 const zodOptionChosen = z.number().int().positive();
 export const zodResponseToPollPayload = z
-    .object({ pollUid: zodPollUID, optionChosen: zodOptionChosen })
+    .object({ postUid: zodPostUid, optionChosen: zodOptionChosen })
     .strict();
 export const zodResponseToPoll = z
     .object({
@@ -556,14 +576,14 @@ export const zodPollOptionChosenAndPseudonym = z
     })
     .strict();
 
-export const zodPollResponsesByPollUid = z.record(
-    zodPollUID,
+export const zodPollResponsesByPostUid = z.record(
+    zodPostUid,
     zodPollOptionChosenAndPseudonym
 );
 export const zodCommentContent = z.string().nonempty().max(1250);
 export const zodCommentMetadata = z
     .object({
-        uid: zodPollUID,
+        uid: zodPostUid,
         slugId: zodSlugId,
         isHidden: z.boolean().optional(),
         updatedAt: z.date(),
@@ -577,7 +597,7 @@ export const zodComment = z
     })
     .strict();
 export const zodCreateCommentPayload = z.object({
-    postUid: zodPollUID,
+    postUid: zodPostUid,
     content: zodCommentContent,
 });
 export const zodPostId = z.number().positive().int();
@@ -622,8 +642,8 @@ export type EmailFormCredentialsPerEmail = z.infer<
 export type Devices = z.infer<typeof zoddevices>;
 export type StudentAdmissionYear = z.infer<typeof zodstudentAdmissionYear>;
 export type Eligibility = z.infer<typeof zodeligibility>;
-export type Poll = z.infer<typeof zodpoll>;
-export type ExtendedPollData = z.infer<typeof zodextendedPollData>;
+export type Post = z.infer<typeof zodPost>;
+export type ExtendedPostData = z.infer<typeof zodExtendedPostData>;
 export type Countries = z.infer<typeof zodcountries>;
 export type WebDomainType = z.infer<typeof zodwebDomainType>;
 export const webDomainTypes = zodwebDomainType.options;
@@ -631,19 +651,20 @@ export type UniversityType = z.infer<typeof zoduniversityType>;
 export const universityTypes = zoduniversityType.options;
 export type PostAs = z.infer<typeof zodPostAs>;
 export type Eligibilities = z.infer<typeof zodEligibilities>; // TODO merge this with Eligibility
-export type PollResult = z.infer<typeof zodpollResult>;
-export type PollData = z.infer<typeof zodpollData>;
+export type PollResult = z.infer<typeof zodPollResult>;
+export type PostData = z.infer<typeof zodPostData>;
 export type ResponseToPollPayload = z.infer<typeof zodResponseToPollPayload>;
 export type ResponseToPoll = z.infer<typeof zodResponseToPoll>;
 export type PollOptionAndPseudonym = z.infer<
     typeof zodPollOptionChosenAndPseudonym
 >;
-export type PollResponsesByPollUid = z.infer<typeof zodPollResponsesByPollUid>;
-export type PollUid = z.infer<typeof zodPollUID>;
-export type PollMetadata = z.infer<typeof zodPollMetadata>;
+export type PollResponsesByPostUid = z.infer<typeof zodPollResponsesByPostUid>;
+export type PostUid = z.infer<typeof zodPostUid>;
+export type PollMetadata = z.infer<typeof zodPostMetadata>;
 export type PostComment = z.infer<typeof zodComment>;
 export type PostPseudonym = z.infer<typeof zodPseudonym>;
 export type CommentContent = z.infer<typeof zodCommentContent>;
 export type CreateCommentPayload = z.infer<typeof zodCreateCommentPayload>;
 export type PostSlugId = z.infer<typeof zodSlugId>;
 export type PostId = z.infer<typeof zodPostId>;
+export type PollOptions = z.infer<typeof zodPollOptions>;

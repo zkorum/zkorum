@@ -8,10 +8,10 @@ import { Outlet } from "react-router-dom";
 import { AuthDialog } from "./components/auth/AuthDialog";
 import { PostDialog } from "./components/post/PostDialog";
 import type { FeedContextType, PostsType } from "./feed";
-import type { PollUid, ResponseToPollPayload } from "./shared/types/zod";
+import type { PostUid, ResponseToPollPayload } from "./shared/types/zod";
 
 export interface UpdatePostHiddenStatusProps {
-    uid: PollUid;
+    uid: PostUid;
     isHidden: boolean;
 }
 
@@ -50,38 +50,48 @@ export function RootDialog() {
     function updatePost(responseToPoll: ResponseToPollPayload): void {
         const newPosts = [...posts];
         for (const post of newPosts) {
-            if (post.metadata.uid === responseToPoll.pollUid) {
+            if (post.metadata.uid === responseToPoll.postUid) {
+                if (post.payload.poll === undefined) {
+                    console.warn(
+                        "Trying to answer to a post which doesn't have poll"
+                    );
+                    return;
+                }
                 switch (responseToPoll.optionChosen) {
                     case 1:
-                        post.payload.result.option1Response =
-                            post.payload.result.option1Response + 1;
+                        post.payload.poll.result.option1Response =
+                            post.payload.poll.result.option1Response + 1;
                         break;
                     case 2:
-                        post.payload.result.option2Response =
-                            post.payload.result.option2Response + 1;
+                        post.payload.poll.result.option2Response =
+                            post.payload.poll.result.option2Response + 1;
                         break;
                     case 3:
-                        post.payload.result.option3Response =
-                            post.payload.result.option3Response !== undefined
-                                ? post.payload.result.option3Response + 1
+                        post.payload.poll.result.option3Response =
+                            post.payload.poll.result.option3Response !==
+                            undefined
+                                ? post.payload.poll.result.option3Response + 1
                                 : 1;
                         break;
                     case 4:
-                        post.payload.result.option4Response =
-                            post.payload.result.option4Response !== undefined
-                                ? post.payload.result.option4Response + 1
+                        post.payload.poll.result.option4Response =
+                            post.payload.poll.result.option4Response !==
+                            undefined
+                                ? post.payload.poll.result.option4Response + 1
                                 : 1;
                         break;
                     case 5:
-                        post.payload.result.option5Response =
-                            post.payload.result.option5Response !== undefined
-                                ? post.payload.result.option5Response + 1
+                        post.payload.poll.result.option5Response =
+                            post.payload.poll.result.option5Response !==
+                            undefined
+                                ? post.payload.poll.result.option5Response + 1
                                 : 1;
                         break;
                     case 6:
-                        post.payload.result.option6Response =
-                            post.payload.result.option6Response !== undefined
-                                ? post.payload.result.option6Response + 1
+                        post.payload.poll.result.option6Response =
+                            post.payload.poll.result.option6Response !==
+                            undefined
+                                ? post.payload.poll.result.option6Response + 1
                                 : 1;
                         break;
                 }

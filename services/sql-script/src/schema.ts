@@ -14,9 +14,11 @@ import {
     jsonb,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
-// import { MAX_LENGTH_OPTION, MAX_LENGTH_QUESTION } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
+// import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 const MAX_LENGTH_OPTION = 30;
-const MAX_LENGTH_QUESTION = 140;
+const MAX_LENGTH_TITLE = 140;
+const MAX_LENGTH_COMMENT = 1250;
+const MAX_LENGTH_BODY = 3000;
 
 export const bytea = customType<{
     data: string;
@@ -526,9 +528,43 @@ export const pseudonymTable = pgTable("pseudonym", {
         .notNull(),
 });
 
+// TODO rename poll to post
+export const pollOptionsTable = pgTable("poll_options", {
+    id: serial("id").primaryKey(),
+    postId: integer("post_id") // "postAs"
+        .notNull()
+        .unique() // currently, a poll can only be associated with one post
+        .references(() => pollTable.id), // the author of the poll
+    option1: varchar("option1", { length: MAX_LENGTH_OPTION }).notNull(),
+    option1Response: integer("option1_response").default(0).notNull(),
+    option2: varchar("option2", { length: MAX_LENGTH_OPTION }).notNull(),
+    option2Response: integer("option2_response").default(0).notNull(),
+    option3: varchar("option3", { length: MAX_LENGTH_OPTION }),
+    option3Response: integer("option3_response"),
+    option4: varchar("option4", { length: MAX_LENGTH_OPTION }),
+    option4Response: integer("option4_response"),
+    option5: varchar("option5", { length: MAX_LENGTH_OPTION }),
+    option5Response: integer("option5_response"),
+    option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
+    option6Response: integer("option6_response"),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+    updatedAt: timestamp("updated_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+});
+
+// TODO rename poll to post
 export const pollTable = pgTable("poll", {
     id: serial("id").primaryKey(),
-    slugId: varchar("slug_id", { length: 10 }), // used for permanent URL, should be not null and unique, a script will populate them...
+    slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL, should be not null and unique, a script will populate them...
     presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
     presentationCID: char("pres_cid", { length: 61 }).unique().notNull(), // unique and notNull are !important for avoiding replay attacks, we will do it in a later release
     timestampedPresentationCID: char("time_pres_cid", { length: 61 }) // see shared/test/common/cid.test.ts for length
@@ -540,7 +576,8 @@ export const pollTable = pgTable("poll", {
     eligibilityId: integer("eligibility_id")
         .notNull()
         .references(() => eligibilityTable.id),
-    question: varchar("question", { length: MAX_LENGTH_QUESTION }).notNull(),
+    title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
+    body: varchar("body", { length: MAX_LENGTH_BODY }),
     option1: varchar("option1", { length: MAX_LENGTH_OPTION }).notNull(),
     option1Response: integer("option1_response").default(0).notNull(),
     option2: varchar("option2", { length: MAX_LENGTH_OPTION }).notNull(),
@@ -588,7 +625,7 @@ export const pollResponseTable = pgTable("poll_response", {
         .references(() => pseudonymTable.id), // the author of the poll
     pollId: integer("poll_id")
         .notNull()
-        .references(() => pollTable.id),
+        .references(() => pollOptionsTable.id),
     optionChosen: integer("option_chosen").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -615,7 +652,7 @@ export const commentTable = pgTable("comment", {
     authorId: integer("author_id") // "postAs"
         .notNull()
         .references(() => pseudonymTable.id), // the author of the poll
-    content: varchar("content", { length: 1250 }).notNull(),
+    content: varchar("content", { length: MAX_LENGTH_COMMENT }).notNull(),
     postId: integer("post_id")
         .references(() => pollTable.id)
         .notNull(),

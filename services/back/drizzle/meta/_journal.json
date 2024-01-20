@@ -29,6 +29,27 @@
       "when": 1705455207681,
       "tag": "0003_deep_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1705710955599,
+      "tag": "0004_hard_stature",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1705712821613,
+      "tag": "0005_fair_songbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1705712910849,
+      "tag": "0006_magenta_omega_red",
+      "breakpoints": true
     }
   ]
 }

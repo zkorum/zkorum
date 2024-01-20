@@ -1,12 +1,12 @@
 import {
     DefaultApiFactory,
     type ApiV1CommentCreatePostRequestPayload,
-    type ApiV1PollCreatePostRequestPoll,
 } from "@/api";
 import { noAuthAxios } from "@/interceptors";
 import type { PostFetch200 } from "@/shared/types/dto";
 import type {
-    ExtendedPollData,
+    ExtendedPostData,
+    Post,
     PostComment,
     PostSlugId,
     ResponseToPollPayload,
@@ -20,9 +20,9 @@ interface FetchCommentsProps {
     updatedAt?: Date | undefined;
 }
 
-export async function createPoll(
+export async function createPost(
     presentation: Presentation,
-    pollContent: ApiV1PollCreatePostRequestPoll
+    postContent: Post
 ): Promise<void> {
     // const bearerToken = encodeCbor(presentation.toJSON());
     // console.log(
@@ -34,8 +34,8 @@ export async function createPoll(
         undefined,
         undefined,
         noAuthAxios
-    ).apiV1PollCreatePost({
-        poll: pollContent,
+    ).apiV1PostCreatePost({
+        post: postContent,
         pres: presentation.toJSON(),
     });
 }
@@ -108,7 +108,7 @@ export async function fetchPost(postSlugId: PostSlugId): Promise<PostFetch200> {
     });
     const postResponse = response.data.post;
     const commentsResponse = response.data.comments;
-    const post: ExtendedPollData = {
+    const post: ExtendedPostData = {
         metadata: {
             uid: postResponse.metadata.uid,
             slugId: postResponse.metadata.slugId,

@@ -1,4 +1,4 @@
-import { MAX_COMMENT_LENGTH } from "@/shared/shared";
+import { MAX_LENGTH_COMMENT } from "@/shared/shared";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { Typography } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
@@ -52,7 +52,7 @@ export function BottomAddCommentBar({
 
     const shouldSendingBeDisabled =
         localComment.length === 0 ||
-        localComment.length > MAX_COMMENT_LENGTH ||
+        localComment.length > MAX_LENGTH_COMMENT ||
         isContextNotLoaded ||
         isSendingComment;
 
@@ -123,12 +123,12 @@ export function BottomAddCommentBar({
                             fullWidth
                             multiline
                             helperText={
-                                localComment.length > MAX_COMMENT_LENGTH
+                                localComment.length > MAX_LENGTH_COMMENT
                                     ? "You have exceeded the maximum character limit"
                                     : undefined
                             }
                             error={
-                                localComment.length > MAX_COMMENT_LENGTH
+                                localComment.length > MAX_LENGTH_COMMENT
                                     ? true
                                     : undefined
                             }
@@ -175,13 +175,13 @@ export function BottomAddCommentBar({
                                 mr: 3,
                                 mb: 1,
                                 display:
-                                    localComment.length > MAX_COMMENT_LENGTH
+                                    localComment.length > MAX_LENGTH_COMMENT
                                         ? "inherit"
                                         : "none",
                             }}
                         >
                             <Typography variant="body2" color="error">
-                                {MAX_COMMENT_LENGTH - localComment.length}
+                                {MAX_LENGTH_COMMENT - localComment.length}
                             </Typography>
                         </Grid>
                         <Grid sx={{ mb: 1 }}>

@@ -4,7 +4,7 @@ import { uint8ArrayToJSON } from "@/shared/common/arrbufs";
 import { base64 } from "@/shared/common/index";
 import { BBSPlusCredential as Credential } from "@docknetwork/crypto-wasm-ts";
 import type { SessionStatus } from "./reducers/session";
-import type { PollUid } from "@/shared/types/zod";
+import type { PostUid } from "@/shared/types/zod";
 
 const selectSessionsData = (state: RootState) => {
     return Object.values(state.sessions.sessions).sort((s1, s2) => {
@@ -57,8 +57,8 @@ export const selectActiveSessionEmail = (state: RootState) => {
     return state.sessions.activeSessionEmail;
 };
 
-export const forwardPollUid = (_state: RootState, pollUid: PollUid) => {
-    return pollUid;
+export const forwardPostUid = (_state: RootState, postUid: PostUid) => {
+    return postUid;
 };
 
 export const selectSessions = (state: RootState) => {
@@ -252,26 +252,26 @@ export const selectActiveSessionStatus = (
     return state.sessions.sessions[activeSessionEmail]?.status;
 };
 
-export const selectPollResponsesPerPollUid = createSelector(
+export const selectPollResponsesPerPostUid = createSelector(
     [selectActiveSessionEmail, selectSessions],
     function (activeSessionEmail, sessions) {
         if (activeSessionEmail === undefined || activeSessionEmail === "") {
             return undefined;
         } else {
-            return sessions[activeSessionEmail]?.pollResponsesByPollUid;
+            return sessions[activeSessionEmail]?.pollResponsesByPostUid;
         }
     }
 );
 
-export const selectPollResponsePerPollUid = createSelector(
-    [selectPollResponsesPerPollUid, forwardPollUid],
-    function (pollResponsesPerPollUid, pollUid) {
-        if (pollResponsesPerPollUid === undefined) {
+export const selectPollResponsePerPostUid = createSelector(
+    [selectPollResponsesPerPostUid, forwardPostUid],
+    function (pollResponsesPerPostUid, postUid) {
+        if (pollResponsesPerPostUid === undefined) {
             return undefined;
-        } else if (!(pollUid in pollResponsesPerPollUid)) {
+        } else if (!(postUid in pollResponsesPerPostUid)) {
             return undefined;
         } else {
-            return pollResponsesPerPollUid[pollUid];
+            return pollResponsesPerPostUid[postUid];
         }
     }
 );

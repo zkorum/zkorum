@@ -2,7 +2,12 @@ import { toEncodedCID } from "@/shared/common/cid.js";
 import { count, eq, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { generateRandomSlugId } from "../crypto.js";
-import { commentTable, pollResponseTable, pollTable } from "../schema.js";
+import {
+    commentTable,
+    pollOptionsTable,
+    pollResponseTable,
+    pollTable,
+} from "../schema.js";
 import { Presentation, initializeWasm } from "@docknetwork/crypto-wasm-ts";
 
 interface CreateSlugProps {
@@ -17,7 +22,48 @@ interface UpdateCommentAmountProps {
     db: PostgresJsDatabase;
 }
 
+interface UpdatePollOptionsProps {
+    db: PostgresJsDatabase;
+}
+
 export class Service {
+    static async updatePollOptions({ db }: UpdatePollOptionsProps) {
+        const results = await db
+            .select({
+                id: pollTable.id,
+                option1: pollTable.option1,
+                option1Response: pollTable.option1Response,
+                option2: pollTable.option2,
+                option2Response: pollTable.option2Response,
+                option3: pollTable.option3,
+                option3Response: pollTable.option3Response,
+                option4: pollTable.option4,
+                option4Response: pollTable.option4Response,
+                option5: pollTable.option5,
+                option5Response: pollTable.option5Response,
+                option6: pollTable.option6,
+                option6Response: pollTable.option6Response,
+            })
+            .from(pollTable);
+        for (const result of results) {
+            await db.insert(pollOptionsTable).values({
+                postId: result.id,
+                option1: result.option1,
+                option2: result.option2,
+                option3: result.option3,
+                option4: result.option4,
+                option5: result.option5,
+                option6: result.option6,
+                option1Response: result.option1Response,
+                option2Response: result.option2Response,
+                option3Response: result.option3Response,
+                option4Response: result.option4Response,
+                option5Response: result.option5Response,
+                option6Response: result.option6Response,
+            });
+        }
+    }
+
     static async updateCommentAmount({ db }: UpdateCommentAmountProps) {
         const results = await db
             .select({
