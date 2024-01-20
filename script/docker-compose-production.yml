@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
   back:
     container_name: zkorum_back
-    image: zkorum/back:0.2.6
+    image: zkorum/back:0.3.0
     environment:
       CONNECTION_STRING: "postgres://postgres:CHANGEME@postgres:5432/zkorum"
       AWS_ACCESS_KEY_ID: "CHANGEME"
@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
   front:
     container_name: zkorum_front
-    image: zkorum/front:0.2.10
+    image: zkorum/front:0.3.0
     expose:
       - "80"
     restart: unless-stopped
