@@ -153,11 +153,15 @@ interface OptionsVerifyUcan {
 const SERVER_URL =
     config.NODE_ENV === Environment.Production
         ? config.SERVER_URL_PROD
+        : config.NODE_ENV === Environment.Staging1
+        ? config.SERVER_URL_STAGING1
         : config.SERVER_URL_DEV;
 
 const SERVER_DID =
     config.NODE_ENV === Environment.Production
         ? config.SERVER_DID_PROD
+        : config.NODE_ENV === Environment.Staging1
+        ? config.SERVER_DID_STAGING1
         : config.SERVER_DID_DEV;
 
 // auth for account profile interaction

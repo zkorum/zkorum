@@ -7,13 +7,16 @@
         "dev": "vite",
         "dev:force": "vite --force",
         "build": "tsc && vite build",
+        "build:staging1": "tsc && NODE_ENV=development vite build --mode staging1",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format:check": "prettier . --check",
         "format:write": "prettier . --write",
         "preview": "vite preview",
         "test": "NODE_OPTIONS=--experimental-vm-modules jest",
         "image:build": "docker build -f Dockerfile.prod -t zkorum-front .",
-        "image:tag": "docker tag zkorum-front:latest zkorum/front:0.1.7"
+        "image:build:staging1": "docker build -f Dockerfile.staging1 -t zkorum-front-staging1 .",
+        "image:tag": "docker tag zkorum-frontJustForExample:latest zkorum/frontJustForExample:0.1.0",
+        "image:push": "docker image push zkorum/frontJustForExample:0.1.0"
     },
     "keywords": [
         "trust-minimized infrastructure",

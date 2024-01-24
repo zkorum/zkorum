@@ -6,7 +6,7 @@ import { zoddidWeb } from "./shared/types/zod.js";
 export enum Environment {
     Development = "development",
     Production = "production",
-    Staging = "staging",
+    Staging1 = "staging1",
 }
 
 const defaultPort = 8080;
@@ -16,8 +16,13 @@ const configSchema = z.object({
     PORT: z.coerce.number().int().nonnegative().default(defaultPort),
     NODE_ENV: z.nativeEnum(Environment).default(Environment.Development),
     SERVER_URL_DEV: z.string().url().default(`http://localhost:${defaultPort}`),
+    SERVER_URL_STAGING1: z
+        .string()
+        .url()
+        .default(`https://staging1.zkorum.com`),
     SERVER_URL_PROD: z.string().url().default(`https://zkorum.com`),
     SERVER_DID_DEV: zoddidWeb.default(`did:web:localhost%3A${defaultPort}`),
+    SERVER_DID_STAGING1: zoddidWeb.default(`did:web:staging1.zkorum.com`),
     SERVER_DID_PROD: zoddidWeb.default(`did:web:zkorum.com`),
     EMAIL_OTP_MAX_ATTEMPT_AMOUNT: z.number().int().min(1).max(5).default(3),
     THROTTLE_EMAIL_MINUTES_INTERVAL: z.number().int().min(3).default(3),
@@ -48,7 +53,7 @@ function envToLogger(env: Environment) {
                 },
             };
         case Environment.Production:
-        case Environment.Staging:
+        case Environment.Staging1:
             return true;
     }
 }
