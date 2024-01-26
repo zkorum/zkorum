@@ -997,9 +997,6 @@ server.after(() => {
         .post(`/api/${apiVersion}/post/create`, {
             schema: {
                 body: Dto.createPostRequest,
-                // response: {
-                //     200: Dto.createPollRequest,
-                // },
             },
             handler: async (request, _reply) => {
                 const { pseudonym, postAs, presentation } =

@@ -2387,12 +2387,12 @@
                         "properties": {
                           "title": {
                             "type": "string",
-                            "maxLength": 140,
+                            "maxLength": 200,
                             "minLength": 1
                           },
                           "body": {
                             "type": "string",
-                            "maxLength": 3000,
+                            "maxLength": 6000,
                             "minLength": 1
                           },
                           "poll": {
@@ -2609,12 +2609,12 @@
                       "properties": {
                         "title": {
                           "type": "string",
-                          "maxLength": 140,
+                          "maxLength": 200,
                           "minLength": 1
                         },
                         "body": {
                           "type": "string",
-                          "maxLength": 3000,
+                          "maxLength": 6000,
                           "minLength": 1
                         },
                         "poll": {
@@ -3439,12 +3439,12 @@
                         "properties": {
                           "title": {
                             "type": "string",
-                            "maxLength": 140,
+                            "maxLength": 200,
                             "minLength": 1
                           },
                           "body": {
                             "type": "string",
-                            "maxLength": 3000,
+                            "maxLength": 6000,
                             "minLength": 1
                           },
                           "poll": {
@@ -4270,12 +4270,12 @@
                         "properties": {
                           "title": {
                             "type": "string",
-                            "maxLength": 140,
+                            "maxLength": 200,
                             "minLength": 1
                           },
                           "body": {
                             "type": "string",
-                            "maxLength": 3000,
+                            "maxLength": 6000,
                             "minLength": 1
                           },
                           "poll": {
@@ -5257,12 +5257,12 @@
                           "properties": {
                             "title": {
                               "type": "string",
-                              "maxLength": 140,
+                              "maxLength": 200,
                               "minLength": 1
                             },
                             "body": {
                               "type": "string",
-                              "maxLength": 3000,
+                              "maxLength": 6000,
                               "minLength": 1
                             },
                             "poll": {

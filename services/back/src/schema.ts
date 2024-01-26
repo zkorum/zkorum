@@ -14,11 +14,12 @@ import {
     jsonb,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
-// import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
+// import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_COMMENT, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
+// WARNING - change this in shared.ts as well
 const MAX_LENGTH_OPTION = 30;
-const MAX_LENGTH_TITLE = 140;
-const MAX_LENGTH_COMMENT = 1250;
-const MAX_LENGTH_BODY = 3000;
+const MAX_LENGTH_TITLE = 200;
+const MAX_LENGTH_COMMENT = 6000;
+const MAX_LENGTH_BODY = 6000;
 
 export const bytea = customType<{
     data: string;

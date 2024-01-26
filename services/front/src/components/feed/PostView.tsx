@@ -66,7 +66,6 @@ export type UserResponse =
     | "option6";
 
 interface PostViewProps {
-    dateToShow: "updatedAt" | "lastReactedAt";
     post: ExtendedPostData;
     updatePost: (responseToPoll: ResponseToPollPayload) => void;
     updatePostHiddenStatus: (props: UpdatePostHiddenStatusProps) => void;
@@ -82,7 +81,6 @@ export interface RespondToPollProps {
 }
 
 export function PostView({
-    dateToShow,
     viewMode,
     post,
     onComment,
@@ -362,10 +360,10 @@ export function PostView({
     }
 
     function showDate(postMetadata: PollMetadata): string {
-        switch (dateToShow) {
-            case "updatedAt":
+        switch (viewMode) {
+            case "post":
                 return getTimeFromNow(postMetadata.updatedAt);
-            case "lastReactedAt":
+            case "feed":
                 return getTimeFromNow(postMetadata.lastReactedAt);
         }
     }
@@ -583,7 +581,7 @@ export function PostView({
                               }
                             : undefined
                     }
-                    p={1}
+                    p={viewMode === "feed" ? 1 : 0}
                     mt={2}
                 >
                     <Grid px={viewMode === "feed" ? 1 : 0} py={1}>
