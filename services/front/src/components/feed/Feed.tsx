@@ -186,7 +186,6 @@ export function Feed() {
                             >
                                 <PostView
                                     viewMode={"feed"}
-                                    dateToShow={"lastReactedAt"}
                                     onComment={(
                                         event: React.MouseEvent<HTMLElement>
                                     ) => {

@@ -191,7 +191,6 @@ export function PostPage() {
                 <Box my={1}>
                     <PostView
                         viewMode={"post"}
-                        dateToShow={"updatedAt"}
                         post={post}
                         onComment={(event: React.MouseEvent<HTMLElement>) => {
                             event.stopPropagation(); // necessary to avoid registering routing - go back should not be affected

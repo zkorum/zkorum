@@ -329,7 +329,10 @@ export function PostDialog({
                 newPost = {
                     data: {
                         title: titleInputRef.current?.value,
-                        body: bodyInputRef.current?.value,
+                        body:
+                            bodyInputRef.current?.value?.length === 0
+                                ? undefined
+                                : bodyInputRef.current?.value,
                         poll: {
                             option1: option1InputRef.current?.value,
                             option2: option2InputRef.current?.value,
@@ -357,7 +360,10 @@ export function PostDialog({
                 newPost = {
                     data: {
                         title: titleInputRef.current?.value,
-                        body: bodyInputRef.current?.value,
+                        body:
+                            bodyInputRef.current?.value?.length === 0
+                                ? undefined
+                                : bodyInputRef.current?.value,
                     },
                     eligibility: undefined,
                 };
@@ -489,7 +495,7 @@ export function PostDialog({
                             fullWidth
                             multiline
                             sx={{ overflow: "hidden" }}
-                            minRows={5} //  https://stackoverflow.com/a/72789474/11046178c
+                            minRows={1} //  https://stackoverflow.com/a/72789474/11046178c
                             maxRows={1500} // long size is necessary to avoid the apparition of an unwanted scroll in the textarea html component
                             id="body-poll"
                             label="Body"

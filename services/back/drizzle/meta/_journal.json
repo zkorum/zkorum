@@ -50,6 +50,13 @@
       "when": 1705712910849,
       "tag": "0006_magenta_omega_red",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1706277744550,
+      "tag": "0007_ancient_miracleman",
+      "breakpoints": true
     }
   ]
 }

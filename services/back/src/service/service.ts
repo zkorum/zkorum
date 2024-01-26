@@ -2711,7 +2711,10 @@ export class Service {
                     slugId: generateRandomSlugId(),
                     timestampedPresentationCID: timestampedPresentationCID,
                     title: post.data.title,
-                    body: post.data.body,
+                    body:
+                        post.data.body?.length === 0
+                            ? undefined
+                            : post.data.body, // we don't want to insert a string with length 0
                     authorId: authorId,
                     eligibilityId: eligibilityId,
                     createdAt: now,
