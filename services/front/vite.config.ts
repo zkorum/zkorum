@@ -6,11 +6,31 @@ import checker from "vite-plugin-checker";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { VitePWA } from "vite-plugin-pwa";
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
-
 export default defineConfig({
     plugins: [
         react(),
-        VitePWA({ registerType: "autoUpdate", selfDestroying: true }),
+        VitePWA({
+            strategies: 'injectManifest', injectManifest: {
+                maximumFileSizeToCacheInBytes: 10000000
+            }, registerType: "autoUpdate", injectRegister: null, devOptions: {
+                enabled: true,
+                type: "classic",
+                navigateFallbackAllowlist: [/^index.html$/]
+            },
+            manifest: {
+                name: 'Zkorum',
+                short_name: 'Zkorum',
+                description: 'Zkorum',
+                theme_color: '#ffffff',
+                icons: [
+                    {
+                        src: 'zkorum_with_bg.svg',
+                        sizes: '192x192',
+                        type: 'image/png'
+                    },
+                ]
+            }
+        }),
         svgr(),
         checker({
             typescript: true,

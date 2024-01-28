@@ -7,7 +7,7 @@
         "dev": "vite",
         "dev:force": "vite --force",
         "build": "tsc && vite build",
-        "build:staging1": "tsc && NODE_ENV=development vite build --mode staging1",
+        "build:staging1": "tsc && NODE_ENV=production vite build --mode staging1",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format:check": "prettier . --check",
         "format:write": "prettier . --write",
@@ -65,6 +65,7 @@
         "uint8arrays": "^4.0.4",
         "usehooks-ts": "^2.9.1",
         "vite-plugin-pwa": "^0.17.4",
+        "workbox": "^0.0.0",
         "zod": "^3.21.4"
     },
     "devDependencies": {
