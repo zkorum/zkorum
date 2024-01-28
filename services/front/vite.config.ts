@@ -6,13 +6,13 @@ import checker from "vite-plugin-checker";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { VitePWA } from "vite-plugin-pwa";
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
-
 export default defineConfig({
-
     plugins: [
         react(),
         VitePWA({
-            strategies: 'injectManifest', registerType: "autoUpdate", injectRegister: null, devOptions: {
+            strategies: 'injectManifest', injectManifest: {
+                maximumFileSizeToCacheInBytes: 10000000
+            }, registerType: "autoUpdate", injectRegister: null, devOptions: {
                 enabled: true,
                 type: "classic",
                 navigateFallbackAllowlist: [/^index.html$/]

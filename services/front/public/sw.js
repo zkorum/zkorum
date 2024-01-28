@@ -1,6 +1,8 @@
 // Import the Workbox libraries
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.2.4/workbox-sw.js');
 
+// Check this link for descritpion https://stackoverflow.com/a/66120107
+workbox.precaching.precacheAndRoute(self.__WB_MANIFEST);
 // Ensure that workbox is available
 if (workbox) {
   // Use the workbox.routing.registerRoute method to register a route

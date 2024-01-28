@@ -5,7 +5,7 @@
     "description": "ZKorum frontend",
     "scripts": {
         "dev": "vite",
-        "build:staging1": "tsc && NODE_ENV=development vite build --mode staging1",
+        "build:staging1": "tsc && NODE_ENV=production vite build --mode staging1",
         "dev:force": "NODE_ENV='development' && vite --force",
         "build": "NODE_ENV='production' && tsc && vite build",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -14,9 +14,9 @@
         "preview": "vite preview",
         "test": "NODE_OPTIONS=--experimental-vm-modules jest",
         "image:build": "docker build -f Dockerfile.prod -t zkorum-front .",
-        "image:build:staging1": "docker build -f Dockerfile.staging1 -t zkorum-front-staging1 .",
-        "image:tag": "docker tag zkorum-frontJustForExample:latest zkorum/frontJustForExample:0.1.0",
-        "image:push": "docker image push zkorum/frontJustForExample:0.1.0"
+        "image:build:staging1": "docker build --no-cache -f Dockerfile.staging1 -t zkorum-front:haz .",
+        "image:tag": "docker tag zkorum-front:haz balghisa/zkorum:haz",
+        "image:push": "docker image push balghisa/zkorum:haz"
     },
     "keywords": [
         "trust-minimized infrastructure",
@@ -65,6 +65,7 @@
         "uint8arrays": "^4.0.4",
         "usehooks-ts": "^2.9.1",
         "vite-plugin-pwa": "^0.17.4",
+        "workbox": "^0.0.0",
         "zod": "^3.21.4"
     },
     "devDependencies": {
