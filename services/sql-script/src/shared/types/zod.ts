@@ -64,7 +64,7 @@ export const zoddidKey = z
             message: "Please use a base58-encoded DID formatted `did:key:z...`",
         }
     );
-export const zoddidWeb = z
+export const zodDidWeb = z
     .string()
     .describe("Decentralized Identifier with did:web method")
     .max(1000)

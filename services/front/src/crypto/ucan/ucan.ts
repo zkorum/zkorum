@@ -51,16 +51,10 @@ export async function symmKeyExists(userId: string): Promise<boolean> {
     return await cryptoStore.keystore.symmKeyExists(userId);
 }
 
-export async function copyKeypairsIfDestIsEmpty(
+export async function copyKeypairs(
     fromEmail: string,
     toUserId: string
 ): Promise<void> {
     const cryptoStore = await getCryptoStore();
-    if (
-        (await cryptoStore.keystore.writeKeyExists(toUserId)) &&
-        (await cryptoStore.keystore.exchangeKeyExists(toUserId))
-    ) {
-        return;
-    }
     await cryptoStore.keystore.copyKeypairs(fromEmail, toUserId);
 }

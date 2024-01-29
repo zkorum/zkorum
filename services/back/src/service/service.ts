@@ -25,6 +25,7 @@ import {
     isNotNull,
     isNull,
     lt,
+    ne,
     sql,
     type TablesRelationalConfig,
 } from "drizzle-orm";
@@ -44,6 +45,7 @@ import {
     type EmailSecretCredentials,
     type GetDeviceStatusResp,
     type IsLoggedInResponse,
+    type RecoverAccountResp,
     type UserCredentials,
     type VerifyOtp200,
 } from "@/shared/types/dto.js";
@@ -77,6 +79,7 @@ import {
     zoduniversityType,
     type BlindedCredentialType,
     type Devices,
+    type Device,
     type Eligibilities,
     type EmailCredential,
     type EmailCredentialsPerEmail,
@@ -157,6 +160,22 @@ interface RegisterProps {
     unboundSecretCredentialRequest: SecretCredentialRequest;
     timeboundSecretCredentialRequest: SecretCredentialRequest;
     httpErrors: HttpErrors;
+    now: Date;
+    sessionExpiry: Date;
+}
+
+interface LoginProps {
+    db: PostgresDatabase;
+    didWrite: string;
+    now: Date;
+    sessionExpiry: Date;
+}
+
+interface AwaitSyncingNewDeviceProps {
+    db: PostgresDatabase;
+    didWrite: string;
+    now: Date;
+    sessionExpiry: Date;
 }
 
 interface CreateSecretCredentialsProps {
@@ -357,6 +376,7 @@ interface InsertAuthAttemptCodeProps {
     minutesBeforeCodeExpiry: number;
     didWrite: string;
     now: Date;
+    userAgent: string;
     authenticateRequestBody: AuthenticateRequestBody;
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
@@ -382,6 +402,7 @@ interface AuthenticateAttemptProps {
     userId: string;
     minutesBeforeCodeExpiry: number;
     didWrite: string;
+    userAgent: string;
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
     env: Environment;
@@ -438,6 +459,62 @@ interface GetPostIdFromSlugIdProps {
     db: PostgresDatabase;
     slugId: PostSlugId;
     httpErrors: HttpErrors;
+}
+
+interface RegisterResult extends EmailSecretCredentials {
+    device: Device;
+}
+
+interface RevokeUserCredentialsProps<
+    TQueryResult extends QueryResultHKT,
+    TFullSchema extends Record<string, unknown>,
+    TSchema extends TablesRelationalConfig,
+> {
+    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
+    email: string;
+    userId: string;
+    now: Date;
+}
+
+interface RecoverAccountProps {
+    db: PostgresDatabase;
+    didWrite: string;
+    pkVersion: number;
+    httpErrors: HttpErrors;
+    timeboundSecretCredentialRequest: SecretCredentialRequest;
+    unboundSecretCredentialRequest: SecretCredentialRequest;
+    sk: SecretKey;
+    encryptedSymmKey: string;
+}
+
+interface LogoutAllDevicesButOneProps<
+    TQueryResult extends QueryResultHKT,
+    TFullSchema extends Record<string, unknown>,
+    TSchema extends TablesRelationalConfig,
+> {
+    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
+    didWrite: string;
+    userId: string;
+    now: Date;
+    sessionExpiry: Date;
+}
+
+interface UpdateEncryptedSymmKeyProps<
+    TQueryResult extends QueryResultHKT,
+    TFullSchema extends Record<string, unknown>,
+    TSchema extends TablesRelationalConfig,
+> {
+    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
+    didWrite: string;
+    encryptedSymmKey: string;
+    now: Date;
+}
+
+interface InfoDevice {
+    userAgent: string;
+    uid: string;
+    userId: string;
+    sessionExpiry: Date;
 }
 
 function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
@@ -671,12 +748,14 @@ export class Service {
             return {
                 userId: resultDevice[0].userId,
                 isLoggedIn: resultDevice[0].sessionExpiry > now,
+                sessionExpiry: resultDevice[0].sessionExpiry,
                 isSyncing: false,
             };
         } else {
             return {
                 userId: resultDevice[0].userId,
                 isLoggedIn: resultDevice[0].sessionExpiry > now,
+                sessionExpiry: resultDevice[0].sessionExpiry,
                 isSyncing: true,
                 encryptedSymmKey: resultDevice[0].encryptedSymmKey,
             };
@@ -690,35 +769,42 @@ export class Service {
     ): Promise<GetDeviceStatusResp> {
         const deviceStatus = await Service.getDeviceStatus(db, didWrite);
         if (deviceStatus !== undefined) {
-            if (!deviceStatus.isSyncing) {
-                throw httpErrors.createError(409, "Conflict", {
-                    reason: "awaiting_syncing",
-                    userId: deviceStatus.userId,
-                });
-            } else if (deviceStatus.isLoggedIn) {
-                const syncingDevices = await Service.getAllSyncingDidWrites(
+            if (deviceStatus.isLoggedIn) {
+                const syncingDevices = await Service.getAllSyncingDevices(
                     db,
                     deviceStatus.userId
                 );
-                const { emailCredentialsPerEmail, formCredentialsPerEmail } =
-                    await Service.getEmailFormCredentialsPerEmailFromUserId(
+                if (!deviceStatus.isSyncing) {
+                    throw httpErrors.createError(409, "Conflict", {
+                        reason: "awaiting_syncing",
+                        userId: deviceStatus.userId,
+                        sessionExpiry: deviceStatus.sessionExpiry,
+                        syncingDevices: syncingDevices,
+                    });
+                } else {
+                    const {
+                        emailCredentialsPerEmail,
+                        formCredentialsPerEmail,
+                    } = await Service.getEmailFormCredentialsPerEmailFromUserId(
                         db,
                         deviceStatus.userId
                     );
-                const secretCredentialsPerType =
-                    await Service.getSecretCredentialsPerType(
-                        db,
-                        deviceStatus.userId
-                    );
-                throw httpErrors.createError(409, "Conflict", {
-                    reason: "already_logged_in",
-                    userId: deviceStatus.userId,
-                    encryptedSymmKey: deviceStatus.encryptedSymmKey,
-                    syncingDevices: syncingDevices,
-                    emailCredentialsPerEmail: emailCredentialsPerEmail,
-                    formCredentialsPerEmail: formCredentialsPerEmail,
-                    secretCredentialsPerType: secretCredentialsPerType,
-                });
+                    const secretCredentialsPerType =
+                        await Service.getSecretCredentialsPerType(
+                            db,
+                            deviceStatus.userId
+                        );
+                    throw httpErrors.createError(409, "Conflict", {
+                        reason: "already_logged_in",
+                        userId: deviceStatus.userId,
+                        sessionExpiry: deviceStatus.sessionExpiry,
+                        encryptedSymmKey: deviceStatus.encryptedSymmKey,
+                        syncingDevices: syncingDevices,
+                        emailCredentialsPerEmail: emailCredentialsPerEmail,
+                        formCredentialsPerEmail: formCredentialsPerEmail,
+                        secretCredentialsPerType: secretCredentialsPerType,
+                    });
+                }
             }
         }
         return deviceStatus;
@@ -837,6 +923,14 @@ export class Service {
         if (resultOtp[0].codeExpiry <= now) {
             return { success: false, reason: "expired_code" };
         } else if (resultOtp[0].code === code) {
+            const loginSessionExpiry = new Date(now);
+            loginSessionExpiry.setFullYear(
+                loginSessionExpiry.getFullYear() + 1000
+            );
+            const awaitSyncingSessionExpiry = new Date(now);
+            awaitSyncingSessionExpiry.setMinutes(
+                awaitSyncingSessionExpiry.getMinutes() + 30
+            );
             switch (resultOtp[0].authType) {
                 case "register": {
                     // we can't register the user without an encrypted symm key
@@ -869,6 +963,7 @@ export class Service {
                         };
                     }
                     const {
+                        device,
                         emailCredentialsPerEmail,
                         secretCredentialsPerType,
                     } = await Service.register({
@@ -880,60 +975,96 @@ export class Service {
                         unboundSecretCredentialRequest,
                         timeboundSecretCredentialRequest,
                         httpErrors,
+                        now,
+                        sessionExpiry: loginSessionExpiry,
                     });
                     return {
                         success: true,
                         userId: resultOtp[0].userId,
+                        sessionExpiry: loginSessionExpiry,
                         encryptedSymmKey: encryptedSymmKey,
-                        syncingDevices: [didWrite],
+                        syncingDevices: [device],
                         emailCredentialsPerEmail: emailCredentialsPerEmail,
                         formCredentialsPerEmail: {},
                         secretCredentialsPerType: secretCredentialsPerType,
                     };
                 }
                 case "login_known_device": {
-                    // device is not awaiting syncing and is not already logged-in, otherwise throwIfAwaitingSyncingOrLoggedIn would have thrown already
                     const existingEncryptedSymmKey =
                         await Service.getEncryptedSymmKey(db, didWrite);
                     if (existingEncryptedSymmKey !== undefined) {
-                        // this check is unecessary because device is not awaiting syncing, but we keep it as a safety net in case someone accidentally removes the throws protection
-                        await Service.login(db, didWrite);
-                    }
-                    const syncingDevices = await Service.getAllSyncingDidWrites(
-                        db,
-                        resultOtp[0].userId
-                    );
-                    const {
-                        emailCredentialsPerEmail,
-                        formCredentialsPerEmail,
-                    } = await Service.getEmailFormCredentialsPerEmailFromUserId(
-                        db,
-                        resultOtp[0].userId
-                    );
-                    const secretCredentialsPerType =
-                        await Service.getSecretCredentialsPerType(
+                        await Service.login({
                             db,
-                            resultOtp[0].userId
-                        );
-                    return {
-                        success: true,
-                        userId: resultOtp[0].userId,
-                        encryptedSymmKey: existingEncryptedSymmKey,
-                        syncingDevices: syncingDevices,
-                        emailCredentialsPerEmail: emailCredentialsPerEmail,
-                        formCredentialsPerEmail: formCredentialsPerEmail,
-                        secretCredentialsPerType: secretCredentialsPerType,
-                    };
+                            didWrite,
+                            now,
+                            sessionExpiry: loginSessionExpiry,
+                        });
+                        const syncingDevices =
+                            await Service.getAllSyncingDevices(
+                                db,
+                                resultOtp[0].userId
+                            );
+                        const {
+                            emailCredentialsPerEmail,
+                            formCredentialsPerEmail,
+                        } =
+                            await Service.getEmailFormCredentialsPerEmailFromUserId(
+                                db,
+                                resultOtp[0].userId
+                            );
+                        const secretCredentialsPerType =
+                            await Service.getSecretCredentialsPerType(
+                                db,
+                                resultOtp[0].userId
+                            );
+                        return {
+                            success: true,
+                            userId: resultOtp[0].userId,
+                            sessionExpiry: loginSessionExpiry,
+                            encryptedSymmKey: existingEncryptedSymmKey,
+                            syncingDevices: syncingDevices,
+                            emailCredentialsPerEmail: emailCredentialsPerEmail,
+                            formCredentialsPerEmail: formCredentialsPerEmail,
+                            secretCredentialsPerType: secretCredentialsPerType,
+                        };
+                    } else {
+                        await Service.login({
+                            db,
+                            didWrite,
+                            now,
+                            sessionExpiry: awaitSyncingSessionExpiry,
+                        });
+                        const syncingDevices =
+                            await Service.getAllSyncingDevices(
+                                db,
+                                resultOtp[0].userId
+                            );
+                        return {
+                            success: true,
+                            userId: resultOtp[0].userId,
+                            sessionExpiry: awaitSyncingSessionExpiry,
+                            syncingDevices: syncingDevices,
+                            emailCredentialsPerEmail: {}, // user already have an email credential, but this will be unused. We don't want to send the credentials before the device has been confirmed
+                            formCredentialsPerEmail: {}, // user may actually have already filled credentials, but this will be unused. We don't want to send the credentials before the device has been confirmed
+                            secretCredentialsPerType: {}, // TODO: remove them altogether when z.switch will be shipped instead of z.discriminatedUnion (cannot embed z.discriminatedUnion...)
+                        };
+                    }
                 }
                 case "login_new_device": {
-                    await Service.awaitSyncingNewDevice(db, didWrite);
-                    const syncingDevices = await Service.getAllSyncingDidWrites(
+                    await Service.awaitSyncingNewDevice({
+                        db,
+                        didWrite,
+                        now,
+                        sessionExpiry: awaitSyncingSessionExpiry,
+                    });
+                    const syncingDevices = await Service.getAllSyncingDevices(
                         db,
                         resultOtp[0].userId
                     );
                     return {
                         success: true,
                         userId: resultOtp[0].userId,
+                        sessionExpiry: awaitSyncingSessionExpiry,
                         syncingDevices: syncingDevices,
                         emailCredentialsPerEmail: {}, // user already have an email credential, but this will be unused. We don't want to send the credentials before the device has been confirmed
                         formCredentialsPerEmail: {}, // user may actually have already filled credentials, but this will be unused. We don't want to send the credentials before the device has been confirmed
@@ -973,12 +1104,15 @@ export class Service {
             .where(eq(authAttemptTable.didWrite, didWrite));
     }
 
-    static async getAllSyncingDidWrites(
+    static async getAllSyncingDevices(
         db: PostgresDatabase,
         userId: string
     ): Promise<Devices> {
         const results = await db
-            .select({ didWrite: deviceTable.didWrite })
+            .select({
+                didWrite: deviceTable.didWrite,
+                userAgent: deviceTable.userAgent,
+            })
             .from(deviceTable)
             .where(
                 and(
@@ -989,7 +1123,12 @@ export class Service {
         if (results.length === 0) {
             return [];
         } else {
-            return results.map((result) => result.didWrite);
+            return results.map((result) => {
+                return {
+                    didWrite: result.didWrite,
+                    userAgent: result.userAgent,
+                };
+            });
         }
     }
 
@@ -1065,6 +1204,7 @@ export class Service {
         userId,
         minutesBeforeCodeExpiry,
         didWrite,
+        userAgent,
         throttleMinutesInterval,
         httpErrors,
         env,
@@ -1087,6 +1227,7 @@ export class Service {
                 minutesBeforeCodeExpiry,
                 didWrite,
                 now,
+                userAgent,
                 authenticateRequestBody,
                 throttleMinutesInterval,
                 httpErrors,
@@ -1177,6 +1318,7 @@ export class Service {
         minutesBeforeCodeExpiry,
         didWrite,
         now,
+        userAgent,
         authenticateRequestBody,
         throttleMinutesInterval,
         httpErrors,
@@ -1216,6 +1358,7 @@ export class Service {
             email: authenticateRequestBody.email,
             userId: userId,
             didExchange: authenticateRequestBody.didExchange,
+            userAgent: userAgent,
             code: oneTimeCode,
             codeExpiry: codeExpiry,
             lastEmailSentAt: now,
@@ -1303,17 +1446,17 @@ export class Service {
         unboundSecretCredentialRequest,
         timeboundSecretCredentialRequest,
         httpErrors,
-    }: RegisterProps): Promise<EmailSecretCredentials> {
+        now,
+        sessionExpiry,
+    }: RegisterProps): Promise<RegisterResult> {
         const uid = generateRandomHex();
-        const now = nowZeroMs();
-        const in1000years = new Date(now);
-        in1000years.setFullYear(in1000years.getFullYear() + 1000);
         return await db.transaction(async (tx) => {
             const authAttemptResult = await tx
                 .select({
                     email: authAttemptTable.email,
                     userId: authAttemptTable.userId,
                     didExchange: authAttemptTable.didExchange,
+                    userAgent: authAttemptTable.userAgent,
                 })
                 .from(authAttemptTable)
                 .where(eq(authAttemptTable.didWrite, didWrite));
@@ -1339,8 +1482,9 @@ export class Service {
                 userId: authAttemptResult[0].userId,
                 didWrite: didWrite,
                 didExchange: authAttemptResult[0].didExchange,
+                userAgent: authAttemptResult[0].userAgent,
                 encryptedSymmKey: encryptedSymmKey,
-                sessionExpiry: in1000years,
+                sessionExpiry: sessionExpiry,
             });
             await tx.insert(emailTable).values({
                 userId: authAttemptResult[0].userId,
@@ -1374,18 +1518,32 @@ export class Service {
                     httpErrors,
                     sk,
                 });
-            return { emailCredentialsPerEmail, secretCredentialsPerType };
+            const device: Device = {
+                didWrite: didWrite,
+                userAgent: authAttemptResult[0].userAgent,
+            };
+
+            return {
+                device,
+                emailCredentialsPerEmail,
+                secretCredentialsPerType,
+            };
         });
     }
 
     // ! WARN we assume the OTP was verified for login new device at this point
-    static async awaitSyncingNewDevice(db: PostgresDatabase, didWrite: string) {
-        const now = nowZeroMs();
+    static async awaitSyncingNewDevice({
+        db,
+        didWrite,
+        now,
+        sessionExpiry,
+    }: AwaitSyncingNewDeviceProps) {
         await db.transaction(async (tx) => {
             const authAttemptResult = await tx
                 .select({
                     userId: authAttemptTable.userId,
                     didExchange: authAttemptTable.didExchange,
+                    userAgent: authAttemptTable.userAgent,
                 })
                 .from(authAttemptTable)
                 .where(eq(authAttemptTable.didWrite, didWrite));
@@ -1404,18 +1562,16 @@ export class Service {
             await tx.insert(deviceTable).values({
                 userId: authAttemptResult[0].userId,
                 didWrite: didWrite,
+                userAgent: authAttemptResult[0].userAgent,
                 // it's a new device - so no encryption key. Users must manually accept syncing from an existing syncing device. This is necessary because symmetric keys are only known client-side, and it is a protection against an attacker that would have access to the user's email address. Even in such situation, the attacker will not be able to get access to the user's credentials and secrets unless the attacker has also access to one of the user's existing syncing device - or unless the attacker successfully phishes the user into accepting syncing with the attacker's device.
                 didExchange: authAttemptResult[0].didExchange,
-                sessionExpiry: now,
+                sessionExpiry: sessionExpiry,
             });
         });
     }
 
     // ! WARN we assume the OTP was verified and the device is already syncing
-    static async login(db: PostgresDatabase, didWrite: string) {
-        const now = nowZeroMs();
-        const in1000years = new Date(now);
-        in1000years.setFullYear(in1000years.getFullYear() + 1000);
+    static async login({ db, didWrite, now, sessionExpiry }: LoginProps) {
         await db.transaction(async (tx) => {
             await tx
                 .update(authAttemptTable)
@@ -1427,7 +1583,7 @@ export class Service {
             await tx
                 .update(deviceTable)
                 .set({
-                    sessionExpiry: in1000years,
+                    sessionExpiry: sessionExpiry,
                     updatedAt: now,
                 })
                 .where(eq(deviceTable.didWrite, didWrite));
@@ -1831,6 +1987,176 @@ export class Service {
         });
     }
 
+    static async revokeUserCredentials({
+        db,
+        email,
+        userId,
+        now,
+    }: RevokeUserCredentialsProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<void> {
+        // TODO: use transaction if type of DB is not transaction already
+        await db
+            .update(credentialEmailTable)
+            .set({
+                isRevoked: true,
+                updatedAt: now,
+            })
+            .where(eq(credentialEmailTable.email, email));
+        await db
+            .update(credentialFormTable)
+            .set({
+                isRevoked: true,
+                updatedAt: now,
+            })
+            .where(eq(credentialFormTable.email, email));
+        await db
+            .update(credentialSecretTable)
+            .set({
+                isRevoked: true,
+                updatedAt: now,
+            })
+            .where(eq(credentialSecretTable.userId, userId));
+    }
+
+    static async logoutAllDevicesButOne({
+        db,
+        didWrite,
+        userId,
+        now,
+        sessionExpiry,
+    }: LogoutAllDevicesButOneProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<void> {
+        await db
+            .update(deviceTable)
+            .set({
+                encryptedSymmKey: null,
+                sessionExpiry: now,
+                updatedAt: now,
+            })
+            .where(
+                and(
+                    eq(deviceTable.userId, userId),
+                    ne(deviceTable.didWrite, didWrite)
+                )
+            );
+        await db
+            .update(deviceTable)
+            .set({
+                sessionExpiry: sessionExpiry,
+                updatedAt: now,
+            })
+            .where(eq(deviceTable.didWrite, didWrite));
+    }
+
+    // encryptedSymmKey: z.string().optional(),
+    // timeboundSecretCredentialRequest: zodsecretCredentialRequest.optional(),
+    // unboundSecretCredentialRequest: zodsecretCredentialRequest.optional(),
+
+    static async updateEncryptedSymmKey({
+        db,
+        didWrite,
+        encryptedSymmKey,
+        now,
+    }: UpdateEncryptedSymmKeyProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<void> {
+        await db
+            .update(deviceTable)
+            .set({
+                encryptedSymmKey: encryptedSymmKey,
+                updatedAt: now,
+            })
+            .where(and(eq(deviceTable.didWrite, didWrite)));
+    }
+
+    static async recoverAccount({
+        db,
+        didWrite,
+        pkVersion,
+        httpErrors,
+        timeboundSecretCredentialRequest,
+        unboundSecretCredentialRequest,
+        sk,
+        encryptedSymmKey,
+    }: RecoverAccountProps): Promise<RecoverAccountResp> {
+        // TODO do all this as a unique transaction
+        const now = nowZeroMs();
+        return await db.transaction(async (tx) => {
+            const emails = await Service.getEmailsFromDidWrite(tx, didWrite);
+            const email = emails[0]; // TODO solve it for multiple emails
+            const { userId, uid, userAgent } = await Service.getInfoFromDevice(
+                tx,
+                didWrite
+            );
+            await Service.revokeUserCredentials({ db: tx, email, userId, now });
+            const loginSessionExpiry = new Date(now);
+            loginSessionExpiry.setFullYear(
+                loginSessionExpiry.getFullYear() + 1000
+            );
+            await Service.logoutAllDevicesButOne({
+                db: tx,
+                didWrite,
+                userId,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            await Service.updateEncryptedSymmKey({
+                db: tx,
+                didWrite,
+                encryptedSymmKey,
+                now,
+            });
+            await Service.createAndStoreEmailCredential({
+                db: tx,
+                email,
+                pkVersion,
+                uid,
+                sk,
+                httpErrors,
+            });
+            await Service.createAndStoreSecretCredential({
+                db: tx,
+                userId,
+                uid,
+                pkVersion: pkVersion,
+                secretCredentialRequest: timeboundSecretCredentialRequest,
+                httpErrors: httpErrors,
+                sk,
+                type: "timebound",
+            });
+            await Service.createAndStoreSecretCredential({
+                db: tx,
+                userId,
+                uid,
+                pkVersion: pkVersion,
+                secretCredentialRequest: unboundSecretCredentialRequest,
+                httpErrors: httpErrors,
+                sk,
+                type: "unbound",
+            });
+            const credentials = await Service.getUserCredentials(tx, didWrite);
+            return {
+                ...credentials,
+                userId: userId,
+                sessionExpiry: loginSessionExpiry,
+                syncingDevices: [
+                    {
+                        didWrite: didWrite,
+                        userAgent: userAgent,
+                    },
+                ],
+            };
+        });
+    }
+
     static async getUserIdFromDevice(
         db: PostgresDatabase,
         didWrite: string
@@ -1844,6 +2170,31 @@ export class Service {
             throw new Error("This didWrite is not registered to any user");
         }
         return results[0].userId;
+    }
+
+    static async getInfoFromDevice(
+        db: PostgresDatabase,
+        didWrite: string
+    ): Promise<InfoDevice> {
+        const results = await db
+            .select({
+                userId: userTable.id,
+                uid: userTable.uid,
+                userAgent: deviceTable.userAgent,
+                sessionExpiry: deviceTable.sessionExpiry,
+            })
+            .from(userTable)
+            .innerJoin(deviceTable, eq(deviceTable.userId, userTable.id))
+            .where(eq(deviceTable.didWrite, didWrite));
+        if (results.length === 0) {
+            throw new Error("This didWrite is not registered to any user");
+        }
+        return {
+            userId: results[0].userId,
+            uid: results[0].uid,
+            userAgent: results[0].userAgent,
+            sessionExpiry: results[0].sessionExpiry,
+        };
     }
 
     static async getUidFromDevice(

@@ -8,20 +8,18 @@ import { LoggedInUserMustPerformActionPage } from "./LoggedInUserMustPerformActi
 export interface LoggedInPageProps {
     isRegistration: boolean;
     isTheOnlyDevice: boolean;
-    hasFilledForms: boolean;
 }
 
 export function LoggedInPage({
     isRegistration,
     isTheOnlyDevice,
-    hasFilledForms,
 }: LoggedInPageProps) {
     const [nextButtonWasClicked, setNextButtonWasClicked] =
         React.useState<boolean>(false);
     const dispatch = useAppDispatch();
 
     React.useEffect(() => {
-        if (hasFilledForms && !isRegistration && !isTheOnlyDevice) {
+        if (!isRegistration && !isTheOnlyDevice) {
             // this component should not have been called on first place! close the form
             dispatch(closeAuthModal());
             dispatch(resetPendingSession());
@@ -34,13 +32,8 @@ export function LoggedInPage({
                 onNextButtonClicked={() => setNextButtonWasClicked(true)}
             />
         );
-    } else if (isTheOnlyDevice || hasFilledForms) {
-        return (
-            <LoggedInUserMustPerformActionPage
-                isTheOnlyDevice={false} // TODO: implement linking device and change that
-                hasFilledForms={hasFilledForms}
-            />
-        );
+    } else if (isTheOnlyDevice) {
+        return <LoggedInUserMustPerformActionPage />;
     } else {
         return <>This should not happen</>;
     }

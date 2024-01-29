@@ -5,8 +5,8 @@ import {
     zodauthorizedEmail,
     zodblindedCredential,
     zodcode,
-    zoddevices,
-    zoddidKey,
+    zodDevices,
+    zodDidKey,
     zodemail,
     zodemailCredential,
     zodemailCredentialsPerEmail,
@@ -28,7 +28,7 @@ export class Dto {
     static authenticateRequestBody = z
         .object({
             email: zodauthorizedEmail,
-            didExchange: zoddidKey,
+            didExchange: zodDidKey,
             isRequestingNewCode: z.boolean(),
         })
         .strict();
@@ -50,7 +50,8 @@ export class Dto {
                 success: z.literal(true),
                 userId: zoduserId,
                 encryptedSymmKey: z.string().optional(), // if undefined, device is awaiting synchronization
-                syncingDevices: zoddevices,
+                sessionExpiry: z.date(),
+                syncingDevices: zodDevices,
                 emailCredentialsPerEmail: zodemailCredentialsPerEmail,
                 formCredentialsPerEmail: zodformCredentialsPerEmail,
                 secretCredentialsPerType: zodsecretCredentialsPerType,
@@ -71,16 +72,20 @@ export class Dto {
             })
             .strict(),
     ]);
+    // WARNING when changing auth 409 - also change expected type in frontend manually!
     static auth409 = z.discriminatedUnion("reason", [
         z.object({
             reason: z.literal("awaiting_syncing"),
             userId: zoduserId,
+            sessionExpiry: z.date(),
+            syncingDevices: zodDevices,
         }),
         z.object({
             reason: z.literal("already_logged_in"),
             userId: zoduserId,
+            sessionExpiry: z.date(),
             encryptedSymmKey: z.string(),
-            syncingDevices: zoddevices,
+            syncingDevices: zodDevices,
             emailCredentialsPerEmail: zodemailCredentialsPerEmail,
             formCredentialsPerEmail: zodformCredentialsPerEmail,
             secretCredentialsPerType: zodsecretCredentialsPerType,
@@ -93,6 +98,19 @@ export class Dto {
             userId: zoduserId,
         })
         .strict();
+    static recoverAccountReq = z.object({
+        encryptedSymmKey: z.string(),
+        timeboundSecretCredentialRequest: zodsecretCredentialRequest,
+        unboundSecretCredentialRequest: zodsecretCredentialRequest,
+    });
+    static recoverAccountResp = z.object({
+        userId: zoduserId,
+        sessionExpiry: z.date(),
+        syncingDevices: zodDevices,
+        emailCredentialsPerEmail: zodformCredentialsPerEmail,
+        formCredentialsPerEmail: zodformCredentialsPerEmail,
+        secretCredentialsPerType: zodsecretCredentialsPerType,
+    });
     static isLoggedInResponse = z.discriminatedUnion("isLoggedIn", [
         z.object({ isLoggedIn: z.literal(true), userId: zoduserId }).strict(),
         z
@@ -108,6 +126,7 @@ export class Dto {
                     userId: zoduserId,
                     isLoggedIn: z.boolean(),
                     isSyncing: z.literal(true),
+                    sessionExpiry: z.date(),
                     encryptedSymmKey: z.string(),
                 })
                 .strict(),
@@ -115,6 +134,7 @@ export class Dto {
                 .object({
                     userId: zoduserId,
                     isLoggedIn: z.boolean(),
+                    sessionExpiry: z.date(),
                     isSyncing: z.literal(false),
                 })
                 .strict(),
@@ -210,3 +230,4 @@ export type UserCredentials = z.infer<typeof Dto.userCredentials>;
 export type EmailSecretCredentials = z.infer<typeof Dto.emailSecretCredentials>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
 export type CreatePostRequest = z.infer<typeof Dto.createPostRequest>;
+export type RecoverAccountResp = z.infer<typeof Dto.recoverAccountResp>;

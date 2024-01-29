@@ -49,7 +49,7 @@ import {
 import { toCID, decodeCID } from "./shared/common/cid.js";
 import isEqual from "lodash/isEqual.js";
 import { stringToBytes } from "./shared/common/arrbufs.js";
-import { scopeWith } from "./shared/common/util.js";
+import { nowZeroMs, scopeWith } from "./shared/common/util.js";
 import {
     buildCreateCommentContextFromPayload,
     buildCreatePostContextFromPayload,
@@ -179,8 +179,7 @@ async function verifyUCAN(
 ): Promise<string> {
     const authHeader = request.headers.authorization;
     if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
-        console.log("no header");
-        throw server.httpErrors.unauthorized();
+        throw server.httpErrors.unauthorized("No UCAN in Bearer token");
     } else {
         const { scheme, hierPart } = httpUrlToResourcePointer(
             new URL(request.originalUrl, SERVER_URL)
@@ -203,7 +202,7 @@ async function verifyUCAN(
         if (!result.ok) {
             throw server.httpErrors.createError(
                 401,
-                "Unauthorized",
+                "UCAN validation failed",
                 new AggregateError(result.error)
             );
         }
@@ -215,17 +214,17 @@ async function verifyUCAN(
             if (deviceStatus === undefined) {
                 if (options.expectedDeviceStatus.isLoggedIn !== undefined) {
                     throw server.httpErrors.unauthorized(
-                        `[${rootIssuerDid}}] has not been registered but is expected to have a log in status`
+                        `[${rootIssuerDid}] has not been registered but is expected to have a log in status`
                     );
                 } else if (options.expectedDeviceStatus.userId !== undefined) {
                     throw server.httpErrors.forbidden(
-                        `[${rootIssuerDid}}] has not been registered but is expected to have a specific userId`
+                        `[${rootIssuerDid}] has not been registered but is expected to have a specific userId`
                     );
                 } else if (
                     options.expectedDeviceStatus.isSyncing !== undefined
                 ) {
                     throw server.httpErrors.forbidden(
-                        `[${rootIssuerDid}}] has not been registered but is expected to have a syncing status`
+                        `[${rootIssuerDid}] has not been registered but is expected to have a syncing status`
                     );
                 }
             } else {
@@ -235,21 +234,21 @@ async function verifyUCAN(
                     options.expectedDeviceStatus.isLoggedIn !== isLoggedIn
                 ) {
                     throw server.httpErrors.unauthorized(
-                        `[${rootIssuerDid}}] is expected to have 'isLoggedIn=${options.expectedDeviceStatus.isLoggedIn}' but has 'isLoggedIn=${isLoggedIn}'`
+                        `[${rootIssuerDid}] is expected to have 'isLoggedIn=${options.expectedDeviceStatus.isLoggedIn}' but has 'isLoggedIn=${isLoggedIn}'`
                     );
                 } else if (
                     options.expectedDeviceStatus.userId !== undefined &&
                     options.expectedDeviceStatus.userId !== userId
                 ) {
                     throw server.httpErrors.forbidden(
-                        `[${rootIssuerDid}}] is expected to have 'userId=${options.expectedDeviceStatus.userId}' but has 'userId=${userId}'`
+                        `[${rootIssuerDid}] is expected to have 'userId=${options.expectedDeviceStatus.userId}' but has 'userId=${userId}'`
                     );
                 } else if (
                     options.expectedDeviceStatus.isSyncing !== undefined &&
                     options.expectedDeviceStatus.isSyncing !== isSyncing
                 ) {
                     throw server.httpErrors.forbidden(
-                        `[${rootIssuerDid}}] is expected to have 'isSyncing=${options.expectedDeviceStatus.isSyncing}' but has 'isSyncing=${isSyncing}'`
+                        `[${rootIssuerDid}] is expected to have 'isSyncing=${options.expectedDeviceStatus.isSyncing}' but has 'isSyncing=${isSyncing}'`
                     );
                 }
             }
@@ -664,6 +663,10 @@ server.after(() => {
                     didWrite,
                     server.httpErrors
                 );
+                const userAgent =
+                    request.headers["user-agent"] === undefined
+                        ? "Unknown device"
+                        : request.headers["user-agent"];
                 return await Service.authenticateAttempt({
                     db,
                     type,
@@ -677,6 +680,7 @@ server.after(() => {
                     httpErrors: server.httpErrors,
                     env: config.NODE_ENV,
                     awsMailConf: awsMailConf,
+                    userAgent: userAgent,
                 }).then(({ codeExpiry, nextCodeSoonestTime }) => {
                     // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
                     return {
@@ -694,7 +698,10 @@ server.after(() => {
         .post(`/api/${apiVersion}/auth/verifyOtp`, {
             schema: {
                 body: Dto.verifyOtpReqBody,
-                response: { 200: Dto.verifyOtp200, 409: Dto.auth409 },
+                response: {
+                    200: Dto.verifyOtp200,
+                    409: Dto.auth409, // WARNING when changing auth 409 - also change expected type in frontend manually!
+                },
             },
             handler: async (request, _reply) => {
                 const didWrite = await verifyUCAN(db, request, {
@@ -726,6 +733,36 @@ server.after(() => {
                     },
                 });
                 await Service.logout(db, didWrite);
+            },
+        });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/auth/recover`, {
+            schema: {
+                body: Dto.recoverAccountReq,
+                response: {
+                    200: Dto.recoverAccountResp,
+                },
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                        isSyncing: false,
+                    },
+                });
+                return await Service.recoverAccount({
+                    db,
+                    didWrite,
+                    pkVersion: config.PK_VERSION,
+                    httpErrors: server.httpErrors,
+                    timeboundSecretCredentialRequest:
+                        request.body.timeboundSecretCredentialRequest,
+                    unboundSecretCredentialRequest:
+                        request.body.unboundSecretCredentialRequest,
+                    encryptedSymmKey: request.body.encryptedSymmKey,
+                    sk,
+                });
             },
         });
     // TODO

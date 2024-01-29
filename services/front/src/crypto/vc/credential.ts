@@ -235,28 +235,42 @@ export async function unblindedSecretCredentialsPerTypeFrom(
             revoked: [],
         };
         for (const secretCredential of secretCredentials.revoked) {
-            const unblindedCredential = await unblindedCredentialFrom(
-                secretCredential,
-                userId
-            );
+            try {
+                const unblindedCredential = await unblindedCredentialFrom(
+                    secretCredential,
+                    userId
+                );
+                (
+                    unblindedSecretCredentialsPerType[
+                        type as SecretCredentialType
+                    ] as UnblindedSecretCredentials
+                ).revoked.push(unblindedCredential);
+            } catch (e) {
+                console.log(
+                    "Credential secret was lost - skipping trying to unblind it"
+                );
+                continue;
+            }
+        }
+        try {
+            const unblindedActiveCredential =
+                secretCredentials.active !== undefined
+                    ? await unblindedCredentialFrom(
+                          secretCredentials.active,
+                          userId
+                      )
+                    : undefined;
             (
                 unblindedSecretCredentialsPerType[
                     type as SecretCredentialType
                 ] as UnblindedSecretCredentials
-            ).revoked.push(unblindedCredential);
+            ).active = unblindedActiveCredential;
+        } catch (e) {
+            console.log(
+                "Credential secret was lost - skipping trying to unblind it"
+            );
+            continue;
         }
-        const unblindedActiveCredential =
-            secretCredentials.active !== undefined
-                ? await unblindedCredentialFrom(
-                      secretCredentials.active,
-                      userId
-                  )
-                : undefined;
-        (
-            unblindedSecretCredentialsPerType[
-                type as SecretCredentialType
-            ] as UnblindedSecretCredentials
-        ).active = unblindedActiveCredential;
     }
     return unblindedSecretCredentialsPerType;
 }

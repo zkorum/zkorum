@@ -65,13 +65,19 @@ export interface ApiV1AuthAuthenticatePost409Response {
      * @type {string}
      * @memberof ApiV1AuthAuthenticatePost409Response
      */
-    'encryptedSymmKey': string;
+    'sessionExpiry': string;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>}
      * @memberof ApiV1AuthAuthenticatePost409Response
      */
-    'syncingDevices': Array<string>;
+    'syncingDevices': Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthAuthenticatePost409Response
+     */
+    'encryptedSymmKey': string;
     /**
      * 
      * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
@@ -116,6 +122,18 @@ export interface ApiV1AuthAuthenticatePost409ResponseAnyOf {
      * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf
      */
     'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf
+     */
+    'sessionExpiry': string;
+    /**
+     * 
+     * @type {Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf
+     */
+    'syncingDevices': Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>;
 }
 
 export const ApiV1AuthAuthenticatePost409ResponseAnyOfReasonEnum = {
@@ -147,13 +165,19 @@ export interface ApiV1AuthAuthenticatePost409ResponseAnyOf1 {
      * @type {string}
      * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
+    'sessionExpiry': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
+     */
     'encryptedSymmKey': string;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>}
      * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOf1
      */
-    'syncingDevices': Array<string>;
+    'syncingDevices': Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>;
     /**
      * 
      * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
@@ -265,6 +289,25 @@ export interface ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerT
 /**
  * 
  * @export
+ * @interface ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner
+ */
+export interface ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner {
+    /**
+     * Decentralized Identifier with did:key method
+     * @type {string}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner
+     */
+    'didWrite': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner
+     */
+    'userAgent': string;
+}
+/**
+ * 
+ * @export
  * @interface ApiV1AuthAuthenticatePostRequest
  */
 export interface ApiV1AuthAuthenticatePostRequest {
@@ -286,6 +329,74 @@ export interface ApiV1AuthAuthenticatePostRequest {
      * @memberof ApiV1AuthAuthenticatePostRequest
      */
     'isRequestingNewCode': boolean;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1AuthRecoverPost200Response
+ */
+export interface ApiV1AuthRecoverPost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthRecoverPost200Response
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthRecoverPost200Response
+     */
+    'sessionExpiry': string;
+    /**
+     * 
+     * @type {Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>}
+     * @memberof ApiV1AuthRecoverPost200Response
+     */
+    'syncingDevices': Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>;
+    /**
+     * 
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthRecoverPost200Response
+     */
+    'emailCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
+     * @memberof ApiV1AuthRecoverPost200Response
+     */
+    'formCredentialsPerEmail': { [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; };
+    /**
+     * 
+     * @type {ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType}
+     * @memberof ApiV1AuthRecoverPost200Response
+     */
+    'secretCredentialsPerType': ApiV1AuthAuthenticatePost409ResponseAnyOf1SecretCredentialsPerType;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1AuthRecoverPostRequest
+ */
+export interface ApiV1AuthRecoverPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthRecoverPostRequest
+     */
+    'encryptedSymmKey': string;
+    /**
+     * 
+     * @type {ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
+     * @memberof ApiV1AuthRecoverPostRequest
+     */
+    'timeboundSecretCredentialRequest': ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
+    /**
+     * 
+     * @type {ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest}
+     * @memberof ApiV1AuthRecoverPostRequest
+     */
+    'unboundSecretCredentialRequest': ApiV1AuthVerifyOtpPostRequestTimeboundSecretCredentialRequest;
 }
 /**
  * 
@@ -339,10 +450,16 @@ export interface ApiV1AuthVerifyOtpPost200Response {
     'encryptedSymmKey'?: string;
     /**
      * 
-     * @type {Array<string>}
+     * @type {string}
      * @memberof ApiV1AuthVerifyOtpPost200Response
      */
-    'syncingDevices': Array<string>;
+    'sessionExpiry': string;
+    /**
+     * 
+     * @type {Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>}
+     * @memberof ApiV1AuthVerifyOtpPost200Response
+     */
+    'syncingDevices': Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>;
     /**
      * 
      * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
@@ -407,10 +524,16 @@ export interface ApiV1AuthVerifyOtpPost200ResponseAnyOf {
     'encryptedSymmKey'?: string;
     /**
      * 
-     * @type {Array<string>}
+     * @type {string}
      * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
      */
-    'syncingDevices': Array<string>;
+    'sessionExpiry': string;
+    /**
+     * 
+     * @type {Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>}
+     * @memberof ApiV1AuthVerifyOtpPost200ResponseAnyOf
+     */
+    'syncingDevices': Array<ApiV1AuthAuthenticatePost409ResponseAnyOfSyncingDevicesInner>;
     /**
      * 
      * @type {{ [key: string]: ApiV1AuthAuthenticatePost409ResponseAnyOf1EmailCredentialsPerEmailValue; }}
@@ -3690,6 +3813,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {ApiV1AuthRecoverPostRequest} apiV1AuthRecoverPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AuthRecoverPost: async (apiV1AuthRecoverPostRequest: ApiV1AuthRecoverPostRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1AuthRecoverPostRequest' is not null or undefined
+            assertParamExists('apiV1AuthRecoverPost', 'apiV1AuthRecoverPostRequest', apiV1AuthRecoverPostRequest)
+            const localVarPath = `/api/v1/auth/recover`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1AuthRecoverPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -4448,6 +4610,16 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {ApiV1AuthRecoverPostRequest} apiV1AuthRecoverPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest: ApiV1AuthRecoverPostRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1AuthRecoverPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -4663,6 +4835,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
+         * @param {ApiV1AuthRecoverPostRequest} apiV1AuthRecoverPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest: ApiV1AuthRecoverPostRequest, options?: any): AxiosPromise<ApiV1AuthRecoverPost200Response> {
+            return localVarFp.apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -4859,6 +5040,17 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1AuthLogoutPost(options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1AuthLogoutPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1AuthRecoverPostRequest} apiV1AuthRecoverPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest: ApiV1AuthRecoverPostRequest, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -7,8 +7,14 @@ import { useCountdown } from "usehooks-ts";
 import {
     ApiV1AuthVerifyOtpPost200ResponseReasonEnum,
     type ApiV1AuthAuthenticatePost409Response,
+    type ApiV1AuthAuthenticatePost409ResponseAnyOf,
 } from "../../api";
-import { authenticate, onLoggedIn, verifyOtp } from "@/request/auth";
+import {
+    authenticate,
+    onLoggedIn,
+    onAwaitingSyncing,
+    verifyOtp,
+} from "@/request/auth";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { CircularProgressCountdown } from "../shared/CircularProgressCountdown";
 import {
@@ -20,8 +26,8 @@ import {
 import { setPendingSessionCodeExpiry } from "../../store/reducers/session";
 import {
     authAlreadyLoggedIn,
+    authEmailAlreadyVerified,
     genericError,
-    linkingDevice,
     throttled,
 } from "../error/message";
 import axios from "axios";
@@ -30,6 +36,7 @@ import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { zodcode, zoddigit } from "@/shared/types/zod";
+import { nowZeroMs } from "@/shared/common/util";
 
 export function OtpVerify() {
     const theme = useTheme();
@@ -58,7 +65,7 @@ export function OtpVerify() {
         const currentCodeExpiryStr = state.sessions.sessions[
             pendingSessionEmail
         ].codeExpiry as string; // at this point it SHALL not be possible for it to be undefined
-        const now = new Date().getTime(); // ms
+        const now = nowZeroMs().getTime(); // ms
         const currentCodeDateExpiry = Date.parse(currentCodeExpiryStr); // ms
         const secondsUntilCodeExpiry = Math.round(
             (currentCodeDateExpiry - now) / 1000
@@ -72,7 +79,7 @@ export function OtpVerify() {
         const pendingSessionUserId = state.sessions.pendingSessionEmail;
         const nextCodeStr = state.sessions.sessions[pendingSessionUserId]
             .nextCodeSoonestTime as string; // at this point it SHALL not be possible for it to be undefined
-        const now = new Date().getTime(); // ms
+        const now = nowZeroMs().getTime(); // ms
         const nextCodeDate = Date.parse(nextCodeStr); // ms
         const secondsUntilNextCodeSoonestTime = Math.round(
             (nextCodeDate - now) / 1000
@@ -151,15 +158,18 @@ export function OtpVerify() {
                 );
                 if (verifyOtpData.success) {
                     if (verifyOtpData.encryptedSymmKey === undefined) {
-                        dispatch(showError(linkingDevice));
-                        // this is login from a new device or a known unsynced device
-                        // device is awaiting syncing: TODO show corresponding screen and update redux user status
-                        // then when syncing is OK - steps as in "else"
+                        await onAwaitingSyncing({
+                            email: pendingEmail,
+                            userId: verifyOtpData.userId,
+                            sessionExpiry: verifyOtpData.sessionExpiry,
+                            syncingDevices: verifyOtpData.syncingDevices,
+                        });
                     } else {
                         // this is a first time registration or a login from a known device that's been synced already
                         await onLoggedIn({
                             email: pendingEmail,
                             userId: verifyOtpData.userId,
+                            sessionExpiry: verifyOtpData.sessionExpiry,
                             encryptedSymmKey: verifyOtpData.encryptedSymmKey,
                             isRegistration:
                                 verifyOtpData.encryptedSymmKey ===
@@ -204,26 +214,37 @@ export function OtpVerify() {
                 console.error(e);
                 if (axios.isAxiosError(e)) {
                     if (e.response?.status === 409) {
-                        const auth409: ApiV1AuthAuthenticatePost409Response = e
-                            .response
-                            .data as ApiV1AuthAuthenticatePost409Response;
-                        if (auth409.reason === "already_logged_in") {
-                            await onLoggedIn({
-                                email: pendingEmail,
-                                userId: auth409.userId,
-                                isRegistration: false,
-                                encryptedSymmKey: auth409.encryptedSymmKey,
-                                syncingDevices: auth409.syncingDevices,
-                                emailCredentialsPerEmail:
-                                    auth409.emailCredentialsPerEmail,
-                                formCredentialsPerEmail:
-                                    auth409.formCredentialsPerEmail,
-                                secretCredentialsPerType:
-                                    auth409.secretCredentialsPerType,
-                            });
-                        } else {
-                            console.log("awaiting_syncing");
-                            // TODO "awaiting_syncing";
+                        const auth409:
+                            | ApiV1AuthAuthenticatePost409Response
+                            | ApiV1AuthAuthenticatePost409ResponseAnyOf = e
+                            .response.data as
+                            | ApiV1AuthAuthenticatePost409Response
+                            | ApiV1AuthAuthenticatePost409ResponseAnyOf; // TODO: this is not future proof - openapi type generation isn't right
+                        switch (auth409.reason) {
+                            case "already_logged_in":
+                                await onLoggedIn({
+                                    email: pendingEmail,
+                                    userId: auth409.userId,
+                                    sessionExpiry: auth409.sessionExpiry,
+                                    isRegistration: false,
+                                    encryptedSymmKey: auth409.encryptedSymmKey,
+                                    syncingDevices: auth409.syncingDevices,
+                                    emailCredentialsPerEmail:
+                                        auth409.emailCredentialsPerEmail,
+                                    formCredentialsPerEmail:
+                                        auth409.formCredentialsPerEmail,
+                                    secretCredentialsPerType:
+                                        auth409.secretCredentialsPerType,
+                                });
+                                break;
+                            case "awaiting_syncing":
+                                await onAwaitingSyncing({
+                                    email: pendingEmail,
+                                    userId: auth409.userId,
+                                    sessionExpiry: auth409.sessionExpiry,
+                                    syncingDevices: auth409.syncingDevices,
+                                });
+                                break;
                         }
                     } else if (e.response?.status === 429) {
                         dispatch(showError(throttled));
@@ -250,8 +271,7 @@ export function OtpVerify() {
                     dispatch(showSuccess(authAlreadyLoggedIn));
                     return;
                 } else if (response === "awaiting-syncing") {
-                    dispatch(showError(linkingDevice));
-                    // TODO
+                    dispatch(showSuccess(authEmailAlreadyVerified));
                     return;
                 } else if (response === "throttled") {
                     dispatch(showError(throttled));
@@ -264,6 +284,7 @@ export function OtpVerify() {
                             "New code sent to your email - previous code invalidated"
                         )
                     );
+                    return;
                 }
             })
             .catch((e) => {
