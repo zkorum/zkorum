@@ -109,6 +109,7 @@ export const deviceTable = pgTable("device", {
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
+    userAgent: text("user_agent").notNull(), // user-agent length is not fixed
     // TODO: isTrusted: boolean("is_trusted").notNull(), // if set to true by user then, device should stay logged-in indefinitely until log out action
     sessionExpiry: timestamp("session_expiry").notNull(), // on register, a new login session is always started, hence the notNull. This column is updated to now + 15 minutes at each request when isTrusted == false. Otherwise, expiry will be now + 1000 years - meaning no expiry.
     encryptedSymmKey: bytea("encrypted_symm_key"), // symmetric key used for client-side encryption. Devices belonging to the same user and with encryptedSymmKey!=null automatically sync credentials and presentations between each other
@@ -143,6 +144,7 @@ export const authAttemptTable = pgTable("auth_attempt", {
     email: varchar("email", { length: 254 }).notNull(),
     userId: uuid("user_id").notNull(),
     didExchange: varchar("did_exchange", { length: 1000 }).notNull(), // TODO: make sure of length
+    userAgent: text("user_agent").notNull(), // user-agent length is not fixed
     code: integer("code").notNull(), // one-time password sent to the email ("otp")
     codeExpiry: timestamp("code_expiry").notNull(),
     guessAttemptAmount: integer("guess_attempt_amount").default(0).notNull(),

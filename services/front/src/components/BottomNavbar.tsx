@@ -2,7 +2,6 @@ import * as React from "react";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import HomeIcon from "@mui/icons-material/Home";
-import BadgeIcon from "@mui/icons-material/Badge";
 import GroupsIcon from "@mui/icons-material/Groups";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
@@ -10,17 +9,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
 import { type SxProps } from "@mui/material/styles";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import { COMMUNITIES, CREDENTIALS, NOTIFICATIONS } from "@/common/navigation";
+import { COMMUNITIES, JOBS, NOTIFICATIONS } from "@/common/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import Badge from "@mui/material/Badge";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { openPostModal } from "@/store/reducers/post";
 import { selectActiveSessionStatus } from "@/store/selector";
 import { openAuthModal } from "@/store/reducers/session";
+import WorkIcon from "@mui/icons-material/Work";
 
 enum Nav {
     Home = "Home",
-    Credentials = "Credentials",
+    Jobs = "Jobs",
     Communities = "Communities",
     Notifications = "Notifications",
     Post = "Post",
@@ -28,23 +28,6 @@ enum Nav {
 
 export function BottomNavbar() {
     const dispatch = useAppDispatch();
-    const hasFilledForms = useAppSelector((state) => {
-        const activeSessionEmail = state.sessions.activeSessionEmail;
-        if (
-            activeSessionEmail === "" ||
-            !(activeSessionEmail in state.sessions.sessions) ||
-            state.sessions.sessions[activeSessionEmail].status !== "logged-in"
-        ) {
-            return true;
-        }
-        const emailCredentialsPerEmail =
-            state.sessions.sessions[activeSessionEmail]
-                .emailCredentialsPerEmail;
-        if (emailCredentialsPerEmail === undefined) {
-            return false;
-        }
-        return activeSessionEmail in emailCredentialsPerEmail;
-    });
     const activeSessionStatus = useAppSelector(selectActiveSessionStatus);
     const trigger = useScrollTrigger();
     const [value, setValue] = React.useState<Nav>(Nav.Home);
@@ -54,8 +37,8 @@ export function BottomNavbar() {
 
     React.useEffect(() => {
         const { pathname } = location;
-        if (pathname === CREDENTIALS) {
-            setValue(Nav.Credentials);
+        if (pathname === JOBS) {
+            setValue(Nav.Jobs);
         } else if (pathname.startsWith(COMMUNITIES)) {
             setValue(Nav.Communities);
         } else if (pathname.startsWith(NOTIFICATIONS)) {
@@ -82,9 +65,9 @@ export function BottomNavbar() {
                 setValue(Nav.Home);
                 navigate("/");
                 break;
-            case Nav.Credentials:
-                setValue(Nav.Credentials);
-                navigate(CREDENTIALS);
+            case Nav.Jobs:
+                setValue(Nav.Jobs);
+                navigate(JOBS);
                 break;
             case Nav.Communities:
                 setValue(Nav.Communities);
@@ -133,21 +116,10 @@ export function BottomNavbar() {
                         sx={{ minWidth: "60px" }}
                     />
                     <BottomNavigationAction
+                        disabled
                         label={Nav.Communities}
                         value={Nav.Communities}
-                        icon={
-                            !hasFilledForms ? (
-                                <Badge
-                                    color="error"
-                                    variant="dot"
-                                    invisible={false}
-                                >
-                                    <GroupsIcon />
-                                </Badge>
-                            ) : (
-                                <GroupsIcon />
-                            )
-                        }
+                        icon={<GroupsIcon color="disabled" />}
                         sx={{ minWidth: "60px" }}
                     />
                     <BottomNavigationAction
@@ -178,9 +150,9 @@ export function BottomNavbar() {
                     />
                     <BottomNavigationAction
                         disabled
-                        label={Nav.Credentials}
-                        value={Nav.Credentials}
-                        icon={<BadgeIcon color="disabled" />}
+                        label={Nav.Jobs}
+                        value={Nav.Jobs}
+                        icon={<WorkIcon color="disabled" />}
                         sx={{ minWidth: "60px" }}
                     />
                 </BottomNavigation>

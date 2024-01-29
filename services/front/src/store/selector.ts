@@ -32,6 +32,15 @@ const selectSessionsData = (state: RootState) => {
         if (s2.status === "logged-out") {
             return 1;
         }
+        if (s1.status === "awaiting-syncing") {
+            if (s2.status === "awaiting-syncing") {
+                return 0;
+            }
+            return -1;
+        }
+        if (s2.status === "awaiting-syncing") {
+            return 1;
+        }
         if (s1.status === "verifying") {
             if (s2.status === "verifying") {
                 return 0;
@@ -57,6 +66,10 @@ export const selectActiveSessionEmail = (state: RootState) => {
     return state.sessions.activeSessionEmail;
 };
 
+export const selectPendingSessionEmail = (state: RootState) => {
+    return state.sessions.pendingSessionEmail;
+};
+
 export const forwardPostUid = (_state: RootState, postUid: PostUid) => {
     return postUid;
 };
@@ -64,6 +77,16 @@ export const forwardPostUid = (_state: RootState, postUid: PostUid) => {
 export const selectSessions = (state: RootState) => {
     return state.sessions.sessions;
 };
+
+export const selectPendingSessionDevices = createSelector(
+    [selectPendingSessionEmail, selectSessions],
+    (pendingSessionEmail, sessions) => {
+        if (pendingSessionEmail === undefined || pendingSessionEmail === "") {
+            return undefined;
+        }
+        return sessions[pendingSessionEmail]?.syncingDevices;
+    }
+);
 
 export const selectFormCredentialsPerEmail = createSelector(
     [selectActiveSessionEmail, selectSessions],

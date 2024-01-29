@@ -121,6 +121,47 @@ async function activeSessionUcanAxiosConfig(
     return config;
 }
 
+export function createAxiosPerEmail(email: string) {
+    const sessions = store.getState().sessions.sessions;
+    if (email === "" || !(email in sessions)) {
+        return noAuthAxios;
+    }
+    const axiosInstance = axios.create({
+        baseURL: VITE_BACK_BASE_URL,
+    });
+
+    axiosInstance.interceptors.request.use(
+        async function (config) {
+            if (email === "" || email === undefined) {
+                console.warn("No pending session: not adding UCAN");
+                return config;
+            }
+
+            if (config.url === undefined || config.method === undefined) {
+                // TODO: better error handling
+                throw new Error(
+                    `Cannot add UCAN because url==${config.url} or method==${config.method} is undefined, should not happen!`
+                );
+            }
+
+            const sessions = store.getState().sessions.sessions;
+            const newUcan = await buildUcan(
+                config.url,
+                config.method,
+                sessions[email] ? sessions[email].email : email,
+                sessions[email]?.userId
+            );
+            config.headers.Authorization = `Bearer ${newUcan}`;
+            return config;
+        },
+        function (error) {
+            // Do something with request error
+            return Promise.reject(error);
+        }
+    );
+    return axiosInstance;
+}
+
 // Add UCAN to every request - if an active session exists
 activeSessionUcanAxios.interceptors.request.use(
     async function (config) {
@@ -150,7 +191,7 @@ pendingSessionUcanAxios.interceptors.request.use(
         const pendingSessionEmail =
             store.getState().sessions.pendingSessionEmail;
         if (pendingSessionEmail === "" || pendingSessionEmail === undefined) {
-            console.log("No pending session: not adding UCAN");
+            console.warn("No pending session: not adding UCAN");
             return config;
         }
 
@@ -189,7 +230,7 @@ activeSessionUcanAxios.interceptors.response.use(
     function (error) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 401) {
-                // most likely the device is logged-out
+                // most likely the device is logged-out (TODO not true)
                 const activeSessionEmail =
                     store.getState().sessions.activeSessionEmail;
                 if (

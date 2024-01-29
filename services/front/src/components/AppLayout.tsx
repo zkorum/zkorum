@@ -3,6 +3,7 @@ import { useAppSelector } from "@/hooks";
 import { fetchAndUpdateCredentials } from "@/request/credential";
 import {
     selectActiveSessionEmail,
+    selectActiveSessionStatus,
     selectActiveSessionUserId,
 } from "@/store/selector";
 import Box from "@mui/material/Box";
@@ -14,6 +15,7 @@ import { Topbar } from "./Topbar";
 export function AppLayout() {
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const activeSessionUserId = useAppSelector(selectActiveSessionUserId);
+    const activeSessionStatus = useAppSelector(selectActiveSessionStatus);
 
     const {
         posts,
@@ -29,7 +31,10 @@ export function AppLayout() {
     React.useEffect(() => {
         // this will set the values in redux store and eventually update this page
         const fetchData = async function () {
-            if (activeSessionUserId !== undefined) {
+            if (
+                activeSessionStatus === "logged-in" &&
+                activeSessionUserId !== undefined
+            ) {
                 try {
                     await fetchAndUpdateCredentials(
                         activeSessionUserId,

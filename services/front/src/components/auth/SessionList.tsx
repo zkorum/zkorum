@@ -7,7 +7,7 @@ import { CustomAvatar } from "./CustomAvatar";
 import ListItemButton from "@mui/material/ListItemButton";
 import Chip from "@mui/material/Chip";
 import { removeSession, type SessionData } from "../../store/reducers/session";
-import { logout, onChooseAccount } from "@/request/auth";
+import { awaitingSyncingLogout, logout, onChooseAccount } from "@/request/auth";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -18,6 +18,7 @@ import React from "react";
 import MenuList from "@mui/material/MenuList";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
+import { nowZeroMs } from "@/shared/common/util";
 
 interface SessionListProps {
     sessions: SessionData[];
@@ -37,6 +38,16 @@ export function SessionList({
     async function onLogout(): Promise<void> {
         try {
             await logout();
+            dispatch(showSuccess(logoutMessage));
+        } catch (e) {
+            console.error(e);
+            dispatch(showError(genericError));
+        }
+    }
+
+    async function onAwaitingSyncingLogout(email: string): Promise<void> {
+        try {
+            await awaitingSyncingLogout(email);
             dispatch(showSuccess(logoutMessage));
         } catch (e) {
             console.error(e);
@@ -76,6 +87,29 @@ export function SessionList({
                 } else {
                     return null;
                 }
+            case "awaiting-syncing": {
+                if (session.sessionExpiry !== undefined) {
+                    const now = nowZeroMs().getTime(); // ms
+                    const sessionExpiry = Date.parse(session.sessionExpiry); // ms
+                    if (sessionExpiry > now) {
+                        return (
+                            <IconButton
+                                onClick={async () =>
+                                    await onAwaitingSyncingLogout(session.email)
+                                }
+                                edge="start"
+                                aria-label="logout"
+                            >
+                                <LogoutIcon color="error" />
+                            </IconButton>
+                        );
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+            }
             case "logged-in":
                 if (isActive) {
                     return (
@@ -167,21 +201,24 @@ export function SessionList({
             <List>
                 <React.Fragment>
                     {sessions.map((session) => {
-                        return (
-                            <ListItem
-                                key={session.email}
-                                sx={{ maxHeight: "60%" }}
-                                secondaryAction={getSecondaryAction(
-                                    session,
-                                    session.email === activeSessionEmail
-                                )}
-                            >
-                                {getListItemButton({
-                                    session: session,
-                                    activeSessionEmail: activeSessionEmail,
-                                })}
-                            </ListItem>
-                        );
+                        if (session.email !== "") {
+                            // this should not happen - TODO: do better
+                            return (
+                                <ListItem
+                                    key={session.email}
+                                    sx={{ maxHeight: "60%" }}
+                                    secondaryAction={getSecondaryAction(
+                                        session,
+                                        session.email === activeSessionEmail
+                                    )}
+                                >
+                                    {getListItemButton({
+                                        session: session,
+                                        activeSessionEmail: activeSessionEmail,
+                                    })}
+                                </ListItem>
+                            );
+                        }
                     })}
                 </React.Fragment>
             </List>
@@ -190,14 +227,19 @@ export function SessionList({
         return (
             <MenuList sx={{ maxHeight: "30vh", overflow: "auto" }}>
                 {sessions.map((session) => {
-                    return (
-                        <MenuItem key={session.email} sx={{ maxHeight: "60%" }}>
-                            {getListItemButton({
-                                session: session,
-                                activeSessionEmail: activeSessionEmail,
-                            })}
-                        </MenuItem>
-                    );
+                    if (session.email !== "") {
+                        return (
+                            <MenuItem
+                                key={session.email}
+                                sx={{ maxHeight: "60%" }}
+                            >
+                                {getListItemButton({
+                                    session: session,
+                                    activeSessionEmail: activeSessionEmail,
+                                })}
+                            </MenuItem>
+                        );
+                    }
                 })}
             </MenuList>
         );

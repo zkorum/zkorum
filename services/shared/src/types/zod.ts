@@ -56,7 +56,7 @@ export const zodauthorizedEmail = z
     .refine((email: string) => {
         return isAuthorizedEmail(email);
     });
-export const zoddidKey = z
+export const zodDidKey = z
     .string()
     .describe("Decentralized Identifier with did:key method")
     .max(1000)
@@ -68,7 +68,7 @@ export const zoddidKey = z
             message: "Please use a base58-encoded DID formatted `did:key:z...`",
         }
     );
-export const zoddidWeb = z
+export const zodDidWeb = z
     .string()
     .describe("Decentralized Identifier with did:web method")
     .max(1000)
@@ -139,7 +139,13 @@ export const zodemailFormCredentialsPerEmail = z.object({
     emailCredentialsPerEmail: zodemailCredentialsPerEmail,
     formCredentialsPerEmail: zodformCredentialsPerEmail,
 });
-export const zoddevices = z.array(z.string()); // list of didWrite of all the devices belonging to a user
+export const zodDevice = z
+    .object({
+        didWrite: zodDidKey,
+        userAgent: z.string(),
+    })
+    .strict();
+export const zodDevices = z.array(zodDevice); // list of didWrite of all the devices belonging to a user
 export const zodessecCampus = z.nativeEnum(EssecCampus);
 export const zodessecProgram = z.nativeEnum(EssecProgram);
 export const zodcountryCode: z.ZodType<TCountryCode> = z.enum([
@@ -639,7 +645,8 @@ export type FormCredentialRequest = z.infer<typeof zodformCredentialRequest>;
 export type EmailFormCredentialsPerEmail = z.infer<
     typeof zodemailFormCredentialsPerEmail
 >;
-export type Devices = z.infer<typeof zoddevices>;
+export type Device = z.infer<typeof zodDevice>;
+export type Devices = z.infer<typeof zodDevices>;
 export type StudentAdmissionYear = z.infer<typeof zodstudentAdmissionYear>;
 export type Eligibility = z.infer<typeof zodeligibility>;
 export type Post = z.infer<typeof zodPost>;

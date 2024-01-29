@@ -1,3 +1,4 @@
+import { nowZeroMs } from "@/shared/common/util";
 import type {
     Devices,
     EmailCredentialsPerEmail,
@@ -22,12 +23,14 @@ export interface SessionState {
 export type SessionStatus =
     | "authenticating"
     | "verifying"
+    | "awaiting-syncing"
     | "logged-in"
     | "logged-out";
 
 export interface SessionData {
     email: string;
     userId?: string;
+    sessionExpiry?: string;
     codeExpiry?: string;
     nextCodeSoonestTime?: string;
     status: SessionStatus;
@@ -50,12 +53,20 @@ interface VerifyProps {
 interface LoggedInProps {
     email: string;
     userId: string;
+    sessionExpiry: string;
     encryptedSymmKey: string;
     isRegistration: boolean;
     syncingDevices: Devices;
     emailCredentialsPerEmail: EmailCredentialsPerEmail;
     formCredentialsPerEmail: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType: UnblindedSecretCredentialsPerType;
+}
+
+interface SyncingProps {
+    email: string;
+    userId: string;
+    sessionExpiry: string;
+    syncingDevices: Devices;
 }
 
 interface EmailProps {
@@ -135,6 +146,30 @@ export const sessionSlice = createSlice({
             state.isModalOpen = true;
             state.pendingSessionEmail = action.payload.email;
         },
+        awaitingSyncing: (state, action: PayloadAction<SyncingProps>) => {
+            if (action.payload.email in state.sessions) {
+                state.sessions[action.payload.email].status =
+                    "awaiting-syncing";
+                state.sessions[action.payload.email].email =
+                    action.payload.email;
+                state.sessions[action.payload.email].userId =
+                    action.payload.userId;
+                state.sessions[action.payload.email].sessionExpiry =
+                    action.payload.sessionExpiry;
+                state.sessions[action.payload.email].syncingDevices =
+                    action.payload.syncingDevices;
+            } else {
+                state.sessions[action.payload.email] = {
+                    status: "awaiting-syncing",
+                    email: action.payload.email,
+                    userId: action.payload.userId,
+                    sessionExpiry: action.payload.sessionExpiry,
+                    syncingDevices: action.payload.syncingDevices,
+                };
+            }
+            state.isModalOpen = true;
+            state.pendingSessionEmail = action.payload.email;
+        },
         loggedIn: (state, action: PayloadAction<LoggedInProps>) => {
             if (action.payload.email in state.sessions) {
                 state.sessions[action.payload.email].status = "logged-in";
@@ -142,6 +177,8 @@ export const sessionSlice = createSlice({
                     action.payload.email;
                 state.sessions[action.payload.email].userId =
                     action.payload.userId;
+                state.sessions[action.payload.email].sessionExpiry =
+                    action.payload.sessionExpiry;
                 state.sessions[action.payload.email].encryptedSymmKey =
                     action.payload.encryptedSymmKey;
                 state.sessions[action.payload.email].isRegistration =
@@ -161,6 +198,7 @@ export const sessionSlice = createSlice({
                     status: "logged-in",
                     email: action.payload.email,
                     userId: action.payload.userId,
+                    sessionExpiry: action.payload.sessionExpiry,
                     encryptedSymmKey: action.payload.encryptedSymmKey,
                     isRegistration: action.payload.isRegistration,
                     syncingDevices: action.payload.syncingDevices,
@@ -175,6 +213,10 @@ export const sessionSlice = createSlice({
             state.activeSessionEmail = action.payload.email;
         },
         loggedOut: (state, action: PayloadAction<EmailProps>) => {
+            if (action.payload.email === "") {
+                console.error("Attempt to log out from empty email");
+                return;
+            }
             if (state.activeSessionEmail === action.payload.email) {
                 state.activeSessionEmail = "";
             }
@@ -186,6 +228,32 @@ export const sessionSlice = createSlice({
                 state.sessions[action.payload.email] = {
                     status: "logged-out",
                     email: action.payload.email,
+                };
+            }
+        },
+        awaitingSyncingLoggedOut: (
+            state,
+            action: PayloadAction<EmailProps>
+        ) => {
+            const now = nowZeroMs(); // TODO just use returned value by backend onLogout
+            if (action.payload.email === "") {
+                console.error("Attempt to log out from empty email");
+                return;
+            }
+            if (state.pendingSessionEmail === action.payload.email) {
+                state.pendingSessionEmail = "";
+            }
+            if (action.payload.email in state.sessions) {
+                state.sessions[action.payload.email].status = "logged-out";
+                state.sessions[action.payload.email].email =
+                    action.payload.email;
+                state.sessions[action.payload.email].sessionExpiry =
+                    now.toISOString();
+            } else {
+                state.sessions[action.payload.email] = {
+                    status: "logged-out",
+                    email: action.payload.email,
+                    sessionExpiry: now.toISOString(),
                 };
             }
         },
@@ -296,7 +364,9 @@ export const {
     authenticating,
     verifying,
     loggedIn,
+    awaitingSyncing,
     loggedOut,
+    awaitingSyncingLoggedOut,
     resetPendingSession,
     removeSession,
     switchActiveSession,

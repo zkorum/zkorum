@@ -95,11 +95,38 @@
                           "type": "string",
                           "format": "uuid",
                           "minLength": 1
+                        },
+                        "sessionExpiry": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "syncingDevices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "didWrite": {
+                                "type": "string",
+                                "maxLength": 1000,
+                                "description": "Decentralized Identifier with did:key method"
+                              },
+                              "userAgent": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "didWrite",
+                              "userAgent"
+                            ],
+                            "additionalProperties": false
+                          }
                         }
                       },
                       "required": [
                         "reason",
-                        "userId"
+                        "userId",
+                        "sessionExpiry",
+                        "syncingDevices"
                       ],
                       "additionalProperties": false
                     },
@@ -117,13 +144,32 @@
                           "format": "uuid",
                           "minLength": 1
                         },
+                        "sessionExpiry": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
                         "encryptedSymmKey": {
                           "type": "string"
                         },
                         "syncingDevices": {
                           "type": "array",
                           "items": {
-                            "type": "string"
+                            "type": "object",
+                            "properties": {
+                              "didWrite": {
+                                "type": "string",
+                                "maxLength": 1000,
+                                "description": "Decentralized Identifier with did:key method"
+                              },
+                              "userAgent": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "didWrite",
+                              "userAgent"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "emailCredentialsPerEmail": {
@@ -286,6 +332,7 @@
                       "required": [
                         "reason",
                         "userId",
+                        "sessionExpiry",
                         "encryptedSymmKey",
                         "syncingDevices",
                         "emailCredentialsPerEmail",
@@ -394,10 +441,29 @@
                         "encryptedSymmKey": {
                           "type": "string"
                         },
+                        "sessionExpiry": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
                         "syncingDevices": {
                           "type": "array",
                           "items": {
-                            "type": "string"
+                            "type": "object",
+                            "properties": {
+                              "didWrite": {
+                                "type": "string",
+                                "maxLength": 1000,
+                                "description": "Decentralized Identifier with did:key method"
+                              },
+                              "userAgent": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "didWrite",
+                              "userAgent"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "emailCredentialsPerEmail": {
@@ -560,6 +626,7 @@
                       "required": [
                         "success",
                         "userId",
+                        "sessionExpiry",
                         "syncingDevices",
                         "emailCredentialsPerEmail",
                         "formCredentialsPerEmail",
@@ -619,11 +686,38 @@
                           "type": "string",
                           "format": "uuid",
                           "minLength": 1
+                        },
+                        "sessionExpiry": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "syncingDevices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "didWrite": {
+                                "type": "string",
+                                "maxLength": 1000,
+                                "description": "Decentralized Identifier with did:key method"
+                              },
+                              "userAgent": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "didWrite",
+                              "userAgent"
+                            ],
+                            "additionalProperties": false
+                          }
                         }
                       },
                       "required": [
                         "reason",
-                        "userId"
+                        "userId",
+                        "sessionExpiry",
+                        "syncingDevices"
                       ],
                       "additionalProperties": false
                     },
@@ -641,13 +735,32 @@
                           "format": "uuid",
                           "minLength": 1
                         },
+                        "sessionExpiry": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
                         "encryptedSymmKey": {
                           "type": "string"
                         },
                         "syncingDevices": {
                           "type": "array",
                           "items": {
-                            "type": "string"
+                            "type": "object",
+                            "properties": {
+                              "didWrite": {
+                                "type": "string",
+                                "maxLength": 1000,
+                                "description": "Decentralized Identifier with did:key method"
+                              },
+                              "userAgent": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "didWrite",
+                              "userAgent"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "emailCredentialsPerEmail": {
@@ -810,6 +923,7 @@
                       "required": [
                         "reason",
                         "userId",
+                        "sessionExpiry",
                         "encryptedSymmKey",
                         "syncingDevices",
                         "emailCredentialsPerEmail",
@@ -831,6 +945,282 @@
         "responses": {
           "200": {
             "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/recover": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "encryptedSymmKey": {
+                    "type": "string"
+                  },
+                  "timeboundSecretCredentialRequest": {
+                    "type": "object",
+                    "properties": {
+                      "blindedRequest": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "encryptedEncodedBlindedSubject": {
+                        "type": "string"
+                      },
+                      "encryptedEncodedBlinding": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "blindedRequest",
+                      "encryptedEncodedBlindedSubject",
+                      "encryptedEncodedBlinding"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "unboundSecretCredentialRequest": {
+                    "type": "object",
+                    "properties": {
+                      "blindedRequest": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "encryptedEncodedBlindedSubject": {
+                        "type": "string"
+                      },
+                      "encryptedEncodedBlinding": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "blindedRequest",
+                      "encryptedEncodedBlindedSubject",
+                      "encryptedEncodedBlinding"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "encryptedSymmKey",
+                  "timeboundSecretCredentialRequest",
+                  "unboundSecretCredentialRequest"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "minLength": 1
+                    },
+                    "sessionExpiry": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "syncingDevices": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "didWrite": {
+                            "type": "string",
+                            "maxLength": 1000,
+                            "description": "Decentralized Identifier with did:key method"
+                          },
+                          "userAgent": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "didWrite",
+                          "userAgent"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "emailCredentialsPerEmail": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "active": {
+                            "type": "string"
+                          },
+                          "revoked": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "revoked"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "formCredentialsPerEmail": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "active": {
+                            "type": "string"
+                          },
+                          "revoked": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "revoked"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "secretCredentialsPerType": {
+                      "type": "object",
+                      "required": [
+                        "unbound",
+                        "timebound"
+                      ],
+                      "properties": {
+                        "unbound": {
+                          "type": "object",
+                          "properties": {
+                            "active": {
+                              "type": "object",
+                              "properties": {
+                                "blindedCredential": {
+                                  "type": "string"
+                                },
+                                "encryptedBlinding": {
+                                  "type": "string"
+                                },
+                                "encryptedBlindedSubject": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "blindedCredential",
+                                "encryptedBlinding",
+                                "encryptedBlindedSubject"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "revoked": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "blindedCredential": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlinding": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlindedSubject": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "blindedCredential",
+                                  "encryptedBlinding",
+                                  "encryptedBlindedSubject"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "revoked"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "timebound": {
+                          "type": "object",
+                          "properties": {
+                            "active": {
+                              "type": "object",
+                              "properties": {
+                                "blindedCredential": {
+                                  "type": "string"
+                                },
+                                "encryptedBlinding": {
+                                  "type": "string"
+                                },
+                                "encryptedBlindedSubject": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "blindedCredential",
+                                "encryptedBlinding",
+                                "encryptedBlindedSubject"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "revoked": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "blindedCredential": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlinding": {
+                                    "type": "string"
+                                  },
+                                  "encryptedBlindedSubject": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "blindedCredential",
+                                  "encryptedBlinding",
+                                  "encryptedBlindedSubject"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "revoked"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "sessionExpiry",
+                    "syncingDevices",
+                    "emailCredentialsPerEmail",
+                    "formCredentialsPerEmail",
+                    "secretCredentialsPerType"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           }
         }
       }

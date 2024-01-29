@@ -1,8 +1,9 @@
+import { nowZeroMs } from "@/shared/common/util";
 import { universityTypeToString } from "@/shared/types/university";
 import type { Eligibilities, PostAs } from "@/shared/types/zod";
 
 export function getTimeFromNow(time: Date): string {
-    const now = new Date();
+    const now = nowZeroMs();
     const difference = now.getTime() - time.getTime();
     const differenceSeconds = difference / 1000;
     if (differenceSeconds <= 59) {
