@@ -10,26 +10,30 @@ export default defineConfig({
     plugins: [
         react(),
         VitePWA({
-            strategies: 'injectManifest', injectManifest: {
-                maximumFileSizeToCacheInBytes: 10000000
-            }, registerType: "autoUpdate", injectRegister: null, devOptions: {
+            strategies: "injectManifest",
+            injectManifest: {
+                maximumFileSizeToCacheInBytes: 10000000,
+            },
+            registerType: "autoUpdate",
+            injectRegister: null,
+            devOptions: {
                 enabled: true,
                 type: "classic",
-                navigateFallbackAllowlist: [/^index.html$/]
+                navigateFallbackAllowlist: [/^index.html$/],
             },
             manifest: {
-                name: 'Zkorum',
-                short_name: 'Zkorum',
-                description: 'Zkorum',
-                theme_color: '#ffffff',
+                name: "ZKorum",
+                short_name: "ZKorum",
+                description: "ZKorum",
+                theme_color: "#ffffff",
                 icons: [
                     {
-                        src: 'zkorum_with_bg.svg',
-                        sizes: '192x192',
-                        type: 'image/png'
+                        src: "zkorum_with_bg_192.svg",
+                        sizes: "192x192",
+                        type: "image/png",
                     },
-                ]
-            }
+                ],
+            },
         }),
         svgr(),
         checker({
