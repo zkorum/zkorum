@@ -3,18 +3,16 @@ import { z } from "zod";
 import fastify from "fastify";
 import { zodDidWeb } from "./shared/types/zod.js";
 
-export enum Environment {
-    Development = "development",
-    Production = "production",
-    Staging1 = "staging1",
-}
+export type Environment = "development" | "production" | "staging1";
 
 const defaultPort = 8080;
 
 const configSchema = z.object({
     CONNECTION_STRING: z.string(),
     PORT: z.coerce.number().int().nonnegative().default(defaultPort),
-    NODE_ENV: z.nativeEnum(Environment).default(Environment.Development),
+    NODE_ENV: z
+        .enum(["development", "staging1", "production"])
+        .default("development"),
     SERVER_URL_DEV: z.string().url().default(`http://localhost:${defaultPort}`),
     SERVER_URL_STAGING1: z
         .string()
@@ -35,14 +33,19 @@ const configSchema = z.object({
     AWS_ACCESS_KEY_ID: z.string().default("CHANGEME"), // only use for prod
     AWS_SECRET_ACCESS_KEY: z.string().default("CHANGEME"),
     PK_VERSION: z.coerce.number().int().min(1),
+    EMAIL_CREDENTIAL_VERSION: z.string().default("0.2.0"),
+    SECRET_CREDENTIAL_VERSION: z.string().default("0.2.0"),
+    PRESENTATION_VERSION: z.string().default("0.1.0"),
     PRIVATE_KEY_FILEPATH: z.string(),
+    TEST_CODE: z.coerce.number().int().min(0).max(999999).default(0),
+    SPECIALLY_AUTHORIZED_EMAILS: z.string().optional(),
 });
 
 export const config = configSchema.parse(process.env);
 
 function envToLogger(env: Environment) {
     switch (env) {
-        case Environment.Development:
+        case "development":
             return {
                 transport: {
                     target: "pino-pretty",
@@ -52,8 +55,8 @@ function envToLogger(env: Environment) {
                     },
                 },
             };
-        case Environment.Production:
-        case Environment.Staging1:
+        case "production":
+        case "staging1":
             return true;
     }
 }

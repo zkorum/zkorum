@@ -12,9 +12,6 @@ import {
     zodemailCredential,
     zodemailCredentialsPerEmail,
     zodExtendedPostData,
-    zodformCredential,
-    zodformCredentialRequest,
-    zodformCredentialsPerEmail,
     zodPost,
     zodPostUid,
     zodsecretCredentialRequest,
@@ -54,7 +51,6 @@ export class Dto {
                 sessionExpiry: z.date(),
                 syncingDevices: zodDevices,
                 emailCredentialsPerEmail: zodemailCredentialsPerEmail,
-                formCredentialsPerEmail: zodformCredentialsPerEmail,
                 secretCredentialsPerType: zodsecretCredentialsPerType,
             })
             .strict(),
@@ -88,7 +84,6 @@ export class Dto {
             encryptedSymmKey: z.string(),
             syncingDevices: zodDevices,
             emailCredentialsPerEmail: zodemailCredentialsPerEmail,
-            formCredentialsPerEmail: zodformCredentialsPerEmail,
             secretCredentialsPerType: zodsecretCredentialsPerType,
         }),
     ]);
@@ -108,8 +103,7 @@ export class Dto {
         userId: zoduserId,
         sessionExpiry: z.date(),
         syncingDevices: zodDevices,
-        emailCredentialsPerEmail: zodformCredentialsPerEmail,
-        formCredentialsPerEmail: zodformCredentialsPerEmail,
+        emailCredentialsPerEmail: zodemailCredentialsPerEmail,
         secretCredentialsPerType: zodsecretCredentialsPerType,
     });
     static isLoggedInResponse = z.discriminatedUnion("isLoggedIn", [
@@ -143,8 +137,7 @@ export class Dto {
         .optional();
     static userCredentials = z
         .object({
-            emailCredentialsPerEmail: zodformCredentialsPerEmail,
-            formCredentialsPerEmail: zodformCredentialsPerEmail,
+            emailCredentialsPerEmail: zodemailCredentialsPerEmail,
             secretCredentialsPerType: zodsecretCredentialsPerType,
         })
         .strict();
@@ -154,13 +147,6 @@ export class Dto {
             secretCredentialsPerType: zodsecretCredentialsPerType,
         })
         .strict();
-    static requestFormCredential = z.object({
-        email: zodemail,
-        formCredentialRequest: zodformCredentialRequest,
-    });
-    static requestFormCredential200 = z.object({
-        formCredentialsPerEmail: zodformCredentialsPerEmail,
-    });
     static createPostRequest = z.object({
         post: zodPost,
         pres: z.unknown(), // z.object() does not exist :(
@@ -195,12 +181,6 @@ export class Dto {
     });
     static renewEmailCredential200 = z.object({
         emailCredential: zodemailCredential,
-    });
-    static renewFormCredential = z.object({
-        email: zodemail,
-    });
-    static renewFormCredential200 = z.object({
-        formCredential: zodformCredential,
     });
     static commentRequest = z.object({
         pres: z.unknown(), // z.object() does not exist :(

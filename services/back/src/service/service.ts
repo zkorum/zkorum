@@ -1,45 +1,6 @@
-import { Environment } from "@/app.js";
 import { toEncodedCID } from "@/shared/common/cid.js";
+import { nowZeroMs } from "@/shared/common/util.js";
 import { domainFromEmail, toUnionUndefined } from "@/shared/shared.js";
-import {
-    essecCampusStrToEnum,
-    essecCampusToString,
-    essecProgramStrToEnum,
-    essecProgramToString,
-} from "@/shared/types/university.js";
-import sesClientModule from "@aws-sdk/client-ses";
-import {
-    BBSPlusCredential as Credential,
-    BBSPlusBlindedCredentialRequest as BlindedCredentialRequest,
-    Presentation,
-    BBSPlusSecretKey as SecretKey,
-} from "@docknetwork/crypto-wasm-ts";
-import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
-import { countries as allCountries, type TCountryCode } from "countries-list";
-import {
-    and,
-    desc,
-    eq,
-    gt,
-    inArray,
-    isNotNull,
-    isNull,
-    lt,
-    ne,
-    sql,
-    type TablesRelationalConfig,
-} from "drizzle-orm";
-import type { PgTransaction, QueryResultHKT } from "drizzle-orm/pg-core";
-import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import isEqual from "lodash/isEqual.js";
-import nodemailer from "nodemailer";
-import {
-    codeToString,
-    generateOneTimeCode,
-    generateRandomSlugId,
-    generateRandomHex,
-    generateUUID,
-} from "../crypto.js";
 import {
     type AuthenticateRequestBody,
     type EmailSecretCredentials,
@@ -49,68 +10,76 @@ import {
     type UserCredentials,
     type VerifyOtp200,
 } from "@/shared/types/dto.js";
+import sesClientModule from "@aws-sdk/client-ses";
 import {
-    alumEligibilityTable,
-    alumPersonaTable,
+    BBSPlusBlindedCredentialRequest as BlindedCredentialRequest,
+    Presentation,
+    BBSPlusSecretKey as SecretKey,
+} from "@docknetwork/crypto-wasm-ts";
+import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
+import {
+    and,
+    desc,
+    eq,
+    gt,
+    inArray,
+    isNotNull,
+    lt,
+    ne,
+    sql,
+    type TablesRelationalConfig,
+} from "drizzle-orm";
+import type { PgTransaction, QueryResultHKT } from "drizzle-orm/pg-core";
+import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
+import nodemailer from "nodemailer";
+import {
+    codeToString,
+    generateOneTimeCode,
+    generateRandomHex,
+    generateRandomSlugId,
+    generateUUID,
+} from "../crypto.js";
+import {
     authAttemptTable,
     commentTable,
     credentialEmailTable,
-    credentialFormTable,
     credentialSecretTable,
     deviceTable,
-    eligibilityTable,
     emailTable,
-    facultyEligibilityTable,
-    facultyPersonaTable,
     personaTable,
     pollResponseTable,
-    postTable,
     pollTable,
+    postTable,
     pseudonymTable,
-    studentEligibilityTable,
-    studentPersonaTable,
-    universityEligibilityTable,
-    universityPersonaTable,
     userTable,
 } from "../schema.js";
 import { anyToUint8Array } from "../shared/common/arrbufs.js";
 import { base64 } from "../shared/common/index.js";
 import {
-    zoduniversityType,
     type BlindedCredentialType,
-    type Devices,
+    type CreateCommentPayload,
     type Device,
-    type Eligibilities,
+    type Devices,
     type EmailCredential,
     type EmailCredentialsPerEmail,
-    type EmailFormCredentialsPerEmail,
     type ExtendedPostData,
-    type FormCredential,
-    type FormCredentialRequest,
-    type FormCredentialsPerEmail,
     type Post,
+    type PostComment,
+    type PostId,
+    type PostSlugId,
     type PostUid,
     type ResponseToPollPayload,
     type SecretCredentialRequest,
     type SecretCredentialType,
     type SecretCredentials,
     type SecretCredentialsPerType,
-    type UniversityType,
-    type WebDomainType,
-    type CreateCommentPayload,
-    type PostSlugId,
-    type PostId,
-    type PostComment,
 } from "../shared/types/zod.js";
 import {
     buildEmailCredential,
-    buildFormCredential,
     buildSecretCredential,
-    getIsEligible,
     parseSecretCredentialRequest,
     type PostAs,
 } from "./credential.js";
-import { nowZeroMs } from "@/shared/common/util.js";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -144,6 +113,8 @@ interface VerifyOtpProps {
     didWrite: string;
     code: number;
     pkVersion: number;
+    emailCredentialVersion: string;
+    secretCredentialVersion: string;
     encryptedSymmKey?: string;
     sk: SecretKey;
     httpErrors: HttpErrors;
@@ -156,6 +127,8 @@ interface RegisterProps {
     didWrite: string;
     encryptedSymmKey: string;
     pkVersion: number;
+    emailCredentialVersion: string;
+    secretCredentialVersion: string;
     sk: SecretKey;
     unboundSecretCredentialRequest: SecretCredentialRequest;
     timeboundSecretCredentialRequest: SecretCredentialRequest;
@@ -183,6 +156,7 @@ interface CreateSecretCredentialsProps {
     uid: string;
     userId: string;
     pkVersion: number;
+    secretCredentialVersion: string;
     timeboundSecretCredentialRequest: SecretCredentialRequest;
     unboundSecretCredentialRequest: SecretCredentialRequest;
     httpErrors: HttpErrors;
@@ -194,6 +168,7 @@ interface CreateAndStoreSecretCredentialProps {
     uid: string;
     userId: string;
     pkVersion: number;
+    secretCredentialVersion: string;
     secretCredentialRequest: SecretCredentialRequest;
     type: SecretCredentialType;
     httpErrors: HttpErrors;
@@ -206,26 +181,11 @@ interface GetCredentialsResult {
     isRevoked: boolean | null;
 }
 
-interface GetLatestFormCredentialRequestProps {
-    db: PostgresDatabase;
-    email: string;
-    httpErrors: HttpErrors;
-}
-
 interface CreateAndStoreEmailCredentialsProps {
     db: PostgresDatabase;
     email: string;
     pkVersion: number;
-    uid: string;
-    sk: SecretKey;
-    httpErrors: HttpErrors;
-}
-
-interface CreateAndStoreFormCredentialProps {
-    db: PostgresDatabase;
-    email: string;
-    pkVersion: number;
-    formCredentialRequest: FormCredentialRequest;
+    emailCredentialVersion: string;
     uid: string;
     sk: SecretKey;
     httpErrors: HttpErrors;
@@ -233,54 +193,7 @@ interface CreateAndStoreFormCredentialProps {
 
 interface AddCredentialProps {
     results: GetCredentialsResult[];
-    credentialsPerEmail: EmailCredentialsPerEmail | FormCredentialsPerEmail;
-}
-
-interface SelectStudentPersonaIdFromAttributesProps<
-    TQueryResult extends QueryResultHKT,
-    TFullSchema extends Record<string, unknown>,
-    TSchema extends TablesRelationalConfig,
-> {
-    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
-    campus: string | undefined;
-    program: string | undefined;
-    admissionYear: number | undefined;
-}
-
-interface SelectAlumPersonaIdFromAttributesProps<
-    TQueryResult extends QueryResultHKT,
-    TFullSchema extends Record<string, unknown>,
-    TSchema extends TablesRelationalConfig,
-> {
-    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
-}
-
-interface SelectFacultyPersonaIdFromAttributesProps<
-    TQueryResult extends QueryResultHKT,
-    TFullSchema extends Record<string, unknown>,
-    TSchema extends TablesRelationalConfig,
-> {
-    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
-}
-
-interface SelectUniversityPersonaIdFromAttributesProps<
-    TQueryResult extends QueryResultHKT,
-    TFullSchema extends Record<string, unknown>,
-    TSchema extends TablesRelationalConfig,
-> {
-    db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
-    type: UniversityType;
-    countries: string[] | undefined;
-    studentPersonaId: number | undefined;
-    alumPersonaId: number | undefined;
-    facultyPersonaId: number | undefined;
-}
-
-interface SelectEligibilityIdProps {
-    db: PostgresDatabase;
-    domains: string[] | undefined; // for now users can only ask questions to people in their own community
-    types: WebDomainType[] | undefined; // for now users can only ask questions to people in their own community
-    universityEligibilityId: number | undefined;
+    emailCredentialsPerEmail: EmailCredentialsPerEmail;
 }
 
 interface SelectPersonaIdFromAttributesProps<
@@ -290,32 +203,6 @@ interface SelectPersonaIdFromAttributesProps<
 > {
     db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
     domain: string;
-    type: WebDomainType;
-    universityPersonaId: number | undefined;
-}
-
-interface SelectStudentEligibilityIdFromAttributesProps {
-    db: PostgresDatabase;
-    campuses: string[] | undefined;
-    programs: string[] | undefined;
-    admissionYears: number[] | undefined;
-}
-
-interface SelectAlumEligibilityIdFromAttributesProps {
-    db: PostgresDatabase;
-}
-
-interface SelectFacultyEligibilityIdFromAttributesProps {
-    db: PostgresDatabase;
-}
-
-interface SelectUniversityEligibilityIdFromAttributesProps {
-    db: PostgresDatabase;
-    types: UniversityType[] | undefined;
-    countries: string[] | undefined;
-    studentEligibilityId: number | undefined;
-    alumEligibilityId: number | undefined;
-    facultyEligibilityId: number | undefined;
 }
 
 interface FetchFeedProps<
@@ -380,7 +267,9 @@ interface InsertAuthAttemptCodeProps {
     authenticateRequestBody: AuthenticateRequestBody;
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
-    env: Environment;
+    testCode: number;
+    doUseTestCode: boolean;
+    doSendEmail: boolean;
     awsMailConf: AwsMailConf;
 }
 
@@ -405,8 +294,10 @@ interface AuthenticateAttemptProps {
     userAgent: string;
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
-    env: Environment;
+    doSendEmail: boolean;
     awsMailConf: AwsMailConf;
+    testCode: number;
+    doUseTestCode: boolean;
 }
 
 interface UpdateAuthAttemptCodeProps {
@@ -419,8 +310,10 @@ interface UpdateAuthAttemptCodeProps {
     authenticateRequestBody: AuthenticateRequestBody;
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
-    env: Environment;
+    doSendEmail: boolean;
     awsMailConf: AwsMailConf;
+    testCode: number;
+    doUseTestCode: boolean;
 }
 
 interface ModeratePostProps {
@@ -480,6 +373,8 @@ interface RecoverAccountProps {
     db: PostgresDatabase;
     didWrite: string;
     pkVersion: number;
+    secretCredentialVersion: string;
+    emailCredentialVersion: string;
     httpErrors: HttpErrors;
     timeboundSecretCredentialRequest: SecretCredentialRequest;
     unboundSecretCredentialRequest: SecretCredentialRequest;
@@ -517,7 +412,10 @@ interface InfoDevice {
     sessionExpiry: Date;
 }
 
-function addCredentials({ results, credentialsPerEmail }: AddCredentialProps) {
+function addCredentials({
+    results,
+    emailCredentialsPerEmail: credentialsPerEmail,
+}: AddCredentialProps) {
     for (const result of results) {
         const credential = result.credential;
         const isRevoked = result.isRevoked;
@@ -574,22 +472,6 @@ function fetchPostBy({
             // post as
             pseudonym: pseudonymTable.pseudonym,
             domain: personaTable.domain,
-            type: personaTable.type,
-            universityType: universityPersonaTable.type,
-            universityCountries: universityPersonaTable.countries,
-            studentCampus: studentPersonaTable.campus,
-            studentProgram: studentPersonaTable.program,
-            studentAdmissionYear: studentPersonaTable.admissionYear,
-            // eligibility
-            eligibilityDomains: eligibilityTable.domains,
-            eligibilityTypes: eligibilityTable.types,
-            eligibilityUniversityTypes: universityEligibilityTable.types,
-            eligibilityUniversityCountries:
-                universityEligibilityTable.countries,
-            eligibilityStudentCampuses: studentEligibilityTable.campuses,
-            eligibilityStudentPrograms: studentEligibilityTable.programs,
-            eligibilityStudentAdmissionYears:
-                studentEligibilityTable.admissionYears,
             // metadata
             pollUid: postTable.timestampedPresentationCID,
             slugId: postTable.slugId,
@@ -601,33 +483,7 @@ function fetchPostBy({
         .from(postTable)
         .innerJoin(pseudonymTable, eq(pseudonymTable.id, postTable.authorId))
         .innerJoin(personaTable, eq(personaTable.id, pseudonymTable.personaId))
-        .leftJoin(pollTable, eq(postTable.id, pollTable.postId))
-        .leftJoin(
-            universityPersonaTable,
-            eq(universityPersonaTable.id, personaTable.universityPersonaId)
-        )
-        .leftJoin(
-            studentPersonaTable,
-            eq(studentPersonaTable.id, universityPersonaTable.studentPersonaId)
-        )
-        .leftJoin(
-            eligibilityTable,
-            eq(postTable.eligibilityId, eligibilityTable.id)
-        )
-        .leftJoin(
-            universityEligibilityTable,
-            eq(
-                eligibilityTable.universityEligibilityId,
-                universityEligibilityTable.id
-            )
-        )
-        .leftJoin(
-            studentEligibilityTable,
-            eq(
-                universityEligibilityTable.studentEligibilityId,
-                studentEligibilityTable.id
-            )
-        );
+        .leftJoin(pollTable, eq(postTable.id, pollTable.postId));
 }
 
 // No need to validate data, it has been done in the controller level
@@ -785,7 +641,7 @@ export class Service {
                     const {
                         emailCredentialsPerEmail,
                         formCredentialsPerEmail,
-                    } = await Service.getEmailFormCredentialsPerEmailFromUserId(
+                    } = await Service.getEmailCredentialsPerEmailFromUserId(
                         db,
                         deviceStatus.userId
                     );
@@ -897,6 +753,8 @@ export class Service {
         encryptedSymmKey,
         sk,
         pkVersion,
+        emailCredentialVersion,
+        secretCredentialVersion,
         httpErrors,
         unboundSecretCredentialRequest,
         timeboundSecretCredentialRequest,
@@ -970,6 +828,8 @@ export class Service {
                         db,
                         didWrite,
                         pkVersion,
+                        emailCredentialVersion,
+                        secretCredentialVersion,
                         encryptedSymmKey,
                         sk,
                         unboundSecretCredentialRequest,
@@ -985,7 +845,6 @@ export class Service {
                         encryptedSymmKey: encryptedSymmKey,
                         syncingDevices: [device],
                         emailCredentialsPerEmail: emailCredentialsPerEmail,
-                        formCredentialsPerEmail: {},
                         secretCredentialsPerType: secretCredentialsPerType,
                     };
                 }
@@ -1004,11 +863,8 @@ export class Service {
                                 db,
                                 resultOtp[0].userId
                             );
-                        const {
-                            emailCredentialsPerEmail,
-                            formCredentialsPerEmail,
-                        } =
-                            await Service.getEmailFormCredentialsPerEmailFromUserId(
+                        const emailCredentialsPerEmail =
+                            await Service.getEmailCredentialsPerEmailFromUserId(
                                 db,
                                 resultOtp[0].userId
                             );
@@ -1024,7 +880,6 @@ export class Service {
                             encryptedSymmKey: existingEncryptedSymmKey,
                             syncingDevices: syncingDevices,
                             emailCredentialsPerEmail: emailCredentialsPerEmail,
-                            formCredentialsPerEmail: formCredentialsPerEmail,
                             secretCredentialsPerType: secretCredentialsPerType,
                         };
                     } else {
@@ -1045,7 +900,6 @@ export class Service {
                             sessionExpiry: awaitSyncingSessionExpiry,
                             syncingDevices: syncingDevices,
                             emailCredentialsPerEmail: {}, // user already have an email credential, but this will be unused. We don't want to send the credentials before the device has been confirmed
-                            formCredentialsPerEmail: {}, // user may actually have already filled credentials, but this will be unused. We don't want to send the credentials before the device has been confirmed
                             secretCredentialsPerType: {}, // TODO: remove them altogether when z.switch will be shipped instead of z.discriminatedUnion (cannot embed z.discriminatedUnion...)
                         };
                     }
@@ -1067,7 +921,6 @@ export class Service {
                         sessionExpiry: awaitSyncingSessionExpiry,
                         syncingDevices: syncingDevices,
                         emailCredentialsPerEmail: {}, // user already have an email credential, but this will be unused. We don't want to send the credentials before the device has been confirmed
-                        formCredentialsPerEmail: {}, // user may actually have already filled credentials, but this will be unused. We don't want to send the credentials before the device has been confirmed
                         secretCredentialsPerType: {}, // TODO: remove them altogether when z.switch will be shipped instead of z.discriminatedUnion (cannot embed z.discriminatedUnion...)
                     };
                 }
@@ -1132,26 +985,6 @@ export class Service {
         }
     }
 
-    static async hasFilledForms(
-        db: PostgresDatabase,
-        email: string
-    ): Promise<boolean> {
-        const result = await db
-            .select()
-            .from(credentialFormTable)
-            .where(
-                and(
-                    eq(credentialFormTable.email, email),
-                    eq(credentialFormTable.isRevoked, false)
-                )
-            );
-        if (result.length > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     static async isEmailAvailable(
         db: PostgresDatabase,
         email: string
@@ -1207,7 +1040,9 @@ export class Service {
         userAgent,
         throttleMinutesInterval,
         httpErrors,
-        env,
+        testCode,
+        doUseTestCode,
+        doSendEmail,
         awsMailConf,
     }: AuthenticateAttemptProps): Promise<AuthenticateOtp> {
         const now = nowZeroMs();
@@ -1231,8 +1066,10 @@ export class Service {
                 authenticateRequestBody,
                 throttleMinutesInterval,
                 httpErrors,
-                env,
+                doSendEmail,
                 awsMailConf,
+                doUseTestCode,
+                testCode,
             });
         } else if (authenticateRequestBody.isRequestingNewCode) {
             // if user wants to regenerate new code, do it (if possible according to throttling rules)
@@ -1246,8 +1083,10 @@ export class Service {
                 authenticateRequestBody,
                 throttleMinutesInterval,
                 httpErrors,
-                env,
+                doSendEmail,
                 awsMailConf,
+                doUseTestCode,
+                testCode,
             });
         } else if (resultHasAttempted[0].codeExpiry > now) {
             // code hasn't expired
@@ -1271,8 +1110,10 @@ export class Service {
                 authenticateRequestBody,
                 throttleMinutesInterval,
                 httpErrors,
-                env,
+                doSendEmail,
                 awsMailConf,
+                doUseTestCode,
+                testCode,
             });
         }
     }
@@ -1322,9 +1163,16 @@ export class Service {
         authenticateRequestBody,
         throttleMinutesInterval,
         httpErrors,
-        env,
+        testCode,
+        doUseTestCode,
+        doSendEmail,
         awsMailConf,
     }: InsertAuthAttemptCodeProps): Promise<AuthenticateOtp> {
+        if (doUseTestCode && doSendEmail) {
+            throw httpErrors.badRequest(
+                "Test code shall not be sent via email"
+            );
+        }
         await Service.throttleByEmail(
             db,
             authenticateRequestBody.email,
@@ -1332,12 +1180,12 @@ export class Service {
             minutesBeforeCodeExpiry,
             httpErrors
         );
-        const oneTimeCode = generateOneTimeCode();
+        const oneTimeCode = doUseTestCode ? testCode : generateOneTimeCode();
         const codeExpiry = new Date(now);
         codeExpiry.setMinutes(
             codeExpiry.getMinutes() + minutesBeforeCodeExpiry
         );
-        if (env === Environment.Production) {
+        if (doSendEmail) {
             // may throw errors and return 500 :)
             await Service.sendOtpEmail({
                 email: authenticateRequestBody.email,
@@ -1383,9 +1231,16 @@ export class Service {
         authenticateRequestBody,
         throttleMinutesInterval,
         httpErrors,
-        env,
+        doSendEmail,
         awsMailConf,
+        doUseTestCode,
+        testCode,
     }: UpdateAuthAttemptCodeProps): Promise<AuthenticateOtp> {
+        if (doUseTestCode && doSendEmail) {
+            throw httpErrors.badRequest(
+                "Test code shall not be sent via email"
+            );
+        }
         await Service.throttleByEmail(
             db,
             authenticateRequestBody.email,
@@ -1393,12 +1248,12 @@ export class Service {
             minutesBeforeCodeExpiry,
             httpErrors
         );
-        const oneTimeCode = generateOneTimeCode();
+        const oneTimeCode = doUseTestCode ? testCode : generateOneTimeCode();
         const codeExpiry = new Date(now);
         codeExpiry.setMinutes(
             codeExpiry.getMinutes() + minutesBeforeCodeExpiry
         );
-        if (env === Environment.Production) {
+        if (doSendEmail) {
             await Service.sendOtpEmail({
                 email: authenticateRequestBody.email,
                 otp: oneTimeCode,
@@ -1443,6 +1298,8 @@ export class Service {
         encryptedSymmKey,
         sk,
         pkVersion,
+        secretCredentialVersion,
+        emailCredentialVersion,
         unboundSecretCredentialRequest,
         timeboundSecretCredentialRequest,
         httpErrors,
@@ -1496,6 +1353,7 @@ export class Service {
                     db: tx,
                     email: authAttemptResult[0].email,
                     pkVersion,
+                    emailCredentialVersion,
                     sk: sk,
                     uid: uid,
                     httpErrors,
@@ -1513,6 +1371,7 @@ export class Service {
                     uid: uid,
                     userId: authAttemptResult[0].userId,
                     pkVersion: pkVersion,
+                    secretCredentialVersion,
                     unboundSecretCredentialRequest,
                     timeboundSecretCredentialRequest,
                     httpErrors,
@@ -1674,45 +1533,12 @@ export class Service {
         }
     }
 
-    static async getFormCredentialsPerEmailFromDidWrite(
-        db: PostgresDatabase,
-        didWrite: string
-    ): Promise<FormCredentialsPerEmail> {
-        const emails = await Service.getEmailsFromDidWrite(db, didWrite);
-        return await Service.getFormCredentialsPerEmail(db, emails);
-    }
-
-    static async getEmailFormCredentialsPerEmailFromUserId(
+    static async getEmailCredentialsPerEmailFromUserId(
         db: PostgresDatabase,
         userId: string
-    ): Promise<EmailFormCredentialsPerEmail> {
+    ): Promise<EmailCredentialsPerEmail> {
         const emails = await Service.getEmailsFromUserId(db, userId);
         return await Service.getEmailFormCredentialsPerEmail(db, emails);
-    }
-
-    static async getFormCredentialsPerEmail(
-        db: PostgresDatabase,
-        emails: string[]
-    ): Promise<FormCredentialsPerEmail> {
-        const formCredentials: FormCredentialsPerEmail = {};
-        const results = await db
-            .select({
-                email: credentialFormTable.email,
-                credential: credentialFormTable.credential,
-                isRevoked: credentialFormTable.isRevoked,
-            })
-            .from(credentialFormTable)
-            .orderBy(credentialFormTable.createdAt)
-            .where(inArray(credentialFormTable.email, emails));
-        if (results.length === 0) {
-            return {};
-        } else {
-            addCredentials({
-                results: results,
-                credentialsPerEmail: formCredentials,
-            });
-            return formCredentials;
-        }
     }
 
     static async getEmailCredentialsPerEmail(
@@ -1734,7 +1560,7 @@ export class Service {
         } else {
             addCredentials({
                 results: results,
-                credentialsPerEmail: emailCredentials,
+                emailCredentialsPerEmail: emailCredentials,
             });
             return emailCredentials;
         }
@@ -1743,12 +1569,10 @@ export class Service {
     static async getEmailFormCredentialsPerEmail(
         db: PostgresDatabase,
         emails: string[]
-    ): Promise<EmailFormCredentialsPerEmail> {
+    ): Promise<EmailCredentialsPerEmail> {
         const emailCredentialsPerEmail =
             await Service.getEmailCredentialsPerEmail(db, emails);
-        const formCredentialsPerEmail =
-            await Service.getFormCredentialsPerEmail(db, emails);
-        return { emailCredentialsPerEmail, formCredentialsPerEmail };
+        return emailCredentialsPerEmail;
     }
 
     static async createAndStoreEmailCredential({
@@ -1757,6 +1581,7 @@ export class Service {
         uid,
         sk,
         pkVersion,
+        emailCredentialVersion,
         httpErrors,
     }: CreateAndStoreEmailCredentialsProps): Promise<EmailCredential> {
         return await db.transaction(async (tx) => {
@@ -1774,7 +1599,12 @@ export class Service {
                     `Attempt to create multiple active email credential`
                 );
             }
-            const credential = buildEmailCredential({ email, uid, sk });
+            const credential = buildEmailCredential({
+                email,
+                uid,
+                sk,
+                version: emailCredentialVersion,
+            });
             const encodedCredential = base64.encode(
                 anyToUint8Array(credential.toJSON())
             );
@@ -1788,94 +1618,11 @@ export class Service {
         });
     }
 
-    static async getLatestFormCredentialRequest({
-        db,
-        email,
-        httpErrors,
-    }: GetLatestFormCredentialRequestProps): Promise<FormCredentialRequest> {
-        const results = await db
-            .select({ credential: credentialFormTable.credential })
-            .from(credentialFormTable)
-            .orderBy(credentialFormTable.createdAt)
-            .where(and(eq(credentialFormTable.email, email)));
-        if (results.length === 0) {
-            throw httpErrors.forbidden(`The form has never been filled`);
-        }
-        const latestFormCredential = Credential.fromJSON(
-            results[results.length - 1].credential
-        ) as any; // TODO type this...
-        const type: UniversityType = latestFormCredential.subject.typeSpecific
-            .type as UniversityType;
-        switch (type) {
-            case "student":
-                return {
-                    type: type,
-                    campus: essecCampusStrToEnum(
-                        latestFormCredential.subject.typeSpecific.campus
-                    ),
-                    program: essecProgramStrToEnum(
-                        latestFormCredential.subject.typeSpecific.program
-                    ),
-                    countries:
-                        latestFormCredential.subject.typeSpecific.countries,
-                    admissionYear:
-                        latestFormCredential.subject.typeSpecific.admissionYear,
-                };
-            case "alum":
-            case "faculty":
-                return {
-                    type: type,
-                };
-        }
-    }
-
-    static async createAndStoreFormCredential({
-        db,
-        email,
-        formCredentialRequest,
-        uid,
-        pkVersion,
-        sk,
-        httpErrors,
-    }: CreateAndStoreFormCredentialProps): Promise<FormCredential> {
-        return await db.transaction(async (tx) => {
-            const results = await tx
-                .select({ id: credentialFormTable.id })
-                .from(credentialFormTable)
-                .where(
-                    and(
-                        eq(credentialFormTable.email, email),
-                        eq(credentialFormTable.isRevoked, false)
-                    )
-                );
-            if (results.length !== 0) {
-                throw httpErrors.forbidden(
-                    `Attempt to create multiple active form credential`
-                );
-            }
-            const credential = buildFormCredential({
-                email,
-                formCredentialRequest,
-                sk,
-                uid,
-            });
-            const encodedCredential = base64.encode(
-                anyToUint8Array(credential.toJSON())
-            );
-            await tx.insert(credentialFormTable).values({
-                email: email,
-                pkVersion: pkVersion,
-                isRevoked: false,
-                credential: credential.toJSON(),
-            });
-            return encodedCredential;
-        });
-    }
-
     static async createAndStoreSecretCredentials({
         db,
         unboundSecretCredentialRequest,
         pkVersion,
+        secretCredentialVersion,
         userId,
         uid,
         timeboundSecretCredentialRequest,
@@ -1887,6 +1634,7 @@ export class Service {
                 db,
                 secretCredentialRequest: unboundSecretCredentialRequest,
                 pkVersion,
+                secretCredentialVersion,
                 type: "unbound",
                 uid,
                 userId,
@@ -1900,6 +1648,7 @@ export class Service {
                 uid,
                 secretCredentialRequest: timeboundSecretCredentialRequest,
                 pkVersion,
+                secretCredentialVersion,
                 httpErrors,
                 sk,
                 type: "timebound",
@@ -1934,6 +1683,7 @@ export class Service {
         secretCredentialRequest,
         type,
         pkVersion,
+        secretCredentialVersion,
         uid,
         userId,
         httpErrors,
@@ -1968,6 +1718,7 @@ export class Service {
                 uid,
                 type,
                 sk,
+                version: secretCredentialVersion,
             });
             const encodedCredential = base64.encode(
                 anyToUint8Array(credential.toJSON())
@@ -2005,13 +1756,6 @@ export class Service {
                 updatedAt: now,
             })
             .where(eq(credentialEmailTable.email, email));
-        await db
-            .update(credentialFormTable)
-            .set({
-                isRevoked: true,
-                updatedAt: now,
-            })
-            .where(eq(credentialFormTable.email, email));
         await db
             .update(credentialSecretTable)
             .set({
@@ -2081,6 +1825,8 @@ export class Service {
         db,
         didWrite,
         pkVersion,
+        secretCredentialVersion,
+        emailCredentialVersion,
         httpErrors,
         timeboundSecretCredentialRequest,
         unboundSecretCredentialRequest,
@@ -2118,6 +1864,7 @@ export class Service {
                 db: tx,
                 email,
                 pkVersion,
+                emailCredentialVersion,
                 uid,
                 sk,
                 httpErrors,
@@ -2127,6 +1874,7 @@ export class Service {
                 userId,
                 uid,
                 pkVersion: pkVersion,
+                secretCredentialVersion,
                 secretCredentialRequest: timeboundSecretCredentialRequest,
                 httpErrors: httpErrors,
                 sk,
@@ -2137,6 +1885,7 @@ export class Service {
                 userId,
                 uid,
                 pkVersion: pkVersion,
+                secretCredentialVersion,
                 secretCredentialRequest: unboundSecretCredentialRequest,
                 httpErrors: httpErrors,
                 sk,
@@ -2315,330 +2064,30 @@ export class Service {
         didWrite: string
     ): Promise<UserCredentials> {
         const userId = await Service.getUserIdFromDevice(db, didWrite);
-        const { emailCredentialsPerEmail, formCredentialsPerEmail } =
-            await Service.getEmailFormCredentialsPerEmailFromUserId(db, userId);
+        const emailCredentialsPerEmail =
+            await Service.getEmailCredentialsPerEmailFromUserId(db, userId);
         const secretCredentialsPerType =
             await Service.getSecretCredentialsPerType(db, userId);
         return {
             emailCredentialsPerEmail: emailCredentialsPerEmail,
-            formCredentialsPerEmail: formCredentialsPerEmail,
             secretCredentialsPerType: secretCredentialsPerType,
         };
-    }
-
-    static async selectFacultyEligibilityIdFromAttributes({
-        db,
-    }: SelectFacultyEligibilityIdFromAttributesProps): Promise<
-        number | undefined
-    > {
-        const results = await db
-            .select({
-                facultyEligibilityId: facultyEligibilityTable.id,
-            })
-            .from(facultyEligibilityTable);
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].facultyEligibilityId;
-        }
-    }
-
-    static async selectAlumEligibilityIdFromAttributes({
-        db,
-    }: SelectAlumEligibilityIdFromAttributesProps): Promise<
-        number | undefined
-    > {
-        const results = await db
-            .select({
-                alumEligibilityId: alumEligibilityTable.id,
-            })
-            .from(alumEligibilityTable);
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].alumEligibilityId;
-        }
-    }
-
-    static async selectStudentEligibilityIdFromAttributes({
-        db,
-        campuses,
-        programs,
-        admissionYears,
-    }: SelectStudentEligibilityIdFromAttributesProps): Promise<
-        number | undefined
-    > {
-        const campusesWhere =
-            campuses === undefined
-                ? isNull(studentEligibilityTable.campuses)
-                : eq(studentEligibilityTable.campuses, campuses);
-        const programWhere =
-            programs === undefined
-                ? isNull(studentEligibilityTable.programs)
-                : eq(studentEligibilityTable.programs, programs);
-        const admissionYearsWhere =
-            admissionYears === undefined
-                ? isNull(studentEligibilityTable.admissionYears)
-                : eq(studentEligibilityTable.admissionYears, admissionYears);
-
-        const results = await db
-            .select({
-                studentEligibilityId: studentEligibilityTable.id,
-            })
-            .from(studentEligibilityTable)
-            .where(and(campusesWhere, programWhere, admissionYearsWhere));
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].studentEligibilityId;
-        }
-    }
-
-    static async selectAlumPersonaIdFromAttributes({
-        db,
-    }: SelectAlumPersonaIdFromAttributesProps<
-        QueryResultHKT,
-        Record<string, unknown>,
-        TablesRelationalConfig
-    >): Promise<number | undefined> {
-        const results = await db
-            .select({
-                alumPersonaId: alumPersonaTable.id,
-            })
-            .from(alumPersonaTable);
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].alumPersonaId;
-        }
-    }
-
-    static async selectFacultyPersonaIdFromAttributes({
-        db,
-    }: SelectFacultyPersonaIdFromAttributesProps<
-        QueryResultHKT,
-        Record<string, unknown>,
-        TablesRelationalConfig
-    >): Promise<number | undefined> {
-        const results = await db
-            .select({
-                facultyPersonaId: facultyPersonaTable.id,
-            })
-            .from(facultyPersonaTable);
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].facultyPersonaId;
-        }
-    }
-
-    static async selectStudentPersonaIdFromAttributes({
-        db,
-        campus,
-        program,
-        admissionYear,
-    }: SelectStudentPersonaIdFromAttributesProps<
-        QueryResultHKT,
-        Record<string, unknown>,
-        TablesRelationalConfig
-    >): Promise<number | undefined> {
-        const campusWhere =
-            campus === undefined
-                ? isNull(studentPersonaTable.campus)
-                : eq(studentPersonaTable.campus, campus);
-        const programWhere =
-            program === undefined
-                ? isNull(studentPersonaTable.program)
-                : eq(studentPersonaTable.program, program);
-        const admissionYearWhere =
-            admissionYear === undefined
-                ? isNull(studentPersonaTable.admissionYear)
-                : eq(studentPersonaTable.admissionYear, admissionYear);
-
-        const results = await db
-            .select({
-                studentPersonaId: studentPersonaTable.id,
-            })
-            .from(studentPersonaTable)
-            .where(and(campusWhere, programWhere, admissionYearWhere));
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].studentPersonaId;
-        }
-    }
-
-    static async selectUniversityEligibilityIdFromAttributes({
-        db,
-        types,
-        countries,
-        studentEligibilityId,
-        alumEligibilityId,
-        facultyEligibilityId,
-    }: SelectUniversityEligibilityIdFromAttributesProps): Promise<
-        number | undefined
-    > {
-        const typesWhere =
-            types === undefined
-                ? isNull(universityEligibilityTable.types)
-                : eq(universityEligibilityTable.types, types);
-        const countriesWhere =
-            countries === undefined
-                ? isNull(universityEligibilityTable.countries)
-                : eq(universityEligibilityTable.countries, countries);
-        const studentEligibilityIdWhere =
-            studentEligibilityId === undefined
-                ? isNull(universityEligibilityTable.studentEligibilityId)
-                : eq(
-                      universityEligibilityTable.studentEligibilityId,
-                      studentEligibilityId
-                  );
-        const alumEligibilityIdWhere =
-            alumEligibilityId === undefined
-                ? isNull(universityEligibilityTable.alumEligibilityId)
-                : eq(
-                      universityEligibilityTable.alumEligibilityId,
-                      alumEligibilityId
-                  );
-        const facultyEligibilityIdWhere =
-            facultyEligibilityId === undefined
-                ? isNull(universityEligibilityTable.facultyEligibilityId)
-                : eq(
-                      universityEligibilityTable.facultyEligibilityId,
-                      facultyEligibilityId
-                  );
-
-        const results = await db
-            .select({
-                universityEligibilityId: universityEligibilityTable.id,
-            })
-            .from(universityEligibilityTable)
-            .where(
-                and(
-                    typesWhere,
-                    countriesWhere,
-                    studentEligibilityIdWhere,
-                    alumEligibilityIdWhere,
-                    facultyEligibilityIdWhere
-                )
-            );
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].universityEligibilityId;
-        }
-    }
-
-    static async selectUniversityPersonaIdFromAttributes({
-        db,
-        type,
-        countries,
-        studentPersonaId,
-        alumPersonaId,
-        facultyPersonaId,
-    }: SelectUniversityPersonaIdFromAttributesProps<
-        QueryResultHKT,
-        Record<string, unknown>,
-        TablesRelationalConfig
-    >): Promise<number | undefined> {
-        const countriesWhere =
-            countries === undefined
-                ? isNull(universityPersonaTable.countries)
-                : eq(universityPersonaTable.countries, countries);
-        const studentPersonaIdWhere =
-            studentPersonaId === undefined
-                ? isNull(universityPersonaTable.studentPersonaId)
-                : eq(universityPersonaTable.studentPersonaId, studentPersonaId);
-        const alumPersonaIdWhere =
-            alumPersonaId === undefined
-                ? isNull(universityPersonaTable.alumPersonaId)
-                : eq(universityPersonaTable.alumPersonaId, alumPersonaId);
-        const facultyPersonaIdWhere =
-            facultyPersonaId === undefined
-                ? isNull(universityPersonaTable.facultyPersonaId)
-                : eq(universityPersonaTable.facultyPersonaId, facultyPersonaId);
-
-        const results = await db
-            .select({
-                universityPersonaId: universityPersonaTable.id,
-            })
-            .from(universityPersonaTable)
-            .where(
-                and(
-                    eq(universityPersonaTable.type, type),
-                    countriesWhere,
-                    studentPersonaIdWhere,
-                    alumPersonaIdWhere,
-                    facultyPersonaIdWhere
-                )
-            );
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].universityPersonaId;
-        }
-    }
-
-    static async selectEligibilityId({
-        db,
-        domains,
-        types,
-        universityEligibilityId,
-    }: SelectEligibilityIdProps): Promise<number | undefined> {
-        const domainsWhere =
-            domains === undefined
-                ? isNull(eligibilityTable.domains)
-                : eq(eligibilityTable.domains, domains);
-        const typesWhere =
-            types === undefined
-                ? isNull(eligibilityTable.types)
-                : eq(eligibilityTable.types, types);
-        const universityEligibilityIdWhere =
-            universityEligibilityId === undefined
-                ? isNull(eligibilityTable.universityEligibilityId)
-                : eq(
-                      eligibilityTable.universityEligibilityId,
-                      universityEligibilityId
-                  );
-        const results = await db
-            .select({
-                eligibilityId: eligibilityTable.id,
-            })
-            .from(eligibilityTable)
-            .where(and(domainsWhere, typesWhere, universityEligibilityIdWhere));
-        if (results.length === 0) {
-            return undefined;
-        } else {
-            return results[0].eligibilityId;
-        }
     }
 
     static async selectPersonaIdFromAttributes({
         db,
         domain,
-        type,
-        universityPersonaId,
     }: SelectPersonaIdFromAttributesProps<
         QueryResultHKT,
         Record<string, unknown>,
         TablesRelationalConfig
     >): Promise<number | undefined> {
-        const universityPersonaIdWhere =
-            universityPersonaId === undefined
-                ? isNull(personaTable.universityPersonaId)
-                : eq(personaTable.universityPersonaId, universityPersonaId);
         const results = await db
             .select({
                 personaId: personaTable.id,
             })
             .from(personaTable)
-            .where(
-                and(
-                    eq(personaTable.domain, domain),
-                    eq(personaTable.type, type),
-                    universityPersonaIdWhere
-                )
-            );
+            .where(and(eq(personaTable.domain, domain)));
         if (results.length === 0) {
             return undefined;
         } else {
@@ -2664,150 +2113,18 @@ export class Service {
         if (resultSelectPseudonymId.length !== 0) {
             return resultSelectPseudonymId[0].id;
         }
-        let universityPersonaId: number | undefined = undefined;
         let personaId: number | undefined = undefined;
         // TODO: switch case depending on value of postAs.type - here we only do work for universities
-        if (postAs.typeSpecific !== undefined) {
-            let studentPersonaId: number | undefined = undefined;
-            let alumPersonaId: number | undefined = undefined;
-            let facultyPersonaId: number | undefined = undefined;
-            switch (postAs.typeSpecific.type) {
-                case zoduniversityType.enum.student:
-                    const selectedStudentPersonaId: number | undefined =
-                        await Service.selectStudentPersonaIdFromAttributes({
-                            db: tx,
-                            campus:
-                                postAs.typeSpecific.campus !== undefined
-                                    ? essecCampusToString(
-                                          postAs.typeSpecific.campus
-                                      )
-                                    : undefined,
-                            program:
-                                postAs.typeSpecific.program !== undefined
-                                    ? essecProgramToString(
-                                          postAs.typeSpecific.program
-                                      )
-                                    : undefined,
-                            admissionYear:
-                                postAs.typeSpecific.admissionYear !== undefined
-                                    ? postAs.typeSpecific.admissionYear
-                                    : undefined,
-                        });
-                    if (selectedStudentPersonaId === undefined) {
-                        const insertedStudentPersona = await tx
-                            .insert(studentPersonaTable)
-                            .values({
-                                campus:
-                                    postAs.typeSpecific.campus !== undefined
-                                        ? essecCampusToString(
-                                              postAs.typeSpecific.campus
-                                          )
-                                        : undefined,
-                                program:
-                                    postAs.typeSpecific.program !== undefined
-                                        ? essecProgramToString(
-                                              postAs.typeSpecific.program
-                                          )
-                                        : undefined,
-                                admissionYear:
-                                    postAs.typeSpecific.admissionYear !==
-                                    undefined
-                                        ? postAs.typeSpecific.admissionYear
-                                        : undefined,
-                            })
-                            .returning({
-                                insertedId: studentPersonaTable.id,
-                            });
-                        studentPersonaId = insertedStudentPersona[0].insertedId;
-                    } else {
-                        studentPersonaId = selectedStudentPersonaId;
-                    }
-                    break;
-                case zoduniversityType.enum.alum:
-                    const selectedAlumPersonaId: number | undefined =
-                        await Service.selectAlumPersonaIdFromAttributes({
-                            db: tx,
-                        });
-                    if (selectedAlumPersonaId === undefined) {
-                        const insertedAlumPersona = await tx
-                            .insert(alumPersonaTable)
-                            .values({ id: undefined }) // inserts default values, see https://github.com/drizzle-team/drizzle-orm/issues/1629
-                            .returning({
-                                insertedId: alumPersonaTable.id,
-                            });
-                        alumPersonaId = insertedAlumPersona[0].insertedId;
-                    } else {
-                        alumPersonaId = selectedAlumPersonaId;
-                    }
-                    break;
-                case zoduniversityType.enum.faculty:
-                    const selectedFacultyPersonaId: number | undefined =
-                        await Service.selectFacultyPersonaIdFromAttributes({
-                            db: tx,
-                        });
-                    if (selectedFacultyPersonaId === undefined) {
-                        const insertedFacultyPersona = await tx
-                            .insert(facultyPersonaTable)
-                            .values({ id: undefined })
-                            .returning({
-                                insertedId: facultyPersonaTable.id,
-                            });
-                        facultyPersonaId = insertedFacultyPersona[0].insertedId;
-                    } else {
-                        facultyPersonaId = selectedFacultyPersonaId;
-                    }
-                    break;
-            }
-            let personaCountries = undefined;
-            if (postAs.typeSpecific.countries) {
-                const postAsCountries = postAs.typeSpecific.countries;
-                personaCountries = Object.keys(
-                    postAs.typeSpecific.countries
-                ).filter(
-                    (countryCode) =>
-                        postAsCountries[countryCode as TCountryCode] === true
-                );
-            }
-            const selectedUniversityPersonaId: number | undefined =
-                await Service.selectUniversityPersonaIdFromAttributes({
-                    db: tx,
-                    type: postAs.typeSpecific.type,
-                    countries: personaCountries,
-                    studentPersonaId: studentPersonaId,
-                    alumPersonaId: alumPersonaId,
-                    facultyPersonaId: facultyPersonaId,
-                });
-
-            if (selectedUniversityPersonaId === undefined) {
-                const insertedUniversityPersona = await tx
-                    .insert(universityPersonaTable)
-                    .values({
-                        type: postAs.typeSpecific.type,
-                        countries: personaCountries,
-                        studentPersonaId: studentPersonaId,
-                        alumPersonaId: alumPersonaId,
-                        facultyPersonaId: facultyPersonaId,
-                    })
-                    .returning({ insertedId: personaTable.id });
-                universityPersonaId = insertedUniversityPersona[0].insertedId;
-            } else {
-                universityPersonaId = selectedUniversityPersonaId;
-            }
-        }
         const selectedPersonaId: number | undefined =
             await Service.selectPersonaIdFromAttributes({
                 db: tx,
                 domain: postAs.domain,
-                type: postAs.type,
-                universityPersonaId: universityPersonaId,
             });
         if (selectedPersonaId === undefined) {
             const insertedPersona = await tx
                 .insert(personaTable)
                 .values({
                     domain: postAs.domain,
-                    type: postAs.type,
-                    universityPersonaId: universityPersonaId,
                 })
                 .returning({ insertedId: personaTable.id });
             personaId = insertedPersona[0].insertedId;
@@ -2849,211 +2166,6 @@ export class Service {
                 pseudonym: pseudonym,
             });
             /////////////////////////////////////////////////////////////////////////////////////////
-
-            //////////////////////// ELIGIBILITY ///////////////////////////////////////////////////
-            let eligibilityId: number | undefined = undefined;
-            let universityEligibilityId: number | undefined = undefined;
-            let eligibilityTypes: UniversityType[] = [];
-            let eligibilityCountries: TCountryCode[] = [];
-            let studentEligibilityId: number | undefined = undefined;
-            let alumEligibilityId: number | undefined = undefined;
-            let facultyEligibilityId: number | undefined = undefined;
-            if (post.eligibility !== undefined) {
-                if (
-                    post.eligibility.countries !== undefined &&
-                    post.eligibility.countries.length == 1
-                ) {
-                    if (isEqual(post.eligibility.countries, ["FR"])) {
-                        eligibilityCountries = ["FR"];
-                    } else {
-                        const allCountriesButFrance = Object.keys(
-                            allCountries
-                        ).filter((country) => country !== "FR");
-                        eligibilityCountries =
-                            allCountriesButFrance as TCountryCode[];
-                    }
-                }
-                if (post.eligibility.student === true) {
-                    eligibilityTypes.push(zoduniversityType.enum.student);
-                    if (
-                        (post.eligibility.admissionYears !== undefined &&
-                            post.eligibility.admissionYears.length > 0) ||
-                        (post.eligibility.campuses !== undefined &&
-                            post.eligibility.campuses.length > 0) ||
-                        (post.eligibility.programs !== undefined &&
-                            post.eligibility.programs.length > 0)
-                    ) {
-                        const selectedStudentEligibilityId: number | undefined =
-                            await Service.selectStudentEligibilityIdFromAttributes(
-                                {
-                                    db: tx,
-                                    campuses:
-                                        post.eligibility.campuses !== undefined
-                                            ? post.eligibility.campuses.map(
-                                                  (campus) =>
-                                                      essecCampusToString(
-                                                          campus
-                                                      )
-                                              )
-                                            : undefined,
-                                    programs:
-                                        post.eligibility.programs !== undefined
-                                            ? post.eligibility.programs.map(
-                                                  (program) =>
-                                                      essecProgramToString(
-                                                          program
-                                                      )
-                                              )
-                                            : undefined,
-                                    admissionYears:
-                                        post.eligibility.admissionYears !==
-                                        undefined
-                                            ? post.eligibility.admissionYears
-                                            : undefined,
-                                }
-                            );
-                        if (selectedStudentEligibilityId === undefined) {
-                            const insertedStudentEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
-                                .insert(studentEligibilityTable)
-                                .values({
-                                    campuses:
-                                        post.eligibility.campuses !== undefined
-                                            ? post.eligibility.campuses.map(
-                                                  (campus) =>
-                                                      essecCampusToString(
-                                                          campus
-                                                      )
-                                              )
-                                            : undefined,
-                                    programs:
-                                        post.eligibility.programs !== undefined
-                                            ? post.eligibility.programs.map(
-                                                  (program) =>
-                                                      essecProgramToString(
-                                                          program
-                                                      )
-                                              )
-                                            : undefined,
-                                    admissionYears:
-                                        post.eligibility.admissionYears !==
-                                        undefined
-                                            ? post.eligibility.admissionYears
-                                            : undefined,
-                                })
-                                .returning({
-                                    insertedId: studentEligibilityTable.id,
-                                });
-                            studentEligibilityId =
-                                insertedStudentEligibility[0].insertedId;
-                        } else {
-                            studentEligibilityId = selectedStudentEligibilityId;
-                        }
-                    }
-                }
-                if (post.eligibility.alum === true) {
-                    eligibilityTypes.push(zoduniversityType.enum.alum);
-                    const selectedAlumEligibilityId: number | undefined =
-                        await Service.selectAlumEligibilityIdFromAttributes({
-                            db: tx,
-                        });
-                    if (selectedAlumEligibilityId === undefined) {
-                        const insertedAlumEligibility = await tx
-                            .insert(alumEligibilityTable)
-                            .values({ id: undefined })
-                            .returning({ insertedId: alumEligibilityTable.id });
-                        alumEligibilityId =
-                            insertedAlumEligibility[0].insertedId;
-                    } else {
-                        alumEligibilityId = selectedAlumEligibilityId;
-                    }
-                }
-                if (post.eligibility.faculty === true) {
-                    eligibilityTypes.push(zoduniversityType.enum.faculty);
-                    const selectedFacultyEligibilityId: number | undefined =
-                        await Service.selectFacultyEligibilityIdFromAttributes({
-                            db: tx,
-                        });
-                    if (selectedFacultyEligibilityId === undefined) {
-                        const insertedFacultyEligibility = await tx
-                            .insert(facultyEligibilityTable)
-                            .values({ id: undefined })
-                            .returning({
-                                insertedId: facultyEligibilityTable.id,
-                            });
-                        facultyEligibilityId =
-                            insertedFacultyEligibility[0].insertedId;
-                    } else {
-                        facultyEligibilityId = selectedFacultyEligibilityId;
-                    }
-                }
-            }
-            if (
-                eligibilityTypes.length !== 0 ||
-                eligibilityCountries.length !== 0
-            ) {
-                const selectedUniversityEligibilityId: number | undefined =
-                    await Service.selectUniversityEligibilityIdFromAttributes({
-                        db: tx,
-                        types:
-                            eligibilityTypes.length !== 0
-                                ? eligibilityTypes
-                                : undefined,
-                        countries:
-                            eligibilityCountries.length !== 0
-                                ? eligibilityCountries
-                                : undefined,
-                        studentEligibilityId: studentEligibilityId,
-                        alumEligibilityId: alumEligibilityId,
-                        facultyEligibilityId: facultyEligibilityId,
-                    });
-                if (selectedUniversityEligibilityId === undefined) {
-                    const insertedUniversityEligibility = await tx
-                        .insert(universityEligibilityTable)
-                        .values({
-                            types:
-                                eligibilityTypes.length !== 0
-                                    ? eligibilityTypes
-                                    : undefined,
-                            countries:
-                                eligibilityCountries.length !== 0
-                                    ? eligibilityCountries
-                                    : undefined,
-                            studentEligibilityId: studentEligibilityId,
-                            alumEligibilityId: alumEligibilityId,
-                            facultyEligibilityId: facultyEligibilityId,
-                        })
-                        .returning({
-                            insertedId: universityEligibilityTable.id,
-                        });
-                    universityEligibilityId =
-                        insertedUniversityEligibility[0].insertedId;
-                } else {
-                    universityEligibilityId = selectedUniversityEligibilityId;
-                }
-            }
-            const selectedEligibilityId: number | undefined =
-                await Service.selectEligibilityId({
-                    db: tx,
-                    domains: [postAs.domain], // for now users can only ask questions to people in their own community
-                    types: [postAs.type], // for now users can only ask questions to people in their own community
-                    universityEligibilityId: universityEligibilityId,
-                });
-            if (selectedEligibilityId === undefined) {
-                const insertedEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
-                    .insert(eligibilityTable)
-                    .values({
-                        domains: [postAs.domain], // for now users can only ask questions to people in their own community
-                        types: [postAs.type], // for now users can only ask questions to people in their own community
-                        universityEligibilityId: universityEligibilityId,
-                    })
-                    .returning({ insertedId: eligibilityTable.id });
-                eligibilityId = insertedEligibility[0].insertedId;
-            } else {
-                eligibilityId = selectedEligibilityId;
-            }
-
-            /////////////////////////////////////////////////////////////////////////////////////////
-
             const insertedPost = await tx
                 .insert(postTable)
                 .values({
@@ -3067,7 +2179,6 @@ export class Service {
                             ? undefined
                             : post.data.body, // we don't want to insert a string with length 0
                     authorId: authorId,
-                    eligibilityId: eligibilityId,
                     createdAt: now,
                     updatedAt: now,
                     lastReactedAt: now,
@@ -3153,22 +2264,6 @@ export class Service {
                 // post as
                 pseudonym: pseudonymTable.pseudonym,
                 domain: personaTable.domain,
-                type: personaTable.type,
-                universityType: universityPersonaTable.type,
-                universityCountries: universityPersonaTable.countries,
-                studentCampus: studentPersonaTable.campus,
-                studentProgram: studentPersonaTable.program,
-                studentAdmissionYear: studentPersonaTable.admissionYear,
-                // eligibility
-                eligibilityDomains: eligibilityTable.domains,
-                eligibilityTypes: eligibilityTable.types,
-                eligibilityUniversityTypes: universityEligibilityTable.types,
-                eligibilityUniversityCountries:
-                    universityEligibilityTable.countries,
-                eligibilityStudentCampuses: studentEligibilityTable.campuses,
-                eligibilityStudentPrograms: studentEligibilityTable.programs,
-                eligibilityStudentAdmissionYears:
-                    studentEligibilityTable.admissionYears,
                 // metadata
                 pollUid: postTable.timestampedPresentationCID,
                 slugId: postTable.slugId,
@@ -3187,48 +2282,6 @@ export class Service {
                 eq(personaTable.id, pseudonymTable.personaId)
             )
             .leftJoin(pollTable, eq(postTable.id, pollTable.postId))
-            .leftJoin(
-                universityPersonaTable,
-                eq(universityPersonaTable.id, personaTable.universityPersonaId)
-            )
-            .leftJoin(
-                studentPersonaTable,
-                eq(
-                    studentPersonaTable.id,
-                    universityPersonaTable.studentPersonaId
-                )
-            )
-            // TODO: alum and faculty-specific attributes
-            // .leftJoin(
-            //     alumPersonaTable,
-            //     eq(alumPersonaTable.id, universityPersonaTable.alumPersonaId)
-            // )
-            // .leftJoin(
-            //     facultyPersonaTable,
-            //     eq(
-            //         facultyPersonaTable.id,
-            //         universityPersonaTable.facultyPersonaId
-            //     )
-            // )
-            .leftJoin(
-                eligibilityTable,
-                eq(postTable.eligibilityId, eligibilityTable.id)
-            )
-            .leftJoin(
-                universityEligibilityTable,
-                eq(
-                    eligibilityTable.universityEligibilityId,
-                    universityEligibilityTable.id
-                )
-            )
-            .leftJoin(
-                studentEligibilityTable,
-                eq(
-                    universityEligibilityTable.studentEligibilityId,
-                    studentEligibilityTable.id
-                )
-            )
-            // TODO: alum and faculty eligibility when specific attributes will be created
             .orderBy(desc(postTable.updatedAt), desc(postTable.id))
             .limit(actualLimit)
             .where(
@@ -3295,71 +2348,6 @@ export class Service {
                 author: {
                     pseudonym: result.pseudonym,
                     domain: result.domain,
-                    type: result.type,
-                    university:
-                        result.universityType !== null
-                            ? {
-                                  type: result.universityType,
-                                  student:
-                                      result.studentCampus !== null ||
-                                      result.studentProgram !== null ||
-                                      result.studentAdmissionYear !== null ||
-                                      result.universityCountries !== null
-                                          ? {
-                                                countries: toUnionUndefined(
-                                                    result.universityCountries
-                                                ) as TCountryCode[] | undefined,
-                                                campus: toUnionUndefined(
-                                                    result.studentCampus
-                                                ),
-                                                program: toUnionUndefined(
-                                                    result.studentProgram
-                                                ),
-                                                admissionYear: toUnionUndefined(
-                                                    result.studentAdmissionYear
-                                                ),
-                                            }
-                                          : undefined,
-                              }
-                            : undefined,
-                },
-                eligibility: {
-                    domains: toUnionUndefined(result.eligibilityDomains),
-                    types: toUnionUndefined(result.eligibilityTypes),
-
-                    university:
-                        result.eligibilityUniversityTypes !== null
-                            ? {
-                                  types: toUnionUndefined(
-                                      result.eligibilityUniversityTypes
-                                  ),
-                                  student:
-                                      result.eligibilityUniversityCountries !==
-                                          null ||
-                                      result.eligibilityStudentPrograms !==
-                                          null ||
-                                      result.eligibilityStudentPrograms !==
-                                          null ||
-                                      result.eligibilityStudentAdmissionYears !==
-                                          null
-                                          ? {
-                                                countries: toUnionUndefined(
-                                                    result.eligibilityUniversityCountries
-                                                ) as TCountryCode[] | undefined,
-                                                campuses: toUnionUndefined(
-                                                    result.eligibilityStudentCampuses
-                                                ),
-                                                programs: toUnionUndefined(
-                                                    result.eligibilityStudentPrograms
-                                                ),
-                                                admissionYears:
-                                                    toUnionUndefined(
-                                                        result.eligibilityStudentAdmissionYears
-                                                    ),
-                                            }
-                                          : undefined,
-                              }
-                            : undefined,
                 },
             };
         });
@@ -3441,68 +2429,6 @@ export class Service {
             author: {
                 pseudonym: result.pseudonym,
                 domain: result.domain,
-                type: result.type,
-                university:
-                    result.universityType !== null
-                        ? {
-                              type: result.universityType,
-                              student:
-                                  result.studentCampus !== null ||
-                                  result.studentProgram !== null ||
-                                  result.studentAdmissionYear !== null ||
-                                  result.universityCountries !== null
-                                      ? {
-                                            countries: toUnionUndefined(
-                                                result.universityCountries
-                                            ) as TCountryCode[] | undefined,
-                                            campus: toUnionUndefined(
-                                                result.studentCampus
-                                            ),
-                                            program: toUnionUndefined(
-                                                result.studentProgram
-                                            ),
-                                            admissionYear: toUnionUndefined(
-                                                result.studentAdmissionYear
-                                            ),
-                                        }
-                                      : undefined,
-                          }
-                        : undefined,
-            },
-            eligibility: {
-                domains: toUnionUndefined(result.eligibilityDomains),
-                types: toUnionUndefined(result.eligibilityTypes),
-
-                university:
-                    result.eligibilityUniversityTypes !== null
-                        ? {
-                              types: toUnionUndefined(
-                                  result.eligibilityUniversityTypes
-                              ),
-                              student:
-                                  result.eligibilityUniversityCountries !==
-                                      null ||
-                                  result.eligibilityStudentPrograms !== null ||
-                                  result.eligibilityStudentPrograms !== null ||
-                                  result.eligibilityStudentAdmissionYears !==
-                                      null
-                                      ? {
-                                            countries: toUnionUndefined(
-                                                result.eligibilityUniversityCountries
-                                            ) as TCountryCode[] | undefined,
-                                            campuses: toUnionUndefined(
-                                                result.eligibilityStudentCampuses
-                                            ),
-                                            programs: toUnionUndefined(
-                                                result.eligibilityStudentPrograms
-                                            ),
-                                            admissionYears: toUnionUndefined(
-                                                result.eligibilityStudentAdmissionYears
-                                            ),
-                                        }
-                                      : undefined,
-                          }
-                        : undefined,
             },
         };
         const postId = result.id;
@@ -3532,37 +2458,9 @@ export class Service {
                 option4: pollTable.option4,
                 option5: pollTable.option5,
                 option6: pollTable.option6,
-                // eligibility
-                eligibilityDomains: eligibilityTable.domains,
-                eligibilityTypes: eligibilityTable.types,
-                eligibilityUniversityTypes: universityEligibilityTable.types,
-                eligibilityUniversityCountries:
-                    universityEligibilityTable.countries,
-                eligibilityStudentCampuses: studentEligibilityTable.campuses,
-                eligibilityStudentPrograms: studentEligibilityTable.programs,
-                eligibilityStudentAdmissionYears:
-                    studentEligibilityTable.admissionYears,
             })
             .from(postTable)
             .innerJoin(pollTable, eq(postTable.id, pollTable.postId)) // this may lead to 0 values in case the post has no associated poll
-            .leftJoin(
-                eligibilityTable,
-                eq(postTable.eligibilityId, eligibilityTable.id)
-            )
-            .leftJoin(
-                universityEligibilityTable,
-                eq(
-                    eligibilityTable.universityEligibilityId,
-                    universityEligibilityTable.id
-                )
-            )
-            .leftJoin(
-                studentEligibilityTable,
-                eq(
-                    universityEligibilityTable.studentEligibilityId,
-                    studentEligibilityTable.id
-                )
-            )
             .where(eq(postTable.timestampedPresentationCID, response.postUid));
         if (results.length === 0) {
             throw httpErrors.notFound(
@@ -3593,50 +2491,6 @@ export class Service {
         if (response.optionChosen === 6 && result.option6 === null) {
             throw httpErrors.badRequest(
                 `Option 6 does not exist in poll '${response.postUid}'`
-            );
-        }
-        // check wheter postAs matches poll's eligiblity
-        const eligibility: Eligibilities = {
-            domains: toUnionUndefined(result.eligibilityDomains),
-            types: toUnionUndefined(result.eligibilityTypes),
-
-            university:
-                result.eligibilityUniversityTypes !== null
-                    ? {
-                          types: toUnionUndefined(
-                              result.eligibilityUniversityTypes
-                          ),
-                          student:
-                              result.eligibilityUniversityCountries !== null ||
-                              result.eligibilityStudentPrograms !== null ||
-                              result.eligibilityStudentPrograms !== null ||
-                              result.eligibilityStudentAdmissionYears !== null
-                                  ? {
-                                        countries: toUnionUndefined(
-                                            result.eligibilityUniversityCountries
-                                        ) as TCountryCode[] | undefined,
-                                        campuses: toUnionUndefined(
-                                            result.eligibilityStudentCampuses
-                                        ),
-                                        programs: toUnionUndefined(
-                                            result.eligibilityStudentPrograms
-                                        ),
-                                        admissionYears: toUnionUndefined(
-                                            result.eligibilityStudentAdmissionYears
-                                        ),
-                                    }
-                                  : undefined,
-                      }
-                    : undefined,
-        };
-        const isEligible = getIsEligible(eligibility, postAs);
-        if (!isEligible) {
-            throw httpErrors.unauthorized(
-                `Respondent '${pseudonym}' is not eligible to poll '${
-                    response.postUid
-                }':\neligibility = '${JSON.stringify(
-                    eligibility
-                )}\n'postAs = '${JSON.stringify(postAs)}'`
             );
         }
         const presentationCID = await toEncodedCID(presentation);
@@ -3872,12 +2726,6 @@ export class Service {
                 // post as
                 pseudonym: pseudonymTable.pseudonym,
                 domain: personaTable.domain,
-                type: personaTable.type,
-                universityType: universityPersonaTable.type,
-                universityCountries: universityPersonaTable.countries,
-                studentCampus: studentPersonaTable.campus,
-                studentProgram: studentPersonaTable.program,
-                studentAdmissionYear: studentPersonaTable.admissionYear,
                 // metadata
                 commentUid: commentTable.timestampedPresentationCID,
                 slugId: commentTable.slugId,
@@ -3892,17 +2740,6 @@ export class Service {
             .innerJoin(
                 personaTable,
                 eq(personaTable.id, pseudonymTable.personaId)
-            )
-            .leftJoin(
-                universityPersonaTable,
-                eq(universityPersonaTable.id, personaTable.universityPersonaId)
-            )
-            .leftJoin(
-                studentPersonaTable,
-                eq(
-                    studentPersonaTable.id,
-                    universityPersonaTable.studentPersonaId
-                )
             )
             .orderBy(desc(commentTable.updatedAt), desc(commentTable.id))
             .limit(actualLimit)
@@ -3923,33 +2760,6 @@ export class Service {
                 author: {
                     pseudonym: result.pseudonym,
                     domain: result.domain,
-                    type: result.type,
-                    university:
-                        result.universityType !== null
-                            ? {
-                                  type: result.universityType,
-                                  student:
-                                      result.studentCampus !== null ||
-                                      result.studentProgram !== null ||
-                                      result.studentAdmissionYear !== null ||
-                                      result.universityCountries !== null
-                                          ? {
-                                                countries: toUnionUndefined(
-                                                    result.universityCountries
-                                                ) as TCountryCode[] | undefined,
-                                                campus: toUnionUndefined(
-                                                    result.studentCampus
-                                                ),
-                                                program: toUnionUndefined(
-                                                    result.studentProgram
-                                                ),
-                                                admissionYear: toUnionUndefined(
-                                                    result.studentAdmissionYear
-                                                ),
-                                            }
-                                          : undefined,
-                              }
-                            : undefined,
                 },
             };
         });

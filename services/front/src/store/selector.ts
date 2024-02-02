@@ -88,16 +88,6 @@ export const selectPendingSessionDevices = createSelector(
     }
 );
 
-export const selectFormCredentialsPerEmail = createSelector(
-    [selectActiveSessionEmail, selectSessions],
-    (activeSessionEmail, sessions) => {
-        if (activeSessionEmail === undefined || activeSessionEmail === "") {
-            return undefined;
-        }
-        return sessions[activeSessionEmail]?.formCredentialsPerEmail;
-    }
-);
-
 export const selectEmailCredentialsPerEmail = createSelector(
     [selectActiveSessionEmail, selectSessions],
     (activeSessionEmail, sessions) => {
@@ -115,17 +105,6 @@ export const selectUnblindedSecretCredentialsPerType = createSelector(
             return undefined;
         }
         return sessions[activeSessionEmail]?.unblindedSecretCredentialsPerType;
-    }
-);
-
-export const selectActiveEncodedFormCredential = createSelector(
-    [selectFormCredentialsPerEmail, selectActiveSessionEmail],
-    function (formCredentialsPerEmail, activeSessionEmail) {
-        if (formCredentialsPerEmail === undefined) {
-            return undefined;
-        } else {
-            return formCredentialsPerEmail[activeSessionEmail]?.active;
-        }
     }
 );
 
@@ -158,26 +137,6 @@ export const selectActiveEncodedTimeboundSecretCredential = createSelector(
             return undefined;
         } else {
             return unblindedSecretCredentialsPerType["timebound"]?.active;
-        }
-    }
-);
-
-export const selectActiveFormCredential = createSelector(
-    [selectActiveEncodedFormCredential],
-    function (activeEncodedFormCredential) {
-        if (activeEncodedFormCredential === undefined) {
-            return undefined;
-        } else {
-            try {
-                return Credential.fromJSON(
-                    uint8ArrayToJSON(base64.decode(activeEncodedFormCredential))
-                );
-            } catch (e) {
-                // TODO: better error handling
-                // for now we catch it so it doesn't crash the entire app, though in case of error the whole app is pretty much unusable
-                console.error("Error while parsing form credential", e);
-                return undefined;
-            }
         }
     }
 );

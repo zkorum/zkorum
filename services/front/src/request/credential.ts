@@ -1,7 +1,4 @@
-import {
-    DefaultApiFactory,
-    type ApiV1CredentialFormRequestPostRequestFormCredentialRequest,
-} from "@/api";
+import { DefaultApiFactory } from "@/api";
 import { retrieveSymmKey } from "@/crypto/ucan/ucan";
 import {
     buildSecretCredentialRequest,
@@ -11,37 +8,8 @@ import {
     unblindedSecretCredentialsPerTypeFrom,
 } from "@/crypto/vc/credential";
 import { activeSessionUcanAxios } from "@/interceptors";
-import type { FormCredentialRequest } from "@/shared/types/zod";
-import {
-    updateCredentials,
-    updateFormCredentials,
-} from "@/store/reducers/session";
+import { updateCredentials } from "@/store/reducers/session";
 import { store } from "@/store/store";
-
-export async function requestAnonymousCredentials(
-    email: string,
-    formCredentialRequest: FormCredentialRequest
-): Promise<void> {
-    const response = await DefaultApiFactory(
-        undefined,
-        undefined,
-        activeSessionUcanAxios
-    ).apiV1CredentialFormRequestPost({
-        email: email,
-        formCredentialRequest:
-            formCredentialRequest as ApiV1CredentialFormRequestPostRequestFormCredentialRequest,
-    });
-    if (response.data !== undefined) {
-        const credentials = response.data;
-        store.dispatch(
-            updateFormCredentials({
-                formCredentialsPerEmail: credentials.formCredentialsPerEmail,
-            })
-        );
-    } else {
-        console.warn("Unexpected empty data on credential request response");
-    }
-}
 
 // TODO this function is subject to synchronization errors,
 // because the activeSessionEmail email is continuously
@@ -169,34 +137,9 @@ export async function fetchAndUpdateCredentials(
             }
             // Else, user is suspended!
         }
-        if (
-            credentials.formCredentialsPerEmail[email] !== undefined &&
-            credentials.formCredentialsPerEmail[email].active === undefined &&
-            credentials.formCredentialsPerEmail[email].revoked.length !== 0
-        ) {
-            const formCredentials = credentials.formCredentialsPerEmail[email];
-            const numberOfRevokedCred = formCredentials.revoked.length;
-            const lastRevokedCred =
-                formCredentials.revoked[numberOfRevokedCred - 1];
-            if (await isNotSignedByLatestPublicKey(lastRevokedCred)) {
-                const response = await DefaultApiFactory(
-                    undefined,
-                    undefined,
-                    activeSessionUcanAxios
-                ).apiV1CredentialFormRenewPost({
-                    email: email,
-                });
-                if (response?.data !== undefined) {
-                    credentials.formCredentialsPerEmail[email].active =
-                        response.data.formCredential;
-                }
-            }
-            // Else, user is suspended!
-        }
         store.dispatch(
             updateCredentials({
                 emailCredentialsPerEmail: credentials.emailCredentialsPerEmail,
-                formCredentialsPerEmail: credentials.formCredentialsPerEmail,
                 unblindedSecretCredentialsPerType:
                     await unblindedSecretCredentialsPerTypeFrom(
                         credentials.secretCredentialsPerType,

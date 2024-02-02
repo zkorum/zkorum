@@ -261,10 +261,7 @@ export function PostDialog({
             ); // first credential added was secret credential, for posting must be an unbound one
             builder.markAttributesRevealed(
                 1,
-                new Set<string>([
-                    "credentialSubject.domain",
-                    "credentialSubject.type",
-                ])
+                new Set<string>(["credentialSubject.domain"])
             ); // second credential added was email credential
             //////// PSEUDONYMS /////
             const scope = stringToBytes(BASE_SCOPE);
@@ -354,7 +351,6 @@ export function PostDialog({
                                     : option6InputRef.current?.value,
                         },
                     },
-                    eligibility: undefined,
                 };
             } else {
                 newPost = {
@@ -365,7 +361,6 @@ export function PostDialog({
                                 ? undefined
                                 : bodyInputRef.current?.value,
                     },
-                    eligibility: undefined,
                 };
             }
             const newPostForContext =
@@ -375,7 +370,7 @@ export function PostDialog({
             );
             builder.context = context;
             builder.nonce = randomFieldElement();
-            builder.version = "0.1.0";
+            builder.version = import.meta.env.VITE_PRESENTATION_VERSION;
             const presentation = builder.finalize();
             dispatch(showInfo(sendingPost));
             await createPost(presentation, newPost);

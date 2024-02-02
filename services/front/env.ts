@@ -2,6 +2,7 @@ import { defineConfig } from "@julr/vite-plugin-validate-env";
 import { z } from "zod";
 
 const configSchema = {
+    VITE_PRESENTATION_VERSION: z.string().default("0.1.0"),
     VITE_BACK_BASE_URL_DEV: z
         .string()
         .url()

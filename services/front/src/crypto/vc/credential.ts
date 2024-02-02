@@ -4,7 +4,6 @@ import { arrbufs, base64 } from "@/shared/common/index";
 import {
     type EmailCredential,
     type EmailCredentialsPerEmail,
-    type FormCredential,
     type SecretCredential,
     type SecretCredentialRequest,
     type SecretCredentialType,
@@ -35,6 +34,7 @@ function secretCredSchema() {
         properties: {
             uid: { type: "string" },
             type: { type: "string" },
+            issuanceDatetime: { type: "string", format: "date-time" },
             secret: { type: "string" },
         },
     };
@@ -135,7 +135,7 @@ export async function buildSecretCredentialRequest(
 }
 
 export async function isNotSignedByLatestPublicKey(
-    credential: EmailCredential | FormCredential
+    credential: EmailCredential
 ): Promise<boolean> {
     await maybeInitWasm();
     const publicKey = BBSPlusPublicKeyG2.fromHex(VITE_BACK_PUBLIC_KEY);
