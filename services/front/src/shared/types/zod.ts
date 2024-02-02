@@ -1,9 +1,6 @@
 /** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/
 import { z } from "zod";
 import { validateDidKey, validateDidWeb } from "../did/util.js";
-import { range } from "../common/util.js";
-import { EssecCampus, EssecProgram } from "./university.js";
-import { type TCountryCode } from "countries-list";
 import {
     MAX_LENGTH_TITLE,
     MAX_LENGTH_OPTION,
@@ -26,20 +23,6 @@ function isAuthorizedEmail(email: Email) {
     }
 }
 
-const currentYear = new Date().getFullYear();
-export const minStudentYear = currentYear - 9;
-export const maxStudentYear = currentYear + 1;
-export const currentStudentsAdmissionYears = range(
-    currentYear - 9,
-    currentYear + 1
-);
-
-export const zodstudentAdmissionYear = z
-    .number()
-    .positive()
-    .int()
-    .min(minStudentYear)
-    .max(maxStudentYear);
 export const zodemail = z
     .string()
     .email()
@@ -124,21 +107,6 @@ export const zodemailCredentialsPerEmail = z.record(
     zodemail,
     zodemailCredentials
 );
-export const zodformCredential = zodemailCredential;
-export const zodformCredentials = z
-    .object({
-        active: zodformCredential.optional(),
-        revoked: z.array(zodemailCredential),
-    })
-    .strict();
-export const zodformCredentialsPerEmail = z.record(
-    zodemail,
-    zodformCredentials
-);
-export const zodemailFormCredentialsPerEmail = z.object({
-    emailCredentialsPerEmail: zodemailCredentialsPerEmail,
-    formCredentialsPerEmail: zodformCredentialsPerEmail,
-});
 export const zodDevice = z
     .object({
         didWrite: zodDidKey,
@@ -146,306 +114,11 @@ export const zodDevice = z
     })
     .strict();
 export const zodDevices = z.array(zodDevice); // list of didWrite of all the devices belonging to a user
-export const zodessecCampus = z.nativeEnum(EssecCampus);
-export const zodessecProgram = z.nativeEnum(EssecProgram);
-export const zodcountryCode: z.ZodType<TCountryCode> = z.enum([
-    "AD",
-    "AE",
-    "AF",
-    "AG",
-    "AI",
-    "AL",
-    "AM",
-    "AO",
-    "AQ",
-    "AR",
-    "AS",
-    "AT",
-    "AU",
-    "AW",
-    "AX",
-    "AZ",
-    "BA",
-    "BB",
-    "BD",
-    "BE",
-    "BF",
-    "BG",
-    "BH",
-    "BI",
-    "BJ",
-    "BL",
-    "BM",
-    "BN",
-    "BO",
-    "BQ",
-    "BR",
-    "BS",
-    "BT",
-    "BV",
-    "BW",
-    "BY",
-    "BZ",
-    "CA",
-    "CC",
-    "CD",
-    "CF",
-    "CG",
-    "CH",
-    "CI",
-    "CK",
-    "CL",
-    "CM",
-    "CN",
-    "CO",
-    "CR",
-    "CU",
-    "CV",
-    "CW",
-    "CX",
-    "CY",
-    "CZ",
-    "DE",
-    "DJ",
-    "DK",
-    "DM",
-    "DO",
-    "DZ",
-    "EC",
-    "EE",
-    "EG",
-    "EH",
-    "ER",
-    "ES",
-    "ET",
-    "FI",
-    "FJ",
-    "FK",
-    "FM",
-    "FO",
-    "FR",
-    "GA",
-    "GB",
-    "GD",
-    "GE",
-    "GF",
-    "GG",
-    "GH",
-    "GI",
-    "GL",
-    "GM",
-    "GN",
-    "GP",
-    "GQ",
-    "GR",
-    "GS",
-    "GT",
-    "GU",
-    "GW",
-    "GY",
-    "HK",
-    "HM",
-    "HN",
-    "HR",
-    "HT",
-    "HU",
-    "ID",
-    "IE",
-    "IL",
-    "IM",
-    "IN",
-    "IO",
-    "IQ",
-    "IR",
-    "IS",
-    "IT",
-    "JE",
-    "JM",
-    "JO",
-    "JP",
-    "KE",
-    "KG",
-    "KH",
-    "KI",
-    "KM",
-    "KN",
-    "KP",
-    "KR",
-    "KW",
-    "KY",
-    "KZ",
-    "LA",
-    "LB",
-    "LC",
-    "LI",
-    "LK",
-    "LR",
-    "LS",
-    "LT",
-    "LU",
-    "LV",
-    "LY",
-    "MA",
-    "MC",
-    "MD",
-    "ME",
-    "MF",
-    "MG",
-    "MH",
-    "MK",
-    "ML",
-    "MM",
-    "MN",
-    "MO",
-    "MP",
-    "MQ",
-    "MR",
-    "MS",
-    "MT",
-    "MU",
-    "MV",
-    "MW",
-    "MX",
-    "MY",
-    "MZ",
-    "NA",
-    "NC",
-    "NE",
-    "NF",
-    "NG",
-    "NI",
-    "NL",
-    "NO",
-    "NP",
-    "NR",
-    "NU",
-    "NZ",
-    "OM",
-    "PA",
-    "PE",
-    "PF",
-    "PG",
-    "PH",
-    "PK",
-    "PL",
-    "PM",
-    "PN",
-    "PR",
-    "PS",
-    "PT",
-    "PW",
-    "PY",
-    "QA",
-    "RE",
-    "RO",
-    "RS",
-    "RU",
-    "RW",
-    "SA",
-    "SB",
-    "SC",
-    "SD",
-    "SE",
-    "SG",
-    "SH",
-    "SI",
-    "SJ",
-    "SK",
-    "SL",
-    "SM",
-    "SN",
-    "SO",
-    "SR",
-    "SS",
-    "ST",
-    "SV",
-    "SX",
-    "SY",
-    "SZ",
-    "TC",
-    "TD",
-    "TF",
-    "TG",
-    "TH",
-    "TJ",
-    "TK",
-    "TL",
-    "TM",
-    "TN",
-    "TO",
-    "TR",
-    "TT",
-    "TV",
-    "TW",
-    "TZ",
-    "UA",
-    "UG",
-    "UM",
-    "US",
-    "UY",
-    "UZ",
-    "VA",
-    "VC",
-    "VE",
-    "VG",
-    "VI",
-    "VN",
-    "VU",
-    "WF",
-    "WS",
-    "XK",
-    "YE",
-    "YT",
-    "ZA",
-    "ZM",
-    "ZW",
-]);
-export const zoduniversityType = z.enum(["student", "alum", "faculty"]);
-export const zodwebDomainType = z.enum(["university", "company"]); // duplicate from db
-export const zodcountries = z.record(zodcountryCode, z.boolean());
-export const zodformCredentialRequest = z.discriminatedUnion("type", [
-    z
-        .object({
-            type: z.literal(zoduniversityType.enum.student),
-            campus: zodessecCampus,
-            program: zodessecProgram,
-            countries: zodcountries,
-            admissionYear: zodstudentAdmissionYear,
-        })
-        .strict(),
-    z
-        .object({
-            type: z.literal(zoduniversityType.enum.alum),
-            // TODO
-        })
-        .strict(),
-    z
-        .object({
-            type: z.literal(zoduniversityType.enum.faculty),
-            // TODO
-        })
-        .strict(),
-]);
 export const zodsecretCredentialRequest = z
     .object({
         blindedRequest: z.record(z.string(), z.unknown()),
         encryptedEncodedBlindedSubject: z.string(),
         encryptedEncodedBlinding: z.string(),
-    })
-    .strict();
-export const zodformAndBlindedCredentials = z.object({
-    formCredential: zodformCredential,
-    blindedCredential: zodblindedCredential,
-});
-export const zodeligibility = z
-    .object({
-        student: z.boolean().optional(),
-        alum: z.boolean().optional(),
-        faculty: z.boolean().optional(),
-        countries: z.array(z.enum(["FR", "INT"])).optional(),
-        campuses: z.array(zodessecCampus).optional(),
-        programs: z.array(zodessecProgram).optional(),
-        admissionYears: z.array(zodstudentAdmissionYear).optional(),
     })
     .strict();
 export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).nonempty();
@@ -495,7 +168,6 @@ export const zodPostDataWithResult = z
 export const zodPost = z
     .object({
         data: zodPostData,
-        eligibility: zodeligibility.optional(),
     })
     .strict();
 export const zodPostUid = z.string(); // TODO it's a CID actually
@@ -504,45 +176,6 @@ export const zodPostAs = z
     .object({
         pseudonym: zodPseudonym,
         domain: z.string(), // TODO: a domain like acme.edu
-        type: zodwebDomainType,
-        university: z
-            .object({
-                type: zoduniversityType, //TODO it's an enum...!
-                student: z
-                    .object({
-                        countries: z.array(zodcountryCode).optional(),
-                        campus: z.string().optional(),
-                        program: z.string().optional(),
-                        admissionYear: zodstudentAdmissionYear.optional(),
-                    })
-                    .strict()
-                    .optional(),
-            })
-            .strict()
-            .optional(),
-    })
-    .strict();
-export const zodEligibilities = z // TODO merge this with zodeligibility
-    .object({
-        domains: z.array(z.string()).optional(),
-        types: z.array(zodwebDomainType).optional(),
-        university: z
-            .object({
-                types: z.array(zoduniversityType).optional(),
-                student: z
-                    .object({
-                        countries: z.array(zodcountryCode).optional(),
-                        campuses: z.array(z.string()).optional(),
-                        programs: z.array(z.string()).optional(),
-                        admissionYears: z
-                            .array(zodstudentAdmissionYear)
-                            .optional(),
-                    })
-                    .strict()
-                    .optional(),
-            })
-            .strict()
-            .optional(),
     })
     .strict();
 export const zodSlugId = z.string().max(10);
@@ -562,7 +195,6 @@ export const zodExtendedPostData = z
         metadata: zodPostMetadata,
         payload: zodPostDataWithResult,
         author: zodPostAs,
-        eligibility: zodEligibilities,
     })
     .strict();
 const zodOptionChosen = z.number().int().positive();
@@ -609,9 +241,6 @@ export const zodCreateCommentPayload = z.object({
 export const zodPostId = z.number().positive().int();
 
 type Email = z.infer<typeof zodemail>;
-export type FormAndBlindedCredentials = z.infer<
-    typeof zodformAndBlindedCredentials
->;
 export type SecretCredentialType = z.infer<typeof zodsecretCredentialType>;
 export type UnblindedSecretCredential = z.infer<
     typeof zodunblindedSecretCredential
@@ -636,28 +265,11 @@ export type EmailCredentials = z.infer<typeof zodemailCredentials>;
 export type EmailCredentialsPerEmail = z.infer<
     typeof zodemailCredentialsPerEmail
 >;
-export type FormCredential = z.infer<typeof zodformCredential>;
-export type FormCredentials = z.infer<typeof zodformCredentials>;
-export type FormCredentialsPerEmail = z.infer<
-    typeof zodformCredentialsPerEmail
->;
-export type FormCredentialRequest = z.infer<typeof zodformCredentialRequest>;
-export type EmailFormCredentialsPerEmail = z.infer<
-    typeof zodemailFormCredentialsPerEmail
->;
 export type Device = z.infer<typeof zodDevice>;
 export type Devices = z.infer<typeof zodDevices>;
-export type StudentAdmissionYear = z.infer<typeof zodstudentAdmissionYear>;
-export type Eligibility = z.infer<typeof zodeligibility>;
 export type Post = z.infer<typeof zodPost>;
 export type ExtendedPostData = z.infer<typeof zodExtendedPostData>;
-export type Countries = z.infer<typeof zodcountries>;
-export type WebDomainType = z.infer<typeof zodwebDomainType>;
-export const webDomainTypes = zodwebDomainType.options;
-export type UniversityType = z.infer<typeof zoduniversityType>;
-export const universityTypes = zoduniversityType.options;
 export type PostAs = z.infer<typeof zodPostAs>;
-export type Eligibilities = z.infer<typeof zodEligibilities>; // TODO merge this with Eligibility
 export type PollResult = z.infer<typeof zodPollResult>;
 export type PostData = z.infer<typeof zodPostData>;
 export type ResponseToPollPayload = z.infer<typeof zodResponseToPollPayload>;

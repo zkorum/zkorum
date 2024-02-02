@@ -1,61 +1,48 @@
-import fs from "fs";
-import { type FastifyRequest } from "fastify";
-import fastifyAuth from "@fastify/auth";
-import fastifySensible from "@fastify/sensible";
-import fastifySwagger from "@fastify/swagger";
-import fastifyCors from "@fastify/cors";
-import { Service } from "./service/service.js";
-import {
-    serializerCompiler,
-    validatorCompiler,
-    jsonSchemaTransform,
-    type ZodTypeProvider,
-} from "fastify-type-provider-zod";
-import { DrizzleFastifyLogger } from "./logger.js";
 import { Dto } from "@/shared/types/dto.js";
-import * as ucans from "@ucans/ucans";
 import {
-    httpMethodToAbility,
-    httpUrlToResourcePointer,
-} from "./shared/ucan/ucan.js";
-import {
-    initializeWasm,
     BBSPlusSecretKey as SecretKey,
-    Presentation,
     BBS_PLUS_SIGNATURE_PARAMS_LABEL_BYTES as SIGNATURE_PARAMS_LABEL_BYTES,
     BBSPlusSignatureParamsG1 as SignatureParams,
-    SUBJECT_STR,
+    initializeWasm,
+    Presentation,
     PseudonymBases,
+    SUBJECT_STR,
 } from "@docknetwork/crypto-wasm-ts";
-import { config, Environment, server } from "./app.js";
+import fastifyAuth from "@fastify/auth";
+import fastifyCors from "@fastify/cors";
+import fastifySensible from "@fastify/sensible";
+import fastifySwagger from "@fastify/swagger";
+import * as ucans from "@ucans/ucans";
 import {
     drizzle,
     type PostgresJsDatabase as PostgresDatabase,
 } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { type FastifyRequest } from "fastify";
 import {
-    addActiveEmailCredential as addActiveEmailOrFormCredential,
-    hasActiveCredential as hasActiveEmailOrFormCredential,
-    revealedAttributesToPostAs,
-    type PostAs,
-    getWebDomainType,
-} from "./service/credential.js";
-import {
-    type FormCredentialsPerEmail,
-    type SecretCredentialType,
-    type WebDomainType,
-    type UniversityType,
-} from "./shared/types/zod.js";
-import { toCID, decodeCID } from "./shared/common/cid.js";
+    jsonSchemaTransform,
+    serializerCompiler,
+    validatorCompiler,
+    type ZodTypeProvider,
+} from "fastify-type-provider-zod";
+import fs from "fs";
 import isEqual from "lodash/isEqual.js";
+import postgres from "postgres";
+import { config, server } from "./app.js";
+import { DrizzleFastifyLogger } from "./logger.js";
+import { type PostAs } from "./service/credential.js";
+import { Service } from "./service/service.js";
 import { stringToBytes } from "./shared/common/arrbufs.js";
-import { nowZeroMs, scopeWith } from "./shared/common/util.js";
+import { decodeCID, toCID } from "./shared/common/cid.js";
 import {
     buildCreateCommentContextFromPayload,
     buildCreatePostContextFromPayload,
     buildResponseToPollFromPayload,
-    domainFromEmail,
 } from "./shared/shared.js";
+import { type SecretCredentialType } from "./shared/types/zod.js";
+import {
+    httpMethodToAbility,
+    httpUrlToResourcePointer,
+} from "./shared/ucan/ucan.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -66,6 +53,14 @@ server.register(fastifyCors, {
 // Add schema validator and serializer
 server.setValidatorCompiler(validatorCompiler);
 server.setSerializerCompiler(serializerCompiler);
+
+const speciallyAuthorizedEmails: string[] =
+    config.NODE_ENV === "production"
+        ? []
+        : config.SPECIALLY_AUTHORIZED_EMAILS !== undefined &&
+          config.SPECIALLY_AUTHORIZED_EMAILS.length !== 0
+        ? config.SPECIALLY_AUTHORIZED_EMAILS.replace(/\s/g, "").split(",")
+        : [];
 
 server.register(fastifySwagger, {
     openapi: {
@@ -129,8 +124,8 @@ const db = drizzle(client, {
 
 // This is necessary for crypto-wasm-ts to work
 await initializeWasm();
-const sk: SecretKey = getSecretKey(config.NODE_ENV);
-function getSecretKey(env: Environment): SecretKey {
+const sk: SecretKey = getSecretKey();
+function getSecretKey(): SecretKey {
     const skAsHex = fs.readFileSync(config.PRIVATE_KEY_FILEPATH, {
         encoding: "utf8",
         flag: "r",
@@ -151,16 +146,16 @@ interface OptionsVerifyUcan {
 }
 
 const SERVER_URL =
-    config.NODE_ENV === Environment.Production
+    config.NODE_ENV === "production"
         ? config.SERVER_URL_PROD
-        : config.NODE_ENV === Environment.Staging1
+        : config.NODE_ENV === "staging1"
         ? config.SERVER_URL_STAGING1
         : config.SERVER_URL_DEV;
 
 const SERVER_DID =
-    config.NODE_ENV === Environment.Production
+    config.NODE_ENV === "production"
         ? config.SERVER_DID_PROD
-        : config.NODE_ENV === Environment.Staging1
+        : config.NODE_ENV === "staging1"
         ? config.SERVER_DID_STAGING1
         : config.SERVER_DID_DEV;
 
@@ -263,42 +258,8 @@ interface VerifyPresentationProps {
     expectedSecretCredentialType: SecretCredentialType;
 }
 
-function basesFromRevealedAttributes(revealedAttributes?: any): string[] {
+function bases(): string[] {
     let scope = "base";
-    if (revealedAttributes === undefined) {
-        const basesForAttributes = PseudonymBases.generateBasesForAttributes(
-            2, // communityId ( == email here) + secret value = 2 attributes
-            stringToBytes(scope)
-        );
-        return PseudonymBases.decodeBasesForAttributes(basesForAttributes);
-    }
-    const typeSpecificStr = "typeSpecific";
-    if (typeSpecificStr in revealedAttributes) {
-        const typeSpecificAttribute = revealedAttributes[typeSpecificStr];
-        const typeStr = "type";
-        if (typeStr in typeSpecificAttribute) {
-            const universityType = typeSpecificAttribute[
-                typeStr
-            ] as UniversityType; // TODO this can throw errors
-            scope = scopeWith(scope, universityType);
-        }
-        const campusStr = "campus";
-        if (campusStr in typeSpecificAttribute) {
-            scope = scopeWith(scope, campusStr);
-        }
-        const programStr = "program";
-        if (programStr in typeSpecificAttribute) {
-            scope = scopeWith(scope, programStr);
-        }
-        const admissionYearStr = "admissionYear";
-        if (admissionYearStr in typeSpecificAttribute) {
-            scope = scopeWith(scope, admissionYearStr);
-        }
-        const countriesStr = "countries";
-        if (countriesStr in typeSpecificAttribute) {
-            scope = scopeWith(scope, countriesStr);
-        }
-    }
     const basesForAttributes = PseudonymBases.generateBasesForAttributes(
         2, // communityId ( == email here) + secret value = 2 attributes
         stringToBytes(scope)
@@ -340,7 +301,7 @@ async function verifyPresentation({
                 );
             }
 
-            const expectedPresentationVersion = "0.1.0";
+            const expectedPresentationVersion = config.PRESENTATION_VERSION;
             if (presentation.version !== expectedPresentationVersion) {
                 throw server.httpErrors.unauthorized(
                     `Version of Presentation must be ${expectedPresentationVersion} but was ${presentation.version}`
@@ -364,26 +325,25 @@ async function verifyPresentation({
                 );
             }
 
-            // check that there are two or three credentials, the first one being secret credential, the second one being a email credential, and the eventual third one being the form credential
-            if (
-                presentation.spec.credentials.length !== 2 &&
-                presentation.spec.credentials.length !== 3
-            ) {
+            // check that there are two, the first one being secret credential, the second one being a email credential
+            if (presentation.spec.credentials.length !== 2) {
                 throw server.httpErrors.unauthorized(
-                    "The Presentation is expected to be created by two or three credentials"
+                    "The Presentation is expected to be created by two credentials"
                 );
             }
 
-            const expectedCredentialVersion = "0.1.0";
-            for (const [
-                credIdx,
-                credential,
-            ] of presentation.spec.credentials.entries()) {
-                if (credential.version !== expectedCredentialVersion) {
-                    throw server.httpErrors.unauthorized(
-                        `Version of Credential ${credIdx} must be ${expectedPresentationVersion} but was ${credential.version}`
-                    );
-                }
+            // credential versions
+            const secretCredential = presentation.spec.credentials[0];
+            if (secretCredential.version !== config.SECRET_CREDENTIAL_VERSION) {
+                throw server.httpErrors.unauthorized(
+                    `Version of Secret Credential must be ${config.SECRET_CREDENTIAL_VERSION} but was ${secretCredential.version}`
+                );
+            }
+            const emailCredential = presentation.spec.credentials[1];
+            if (emailCredential.version !== config.EMAIL_CREDENTIAL_VERSION) {
+                throw server.httpErrors.unauthorized(
+                    `Version of Email Credential must be ${config.EMAIL_CREDENTIAL_VERSION} but was ${emailCredential.version}`
+                );
             }
 
             // check that there is ONE pseudonym associated with the right attributeNames and with the basesForAttributes expected from the attributes shared
@@ -437,16 +397,6 @@ async function verifyPresentation({
                 SUBJECT_STR
             ] as object;
             if (
-                !("type" in emailSubjectRevealedAttrs) ||
-                typeof emailSubjectRevealedAttrs["type"] != "string" ||
-                getWebDomainType(emailSubjectRevealedAttrs["type"]) ===
-                    undefined
-            ) {
-                throw server.httpErrors.unauthorized(
-                    `Attribute 'type' is not revealed in email credential or it is not a valid WebDomainType`
-                );
-            }
-            if (
                 !("domain" in emailSubjectRevealedAttrs) ||
                 typeof emailSubjectRevealedAttrs["domain"] !== "string"
             ) {
@@ -461,26 +411,10 @@ async function verifyPresentation({
                 );
             }
 
-            let formSubjectRevealedAttrs: object | undefined = undefined;
-            if (presentation.spec.credentials.length === 3) {
-                const formCredentialRevealedAttributes =
-                    presentation.spec.credentials[2].revealedAttributes;
-                if (!(SUBJECT_STR in formCredentialRevealedAttributes)) {
-                    throw server.httpErrors.unauthorized(
-                        `Attribute '${SUBJECT_STR}' is not revealed in form credential`
-                    );
-                }
-                formSubjectRevealedAttrs = formCredentialRevealedAttributes[
-                    SUBJECT_STR
-                ] as object;
-            }
-
-            const expectedBasesForAttributes = basesFromRevealedAttributes(
-                formSubjectRevealedAttrs
-            );
-            if (!isEqual(basesForAttributes, expectedBasesForAttributes)) {
+            const expectedBases = bases();
+            if (!isEqual(basesForAttributes, expectedBases)) {
                 throw server.httpErrors.unauthorized(
-                    `The bases for attributes used to generate the anonymous pseudonym does not match with the revealed attributes`
+                    `The bases for attributes used to generate the anonymous pseudonym does not match with the expected bases`
                 );
             }
             const secretCredentialRevealedAttributes =
@@ -511,15 +445,7 @@ async function verifyPresentation({
                 presentation.spec.attributeEqualities.length !== 1
             ) {
                 throw server.httpErrors.unauthorized(
-                    `There must be exactly one attribute equality proof if Form Credential does not partiticipate in the proof`
-                );
-            }
-            if (
-                presentation.spec.credentials.length === 3 &&
-                presentation.spec.attributeEqualities.length !== 2
-            ) {
-                throw server.httpErrors.unauthorized(
-                    `There must be exactly two attribute equality proofs if Form Credential partiticipate in the proof`
+                    `There must be exactly one attribute equality proof`
                 );
             }
             // first attribute equality must be based on uid
@@ -556,59 +482,11 @@ async function verifyPresentation({
                     `The second attribute ref's name of the Uid Attribute Equality must be 'uid' `
                 );
             }
-            if (presentation.spec.attributeEqualities[0].length === 3) {
-                const attributeRefFormCred = uidAttributeEquality[2];
-                if (attributeRefFormCred[0] !== 2) {
-                    throw server.httpErrors.unauthorized(
-                        `The third attribute ref of the Uid Attribute Equality must be related to the third credential - the Form Credential`
-                    );
-                }
-                if (attributeRefFormCred[1] !== attributeUidStr) {
-                    throw server.httpErrors.unauthorized(
-                        `The third attribute ref's name of the Uid Attribute Equality must be 'uid' `
-                    );
-                }
-            }
-            // second attribute equality must be based on email - only exists if Form Credential is shared
-            if (presentation.spec.credentials.length === 3) {
-                const emailAttributeEquality =
-                    presentation.spec.attributeEqualities[1];
-                if (emailAttributeEquality.length !== 2) {
-                    throw server.httpErrors.unauthorized(
-                        `The presentation's Email Attribute Equality must contain 2 meta equalities`
-                    );
-                }
-                const attributeEmailStr = "credentialSubject.email";
-                const attributeRefEmailCred = emailAttributeEquality[0];
-                if (attributeRefEmailCred[0] !== 1) {
-                    throw server.httpErrors.unauthorized(
-                        `The first attribute ref of the Email Attribute Equality must be related to the second credential - the Email Credential`
-                    );
-                }
-                if (attributeRefEmailCred[1] !== attributeEmailStr) {
-                    throw server.httpErrors.unauthorized(
-                        `The first attribute ref's name of the Email Attribute Equality must be 'email' `
-                    );
-                }
-                const attributeRefFormCred = emailAttributeEquality[1];
-                if (attributeRefFormCred[0] !== 2) {
-                    throw server.httpErrors.unauthorized(
-                        `The second attribute ref of the Email Attribute Equality must be related to the third credential - the Form Credential`
-                    );
-                }
-                if (attributeRefFormCred[1] !== attributeEmailStr) {
-                    throw server.httpErrors.unauthorized(
-                        `The second attribute ref's name of the Email Attribute Equality must be 'email' `
-                    );
-                }
-            }
 
             return {
-                postAs: revealedAttributesToPostAs({
+                postAs: {
                     domain: emailSubjectRevealedAttrs["domain"] as string, // we would have thrown already if was not there or not the right type
-                    type: emailSubjectRevealedAttrs["type"] as WebDomainType, // we would have thrown already if was not there or not the right type
-                    revealedFormAttributes: formSubjectRevealedAttrs,
-                }),
+                },
                 pseudonym: pseudonym,
                 presentation: presentation,
             };
@@ -670,6 +548,11 @@ server.after(() => {
                 return await Service.authenticateAttempt({
                     db,
                     type,
+                    doSendEmail: config.NODE_ENV === "production",
+                    doUseTestCode:
+                        config.NODE_ENV !== "production" &&
+                        speciallyAuthorizedEmails.includes(request.body.email),
+                    testCode: config.TEST_CODE,
                     authenticateRequestBody: request.body,
                     userId,
                     minutesBeforeCodeExpiry:
@@ -678,7 +561,6 @@ server.after(() => {
                     throttleMinutesInterval:
                         config.THROTTLE_EMAIL_MINUTES_INTERVAL,
                     httpErrors: server.httpErrors,
-                    env: config.NODE_ENV,
                     awsMailConf: awsMailConf,
                     userAgent: userAgent,
                 }).then(({ codeExpiry, nextCodeSoonestTime }) => {
@@ -715,6 +597,8 @@ server.after(() => {
                     encryptedSymmKey: request.body.encryptedSymmKey,
                     sk,
                     pkVersion: config.PK_VERSION,
+                    emailCredentialVersion: config.EMAIL_CREDENTIAL_VERSION,
+                    secretCredentialVersion: config.SECRET_CREDENTIAL_VERSION,
                     httpErrors: server.httpErrors,
                     unboundSecretCredentialRequest:
                         request.body.unboundSecretCredentialRequest,
@@ -755,6 +639,8 @@ server.after(() => {
                     db,
                     didWrite,
                     pkVersion: config.PK_VERSION,
+                    secretCredentialVersion: config.SECRET_CREDENTIAL_VERSION,
+                    emailCredentialVersion: config.EMAIL_CREDENTIAL_VERSION,
                     httpErrors: server.httpErrors,
                     timeboundSecretCredentialRequest:
                         request.body.timeboundSecretCredentialRequest,
@@ -811,7 +697,7 @@ server.after(() => {
             schema: {
                 body: Dto.renewEmailCredential,
                 description:
-                    "Renew an active email credential - fails if already exists. Used when rotating issuer public key.",
+                    "Renew an active email credential - fails if already exists. Used when rotating issuer public key or modifying schema.",
                 response: {
                     200: Dto.renewEmailCredential200,
                 },
@@ -847,67 +733,12 @@ server.after(() => {
                         db,
                         email,
                         pkVersion: config.PK_VERSION,
+                        emailCredentialVersion: config.EMAIL_CREDENTIAL_VERSION,
                         uid,
                         sk,
                         httpErrors: server.httpErrors,
                     });
                 return { emailCredential };
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/credential/form/renew`, {
-            schema: {
-                body: Dto.renewFormCredential,
-                description:
-                    "Renew an active form credential - fails if already exists. Used when rotating issuer public key.",
-                response: {
-                    200: Dto.renewFormCredential200,
-                },
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                        isSyncing: true,
-                    },
-                });
-                const isAdmin = await Service.isAdmin(db, didWrite);
-                if (isAdmin) {
-                    throw server.httpErrors.forbidden(
-                        "Admin cannot renew credentials"
-                    );
-                }
-                const email = request.body.email;
-                const isEmailAssociatedWithDevice =
-                    await Service.isEmailAssociatedWithDevice(
-                        db,
-                        didWrite,
-                        email
-                    );
-                if (!isEmailAssociatedWithDevice) {
-                    throw server.httpErrors.forbidden(
-                        `Email ${email} is not associated with this didWrite ${didWrite}`
-                    );
-                }
-                const uid = await Service.getUidFromDevice(db, didWrite);
-                const formCredentialRequest =
-                    await Service.getLatestFormCredentialRequest({
-                        db,
-                        email,
-                        httpErrors: server.httpErrors,
-                    });
-                const formCredential =
-                    await Service.createAndStoreFormCredential({
-                        db,
-                        email,
-                        pkVersion: config.PK_VERSION,
-                        formCredentialRequest,
-                        uid,
-                        sk,
-                        httpErrors: server.httpErrors,
-                    });
-                return { formCredential };
             },
         });
     server
@@ -942,6 +773,8 @@ server.after(() => {
                         userId,
                         uid,
                         pkVersion: config.PK_VERSION,
+                        secretCredentialVersion:
+                            config.SECRET_CREDENTIAL_VERSION,
                         secretCredentialRequest:
                             request.body.secretCredentialRequest,
                         httpErrors: server.httpErrors,
@@ -949,84 +782,6 @@ server.after(() => {
                         type: request.body.type,
                     });
                 return { signedBlindedCredential: secretCredential };
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/credential/form/request`, {
-            schema: {
-                body: Dto.requestFormCredential,
-                response: {
-                    200: Dto.requestFormCredential200,
-                },
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                        isSyncing: true,
-                    },
-                });
-                const email = request.body.email;
-                const domain = domainFromEmail(email);
-                if (domain === undefined || domain === "zkorum.com") {
-                    throw server.httpErrors.forbidden(
-                        "Admin cannot request credentials"
-                    );
-                }
-                const isEmailAssociatedWithDevice =
-                    await Service.isEmailAssociatedWithDevice(
-                        db,
-                        didWrite,
-                        email
-                    );
-                if (!isEmailAssociatedWithDevice) {
-                    throw server.httpErrors.forbidden(
-                        `Email ${email} is not associated with this didWrite ${didWrite}`
-                    );
-                }
-
-                const existingFormCredentialsPerEmail: FormCredentialsPerEmail =
-                    await Service.getFormCredentialsPerEmailFromDidWrite(
-                        db,
-                        didWrite
-                    );
-                if (
-                    hasActiveEmailOrFormCredential(
-                        email,
-                        existingFormCredentialsPerEmail
-                    )
-                ) {
-                    server.log.warn(
-                        "Form credentials requested but already exist"
-                    );
-                    return {
-                        formCredentialsPerEmail:
-                            existingFormCredentialsPerEmail,
-                    };
-                } else {
-                    const uid = await Service.getUidFromDevice(db, didWrite);
-                    const encodedFormCredential =
-                        await Service.createAndStoreFormCredential({
-                            db,
-                            email,
-                            formCredentialRequest:
-                                request.body.formCredentialRequest,
-                            pkVersion: config.PK_VERSION,
-                            uid,
-                            sk,
-                            httpErrors: server.httpErrors,
-                        });
-                    const formCredentialsPerEmail =
-                        addActiveEmailOrFormCredential(
-                            email,
-                            encodedFormCredential,
-                            existingFormCredentialsPerEmail
-                        );
-                    return {
-                        formCredentialsPerEmail,
-                    };
-                }
             },
         });
     server
@@ -1336,18 +1091,16 @@ server.ready((e) => {
         server.log.error(e);
         process.exit(1);
     }
-    if (config.NODE_ENV === Environment.Development) {
-        const swaggerJson = JSON.stringify(
-            server.swagger({ yaml: false }),
-            null,
-            2
-        );
-        fs.writeFileSync("./openapi-zkorum.json", swaggerJson);
+    if (config.NODE_ENV === "development") {
+        const swaggerObj = server.swagger({ yaml: false });
+        if (swaggerObj !== undefined) {
+            const swaggerJson = JSON.stringify(swaggerObj, null, 4);
+            fs.writeFileSync("./openapi-zkorum.json", swaggerJson);
+        }
     }
 });
 
-const host =
-    config.NODE_ENV === Environment.Development ? "127.0.0.1" : "0.0.0.0";
+const host = config.NODE_ENV === "development" ? "127.0.0.1" : "0.0.0.0";
 
 server.listen({ port: config.PORT, host: host }, (err) => {
     if (err) {

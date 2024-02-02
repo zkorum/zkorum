@@ -11,28 +11,19 @@ import { hidePost, unhidePost } from "@/request/moderation";
 import { doRespondToPoll } from "@/request/post";
 import { stringToBytes } from "@/shared/common/arrbufs";
 import {
-    attributesFormRevealedFromPostAs,
+    BASE_SCOPE,
     buildContext,
     buildResponseToPollFromPayload,
-    isEligibleForCountries,
-    isEligibleForList,
-    mustPostAsForCountries,
-    mustPostAsForList,
-    postAsFromEligibility,
-    scopeFromPostAs,
-    type PostAsProps,
 } from "@/shared/shared";
 import type {
     ExtendedPostData,
     PollMetadata,
     ResponseToPoll,
     ResponseToPollPayload,
-    UniversityType,
 } from "@/shared/types/zod";
 import { showError } from "@/store/reducers/snackbar";
 import {
     selectActiveEmailCredential,
-    selectActiveFormCredential,
     selectActiveSessionEmail,
     selectActiveTimeboundSecretCredential,
     selectPollResponsePerPostUid,
@@ -88,7 +79,8 @@ export function PostView({
     updatePostHiddenStatus,
 }: PostViewProps) {
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
-    const activeFormCredential = useAppSelector(selectActiveFormCredential);
+    const isLoggedIn =
+        activeSessionEmail !== "" && activeSessionEmail !== undefined;
     const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
     const activeTimeboundSecretCredential = useAppSelector(
         selectActiveTimeboundSecretCredential
@@ -134,68 +126,11 @@ export function PostView({
             ); // first credential added was secret credential, for posting must be an unbound one
             builder.markAttributesRevealed(
                 1,
-                new Set<string>([
-                    "credentialSubject.domain",
-                    "credentialSubject.type",
-                ])
+                new Set<string>(["credentialSubject.domain"])
             ); // second credential added was email credential
-            let formCredentialIsUsed = false;
-            let postAs: PostAsProps;
-            if (activeFormCredential !== undefined) {
-                const mustPostAsForCampus = mustPostAsForList(
-                    (activeFormCredential.subject as any)?.typeSpecific?.campus,
-                    poll.eligibility?.university?.student?.campuses
-                );
-                const mustPostAsForProgram = mustPostAsForList(
-                    (activeFormCredential.subject as any)?.typeSpecific
-                        ?.program,
-                    poll.eligibility?.university?.student?.programs
-                );
-                const mustPostAsForAdmissionYear = mustPostAsForList(
-                    (activeFormCredential.subject as any)?.typeSpecific
-                        ?.admissionYear,
-                    poll.eligibility?.university?.student?.admissionYears
-                );
-                const mustPostAsForCountry = mustPostAsForCountries(
-                    (activeFormCredential.subject as any)?.typeSpecific
-                        ?.countries,
-                    poll.eligibility?.university?.student?.countries
-                );
-                postAs = postAsFromEligibility({
-                    eligibility: poll.eligibility,
-                    type: (activeFormCredential.subject as any)?.typeSpecific
-                        ?.type as UniversityType | undefined,
-                    mustPostAsForCampus,
-                    mustPostAsForProgram,
-                    mustPostAsForAdmissionYear,
-                    mustPostAsForCountries: mustPostAsForCountry,
-                });
-                const attributesRevealed = attributesFormRevealedFromPostAs({
-                    postAs: postAs,
-                    credential: activeFormCredential,
-                });
-                if (attributesRevealed.size > 0) {
-                    // at least one specific postAs has been selected: even if the formCredential exist, it might not be used!
-                    formCredentialIsUsed = true;
-                    builder.addCredential(
-                        activeFormCredential,
-                        backendPublicKey
-                    );
-                    builder.markAttributesRevealed(2, attributesRevealed); // third credential added is form credential
-                }
-            } else {
-                postAs = {
-                    postAsAlum: false,
-                    postAsFaculty: false,
-                    postAsStudent: false,
-                    postAsCampus: false,
-                    postAsProgram: false,
-                    postAsAdmissionYear: false,
-                    postAsCountries: false,
-                };
-            }
+
             //////// PSEUDONYMS /////
-            const scope = stringToBytes(scopeFromPostAs(postAs)); // the scope and thus the pseudonym will be different for each combination of attributes revealed. @see doc/anonymous_pseudonym.md
+            const scope = stringToBytes(BASE_SCOPE); // the scope and thus the pseudonym will be different for each combination of attributes revealed. @see doc/anonymous_pseudonym.md
             const attributeNames = new Map();
             const secretSubject = "credentialSubject.secret";
             const attributesSecretCredential =
@@ -228,23 +163,10 @@ export function PostView({
                 );
             builder.addBoundedPseudonym(basesForAttributes, attributeNames);
             // meta equalities
-            if (formCredentialIsUsed) {
-                builder.markAttributesEqual(
-                    [0, "credentialSubject.uid"],
-                    [1, "credentialSubject.uid"],
-                    [2, "credentialSubject.uid"]
-                );
-                builder.markAttributesEqual(
-                    // email in email and form credentials are equal
-                    [1, "credentialSubject.email"],
-                    [2, "credentialSubject.email"]
-                );
-            } else {
-                builder.markAttributesEqual(
-                    [0, "credentialSubject.uid"],
-                    [1, "credentialSubject.uid"]
-                );
-            }
+            builder.markAttributesEqual(
+                [0, "credentialSubject.uid"],
+                [1, "credentialSubject.uid"]
+            );
             const payloadResponseToPoll: ResponseToPollPayload = {
                 postUid: poll.metadata.uid,
                 optionChosen: optionNumberResponded,
@@ -254,7 +176,7 @@ export function PostView({
             const context = await buildContext(JSON.stringify(responseToPoll));
             builder.context = context;
             builder.nonce = randomFieldElement();
-            builder.version = "0.1.0";
+            builder.version = import.meta.env.VITE_PRESENTATION_VERSION;
             const presentation = builder.finalize();
             setButtonLoadingText(sendingPost);
             await doRespondToPoll(
@@ -270,68 +192,6 @@ export function PostView({
             setButtonLoadingText("");
         }
     }
-
-    function getIsEligible(
-        post: ExtendedPostData,
-        formCredentialObj: object | undefined
-    ): boolean {
-        if (
-            post.eligibility.university === undefined ||
-            post.eligibility.university.types === undefined
-        ) {
-            return true;
-        }
-        if (
-            formCredentialObj === undefined ||
-            (formCredentialObj as any).typeSpecific === undefined
-        ) {
-            return false;
-        }
-        const typeSpecific = (formCredentialObj as any).typeSpecific;
-        const univType = typeSpecific.type as UniversityType;
-        switch (univType) {
-            case "alum":
-            case "faculty":
-                if (post.eligibility.university.types.includes(univType)) {
-                    return true;
-                } else {
-                    return false;
-                }
-            case "student":
-                if (post.eligibility.university.types.includes(univType)) {
-                    if (post.eligibility.university.student === undefined) {
-                        return true;
-                    } else if (
-                        isEligibleForCountries(
-                            typeSpecific.countries,
-                            post.eligibility.university.student.countries
-                        ) &&
-                        isEligibleForList(
-                            typeSpecific.campus,
-                            post.eligibility.university.student.campuses
-                        ) &&
-                        isEligibleForList(
-                            typeSpecific.program,
-                            post.eligibility.university.student.programs
-                        ) &&
-                        isEligibleForList(
-                            typeSpecific.admissionYear,
-                            post.eligibility.university.student.admissionYears
-                        )
-                    ) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-        }
-    }
-    const isEligible =
-        activeEmailCredential === undefined
-            ? false
-            : getIsEligible(post, activeFormCredential?.subject);
 
     async function handleHide(event: React.MouseEvent<HTMLElement>) {
         setIsHideLoading(true);
@@ -377,7 +237,7 @@ export function PostView({
                 zeroIfUndefined(post.payload.poll.result.option4Response) +
                 zeroIfUndefined(post.payload.poll.result.option5Response) +
                 zeroIfUndefined(post.payload.poll.result.option6Response);
-            if (!isEligible || pollResponse !== undefined) {
+            if (pollResponse !== undefined || !isLoggedIn) {
                 return (
                     <Grid
                         sx={

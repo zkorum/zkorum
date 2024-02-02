@@ -1,6 +1,4 @@
 import { nowZeroMs } from "@/shared/common/util";
-import { universityTypeToString } from "@/shared/types/university";
-import type { Eligibilities, PostAs } from "@/shared/types/zod";
 
 export function getTimeFromNow(time: Date): string {
     const now = nowZeroMs();
@@ -47,55 +45,6 @@ export function getTimeFromNow(time: Date): string {
         y += 1;
     }
     return `${y}y`;
-}
-
-export function getFromAuthor(postAs: PostAs): string {
-    if (postAs.university === undefined) {
-        return "a member";
-    }
-    const university = postAs.university;
-    switch (university.type) {
-        case "student":
-            return `a ${universityTypeToString(university.type).toLowerCase()}`;
-        case "alum":
-            return `an ${universityTypeToString(
-                university.type
-            ).toLowerCase()}`;
-        case "faculty":
-            return `a ${universityTypeToString(university.type).toLowerCase()}`;
-    }
-}
-
-export function getToEligibility(eligibility: Eligibilities): string {
-    if (
-        eligibility === undefined ||
-        eligibility.university === undefined ||
-        eligibility.university.types === undefined ||
-        (eligibility.university.types.length === 3 &&
-            eligibility.university.student === undefined)
-    ) {
-        return "any member";
-    }
-    const universityTypes = eligibility.university.types;
-    if (
-        universityTypes.includes("student") &&
-        eligibility.university.student !== undefined
-    ) {
-        // means that there are certain rules
-        const otherThanStudentsTypes = universityTypes.filter(
-            (type) => type !== "student"
-        );
-        if (otherThanStudentsTypes.length === 0) {
-            return `some students`;
-        }
-        if (universityTypes.length === 3) {
-            return `some students and any other member`;
-        }
-        return `some students and any ${otherThanStudentsTypes.join(
-            " or "
-        )} member`;
-    }
-    return `any ${universityTypes.join(" or ")} member`;
 }
 
 export function zeroIfUndefined(value: number | undefined): number {

@@ -5,11 +5,10 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { createComment, fetchMoreComments, fetchPost } from "@/request/post";
 import { stringToBytes } from "@/shared/common/arrbufs";
 import {
+    BASE_SCOPE,
     MAX_LENGTH_COMMENT,
     buildContext,
     buildCreateCommentContextFromPayload,
-    scopeFromPostAs,
-    type PostAsProps,
 } from "@/shared/shared";
 import type {
     CreateCommentPayload,
@@ -150,20 +149,10 @@ export function PostPageLayout() {
                 1,
                 new Set<string>([
                     "credentialSubject.domain",
-                    "credentialSubject.type",
                 ])
             );
-            const postAs: PostAsProps = {
-                postAsAlum: false,
-                postAsFaculty: false,
-                postAsStudent: false,
-                postAsCampus: false,
-                postAsProgram: false,
-                postAsAdmissionYear: false,
-                postAsCountries: false,
-            };
             //////// PSEUDONYMS /////
-            const scope = stringToBytes(scopeFromPostAs(postAs));
+            const scope = stringToBytes(BASE_SCOPE);
             const attributeNames = new Map();
             const secretSubject = "credentialSubject.secret";
             const attributesSecretCredential =
@@ -212,7 +201,7 @@ export function PostPageLayout() {
             );
             builder.context = context;
             builder.nonce = randomFieldElement();
-            builder.version = "0.1.0";
+            builder.version = import.meta.env.VITE_PRESENTATION_VERSION;
             const presentation = builder.finalize();
             dispatch(showInfo(sendingPost));
             await createComment(presentation, createCommentPayload);

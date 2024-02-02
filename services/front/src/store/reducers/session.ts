@@ -2,7 +2,6 @@ import { nowZeroMs } from "@/shared/common/util";
 import type {
     Devices,
     EmailCredentialsPerEmail,
-    FormCredentialsPerEmail,
     ResponseToPollPayload,
     UnblindedSecretCredentialsPerType,
     PollResponsesByPostUid,
@@ -38,7 +37,6 @@ export interface SessionData {
     isRegistration?: boolean;
     syncingDevices?: Devices;
     emailCredentialsPerEmail?: EmailCredentialsPerEmail;
-    formCredentialsPerEmail?: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType?: UnblindedSecretCredentialsPerType;
     pollResponsesByPostUid?: PollResponsesByPostUid;
 }
@@ -58,7 +56,6 @@ interface LoggedInProps {
     isRegistration: boolean;
     syncingDevices: Devices;
     emailCredentialsPerEmail: EmailCredentialsPerEmail;
-    formCredentialsPerEmail: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType: UnblindedSecretCredentialsPerType;
 }
 
@@ -80,12 +77,7 @@ interface AuthenticatingProps {
 
 interface UpdateCredentialsProps {
     emailCredentialsPerEmail: EmailCredentialsPerEmail;
-    formCredentialsPerEmail: FormCredentialsPerEmail;
     unblindedSecretCredentialsPerType: UnblindedSecretCredentialsPerType;
-}
-
-interface UpdateFormCredentialsProps {
-    formCredentialsPerEmail: FormCredentialsPerEmail;
 }
 
 interface InsertOrUpdateResponseToPollProps {
@@ -187,8 +179,6 @@ export const sessionSlice = createSlice({
                     action.payload.syncingDevices;
                 state.sessions[action.payload.email].emailCredentialsPerEmail =
                     action.payload.emailCredentialsPerEmail;
-                state.sessions[action.payload.email].formCredentialsPerEmail =
-                    action.payload.formCredentialsPerEmail;
                 state.sessions[
                     action.payload.email
                 ].unblindedSecretCredentialsPerType =
@@ -204,8 +194,6 @@ export const sessionSlice = createSlice({
                     syncingDevices: action.payload.syncingDevices,
                     emailCredentialsPerEmail:
                         action.payload.emailCredentialsPerEmail,
-                    formCredentialsPerEmail:
-                        action.payload.formCredentialsPerEmail,
                     unblindedSecretCredentialsPerType:
                         action.payload.unblindedSecretCredentialsPerType,
                 };
@@ -299,10 +287,6 @@ export const sessionSlice = createSlice({
                     action.payload.emailCredentialsPerEmail;
                 state.sessions[
                     state.activeSessionEmail
-                ].formCredentialsPerEmail =
-                    action.payload.formCredentialsPerEmail;
-                state.sessions[
-                    state.activeSessionEmail
                 ].unblindedSecretCredentialsPerType =
                     action.payload.unblindedSecretCredentialsPerType;
             }
@@ -341,20 +325,6 @@ export const sessionSlice = createSlice({
                 }
             }
         },
-        updateFormCredentials: (
-            state,
-            action: PayloadAction<UpdateFormCredentialsProps>
-        ) => {
-            if (
-                state.activeSessionEmail in state.sessions &&
-                state.sessions[state.activeSessionEmail].status === "logged-in"
-            ) {
-                state.sessions[
-                    state.activeSessionEmail
-                ].formCredentialsPerEmail =
-                    action.payload.formCredentialsPerEmail;
-            }
-        },
     },
 });
 
@@ -372,7 +342,6 @@ export const {
     switchActiveSession,
     setPendingSessionCodeExpiry,
     updateCredentials,
-    updateFormCredentials,
     insertOrUpdateResponseToPoll,
 } = sessionSlice.actions;
 

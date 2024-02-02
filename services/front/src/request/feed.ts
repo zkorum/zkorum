@@ -32,7 +32,6 @@ export async function fetchFeedMore({
                 },
                 payload: value.payload,
                 author: value.author,
-                eligibility: value.eligibility,
             };
         });
     } else {
@@ -66,7 +65,6 @@ export async function fetchFeedRecent({
                 },
                 payload: value.payload,
                 author: value.author,
-                eligibility: value.eligibility,
             };
         });
     } else {

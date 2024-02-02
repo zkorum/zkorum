@@ -177,8 +177,6 @@ export function OtpVerify() {
                             syncingDevices: verifyOtpData.syncingDevices,
                             emailCredentialsPerEmail:
                                 verifyOtpData.emailCredentialsPerEmail,
-                            formCredentialsPerEmail:
-                                verifyOtpData.formCredentialsPerEmail,
                             secretCredentialsPerType:
                                 verifyOtpData.secretCredentialsPerType,
                         });
@@ -231,8 +229,6 @@ export function OtpVerify() {
                                     syncingDevices: auth409.syncingDevices,
                                     emailCredentialsPerEmail:
                                         auth409.emailCredentialsPerEmail,
-                                    formCredentialsPerEmail:
-                                        auth409.formCredentialsPerEmail,
                                     secretCredentialsPerType:
                                         auth409.secretCredentialsPerType,
                                 });

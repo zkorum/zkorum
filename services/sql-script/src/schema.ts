@@ -14,11 +14,12 @@ import {
     jsonb,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
-// import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
+// import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_COMMENT, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
+// WARNING - change this in shared.ts as well
 const MAX_LENGTH_OPTION = 30;
-const MAX_LENGTH_TITLE = 140;
-const MAX_LENGTH_COMMENT = 1250;
-const MAX_LENGTH_BODY = 3000;
+const MAX_LENGTH_TITLE = 200;
+const MAX_LENGTH_COMMENT = 6000;
+const MAX_LENGTH_BODY = 6000;
 
 export const bytea = customType<{
     data: string;
@@ -108,6 +109,7 @@ export const deviceTable = pgTable("device", {
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
+    userAgent: text("user_agent").notNull(), // user-agent length is not fixed
     // TODO: isTrusted: boolean("is_trusted").notNull(), // if set to true by user then, device should stay logged-in indefinitely until log out action
     sessionExpiry: timestamp("session_expiry").notNull(), // on register, a new login session is always started, hence the notNull. This column is updated to now + 15 minutes at each request when isTrusted == false. Otherwise, expiry will be now + 1000 years - meaning no expiry.
     encryptedSymmKey: bytea("encrypted_symm_key"), // symmetric key used for client-side encryption. Devices belonging to the same user and with encryptedSymmKey!=null automatically sync credentials and presentations between each other
@@ -142,6 +144,7 @@ export const authAttemptTable = pgTable("auth_attempt", {
     email: varchar("email", { length: 254 }).notNull(),
     userId: uuid("user_id").notNull(),
     didExchange: varchar("did_exchange", { length: 1000 }).notNull(), // TODO: make sure of length
+    userAgent: text("user_agent").notNull(), // user-agent length is not fixed
     code: integer("code").notNull(), // one-time password sent to the email ("otp")
     codeExpiry: timestamp("code_expiry").notNull(),
     guessAttemptAmount: integer("guess_attempt_amount").default(0).notNull(),
@@ -190,43 +193,6 @@ export const credentialEmailTable = pgTable(
         return {
             credEmUniqueEmailNotRevoked: uniqueIndex(
                 "cred_em_unique_email_not_revoked"
-            )
-                .on(table.email)
-                .where(eq(table.isRevoked, false)),
-        };
-    }
-);
-
-// formCredential" is an Email-specific Form verifiable credential issued by ZKorum, as opposed to a VC issued by an external authority. It contains the result of the forms filled by the associated user.
-// this table may contain revoke credentials
-// TODO: make sure there are always one and only one active credential (not revoked)
-export const credentialFormTable = pgTable(
-    "credential_form",
-    {
-        id: serial("id").primaryKey(),
-        credential: jsonb("credential").$type<object>().notNull(), // encoded credential
-        isRevoked: boolean("is_revoked").notNull().default(false),
-        email: varchar("email", { length: 254 })
-            .references(() => emailTable.email)
-            .notNull(),
-        pkVersion: integer("pk_version").default(1).notNull(),
-        createdAt: timestamp("created_at", {
-            mode: "date",
-            precision: 0,
-        })
-            .defaultNow()
-            .notNull(),
-        updatedAt: timestamp("updated_at", {
-            mode: "date",
-            precision: 0,
-        })
-            .defaultNow()
-            .notNull(),
-    },
-    (table) => {
-        return {
-            credFoUniqueEmailNotRevoked: uniqueIndex(
-                "cred_fo_unique_email_not_revoked"
             )
                 .on(table.email)
                 .where(eq(table.isRevoked, false)),
@@ -283,217 +249,10 @@ export const credentialSecretTable = pgTable(
     }
 );
 
-// TODO: use zod or something to maintain one set of type only
-export const credentialType = pgEnum("credential_type", [
-    "university",
-    "company",
-    // TODO
-]);
-
-// TODO: use zod or something to maintain one set of type only
-export const universityType = pgEnum("university_type", [
-    "student",
-    "alum",
-    "faculty",
-    // TODO
-]);
-
-// TODO: add table for default values for universities that frontend can select from
-// TODO: add table for overriden values for each universities (starting from essec)
-
-export const facultyPersonaTable = pgTable("faculty_persona", {
-    id: serial("id").primaryKey(),
-    // TODO: add attributes
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-export const facultyEligibilityTable = pgTable("faculty_eligibility", {
-    id: serial("id").primaryKey(),
-    // TODO: add attributes
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-export const alumPersonaTable = pgTable("alum_persona", {
-    id: serial("id").primaryKey(),
-    // TODO: add attributes
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-export const alumEligibilityTable = pgTable("alum_eligibility", {
-    id: serial("id").primaryKey(),
-    // TODO: add attributes
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-export const studentPersonaTable = pgTable("student_persona", {
-    id: serial("id").primaryKey(),
-    campus: varchar("campus", { length: 255 }), // "cergy" or "rabat" for example - may be null because other univ than essec won't have this option by default
-    program: varchar("program", { length: 255 }), // "MiM" or "PhD" for example
-    admissionYear: integer("admissionYear"), // "MiM" or "PhD" for example
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-export const studentEligibilityTable = pgTable("student_eligibility", {
-    id: serial("id").primaryKey(),
-    campuses: varchar("campus", { length: 255 }).array(),
-    programs: varchar("program", { length: 255 }).array(),
-    admissionYears: integer("admissionYear").array(), // "MiM" or "PhD" for example
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-export const universityPersonaTable = pgTable("university_persona", {
-    id: serial("id").primaryKey(),
-    type: universityType("type").notNull(),
-    countries: char("countries", { length: 2 }).array(), // holds TCountryCode
-    studentPersonaId: integer("student_persona_id").references(
-        () => studentPersonaTable.id
-    ),
-    alumPersonaId: integer("alum_persona_id").references(
-        () => alumPersonaTable.id
-    ),
-    facultyPersonaId: integer("faculty_persona_id").references(
-        () => facultyPersonaTable.id
-    ),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-export const universityEligibilityTable = pgTable("university_eligibility", {
-    id: serial("id").primaryKey(),
-    types: universityType("types").array(),
-    countries: char("countries", { length: 2 }).array(), // holds TCountryCode
-    studentEligibilityId: integer("student_eligibility_id").references(
-        () => studentEligibilityTable.id
-    ), // if not null then type must contain "student"
-    alumEligibilityId: integer("alum_eligibility_id").references(
-        () => alumEligibilityTable.id
-    ),
-    facultyEligibilityId: integer("faculty_eligibility_id").references(
-        () => facultyEligibilityTable.id
-    ),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-// note that external credentials & combining multiple email credentials aren't supported yet
-// TODO: would be nice to find a way to enforce unique persona per entry as there are only a limited number of possible combination...
 export const personaTable = pgTable("persona", {
     id: serial("id").primaryKey(),
     domain: varchar("domain", { length: 255 }).notNull(), // should be enough for subdomains? TODO: test that
-    type: credentialType("type").notNull(),
-    universityPersonaId: integer("university_persona_id").references(
-        () => universityPersonaTable.id
-    ),
     // TODO add other potential persona - one of them should not be null
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
-// TODO: would be nice to find a way to enforce unique eligibility per entry as there are only a limited number of possible combination... (though much more than personas)
-export const eligibilityTable = pgTable("eligibility", {
-    id: serial("id").primaryKey(),
-    domains: varchar("domain", { length: 255 }).array(),
-    types: credentialType("type").array(),
-    universityEligibilityId: integer("university_eligibility_id").references(
-        () => universityEligibilityTable.id
-    ),
-    // TODO add other potential eligibility subtype
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -528,13 +287,12 @@ export const pseudonymTable = pgTable("pseudonym", {
         .notNull(),
 });
 
-// TODO rename poll to post
-export const pollOptionsTable = pgTable("poll_options", {
+export const pollTable = pgTable("poll", {
     id: serial("id").primaryKey(),
     postId: integer("post_id") // "postAs"
         .notNull()
         .unique() // currently, a poll can only be associated with one post
-        .references(() => pollTable.id), // the author of the poll
+        .references(() => postTable.id), // the author of the poll
     option1: varchar("option1", { length: MAX_LENGTH_OPTION }).notNull(),
     option1Response: integer("option1_response").default(0).notNull(),
     option2: varchar("option2", { length: MAX_LENGTH_OPTION }).notNull(),
@@ -561,8 +319,7 @@ export const pollOptionsTable = pgTable("poll_options", {
         .notNull(),
 });
 
-// TODO rename poll to post
-export const pollTable = pgTable("poll", {
+export const postTable = pgTable("post", {
     id: serial("id").primaryKey(),
     slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL, should be not null and unique, a script will populate them...
     presentation: jsonb("presentation").$type<object>().notNull(), // verifiable presentation as received
@@ -573,23 +330,8 @@ export const pollTable = pgTable("poll", {
     authorId: integer("author_id") // "postAs"
         .notNull()
         .references(() => pseudonymTable.id), // the author of the poll
-    eligibilityId: integer("eligibility_id")
-        .notNull()
-        .references(() => eligibilityTable.id),
     title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
     body: varchar("body", { length: MAX_LENGTH_BODY }),
-    option1: varchar("option1", { length: MAX_LENGTH_OPTION }).notNull(),
-    option1Response: integer("option1_response").default(0).notNull(),
-    option2: varchar("option2", { length: MAX_LENGTH_OPTION }).notNull(),
-    option2Response: integer("option2_response").default(0).notNull(),
-    option3: varchar("option3", { length: MAX_LENGTH_OPTION }),
-    option3Response: integer("option3_response"),
-    option4: varchar("option4", { length: MAX_LENGTH_OPTION }),
-    option4Response: integer("option4_response"),
-    option5: varchar("option5", { length: MAX_LENGTH_OPTION }),
-    option5Response: integer("option5_response"),
-    option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
-    option6Response: integer("option6_response"),
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -625,7 +367,7 @@ export const pollResponseTable = pgTable("poll_response", {
         .references(() => pseudonymTable.id), // the author of the poll
     pollId: integer("poll_id")
         .notNull()
-        .references(() => pollOptionsTable.id),
+        .references(() => pollTable.id),
     optionChosen: integer("option_chosen").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -654,7 +396,7 @@ export const commentTable = pgTable("comment", {
         .references(() => pseudonymTable.id), // the author of the poll
     content: varchar("content", { length: MAX_LENGTH_COMMENT }).notNull(),
     postId: integer("post_id")
-        .references(() => pollTable.id)
+        .references(() => postTable.id)
         .notNull(),
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {

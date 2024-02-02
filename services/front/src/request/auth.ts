@@ -118,8 +118,6 @@ export async function authenticate(
                             syncingDevices: auth409.syncingDevices,
                             emailCredentialsPerEmail:
                                 auth409.emailCredentialsPerEmail,
-                            formCredentialsPerEmail:
-                                auth409.formCredentialsPerEmail,
                             secretCredentialsPerType:
                                 auth409.secretCredentialsPerType,
                         });
@@ -276,7 +274,6 @@ interface OnLoggedInProps {
     isRegistration: boolean;
     syncingDevices: Devices; // adapts the welcome page if there is only one device in that list
     emailCredentialsPerEmail: EmailCredentialsPerEmail;
-    formCredentialsPerEmail: EmailCredentialsPerEmail; // adapts the welcome page whether it is empty or not
     secretCredentialsPerType: SecretCredentialsPerType;
 }
 
@@ -295,7 +292,6 @@ export async function onLoggedIn({
     isRegistration,
     syncingDevices, // adapts the welcome page if there is only one device in that list
     emailCredentialsPerEmail,
-    formCredentialsPerEmail, // adapts the welcome page whether it is empty or not
     secretCredentialsPerType,
 }: OnLoggedInProps) {
     // this is a first time registration or a login from a known device that's been synced already
@@ -314,7 +310,6 @@ export async function onLoggedIn({
             isRegistration: isRegistration,
             syncingDevices: syncingDevices, // adapts the welcome page if there is only one device in that list
             emailCredentialsPerEmail: emailCredentialsPerEmail,
-            formCredentialsPerEmail: formCredentialsPerEmail, // adapts the welcome page whether it is empty or not
             unblindedSecretCredentialsPerType:
                 await unblindedSecretCredentialsPerTypeFrom(
                     secretCredentialsPerType,
@@ -375,7 +370,6 @@ export async function recoverAccount() {
             syncingDevices: recoverAccountResp.syncingDevices,
             emailCredentialsPerEmail:
                 recoverAccountResp.emailCredentialsPerEmail,
-            formCredentialsPerEmail: recoverAccountResp.formCredentialsPerEmail,
             secretCredentialsPerType:
                 recoverAccountResp.secretCredentialsPerType,
         });

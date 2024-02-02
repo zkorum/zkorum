@@ -119,7 +119,6 @@ export async function fetchPost(postSlugId: PostSlugId): Promise<PostFetch200> {
         },
         payload: postResponse.payload,
         author: postResponse.author,
-        eligibility: postResponse.eligibility,
     };
     const comments = commentsResponse.map((comment) => {
         return {

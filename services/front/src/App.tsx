@@ -7,9 +7,8 @@ import { Box, CssBaseline } from "@mui/material";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { MainLoading } from "./MainLoading";
 import { RootDialog } from "./RootDialog";
-import { COMMUNITIES, POST } from "./common/navigation";
+import { POST } from "./common/navigation";
 import { AppLayout } from "./components/AppLayout";
-import { CommunitiesLayout } from "./components/communities/CommunitiesLayout";
 import { ErrorPage } from "./components/error/ErrorPage";
 import { Feed } from "./components/feed/Feed";
 import { PostPage } from "./components/post/PostPage";
@@ -36,10 +35,6 @@ export const routes = [
                     {
                         path: "/",
                         element: <Feed />,
-                    },
-                    {
-                        path: COMMUNITIES,
-                        element: <CommunitiesLayout />,
                     },
                 ],
             },
