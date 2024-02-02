@@ -609,10 +609,10 @@ export function PostView({
                                     viewMode === "feed" ? "body2" : "body1"
                                 }
                             >
-                                {post.payload.body.length <= 60
+                                {post.payload.body.length <= 200
                                     ? post.payload.body
                                     : viewMode === "feed"
-                                    ? `${post.payload.body.slice(0, 60)}...`
+                                    ? `${post.payload.body.slice(0, 200)}...`
                                     : post.payload.body}
                             </Typography>
                         </Grid>
