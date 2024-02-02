@@ -120,7 +120,7 @@ export function BottomNavbar() {
                         label={Nav.Communities}
                         value={Nav.Communities}
                         icon={<GroupsIcon color="disabled" />}
-                        sx={{ minWidth: "60px" }}
+                        sx={{ visibility: "hidden", minWidth: "60px" }}
                     />
                     <BottomNavigationAction
                         label={Nav.Post}
@@ -146,14 +146,14 @@ export function BottomNavbar() {
                                 <NotificationsIcon color="disabled" />
                             </Badge>
                         }
-                        sx={{ minWidth: "60px" }}
+                        sx={{ visibility: "hidden", minWidth: "60px" }}
                     />
                     <BottomNavigationAction
                         disabled
                         label={Nav.Jobs}
                         value={Nav.Jobs}
                         icon={<WorkIcon color="disabled" />}
-                        sx={{ minWidth: "60px" }}
+                        sx={{ visibility: "hidden", minWidth: "60px" }}
                     />
                 </BottomNavigation>
             </Paper>

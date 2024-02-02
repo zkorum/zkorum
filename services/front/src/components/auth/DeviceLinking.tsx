@@ -70,6 +70,7 @@ export function DeviceLinking({ devices }: DeviceLinkingProps) {
                 </Box>
                 <Box sx={{ mt: 1 }}>
                     <LoadingButton
+                        variant="contained"
                         loading={isRecoveringAccount}
                         onClick={async () => {
                             try {
@@ -82,7 +83,6 @@ export function DeviceLinking({ devices }: DeviceLinkingProps) {
                                 setIsRecoveringAccount(false);
                             }
                         }} // we're explicit with email, just in case we use the wrong DID
-                        color={"error"}
                     >
                         Recover your account
                     </LoadingButton>

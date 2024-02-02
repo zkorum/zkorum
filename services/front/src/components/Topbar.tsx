@@ -104,6 +104,7 @@ export function Topbar() {
                             <Grid flexGrow={1} maxWidth="50%">
                                 <TextField
                                     disabled
+                                    sx={{ visibility: "hidden" }}
                                     placeholder="Coming soon..."
                                     margin="none"
                                     fullWidth
