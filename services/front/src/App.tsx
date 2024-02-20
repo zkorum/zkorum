@@ -4,6 +4,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { Box, CssBaseline } from "@mui/material";
+import { createRef } from "react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { MainLoading } from "./MainLoading";
 import { RootDialog } from "./RootDialog";
@@ -15,6 +16,20 @@ import { PostPage } from "./components/post/PostPage";
 import { PostPageLayout } from "./components/post/PostPageLayout";
 import { useAppSelector } from "./hooks";
 
+const postRoute = {
+    path: `${POST}/:postSlugId`,
+    element: <PostPage />,
+    nodeRef: createRef(),
+};
+
+const feedRoute = {
+    path: "/",
+    nodeRef: createRef(),
+    element: <Feed />,
+};
+
+export const innerRoutes = [postRoute, feedRoute];
+
 export const routes = [
     {
         element: <RootDialog />,
@@ -22,21 +37,11 @@ export const routes = [
         children: [
             {
                 element: <PostPageLayout />,
-                children: [
-                    {
-                        path: `${POST}/:postSlugId`,
-                        element: <PostPage />,
-                    },
-                ],
+                children: [postRoute],
             },
             {
                 element: <AppLayout />,
-                children: [
-                    {
-                        path: "/",
-                        element: <Feed />,
-                    },
-                ],
+                children: [feedRoute],
             },
         ],
     },

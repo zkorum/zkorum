@@ -1,18 +1,17 @@
 import Box from "@mui/material/Box";
-import { useAppSelector } from "../../hooks";
-import { AuthForm } from "./AuthForm";
-import { ChooseExistingAccount } from "./ChooseExistingAccount";
 import Divider from "@mui/material/Divider";
+import React from "react";
+import { useAppSelector } from "../../hooks";
 import {
     selectActiveSessionEmail,
     selectSortedSessionsData,
 } from "../../store/selector";
-import React from "react";
+import { AuthForm } from "./AuthForm";
+import { ChooseExistingAccount } from "./ChooseExistingAccount";
 
 export type EmailValidity =
     | "valid_authorized"
     | "valid_unauthorized"
-    | "invalid_authorized" // authorized domain but invalid email format
     | "incorrect"; // syntaxically incorrect email
 
 export function Authenticate() {

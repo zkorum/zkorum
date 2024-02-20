@@ -19,6 +19,7 @@ import {
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import {
     and,
+    asc,
     desc,
     eq,
     gt,
@@ -2245,7 +2246,7 @@ export class Service {
                 ? lt(postTable.updatedAt, lastReactedAt)
                 : gt(postTable.updatedAt, lastReactedAt);
         const results = await db
-            .selectDistinctOn([postTable.updatedAt, postTable.id], {
+            .selectDistinctOn([postTable.lastReactedAt, postTable.id], {
                 // poll payload
                 title: postTable.title,
                 body: postTable.body,
@@ -2282,7 +2283,7 @@ export class Service {
                 eq(personaTable.id, pseudonymTable.personaId)
             )
             .leftJoin(pollTable, eq(postTable.id, pollTable.postId))
-            .orderBy(desc(postTable.updatedAt), desc(postTable.id))
+            .orderBy(desc(postTable.lastReactedAt), desc(postTable.id))
             .limit(actualLimit)
             .where(
                 showHidden === true
@@ -2741,7 +2742,7 @@ export class Service {
                 personaTable,
                 eq(personaTable.id, pseudonymTable.personaId)
             )
-            .orderBy(desc(commentTable.updatedAt), desc(commentTable.id))
+            .orderBy(asc(commentTable.updatedAt), desc(commentTable.id))
             .limit(actualLimit)
             .where(
                 showHidden === true

@@ -1,29 +1,16 @@
 import AppBar from "@mui/material/AppBar";
+import Button from "@mui/material/Button";
 import Toolbar from "@mui/material/Toolbar";
 import Grid from "@mui/material/Unstable_Grid2";
-import { HideOnScroll } from "./HideOnScroll";
-import Button from "@mui/material/Button";
-import { openAuthModal } from "../store/reducers/session";
 import { useAppDispatch, useAppSelector } from "../hooks";
-import IconButton from "@mui/material/IconButton";
-import Badge from "@mui/material/Badge";
+import { openAuthModal } from "../store/reducers/session";
+import { HideOnScroll } from "./HideOnScroll";
 // import { useNavigate } from "react-router-dom";
-import { LoginMenu } from "./auth/LoginMenu";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import SearchIcon from "@mui/icons-material/Search";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import React from "react";
-import MenuList from "@mui/material/MenuList";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import DevicesIcon from "@mui/icons-material/Devices";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import Link from "@mui/material/Link";
+import { ZKorumIcon } from "@/ZKorumIcon";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Box from "@mui/material/Box";
+import { LoginMenu } from "./auth/LoginMenu";
 // import { ReactComponent as ZKorumIcon } from "../assets/logo.svg";
 // import SvgIcon from "@mui/material/SvgIcon";
 
@@ -38,46 +25,14 @@ export function Topbar() {
         return state.sessions.activeSessionEmail;
     });
 
-    const isTheOnlyDevice = useAppSelector((state) => {
-        const activeSessionEmail = state.sessions.activeSessionEmail;
-        if (
-            activeSessionEmail === "" ||
-            !(activeSessionEmail in state.sessions.sessions) ||
-            state.sessions.sessions[activeSessionEmail].status !== "logged-in"
-        ) {
-            return false;
-        }
-        const syncingDevices =
-            state.sessions.sessions[activeSessionEmail]?.syncingDevices;
-        if (syncingDevices === undefined) {
-            return true;
-        }
-        return syncingDevices.length === 1;
-    });
-    const [anchorElMoreMenu, setAnchorElMoreMenu] =
-        React.useState<null | HTMLElement>(null);
-    const moreMenuIsOpen = Boolean(anchorElMoreMenu);
-    const handleClickMoreMenu = (
-        event: React.MouseEvent<HTMLButtonElement>
-    ) => {
-        setAnchorElMoreMenu(event.currentTarget);
-    };
-    const handleCloseMoreMenu = () => {
-        setAnchorElMoreMenu(null);
-    };
-
-    function handleOnClickAbout() {
-        handleCloseMoreMenu();
-    }
-
-    function handleOnClickDevices() {
-        handleCloseMoreMenu();
+    function scrollToTop() {
+        window.scrollTo(0, 0);
     }
 
     return (
         <>
             <HideOnScroll direction={"down"}>
-                <AppBar>
+                <AppBar onClick={scrollToTop}>
                     <Toolbar disableGutters>
                         <Grid
                             sx={{ ml: 0.2 }}
@@ -90,10 +45,11 @@ export function Topbar() {
                             <Grid>
                                 {activeSessionEmail === "" ? (
                                     <Button
-                                        variant="contained"
-                                        onClick={() =>
-                                            dispatch(openAuthModal())
-                                        }
+                                        variant="outlined"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            dispatch(openAuthModal());
+                                        }}
                                     >
                                         Log in
                                     </Button>
@@ -102,135 +58,61 @@ export function Topbar() {
                                 )}
                             </Grid>
                             <Grid flexGrow={1} maxWidth="50%">
-                                <TextField
-                                    disabled
-                                    sx={{ visibility: "hidden" }}
-                                    placeholder="Coming soon..."
-                                    margin="none"
-                                    fullWidth
-                                    id="standard-basic"
-                                    variant="standard"
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <SearchIcon />
-                                            </InputAdornment>
-                                        ),
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
                                     }}
-                                />
+                                >
+                                    <Box>
+                                        <Grid
+                                            container
+                                            direction="column"
+                                            alignItems="center"
+                                        >
+                                            <Grid>
+                                                <ZKorumIcon />
+                                            </Grid>
+                                        </Grid>
+                                    </Box>
+                                </Box>
                             </Grid>
-                            <Grid>
-                                <IconButton
-                                    aria-controls={
-                                        moreMenuIsOpen
-                                            ? "more-vert-button"
-                                            : undefined
-                                    }
-                                    aria-haspopup="true"
-                                    aria-expanded={
-                                        moreMenuIsOpen ? "true" : undefined
-                                    }
-                                    onClick={handleClickMoreMenu}
+                            <Grid sx={{ color: "grey" }}>
+                                <Button
+                                    sx={{ textTransform: "none" }}
+                                    variant="text"
+                                    color="inherit"
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        window.open(
+                                            "https://about.zkorum.com/",
+                                            "_blank",
+                                            "noopener, noreferrer"
+                                        );
+                                    }}
                                 >
-                                    {isTheOnlyDevice ? (
-                                        <Badge
-                                            color="error"
-                                            variant="dot"
-                                            invisible={false}
+                                    <Grid container direction="row">
+                                        <Grid
+                                            container
+                                            direction="row"
+                                            spacing={1}
+                                            justifyContent="center"
+                                            alignItems="flex-start"
                                         >
-                                            <MoreVertIcon />
-                                        </Badge>
-                                    ) : (
-                                        <MoreVertIcon />
-                                    )}
-                                </IconButton>
-                                <Menu
-                                    id="more-menu"
-                                    anchorEl={anchorElMoreMenu}
-                                    open={moreMenuIsOpen}
-                                    onClose={handleCloseMoreMenu}
-                                >
-                                    <MenuList>
-                                        <MenuItem
-                                            disabled
-                                            onClick={() =>
-                                                handleOnClickDevices()
-                                            }
-                                        >
-                                            <ListItemIcon>
-                                                {isTheOnlyDevice ? (
-                                                    <Badge
-                                                        color="error"
-                                                        variant="dot"
-                                                        invisible={false}
-                                                    >
-                                                        <DevicesIcon fontSize="small" />
-                                                    </Badge>
-                                                ) : (
-                                                    <DevicesIcon fontSize="small" />
-                                                )}
-                                            </ListItemIcon>
-                                            <ListItemText>Devices</ListItemText>
-                                        </MenuItem>
-                                        <MenuItem
-                                            onClick={() => handleOnClickAbout()}
-                                        >
-                                            <Link
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                href="https://about.zkorum.com"
-                                                color="inherit"
-                                                underline="none"
-                                            >
-                                                <Grid container direction="row">
-                                                    <Grid>
-                                                        <ListItemIcon>
-                                                            <InfoOutlinedIcon fontSize="small" />
-                                                        </ListItemIcon>
-                                                    </Grid>
-                                                    <Grid
-                                                        container
-                                                        direction="row"
-                                                        spacing={1}
-                                                        justifyContent="center"
-                                                        alignItems="flex-start"
-                                                    >
-                                                        <Grid>
-                                                            <ListItemText>
-                                                                About
-                                                            </ListItemText>
-                                                        </Grid>
-                                                        <Grid>
-                                                            <FontAwesomeIcon
-                                                                // color="rgba(0, 0, 0, 0.6)"
-                                                                size="xs"
-                                                                icon={
-                                                                    faArrowUpRightFromSquare
-                                                                }
-                                                            />
-                                                        </Grid>
-                                                    </Grid>
-                                                </Grid>
-                                            </Link>
-                                        </MenuItem>
-                                    </MenuList>
-                                </Menu>
-                                {/* <Menu */}
-                                {/*     id="more-menu" */}
-                                {/*     anchorEl={anchorElMoreMenu} */}
-                                {/*     open={moreMenuIsOpen} */}
-                                {/*     onClose={handleCloseMoreMenu} */}
-                                {/*     MenuListProps={{ */}
-                                {/*         "aria-labelledby": "basic-button", */}
-                                {/*     }} */}
-                                {/* > */}
-                                {/*     <MenuItem onClick={handleCloseMoreMenu}> */}
-                                {/*         About */}
-                                {/*     </MenuItem> */}
-                                {/*     <MenuItem onClick={handleCloseMoreMenu}> */}
-                                {/*         My devices */}
-                                {/*     </MenuItem> */}
-                                {/* </Menu> */}
+                                            <Grid>About</Grid>
+                                            <Grid>
+                                                <FontAwesomeIcon
+                                                    // color="rgba(0, 0, 0, 0.6)"
+                                                    size="xs"
+                                                    icon={
+                                                        faArrowUpRightFromSquare
+                                                    }
+                                                />
+                                            </Grid>
+                                        </Grid>
+                                    </Grid>
+                                </Button>
                             </Grid>
                         </Grid>
                     </Toolbar>

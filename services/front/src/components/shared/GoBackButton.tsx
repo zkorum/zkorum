@@ -2,14 +2,14 @@ import IconButton from "@mui/material/IconButton";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 
 interface GoBackButtonProps {
-    onClick: () => void;
+    onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }
 
 export function GoBackButton({ onClick }: GoBackButtonProps) {
     return (
         <IconButton
             aria-label="close"
-            onClick={onClick}
+            onClick={(e) => onClick(e)}
             sx={{
                 position: "absolute",
                 left: 8,

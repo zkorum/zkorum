@@ -1,16 +1,16 @@
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import React from "react";
 import { handleOnAuthenticate } from "@/request/auth";
-import FormControlLabel from "@mui/material/FormControlLabel";
+import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
+import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
+import React from "react";
 import type { EmailValidity } from "./Authenticate";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 
 interface AuthFormProps {
     autoFocus: boolean;
@@ -33,7 +33,7 @@ export function AuthForm({
     emailHelper,
     setEmailHelper,
 }: AuthFormProps) {
-    const [isTrusted, setIsTrusted] = React.useState<boolean>(false);
+    const [isTrusted, setIsTrusted] = React.useState<boolean>(true);
 
     function validateEmail(emailToValidate: string) {
         if (emailToValidate === "") {
@@ -49,17 +49,10 @@ export function AuthForm({
         } else {
             const result = zodauthorizedEmail.safeParse(emailToValidate);
             if (!result.success) {
-                if (emailToValidate.split("@")[1] === "essec.edu") {
-                    setIsEmailValid("invalid_authorized");
-                    setEmailHelper(
-                        'Please use your ESSEC email address starting with "b", e.g: "b012345678@essec.edu"'
-                    );
-                } else {
-                    setIsEmailValid("valid_unauthorized");
-                    setEmailHelper(
-                        "This version is currently reserved for ESSEC Business School. Stay tuned for future releases!"
-                    );
-                }
+                setIsEmailValid("valid_unauthorized");
+                setEmailHelper(
+                    "This version is currently reserved for ESSEC Business School. Stay tuned for future releases!"
+                );
             } else {
                 setIsEmailValid("valid_authorized");
                 setEmailHelper(" ");
@@ -82,8 +75,8 @@ export function AuthForm({
                     required
                     fullWidth
                     id="email"
-                    label="Community Email Address"
-                    placeholder="bXXXXXXXX@essec.edu"
+                    label="ESSEC Email Address"
+                    placeholder="yuting.jiang@essec.edu"
                     name="email"
                     error={
                         email !== "" &&
