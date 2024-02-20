@@ -18,6 +18,7 @@ import {
     buildContext,
     buildCreatePostContextFromPayload,
 } from "@/shared/shared";
+import type { Post } from "@/shared/types/zod";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
 import { closePostModal } from "@/store/reducers/post";
 import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
@@ -35,20 +36,17 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import PollIcon from "@mui/icons-material/Poll";
 import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
 import useTheme from "@mui/material/styles/useTheme";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import React from "react";
 import { PollCreateView } from "./PollCreateView";
-import TextField from "@mui/material/TextField";
-import type { Post } from "@/shared/types/zod";
 
 interface PostDialogProps {
     posts: PostsType;
@@ -423,14 +421,39 @@ export function PostDialog({
                         </IconButton>
                     </Grid>
                     <Grid alignSelf="flex-start">
-                        <Button
-                            onClick={async () => {
-                                await onCreatePost();
-                            }}
-                            variant="contained"
+                        <Grid
+                            container
+                            justifyContent="center"
+                            alignItems="center"
+                            spacing={2}
                         >
-                            Post
-                        </Button>
+                            <Grid>
+                                <Button
+                                    startIcon={
+                                        hasPoll ? (
+                                            <PollIcon fontSize="medium" />
+                                        ) : (
+                                            <PollOutlinedIcon fontSize="medium" />
+                                        )
+                                    }
+                                    size="medium"
+                                    variant="text"
+                                    onClick={() => setHasPoll(!hasPoll)}
+                                >
+                                    {hasPoll ? "Remove the poll" : "Add a poll"}
+                                </Button>
+                            </Grid>
+                            <Grid>
+                                <Button
+                                    onClick={async () => {
+                                        await onCreatePost();
+                                    }}
+                                    variant="contained"
+                                >
+                                    Post
+                                </Button>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
             </DialogTitle>
@@ -534,24 +557,6 @@ export function PostDialog({
                     ) : null}
                 </Grid>
             </DialogContent>
-            <DialogActions>
-                <Box>
-                    <Button
-                        startIcon={
-                            hasPoll ? (
-                                <PollIcon fontSize="medium" />
-                            ) : (
-                                <PollOutlinedIcon fontSize="medium" />
-                            )
-                        }
-                        size="medium"
-                        variant="text"
-                        onClick={() => setHasPoll(!hasPoll)}
-                    >
-                        {hasPoll ? "Remove the poll" : "Add a poll"}
-                    </Button>
-                </Box>
-            </DialogActions>
         </Dialog>
     );
 }

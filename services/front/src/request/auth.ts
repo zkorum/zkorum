@@ -7,8 +7,9 @@ import {
     switchActiveSession,
     type SessionData,
     openAuthModal,
-    awaitingSyncing,
     awaitingSyncingLoggedOut,
+    closeAuthModal,
+    resetPendingSession,
 } from "../store/reducers/session";
 import * as DID from "../crypto/ucan/did/index";
 import {
@@ -301,6 +302,11 @@ export async function onLoggedIn({
     // we also ignore the potential I/O error from storing the key. This should be dealt with by re-trying.
     await storeSymmKeyLocally(encryptedSymmKey, userId);
 
+    if (!isRegistration) {
+        store.dispatch(closeAuthModal());
+        store.dispatch(resetPendingSession());
+    }
+
     store.dispatch(
         loggedIn({
             email: email,
@@ -319,23 +325,11 @@ export async function onLoggedIn({
     );
 }
 
-export async function onAwaitingSyncing({
-    email,
-    userId,
-    sessionExpiry,
-    syncingDevices,
-}: OnSyncingProps) {
+export async function onAwaitingSyncing({ email, userId }: OnSyncingProps) {
     // this is a first time registration or a login from a known device that's been synced already
     await copyKeypairs(email, userId);
 
-    store.dispatch(
-        awaitingSyncing({
-            email: email,
-            userId: userId,
-            sessionExpiry: sessionExpiry,
-            syncingDevices,
-        })
-    );
+    await recoverAccount();
 }
 
 export function redirectToLogin() {

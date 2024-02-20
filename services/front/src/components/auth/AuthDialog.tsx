@@ -21,8 +21,8 @@ import { dataNotPersisted } from "../error/message";
 import { GoBackButton } from "../shared/GoBackButton";
 import { Authenticate } from "./Authenticate";
 import { DeviceLinking } from "./DeviceLinking";
-import { LoggedInPage } from "./LoggedInPage";
 import { OtpVerify } from "./OtpVerify";
+import { WelcomePage } from "./WelcomePage";
 
 // TODO: maybe refactor this as routable dialog or something?
 export function AuthDialog() {
@@ -32,13 +32,7 @@ export function AuthDialog() {
         const pendingSessionEmail = state.sessions.pendingSessionEmail;
         return state.sessions.sessions[pendingSessionEmail]?.status;
     });
-    const isRegistration = useAppSelector((state) => {
-        const pendingSessionEmail = state.sessions.pendingSessionEmail;
-        return state.sessions.sessions[pendingSessionEmail]?.isRegistration;
-    });
     const devices = useAppSelector(selectPendingSessionDevices);
-    const isTheOnlyDevice =
-        devices === undefined ? false : devices.length === 1;
 
     // TODO: prompt users to download the app to home screen
     // force especially iOS people to do so, otherwise this is useless
@@ -122,12 +116,13 @@ export function AuthDialog() {
                             <OtpVerify />
                         ) : pendingSessionStatus === "awaiting-syncing" ? (
                             <DeviceLinking devices={devices} />
-                        ) : pendingSessionStatus === "logged-in" &&
-                          (isRegistration || isTheOnlyDevice) ? (
-                            <LoggedInPage
-                                isRegistration={isRegistration as boolean}
-                                isTheOnlyDevice={isTheOnlyDevice as boolean}
-                            /> // when status is logged-in, there must be data in these fields - TODO: provide better error-handling later (notably via better typing and by being careful when loading from fresh local DB)
+                        ) : pendingSessionStatus === "logged-in" ? (
+                            <WelcomePage
+                                onNextButtonClicked={() => {
+                                    dispatch(closeAuthModal());
+                                    dispatch(resetPendingSession());
+                                }}
+                            />
                         ) : (
                             <Authenticate />
                         )}

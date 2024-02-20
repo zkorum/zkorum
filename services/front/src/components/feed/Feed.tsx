@@ -14,6 +14,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import { PostView } from "./PostView";
+import Skeleton from "@mui/material/Skeleton";
+import Stack from "@mui/material/Stack";
 
 export function Feed() {
     const {
@@ -33,6 +35,17 @@ export function Feed() {
     const isAdmin = activeSessionEmail.endsWith("zkorum.com");
 
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        return reloadPosts();
+    }, []);
+    const reloadPosts = () => {
+        const moreTimeout = loadMore(false);
+        return () => {
+            clearTimeout(moreTimeout);
+            setLoadingMore(false);
+        };
+    };
 
     const loadRecent = React.useCallback(
         (lastReactedAt: Date) => {
@@ -116,13 +129,46 @@ export function Feed() {
         return (
             <Grid pt={1} container justifyContent="center" alignItems="center">
                 <Grid>
-                    {context?.loadingMore ? (
+                    {context?.posts.length === undefined ||
+                    context?.posts.length === 0 ? (
+                        <Box width="100%">
+                            {[...Array(5)].map(() => {
+                                return (
+                                    <Stack spacing={1}>
+                                        {/* For variant="text", adjust the height via font-size */}
+                                        <Skeleton
+                                            animation="wave"
+                                            variant="text"
+                                            sx={{ fontSize: "1rem" }}
+                                        />
+
+                                        {/* For other variants, adjust the size with `width` and `height` */}
+                                        <Skeleton
+                                            animation="wave"
+                                            variant="circular"
+                                            width={40}
+                                            height={40}
+                                        />
+                                        <Skeleton
+                                            animation="wave"
+                                            variant="rectangular"
+                                            width={210}
+                                            height={60}
+                                        />
+                                        <Skeleton
+                                            animation="wave"
+                                            variant="rounded"
+                                            width={210}
+                                            height={60}
+                                        />
+                                    </Stack>
+                                );
+                            })}
+                        </Box>
+                    ) : context?.loadingMore ? (
                         <Box sx={{ mt: 1, color: "#fff" }}>
                             <CircularProgress size="1em" color="inherit" />
                         </Box>
-                    ) : context?.posts.length === undefined ||
-                      context?.posts.length === 0 ? (
-                        <Typography>Initializing...</Typography>
                     ) : context?.posts.length !== undefined &&
                       context.posts.length <= 4 ? (
                         <Button
@@ -190,7 +236,9 @@ export function Feed() {
                                         event: React.MouseEvent<HTMLElement>
                                     ) => {
                                         event.preventDefault();
-                                        navigate(routeToNavigateTo);
+                                        navigate(routeToNavigateTo, {
+                                            preventScrollReset: true,
+                                        });
                                     }}
                                     post={post}
                                     updatePost={updatePost}

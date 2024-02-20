@@ -45,6 +45,7 @@ export function BottomNavbar() {
             setValue(Nav.Notifications);
         } else {
             setValue(Nav.Home);
+            window.scrollTo(0, 0);
         }
     }, [location]);
 

@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { usePost } from "@/post";
 import { fetchMoreComments, fetchRecentComments } from "@/request/post";
 import type {
@@ -5,6 +6,8 @@ import type {
     PostComment,
     PostSlugId,
 } from "@/shared/types/zod";
+import { openAuthModal } from "@/store/reducers/session";
+import { selectActiveSessionEmail } from "@/store/selector";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -15,9 +18,6 @@ import { Virtuoso } from "react-virtuoso";
 import { ErrorPage } from "../error/ErrorPage";
 import { PostView } from "../feed/PostView";
 import { CommentView } from "./CommentView";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { selectActiveSessionEmail } from "@/store/selector";
-import { openAuthModal } from "@/store/reducers/session";
 
 export interface UpdateCommentHiddenStatusProps {
     slugId: PostSlugId;
@@ -80,7 +80,9 @@ export function PostPage() {
         if (wasCommentSent) {
             setLoadingRecent(true);
             const recentTimeout = loadRecent(
-                comments.length > 0 ? comments[0].metadata.updatedAt : undefined
+                comments.length > 0
+                    ? comments[comments.length - 1].metadata.updatedAt
+                    : undefined
             );
             return () => {
                 clearTimeout(recentTimeout);
@@ -111,8 +113,8 @@ export function PostPage() {
                 );
                 if (actualNewComments.length !== 0) {
                     setComments((prevComments) => [
-                        ...prevComments,
                         ...actualNewComments,
+                        ...prevComments,
                     ]);
                 }
             } finally {
@@ -139,8 +141,8 @@ export function PostPage() {
                 );
                 if (actualNewComments.length !== 0) {
                     setComments((prevComments) => [
-                        ...actualNewComments,
                         ...prevComments,
+                        ...actualNewComments,
                     ]);
                 }
             } finally {

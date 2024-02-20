@@ -41,15 +41,20 @@ export async function doLoadMore(
             showHidden: isAdmin === true,
             lastReactedAt: lastPostReactedAt,
         });
-        const actualNewPosts = newPosts.filter(
-            (post) =>
-                !posts.some(
-                    (existingPost) =>
-                        existingPost.metadata.uid === post.metadata.uid
-                )
-        );
-        if (actualNewPosts.length !== 0) {
-            setPosts((prevPosts) => [...prevPosts, ...actualNewPosts]);
+        if (lastPostReactedAt !== undefined) {
+            const actualNewPosts = newPosts.filter(
+                (post) =>
+                    !posts.some(
+                        (existingPost) =>
+                            existingPost.metadata.uid === post.metadata.uid
+                    )
+            );
+            if (actualNewPosts.length !== 0) {
+                setPosts((prevPosts) => [...prevPosts, ...actualNewPosts]);
+            }
+        } else {
+            // refresh feed entirely
+            setPosts(newPosts);
         }
     } finally {
         setLoadingMore(false);

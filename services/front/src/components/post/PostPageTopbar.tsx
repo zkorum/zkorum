@@ -1,17 +1,22 @@
+import { FEED } from "@/common/navigation";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Grid from "@mui/material/Unstable_Grid2";
-import { GoBackButton } from "../shared/GoBackButton";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FEED } from "@/common/navigation";
+import { GoBackButton } from "../shared/GoBackButton";
 
 export function PostPageTopbar() {
     const navigate = useNavigate();
     const location = useLocation();
+
+    function scrollToTop() {
+        window.scrollTo(0, 0);
+    }
+
     return (
         <>
             <AppBar>
-                <Toolbar disableGutters>
+                <Toolbar onClick={scrollToTop} disableGutters>
                     <Grid
                         sx={{ ml: 0.2 }}
                         container
@@ -22,7 +27,8 @@ export function PostPageTopbar() {
                     >
                         <Grid>
                             <GoBackButton
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation();
                                     if (location.key !== "default") {
                                         navigate(-1);
                                     } else {

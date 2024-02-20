@@ -10,13 +10,8 @@ import {
 // Alpha only for ESSEC
 function isAuthorizedEmail(email: Email) {
     const preprocessedEmail = email.trim();
-    const [localPart, fqdn] = preprocessedEmail.split("@");
-    if (
-        (preprocessedEmail.startsWith("b") &&
-            /^\d+$/.test(localPart.substring(1)) &&
-            fqdn === "essec.edu") ||
-        fqdn === "zkorum.com"
-    ) {
+    const [_, fqdn] = preprocessedEmail.split("@");
+    if (fqdn === "essec.edu" || fqdn === "zkorum.com") {
         return true;
     } else {
         return false;

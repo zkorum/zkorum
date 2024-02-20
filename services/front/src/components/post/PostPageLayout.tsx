@@ -147,9 +147,7 @@ export function PostPageLayout() {
             ); // first credential added was secret credential, for posting must be an unbound one
             builder.markAttributesRevealed(
                 1,
-                new Set<string>([
-                    "credentialSubject.domain",
-                ])
+                new Set<string>(["credentialSubject.domain"])
             );
             //////// PSEUDONYMS /////
             const scope = stringToBytes(BASE_SCOPE);
