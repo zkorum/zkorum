@@ -4,11 +4,12 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, ScrollRestoration } from "react-router-dom";
 import { AuthDialog } from "./components/auth/AuthDialog";
 import { PostDialog } from "./components/post/PostDialog";
 import type { FeedContextType, PostsType } from "./feed";
 import type { PostUid, ResponseToPollPayload } from "./shared/types/zod";
+import type { StateSnapshot } from "react-virtuoso";
 
 export interface UpdatePostHiddenStatusProps {
     uid: PostUid;
@@ -19,6 +20,9 @@ export function RootDialog() {
     const [posts, setPosts] = React.useState<PostsType>(() => []);
     const [loadingMore, setLoadingMore] = React.useState<boolean>(false);
     const [loadingRecent, setLoadingRecent] = React.useState<boolean>(false);
+    const [virtuosoState, setVirtuosoState] = React.useState<
+        StateSnapshot | undefined
+    >(undefined);
 
     const snackbarState = useAppSelector((state) => {
         return state.snackbar;
@@ -120,8 +124,15 @@ export function RootDialog() {
                         setLoadingMore,
                         loadingRecent,
                         setLoadingRecent,
+                        virtuosoState,
+                        setVirtuosoState,
                     } satisfies FeedContextType
                 }
+            />
+            <ScrollRestoration
+                getKey={(location, _matches) => {
+                    return location.pathname;
+                }}
             />
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}

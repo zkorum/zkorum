@@ -19,7 +19,7 @@ interface FetchDataProps {
     activeSessionEmail: string;
 }
 
-export const fetchData = async function ({
+export const refreshCredentials = async function ({
     activeSessionStatus,
     activeSessionUserId,
     activeSessionEmail,
@@ -55,10 +55,12 @@ export function AppLayout() {
         setLoadingMore,
         loadingRecent,
         setLoadingRecent,
+        virtuosoState,
+        setVirtuosoState,
     } = usePostsAndMeta();
     React.useEffect(() => {
         // this will set the values in redux store and eventually update this page
-        fetchData({
+        refreshCredentials({
             activeSessionStatus,
             activeSessionUserId,
             activeSessionEmail,
@@ -80,6 +82,8 @@ export function AppLayout() {
                         setLoadingMore,
                         loadingRecent,
                         setLoadingRecent,
+                        virtuosoState,
+                        setVirtuosoState,
                     }}
                 />
             </Box>
