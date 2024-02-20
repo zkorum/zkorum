@@ -48,6 +48,13 @@ let theme = createTheme({
         },
     },
     components: {
+        MuiCssBaseline: {
+            styleOverrides: `
+        html, body {
+          overscroll-behavior: none;
+        }
+      `,
+        },
         MuiAppBar: {
             styleOverrides: {
                 colorPrimary: {

@@ -1,6 +1,7 @@
 import { usePostsAndMeta } from "@/feed";
 import { useAppSelector } from "@/hooks";
 import { fetchAndUpdateCredentials } from "@/request/credential";
+import type { SessionStatus } from "@/store/reducers/session";
 import {
     selectActiveSessionEmail,
     selectActiveSessionStatus,
@@ -11,6 +12,34 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import { BottomNavbar } from "./BottomNavbar";
 import { Topbar } from "./Topbar";
+
+interface FetchDataProps {
+    activeSessionStatus: SessionStatus | undefined;
+    activeSessionUserId: string | undefined;
+    activeSessionEmail: string;
+}
+
+export const fetchData = async function ({
+    activeSessionStatus,
+    activeSessionUserId,
+    activeSessionEmail,
+}: FetchDataProps) {
+    if (
+        activeSessionStatus === "logged-in" &&
+        activeSessionUserId !== undefined
+    ) {
+        try {
+            await fetchAndUpdateCredentials(
+                activeSessionUserId,
+                activeSessionEmail
+            );
+        } catch (e) {
+            console.error(e);
+        }
+    }
+};
+
+export const feedWrapperId = "feedWrapper";
 
 export function AppLayout() {
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
@@ -27,43 +56,33 @@ export function AppLayout() {
         loadingRecent,
         setLoadingRecent,
     } = usePostsAndMeta();
-
     React.useEffect(() => {
         // this will set the values in redux store and eventually update this page
-        const fetchData = async function () {
-            if (
-                activeSessionStatus === "logged-in" &&
-                activeSessionUserId !== undefined
-            ) {
-                try {
-                    await fetchAndUpdateCredentials(
-                        activeSessionUserId,
-                        activeSessionEmail
-                    );
-                } catch (e) {
-                    console.error(e);
-                }
-            }
-        };
-        fetchData();
+        fetchData({
+            activeSessionStatus,
+            activeSessionUserId,
+            activeSessionEmail,
+        });
     }, []);
 
     /* <Container maxWidth={false} disableGutters> */
     return (
         <Box sx={{ height: "100%", backgroundColor: "#e6e9ec" }}>
             <Topbar />
-            <Outlet
-                context={{
-                    posts,
-                    setPosts,
-                    updatePost,
-                    updatePostHiddenStatus,
-                    loadingMore,
-                    setLoadingMore,
-                    loadingRecent,
-                    setLoadingRecent,
-                }}
-            />
+            <Box id={feedWrapperId}>
+                <Outlet
+                    context={{
+                        posts,
+                        setPosts,
+                        updatePost,
+                        updatePostHiddenStatus,
+                        loadingMore,
+                        setLoadingMore,
+                        loadingRecent,
+                        setLoadingRecent,
+                    }}
+                />
+            </Box>
             <Box>
                 {/* https://stackoverflow.com/a/48510444/11046178 */}
                 <Box sx={(theme) => theme.mixins.toolbar} />

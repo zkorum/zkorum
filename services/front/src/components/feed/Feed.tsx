@@ -2,20 +2,26 @@ import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
 import { doLoadMore, doLoadRecent, usePostsAndMeta } from "@/feed";
 import { useAppSelector } from "@/hooks";
 import type { ExtendedPostData } from "@/shared/types/zod";
-import { selectActiveSessionEmail } from "@/store/selector";
+import {
+    selectActiveSessionEmail,
+    selectActiveSessionStatus,
+    selectActiveSessionUserId,
+} from "@/store/selector";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
 import Link from "@mui/material/Link";
+import Skeleton from "@mui/material/Skeleton";
+import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Unstable_Grid2";
+import PullToRefresh from "pulltorefreshjs";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import { PostView } from "./PostView";
-import Skeleton from "@mui/material/Skeleton";
-import Stack from "@mui/material/Stack";
+import { fetchData } from "../AppLayout";
 
 export function Feed() {
     const {
@@ -30,15 +36,14 @@ export function Feed() {
     } = usePostsAndMeta();
 
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
+    const activeSessionUserId = useAppSelector(selectActiveSessionUserId);
+    const activeSessionStatus = useAppSelector(selectActiveSessionStatus);
     const isLoggedIn =
         activeSessionEmail !== "" && activeSessionEmail !== undefined;
     const isAdmin = activeSessionEmail.endsWith("zkorum.com");
 
     const navigate = useNavigate();
 
-    React.useEffect(() => {
-        return reloadPosts();
-    }, []);
     const reloadPosts = () => {
         const moreTimeout = loadMore(false);
         return () => {
@@ -46,6 +51,23 @@ export function Feed() {
             setLoadingMore(false);
         };
     };
+
+    React.useEffect(() => {
+        PullToRefresh.init({
+            mainElement: "#feedWrapper",
+            async onRefresh() {
+                await fetchData({
+                    activeSessionStatus,
+                    activeSessionUserId,
+                    activeSessionEmail,
+                });
+                reloadPosts();
+            },
+        });
+        return () => {
+            PullToRefresh.destroyAll();
+        };
+    }, []);
 
     const loadRecent = React.useCallback(
         (lastReactedAt: Date) => {
