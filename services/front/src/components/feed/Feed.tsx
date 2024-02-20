@@ -19,9 +19,9 @@ import Grid from "@mui/material/Unstable_Grid2";
 import PullToRefresh from "pulltorefreshjs";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Virtuoso } from "react-virtuoso";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { PostView } from "./PostView";
-import { fetchData } from "../AppLayout";
+import { feedWrapperId, refreshCredentials } from "../AppLayout";
 
 export function Feed() {
     const {
@@ -33,6 +33,8 @@ export function Feed() {
         setLoadingMore,
         loadingRecent,
         setLoadingRecent,
+        virtuosoState,
+        setVirtuosoState,
     } = usePostsAndMeta();
 
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
@@ -44,6 +46,8 @@ export function Feed() {
 
     const navigate = useNavigate();
 
+    const ref = React.useRef<VirtuosoHandle>(null);
+
     const reloadPosts = () => {
         const moreTimeout = loadMore(false);
         return () => {
@@ -54,9 +58,9 @@ export function Feed() {
 
     React.useEffect(() => {
         PullToRefresh.init({
-            mainElement: "#feedWrapper",
+            mainElement: `#${feedWrapperId}`,
             async onRefresh() {
-                await fetchData({
+                await refreshCredentials({
                     activeSessionStatus,
                     activeSessionUserId,
                     activeSessionEmail,
@@ -67,7 +71,7 @@ export function Feed() {
         return () => {
             PullToRefresh.destroyAll();
         };
-    }, []);
+    }, [activeSessionUserId, activeSessionEmail, activeSessionStatus]);
 
     const loadRecent = React.useCallback(
         (lastReactedAt: Date) => {
@@ -154,9 +158,9 @@ export function Feed() {
                     {context?.posts.length === undefined ||
                     context?.posts.length === 0 ? (
                         <Box width="100%">
-                            {[...Array(5)].map(() => {
+                            {[1, 2, 3, 4, 5, 6, 7].map((id) => {
                                 return (
-                                    <Stack spacing={1}>
+                                    <Stack key={`stack-${id}`} spacing={1}>
                                         {/* For variant="text", adjust the height via font-size */}
                                         <Skeleton
                                             animation="wave"
@@ -222,7 +226,9 @@ export function Feed() {
         <Container maxWidth="sm" disableGutters>
             <Virtuoso
                 useWindowScroll
+                ref={ref}
                 data={posts}
+                restoreStateFrom={virtuosoState}
                 endReached={(index) => loadMore(true, index)}
                 context={{
                     loadingMore: loadingMore,
@@ -246,6 +252,12 @@ export function Feed() {
                             width="100%"
                         >
                             <Link
+                                onClick={() => {
+                                    // This is key to repositioning virutoso scroll at the exact same position as before
+                                    ref.current?.getState((snapshot) => {
+                                        setVirtuosoState(snapshot);
+                                    });
+                                }}
                                 href={postPage}
                                 underline="none"
                                 sx={{
@@ -258,9 +270,11 @@ export function Feed() {
                                         event: React.MouseEvent<HTMLElement>
                                     ) => {
                                         event.preventDefault();
-                                        navigate(routeToNavigateTo, {
-                                            preventScrollReset: true,
+                                        // This is key to repositioning virutoso scroll at the exact same position as before
+                                        ref.current?.getState((snapshot) => {
+                                            setVirtuosoState(snapshot);
                                         });
+                                        navigate(routeToNavigateTo);
                                     }}
                                     post={post}
                                     updatePost={updatePost}
@@ -274,6 +288,52 @@ export function Feed() {
                 }}
                 components={{ Footer: LoadingMore }}
             />
+            {/* <Box width="100%"> */}
+            {/*     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((id) => { */}
+            {/*         return ( */}
+            {/*             <Link */}
+            {/*                 href={ */}
+            {/*                     posts !== undefined && posts.length >= 1 */}
+            {/*                         ? `${POST}/${posts[0].metadata.slugId}` */}
+            {/*                         : undefined */}
+            {/*                 } */}
+            {/*                 underline="none" */}
+            {/*                 sx={{ */}
+            {/*                     WebkitTapHighlightColor: "transparent", */}
+            {/*                 }} */}
+            {/*             > */}
+            {/*                 <Stack key={`stack2-${id}`} spacing={1}> */}
+            {/*                     {/1* For variant="text", adjust the height via font-size *1/} */}
+            {/*                     <Skeleton */}
+            {/*                         animation="wave" */}
+            {/*                         variant="text" */}
+            {/*                         sx={{ fontSize: "1rem" }} */}
+            {/*                     /> */}
+
+            {/*                     {/1* For other variants, adjust the size with `width` and `height` *1/} */}
+            {/*                     <Skeleton */}
+            {/*                         animation="wave" */}
+            {/*                         variant="circular" */}
+            {/*                         width={40} */}
+            {/*                         height={40} */}
+            {/*                     /> */}
+            {/*                     <Skeleton */}
+            {/*                         animation="wave" */}
+            {/*                         variant="rectangular" */}
+            {/*                         width={210} */}
+            {/*                         height={60} */}
+            {/*                     /> */}
+            {/*                     <Skeleton */}
+            {/*                         animation="wave" */}
+            {/*                         variant="rounded" */}
+            {/*                         width={210} */}
+            {/*                         height={60} */}
+            {/*                     /> */}
+            {/*                 </Stack> */}
+            {/*             </Link> */}
+            {/*         ); */}
+            {/*     })} */}
+            {/* </Box> */}
         </Container>
     );
 }

@@ -19,6 +19,8 @@ import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
 import {
     selectActiveEmailCredential,
     selectActiveSessionEmail,
+    selectActiveSessionStatus,
+    selectActiveSessionUserId,
     selectActiveUnboundSecretCredential,
 } from "@/store/selector";
 import {
@@ -40,8 +42,11 @@ import { BottomAddCommentBar } from "./BottomAddCommentBar";
 import { PostPageTopbar } from "./PostPageTopbar";
 import { openAuthModal } from "@/store/reducers/session";
 import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
+import PullToRefresh from "pulltorefreshjs";
+import { refreshCredentials } from "../AppLayout";
 
 export function PostPageLayout() {
+    const postPageWrapperId = "postPageWrapper";
     let { postSlugId } = useParams();
     const { hash } = useLocation();
 
@@ -65,12 +70,16 @@ export function PostPageLayout() {
                 replace: true,
             });
         } else if (!commentFocused && hash === HASH_IS_COMMENTING) {
-            navigate(`${POST}/${postSlugId}`, { replace: true });
+            navigate(`${POST}/${postSlugId}`, {
+                replace: true,
+            });
         }
     }, [commentFocused]);
 
     const dispatch = useAppDispatch();
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
+    const activeSessionUserId = useAppSelector(selectActiveSessionUserId);
+    const activeSessionStatus = useAppSelector(selectActiveSessionStatus);
     const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
     const activeUnboundSecretCredential = useAppSelector(
         selectActiveUnboundSecretCredential
@@ -94,27 +103,58 @@ export function PostPageLayout() {
         comment.length > MAX_LENGTH_COMMENT ||
         isContextNotLoaded;
 
-    React.useEffect(() => {
-        const fetchData = async function () {
-            if (postSlugId !== undefined) {
-                const cachedPost = getPost(posts, postSlugId);
-                if (cachedPost !== undefined) {
-                    setLoadedPost(cachedPost);
-                    const loadedComments = await fetchMoreComments({
-                        postSlugId,
-                    });
-                    setComments(loadedComments);
-                } else {
-                    const { post, comments } = await fetchPost(postSlugId);
-                    setLoadedPost(post);
-                    setComments(comments);
-                }
+    const fetchPostAndComments = async function () {
+        if (postSlugId !== undefined) {
+            const cachedPost = getPost(posts, postSlugId);
+            if (cachedPost !== undefined) {
+                setLoadedPost(cachedPost);
+                const loadedComments = await fetchMoreComments({
+                    postSlugId,
+                });
+                setComments(loadedComments);
             } else {
-                setLoadedPost(null);
+                await reloadPostAndComments(postSlugId);
             }
-        };
-        fetchData();
+        } else {
+            setLoadedPost(null);
+        }
+    };
+
+    async function reloadPostAndComments(postSlugId: string) {
+        const { post, comments } = await fetchPost(postSlugId);
+        setLoadedPost(post);
+        setComments(comments);
+    }
+
+    React.useEffect(() => {
+        fetchPostAndComments();
     }, [postSlugId]);
+
+    React.useEffect(() => {
+        PullToRefresh.init({
+            mainElement: `#${postPageWrapperId}`,
+            async onRefresh() {
+                await refreshCredentials({
+                    activeSessionStatus,
+                    activeSessionUserId,
+                    activeSessionEmail,
+                });
+                if (postSlugId !== undefined) {
+                    reloadPostAndComments(postSlugId);
+                } else {
+                    setLoadedPost(null);
+                }
+            },
+        });
+        return () => {
+            PullToRefresh.destroyAll();
+        };
+    }, [
+        setLoadedPost,
+        activeSessionUserId,
+        activeSessionEmail,
+        activeSessionStatus,
+    ]);
 
     const isLoggedIn =
         activeSessionEmail !== undefined && activeSessionEmail !== "";
@@ -217,19 +257,21 @@ export function PostPageLayout() {
     return (
         <Box sx={{ height: "100%", backgroundColor: "#e6e9ec" }}>
             <PostPageTopbar />
-            <Outlet
-                context={{
-                    post: loadedPost,
-                    comments,
-                    setComments,
-                    postSlugId,
-                    updatePost,
-                    updatePostHiddenStatus,
-                    wasCommentSent,
-                    commentFocused,
-                    setCommentFocused,
-                }}
-            />
+            <Box id={postPageWrapperId}>
+                <Outlet
+                    context={{
+                        post: loadedPost,
+                        comments,
+                        setComments,
+                        postSlugId,
+                        updatePost,
+                        updatePostHiddenStatus,
+                        wasCommentSent,
+                        commentFocused,
+                        setCommentFocused,
+                    }}
+                />
+            </Box>
             <Box sx={{ backgroundColor: "#ffff" }}>
                 {/* https://stackoverflow.com/a/48510444/11046178 */}
                 <Box mt={1} sx={(theme) => theme.mixins.toolbar} />

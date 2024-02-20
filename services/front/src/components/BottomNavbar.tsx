@@ -45,7 +45,6 @@ export function BottomNavbar() {
             setValue(Nav.Notifications);
         } else {
             setValue(Nav.Home);
-            window.scrollTo(0, 0);
         }
     }, [location]);
 
@@ -63,8 +62,12 @@ export function BottomNavbar() {
     const handleChange = (_event: React.SyntheticEvent, newValue: Nav) => {
         switch (newValue) {
             case Nav.Home:
-                setValue(Nav.Home);
-                navigate("/");
+                if (value === Nav.Home) {
+                    window.scrollTo(0, 0);
+                } else {
+                    setValue(Nav.Home);
+                    navigate("/");
+                }
                 break;
             case Nav.Jobs:
                 setValue(Nav.Jobs);

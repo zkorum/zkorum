@@ -5,6 +5,7 @@ import type {
 import { fetchFeedMore, fetchFeedRecent } from "@/request/feed";
 import { useOutletContext } from "react-router-dom";
 import type { UpdatePostHiddenStatusProps } from "./RootDialog";
+import type { StateSnapshot } from "react-virtuoso";
 
 export type FeedContextType = {
     posts: PostsType;
@@ -15,6 +16,10 @@ export type FeedContextType = {
     setLoadingMore: React.Dispatch<React.SetStateAction<boolean>>;
     loadingRecent: boolean;
     setLoadingRecent: React.Dispatch<React.SetStateAction<boolean>>;
+    virtuosoState: StateSnapshot | undefined;
+    setVirtuosoState: React.Dispatch<
+        React.SetStateAction<StateSnapshot | undefined>
+    >;
 };
 
 export function usePostsAndMeta() {
