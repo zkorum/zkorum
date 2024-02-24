@@ -7,5 +7,14 @@ COPY pnpm-lock.yaml ./
 RUN pnpm install
 COPY . ./
 RUN pnpm build
+
+# Install Python and pip
+RUN apk add --no-cache python3 python3-dev py3-pip
+
+# Copy requirements.txt and install Python packages
+COPY requirements.txt ./
+RUN pip3 install --no-cache-dir -r requirements.txt
+COPY src/python /zkorum
+
 EXPOSE 8080
 CMD ["pnpm", "start"]

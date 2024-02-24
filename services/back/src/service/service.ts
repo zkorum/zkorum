@@ -1,6 +1,7 @@
 import { toEncodedCID } from "@/shared/common/cid.js";
 import { nowZeroMs } from "@/shared/common/util.js";
 import { domainFromEmail, toUnionUndefined } from "@/shared/shared.js";
+import {PythonShell} from 'python-shell';
 import {
     type AuthenticateRequestBody,
     type EmailSecretCredentials,
@@ -81,6 +82,7 @@ import {
     parseSecretCredentialRequest,
     type PostAs,
 } from "./credential.js";
+import type { ToxicType } from "@/schema/enums.ts";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -1479,7 +1481,7 @@ export class Service {
             );
             if (
                 result.lastEmailSentAt.getTime() >=
-                    minutesIntervalAgo.getTime() &&
+                minutesIntervalAgo.getTime() &&
                 expectedExpiryTime.getTime() === result.codeExpiry.getTime() // code hasn't been guessed, because otherwise it would have been manually expired before the normal expiry time
             ) {
                 throw httpErrors.tooManyRequests(
@@ -1990,7 +1992,7 @@ export class Service {
                     if (result.isRevoked) {
                         (
                             secretCredentialsPerType[
-                                result.type
+                            result.type
                             ] as SecretCredentials
                         ).revoked.push({
                             // ts thinks secretCredentialsPerType[result.type] can be undefined :@
@@ -2002,7 +2004,7 @@ export class Service {
                     } else {
                         (
                             secretCredentialsPerType[
-                                result.type
+                            result.type
                             ] as SecretCredentials
                         ).active = {
                             // ts thinks secretCredentialsPerType[result.type] can be undefined :@
@@ -2075,6 +2077,293 @@ export class Service {
         };
     }
 
+    static async selectFacultyEligibilityIdFromAttributes({
+        db,
+    }: SelectFacultyEligibilityIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const results = await db
+            .select({
+                facultyEligibilityId: facultyEligibilityTable.id,
+            })
+            .from(facultyEligibilityTable);
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].facultyEligibilityId;
+        }
+    }
+
+    static async selectAlumEligibilityIdFromAttributes({
+        db,
+    }: SelectAlumEligibilityIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const results = await db
+            .select({
+                alumEligibilityId: alumEligibilityTable.id,
+            })
+            .from(alumEligibilityTable);
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].alumEligibilityId;
+        }
+    }
+
+    static async selectStudentEligibilityIdFromAttributes({
+        db,
+        campuses,
+        programs,
+        admissionYears,
+    }: SelectStudentEligibilityIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const campusesWhere =
+            campuses === undefined
+                ? isNull(studentEligibilityTable.campuses)
+                : eq(studentEligibilityTable.campuses, campuses);
+        const programWhere =
+            programs === undefined
+                ? isNull(studentEligibilityTable.programs)
+                : eq(studentEligibilityTable.programs, programs);
+        const admissionYearsWhere =
+            admissionYears === undefined
+                ? isNull(studentEligibilityTable.admissionYears)
+                : eq(studentEligibilityTable.admissionYears, admissionYears);
+
+        const results = await db
+            .select({
+                studentEligibilityId: studentEligibilityTable.id,
+            })
+            .from(studentEligibilityTable)
+            .where(and(campusesWhere, programWhere, admissionYearsWhere));
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].studentEligibilityId;
+        }
+    }
+
+    static async selectAlumPersonaIdFromAttributes({
+        db,
+    }: SelectAlumPersonaIdFromAttributesProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<number | undefined> {
+        const results = await db
+            .select({
+                alumPersonaId: alumPersonaTable.id,
+            })
+            .from(alumPersonaTable);
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].alumPersonaId;
+        }
+    }
+
+    static async selectFacultyPersonaIdFromAttributes({
+        db,
+    }: SelectFacultyPersonaIdFromAttributesProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<number | undefined> {
+        const results = await db
+            .select({
+                facultyPersonaId: facultyPersonaTable.id,
+            })
+            .from(facultyPersonaTable);
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].facultyPersonaId;
+        }
+    }
+
+    static async selectStudentPersonaIdFromAttributes({
+        db,
+        campus,
+        program,
+        admissionYear,
+    }: SelectStudentPersonaIdFromAttributesProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<number | undefined> {
+        const campusWhere =
+            campus === undefined
+                ? isNull(studentPersonaTable.campus)
+                : eq(studentPersonaTable.campus, campus);
+        const programWhere =
+            program === undefined
+                ? isNull(studentPersonaTable.program)
+                : eq(studentPersonaTable.program, program);
+        const admissionYearWhere =
+            admissionYear === undefined
+                ? isNull(studentPersonaTable.admissionYear)
+                : eq(studentPersonaTable.admissionYear, admissionYear);
+
+        const results = await db
+            .select({
+                studentPersonaId: studentPersonaTable.id,
+            })
+            .from(studentPersonaTable)
+            .where(and(campusWhere, programWhere, admissionYearWhere));
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].studentPersonaId;
+        }
+    }
+
+    static async selectUniversityEligibilityIdFromAttributes({
+        db,
+        types,
+        countries,
+        studentEligibilityId,
+        alumEligibilityId,
+        facultyEligibilityId,
+    }: SelectUniversityEligibilityIdFromAttributesProps): Promise<
+        number | undefined
+    > {
+        const typesWhere =
+            types === undefined
+                ? isNull(universityEligibilityTable.types)
+                : eq(universityEligibilityTable.types, types);
+        const countriesWhere =
+            countries === undefined
+                ? isNull(universityEligibilityTable.countries)
+                : eq(universityEligibilityTable.countries, countries);
+        const studentEligibilityIdWhere =
+            studentEligibilityId === undefined
+                ? isNull(universityEligibilityTable.studentEligibilityId)
+                : eq(
+                    universityEligibilityTable.studentEligibilityId,
+                    studentEligibilityId
+                );
+        const alumEligibilityIdWhere =
+            alumEligibilityId === undefined
+                ? isNull(universityEligibilityTable.alumEligibilityId)
+                : eq(
+                    universityEligibilityTable.alumEligibilityId,
+                    alumEligibilityId
+                );
+        const facultyEligibilityIdWhere =
+            facultyEligibilityId === undefined
+                ? isNull(universityEligibilityTable.facultyEligibilityId)
+                : eq(
+                    universityEligibilityTable.facultyEligibilityId,
+                    facultyEligibilityId
+                );
+
+        const results = await db
+            .select({
+                universityEligibilityId: universityEligibilityTable.id,
+            })
+            .from(universityEligibilityTable)
+            .where(
+                and(
+                    typesWhere,
+                    countriesWhere,
+                    studentEligibilityIdWhere,
+                    alumEligibilityIdWhere,
+                    facultyEligibilityIdWhere
+                )
+            );
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].universityEligibilityId;
+        }
+    }
+
+    static async selectUniversityPersonaIdFromAttributes({
+        db,
+        type,
+        countries,
+        studentPersonaId,
+        alumPersonaId,
+        facultyPersonaId,
+    }: SelectUniversityPersonaIdFromAttributesProps<
+        QueryResultHKT,
+        Record<string, unknown>,
+        TablesRelationalConfig
+    >): Promise<number | undefined> {
+        const countriesWhere =
+            countries === undefined
+                ? isNull(universityPersonaTable.countries)
+                : eq(universityPersonaTable.countries, countries);
+        const studentPersonaIdWhere =
+            studentPersonaId === undefined
+                ? isNull(universityPersonaTable.studentPersonaId)
+                : eq(universityPersonaTable.studentPersonaId, studentPersonaId);
+        const alumPersonaIdWhere =
+            alumPersonaId === undefined
+                ? isNull(universityPersonaTable.alumPersonaId)
+                : eq(universityPersonaTable.alumPersonaId, alumPersonaId);
+        const facultyPersonaIdWhere =
+            facultyPersonaId === undefined
+                ? isNull(universityPersonaTable.facultyPersonaId)
+                : eq(universityPersonaTable.facultyPersonaId, facultyPersonaId);
+
+        const results = await db
+            .select({
+                universityPersonaId: universityPersonaTable.id,
+            })
+            .from(universityPersonaTable)
+            .where(
+                and(
+                    eq(universityPersonaTable.type, type),
+                    countriesWhere,
+                    studentPersonaIdWhere,
+                    alumPersonaIdWhere,
+                    facultyPersonaIdWhere
+                )
+            );
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].universityPersonaId;
+        }
+    }
+
+    static async selectEligibilityId({
+        db,
+        domains,
+        types,
+        universityEligibilityId,
+    }: SelectEligibilityIdProps): Promise<number | undefined> {
+        const domainsWhere =
+            domains === undefined
+                ? isNull(eligibilityTable.domains)
+                : eq(eligibilityTable.domains, domains);
+        const typesWhere =
+            types === undefined
+                ? isNull(eligibilityTable.types)
+                : eq(eligibilityTable.types, types);
+        const universityEligibilityIdWhere =
+            universityEligibilityId === undefined
+                ? isNull(eligibilityTable.universityEligibilityId)
+                : eq(
+                    eligibilityTable.universityEligibilityId,
+                    universityEligibilityId
+                );
+        const results = await db
+            .select({
+                eligibilityId: eligibilityTable.id,
+            })
+            .from(eligibilityTable)
+            .where(and(domainsWhere, typesWhere, universityEligibilityIdWhere));
+        if (results.length === 0) {
+            return undefined;
+        } else {
+            return results[0].eligibilityId;
+        }
+    }
+
     static async selectPersonaIdFromAttributes({
         db,
         domain,
@@ -2116,6 +2405,133 @@ export class Service {
         }
         let personaId: number | undefined = undefined;
         // TODO: switch case depending on value of postAs.type - here we only do work for universities
+        if (postAs.typeSpecific !== undefined) {
+            let studentPersonaId: number | undefined = undefined;
+            let alumPersonaId: number | undefined = undefined;
+            let facultyPersonaId: number | undefined = undefined;
+            switch (postAs.typeSpecific.type) {
+                case zoduniversityType.enum.student:
+                    const selectedStudentPersonaId: number | undefined =
+                        await Service.selectStudentPersonaIdFromAttributes({
+                            db: tx,
+                            campus:
+                                postAs.typeSpecific.campus !== undefined
+                                    ? essecCampusToString(
+                                        postAs.typeSpecific.campus
+                                    )
+                                    : undefined,
+                            program:
+                                postAs.typeSpecific.program !== undefined
+                                    ? essecProgramToString(
+                                        postAs.typeSpecific.program
+                                    )
+                                    : undefined,
+                            admissionYear:
+                                postAs.typeSpecific.admissionYear !== undefined
+                                    ? postAs.typeSpecific.admissionYear
+                                    : undefined,
+                        });
+                    if (selectedStudentPersonaId === undefined) {
+                        const insertedStudentPersona = await tx
+                            .insert(studentPersonaTable)
+                            .values({
+                                campus:
+                                    postAs.typeSpecific.campus !== undefined
+                                        ? essecCampusToString(
+                                            postAs.typeSpecific.campus
+                                        )
+                                        : undefined,
+                                program:
+                                    postAs.typeSpecific.program !== undefined
+                                        ? essecProgramToString(
+                                            postAs.typeSpecific.program
+                                        )
+                                        : undefined,
+                                admissionYear:
+                                    postAs.typeSpecific.admissionYear !==
+                                        undefined
+                                        ? postAs.typeSpecific.admissionYear
+                                        : undefined,
+                            })
+                            .returning({
+                                insertedId: studentPersonaTable.id,
+                            });
+                        studentPersonaId = insertedStudentPersona[0].insertedId;
+                    } else {
+                        studentPersonaId = selectedStudentPersonaId;
+                    }
+                    break;
+                case zoduniversityType.enum.alum:
+                    const selectedAlumPersonaId: number | undefined =
+                        await Service.selectAlumPersonaIdFromAttributes({
+                            db: tx,
+                        });
+                    if (selectedAlumPersonaId === undefined) {
+                        const insertedAlumPersona = await tx
+                            .insert(alumPersonaTable)
+                            .values({ id: undefined }) // inserts default values, see https://github.com/drizzle-team/drizzle-orm/issues/1629
+                            .returning({
+                                insertedId: alumPersonaTable.id,
+                            });
+                        alumPersonaId = insertedAlumPersona[0].insertedId;
+                    } else {
+                        alumPersonaId = selectedAlumPersonaId;
+                    }
+                    break;
+                case zoduniversityType.enum.faculty:
+                    const selectedFacultyPersonaId: number | undefined =
+                        await Service.selectFacultyPersonaIdFromAttributes({
+                            db: tx,
+                        });
+                    if (selectedFacultyPersonaId === undefined) {
+                        const insertedFacultyPersona = await tx
+                            .insert(facultyPersonaTable)
+                            .values({ id: undefined })
+                            .returning({
+                                insertedId: facultyPersonaTable.id,
+                            });
+                        facultyPersonaId = insertedFacultyPersona[0].insertedId;
+                    } else {
+                        facultyPersonaId = selectedFacultyPersonaId;
+                    }
+                    break;
+            }
+            let personaCountries = undefined;
+            if (postAs.typeSpecific.countries) {
+                const postAsCountries = postAs.typeSpecific.countries;
+                personaCountries = Object.keys(
+                    postAs.typeSpecific.countries
+                ).filter(
+                    (countryCode) =>
+                        postAsCountries[countryCode as TCountryCode] === true
+                );
+            }
+            const selectedUniversityPersonaId: number | undefined =
+                await Service.selectUniversityPersonaIdFromAttributes({
+                    db: tx,
+                    type: postAs.typeSpecific.type,
+                    countries: personaCountries,
+                    studentPersonaId: studentPersonaId,
+                    alumPersonaId: alumPersonaId,
+                    facultyPersonaId: facultyPersonaId,
+                });
+
+            if (selectedUniversityPersonaId === undefined) {
+                const insertedUniversityPersona = await tx
+                    .insert(universityPersonaTable)
+                    .values({
+                        type: postAs.typeSpecific.type,
+                        countries: personaCountries,
+                        studentPersonaId: studentPersonaId,
+                        alumPersonaId: alumPersonaId,
+                        facultyPersonaId: facultyPersonaId,
+                    })
+                    .returning({ insertedId: personaTable.id });
+                universityPersonaId = insertedUniversityPersona[0].insertedId;
+            } else {
+                universityPersonaId = selectedUniversityPersonaId;
+            }
+        }
         const selectedPersonaId: number | undefined =
             await Service.selectPersonaIdFromAttributes({
                 db: tx,
@@ -2167,6 +2583,211 @@ export class Service {
                 pseudonym: pseudonym,
             });
             /////////////////////////////////////////////////////////////////////////////////////////
+
+            //////////////////////// ELIGIBILITY ///////////////////////////////////////////////////
+            let eligibilityId: number | undefined = undefined;
+            let universityEligibilityId: number | undefined = undefined;
+            let eligibilityTypes: UniversityType[] = [];
+            let eligibilityCountries: TCountryCode[] = [];
+            let studentEligibilityId: number | undefined = undefined;
+            let alumEligibilityId: number | undefined = undefined;
+            let facultyEligibilityId: number | undefined = undefined;
+            if (post.eligibility !== undefined) {
+                if (
+                    post.eligibility.countries !== undefined &&
+                    post.eligibility.countries.length == 1
+                ) {
+                    if (isEqual(post.eligibility.countries, ["FR"])) {
+                        eligibilityCountries = ["FR"];
+                    } else {
+                        const allCountriesButFrance = Object.keys(
+                            allCountries
+                        ).filter((country) => country !== "FR");
+                        eligibilityCountries =
+                            allCountriesButFrance as TCountryCode[];
+                    }
+                }
+                if (post.eligibility.student === true) {
+                    eligibilityTypes.push(zoduniversityType.enum.student);
+                    if (
+                        (post.eligibility.admissionYears !== undefined &&
+                            post.eligibility.admissionYears.length > 0) ||
+                        (post.eligibility.campuses !== undefined &&
+                            post.eligibility.campuses.length > 0) ||
+                        (post.eligibility.programs !== undefined &&
+                            post.eligibility.programs.length > 0)
+                    ) {
+                        const selectedStudentEligibilityId: number | undefined =
+                            await Service.selectStudentEligibilityIdFromAttributes(
+                                {
+                                    db: tx,
+                                    campuses:
+                                        post.eligibility.campuses !== undefined
+                                            ? post.eligibility.campuses.map(
+                                                (campus) =>
+                                                    essecCampusToString(
+                                                        campus
+                                                    )
+                                            )
+                                            : undefined,
+                                    programs:
+                                        post.eligibility.programs !== undefined
+                                            ? post.eligibility.programs.map(
+                                                (program) =>
+                                                    essecProgramToString(
+                                                        program
+                                                    )
+                                            )
+                                            : undefined,
+                                    admissionYears:
+                                        post.eligibility.admissionYears !==
+                                            undefined
+                                            ? post.eligibility.admissionYears
+                                            : undefined,
+                                }
+                            );
+                        if (selectedStudentEligibilityId === undefined) {
+                            const insertedStudentEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
+                                .insert(studentEligibilityTable)
+                                .values({
+                                    campuses:
+                                        post.eligibility.campuses !== undefined
+                                            ? post.eligibility.campuses.map(
+                                                (campus) =>
+                                                    essecCampusToString(
+                                                        campus
+                                                    )
+                                            )
+                                            : undefined,
+                                    programs:
+                                        post.eligibility.programs !== undefined
+                                            ? post.eligibility.programs.map(
+                                                (program) =>
+                                                    essecProgramToString(
+                                                        program
+                                                    )
+                                            )
+                                            : undefined,
+                                    admissionYears:
+                                        post.eligibility.admissionYears !==
+                                            undefined
+                                            ? post.eligibility.admissionYears
+                                            : undefined,
+                                })
+                                .returning({
+                                    insertedId: studentEligibilityTable.id,
+                                });
+                            studentEligibilityId =
+                                insertedStudentEligibility[0].insertedId;
+                        } else {
+                            studentEligibilityId = selectedStudentEligibilityId;
+                        }
+                    }
+                }
+                if (post.eligibility.alum === true) {
+                    eligibilityTypes.push(zoduniversityType.enum.alum);
+                    const selectedAlumEligibilityId: number | undefined =
+                        await Service.selectAlumEligibilityIdFromAttributes({
+                            db: tx,
+                        });
+                    if (selectedAlumEligibilityId === undefined) {
+                        const insertedAlumEligibility = await tx
+                            .insert(alumEligibilityTable)
+                            .values({ id: undefined })
+                            .returning({ insertedId: alumEligibilityTable.id });
+                        alumEligibilityId =
+                            insertedAlumEligibility[0].insertedId;
+                    } else {
+                        alumEligibilityId = selectedAlumEligibilityId;
+                    }
+                }
+                if (post.eligibility.faculty === true) {
+                    eligibilityTypes.push(zoduniversityType.enum.faculty);
+                    const selectedFacultyEligibilityId: number | undefined =
+                        await Service.selectFacultyEligibilityIdFromAttributes({
+                            db: tx,
+                        });
+                    if (selectedFacultyEligibilityId === undefined) {
+                        const insertedFacultyEligibility = await tx
+                            .insert(facultyEligibilityTable)
+                            .values({ id: undefined })
+                            .returning({
+                                insertedId: facultyEligibilityTable.id,
+                            });
+                        facultyEligibilityId =
+                            insertedFacultyEligibility[0].insertedId;
+                    } else {
+                        facultyEligibilityId = selectedFacultyEligibilityId;
+                    }
+                }
+            }
+            if (
+                eligibilityTypes.length !== 0 ||
+                eligibilityCountries.length !== 0
+            ) {
+                const selectedUniversityEligibilityId: number | undefined =
+                    await Service.selectUniversityEligibilityIdFromAttributes({
+                        db: tx,
+                        types:
+                            eligibilityTypes.length !== 0
+                                ? eligibilityTypes
+                                : undefined,
+                        countries:
+                            eligibilityCountries.length !== 0
+                                ? eligibilityCountries
+                                : undefined,
+                        studentEligibilityId: studentEligibilityId,
+                        alumEligibilityId: alumEligibilityId,
+                        facultyEligibilityId: facultyEligibilityId,
+                    });
+                if (selectedUniversityEligibilityId === undefined) {
+                    const insertedUniversityEligibility = await tx
+                        .insert(universityEligibilityTable)
+                        .values({
+                            types:
+                                eligibilityTypes.length !== 0
+                                    ? eligibilityTypes
+                                    : undefined,
+                            countries:
+                                eligibilityCountries.length !== 0
+                                    ? eligibilityCountries
+                                    : undefined,
+                            studentEligibilityId: studentEligibilityId,
+                            alumEligibilityId: alumEligibilityId,
+                            facultyEligibilityId: facultyEligibilityId,
+                        })
+                        .returning({
+                            insertedId: universityEligibilityTable.id,
+                        });
+                    universityEligibilityId =
+                        insertedUniversityEligibility[0].insertedId;
+                } else {
+                    universityEligibilityId = selectedUniversityEligibilityId;
+                }
+            }
+            const selectedEligibilityId: number | undefined =
+                await Service.selectEligibilityId({
+                    db: tx,
+                    domains: [postAs.domain], // for now users can only ask questions to people in their own community
+                    types: [postAs.type], // for now users can only ask questions to people in their own community
+                    universityEligibilityId: universityEligibilityId,
+                });
+            if (selectedEligibilityId === undefined) {
+                const insertedEligibility = await tx // maybe one day there might no eligibility at all, meaning anyone from ZKorum can respond
+                    .insert(eligibilityTable)
+                    .values({
+                        domains: [postAs.domain], // for now users can only ask questions to people in their own community
+                        types: [postAs.type], // for now users can only ask questions to people in their own community
+                        universityEligibilityId: universityEligibilityId,
+                    })
+                    .returning({ insertedId: eligibilityTable.id });
+                eligibilityId = insertedEligibility[0].insertedId;
+            } else {
+                eligibilityId = selectedEligibilityId;
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////
+
             const insertedPost = await tx
                 .insert(postTable)
                 .values({
@@ -2243,8 +2864,8 @@ export class Service {
             lastReactedAt === undefined
                 ? undefined
                 : order === "more"
-                ? lt(postTable.updatedAt, lastReactedAt)
-                : gt(postTable.updatedAt, lastReactedAt);
+                    ? lt(postTable.updatedAt, lastReactedAt)
+                    : gt(postTable.updatedAt, lastReactedAt);
         const results = await db
             .selectDistinctOn([postTable.lastReactedAt, postTable.id], {
                 // poll payload
@@ -2294,20 +2915,20 @@ export class Service {
             const metadata =
                 showHidden === true
                     ? {
-                          uid: result.pollUid,
-                          slugId: result.slugId,
-                          isHidden: result.isHidden,
-                          updatedAt: result.updatedAt,
-                          lastReactedAt: result.lastReactedAt,
-                          commentCount: result.commentCount,
-                      }
+                        uid: result.pollUid,
+                        slugId: result.slugId,
+                        isHidden: result.isHidden,
+                        updatedAt: result.updatedAt,
+                        lastReactedAt: result.lastReactedAt,
+                        commentCount: result.commentCount,
+                    }
                     : {
-                          uid: result.pollUid,
-                          slugId: result.slugId,
-                          updatedAt: result.updatedAt,
-                          lastReactedAt: result.lastReactedAt,
-                          commentCount: result.commentCount,
-                      };
+                        uid: result.pollUid,
+                        slugId: result.slugId,
+                        updatedAt: result.updatedAt,
+                        lastReactedAt: result.lastReactedAt,
+                        commentCount: result.commentCount,
+                    };
             return {
                 metadata: metadata,
                 payload: {
@@ -2315,40 +2936,105 @@ export class Service {
                     body: toUnionUndefined(result.body),
                     poll:
                         result.option1 !== null &&
-                        result.option2 !== null &&
-                        result.option1Response !== null &&
-                        result.option2Response !== null
+                            result.option2 !== null &&
+                            result.option1Response !== null &&
+                            result.option2Response !== null
                             ? {
-                                  options: {
-                                      option1: result.option1,
-                                      option2: result.option2,
-                                      option3: toUnionUndefined(result.option3),
-                                      option4: toUnionUndefined(result.option4),
-                                      option5: toUnionUndefined(result.option5),
-                                      option6: toUnionUndefined(result.option6),
-                                  },
-                                  result: {
-                                      option1Response: result.option1Response,
-                                      option2Response: result.option2Response,
-                                      option3Response: toUnionUndefined(
-                                          result.option3Response
-                                      ),
-                                      option4Response: toUnionUndefined(
-                                          result.option4Response
-                                      ),
-                                      option5Response: toUnionUndefined(
-                                          result.option5Response
-                                      ),
-                                      option6Response: toUnionUndefined(
-                                          result.option6Response
-                                      ),
-                                  },
-                              }
+                                options: {
+                                    option1: result.option1,
+                                    option2: result.option2,
+                                    option3: toUnionUndefined(result.option3),
+                                    option4: toUnionUndefined(result.option4),
+                                    option5: toUnionUndefined(result.option5),
+                                    option6: toUnionUndefined(result.option6),
+                                },
+                                result: {
+                                    option1Response: result.option1Response,
+                                    option2Response: result.option2Response,
+                                    option3Response: toUnionUndefined(
+                                        result.option3Response
+                                    ),
+                                    option4Response: toUnionUndefined(
+                                        result.option4Response
+                                    ),
+                                    option5Response: toUnionUndefined(
+                                        result.option5Response
+                                    ),
+                                    option6Response: toUnionUndefined(
+                                        result.option6Response
+                                    ),
+                                },
+                            }
                             : undefined,
                 },
                 author: {
                     pseudonym: result.pseudonym,
                     domain: result.domain,
+                    type: result.type,
+                    university:
+                        result.universityType !== null
+                            ? {
+                                type: result.universityType,
+                                student:
+                                    result.studentCampus !== null ||
+                                        result.studentProgram !== null ||
+                                        result.studentAdmissionYear !== null ||
+                                        result.universityCountries !== null
+                                        ? {
+                                            countries: toUnionUndefined(
+                                                result.universityCountries
+                                            ) as TCountryCode[] | undefined,
+                                            campus: toUnionUndefined(
+                                                result.studentCampus
+                                            ),
+                                            program: toUnionUndefined(
+                                                result.studentProgram
+                                            ),
+                                            admissionYear: toUnionUndefined(
+                                                result.studentAdmissionYear
+                                            ),
+                                        }
+                                        : undefined,
+                            }
+                            : undefined,
+                },
+                eligibility: {
+                    domains: toUnionUndefined(result.eligibilityDomains),
+                    types: toUnionUndefined(result.eligibilityTypes),
+
+                    university:
+                        result.eligibilityUniversityTypes !== null
+                            ? {
+                                types: toUnionUndefined(
+                                    result.eligibilityUniversityTypes
+                                ),
+                                student:
+                                    result.eligibilityUniversityCountries !==
+                                        null ||
+                                        result.eligibilityStudentPrograms !==
+                                        null ||
+                                        result.eligibilityStudentPrograms !==
+                                        null ||
+                                        result.eligibilityStudentAdmissionYears !==
+                                        null
+                                        ? {
+                                            countries: toUnionUndefined(
+                                                result.eligibilityUniversityCountries
+                                            ) as TCountryCode[] | undefined,
+                                            campuses: toUnionUndefined(
+                                                result.eligibilityStudentCampuses
+                                            ),
+                                            programs: toUnionUndefined(
+                                                result.eligibilityStudentPrograms
+                                            ),
+                                            admissionYears:
+                                                toUnionUndefined(
+                                                    result.eligibilityStudentAdmissionYears
+                                                ),
+                                        }
+                                        : undefined,
+                            }
+                            : undefined,
                 },
             };
         });
@@ -2396,40 +3082,102 @@ export class Service {
                 body: toUnionUndefined(result.body),
                 poll:
                     result.option1 !== null &&
-                    result.option2 !== null &&
-                    result.option1Response !== null &&
-                    result.option2Response !== null
+                        result.option2 !== null &&
+                        result.option1Response !== null &&
+                        result.option2Response !== null
                         ? {
-                              options: {
-                                  option1: result.option1,
-                                  option2: result.option2,
-                                  option3: toUnionUndefined(result.option3),
-                                  option4: toUnionUndefined(result.option4),
-                                  option5: toUnionUndefined(result.option5),
-                                  option6: toUnionUndefined(result.option6),
-                              },
-                              result: {
-                                  option1Response: result.option1Response,
-                                  option2Response: result.option2Response,
-                                  option3Response: toUnionUndefined(
-                                      result.option3Response
-                                  ),
-                                  option4Response: toUnionUndefined(
-                                      result.option4Response
-                                  ),
-                                  option5Response: toUnionUndefined(
-                                      result.option5Response
-                                  ),
-                                  option6Response: toUnionUndefined(
-                                      result.option6Response
-                                  ),
-                              },
-                          }
+                            options: {
+                                option1: result.option1,
+                                option2: result.option2,
+                                option3: toUnionUndefined(result.option3),
+                                option4: toUnionUndefined(result.option4),
+                                option5: toUnionUndefined(result.option5),
+                                option6: toUnionUndefined(result.option6),
+                            },
+                            result: {
+                                option1Response: result.option1Response,
+                                option2Response: result.option2Response,
+                                option3Response: toUnionUndefined(
+                                    result.option3Response
+                                ),
+                                option4Response: toUnionUndefined(
+                                    result.option4Response
+                                ),
+                                option5Response: toUnionUndefined(
+                                    result.option5Response
+                                ),
+                                option6Response: toUnionUndefined(
+                                    result.option6Response
+                                ),
+                            },
+                        }
                         : undefined,
             },
             author: {
                 pseudonym: result.pseudonym,
                 domain: result.domain,
+                type: result.type,
+                university:
+                    result.universityType !== null
+                        ? {
+                            type: result.universityType,
+                            student:
+                                result.studentCampus !== null ||
+                                    result.studentProgram !== null ||
+                                    result.studentAdmissionYear !== null ||
+                                    result.universityCountries !== null
+                                    ? {
+                                        countries: toUnionUndefined(
+                                            result.universityCountries
+                                        ) as TCountryCode[] | undefined,
+                                        campus: toUnionUndefined(
+                                            result.studentCampus
+                                        ),
+                                        program: toUnionUndefined(
+                                            result.studentProgram
+                                        ),
+                                        admissionYear: toUnionUndefined(
+                                            result.studentAdmissionYear
+                                        ),
+                                    }
+                                    : undefined,
+                        }
+                        : undefined,
+            },
+            eligibility: {
+                domains: toUnionUndefined(result.eligibilityDomains),
+                types: toUnionUndefined(result.eligibilityTypes),
+
+                university:
+                    result.eligibilityUniversityTypes !== null
+                        ? {
+                            types: toUnionUndefined(
+                                result.eligibilityUniversityTypes
+                            ),
+                            student:
+                                result.eligibilityUniversityCountries !==
+                                    null ||
+                                    result.eligibilityStudentPrograms !== null ||
+                                    result.eligibilityStudentPrograms !== null ||
+                                    result.eligibilityStudentAdmissionYears !==
+                                    null
+                                    ? {
+                                        countries: toUnionUndefined(
+                                            result.eligibilityUniversityCountries
+                                        ) as TCountryCode[] | undefined,
+                                        campuses: toUnionUndefined(
+                                            result.eligibilityStudentCampuses
+                                        ),
+                                        programs: toUnionUndefined(
+                                            result.eligibilityStudentPrograms
+                                        ),
+                                        admissionYears: toUnionUndefined(
+                                            result.eligibilityStudentAdmissionYears
+                                        ),
+                                    }
+                                    : undefined,
+                        }
+                        : undefined,
             },
         };
         const postId = result.id;
@@ -2494,6 +3242,49 @@ export class Service {
                 `Option 6 does not exist in poll '${response.postUid}'`
             );
         }
+        // check wheter postAs matches poll's eligiblity
+        const eligibility: Eligibilities = {
+            domains: toUnionUndefined(result.eligibilityDomains),
+            types: toUnionUndefined(result.eligibilityTypes),
+
+            university:
+                result.eligibilityUniversityTypes !== null
+                    ? {
+                        types: toUnionUndefined(
+                            result.eligibilityUniversityTypes
+                        ),
+                        student:
+                            result.eligibilityUniversityCountries !== null ||
+                                result.eligibilityStudentPrograms !== null ||
+                                result.eligibilityStudentPrograms !== null ||
+                                result.eligibilityStudentAdmissionYears !== null
+                                ? {
+                                    countries: toUnionUndefined(
+                                        result.eligibilityUniversityCountries
+                                    ) as TCountryCode[] | undefined,
+                                    campuses: toUnionUndefined(
+                                        result.eligibilityStudentCampuses
+                                    ),
+                                    programs: toUnionUndefined(
+                                        result.eligibilityStudentPrograms
+                                    ),
+                                    admissionYears: toUnionUndefined(
+                                        result.eligibilityStudentAdmissionYears
+                                    ),
+                                }
+                                : undefined,
+                    }
+                    : undefined,
+        };
+        const isEligible = getIsEligible(eligibility, postAs);
+        if (!isEligible) {
+            throw httpErrors.unauthorized(
+                `Respondent '${pseudonym}' is not eligible to poll '${response.postUid
+                }':\neligibility = '${JSON.stringify(
+                    eligibility
+                )}\n'postAs = '${JSON.stringify(postAs)}'`
+            );
+        }
         const presentationCID = await toEncodedCID(presentation);
         const now = nowZeroMs();
         const timestampedPresentation = {
@@ -2538,7 +3329,7 @@ export class Service {
                 | typeof pollTable.option5Response
                 | typeof pollTable.option6Response;
             switch (
-                response.optionChosen // TODO Refactor by making it typesafe by default - this stinks
+            response.optionChosen // TODO Refactor by making it typesafe by default - this stinks
             ) {
                 case 1:
                     optionChosenResponseColumnName = "option1Response";
@@ -2671,6 +3462,16 @@ export class Service {
         const timestampedPresentationCID = await toEncodedCID(
             timestampedPresentation
         );
+        let options = {
+            pythonOptions: ['-u'], // get print results in real-time
+            args: [payload.content]
+          };
+        let toxicType : ToxicType | string
+        await PythonShell.run('/zkorum/python/toxicMod.py', options).then(messages=>{
+            // results is an array consisting of messages collected during execution
+            toxicType = messages[0]
+          });
+
         await db.transaction(async (tx) => {
             const authorId = await Service.selectOrInsertPseudonym({
                 tx: tx,
@@ -2684,6 +3485,7 @@ export class Service {
                 slugId: generateRandomSlugId(),
                 authorId: authorId,
                 content: payload.content,
+                isToxic: toxicType,
                 postId: result.pollId,
                 createdAt: now,
                 updatedAt: now,
@@ -2697,6 +3499,7 @@ export class Service {
                 .where(eq(postTable.id, result.pollId));
         });
         return timestampedPresentationCID;
+
     }
 
     static async fetchCommentsByPostId({
@@ -2712,14 +3515,14 @@ export class Service {
             updatedAt === undefined
                 ? eq(commentTable.postId, postId)
                 : order === "more"
-                ? and(
-                      eq(commentTable.postId, postId),
-                      lt(commentTable.updatedAt, updatedAt)
-                  )
-                : and(
-                      eq(commentTable.postId, postId),
-                      gt(commentTable.updatedAt, updatedAt)
-                  );
+                    ? and(
+                        eq(commentTable.postId, postId),
+                        lt(commentTable.updatedAt, updatedAt)
+                    )
+                    : and(
+                        eq(commentTable.postId, postId),
+                        gt(commentTable.updatedAt, updatedAt)
+                    );
         const results = await db
             .selectDistinctOn([commentTable.updatedAt, commentTable.id], {
                 // comment payload
@@ -2761,6 +3564,33 @@ export class Service {
                 author: {
                     pseudonym: result.pseudonym,
                     domain: result.domain,
+                    type: result.type,
+                    university:
+                        result.universityType !== null
+                            ? {
+                                type: result.universityType,
+                                student:
+                                    result.studentCampus !== null ||
+                                        result.studentProgram !== null ||
+                                        result.studentAdmissionYear !== null ||
+                                        result.universityCountries !== null
+                                        ? {
+                                            countries: toUnionUndefined(
+                                                result.universityCountries
+                                            ) as TCountryCode[] | undefined,
+                                            campus: toUnionUndefined(
+                                                result.studentCampus
+                                            ),
+                                            program: toUnionUndefined(
+                                                result.studentProgram
+                                            ),
+                                            admissionYear: toUnionUndefined(
+                                                result.studentAdmissionYear
+                                            ),
+                                        }
+                                        : undefined,
+                            }
+                            : undefined,
                 },
             };
         });
