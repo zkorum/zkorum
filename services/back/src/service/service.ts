@@ -84,6 +84,7 @@ import {
 } from "./credential.js";
 import type { ToxicType } from "@/schema/enums.js";
 
+
 export interface AuthenticateOtp {
     codeExpiry: Date;
     nextCodeSoonestTime: Date;
