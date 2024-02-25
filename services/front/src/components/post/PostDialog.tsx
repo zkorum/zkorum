@@ -20,7 +20,6 @@ import {
 } from "@/shared/shared";
 import type { Post } from "@/shared/types/zod";
 import { closeMainLoading, openMainLoading } from "@/store/reducers/loading";
-import { closePostModal } from "@/store/reducers/post";
 import { showError, showInfo, showSuccess } from "@/store/reducers/snackbar";
 import {
     selectActiveEmailCredential,
@@ -46,6 +45,7 @@ import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
 import useTheme from "@mui/material/styles/useTheme";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { PollCreateView } from "./PollCreateView";
 
 interface PostDialogProps {
@@ -65,18 +65,13 @@ export function PostDialog({
     const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
     const dispatch = useAppDispatch();
     const isModalOpen = useAppSelector((state) => state.post.isPostModalOpen);
-    function onClose() {
-        setHasModifiedOption1(false);
-        setHasModifiedOption2(false);
-        setHasModifiedTitle(false);
-        dispatch(closePostModal());
-    }
     const activeSessionEmail = useAppSelector(selectActiveSessionEmail);
     const isAdmin = activeSessionEmail.endsWith("zkorum.com");
     const activeEmailCredential = useAppSelector(selectActiveEmailCredential);
     const activeUnboundSecretCredential = useAppSelector(
         selectActiveUnboundSecretCredential
     );
+    const navigate = useNavigate();
 
     const titleInputRef = React.useRef<HTMLInputElement>();
     const bodyInputRef = React.useRef<HTMLInputElement>();
@@ -109,6 +104,55 @@ export function PostDialog({
     >(undefined);
     const [isOption2Valid, setIsOption2Valid] = React.useState<boolean>(false);
     const [hasPoll, setHasPoll] = React.useState<boolean>(false);
+
+    function onClose() {
+        setHasModifiedOption1(false);
+        setHasModifiedOption2(false);
+        setHasModifiedTitle(false);
+        navigate(-1); // remove hash!
+    }
+
+    function onSuccess() {
+        if (titleInputRef.current !== undefined) {
+            titleInputRef.current.value = "";
+        }
+        if (bodyInputRef.current !== undefined) {
+            bodyInputRef.current.value = "";
+        }
+        if (option1InputRef.current !== undefined) {
+            option1InputRef.current.value = "";
+        }
+        if (option2InputRef.current !== undefined) {
+            option2InputRef.current.value = "";
+        }
+        if (option3InputRef.current !== undefined) {
+            option3InputRef.current.value = "";
+        }
+        if (option4InputRef.current !== undefined) {
+            option4InputRef.current.value = "";
+        }
+        if (option5InputRef.current !== undefined) {
+            option5InputRef.current.value = "";
+        }
+        if (option6InputRef.current !== undefined) {
+            option6InputRef.current.value = "";
+        }
+        setOption3Shown(false);
+        setOption4Shown(false);
+        setOption5Shown(false);
+        setOption6Shown(false);
+        setHasModifiedTitle(false);
+        setHasModifiedOption1(false);
+        setHasModifiedOption2(false);
+        setTitleHelper(undefined);
+        setOption1Helper(undefined);
+        setOption2Helper(undefined);
+        setIsTitleValid(false);
+        setIsOption1Valid(false);
+        setIsOption2Valid(false);
+        setHasPoll(false);
+        onClose();
+    }
 
     const loadRecent = React.useCallback(
         (minLastReactedAt: Date) => {
@@ -377,18 +421,19 @@ export function PostDialog({
                 asyncLoadRecent(); // refresh feed to show newly created post
             }
             dispatch(showSuccess(pollCreated));
+            onSuccess();
         } catch (e) {
             console.warn("Error while creating post", e);
             dispatch(showError(genericError));
         } finally {
             dispatch(closeMainLoading());
-            onClose();
         }
     }
 
     return (
         <Dialog
             maxWidth={fullScreen ? undefined : "sm"}
+            keepMounted={true}
             fullWidth={!fullScreen}
             fullScreen={fullScreen}
             open={isModalOpen}

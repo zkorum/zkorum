@@ -4,12 +4,14 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
 import React from "react";
-import { Outlet, ScrollRestoration } from "react-router-dom";
+import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
+import type { StateSnapshot } from "react-virtuoso";
+import { HASH_IS_POSTING } from "./common/navigation";
 import { AuthDialog } from "./components/auth/AuthDialog";
 import { PostDialog } from "./components/post/PostDialog";
 import type { FeedContextType, PostsType } from "./feed";
 import type { PostUid, ResponseToPollPayload } from "./shared/types/zod";
-import type { StateSnapshot } from "react-virtuoso";
+import { closePostModal, openPostModal } from "./store/reducers/post";
 
 export interface UpdatePostHiddenStatusProps {
     uid: PostUid;
@@ -23,11 +25,12 @@ export function RootDialog() {
     const [virtuosoState, setVirtuosoState] = React.useState<
         StateSnapshot | undefined
     >(undefined);
-
+    const { hash } = useLocation();
     const snackbarState = useAppSelector((state) => {
         return state.snackbar;
     });
     const dispatch = useAppDispatch();
+
     function handleCloseSnackbar(
         _event?: React.SyntheticEvent | Event,
         reason?: string
@@ -50,6 +53,14 @@ export function RootDialog() {
         }
         setPosts(newPosts);
     }
+
+    React.useEffect(() => {
+        if (hash === HASH_IS_POSTING) {
+            dispatch(openPostModal());
+        } else {
+            dispatch(closePostModal());
+        }
+    }, [hash]);
 
     function updatePost(responseToPoll: ResponseToPollPayload): void {
         const newPosts = [...posts];

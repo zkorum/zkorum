@@ -37,7 +37,7 @@ export function getTimeFromNow(time: Date): string {
         while (differenceMonths <= m === false) {
             m += 1;
         }
-        return `${m}m`;
+        return `${m}mo`;
     }
     const differenceYears = differenceMonths / 12;
     let y = 1;
