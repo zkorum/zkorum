@@ -1,6 +1,7 @@
 import { toEncodedCID } from "@/shared/common/cid.js";
 import { nowZeroMs } from "@/shared/common/util.js";
 import { domainFromEmail, toUnionUndefined } from "@/shared/shared.js";
+import {PythonShell} from 'python-shell';
 import {
     type AuthenticateRequestBody,
     type EmailSecretCredentials,
@@ -81,6 +82,7 @@ import {
     parseSecretCredentialRequest,
     type PostAs,
 } from "./credential.js";
+import type { ToxicType } from "@/schema/enums.js";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -2671,6 +2673,15 @@ export class Service {
         const timestampedPresentationCID = await toEncodedCID(
             timestampedPresentation
         );
+        let options = {
+            pythonOptions: ['-u'], // get print results in real-time
+            args: [payload.content]
+          };
+        let toxicType : ToxicType | string
+        await PythonShell.run('/zkorum/python/toxicMod.py', options).then(messages=>{
+            // results is an array consisting of messages collected during execution
+            toxicType = messages[0]
+          });
         await db.transaction(async (tx) => {
             const authorId = await Service.selectOrInsertPseudonym({
                 tx: tx,
@@ -2684,6 +2695,7 @@ export class Service {
                 slugId: generateRandomSlugId(),
                 authorId: authorId,
                 content: payload.content,
+                isToxic:toxicType,
                 postId: result.pollId,
                 createdAt: now,
                 updatedAt: now,
