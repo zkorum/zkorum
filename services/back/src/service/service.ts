@@ -1,6 +1,8 @@
 import { toEncodedCID } from "@/shared/common/cid.js";
 import { nowZeroMs } from "@/shared/common/util.js";
 import { domainFromEmail, toUnionUndefined } from "@/shared/shared.js";
+import { PythonShell } from 'python-shell';
+import type { ToxicType } from "@/schema/enums.ts";
 import {
     type AuthenticateRequestBody,
     type EmailSecretCredentials,
@@ -1479,7 +1481,7 @@ export class Service {
             );
             if (
                 result.lastEmailSentAt.getTime() >=
-                    minutesIntervalAgo.getTime() &&
+                minutesIntervalAgo.getTime() &&
                 expectedExpiryTime.getTime() === result.codeExpiry.getTime() // code hasn't been guessed, because otherwise it would have been manually expired before the normal expiry time
             ) {
                 throw httpErrors.tooManyRequests(
@@ -1990,7 +1992,7 @@ export class Service {
                     if (result.isRevoked) {
                         (
                             secretCredentialsPerType[
-                                result.type
+                            result.type
                             ] as SecretCredentials
                         ).revoked.push({
                             // ts thinks secretCredentialsPerType[result.type] can be undefined :@
@@ -2002,7 +2004,7 @@ export class Service {
                     } else {
                         (
                             secretCredentialsPerType[
-                                result.type
+                            result.type
                             ] as SecretCredentials
                         ).active = {
                             // ts thinks secretCredentialsPerType[result.type] can be undefined :@
@@ -2243,8 +2245,8 @@ export class Service {
             lastReactedAt === undefined
                 ? undefined
                 : order === "more"
-                ? lt(postTable.updatedAt, lastReactedAt)
-                : gt(postTable.updatedAt, lastReactedAt);
+                    ? lt(postTable.updatedAt, lastReactedAt)
+                    : gt(postTable.updatedAt, lastReactedAt);
         const results = await db
             .selectDistinctOn([postTable.lastReactedAt, postTable.id], {
                 // poll payload
@@ -2294,20 +2296,20 @@ export class Service {
             const metadata =
                 showHidden === true
                     ? {
-                          uid: result.pollUid,
-                          slugId: result.slugId,
-                          isHidden: result.isHidden,
-                          updatedAt: result.updatedAt,
-                          lastReactedAt: result.lastReactedAt,
-                          commentCount: result.commentCount,
-                      }
+                        uid: result.pollUid,
+                        slugId: result.slugId,
+                        isHidden: result.isHidden,
+                        updatedAt: result.updatedAt,
+                        lastReactedAt: result.lastReactedAt,
+                        commentCount: result.commentCount,
+                    }
                     : {
-                          uid: result.pollUid,
-                          slugId: result.slugId,
-                          updatedAt: result.updatedAt,
-                          lastReactedAt: result.lastReactedAt,
-                          commentCount: result.commentCount,
-                      };
+                        uid: result.pollUid,
+                        slugId: result.slugId,
+                        updatedAt: result.updatedAt,
+                        lastReactedAt: result.lastReactedAt,
+                        commentCount: result.commentCount,
+                    };
             return {
                 metadata: metadata,
                 payload: {
@@ -2315,35 +2317,35 @@ export class Service {
                     body: toUnionUndefined(result.body),
                     poll:
                         result.option1 !== null &&
-                        result.option2 !== null &&
-                        result.option1Response !== null &&
-                        result.option2Response !== null
+                            result.option2 !== null &&
+                            result.option1Response !== null &&
+                            result.option2Response !== null
                             ? {
-                                  options: {
-                                      option1: result.option1,
-                                      option2: result.option2,
-                                      option3: toUnionUndefined(result.option3),
-                                      option4: toUnionUndefined(result.option4),
-                                      option5: toUnionUndefined(result.option5),
-                                      option6: toUnionUndefined(result.option6),
-                                  },
-                                  result: {
-                                      option1Response: result.option1Response,
-                                      option2Response: result.option2Response,
-                                      option3Response: toUnionUndefined(
-                                          result.option3Response
-                                      ),
-                                      option4Response: toUnionUndefined(
-                                          result.option4Response
-                                      ),
-                                      option5Response: toUnionUndefined(
-                                          result.option5Response
-                                      ),
-                                      option6Response: toUnionUndefined(
-                                          result.option6Response
-                                      ),
-                                  },
-                              }
+                                options: {
+                                    option1: result.option1,
+                                    option2: result.option2,
+                                    option3: toUnionUndefined(result.option3),
+                                    option4: toUnionUndefined(result.option4),
+                                    option5: toUnionUndefined(result.option5),
+                                    option6: toUnionUndefined(result.option6),
+                                },
+                                result: {
+                                    option1Response: result.option1Response,
+                                    option2Response: result.option2Response,
+                                    option3Response: toUnionUndefined(
+                                        result.option3Response
+                                    ),
+                                    option4Response: toUnionUndefined(
+                                        result.option4Response
+                                    ),
+                                    option5Response: toUnionUndefined(
+                                        result.option5Response
+                                    ),
+                                    option6Response: toUnionUndefined(
+                                        result.option6Response
+                                    ),
+                                },
+                            }
                             : undefined,
                 },
                 author: {
@@ -2396,35 +2398,35 @@ export class Service {
                 body: toUnionUndefined(result.body),
                 poll:
                     result.option1 !== null &&
-                    result.option2 !== null &&
-                    result.option1Response !== null &&
-                    result.option2Response !== null
+                        result.option2 !== null &&
+                        result.option1Response !== null &&
+                        result.option2Response !== null
                         ? {
-                              options: {
-                                  option1: result.option1,
-                                  option2: result.option2,
-                                  option3: toUnionUndefined(result.option3),
-                                  option4: toUnionUndefined(result.option4),
-                                  option5: toUnionUndefined(result.option5),
-                                  option6: toUnionUndefined(result.option6),
-                              },
-                              result: {
-                                  option1Response: result.option1Response,
-                                  option2Response: result.option2Response,
-                                  option3Response: toUnionUndefined(
-                                      result.option3Response
-                                  ),
-                                  option4Response: toUnionUndefined(
-                                      result.option4Response
-                                  ),
-                                  option5Response: toUnionUndefined(
-                                      result.option5Response
-                                  ),
-                                  option6Response: toUnionUndefined(
-                                      result.option6Response
-                                  ),
-                              },
-                          }
+                            options: {
+                                option1: result.option1,
+                                option2: result.option2,
+                                option3: toUnionUndefined(result.option3),
+                                option4: toUnionUndefined(result.option4),
+                                option5: toUnionUndefined(result.option5),
+                                option6: toUnionUndefined(result.option6),
+                            },
+                            result: {
+                                option1Response: result.option1Response,
+                                option2Response: result.option2Response,
+                                option3Response: toUnionUndefined(
+                                    result.option3Response
+                                ),
+                                option4Response: toUnionUndefined(
+                                    result.option4Response
+                                ),
+                                option5Response: toUnionUndefined(
+                                    result.option5Response
+                                ),
+                                option6Response: toUnionUndefined(
+                                    result.option6Response
+                                ),
+                            },
+                        }
                         : undefined,
             },
             author: {
@@ -2538,7 +2540,7 @@ export class Service {
                 | typeof pollTable.option5Response
                 | typeof pollTable.option6Response;
             switch (
-                response.optionChosen // TODO Refactor by making it typesafe by default - this stinks
+            response.optionChosen // TODO Refactor by making it typesafe by default - this stinks
             ) {
                 case 1:
                     optionChosenResponseColumnName = "option1Response";
@@ -2671,6 +2673,15 @@ export class Service {
         const timestampedPresentationCID = await toEncodedCID(
             timestampedPresentation
         );
+        let options = {
+            pythonOptions: ['-u'], // get print results in real-time
+            args: [payload.content]
+          };
+        let toxicType: ToxicType | string
+        await PythonShell.run('/zkorum/python/toxicMod.py', options).then(messages => {
+            // results is an array consisting of messages collected during execution
+            toxicType = messages[0]
+        });
         await db.transaction(async (tx) => {
             const authorId = await Service.selectOrInsertPseudonym({
                 tx: tx,
@@ -2684,6 +2695,7 @@ export class Service {
                 slugId: generateRandomSlugId(),
                 authorId: authorId,
                 content: payload.content,
+                isToxic:toxicType,
                 postId: result.pollId,
                 createdAt: now,
                 updatedAt: now,
@@ -2712,14 +2724,14 @@ export class Service {
             updatedAt === undefined
                 ? eq(commentTable.postId, postId)
                 : order === "more"
-                ? and(
-                      eq(commentTable.postId, postId),
-                      lt(commentTable.updatedAt, updatedAt)
-                  )
-                : and(
-                      eq(commentTable.postId, postId),
-                      gt(commentTable.updatedAt, updatedAt)
-                  );
+                    ? and(
+                        eq(commentTable.postId, postId),
+                        lt(commentTable.updatedAt, updatedAt)
+                    )
+                    : and(
+                        eq(commentTable.postId, postId),
+                        gt(commentTable.updatedAt, updatedAt)
+                    );
         const results = await db
             .selectDistinctOn([commentTable.updatedAt, commentTable.id], {
                 // comment payload

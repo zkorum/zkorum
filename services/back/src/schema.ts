@@ -20,7 +20,7 @@ const MAX_LENGTH_OPTION = 30;
 const MAX_LENGTH_TITLE = 200;
 const MAX_LENGTH_COMMENT = 6000;
 const MAX_LENGTH_BODY = 6000;
-
+const isToxic = pgEnum("isToxic",["none",'toxicity','severe_toxicity','obscene','identity_attack','insult','threat', 'sexual_explicit'])
 export const bytea = customType<{
     data: string;
     notNull: false;
@@ -399,6 +399,7 @@ export const commentTable = pgTable("comment", {
         .references(() => postTable.id)
         .notNull(),
     isHidden: boolean("is_hidden").notNull().default(false),
+    isToxic: isToxic("isToxic").default("none").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
