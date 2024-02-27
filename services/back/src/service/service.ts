@@ -2714,11 +2714,11 @@ export class Service {
                 : order === "more"
                 ? and(
                       eq(commentTable.postId, postId),
-                      lt(commentTable.updatedAt, updatedAt)
+                      gt(commentTable.updatedAt, updatedAt)
                   )
                 : and(
                       eq(commentTable.postId, postId),
-                      gt(commentTable.updatedAt, updatedAt)
+                      lt(commentTable.updatedAt, updatedAt)
                   );
         const results = await db
             .selectDistinctOn([commentTable.updatedAt, commentTable.id], {

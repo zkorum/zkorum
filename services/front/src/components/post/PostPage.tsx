@@ -113,8 +113,8 @@ export function PostPage() {
                 );
                 if (actualNewComments.length !== 0) {
                     setComments((prevComments) => [
-                        ...actualNewComments,
                         ...prevComments,
+                        ...actualNewComments,
                     ]);
                 }
             } finally {
@@ -141,8 +141,8 @@ export function PostPage() {
                 );
                 if (actualNewComments.length !== 0) {
                     setComments((prevComments) => [
-                        ...prevComments,
                         ...actualNewComments,
+                        ...prevComments,
                     ]);
                 }
             } finally {
