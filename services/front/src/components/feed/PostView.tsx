@@ -46,7 +46,7 @@ import { creatingProof, genericError, sendingPost } from "../error/message";
 import { CommentsViewsLikesView } from "./CommentsViewsLikesView";
 import { PollCanRespondView } from "./PollCanRespondView";
 import { PollResultView } from "./PollResultView";
-import Logo from "/logo-essec_72x107.af462b8d2b4c.png";
+import SchoolIcon from "@mui/icons-material/School";
 
 export type UserResponse =
     | "option1"
@@ -306,14 +306,7 @@ export function PostView({
                         justifyContent="flex-start"
                     >
                         <Grid>
-                            <Box
-                                component="img"
-                                sx={{
-                                    height: 42,
-                                }}
-                                alt="ESSEC"
-                                src={Logo}
-                            />
+                            <SchoolIcon sx={{ fontSize: "42px" }} />
                         </Grid>
                         <Grid
                             p="0"
@@ -340,7 +333,7 @@ export function PostView({
                                             }}
                                             variant="body2"
                                         >
-                                            ESSEC
+                                            essec.edu
                                         </Typography>
                                     </Grid>
                                     <Grid>
