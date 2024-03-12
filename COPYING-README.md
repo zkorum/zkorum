@@ -12,3 +12,5 @@
 | [`nlp`](./services/nlp)               | [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/nlp)        | 🗣️ Natural Language Processing  |
 
 Attribution information for ZKorum is contained in the [AUTHORS](AUTHORS) file.
+
+Every contributors have signed the [Fiduciary Licensing Agreement (FLA)](https://cla-assistant.io/zkorum/zkorum).
