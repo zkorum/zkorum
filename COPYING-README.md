@@ -1,10 +1,14 @@
-- :package: This mono-repository contains a suite of services.
-- :balance_scale: The mono-repository is released under the [AGPL v3 license](./COPYING). Note that the services themselves are released under their own license.
+- 📦 This mono-repository contains a suite of services.
+- ⚖️: The mono-repository is released under the [AGPL v3 license](./COPYING). Note that the services themselves are released under their own license.
 
-| Service                       | License                                                                                                 | Docs                                                                            | Description               |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------- |
-| [`front`](./services/front)   | [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./services/front/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/front)  | :bird: Frontend           |
-| [`back`](./services/back)     | [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/COPYING) | [![documentation](https://img.shields.io/badge/readme-blue)](./services/back)   | :thought_balloon: Backend |
-| [`shared`](./services/shared) | [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./services/shared/COPYING) | [![documentation](https://img.shields.io/badge/readme-blue)](./services/shared) | :handshake: Shared        |
+| Service                               | License                                                                                                  | Docs                                                                                | Description                     |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------- |
+| [`shared`](./services/shared)         | [![License: MPL v2](https://img.shields.io/badge/license-MPL%202.0-blue.svg)](./services/shared/COPYING) | [![documentation](https://img.shields.io/badge/readme-blue)](./services/shared)     | 🤝 Shared                       |
+| [`front`](./services/front)           | [![License: MPL v2](https://img.shields.io/badge/license-MPL%202.0-blue.svg)](./services/front/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/front)      | 🐦 Frontend                     |
+| [`back`](./services/back)             | [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/back)       | 💭 Backend                      |
+| [`sql-script`](./services/sql-script) | [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/sql-script) | 💻 SQL Migration scripts        |
+| [`zkli`](./services/zkli)             | [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/zkli)       | 🛠️ Command-line interface (CLI) |
+| [`llm`](./services/llm)               | [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/llm)        | 🧠 Large-language model         |
+| [`nlp`](./services/nlp)               | [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./services/back/COPYING)  | [![documentation](https://img.shields.io/badge/readme-blue)](./services/nlp)        | 🗣️ Natural Language Processing  |
 
 Attribution information for ZKorum is contained in the [AUTHORS](AUTHORS) file.
