@@ -13,4 +13,4 @@
 
 Attribution information for ZKorum is contained in the [AUTHORS](AUTHORS) file.
 
-Every contributors have signed the [Fiduciary Licensing Agreement (FLA)](https://cla-assistant.io/zkorum/zkorum).
+Every contributors have signed the [Fiduciary Licensing Agreement (FLA)](https://cla-assistant.io/zkorum/zkorum) with [ZKorum SAS](https://annuaire-entreprises.data.gouv.fr/entreprise/zkorum-984736173) as the Trustee.
