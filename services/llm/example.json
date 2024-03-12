@@ -1,0 +1,41 @@
+{
+  "reason": "We appreciate your honest feedback. However, please focus on actions instead of people and more importantly, avoid insults.",
+  "quotes": [
+    {
+      "quote": "Fuck them",
+      "reason": "Please avoid insults",
+      "status": {
+        "insult": {
+          "level": 2,
+          "reason": "Please avoid insults"
+        }
+      },
+      "rewrite": ""
+    },
+    {
+      "quote": "PLEASE FIRE THESE ASSHOLES",
+      "reason": "Please, avoid insults and personal attacks",
+      "status": {
+        "personal_attack": {
+          "level": 1,
+          "reason": "Instead of calling for people's dismissal, judge their actions"
+        },
+        "insult": {
+          "level": 2,
+          "reason": "Please avoid calling people names"
+        },
+        "rewrite": ""
+      }
+    },
+    {
+      "quote": "They are so helpless",
+      "status": {
+        "personal_attack": {
+          "level": 1,
+          "reason": "People generally doesn't respond positively to being called helpless - try a more constructive approach. Judging their actions is as powerful."
+        }
+      },
+      "rewrite": ""
+    }
+  ]
+}

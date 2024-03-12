@@ -1,8 +1,11 @@
 import { toEncodedCID } from "@/shared/common/cid.js";
 import { nowZeroMs } from "@/shared/common/util.js";
-import { domainFromEmail, toUnionUndefined } from "@/shared/shared.js";
-import { PythonShell } from 'python-shell';
-import type { ToxicType } from "@/schema/enums.ts";
+import {
+    domainFromEmail,
+    toUnionUndefined,
+    type ToxicityClassification,
+} from "@/shared/shared.js";
+import { PythonShell } from "python-shell";
 import {
     type AuthenticateRequestBody,
     type EmailSecretCredentials,
@@ -83,6 +86,8 @@ import {
     parseSecretCredentialRequest,
     type PostAs,
 } from "./credential.js";
+import { isTooEarly } from "@ucans/ucans";
+import { log } from "@/app.js";
 
 export interface AuthenticateOtp {
     codeExpiry: Date;
@@ -236,6 +241,7 @@ interface CreateCommentProps {
     presentation: Presentation;
     payload: CreateCommentPayload;
     httpErrors: HttpErrors;
+    nlpBaseUrl: string;
 }
 
 interface SelectOrInsertPseudonymProps<
@@ -2645,6 +2651,7 @@ export class Service {
         presentation,
         payload,
         httpErrors,
+        nlpBaseUrl,
     }: CreateCommentProps): Promise<PostUid> {
         // Check whether post the user responds to actually exists
         const results = await db
@@ -2673,15 +2680,22 @@ export class Service {
         const timestampedPresentationCID = await toEncodedCID(
             timestampedPresentation
         );
-        let options = {
-            pythonOptions: ['-u'], // get print results in real-time
-            args: [payload.content]
-          };
-        let toxicType: ToxicType | string
-        await PythonShell.run('/zkorum/python/toxicMod.py', options).then(messages => {
-            // results is an array consisting of messages collected during execution
-            toxicType = messages[0]
+        const toxicityResp = await fetch(`${nlpBaseUrl}/detoxify`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                speech: payload.content,
+            }),
         });
+        if (toxicityResp.status < 200 || toxicityResp.status > 299) {
+            throw httpErrors.internalServerError(
+                `Interaction with nlp service failed: '${toxicityResp.status} - ${toxicityResp.statusText}'`
+            );
+        }
+        const detoxifyResult: ToxicityClassification =
+            (await toxicityResp.json()) as ToxicityClassification;
         await db.transaction(async (tx) => {
             const authorId = await Service.selectOrInsertPseudonym({
                 tx: tx,
@@ -2694,7 +2708,13 @@ export class Service {
                 timestampedPresentationCID: timestampedPresentationCID,
                 slugId: generateRandomSlugId(),
                 authorId: authorId,
-                isToxic:toxicType,
+                toxicity: detoxifyResult.toxicity,
+                severeToxicity: detoxifyResult.severe_toxicity,
+                obscene: detoxifyResult.obscene,
+                identityAttack: detoxifyResult.identity_attack,
+                insult: detoxifyResult.insult,
+                threat: detoxifyResult.threat,
+                sexualExplicit: detoxifyResult.sexual_explicit,
                 content: payload.content,
                 postId: result.pollId,
                 createdAt: now,

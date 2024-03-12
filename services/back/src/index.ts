@@ -996,6 +996,7 @@ server.after(() => {
                     presentation: presentation,
                     payload: request.body.payload,
                     httpErrors: server.httpErrors,
+                    nlpBaseUrl: config.NLP_BASE_URL,
                 });
             },
         });

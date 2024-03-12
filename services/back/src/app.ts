@@ -39,6 +39,7 @@ const configSchema = z.object({
     PRIVATE_KEY_FILEPATH: z.string(),
     TEST_CODE: z.coerce.number().int().min(0).max(999999).default(0),
     SPECIALLY_AUTHORIZED_EMAILS: z.string().optional(),
+    NLP_BASE_URL: z.string().default("http://localhost:8081"),
 });
 
 export const config = configSchema.parse(process.env);
