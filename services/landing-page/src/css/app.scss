@@ -1,0 +1,30 @@
+// app global css in SCSS form
+.bg-brand {
+  background-color: #00275b !important;
+}
+
+.text-brand {
+  color: #00275b !important;
+}
+
+.bg-brand-teal {
+  background-color: #4be7de !important;
+}
+
+.text-brand-teal {
+  color: #4be7de !important;
+}
+
+.bg-brand-dark {
+  background-color: #00204a !important;
+}
+
+.text-brand-dark {
+  color: #00204a !important;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
