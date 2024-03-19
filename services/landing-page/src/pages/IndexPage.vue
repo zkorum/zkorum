@@ -3,7 +3,7 @@
     <div class="column justify-start items-start">
       <div class="row width-100">
         <div
-          class="column justify-start items-start bg-brand first-intro q-pa-md width-half"
+          class="column justify-start items-start bg-brand first-intro q-pa-md col-grow"
         >
           <q-img
             class="q-my-lg"
@@ -25,34 +25,40 @@
               class="full-width"
               rounded
               no-caps
+              no-wrap
               unelevated
               icon-right="trending_flat"
               color="brand-teal"
               :size="buttonSize"
               text-color="brand-dark"
               label="Go to Feed"
+              href="https://zkorum.com/feed/"
+              target="_blank"
             />
           </div>
         </div>
-        <div class="column justify-center items-center width-half">
+        <div
+          class="column justify-center items-center col-grow"
+          style="max-width: 100%; min-width: 50%"
+        >
           <q-img
             :src="shownImage"
-            style="max-width: 360px"
+            style="max-width: 440px"
             :srcset="
-              (shownImage + ' 135w', shownImage + ' 270w', shownImage + ' 360w')
+              (shownImage + ' 270w', shownImage + ' 360w', shownImage + ' 432w')
             "
-            sizes="(max-width: 140px) 135w,
-              (min-width: 140px) and (max-width: 279px) 270w,
-              (min-width: 280px) and (max-width: 556px) 360w,
-              (min-width: 556px) 360w"
+            sizes="(max-width: 279px) 270w,
+              (min-width: 280px) and (max-width: 369px) 360w,
+              (min-width: 370px) and (max-width: 556px) 432w,
+              (min-width: 557px) 432w"
           />
         </div>
       </div>
       <q-separator class="width-100 bg-brand" />
-      <div>
-        <div class="row justify-around items-start">
-          <div>
-            <q-card flat class="text-center">
+      <div class="width-100">
+        <div class="row justify-around items-center">
+          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
+            <q-card flat class="text-center" style="max-width: 400px">
               <q-card-section>
                 <q-avatar
                   size="100px"
@@ -60,16 +66,16 @@
                   text-color="white"
                   icon="bi-incognito"
                 />
-                <p class="text-h4">Anonymous</p>
-                <p class="text-body1 width-explanation">
+                <p class="text-h4 q-mt-xs">Anonymous</p>
+                <p class="text-body1 text-justify">
                   The origin of your posts is encrypted on your device; even we
                   can't track who says what on ZKorum's backend. #ZKP
                 </p>
               </q-card-section>
             </q-card>
           </div>
-          <div>
-            <q-card flat class="text-center">
+          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
+            <q-card flat class="text-center" style="max-width: 400px">
               <q-card-section>
                 <q-avatar
                   size="100px"
@@ -77,16 +83,16 @@
                   text-color="white"
                   icon="bi-person-check"
                 />
-                <p class="text-h4">Verifiable</p>
-                <p class="text-body1 width-explanation">
+                <p class="text-h4 q-mt-xs">Verifiable</p>
+                <p class="text-body1 text-justify">
                   All users are verified by a professional/school email address
                   or a W3C Verifiable Credential. #SSI
                 </p>
               </q-card-section>
             </q-card>
           </div>
-          <div>
-            <q-card flat class="text-center">
+          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
+            <q-card flat class="text-center" style="max-width: 400px">
               <q-card-section>
                 <q-avatar
                   size="100px"
@@ -94,8 +100,8 @@
                   text-color="white"
                   icon="bi-robot"
                 />
-                <p class="text-h4">Non-toxic</p>
-                <p class="text-body1 width-explanation">
+                <p class="text-h4 q-mt-xs">Non-toxic</p>
+                <p class="text-body1 text-justify">
                   Learn to disagree respectfully and keep this space supportive
                   by interacting with ShelBot, our fine-tuned Mistal LLM. #AI
                   #Gamification
@@ -103,8 +109,8 @@
               </q-card-section>
             </q-card>
           </div>
-          <div>
-            <q-card flat class="text-center">
+          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
+            <q-card flat class="text-center" style="max-width: 400px">
               <q-card-section>
                 <q-avatar
                   size="100px"
@@ -112,8 +118,8 @@
                   text-color="white"
                   icon="bi-vignette"
                 />
-                <p class="text-h4">Auditable moderation</p>
-                <p class="text-body1 width-explanation">
+                <p class="text-h4 q-mt-xs">Auditable</p>
+                <p class="text-body1 text-justify">
                   Every proof of posts are broardcast on a permisionless
                   peer-to-peer network, building moderation accountability.
                   Don't Trust, Verify! #DWeb
@@ -121,8 +127,8 @@
               </q-card-section>
             </q-card>
           </div>
-          <div>
-            <q-card flat class="text-center">
+          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
+            <q-card flat class="text-center" style="max-width: 400px">
               <q-card-section>
                 <q-avatar
                   size="100px"
@@ -130,8 +136,8 @@
                   text-color="white"
                   icon="bi-code-slash"
                 />
-                <p class="text-h4">Open-Source</p>
-                <p class="text-body1 width-explanation">
+                <p class="text-h4 q-mt-xs">Open-source</p>
+                <p class="text-body1 text-justify">
                   Anyone can verify our source-code is doing what we say it
                   does, building transparency, and providing better
                   interoperability and security. #OSS
@@ -140,6 +146,119 @@
             </q-card>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="column flex-center bg-brand-teal width-100">
+      <div class="row items-center justify-around">
+        <q-btn
+          class="text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
+          unelevated
+          flat
+          rounded
+          outline
+          no-caps
+          type="a"
+          href="https://www.notion.so/zkorum/Legal-notice-90ddbd5ebddc48de93512241a6157095"
+          target="_blank"
+          text-color="brand"
+          >Legal</q-btn
+        >
+        <q-btn
+          class="text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
+          unelevated
+          flat
+          rounded
+          outline
+          no-caps
+          type="a"
+          href="https://www.notion.so/zkorum/Privacy-policy-ac5d0d7c91f142e481daa8f826b0e2b2"
+          target="_blank"
+          text-color="brand"
+          >Privacy</q-btn
+        >
+        <q-btn
+          class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
+          unelevated
+          flat
+          rounded
+          outline
+          no-caps
+          type="a"
+          href="https://www.notion.so/zkorum/Terms-of-service-c37b34e934c240878b7d5af53888e72c"
+          target="_blank"
+          text-color="brand"
+          >Terms</q-btn
+        >
+        <q-btn
+          class="text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
+          unelevated
+          flat
+          rounded
+          outline
+          no-caps
+          type="a"
+          href="https://about.zkorum.com"
+          target="_blank"
+          text-color="brand"
+          >About</q-btn
+        >
+      </div>
+      <div class="row flex-center">
+        <q-btn
+          text-color="brand"
+          unelevated
+          flat
+          rounded
+          outline
+          no-caps
+          type="a"
+          href="https://www.instagram.com/zkorum/"
+          target="_blank"
+          icon="bi-instagram"
+        />
+        <q-btn
+          text-color="brand"
+          unelevated
+          flat
+          rounded
+          outline
+          no-caps
+          href="https://www.linkedin.com/company/zkorum/"
+          target="_blank"
+          icon="bi-linkedin"
+        />
+        <q-btn
+          text-color="brand"
+          unelevated
+          flat
+          rounded
+          outline
+          no-caps
+          type="a"
+          href="https://github.com/zkorum/zkorum"
+          target="_blank"
+          icon="bi-github"
+        />
+        <q-btn
+          text-color="brand"
+          unelevated
+          flat
+          rounded
+          outline
+          no-caps
+          type="a"
+          href="https://discord.gg/cAkAJQSTEU"
+          target="_blank"
+          icon="bi-discord"
+        />
+      </div>
+      <div class="text-brand row flex-center">
+        <div class="text-center text-body1 q-pt-md q-pb-sm">
+          © ZKorum SAS 2024
+        </div>
+      </div>
+      <div class="text-brand row flex-center">
+        <div class="text-center text-body1 q-pb-sm">Made with ❤️ in Paris</div>
       </div>
     </div>
     <!-- <example-component -->
@@ -160,7 +279,7 @@ const buttonSize = computed(() => {
   return $q.screen.lt.md ? 'lg' : 'xl';
 });
 
-const images = ['1-cropped.png', '2-cropped.png', '3-cropped.png'];
+const images = ['1.png', '2.png', '3.png'];
 
 const shownImage = ref(images[0]);
 const indexShownImage = ref(0);
@@ -184,13 +303,13 @@ onMounted(() => {
 @import 'node_modules/quasar/src/css/core/typography.sass';
 .motto {
   body.screen--xs & {
-    @extend .text-h5;
+    @extend .text-h4;
   }
   body.screen--sm & {
     @extend .text-h4;
   }
   body.screen--md & {
-    @extend .text-h4;
+    @extend .text-h3;
   }
   body.screen--lg & {
     @extend .text-h3;
@@ -212,15 +331,9 @@ onMounted(() => {
   margin-top: auto;
   margin-bottom: auto;
 }
-.width-explanation {
-  max-width: 400px;
-}
 .first-intro {
-  height: 650px;
+  max-height: 750px;
   color: white;
-}
-.width-half {
-  width: 50%;
 }
 .width-25 {
   min-width: 33%;

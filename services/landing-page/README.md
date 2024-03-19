@@ -2,6 +2,12 @@
 
 ZKorum - Break Barriers, Build Understandings
 
+## SSG
+
+TODO: Deploy as an SSG using https://github.com/freddy38510/quasar-app-extension-ssg
+
+Current blocking issue: https://github.com/freddy38510/quasar-app-extension-ssg/issues/385
+
 ## Install the dependencies
 
 ```bash

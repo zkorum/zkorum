@@ -46,6 +46,12 @@ services:
     expose:
       - "80"
     restart: unless-stopped
+  landing-page:
+    container_name: zkorum_landing-page
+    image: zkorum/landing-page:1.0.0
+    expose:
+      - "80"
+    restart: unless-stopped
   nginx:
     image: nginx:stable-alpine
     container_name: zkorum_nginx

@@ -30,7 +30,7 @@ export default configure((ctx) => {
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
       'bootstrap-icons',
 
-      'roboto-font', // optional, you are not bound to it
+      // 'roboto-font', // optional, you are not bound to it
       'material-icons', // optional, you are not bound to it
     ],
 
