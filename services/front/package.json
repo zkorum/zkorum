@@ -6,8 +6,8 @@
     "scripts": {
         "dev": "vite",
         "dev:force": "vite --force",
-        "build": "tsc && vite build",
-        "build:staging1": "tsc && NODE_ENV=production vite build --mode staging1",
+        "build": "tsc && vite build --base=/feed/",
+        "build:staging1": "tsc && vite build --base=/feed/ --mode staging1",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format:check": "prettier . --check",
         "format:write": "prettier . --write",

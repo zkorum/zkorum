@@ -18,9 +18,7 @@ import { Buffer } from "buffer";
 globalThis.Buffer = Buffer;
 
 navigator.serviceWorker
-    ?.register(
-        process.env.NODE_ENV === "production" ? "/sw.js" : "/dev-sw.js?dev-sw"
-    )
+    ?.register(import.meta.env.PROD ? "/feed/sw.js" : "/dev-sw.js?dev-sw")
     .then((registration) => {
         registration?.addEventListener("updatefound", () => {
             // Listen for updates to the service worker

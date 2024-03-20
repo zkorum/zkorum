@@ -103,7 +103,7 @@
                 <p class="text-h4 q-mt-xs">Non-toxic</p>
                 <p class="text-body1 text-justify">
                   Learn to disagree respectfully and keep this space supportive
-                  by interacting with ShelBot, our fine-tuned Mistal LLM. #AI
+                  by interacting with ShelBot, our fine-tuned Mistral LLM. #AI
                   #Gamification
                 </p>
               </q-card-section>
@@ -120,7 +120,7 @@
                 />
                 <p class="text-h4 q-mt-xs">Auditable</p>
                 <p class="text-body1 text-justify">
-                  Every proof of posts are broardcast on a permisionless
+                  Every proof of posts are broadcast on a permisionless
                   peer-to-peer network, building moderation accountability.
                   Don't Trust, Verify! #DWeb
                 </p>

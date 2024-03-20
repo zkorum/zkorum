@@ -47,7 +47,7 @@ export const routes = [
     },
 ];
 
-const router = createBrowserRouter(routes);
+const router = createBrowserRouter(routes, { basename: "/feed/" });
 
 export function App() {
     const isMainLoadingOpen = useAppSelector((state) => {
