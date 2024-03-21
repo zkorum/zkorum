@@ -17,34 +17,34 @@ import { MainLoading } from "./MainLoading";
 import { Buffer } from "buffer";
 globalThis.Buffer = Buffer;
 
-navigator.serviceWorker
-    ?.register(import.meta.env.PROD ? "/feed/sw.js" : "/dev-sw.js?dev-sw")
-    .then((registration) => {
-        registration?.addEventListener("updatefound", () => {
-            // Listen for updates to the service worker
-            const newWorker = registration.installing;
+// navigator.serviceWorker
+//     ?.register(import.meta.env.PROD ? "/feed/sw.js" : "/dev-sw.js?dev-sw")
+//     .then((registration) => {
+//         registration?.addEventListener("updatefound", () => {
+//             // Listen for updates to the service worker
+//             const newWorker = registration.installing;
 
-            newWorker?.addEventListener("statechange", () => {
-                // Reload the page when the new service worker is installed
-                if (newWorker.state === "installed") {
-                    if (navigator.serviceWorker.controller) {
-                        // A new version of the service worker is available
-                        alert("New update, please refresh the page");
-                        // Reload the page
-                        window.location.reload();
-                    } else {
-                        // The service worker is the initial one
-                        console.log(
-                            "Service worker installed for the first time."
-                        );
-                    }
-                }
-            });
-        });
-    })
-    .catch((err) => {
-        console.log(err);
-    });
+//             newWorker?.addEventListener("statechange", () => {
+//                 // Reload the page when the new service worker is installed
+//                 if (newWorker.state === "installed") {
+//                     if (navigator.serviceWorker.controller) {
+//                         // A new version of the service worker is available
+//                         alert("New update, please refresh the page");
+//                         // Reload the page
+//                         window.location.reload();
+//                     } else {
+//                         // The service worker is the initial one
+//                         console.log(
+//                             "Service worker installed for the first time."
+//                         );
+//                     }
+//                 }
+//             });
+//         });
+//     })
+//     .catch((err) => {
+//         console.log(err);
+//     });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>

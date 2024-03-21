@@ -11,7 +11,7 @@
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
-    "build": "quasar build",
+    "build": "quasar build -m pwa",
     "image:build": "docker build -f Dockerfile.prod -t zkorum-landing-page .",
     "image:tag": "docker tag zkorum-landing-page:latest zkorum/landing-page:<TODO>",
     "image:push": "docker image push zkorum/frontJustForExample:0.1.0"
@@ -36,7 +36,14 @@
     "prettier": "^3.0.3",
     "typescript": "~5.3.0",
     "vite-plugin-checker": "^0.6.4",
-    "vue-tsc": "^1.8.22"
+    "vue-tsc": "^1.8.22",
+    "workbox-build": "^7.0.0",
+    "workbox-cacheable-response": "^7.0.0",
+    "workbox-core": "^7.0.0",
+    "workbox-expiration": "^7.0.0",
+    "workbox-precaching": "^7.0.0",
+    "workbox-routing": "^7.0.0",
+    "workbox-strategies": "^7.0.0"
   },
   "engines": {
     "node": "^24 || ^22 || ^20 || ^18",

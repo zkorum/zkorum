@@ -15,7 +15,7 @@ export default defineConfig({
                 maximumFileSizeToCacheInBytes: 10000000,
             },
             registerType: "autoUpdate",
-            injectRegister: null,
+            injectRegister: "inline",
             devOptions: {
                 enabled: true,
                 type: "classic",
@@ -28,12 +28,27 @@ export default defineConfig({
                 theme_color: "#ffffff",
                 icons: [
                     {
-                        src: "/android-chrome-192x192.png",
+                        src: "icons/icon-128x128.png",
+                        sizes: "128x128",
+                        type: "image/png",
+                    },
+                    {
+                        src: "icons/icon-192x192.png",
                         sizes: "192x192",
                         type: "image/png",
                     },
                     {
-                        src: "/android-chrome-512x512.png",
+                        src: "icons/icon-256x256.png",
+                        sizes: "256x256",
+                        type: "image/png",
+                    },
+                    {
+                        src: "icons/icon-384x384.png",
+                        sizes: "384x384",
+                        type: "image/png",
+                    },
+                    {
+                        src: "icons/icon-512x512.png",
                         sizes: "512x512",
                         type: "image/png",
                     },

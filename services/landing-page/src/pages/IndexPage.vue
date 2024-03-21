@@ -32,7 +32,7 @@
               :size="buttonSize"
               text-color="brand-dark"
               label="Go to Feed"
-              href="https://zkorum.com/feed/"
+              :href="baseUrl + /feed/"
               target="_blank"
             />
           </div>
@@ -283,6 +283,8 @@ const images = ['1.png', '2.png', '3.png'];
 
 const shownImage = ref(images[0]);
 const indexShownImage = ref(0);
+
+const baseUrl = window.location.origin;
 
 onMounted(() => {
   setInterval(function () {

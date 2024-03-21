@@ -1,29 +1,16 @@
-// Import the Workbox libraries
-importScripts(
-    "https://storage.googleapis.com/workbox-cdn/releases/6.2.4/workbox-sw.js"
-);
+/*
+ * This file (which will be your service worker)
+ * is picked up by the build system ONLY if
+ * quasar.config file > pwa > workboxMode is set to "injectManifest"
+ */
 
-// Ensure that workbox is available
-if (workbox) {
-    // Use the workbox.routing.registerRoute method to register a route
-    workbox.routing.registerRoute(
-        // Define a RegExp pattern that matches the desired URLs
-        new RegExp(".*"),
-        // Use the workbox.strategies.networkFirst strategy
-        new workbox.strategies.NetworkFirst()
-    );
+import { clientsClaim } from "workbox-core";
+import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 
-    // Add an event listener for the install event
-    self.addEventListener("install", (event) => {
-        // Skip waiting to immediately activate the service worker
-        self.skipWaiting();
-    });
+self.skipWaiting();
+clientsClaim();
 
-    // Add an event listener for the activate event
-    self.addEventListener("activate", (event) => {
-        // Claim clients to activate all tabs immediately
-        self.clients.claim();
-    });
-} else {
-    console.error("Workbox not loaded!");
-}
+// Use with precache injection
+precacheAndRoute(self.__WB_MANIFEST);
+
+cleanupOutdatedCaches();

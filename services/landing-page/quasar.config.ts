@@ -167,12 +167,15 @@ export default configure((ctx) => {
     pwa: {
       workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
       // swFilename: 'sw.js',
-      // manifestFilename: 'manifest.json'
+      // manifestFilename: 'manifest.webmanifest',
       // extendManifestJson (json) {},
       // useCredentialsForManifestTag: true,
       // injectPwaMetaTags: false,
       // extendPWACustomSWConf (esbuildConf) {},
-      // extendGenerateSWOptions (cfg) {},
+      extendGenerateSWOptions(cfg) {
+        cfg.skipWaiting = false;
+        cfg.clientsClaim = false;
+      },
       // extendInjectManifestOptions (cfg) {}
     },
 
