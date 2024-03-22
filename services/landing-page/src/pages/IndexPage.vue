@@ -32,8 +32,7 @@
               :size="buttonSize"
               text-color="brand-dark"
               label="Go to Feed"
-              :href="baseUrl + /feed/"
-              target="_blank"
+              :href="feedUrl"
             />
           </div>
         </div>
@@ -279,16 +278,17 @@ const buttonSize = computed(() => {
   return $q.screen.lt.md ? 'lg' : 'xl';
 });
 
-const images = ['1.png', '2.png', '3.png'];
+const images = ['1.png', '2.png', '3.png', '4.png'];
 
 const shownImage = ref(images[0]);
 const indexShownImage = ref(0);
 
 const baseUrl = window.location.origin;
+const feedUrl = `${baseUrl}/feed/`;
 
 onMounted(() => {
   setInterval(function () {
-    if (indexShownImage.value < 2) {
+    if (indexShownImage.value < 3) {
       const newIndex = indexShownImage.value + 1;
       shownImage.value = images[newIndex];
       indexShownImage.value = newIndex;
@@ -297,7 +297,7 @@ onMounted(() => {
       shownImage.value = images[0];
       indexShownImage.value = newIndex;
     }
-  }, 4000);
+  }, 5000);
 });
 </script>
 

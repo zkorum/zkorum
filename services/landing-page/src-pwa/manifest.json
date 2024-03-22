@@ -1,6 +1,9 @@
 {
   "orientation": "portrait",
   "background_color": "#ffffff",
+  "start_url": "/feed/",
+  "name": "ZKorum",
+  "short_name": "ZKorum",
   "theme_color": "#027be3",
   "icons": [
     {

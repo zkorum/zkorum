@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env*
+
+# other
+logo-square.png

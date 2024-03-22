@@ -45,6 +45,14 @@ globalThis.Buffer = Buffer;
 //     .catch((err) => {
 //         console.log(err);
 //     });
+//
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register(
+            import.meta.env.PROD ? "/feed/sw.js" : "/dev-sw.js?dev-sw"
+        );
+    });
+}
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>

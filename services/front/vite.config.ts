@@ -12,10 +12,10 @@ export default defineConfig({
         VitePWA({
             strategies: "injectManifest",
             injectManifest: {
-                maximumFileSizeToCacheInBytes: 10000000,
+                injectionPoint: undefined,
             },
             registerType: "autoUpdate",
-            injectRegister: "inline",
+            injectRegister: null,
             devOptions: {
                 enabled: true,
                 type: "classic",

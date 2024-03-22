@@ -41,7 +41,7 @@ export default configure((ctx) => {
         node: 'node20',
       },
 
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
@@ -165,17 +165,19 @@ export default configure((ctx) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-      // swFilename: 'sw.js',
-      // manifestFilename: 'manifest.webmanifest',
+      workboxOptions: {
+        exclude: [
+          /\.html$/, // I don't know why I need to change this matching pattern from string to RegEx to get it work.
+        ],
+      },
+      workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
+      swFilename: 'sw.js',
+      manifestFilename: 'manifest.webmanifest',
       // extendManifestJson (json) {},
       // useCredentialsForManifestTag: true,
       // injectPwaMetaTags: false,
       // extendPWACustomSWConf (esbuildConf) {},
-      extendGenerateSWOptions(cfg) {
-        cfg.skipWaiting = false;
-        cfg.clientsClaim = false;
-      },
+      // extendGenerateSWOptions(cfg) {},
       // extendInjectManifestOptions (cfg) {}
     },
 
@@ -218,7 +220,7 @@ export default configure((ctx) => {
       builder: {
         // https://www.electron.build/configuration/configuration
 
-        appId: 'landing-page',
+        appId: 'ZKorum',
       },
     },
 

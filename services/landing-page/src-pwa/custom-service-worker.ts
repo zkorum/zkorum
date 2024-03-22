@@ -7,36 +7,16 @@
 declare const self: ServiceWorkerGlobalScope &
   typeof globalThis & { skipWaiting: () => void };
 
-import { clientsClaim } from 'workbox-core';
-import {
-  precacheAndRoute,
-  cleanupOutdatedCaches,
-  createHandlerBoundToURL,
-} from 'workbox-precaching';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
+import 'workbox-precaching';
 
 // no-op sw to fix crazy issues with stale pwa...
 // https://stackoverflow.com/a/38980776/11046178
-self.skipWaiting();
-clientsClaim();
+self.addEventListener('install', () => {
+  // Skip over the "waiting" lifecycle state, to ensure that our
+  // new service worker is activated immediately, even if there's
+  // another tab open controlled by our older service worker code.
+  self.skipWaiting();
+});
 
-// Use with precache injection
-precacheAndRoute(self.__WB_MANIFEST);
-
-cleanupOutdatedCaches();
-
-// Non-SSR fallbacks to index.html
-// Production SSR fallbacks to offline.html (except for dev)
-if (process.env.MODE !== 'ssr' || process.env.PROD) {
-  registerRoute(
-    new NavigationRoute(
-      createHandlerBoundToURL(process.env.PWA_FALLBACK_HTML),
-      {
-        denylist: [
-          new RegExp(process.env.PWA_SERVICE_WORKER_REGEX),
-          /workbox-(.)*\.js$/,
-        ],
-      },
-    ),
-  );
-}
+const manifest = self.__WB_MANIFEST;
+manifest; // to avoid build issues
