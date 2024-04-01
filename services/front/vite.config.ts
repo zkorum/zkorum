@@ -24,8 +24,9 @@ export default defineConfig({
             manifest: {
                 name: "ZKorum",
                 short_name: "ZKorum",
-                description: "ZKorum",
-                theme_color: "#ffffff",
+                description: "ZKorum - Break Barriers, Build Understandings",
+                background_color: "#00275b",
+                theme_color: "#00275b",
                 icons: [
                     {
                         src: "icons/icon-128x128.png",

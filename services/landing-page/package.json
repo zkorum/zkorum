@@ -1,11 +1,11 @@
 {
   "name": "landing-page",
+  "license": "MPL-2.0",
   "version": "0.0.1",
   "description": "ZKorum - Break Barriers, Build Understandings",
   "productName": "ZKorum",
   "author": "Nicolas Gimenez <46368291+nicobao@users.noreply.github.com>",
   "type": "module",
-  "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.ts,.vue ./",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
