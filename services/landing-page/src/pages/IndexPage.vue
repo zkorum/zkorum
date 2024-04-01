@@ -101,8 +101,8 @@
                 />
                 <p class="text-h4 q-mt-xs">Non-toxic</p>
                 <p class="text-body1 text-justify">
-                  Learn to disagree respectfully and keep this space supportive
-                  by interacting with ShelBot, our fine-tuned Mistral LLM. #AI
+                  Users learn to disagree respectfully and keep this space supportive
+                  by interacting with ShelBot, our fine-tuned LLM. #AI
                   #Gamification
                 </p>
               </q-card-section>
@@ -119,7 +119,7 @@
                 />
                 <p class="text-h4 q-mt-xs">Auditable</p>
                 <p class="text-body1 text-justify">
-                  Every proof of posts are broadcast on a permisionless
+                  Every proof of posts is broadcast on a permissionless
                   peer-to-peer network, building moderation accountability.
                   Don't Trust, Verify! #DWeb
                 </p>
@@ -139,7 +139,7 @@
                 <p class="text-body1 text-justify">
                   Anyone can verify our source-code is doing what we say it
                   does, building transparency, and providing better
-                  interoperability and security. #OSS
+                  interoperability and security. #FOSS
                 </p>
               </q-card-section>
             </q-card>

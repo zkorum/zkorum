@@ -6,13 +6,13 @@ BASE_DIR=$HOME/zkorum/zkorum
 
 cat << EOF > /tmp/bootstrap_tabs.sh
 gnome-terminal --tab -t "OpenAPI" --working-directory="$BASE_DIR" -- \
-	zsh -is eval "make dev-generate"
+	bash -c "make dev-generate; bash"
 gnome-terminal --tab -t "Shared" --working-directory="$BASE_DIR" -- \
-	zsh -is eval "make dev-sync"
+	bash -c "make dev-sync; bash"
 gnome-terminal --tab -t "Back" --working-directory="$BASE_DIR" -- \
-	zsh -is eval "make dev-back"
+	bash -c "make dev-back; bash"
 gnome-terminal --tab -t "Front" --working-directory="$BASE_DIR" -- \
-	zsh -is eval "make dev-front"
+	bash -c "make dev-front; bash"
 gnome-terminal --tab -t "Git" --working-directory="$BASE_DIR"
 EOF
 
