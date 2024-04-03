@@ -21,7 +21,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { PostView } from "./PostView";
-import { feedWrapperId, refreshCredentials } from "../AppLayout";
+import { feedWrapperId } from "../AppLayout";
 
 export function Feed() {
     const {
@@ -48,24 +48,19 @@ export function Feed() {
 
     const ref = React.useRef<VirtuosoHandle>(null);
 
-    const reloadPosts = () => {
-        const moreTimeout = loadMore(false);
-        return () => {
-            clearTimeout(moreTimeout);
-            setLoadingMore(false);
-        };
-    };
+    // const reloadPosts = () => {
+    //     const moreTimeout = loadMore(false);
+    //     return () => {
+    //         clearTimeout(moreTimeout);
+    //         setLoadingMore(false);
+    //     };
+    // };
 
     React.useEffect(() => {
         PullToRefresh.init({
             mainElement: `#${feedWrapperId}`,
-            async onRefresh() {
-                await refreshCredentials({
-                    activeSessionStatus,
-                    activeSessionUserId,
-                    activeSessionEmail,
-                });
-                reloadPosts();
+            onRefresh() {
+                window.location.reload();
             },
         });
         return () => {

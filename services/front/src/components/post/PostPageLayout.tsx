@@ -43,7 +43,6 @@ import { PostPageTopbar } from "./PostPageTopbar";
 import { openAuthModal } from "@/store/reducers/session";
 import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
 import PullToRefresh from "pulltorefreshjs";
-import { refreshCredentials } from "../AppLayout";
 
 export function PostPageLayout() {
     const postPageWrapperId = "postPageWrapper";
@@ -133,17 +132,8 @@ export function PostPageLayout() {
     React.useEffect(() => {
         PullToRefresh.init({
             mainElement: `#${postPageWrapperId}`,
-            async onRefresh() {
-                await refreshCredentials({
-                    activeSessionStatus,
-                    activeSessionUserId,
-                    activeSessionEmail,
-                });
-                if (postSlugId !== undefined) {
-                    reloadPostAndComments(postSlugId);
-                } else {
-                    setLoadedPost(null);
-                }
+            onRefresh() {
+                window.location.reload();
             },
         });
         return () => {
