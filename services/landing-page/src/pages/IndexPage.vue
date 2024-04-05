@@ -97,7 +97,7 @@
     </div>
     <div class="column flex-center bg-brand-teal width-100">
       <div class="row items-center justify-around">
-        <!-- fit-content serves to make the button size fits the text size, however it renders the "col" directives useless :/ -->
+        <!-- NOTE: `style="width: fit-content;"` serves to make the button size fits the text size, however it renders the "col" directives useless :/ -->
         <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
           unelevated flat rounded outline no-caps type="a"
           href="https://www.notion.so/zkorum/Legal-notice-90ddbd5ebddc48de93512241a6157095" target="_blank"
