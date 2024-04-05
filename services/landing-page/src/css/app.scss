@@ -1,4 +1,5 @@
 // app global css in SCSS form
+
 .bg-brand {
   background-color: #00275b !important;
 }
@@ -7,20 +8,24 @@
   color: #00275b !important;
 }
 
+$color-brand-teal: #4be7de;
+
 .bg-brand-teal {
-  background-color: #4be7de !important;
+  background-color: $color-brand-teal !important;
 }
 
 .text-brand-teal {
-  color: #4be7de !important;
+  color: $color-brand-teal !important;
 }
 
+$color-brand-dark: #00204a;
+
 .bg-brand-dark {
-  background-color: #00204a !important;
+  background-color: $color-brand-dark !important;
 }
 
 .text-brand-dark {
-  color: #00204a !important;
+  color: $color-brand-dark !important;
 }
 
 html,
@@ -28,3 +33,14 @@ body {
   max-width: 100%;
   overflow-x: hidden;
 }
+
+// strong {
+//   /* Resetting all properties to default */
+//   color: $color-brand-dark;
+//   background-color: $color-brand-teal;
+//   border-radius: 25px;
+//   font-weight: inherit;
+//   padding: 5px 10px;
+//   /* Add any additional styling as needed */
+// }
+

@@ -1,0 +1,30 @@
+<template>
+  <q-btn-toggle size="sm" v-model="actualLocale" class="my-custom-toggle" no-caps rounded unelevated
+    toggle-color="brand-teal" toggle-text-color="brand" color="white" text-color="brand" :options="localeOptions" />
+</template>
+
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import { ref, watch } from 'vue'
+import { onMounted } from 'vue';
+
+const { locale } = useI18n({ useScope: 'global' })
+let actualLocale = ref(locale.value)
+onMounted(() => {
+  if (actualLocale.value.includes('fr')) {
+    actualLocale.value = 'fr';
+  } else if (locale.value.includes('en')) {
+    actualLocale.value = 'en-US';
+  } else {
+    actualLocale.value = 'en-US';
+  }
+});
+const localeOptions = [
+  { value: 'en-US', label: 'En' },
+  { value: 'fr', label: 'Fr' }
+]
+watch(actualLocale, (newValue) => {
+  // Update vue-i18n locale when actualLocale changes
+  locale.value = newValue
+})
+</script>
