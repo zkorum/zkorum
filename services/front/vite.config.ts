@@ -7,12 +7,16 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { VitePWA } from "vite-plugin-pwa";
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 export default defineConfig({
+    build: {
+        chunkSizeWarningLimit: 10000
+    },
     plugins: [
         react(),
         VitePWA({
             strategies: "injectManifest",
             injectManifest: {
                 injectionPoint: undefined,
+                maximumFileSizeToCacheInBytes: 10000,
             },
             registerType: "autoUpdate",
             injectRegister: null,

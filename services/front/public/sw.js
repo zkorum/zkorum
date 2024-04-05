@@ -4,6 +4,10 @@
  * quasar.config file > pwa > workboxMode is set to "InjectManifest"
  */
 
+import { cleanupOutdatedCaches } from 'workbox-precaching'
+
+cleanupOutdatedCaches()
+
 // no-op sw to fix crazy issues with stale pwa...
 // https://stackoverflow.com/a/38980776/11046178
 self.addEventListener("install", () => {

@@ -43,6 +43,7 @@ import { PostPageTopbar } from "./PostPageTopbar";
 import { openAuthModal } from "@/store/reducers/session";
 import { HASH_IS_COMMENTING, POST } from "@/common/navigation";
 import PullToRefresh from "pulltorefreshjs";
+import { refreshCredentials } from "../AppLayout";
 
 export function PostPageLayout() {
     const postPageWrapperId = "postPageWrapper";
@@ -102,7 +103,7 @@ export function PostPageLayout() {
         comment.length > MAX_LENGTH_COMMENT ||
         isContextNotLoaded;
 
-    const fetchPostAndComments = async function () {
+    const fetchPostAndComments = async function() {
         if (postSlugId !== undefined) {
             const cachedPost = getPost(posts, postSlugId);
             if (cachedPost !== undefined) {
@@ -132,8 +133,17 @@ export function PostPageLayout() {
     React.useEffect(() => {
         PullToRefresh.init({
             mainElement: `#${postPageWrapperId}`,
-            onRefresh() {
-                window.location.reload();
+            async onRefresh() {
+                await refreshCredentials({
+                    activeSessionStatus,
+                    activeSessionUserId,
+                    activeSessionEmail,
+                });
+                if (postSlugId !== undefined) {
+                    reloadPostAndComments(postSlugId);
+                } else {
+                    setLoadedPost(null);
+                }
             },
         });
         return () => {

@@ -1,5 +1,5 @@
 export default {
-  title: 'Espace Anonyme\nPour Conversations Franches',
+  title: 'Espace Anonyme\nEntre Membres Vérifiés',
   // title: {
   //   anonymous: {
   //     pre: 'Espace ',
@@ -17,7 +17,7 @@ export default {
   //     post: ''
   //   }
   // },
-  goToFeed: 'Voir le Feed',
+  goToFeed: 'Brisez le silence !',
   anonymous: {
     title: 'Anonyme',
     description: "L'origine de vos publications est chiffrée sur votre appareil ; même nous ne pouvons pas déterminer qui dit quoi sur l'infrastructure de ZKorum. #ZKP",

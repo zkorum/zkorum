@@ -7,7 +7,9 @@
 declare const self: ServiceWorkerGlobalScope &
   typeof globalThis & { skipWaiting: () => void };
 
-import 'workbox-precaching';
+import { cleanupOutdatedCaches } from 'workbox-precaching';
+
+cleanupOutdatedCaches()
 
 // no-op sw to fix crazy issues with stale pwa...
 // https://stackoverflow.com/a/38980776/11046178

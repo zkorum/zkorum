@@ -21,7 +21,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { PostView } from "./PostView";
-import { feedWrapperId } from "../AppLayout";
+import { feedWrapperId, refreshCredentials } from "../AppLayout";
 
 export function Feed() {
     const {
@@ -48,25 +48,38 @@ export function Feed() {
 
     const ref = React.useRef<VirtuosoHandle>(null);
 
-    // const reloadPosts = () => {
-    //     const moreTimeout = loadMore(false);
-    //     return () => {
-    //         clearTimeout(moreTimeout);
-    //         setLoadingMore(false);
-    //     };
-    // };
+    // force refresh after some time in case this is a stale version
+    const [countRefresh, setCountRefresh] = React.useState(0);
+
+    const reloadPosts = () => {
+        const moreTimeout = loadMore(false);
+        return () => {
+            clearTimeout(moreTimeout);
+            setLoadingMore(false);
+        };
+    };
 
     React.useEffect(() => {
         PullToRefresh.init({
             mainElement: `#${feedWrapperId}`,
-            onRefresh() {
-                window.location.reload();
+            async onRefresh() {
+                if (countRefresh === 3) {
+                    window.location.reload()
+                } else {
+                    setCountRefresh(countRefresh + 1)
+                    await refreshCredentials({
+                        activeSessionStatus,
+                        activeSessionUserId,
+                        activeSessionEmail,
+                    });
+                    reloadPosts();
+                }
             },
         });
         return () => {
             PullToRefresh.destroyAll();
         };
-    }, [activeSessionUserId, activeSessionEmail, activeSessionStatus]);
+    }, [countRefresh, activeSessionUserId, activeSessionEmail, activeSessionStatus]);
 
     const loadRecent = React.useCallback(
         (lastReactedAt: Date) => {
@@ -151,7 +164,7 @@ export function Feed() {
             <Grid pt={1} container justifyContent="center" alignItems="center">
                 <Grid>
                     {context?.posts.length === undefined ||
-                    context?.posts.length === 0 ? (
+                        context?.posts.length === 0 ? (
                         <Box width="100%">
                             {[1, 2, 3, 4, 5, 6, 7].map((id) => {
                                 return (
@@ -191,7 +204,7 @@ export function Feed() {
                             <CircularProgress size="1em" color="inherit" />
                         </Box>
                     ) : context?.posts.length !== undefined &&
-                      context.posts.length <= 4 ? (
+                        context.posts.length <= 4 ? (
                         <Button
                             size="small"
                             color={"inherit"}
