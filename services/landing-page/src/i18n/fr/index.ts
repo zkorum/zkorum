@@ -1,5 +1,5 @@
 export default {
-  title: 'Espace Anonyme\nEntre Membres Vérifiés',
+  title: 'Forum Anonyme\nEntre Membres Vérifiés',
   // title: {
   //   anonymous: {
   //     pre: 'Espace ',
