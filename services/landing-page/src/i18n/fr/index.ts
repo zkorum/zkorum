@@ -38,7 +38,7 @@ export default {
     title: 'Open-source',
     description: "N'importe qui peut vérifier que notre code source fait ce que nous disons qu'il fait, favorisant la transparence, et fournissant une meilleure interopérabilité et sécurité. #FOSS"
   },
-  legal: 'Légal',
+  legal: 'Mentions',
   privacy: 'Confidentialité',
   terms: 'CGU',
   about: 'À propos'
