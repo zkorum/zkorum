@@ -21,7 +21,7 @@
             <!--   }}<strong>{{ -->
             <!--   $t("title.verified.bold") }}</strong>{{ $t("title.verified.post") }}</h1> -->
           </div>
-          <div class="q-my-lg col-auto width-25">
+          <div class="q-my-lg col-auto min-width-33">
             <q-btn class="full-width" rounded no-caps no-wrap unelevated icon-right="trending_flat" color="brand-teal"
               :size="buttonSize" text-color="brand-dark" :label="$t('goToFeed')" :href="feedUrl" />
           </div>
@@ -96,41 +96,45 @@
       </div>
     </div>
     <div class="column flex-center bg-brand-teal width-100">
+      <div class="q-my-lg width-between">
+        <q-btn class="full-width" rounded no-caps no-wrap unelevated icon-right="trending_flat" color="brand"
+          :size="buttonSize" text-color="white" :label="$t('goToFeed')" :href="feedUrl" />
+      </div>
       <div class="row items-center justify-around">
         <!-- NOTE: `style="width: fit-content;"` serves to make the button size fits the text size, however it renders the "col" directives useless :/ -->
         <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
           unelevated flat rounded outline no-caps type="a"
           href="https://www.notion.so/zkorum/Legal-notice-90ddbd5ebddc48de93512241a6157095" target="_blank"
-          text-color="brand">{{ $t('legal') }}</q-btn>
+          text-color="brand-dark">{{ $t('legal') }}</q-btn>
         <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
           unelevated flat rounded outline no-caps type="a"
           href="https://www.notion.so/zkorum/Privacy-policy-ac5d0d7c91f142e481daa8f826b0e2b2" target="_blank"
-          text-color="brand">{{ $t('privacy') }}</q-btn>
+          text-color="brand-dark">{{ $t('privacy') }}</q-btn>
         <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
           unelevated flat rounded outline no-caps type="a"
           href="https://www.notion.so/zkorum/Terms-of-service-c37b34e934c240878b7d5af53888e72c" target="_blank"
-          text-color="brand">{{ $t('terms') }}</q-btn>
+          text-color="brand-dark">{{ $t('terms') }}</q-btn>
         <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
           unelevated flat rounded outline no-caps type="a" href="https://about.zkorum.com" target="_blank"
-          text-color="brand">{{
+          text-color="brand-dark">{{
               $t('about') }}</q-btn>
       </div>
       <div class="row flex-center">
-        <q-btn text-color="brand" unelevated flat rounded outline no-caps type="a"
+        <q-btn text-color="brand-dark" unelevated flat rounded outline no-caps type="a"
           href="https://www.instagram.com/zkorum/" target="_blank" icon="bi-instagram" />
-        <q-btn text-color="brand" unelevated flat rounded outline no-caps
+        <q-btn text-color="brand-dark" unelevated flat rounded outline no-caps
           href="https://www.linkedin.com/company/zkorum/" target="_blank" icon="bi-linkedin" />
-        <q-btn text-color="brand" unelevated flat rounded outline no-caps type="a"
+        <q-btn text-color="brand-dark" unelevated flat rounded outline no-caps type="a"
           href="https://github.com/zkorum/zkorum" target="_blank" icon="bi-github" />
-        <q-btn text-color="brand" unelevated flat rounded outline no-caps type="a" href="https://discord.gg/cAkAJQSTEU"
-          target="_blank" icon="bi-discord" />
+        <q-btn text-color="brand-dark" unelevated flat rounded outline no-caps type="a"
+          href="https://discord.gg/cAkAJQSTEU" target="_blank" icon="bi-discord" />
       </div>
-      <div class="text-brand row flex-center">
+      <div class="text-brand-dark row flex-center">
         <div class="text-center text-body1 q-pt-md q-pb-sm">
           © ZKorum SAS 2024
         </div>
       </div>
-      <div class="text-brand row flex-center">
+      <div class="text-brand-dark row flex-center">
         <div class="text-center text-body1 q-pb-sm">Made with ❤️ in Paris</div>
       </div>
     </div>
@@ -224,7 +228,11 @@ onMounted(() => {
   color: white;
 }
 
-.width-25 {
+.min-width-33 {
   min-width: 33%;
+}
+
+.width-between {
+  min-width: 16%;
 }
 </style>
