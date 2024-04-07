@@ -17,7 +17,7 @@ export default {
   //     post: ''
   //   }
   // },
-  goToFeed: 'Brisez le silence !',
+  goToFeed: 'Voir le Feed',
   anonymous: {
     title: 'Anonyme',
     description: "L'origine de vos publications est chiffrée sur votre appareil ; même nous ne pouvons pas déterminer qui dit quoi sur l'infrastructure de ZKorum. #ZKP",
