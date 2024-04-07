@@ -27,7 +27,7 @@
           </div>
         </div>
         <div class="column justify-center items-center col-grow" style="max-width: 100%; min-width: 50%">
-          <q-img :src="shownImage" style="max-width: 440px" :srcset="(shownImage + ' 270w', shownImage + ' 360w', shownImage + ' 432w')
+          <q-img :src="images[indexShownImage]" style="max-width: 440px" :srcset="(images[indexShownImage] + ' 270w', images[indexShownImage] + ' 360w', images[indexShownImage] + ' 432w')
               " sizes="(max-width: 279px) 270w,
               (min-width: 280px) and (max-width: 369px) 360w,
               (min-width: 370px) and (max-width: 556px) 432w,
@@ -149,7 +149,7 @@
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import LanguageSwitcher from 'components/LanguageSwitcher.vue';
 import { useI18n } from 'vue-i18n';
 
@@ -161,14 +161,16 @@ const buttonSize = computed(() => {
   return $q.screen.lt.md ? 'lg' : 'xl';
 });
 
-const imagesEn = ['1.png', '2.png', '3.png', '4.png'];
-const imagesFr = ['5.png', '6.png', '7.png', '8.png'];
-let images = imagesEn;
+const imagesEn: Array<string> & { length: 4 } = ['1.png', '2.png', '3.png', '4.png'];
+const imagesFr: Array<string> & { length: 4 } = ['5.png', '6.png', '7.png', '8.png'];
+let chosenImages: Array<string> & { length: 4 } = imagesEn;
 if (locale.value.includes('fr')) {
-  images = imagesFr
+  chosenImages = imagesFr;
+} else {
+  chosenImages = imagesEn;
 }
+const images = ref(chosenImages)
 
-const shownImage = ref(images[0]);
 const indexShownImage = ref(0);
 
 const baseUrl = window.location.origin;
@@ -178,14 +180,19 @@ onMounted(() => {
   setInterval(function () {
     if (indexShownImage.value < 3) {
       const newIndex = indexShownImage.value + 1;
-      shownImage.value = images[newIndex];
       indexShownImage.value = newIndex;
     } else {
       const newIndex = 0;
-      shownImage.value = images[0];
       indexShownImage.value = newIndex;
     }
   }, 5000);
+});
+watch(locale, () => {
+  if (locale.value.includes('fr')) {
+    images.value = imagesFr
+  } else {
+    images.value = imagesEn
+  }
 });
 </script>
 
