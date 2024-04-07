@@ -151,6 +151,9 @@
 import { useQuasar } from 'quasar';
 import { computed, onMounted, ref } from 'vue';
 import LanguageSwitcher from 'components/LanguageSwitcher.vue';
+import { useI18n } from 'vue-i18n';
+
+const { locale } = useI18n();
 
 
 const $q = useQuasar();
@@ -158,7 +161,12 @@ const buttonSize = computed(() => {
   return $q.screen.lt.md ? 'lg' : 'xl';
 });
 
-const images = ['1.png', '2.png', '3.png', '4.png'];
+const imagesEn = ['1.png', '2.png', '3.png', '4.png'];
+const imagesFr = ['5.png', '6.png', '7.png', '8.png'];
+let images = imagesEn;
+if (locale.value.includes('fr')) {
+  images = imagesFr
+}
 
 const shownImage = ref(images[0]);
 const indexShownImage = ref(0);
