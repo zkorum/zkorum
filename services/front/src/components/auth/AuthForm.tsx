@@ -127,7 +127,7 @@ export function AuthForm({
                     </Button>
                 </Box>
             </Box>
-            <Box sx={{ mt: 3, alignSelf: "flex-start" }}>
+            <Box sx={{ mt: 3 }}>
                 <Typography>This version is currently reserved for ESSEC Business School. Stay tuned for the Beta release!</Typography>
                 <Button
                     fullWidth
