@@ -39,7 +39,7 @@ export function Authenticate() {
                 setIsEmailValid={setIsEmailValid}
                 emailHelper={emailHelper}
                 setEmailHelper={setEmailHelper}
-                autoFocus={true}
+                autoFocus={false}
             />
         );
     } else {
@@ -58,7 +58,7 @@ export function Authenticate() {
                     setIsEmailValid={setIsEmailValid}
                     emailHelper={emailHelper}
                     setEmailHelper={setEmailHelper}
-                    autoFocus={true}
+                    autoFocus={false}
                 />
             </Box>
         );
