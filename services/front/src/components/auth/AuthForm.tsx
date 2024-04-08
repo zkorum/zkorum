@@ -118,10 +118,9 @@ export function AuthForm({
                         <Button
                             fullWidth
                             variant="contained"
-                            rel="noreferrer"
+                            rel="noreferrer noopener"
                             target="_blank"
-                            href="https://discord.gg/QwXFDafX4U"
-                            color="discord"
+                            href="https://fmphp086zpk.typeform.com/to/O9wdAe6o"
                             sx={{ mt: 3, mb: 2 }}
                             endIcon={
                                 <FontAwesomeIcon
@@ -130,7 +129,7 @@ export function AuthForm({
                                 />
                             }
                         >
-                            Join our Discord
+                            Join our Waitlist
                         </Button>
                     ) : (
                         <Button

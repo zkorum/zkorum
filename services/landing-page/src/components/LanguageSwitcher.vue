@@ -1,6 +1,7 @@
 <template>
   <q-btn-toggle size="sm" v-model="actualLocale" class="my-custom-toggle" no-caps rounded unelevated
-    toggle-color="brand-teal" toggle-text-color="brand" color="white" text-color="brand" :options="localeOptions" />
+    toggle-color="brand-teal" toggle-text-color="brand-dark" color="white" text-color="brand-dark"
+    :options="localeOptions" />
 </template>
 
 <script setup lang="ts">
