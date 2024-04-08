@@ -51,7 +51,7 @@ export function AuthForm({
             if (!result.success) {
                 setIsEmailValid("valid_unauthorized");
                 setEmailHelper(
-                    "This version is currently reserved for ESSEC Business School. Stay tuned for future releases!"
+                    "Please provide a valid @essec.edu email address"
                 );
             } else {
                 setIsEmailValid("valid_authorized");
@@ -80,8 +80,7 @@ export function AuthForm({
                     name="email"
                     error={
                         email !== "" &&
-                        isEmailValid !== "valid_authorized" &&
-                        isEmailValid !== "valid_unauthorized"
+                        isEmailValid !== "valid_authorized"
                     }
                     helperText={emailHelper} // must always be set to keep same height (see link at variable definition)
                     value={email}
@@ -114,38 +113,38 @@ export function AuthForm({
                             }
                         />
                     </FormControl>
-                    {isEmailValid === "valid_unauthorized" ? (
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            rel="noreferrer noopener"
-                            target="_blank"
-                            href="https://fmphp086zpk.typeform.com/to/O9wdAe6o"
-                            sx={{ mt: 3, mb: 2 }}
-                            endIcon={
-                                <FontAwesomeIcon
-                                    size="2xs"
-                                    icon={faArrowUpRightFromSquare}
-                                />
-                            }
-                        >
-                            Join our Waitlist
-                        </Button>
-                    ) : (
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            sx={{ mt: 3, mb: 2 }}
-                            onClick={() => handleOnAuthenticate(email, userId)}
-                            disabled={
-                                isEmailValid !== "valid_authorized" ||
-                                !isTrusted
-                            }
-                        >
-                            Register / Log in
-                        </Button>
-                    )}
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 3, mb: 2 }}
+                        onClick={() => handleOnAuthenticate(email, userId)}
+                        disabled={
+                            isEmailValid !== "valid_authorized" ||
+                            !isTrusted
+                        }
+                    >
+                        Register / Log in
+                    </Button>
                 </Box>
+            </Box>
+            <Box sx={{ mt: 3, alignSelf: "flex-start" }}>
+                <Typography>This version is currently reserved for ESSEC Business School. Stay tuned for the Beta release!</Typography>
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    rel="noreferrer noopener"
+                    target="_blank"
+                    href="https://fmphp086zpk.typeform.com/to/O9wdAe6o"
+                    sx={{ mt: 3, mb: 2 }}
+                    endIcon={
+                        <FontAwesomeIcon
+                            size="2xs"
+                            icon={faArrowUpRightFromSquare}
+                        />
+                    }
+                >
+                    Join our Waitlist
+                </Button>
             </Box>
         </Box>
     );
