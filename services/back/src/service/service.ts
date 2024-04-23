@@ -2251,8 +2251,8 @@ export class Service {
             lastReactedAt === undefined
                 ? undefined
                 : order === "more"
-                ? lt(postTable.updatedAt, lastReactedAt)
-                : gt(postTable.updatedAt, lastReactedAt);
+                ? lt(postTable.lastReactedAt, lastReactedAt)
+                : gt(postTable.lastReactedAt, lastReactedAt);
         const results = await db
             .selectDistinctOn([postTable.lastReactedAt, postTable.id], {
                 // poll payload

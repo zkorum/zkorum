@@ -48,6 +48,18 @@ server.register(fastifySensible);
 server.register(fastifyAuth);
 server.register(fastifyCors, {
     // put your options here
+    // origin: (origin, cb) => {
+    //     if (origin !== undefined) {
+    //         const hostname = new URL(origin).hostname
+    //         if (hostname === "localhost" || hostname === "192.168.1.96" || hostname === "113.0.5672.136") {
+    //             //  Request from localhost will pass
+    //             cb(null, true)
+    //             return
+    //         }
+    //         // Generate an error on other origins, disabling access
+    //         cb(new Error("Not allowed"), false)
+    //     }
+    // }
 });
 
 // Add schema validator and serializer
@@ -58,9 +70,9 @@ const speciallyAuthorizedEmails: string[] =
     config.NODE_ENV === "production"
         ? []
         : config.SPECIALLY_AUTHORIZED_EMAILS !== undefined &&
-          config.SPECIALLY_AUTHORIZED_EMAILS.length !== 0
-        ? config.SPECIALLY_AUTHORIZED_EMAILS.replace(/\s/g, "").split(",")
-        : [];
+            config.SPECIALLY_AUTHORIZED_EMAILS.length !== 0
+            ? config.SPECIALLY_AUTHORIZED_EMAILS.replace(/\s/g, "").split(",")
+            : [];
 
 server.register(fastifySwagger, {
     openapi: {
@@ -149,15 +161,15 @@ const SERVER_URL =
     config.NODE_ENV === "production"
         ? config.SERVER_URL_PROD
         : config.NODE_ENV === "staging1"
-        ? config.SERVER_URL_STAGING1
-        : config.SERVER_URL_DEV;
+            ? config.SERVER_URL_STAGING1
+            : config.SERVER_URL_DEV;
 
 const SERVER_DID =
     config.NODE_ENV === "production"
         ? config.SERVER_DID_PROD
         : config.NODE_ENV === "staging1"
-        ? config.SERVER_DID_STAGING1
-        : config.SERVER_DID_DEV;
+            ? config.SERVER_DID_STAGING1
+            : config.SERVER_DID_DEV;
 
 // auth for account profile interaction
 // TODO: store UCAN in ucan table at the end and check whether UCAN has already been seen in the ucan table on the first place - if yes, throw unauthorized error and log the potential replay attack attempt.
@@ -426,7 +438,7 @@ async function verifyPresentation({
                     (secretCredentialRevealedAttributes[SUBJECT_STR] as object)
                 ) ||
                 (secretCredentialRevealedAttributes as any)[SUBJECT_STR][
-                    "type"
+                "type"
                 ] !== expectedSecretCredentialType
             ) {
                 throw server.httpErrors.unauthorized(

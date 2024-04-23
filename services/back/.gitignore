@@ -39,3 +39,5 @@ lerna-debug.log*
 flyway.conf
 
 swagger-spec.json
+# We don't use orval for now
+orval.config.ts
