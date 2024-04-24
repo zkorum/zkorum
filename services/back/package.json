@@ -4,9 +4,10 @@
     "description": "ZKorum backend",
     "exports": "./index.js",
     "scripts": {
-        "build": "rm -rf dist && tsc --sourceMap -p tsconfig.json",
+        "build": "NODE_ENV=production rm -rf dist && tsc --sourceMap -p tsconfig.json",
         "start": "node --loader esm-module-alias/loader --no-warnings dist/index.js",
         "start:dev": "tsx watch src/index.ts",
+        "start:dev:capacitor": "MODE=capacitor tsx watch src/index.ts",
         "db:drop": "drizzle-kit drop",
         "db:generate": "drizzle-kit generate:pg && ./scripts/rename_sql_migration_file.sh drizzle/",
         "db:migrate": "docker run --rm --network host -v ${PWD}/database/flyway:/flyway/conf -v ${PWD}/database/flyway:/flyway/sql flyway/flyway migrate",
@@ -18,7 +19,7 @@
         "format:write": "prettier . --write",
         "generate-dev-keys": "NODE_OPTIONS=--experimental-vm-modules GENERATE_DEV_KEYS=true jest -t 'generate-dev-keys'",
         "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-        "image:build": "docker build -f Dockerfile.prod -t zkorum-back ."
+        "image:build": "docker build -t zkorum-back ."
     },
     "type": "module",
     "engines": {

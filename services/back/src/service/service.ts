@@ -5,7 +5,6 @@ import {
     toUnionUndefined,
     type ToxicityClassification,
 } from "@/shared/shared.js";
-import { PythonShell } from "python-shell";
 import {
     type AuthenticateRequestBody,
     type EmailSecretCredentials,
@@ -86,7 +85,6 @@ import {
     parseSecretCredentialRequest,
     type PostAs,
 } from "./credential.js";
-import { isTooEarly } from "@ucans/ucans";
 import { log } from "@/app.js";
 
 export interface AuthenticateOtp {
@@ -1487,7 +1485,7 @@ export class Service {
             );
             if (
                 result.lastEmailSentAt.getTime() >=
-                    minutesIntervalAgo.getTime() &&
+                minutesIntervalAgo.getTime() &&
                 expectedExpiryTime.getTime() === result.codeExpiry.getTime() // code hasn't been guessed, because otherwise it would have been manually expired before the normal expiry time
             ) {
                 throw httpErrors.tooManyRequests(
@@ -1998,7 +1996,7 @@ export class Service {
                     if (result.isRevoked) {
                         (
                             secretCredentialsPerType[
-                                result.type
+                            result.type
                             ] as SecretCredentials
                         ).revoked.push({
                             // ts thinks secretCredentialsPerType[result.type] can be undefined :@
@@ -2010,7 +2008,7 @@ export class Service {
                     } else {
                         (
                             secretCredentialsPerType[
-                                result.type
+                            result.type
                             ] as SecretCredentials
                         ).active = {
                             // ts thinks secretCredentialsPerType[result.type] can be undefined :@
@@ -2251,8 +2249,8 @@ export class Service {
             lastReactedAt === undefined
                 ? undefined
                 : order === "more"
-                ? lt(postTable.lastReactedAt, lastReactedAt)
-                : gt(postTable.lastReactedAt, lastReactedAt);
+                    ? lt(postTable.lastReactedAt, lastReactedAt)
+                    : gt(postTable.lastReactedAt, lastReactedAt);
         const results = await db
             .selectDistinctOn([postTable.lastReactedAt, postTable.id], {
                 // poll payload
@@ -2302,20 +2300,20 @@ export class Service {
             const metadata =
                 showHidden === true
                     ? {
-                          uid: result.pollUid,
-                          slugId: result.slugId,
-                          isHidden: result.isHidden,
-                          updatedAt: result.updatedAt,
-                          lastReactedAt: result.lastReactedAt,
-                          commentCount: result.commentCount,
-                      }
+                        uid: result.pollUid,
+                        slugId: result.slugId,
+                        isHidden: result.isHidden,
+                        updatedAt: result.updatedAt,
+                        lastReactedAt: result.lastReactedAt,
+                        commentCount: result.commentCount,
+                    }
                     : {
-                          uid: result.pollUid,
-                          slugId: result.slugId,
-                          updatedAt: result.updatedAt,
-                          lastReactedAt: result.lastReactedAt,
-                          commentCount: result.commentCount,
-                      };
+                        uid: result.pollUid,
+                        slugId: result.slugId,
+                        updatedAt: result.updatedAt,
+                        lastReactedAt: result.lastReactedAt,
+                        commentCount: result.commentCount,
+                    };
             return {
                 metadata: metadata,
                 payload: {
@@ -2323,35 +2321,35 @@ export class Service {
                     body: toUnionUndefined(result.body),
                     poll:
                         result.option1 !== null &&
-                        result.option2 !== null &&
-                        result.option1Response !== null &&
-                        result.option2Response !== null
+                            result.option2 !== null &&
+                            result.option1Response !== null &&
+                            result.option2Response !== null
                             ? {
-                                  options: {
-                                      option1: result.option1,
-                                      option2: result.option2,
-                                      option3: toUnionUndefined(result.option3),
-                                      option4: toUnionUndefined(result.option4),
-                                      option5: toUnionUndefined(result.option5),
-                                      option6: toUnionUndefined(result.option6),
-                                  },
-                                  result: {
-                                      option1Response: result.option1Response,
-                                      option2Response: result.option2Response,
-                                      option3Response: toUnionUndefined(
-                                          result.option3Response
-                                      ),
-                                      option4Response: toUnionUndefined(
-                                          result.option4Response
-                                      ),
-                                      option5Response: toUnionUndefined(
-                                          result.option5Response
-                                      ),
-                                      option6Response: toUnionUndefined(
-                                          result.option6Response
-                                      ),
-                                  },
-                              }
+                                options: {
+                                    option1: result.option1,
+                                    option2: result.option2,
+                                    option3: toUnionUndefined(result.option3),
+                                    option4: toUnionUndefined(result.option4),
+                                    option5: toUnionUndefined(result.option5),
+                                    option6: toUnionUndefined(result.option6),
+                                },
+                                result: {
+                                    option1Response: result.option1Response,
+                                    option2Response: result.option2Response,
+                                    option3Response: toUnionUndefined(
+                                        result.option3Response
+                                    ),
+                                    option4Response: toUnionUndefined(
+                                        result.option4Response
+                                    ),
+                                    option5Response: toUnionUndefined(
+                                        result.option5Response
+                                    ),
+                                    option6Response: toUnionUndefined(
+                                        result.option6Response
+                                    ),
+                                },
+                            }
                             : undefined,
                 },
                 author: {
@@ -2404,35 +2402,35 @@ export class Service {
                 body: toUnionUndefined(result.body),
                 poll:
                     result.option1 !== null &&
-                    result.option2 !== null &&
-                    result.option1Response !== null &&
-                    result.option2Response !== null
+                        result.option2 !== null &&
+                        result.option1Response !== null &&
+                        result.option2Response !== null
                         ? {
-                              options: {
-                                  option1: result.option1,
-                                  option2: result.option2,
-                                  option3: toUnionUndefined(result.option3),
-                                  option4: toUnionUndefined(result.option4),
-                                  option5: toUnionUndefined(result.option5),
-                                  option6: toUnionUndefined(result.option6),
-                              },
-                              result: {
-                                  option1Response: result.option1Response,
-                                  option2Response: result.option2Response,
-                                  option3Response: toUnionUndefined(
-                                      result.option3Response
-                                  ),
-                                  option4Response: toUnionUndefined(
-                                      result.option4Response
-                                  ),
-                                  option5Response: toUnionUndefined(
-                                      result.option5Response
-                                  ),
-                                  option6Response: toUnionUndefined(
-                                      result.option6Response
-                                  ),
-                              },
-                          }
+                            options: {
+                                option1: result.option1,
+                                option2: result.option2,
+                                option3: toUnionUndefined(result.option3),
+                                option4: toUnionUndefined(result.option4),
+                                option5: toUnionUndefined(result.option5),
+                                option6: toUnionUndefined(result.option6),
+                            },
+                            result: {
+                                option1Response: result.option1Response,
+                                option2Response: result.option2Response,
+                                option3Response: toUnionUndefined(
+                                    result.option3Response
+                                ),
+                                option4Response: toUnionUndefined(
+                                    result.option4Response
+                                ),
+                                option5Response: toUnionUndefined(
+                                    result.option5Response
+                                ),
+                                option6Response: toUnionUndefined(
+                                    result.option6Response
+                                ),
+                            },
+                        }
                         : undefined,
             },
             author: {
@@ -2546,7 +2544,7 @@ export class Service {
                 | typeof pollTable.option5Response
                 | typeof pollTable.option6Response;
             switch (
-                response.optionChosen // TODO Refactor by making it typesafe by default - this stinks
+            response.optionChosen // TODO Refactor by making it typesafe by default - this stinks
             ) {
                 case 1:
                     optionChosenResponseColumnName = "option1Response";
@@ -2680,22 +2678,30 @@ export class Service {
         const timestampedPresentationCID = await toEncodedCID(
             timestampedPresentation
         );
-        const toxicityResp = await fetch(`${nlpBaseUrl}/detoxify`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                speech: payload.content,
-            }),
-        });
-        if (toxicityResp.status < 200 || toxicityResp.status > 299) {
-            throw httpErrors.internalServerError(
-                `Interaction with nlp service failed: '${toxicityResp.status} - ${toxicityResp.statusText}'`
-            );
+        let toxicityResp: Response | undefined = undefined;
+        try {
+            toxicityResp = await fetch(`${nlpBaseUrl}/detoxify`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    speech: payload.content,
+                }),
+            });
+        } catch (e) {
+            log.warn(`Interaction with nlp service failed: '${e}'`)
         }
-        const detoxifyResult: ToxicityClassification =
-            (await toxicityResp.json()) as ToxicityClassification;
+        let detoxifyResult: ToxicityClassification | undefined = undefined;
+        if (toxicityResp === undefined || toxicityResp?.status < 200 || toxicityResp?.status > 299) {
+            log.warn(`Interaction with nlp service failed: '${toxicityResp?.status} - ${toxicityResp?.statusText}'`)
+            // throw httpErrors.internalServerError(
+            //     `Interaction with nlp service failed: '${toxicityResp.status} - ${toxicityResp.statusText}'`
+            // );
+        } else {
+            detoxifyResult =
+                (await toxicityResp.json()) as ToxicityClassification;
+        }
         await db.transaction(async (tx) => {
             const authorId = await Service.selectOrInsertPseudonym({
                 tx: tx,
@@ -2708,13 +2714,13 @@ export class Service {
                 timestampedPresentationCID: timestampedPresentationCID,
                 slugId: generateRandomSlugId(),
                 authorId: authorId,
-                toxicity: detoxifyResult.toxicity,
-                severeToxicity: detoxifyResult.severe_toxicity,
-                obscene: detoxifyResult.obscene,
-                identityAttack: detoxifyResult.identity_attack,
-                insult: detoxifyResult.insult,
-                threat: detoxifyResult.threat,
-                sexualExplicit: detoxifyResult.sexual_explicit,
+                toxicity: detoxifyResult !== undefined ? detoxifyResult.toxicity : 0,
+                severeToxicity: detoxifyResult !== undefined ? detoxifyResult.severe_toxicity : 0,
+                obscene: detoxifyResult !== undefined ? detoxifyResult.obscene : 0,
+                identityAttack: detoxifyResult !== undefined ? detoxifyResult.identity_attack : 0,
+                insult: detoxifyResult !== undefined ? detoxifyResult.insult : 0,
+                threat: detoxifyResult !== undefined ? detoxifyResult.threat : 0,
+                sexualExplicit: detoxifyResult !== undefined ? detoxifyResult.sexual_explicit : 0,
                 content: payload.content,
                 postId: result.pollId,
                 createdAt: now,
@@ -2744,14 +2750,14 @@ export class Service {
             updatedAt === undefined
                 ? eq(commentTable.postId, postId)
                 : order === "more"
-                ? and(
-                      eq(commentTable.postId, postId),
-                      gt(commentTable.updatedAt, updatedAt)
-                  )
-                : and(
-                      eq(commentTable.postId, postId),
-                      lt(commentTable.updatedAt, updatedAt)
-                  );
+                    ? and(
+                        eq(commentTable.postId, postId),
+                        gt(commentTable.updatedAt, updatedAt)
+                    )
+                    : and(
+                        eq(commentTable.postId, postId),
+                        lt(commentTable.updatedAt, updatedAt)
+                    );
         const results = await db
             .selectDistinctOn([commentTable.updatedAt, commentTable.id], {
                 // comment payload

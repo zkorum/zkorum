@@ -3,7 +3,7 @@ name = "nlp"
 version = "0.1.0"
 description = "Default template for PDM package"
 authors = [
-    {name = "Nicolas Gimenez", email = "nicolas.gimenez@zkorum.com"},
+    {name = "ZKorum SAS", email = "legal@zkorum.com"},
 ]
 dependencies = [
     "detoxify==0.5.2",

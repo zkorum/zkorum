@@ -237,7 +237,7 @@ export function Feed() {
                 ref={ref}
                 data={posts}
                 restoreStateFrom={virtuosoState}
-                endReached={(index) => loadMore(true, index)}
+                endReached={(index) => loadMore(false, index)}
                 context={{
                     loadingMore: loadingMore,
                     loadingRecent: loadingRecent,

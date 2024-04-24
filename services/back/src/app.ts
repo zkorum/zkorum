@@ -13,6 +13,9 @@ const configSchema = z.object({
     NODE_ENV: z
         .enum(["development", "staging1", "production"])
         .default("development"),
+    MODE: z
+        .enum(["web", "capacitor"])
+        .default("web"),
     SERVER_URL_DEV: z.string().url().default(`http://localhost:${defaultPort}`),
     SERVER_URL_STAGING1: z
         .string()

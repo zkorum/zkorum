@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { usePost } from "@/post";
-import { fetchMoreComments, fetchRecentComments } from "@/request/post";
+import { fetchMoreComments } from "@/request/post";
 import type {
     ExtendedPostData,
     PostComment,
@@ -58,15 +58,6 @@ export function PostPage() {
         setComments(updatedComments);
     }
 
-    const loadRecent = React.useCallback(
-        (minUpdatedAt?: Date) => {
-            return setTimeout(async () => {
-                return await doLoadRecentComments(minUpdatedAt);
-            }, 200);
-        },
-        [setComments, setLoadingRecent]
-    );
-
     const loadMore = React.useCallback(
         (lastIndex?: number) => {
             return setTimeout(async () => {
@@ -79,9 +70,9 @@ export function PostPage() {
     React.useEffect(() => {
         if (wasCommentSent) {
             setLoadingRecent(true);
-            const recentTimeout = loadRecent(
+            const recentTimeout = loadMore(
                 comments.length > 0
-                    ? comments[comments.length - 1].metadata.updatedAt
+                    ? comments.length - 1
                     : undefined
             );
             return () => {
@@ -123,34 +114,6 @@ export function PostPage() {
         }
     }
 
-    async function doLoadRecentComments(minUpdatedAt?: Date) {
-        if (postSlugId !== undefined) {
-            try {
-                setLoadingRecent(true);
-                const newComments = await fetchRecentComments({
-                    postSlugId: postSlugId,
-                    updatedAt: minUpdatedAt,
-                });
-                const actualNewComments = newComments.filter(
-                    (comment) =>
-                        !comments.some(
-                            (existingComment) =>
-                                existingComment.metadata.uid ===
-                                comment.metadata.uid
-                        )
-                );
-                if (actualNewComments.length !== 0) {
-                    setComments((prevComments) => [
-                        ...actualNewComments,
-                        ...prevComments,
-                    ]);
-                }
-            } finally {
-                setLoadingRecent(false);
-            }
-        }
-    }
-
     interface LoadingContext {
         loadingMore: boolean | undefined;
         loadingRecent: boolean | undefined;
@@ -166,15 +129,15 @@ export function PostPage() {
             <Grid container justifyContent="center" alignItems="center">
                 <Grid>
                     {context?.loadingMore ||
-                    context?.loadingRecent ||
-                    (context?.loadingMore === undefined &&
-                        context?.loadingRecent === undefined) ? null : context
-                          ?.comments.length === undefined ||
-                      context?.comments.length === 0 ? (
+                        context?.loadingRecent ||
+                        (context?.loadingMore === undefined &&
+                            context?.loadingRecent === undefined) ? null : context
+                                ?.comments.length === undefined ||
+                                context?.comments.length === 0 ? (
                         <Button
                             onClick={() => {
                                 activeSessionEmail === "" ||
-                                activeSessionEmail === undefined
+                                    activeSessionEmail === undefined
                                     ? dispatch(openAuthModal())
                                     : setCommentFocused(true);
                             }}

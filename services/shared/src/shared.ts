@@ -112,3 +112,13 @@ export function buildCreateCommentContextFromPayload(
         payload: payload,
     };
 }
+
+export interface ToxicityClassification {
+    toxicity: number;
+    severe_toxicity: number;
+    obscene: number;
+    identity_attack: number;
+    insult: number;
+    threat: number;
+    sexual_explicit: number;
+}

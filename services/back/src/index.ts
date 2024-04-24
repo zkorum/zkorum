@@ -1113,7 +1113,7 @@ server.ready((e) => {
     }
 });
 
-const host = config.NODE_ENV === "development" ? "127.0.0.1" : "0.0.0.0";
+const host = config.NODE_ENV === "development" ? config.MODE === "capacitor" ? "192.168.1.96" : "127.0.0.1" : "0.0.0.0";
 
 server.listen({ port: config.PORT, host: host }, (err) => {
     if (err) {
