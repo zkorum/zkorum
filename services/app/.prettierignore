@@ -1,0 +1,9 @@
+**/.git
+**/.svn
+**/.hg
+**/node_modules
+.vscode
+node_modules
+src/shared
+src/api
+src-capacitor

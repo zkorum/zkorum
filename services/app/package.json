@@ -1,0 +1,58 @@
+{
+  "name": "@zkorum/app",
+  "version": "0.0.2",
+  "description": "Anonymous Space For Open Dialogues",
+  "productName": "ZKorum",
+  "author": "Nicolas Gimenez <46368291+nicobao@users.noreply.github.com>",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --ext .js,.ts,.vue ./",
+    "format:write": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\"",
+    "format:check": "prettier . --check",
+    "test": "echo \"No test specified\" && exit 0",
+    "dev": "quasar dev",
+    "dev:android": "quasar dev -m capacitor -T android",
+    "build": "quasar build"
+  },
+  "dependencies": {
+    "@capgo/capacitor-updater": "^5.9.4",
+    "@docknetwork/crypto-wasm-ts": "^0.59.0",
+    "@quasar/extras": "^1.16.4",
+    "@tanstack/vue-query": "^5.29.0",
+    "axios": "^1.6.8",
+    "buffer": "^6.0.3",
+    "cborg": "^4.2.0",
+    "localforage": "^1.10.0",
+    "pinia": "^2.1.7",
+    "quasar": "^2.6.0",
+    "uint8arrays": "^5.0.3",
+    "vue": "^3.4.18",
+    "vue-i18n": "^9.2.2",
+    "vue-router": "^4.0.12",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@intlify/unplugin-vue-i18n": "^2.0.0",
+    "@quasar/app-vite": "^2.0.0-beta.5",
+    "@types/node": "^20.5.9",
+    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/parser": "^6.6.0",
+    "autoprefixer": "^10.4.2",
+    "eslint": "^8.11.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "msw": "^2.2.14",
+    "prettier": "^3.0.3",
+    "typescript": "~5.3.0",
+    "vite-plugin-checker": "^0.6.4",
+    "vite-tsconfig-paths": "^4.3.2",
+    "vue-tsc": "^1.8.22"
+  },
+  "engines": {
+    "node": "^24 || ^22 || ^20 || ^18",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  }
+}

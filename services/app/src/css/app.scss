@@ -1,0 +1,41 @@
+// app global css in SCSS form
+
+$color-brand: #00275b;
+
+.bg-brand {
+    background-color: $color-brand !important;
+}
+
+.text-brand {
+    color: $color-brand !important;
+}
+
+$color-brand-teal: #4be7de;
+
+.bg-brand-teal {
+    background-color: $color-brand-teal !important;
+}
+
+.text-brand-teal {
+    color: $color-brand-teal !important;
+}
+
+$color-brand-dark: #00204a;
+
+.bg-brand-dark {
+    background-color: $color-brand-dark !important;
+}
+
+.text-brand-dark {
+    color: $color-brand-dark !important;
+}
+
+$color-essec-blue: #1da1e1;
+
+.bg-essec-blue {
+    background-color: $color-essec-blue !important;
+}
+
+.text-essec-blue {
+    color: $color-essec-blue !important;
+}

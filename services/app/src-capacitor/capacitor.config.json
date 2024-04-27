@@ -1,0 +1,8 @@
+{
+  "appId": "com.zkorum.feed",
+  "appName": "ZKorum",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
