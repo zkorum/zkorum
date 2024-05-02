@@ -6,8 +6,6 @@ import {
   BBSPlusBlinding,
   CredentialSchema,
   SUBJECT_STR,
-  initializeWasm,
-  isWasmInitialized,
 } from "@docknetwork/crypto-wasm-ts";
 
 function secretCredSchema() {
@@ -22,15 +20,6 @@ function secretCredSchema() {
     },
   };
   return new CredentialSchema(schema);
-}
-
-// TODO: move this function once and for all at React app initialization stage
-export async function maybeInitWasm() {
-  if (isWasmInitialized()) {
-    return;
-  } else {
-    await initializeWasm();
-  }
 }
 
 function newReqBuilder(
@@ -75,8 +64,7 @@ function newReqBuilder(
 // }
 //
 
-export async function buildBlindedSecretCredential(secret?: string) {
-  await maybeInitWasm();
+export async function buildBlindedSecretCredential(secret?: string): Promise<PreparedSecretCredentialRequest> {
   let actualSecret = secret;
   if (actualSecret === undefined) {
     actualSecret = base64.encode(randomNumbers({ amount: 32 }));

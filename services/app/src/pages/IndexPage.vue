@@ -18,16 +18,22 @@
       getTimeFromNow(item.metadata.lastReactedAt) }}</div>
               </div>
             </div>
-            <div class="column q-pa-md" style="gap: 5px; border-radius: 8px; border: 1px solid #e6e9ec;">
+            <div class="column q-pa-md" style="gap: 10px; border-radius: 8px; border: 1px solid #e6e9ec;">
               <div style="font-weight: bold; font-size: 1.125rem; line-height: 1.5rem;">
                 {{ item.payload.title }}
               </div>
               <div class="text-body2" style="color: rgba(0, 0, 0, 0.6);" v-if="item.payload?.body !== undefined">
                 {{
       item.payload.body.length <= 200 ? item.payload.body : `${item.payload.body.slice(0, 200)} ...` }} </div>
+                  <div class="q-my-sm" v-if="item.payload.poll !== undefined">
+                    <poll-result-view :result="item.payload.poll.result" :options="item.payload.poll.options"
+                      :pollResponse="undefined" /> <!-- TODO: pollResponse -->
+                  </div>
               </div>
               <div>
-                {{ credential?.blindedSubject.secret}}
+                <q-btn dense align="left" icon="o_insert_comment" class="text-body2" style="color: rgba(0, 0, 0, 0.6);"
+                  unelevated no-caps color="white" text-color="rgba(0, 0, 0, 0.6)"
+                  :label="item.metadata.commentCount === 0 ? 'Comment' : item.metadata.commentCount === 1 ? '1 Comment' : `${item.metadata.commentCount} Comments`" />
               </div>
             </div>
         </q-card>
@@ -43,14 +49,14 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, onMounted, ref } from "vue";
+import { Ref, ref } from "vue";
 // import { Todo, Meta } from 'components/models';
 // import ExampleComponent from 'components/ExampleComponent.vue';
+import PollResultView from "components/poll/PollResultView.vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
 import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
-import { PreparedSecretCredentialRequest, buildBlindedSecretCredential } from "src/crypto/credential";
 
 interface FetchFeedProps {
   showHidden: boolean;
@@ -102,14 +108,6 @@ async function onLoad() {
     lastReactedAt: undefined,
   });
 }
-
-const credential: Ref<PreparedSecretCredentialRequest | undefined> = ref(undefined);
-
-onMounted(async () => {
-  credential.value = await buildBlindedSecretCredential()
-  console.log("hey");
-});
-
 
 // const todos = ref<Todo[]>([
 //   {

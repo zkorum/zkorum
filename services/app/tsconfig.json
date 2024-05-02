@@ -3,9 +3,6 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "src/*": [
-        "src/*"
-      ],
       "@/*": [
         "src/*"
       ],
@@ -35,7 +32,7 @@
       ],
       "crypto/*": [
         "src/crypto/*"
-      ]
+      ],
     }
   },
   "exclude": [
