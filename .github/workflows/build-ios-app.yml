@@ -19,8 +19,8 @@ jobs:
           node-version: 20
           cache: 'yarn'
           cache-dependency-path: './services/app'
-      - run: npm i -g @quasar/cli @quasar/app-vite
-      - run: yarn install --frozen-lockfile
+      - run: npm i -g @quasar/cli
+      - run: yarn install --frozen-lockfile --production=false
       - uses: actions/checkout@v2
       - name: Build Quasar Capacitor app for iOS
         working-directory: './services/app/'
