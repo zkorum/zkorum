@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'services/app/**'
+      - '.github/workflows/build-ios-app.yml'
     branches:
       - 'main'
 jobs:
@@ -16,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'yarn'
+          cache-dependency-path: './services/app'
       - run: yarn install --frozen-lockfile
       - uses: actions/checkout@v2
       - name: Build Quasar Capacitor app for iOS
