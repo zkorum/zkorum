@@ -14,7 +14,8 @@
     "dev": "quasar dev",
     "dev:android": "quasar dev -m capacitor -T android",
     "build": "quasar build",
-    "build:ios": "quasar build -m capacitor -T ios"
+    "build:ios": "quasar build -m capacitor -T ios",
+    "build:ci:ios": "yarn quasar build -m capacitor -T ios"
   },
   "dependencies": {
     "@capgo/capacitor-updater": "^5.9.4",
