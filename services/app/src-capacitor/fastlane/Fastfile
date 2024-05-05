@@ -12,6 +12,7 @@
 
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
+opt_out_usage
 
 default_platform(:ios)
 
@@ -35,6 +36,7 @@ default_platform(:ios)
 #     gradle(task: "clean assembleRelease")
 #     upload_to_play_store
 #   end
+# end
 
 platform :ios do
   lane :beta do
@@ -55,5 +57,4 @@ platform :ios do
     build_app
     upload_to_testflight(skip_waiting_for_build_processing: true)
   end
-end
 end

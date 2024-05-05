@@ -24,6 +24,6 @@ jobs:
         run: echo $PWD && yarn build:ci:ios
       - name: Run Fastlane
         working-directory: './services/app/src-capacitor'
-        run: fastlane beta
+        run: bundle exec fastlane beta
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
