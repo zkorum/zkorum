@@ -16,7 +16,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'yarn'
       - run: yarn install --frozen-lockfile
       - uses: actions/checkout@v2
       - name: Build Quasar Capacitor app for iOS
