@@ -23,6 +23,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - uses: actions/checkout@v2
       - name: Build Quasar Capacitor app for iOS
+        working-directory: './services/app/'
         run: yarn build:ios
       - name: Run Fastlane
         working-directory: './services/app/src-capacitor'
