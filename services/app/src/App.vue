@@ -5,6 +5,6 @@
 <script setup lang="ts">
 
 defineOptions({
-  name: "App",
+  name: "ZKorum",
 });
 </script>

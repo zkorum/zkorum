@@ -13,7 +13,8 @@
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
     "dev:android": "quasar dev -m capacitor -T android",
-    "build": "quasar build"
+    "build": "quasar build",
+    "build:ios": "quasar build -m capacitor -T ios"
   },
   "dependencies": {
     "@capgo/capacitor-updater": "^5.9.4",

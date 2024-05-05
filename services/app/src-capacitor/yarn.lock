@@ -42,6 +42,11 @@
   dependencies:
     tslib "^2.1.0"
 
+"@capacitor/ios@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/ios/-/ios-6.0.0.tgz#b04ce2967d732c73ebf29ec38b4b585255930e43"
+  integrity sha512-7mAs3gjWiE5DPM4AGPduqFSDGXCPwwqQRMzbohVway7/cTWnHomHV8mIojMZE4GILeWO2fILbyu3C8q9pHg2vg==
+
 "@capgo/capacitor-updater@^5.9.4":
   version "5.9.4"
   resolved "https://registry.yarnpkg.com/@capgo/capacitor-updater/-/capacitor-updater-5.9.4.tgz#e240fc6fd0957f0b7fe8a7fccc290894a27cd30c"
