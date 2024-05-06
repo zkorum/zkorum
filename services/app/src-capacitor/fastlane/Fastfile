@@ -64,7 +64,9 @@ platform :ios do
       path: "./ios/App/App.xcodeproj",
       team_id: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID'],
       bundle_identifier: "com.zkorum.feed",
-      profile_name: "match appstore com.zkorum.feed",
+      profile_name: ENV['APPLE_DIST_PROFILE_NAME'],
+      sdk: "iphoneos*",
+      code_sign_identity: "iPhone Distribution",
     )
     build_app
     upload_to_testflight(skip_waiting_for_build_processing: true)
