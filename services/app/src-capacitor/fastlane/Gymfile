@@ -12,3 +12,5 @@ scheme("App")
 
 workspace("./ios/App/App.xcworkspace")
 output_directory("../dist/capacitor/ios")
+export_method("app-store")
+configuration("Release")
