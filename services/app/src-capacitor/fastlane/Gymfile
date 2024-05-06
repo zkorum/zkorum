@@ -11,5 +11,4 @@ scheme("ZKorum")
 # sdk("iphoneos9.0")
 
 workspace("./ios/App/App.xcworkspace")
-project("./ios/App/App.xcodeproj")
 output_directory("../dist/capacitor/ios")
