@@ -50,7 +50,10 @@ platform :ios do
       in_house: false
     )
 
-    match(type: 'appstore')
+    git_apple_keys_token_user = ENV['GIT_APPLE_KEYS_TOKEN_USER']
+    git_apple_keys_token_value = ENV['GIT_APPLE_KEYS_TOKEN_VALUE']
+
+    match(type: 'appstore', git_basic_authorization: Base64.strict_encode64("#{git_apple_keys_token_user}:#{git_apple_keys_token_value}"))
     build_app
     upload_to_testflight(skip_waiting_for_build_processing: true)
   end
