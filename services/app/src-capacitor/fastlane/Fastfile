@@ -59,12 +59,19 @@ platform :ios do
       path: "./ios/App/App.xcodeproj",
       teamid: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID']
     )
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      path: "./ios/App/App.xcodeproj"
+      # team_id: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID'],
+      # bundle_identifier: "com.zkorum.feed",
+      # profile_name: "match AppStore com.zkorum.feed",
+    )
     build_app(
-      export_options: {
-        provisioningProfiles: {
-          "com.zkorum.feed" => "match appstore com.zkorum.feed"
-        }
-      }
+      # export_options: {
+      #   provisioningProfiles: {
+      #     "com.zkorum.feed" => "match AppStore com.zkorum.feed"
+      #   }
+      # }
     )
     upload_to_testflight(skip_waiting_for_build_processing: true)
   end

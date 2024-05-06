@@ -14,3 +14,8 @@ workspace("./ios/App/App.xcworkspace")
 output_directory("../dist/capacitor/ios")
 export_method("app-store")
 configuration("Release")
+# export_options({
+#   provisioningProfiles: {
+#     "com.zkorum.feed" => "match AppStore com.zkorum.feed"
+#   }
+# })
