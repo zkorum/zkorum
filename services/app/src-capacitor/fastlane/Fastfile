@@ -61,7 +61,7 @@ platform :ios do
     )
     update_code_signing_settings(
       use_automatic_signing: false,
-      path: "./ios/App/App.xcodeproj"
+      path: "./ios/App/App.xcodeproj",
       team_id: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID'],
       bundle_identifier: "com.zkorum.feed",
       profile_name: "match AppStore com.zkorum.feed",
