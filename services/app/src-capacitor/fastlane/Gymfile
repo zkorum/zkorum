@@ -16,6 +16,6 @@ export_method("app-store")
 configuration("Release")
 export_options({
   provisioningProfiles: {
-    "com.zkorum.feed" => "match AppStore com.zkorum.feed"
+    "com.zkorum.feed" => "match appstore com.zkorum.feed"
   }
 })
