@@ -65,6 +65,7 @@ platform :ios do
       team_id: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID'],
       bundle_identifier: "com.zkorum.feed",
       profile_name: ENV['APPLE_DIST_PROFILE_NAME'],
+      profile_uuid: ENV['APPLE_DIST_PROFILE_UUID'],
       sdk: "iphoneos*",
       code_sign_identity: ENV['APPLE_DIST_CERTIFICATE_NAME'],
     )

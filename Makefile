@@ -11,7 +11,7 @@ generate:
   -i /local/services/back/openapi-zkorum.json \
   -g typescript-axios \
   -t /local/.openapi-generator/templates \
-  -o /local/services/front/src/api
+  -o /local/services/app/src/api
 
 sync:
 	cd services/shared && pnpm run sync
