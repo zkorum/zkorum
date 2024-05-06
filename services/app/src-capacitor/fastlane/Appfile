@@ -3,4 +3,5 @@
 package_name("com.zkorum.feed") # e.g. com.krausefx.app
 
 # Apple
-app_identifier(["com.zkorum.feed"])
+app_identifier("com.zkorum.feed")
+apple_id(ENV["APPLE_ID"])
