@@ -6,11 +6,10 @@
 
 # Remove the # in front of the line to enable the option
 
-scheme("App")
+scheme("ZKorum")
 
 # sdk("iphoneos9.0")
 
-workspace("./App/App.xcworkspace")
-project("./App/App.xcodeproj")
-output_directory("./")
-# output_directory("../dist/capacitor/ios")
+workspace("./ios/App/App.xcworkspace")
+project("./ios/App/App.xcodeproj")
+output_directory("../dist/capacitor/ios")
