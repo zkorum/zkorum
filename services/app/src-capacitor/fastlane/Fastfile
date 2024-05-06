@@ -59,7 +59,13 @@ platform :ios do
       path: "./ios/App/App.xcodeproj",
       teamid: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID']
     )
-    build_app
+    build_app(
+      export_options: {
+        provisioningProfiles: {
+          "com.zkorum.feed" => "match appstore com.zkorum.feed"
+        }
+      }
+    )
     upload_to_testflight(skip_waiting_for_build_processing: true)
   end
 end
