@@ -23,7 +23,7 @@ jobs:
         run: yarn install --production=false --frozen-lockfile
       - name: Build Quasar Capacitor app for iOS
         run: echo $PWD && yarn build:ci:ios
-      - name: Run Fastlane and upload to TestFlight
+      - name: Fastlane - build app and upload to TestFlight
         working-directory: './services/app/src-capacitor'
         run: bundle exec fastlane beta
         env:
