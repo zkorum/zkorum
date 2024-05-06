@@ -5,3 +5,5 @@ package_name("com.zkorum.feed") # e.g. com.krausefx.app
 # Apple
 app_identifier("com.zkorum.feed")
 apple_id(ENV["APPLE_ID"])
+team_id(ENV["APPLE_DEVELOPER_PORTAL_TEAM_ID"])
+itc_team_id(ENV["APPLE_APP_STORE_CONNECT_TEAM_ID"])
