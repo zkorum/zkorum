@@ -78,7 +78,7 @@ platform :ios do
     git_apple_keys_token_value = ENV['GIT_APPLE_KEYS_TOKEN_VALUE']
     git_apple_keys_url = ENV['GIT_APPLE_KEYS_URL']
 
-    match(type: 'appstore', keychain_name: TEMP_KEYCHAIN_USER, keychain_password: TEMP_KEYCHAIN_PASSWORD, readonly: true, git_url: git_apple_keys_url, git_basic_authorization: Base64.strict_encode64("#{git_apple_keys_token_user}:#{git_apple_keys_token_value}"))
+    match(type: 'appstore', verbose: true, keychain_name: TEMP_KEYCHAIN_USER, keychain_password: TEMP_KEYCHAIN_PASSWORD, readonly: true, git_url: git_apple_keys_url, git_basic_authorization: Base64.strict_encode64("#{git_apple_keys_token_user}:#{git_apple_keys_token_value}"))
     update_project_team(
       path: "./ios/App/App.xcodeproj",
       teamid: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID']

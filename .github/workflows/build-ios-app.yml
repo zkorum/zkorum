@@ -25,7 +25,7 @@ jobs:
         run: echo $PWD && yarn build:ci:ios
       - name: Fastlane - build & upload to TestFlight
         working-directory: './services/app/src-capacitor'
-        run: bundle exec fastlane beta
+        run: bundle exec fastlane beta --verbose
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
