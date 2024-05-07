@@ -39,9 +39,10 @@ default_platform(:ios)
 # end
 
 platform :ios do
+  before_all do
+    setup_circle_ci
+  end
   lane :beta do
-
-    setup_ci if ENV['CI']
     app_store_connect_api_key(
       key_id: ENV['APP_STORE_CONNECT_API_KEY_ID'],
       issuer_id: ENV['APP_STORE_CONNECT_API_ISSUER_ID'],

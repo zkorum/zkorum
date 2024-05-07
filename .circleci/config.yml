@@ -1,0 +1,55 @@
+version: 2.1
+
+orbs:
+  ruby: circleci/ruby@1.2.0
+
+jobs:
+  build:
+    macos:
+      xcode: "13.1.0"
+      working_directory: /Users/distiller/project/services/app
+    environment:
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID
+        }}
+      APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT
+        }}
+      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      GIT_APPLE_KEYS_TOKEN_USER: ${{ secrets.GIT_APPLE_KEYS_TOKEN_USER }}
+      GIT_APPLE_KEYS_TOKEN_VALUE: ${{ secrets.GIT_APPLE_KEYS_TOKEN_VALUE }}
+      GIT_APPLE_KEYS_URL: ${{ secrets.GIT_APPLE_KEYS_URL }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_DEVELOPER_PORTAL_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_PORTAL_TEAM_ID }}
+      APPLE_APP_STORE_CONNECT_TEAM_ID: ${{ secrets.APPLE_APP_STORE_CONNECT_TEAM_ID
+        }}
+      APPLE_DIST_PROFILE_NAME: ${{ secrets.APPLE_DIST_PROFILE_NAME }}
+      APPLE_DIST_PROFILE_UUID: ${{ secrets.APPLE_DIST_PROFILE_UUID }}
+      APPLE_DIST_CERTIFICATE_NAME: ${{ secrets.APPLE_DIST_CERTIFICATE_NAME }}
+    shell: /bin/bash --login -o pipefail
+    steps:
+    - checkout
+    - ruby/install-deps
+    - run:
+        name: Install dependencies
+        command: yarn install --production=false --frozen-lockfile
+    - run:
+        name: Build Quasar Capacitor app for iOS
+        command: echo $PWD && yarn build:ci:ios
+    - run:
+        command: cd src-capacitor && bundle exec fastlane beta
+    - store_artifacts:
+        path: output
+    - store_test_results:
+        path: output/scan
+
+workflows:
+  build-ios-app:
+    jobs:
+    - build:
+        filters:
+          branches:
+            only:
+            - main
+          tags: {}
+# Translated via CircleCI's Configuration Translator
+# Info :: Could not translate "defaults" in workflow "build-ios-app", in job "build"
