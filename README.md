@@ -1,6 +1,6 @@
 # ZKorum
 
-For some background, check the [organization page](https://github.com/zkorum) or visit [about.zkorum.com](https://about.zkorum.com).
+For some background, visit [about.zkorum.com](https://about.zkorum.com).
 
 ## Development
 
