@@ -40,5 +40,3 @@ jobs:
           APPLE_DIST_PROFILE_NAME: ${{ secrets.APPLE_DIST_PROFILE_NAME }}
           APPLE_DIST_PROFILE_UUID: ${{ secrets.APPLE_DIST_PROFILE_UUID }}
           APPLE_DIST_CERTIFICATE_NAME: ${{ secrets.APPLE_DIST_CERTIFICATE_NAME }}
-      - run: security find-identity -v -p codesigning /Users/runner/Library/Keychains/fastlane_tmp_keychain-db
-
