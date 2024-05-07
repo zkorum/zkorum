@@ -38,9 +38,32 @@ default_platform(:ios)
 #   end
 # end
 
+TEMP_KEYCHAIN_USER = ENV["TEMP_KEYCHAIN_USER"]
+TEMP_KEYCHAIN_PASSWORD = ENV["TEMP_KEYCHAIN_PASSWORD"]
+
+def delete_temp_keychain(name)
+  delete_keychain(
+    name: name
+  ) if File.exist? File.expand_path("~/Library/Keychains/#{name}-db")
+end
+
+def create_temp_keychain(name, password)
+  create_keychain(
+    name: name,
+    password: password,
+    unlock: false,
+    timeout: 0
+  )
+end
+
+def ensure_temp_keychain(name, password)
+  delete_temp_keychain(name)
+  create_temp_keychain(name, password)
+end
+
 platform :ios do
   before_all do
-    setup_circle_ci
+    ensure_temp_keychain(TEMP_KEYCHAIN_USER, TEMP_KEYCHAIN_PASSWORD)
   end
   lane :beta do
     app_store_connect_api_key(
@@ -55,7 +78,7 @@ platform :ios do
     git_apple_keys_token_value = ENV['GIT_APPLE_KEYS_TOKEN_VALUE']
     git_apple_keys_url = ENV['GIT_APPLE_KEYS_URL']
 
-    match(type: 'appstore', git_url: git_apple_keys_url, git_basic_authorization: Base64.strict_encode64("#{git_apple_keys_token_user}:#{git_apple_keys_token_value}"))
+    match(type: 'appstore', keychain_name: TEMP_KEYCHAIN_USER, keychain_password: TEMP_KEYCHAIN_PASSWORD, readonly: true, git_url: git_apple_keys_url, git_basic_authorization: Base64.strict_encode64("#{git_apple_keys_token_user}:#{git_apple_keys_token_value}"))
     update_project_team(
       path: "./ios/App/App.xcodeproj",
       teamid: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID']
@@ -72,5 +95,6 @@ platform :ios do
     )
     build_app
     upload_to_testflight(skip_waiting_for_build_processing: true)
+    delete_temp_keychain(TEMP_KEYCHAIN_USER)
   end
 end
