@@ -1,4 +1,4 @@
-# ZKorum (@zkorum/app)
+# Afterwork (@zkorum/afterwork)
 
 Anonymous Space For Open Dialogues
 

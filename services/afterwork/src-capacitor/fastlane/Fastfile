@@ -80,14 +80,14 @@ platform :ios do
 
     match(type: 'appstore', verbose: true, keychain_name: TEMP_KEYCHAIN_USER, keychain_password: TEMP_KEYCHAIN_PASSWORD, readonly: true, git_url: git_apple_keys_url, git_basic_authorization: Base64.strict_encode64("#{git_apple_keys_token_user}:#{git_apple_keys_token_value}"))
     update_project_team(
-      path: "./ios/App/App.xcodeproj",
+      path: "./ios/Afterwork/Afterwork.xcodeproj",
       teamid: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID']
     )
     update_code_signing_settings(
       use_automatic_signing: false,
-      path: "./ios/App/App.xcodeproj",
+      path: "./ios/Afterwork/Afterwork.xcodeproj",
       team_id: ENV['APPLE_DEVELOPER_PORTAL_TEAM_ID'],
-      bundle_identifier: "com.zkorum.feed",
+      bundle_identifier: "com.zkorum.afterwork",
       profile_name: ENV['APPLE_DIST_PROFILE_NAME'],
       profile_uuid: ENV['APPLE_DIST_PROFILE_UUID'],
       sdk: "iphoneos*",

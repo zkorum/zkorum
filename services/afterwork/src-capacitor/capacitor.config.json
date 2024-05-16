@@ -1,6 +1,6 @@
 {
-  "appId": "com.zkorum.feed",
-  "appName": "ZKorum",
+  "appId": "com.zkorum.afterwork",
+  "appName": "Afterwork",
   "webDir": "www",
   "server": {
     "androidScheme": "https"

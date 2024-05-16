@@ -1,9 +1,9 @@
 # Android
 # json_key_file("/home/nicobao/fasstlane/BN643Y948W.json") # Path to the json secret file - Follow https://docs.fastlane.tools/actions/supply/#setup to get one
-package_name("com.zkorum.feed") # e.g. com.krausefx.app
+package_name("com.zkorum.afterwork") # e.g. com.krausefx.app
 
 # Apple
-app_identifier("com.zkorum.feed")
+app_identifier("com.zkorum.afterwork")
 apple_id(ENV["APPLE_ID"])
 team_id(ENV["APPLE_DEVELOPER_PORTAL_TEAM_ID"])
 itc_team_id(ENV["APPLE_APP_STORE_CONNECT_TEAM_ID"])

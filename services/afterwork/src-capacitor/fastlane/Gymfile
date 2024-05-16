@@ -6,16 +6,16 @@
 
 # Remove the # in front of the line to enable the option
 
-scheme("App")
+scheme("Afterwork")
 
 # sdk("iphoneos9.0")
 
-workspace("./ios/App/App.xcworkspace")
+workspace("./ios/Afterwork/Afterwork.xcworkspace")
 output_directory("../dist/capacitor/ios")
 export_method("app-store")
 configuration("Release")
 export_options({
   provisioningProfiles: {
-    "com.zkorum.feed" => "match appstore com.zkorum.feed"
+    "com.zkorum.afterwork" => "match appstore com.zkorum.afterwork"
   }
 })
