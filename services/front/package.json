@@ -31,7 +31,7 @@
         "vote"
     ],
     "author": "Nicolas Gimenez",
-    "license": "GPLv3",
+    "license": "MPLv2",
     "dependencies": {
         "@docknetwork/crypto-wasm-ts": "^0.40.0",
         "@emotion/react": "^11.11.1",

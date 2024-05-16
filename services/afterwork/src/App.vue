@@ -5,6 +5,6 @@
 <script setup lang="ts">
 
 defineOptions({
-  name: "Afterwork",
+  name: "App",
 });
 </script>

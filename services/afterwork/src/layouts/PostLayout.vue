@@ -12,8 +12,8 @@
       </q-toolbar>
 
       <q-tabs no-caps align="justify">
-        <q-route-tab to="/page1" label="Feed" />
-        <q-route-tab to="/page2" label="ESSEC" />
+        <q-route-tab to="/page1" label="Other Header" />
+        <q-route-tab to="/page2" label="Go Backward" />
       </q-tabs>
     </q-header>
 

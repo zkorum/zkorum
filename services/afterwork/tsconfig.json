@@ -27,6 +27,9 @@
       "stores/*": [
         "src/stores/*"
       ],
+      "router/*": [
+        "src/router/*"
+      ],
       "utils/*": [
         "src/utils/*"
       ],

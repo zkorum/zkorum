@@ -3,7 +3,7 @@
     <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
       <!-- <example-component title="Example component" active :todos="todos" :meta="meta"></example-component> -->
       <div v-for="(item, index) in  items " :key="index" style="max-width: 600px" class="full-width">
-        <q-card :class="index === 0 ? 'q-my-sm q-pa-sm' : 'q-mb-sm q-pa-sm'">
+        <q-card @click="$router.push('/post')" :class="index === 0 ? 'q-my-sm q-pa-sm' : 'q-mb-sm q-pa-sm'">
           <div class="column full-width" style="gap: 15px;">
             <div class="row items-center justify-start" style="gap: 5px; background-color: white">
               <q-avatar size="42px" color="essec-blue" text-color="white">E</q-avatar>

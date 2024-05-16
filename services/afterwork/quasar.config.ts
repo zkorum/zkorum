@@ -5,6 +5,7 @@
 
 import { configure } from "quasar/wrappers";
 import { fileURLToPath } from "node:url";
+import "dotenv/config"
 
 export default configure((ctx) => {
   return {
@@ -52,7 +53,7 @@ export default configure((ctx) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      publicPath: "/feed",
+      // publicPath: "/feed",
       // analyze: true,
       env: {
         BASE_URL: ctx.dev
@@ -67,7 +68,9 @@ export default configure((ctx) => {
             "a33d87ba094e5fb522459da31ef501eedff2ef6b672ed6668555a90e5d099f2f8ac9b428c6b05479aebd9febe64011d707e3e331a01fd32e7bcca2e90405132014d395dade3aa95f72420567c6d4e75a5c70478691d36aa54030f31d326f9414"
             : ctx.debug
               ? "a17f8e504a42e53d53ae5ff92a7ba592f8a290cd2a6ed590a32265189cad76dd970b36582a8faca1697711c2fb8560ed084387bcb367f2d90b69887a51e7f41746678d4fc893a53ee6c7a2427b5bb277c6a35670530fbddfcddd1ce131b34288"
-              : "94dbc0cc2cc457d9fc23823d7bbb46f3a59f5ec5062628147c89aabcef565593858ffb4f2897c2b8fc2336de2f84dab00eb1b91675e0e89ca18c37b29fde190f266ab2592caf88276ea8fe0449d91b84a32adc95cd969fe266db462a75147352"
+              : "94dbc0cc2cc457d9fc23823d7bbb46f3a59f5ec5062628147c89aabcef565593858ffb4f2897c2b8fc2336de2f84dab00eb1b91675e0e89ca18c37b29fde190f266ab2592caf88276ea8fe0449d91b84a32adc95cd969fe266db462a75147352",
+        // https://quasar.dev/quasar-cli-webpack/handling-process-env/#using-dotenv
+        HANKO_API_URL: process.env.HANKO_API_URL
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -85,7 +88,14 @@ export default configure((ctx) => {
       //     })
       //   }
       // },
-      // viteVuePluginOptions: {},
+      viteVuePluginOptions: {
+        // see https://docs.hanko.io/quickstarts/frontend/vue#configure-component-resolution
+        template: {
+          compilerOptions: {
+            isCustomElement: (tag) => tag.startsWith("hanko-")
+          }
+        }
+      },
 
       vitePlugins: [
         [
@@ -153,7 +163,7 @@ export default configure((ctx) => {
 
     // animations: 'all', // --- includes all animations
     // https://v2.quasar.dev/options/animations
-    animations: [],
+    animations: "all",
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#sourcefiles
     // sourceFiles: {
