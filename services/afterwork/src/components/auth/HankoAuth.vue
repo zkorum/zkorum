@@ -15,6 +15,7 @@ const redirectAfterLogin = () => {
 onMounted(() => {
   register(hankoApi)
     .catch((error) => {
+      console.error(error)
       // handle error
     });
 });

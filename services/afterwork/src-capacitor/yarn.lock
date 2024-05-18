@@ -2,15 +2,35 @@
 # yarn lockfile v1
 
 
+"@aparajita/capacitor-secure-storage@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@aparajita/capacitor-secure-storage/-/capacitor-secure-storage-6.0.0.tgz#2d3b66394e38270f125b11bb490b644ac6d5002f"
+  integrity sha512-bInwcVFA3Nq71AiIkiSZMhb8+EFn4LN+yl2yrfsPtcYI1W0L8unVWjWGuPaYAEmjTmHn46iDz5NVKgUWZqENnw==
+  dependencies:
+    "@capacitor/android" "^6.0.0"
+    "@capacitor/app" "^6.0.0"
+    "@capacitor/core" "^6.0.0"
+    "@capacitor/ios" "^6.0.0"
+
 "@capacitor/android@^5.0.0":
   version "5.7.5"
   resolved "https://registry.yarnpkg.com/@capacitor/android/-/android-5.7.5.tgz#8392de3c38ed4455038ea7e18c01aa33584e5208"
   integrity sha512-VKb9VarGA2hJ8PuLk4EhSq4jvgM+V8JOoNw00WdD6Q4rbgDKSa7WIKTw75sFrNRGiwHSZ99FPvmisJfr1Spk+Q==
 
+"@capacitor/android@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/android/-/android-6.0.0.tgz#eb24c64a5c6821fbbb8db48eedf50eca18876318"
+  integrity sha512-NwL87VO9F1WY/EgvJZN9pIhjejq688k2fRW6XWNLVe3cgGE6nUb9J34KI68fhx3139cf2LVGPUYs+mwZC8esiQ==
+
 "@capacitor/app@^5.0.0":
   version "5.0.7"
   resolved "https://registry.yarnpkg.com/@capacitor/app/-/app-5.0.7.tgz#f71e81320bcd504c400c1f503ba43a88ccac96e8"
   integrity sha512-oad0jwQu+vgQDukeS9UV56yG10dlxkAGGl26IQpZlTmg3dTI9qSJtvhmlLfkF0nEtoj5IsVQUPE+NLH1oZkgGQ==
+
+"@capacitor/app@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/app/-/app-6.0.0.tgz#b383c97543e2fb9462e8bd69c0f512c33bba0089"
+  integrity sha512-X5UGd90Jh5p9rmoPyMqFyFWqOypdJgVJhYcM5X1YyDVJJGzmJ5MuYv1+ajj5DW9Qyh+5a3th9WYptdGby8jidA==
 
 "@capacitor/cli@^5.0.0":
   version "5.7.5"
@@ -42,10 +62,22 @@
   dependencies:
     tslib "^2.1.0"
 
+"@capacitor/core@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/core/-/core-6.0.0.tgz#abfaf1013cec686cf9743cf4fdc445d10e2f13ea"
+  integrity sha512-NvxIQsJcMiIV+Le1DilR2GGyQQbDInfXK1UywGROQ5mycdFlW5XoAPZ+MKnFGB123RoEgE3uhDGgwTXUmSlX9A==
+  dependencies:
+    tslib "^2.1.0"
+
 "@capacitor/ios@^5.0.0":
   version "5.7.5"
   resolved "https://registry.yarnpkg.com/@capacitor/ios/-/ios-5.7.5.tgz#bad2aac70ccae5d62cff23aa963ad1b0ad788c9e"
   integrity sha512-mREcvv4XC9USSAbYmf/2Lmbr52eZjMDpKYwxwi2CKLJXGXNjYfJaHm6jnPordAl6kZdm3Bm/tnx+rYpb9KptGA==
+
+"@capacitor/ios@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/ios/-/ios-6.0.0.tgz#b04ce2967d732c73ebf29ec38b4b585255930e43"
+  integrity sha512-7mAs3gjWiE5DPM4AGPduqFSDGXCPwwqQRMzbohVway7/cTWnHomHV8mIojMZE4GILeWO2fILbyu3C8q9pHg2vg==
 
 "@capgo/capacitor-updater@^5.9.4":
   version "5.9.4"

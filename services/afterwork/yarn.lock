@@ -7,6 +7,16 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
+"@aparajita/capacitor-secure-storage@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@aparajita/capacitor-secure-storage/-/capacitor-secure-storage-6.0.0.tgz#2d3b66394e38270f125b11bb490b644ac6d5002f"
+  integrity sha512-bInwcVFA3Nq71AiIkiSZMhb8+EFn4LN+yl2yrfsPtcYI1W0L8unVWjWGuPaYAEmjTmHn46iDz5NVKgUWZqENnw==
+  dependencies:
+    "@capacitor/android" "^6.0.0"
+    "@capacitor/app" "^6.0.0"
+    "@capacitor/core" "^6.0.0"
+    "@capacitor/ios" "^6.0.0"
+
 "@babel/code-frame@^7.12.13":
   version "7.24.2"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.24.2.tgz#718b4b19841809a58b29b68cde80bc5e1aa6d9ae"
@@ -48,6 +58,28 @@
   integrity sha512-yn7BklA5acgcBr+7w064fGV+SGIFySjCKpqjcWgBAIfrAkY+4GQTJJHQMeT3V/sgz23VTEVV8TtOmkvJAhFVfg==
   dependencies:
     statuses "^2.0.1"
+
+"@capacitor/android@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/android/-/android-6.0.0.tgz#eb24c64a5c6821fbbb8db48eedf50eca18876318"
+  integrity sha512-NwL87VO9F1WY/EgvJZN9pIhjejq688k2fRW6XWNLVe3cgGE6nUb9J34KI68fhx3139cf2LVGPUYs+mwZC8esiQ==
+
+"@capacitor/app@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/app/-/app-6.0.0.tgz#b383c97543e2fb9462e8bd69c0f512c33bba0089"
+  integrity sha512-X5UGd90Jh5p9rmoPyMqFyFWqOypdJgVJhYcM5X1YyDVJJGzmJ5MuYv1+ajj5DW9Qyh+5a3th9WYptdGby8jidA==
+
+"@capacitor/core@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/core/-/core-6.0.0.tgz#abfaf1013cec686cf9743cf4fdc445d10e2f13ea"
+  integrity sha512-NvxIQsJcMiIV+Le1DilR2GGyQQbDInfXK1UywGROQ5mycdFlW5XoAPZ+MKnFGB123RoEgE3uhDGgwTXUmSlX9A==
+  dependencies:
+    tslib "^2.1.0"
+
+"@capacitor/ios@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/ios/-/ios-6.0.0.tgz#b04ce2967d732c73ebf29ec38b4b585255930e43"
+  integrity sha512-7mAs3gjWiE5DPM4AGPduqFSDGXCPwwqQRMzbohVway7/cTWnHomHV8mIojMZE4GILeWO2fILbyu3C8q9pHg2vg==
 
 "@capgo/capacitor-updater@^5.9.4":
   version "5.9.4"

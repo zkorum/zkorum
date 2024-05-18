@@ -2,8 +2,9 @@
   <q-page class="full-width q-px-md" style="background-color: #e6e9ec">
     <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
       <!-- <example-component title="Example component" active :todos="todos" :meta="meta"></example-component> -->
+      <div class="text-bold" style="margin-bottom: -5px;">{{ passphrase }}</div>
       <div v-for="(item, index) in  items " :key="index" style="max-width: 600px" class="full-width">
-        <q-card @click="$router.push('/post')" :class="index === 0 ? 'q-my-sm q-pa-sm' : 'q-mb-sm q-pa-sm'">
+        <q-card @click="$router.push('/post')" class="q-mb-sm q-pa-sm">
           <div class="column full-width" style="gap: 15px;">
             <div class="row items-center justify-start" style="gap: 5px; background-color: white">
               <q-avatar size="42px" color="essec-blue" text-color="white">E</q-avatar>
@@ -49,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, ref } from "vue";
+import { Ref, onMounted, ref } from "vue";
 // import { Todo, Meta } from 'components/models';
 // import ExampleComponent from 'components/ExampleComponent.vue';
 import PollResultView from "components/poll/PollResultView.vue";
@@ -57,6 +58,27 @@ import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
 import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
+import { useQuasar } from "quasar";
+import { SecureStorage } from "@aparajita/capacitor-secure-storage";
+
+const $q = useQuasar();
+const passphrase = ref("");
+
+onMounted(async () => {
+  if ($q.platform.is.mobile) {
+    const passphraseDataType = await SecureStorage.get("userid/passphrase", true, true);
+    if (passphraseDataType === null) {
+      passphrase.value = "";
+    }
+
+    if (passphraseDataType instanceof Date) {
+      passphrase.value = passphraseDataType.toISOString();
+    } else {
+      passphrase.value = JSON.stringify(passphraseDataType);
+    }
+    console.log(`Extracted passphrase: ${passphrase.value}`);
+  }
+});
 
 interface FetchFeedProps {
   showHidden: boolean;
@@ -107,6 +129,7 @@ async function onLoad() {
     showHidden: false,
     lastReactedAt: undefined,
   });
+
 }
 
 // const todos = ref<Todo[]>([

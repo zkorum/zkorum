@@ -9,6 +9,7 @@ const hanko = new Hanko(hankoApi);
 
 const logout = () => {
   hanko.user.logout().catch((error) => {
+    console.error(error)
     // handle error
   })
   router.push("/login")

@@ -9,7 +9,7 @@ try {
     appVersion = new groovy.json.JsonSlurper().parseText(versionJSONFile.text).version
     def (_,major) = (appVersion =~/^(\d+).*/ )[0]
     // appCode =  major as Integer
-    appCode =  2
+    appCode =  5
     println  " Building App Version: ${appVersion} with Code: ${appCode}"
 } catch(Exception e) {
     logger.warn("could not read version of ${packageJSONFilename}")

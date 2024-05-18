@@ -4,13 +4,13 @@
 rsync -av --delete ./src/ ../back/src/shared/
 
 # Step 2: Use rsync again to copy from source to front
-rsync -av --delete ./src/ ../app/src/shared/
+rsync -av --delete ./src/ ../afterwork/src/shared/
 
 # Step 3: Apply sed to every file synced in front. Validator is not imported the same way in the browser.
 # See https://github.com/validatorjs/validator.js
 # Step 4: add "generated" comment if it does not already exist
 comment="/** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/"
-find ../app/src/shared/ -name "*.ts" -print0 | while read -d $'\0' file
+find ../afterwork/src/shared/ -name "*.ts" -print0 | while read -d $'\0' file
 do
   sed -i '/import validator from "validator";/d' $file
   # Check if the comment already exists in the file
