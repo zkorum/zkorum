@@ -1,5 +1,13 @@
 import * as uint8arrays from "uint8arrays";
 
+export function base64Encode(value: Uint8Array): string {
+    return uint8arrays.toString(value, "base64");
+}
+
+export function base64Decode(str: string): Uint8Array {
+    return uint8arrays.fromString(str, "base64");
+}
+
 export function encode(value: Uint8Array): string {
     return uint8arrays.toString(value, "base64url");
 }

@@ -2,7 +2,7 @@ import { boot } from "quasar/wrappers"
 import {
   KeychainAccess,
   SecureStorage,
-} from "@aparajita/capacitor-secure-storage"
+} from "@zkorum/capacitor-secure-storage"
 import { generateRandomPassphrase } from "@/shared/passphrase/generate"
 
 
@@ -11,12 +11,16 @@ import { generateRandomPassphrase } from "@/shared/passphrase/generate"
 export default boot(async (/* { app, router, ... } */) => {
   const newPassphrase = generateRandomPassphrase()
   console.log(newPassphrase)
-  await SecureStorage.setKeyPrefix("com.zkorum.afterwork/v1")
-  await SecureStorage.set(
-    "userid/passphrase",
-    newPassphrase,
-    true,
-    true,
-    KeychainAccess.whenUnlocked
-  )
+  try {
+    await SecureStorage.setKeyPrefix("com.zkorum.afterwork/v1")
+    await SecureStorage.set(
+      "userid/passphrase",
+      newPassphrase,
+      true,
+      true,
+      KeychainAccess.whenUnlocked
+    )
+  } catch (e) {
+    console.error("Error while setting up key", e)
+  }
 })

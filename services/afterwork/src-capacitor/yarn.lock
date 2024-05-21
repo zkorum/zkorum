@@ -2,16 +2,6 @@
 # yarn lockfile v1
 
 
-"@aparajita/capacitor-secure-storage@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@aparajita/capacitor-secure-storage/-/capacitor-secure-storage-6.0.0.tgz#2d3b66394e38270f125b11bb490b644ac6d5002f"
-  integrity sha512-bInwcVFA3Nq71AiIkiSZMhb8+EFn4LN+yl2yrfsPtcYI1W0L8unVWjWGuPaYAEmjTmHn46iDz5NVKgUWZqENnw==
-  dependencies:
-    "@capacitor/android" "^6.0.0"
-    "@capacitor/app" "^6.0.0"
-    "@capacitor/core" "^6.0.0"
-    "@capacitor/ios" "^6.0.0"
-
 "@capacitor/android@^5.0.0":
   version "5.7.5"
   resolved "https://registry.yarnpkg.com/@capacitor/android/-/android-5.7.5.tgz#8392de3c38ed4455038ea7e18c01aa33584e5208"
@@ -206,6 +196,21 @@
   version "0.8.10"
   resolved "https://registry.yarnpkg.com/@xmldom/xmldom/-/xmldom-0.8.10.tgz#a1337ca426aa61cef9fe15b5b28e340a72f6fa99"
   integrity sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==
+
+"@zkorum/capacitor-secure-signing@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@zkorum/capacitor-secure-signing/-/capacitor-secure-signing-1.0.0.tgz#677516dad89157e8560e57a5a666816e5093530c"
+  integrity sha512-YBTQDzWgpfS1gzmSxWmkVcP3vu4YiPH3Y9ohOn91/X7Ylq+vMfgzghCdmcjQOI2ecGibAAiEyxH2ntqF3fphRg==
+
+"@zkorum/capacitor-secure-storage@^8.0.6":
+  version "8.0.6"
+  resolved "https://registry.yarnpkg.com/@zkorum/capacitor-secure-storage/-/capacitor-secure-storage-8.0.6.tgz#4adcb2da844258891370216daf98baf284e26c7b"
+  integrity sha512-INMc/PRck8OyB0WUBkrj3q0ZlcTMHmo+5TuAGYIFSyMo8r6u47Q0O4M4bOvsQYjInpxMulUBq1n9tpIUknyaww==
+  dependencies:
+    "@capacitor/android" "^6.0.0"
+    "@capacitor/app" "^6.0.0"
+    "@capacitor/core" "^6.0.0"
+    "@capacitor/ios" "^6.0.0"
 
 ansi-regex@^5.0.1:
   version "5.0.1"
