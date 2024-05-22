@@ -1,9 +1,9 @@
 <template>
   <q-page class="full-width q-px-md" style="background-color: #e6e9ec">
     <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
+      <div class="text-bold q-pa-md">{{ passphrase }}</div>
+      <div class="text-bold q-pa-md">{{ verified }}</div>
       <!-- <example-component title="Example component" active :todos="todos" :meta="meta"></example-component> -->
-      <div class="text-bold" style="margin-bottom: -5px;">{{ passphrase }}</div>
-      <div class="text-bold" style="margin-bottom: -5px;">{{ verified }}</div>
       <div v-for="(item, index) in  items " :key="index" style="max-width: 600px" class="full-width">
         <q-card @click="$router.push('/post')" class="q-mb-sm q-pa-sm">
           <div class="column full-width" style="gap: 15px;">
@@ -70,7 +70,7 @@ import * as uint8arrays from "uint8arrays";
 import { httpMethodToAbility, httpUrlToResourcePointer } from "@/shared/ucan/ucan";
 
 const $q = useQuasar();
-const passphrase = ref("");
+const passphrase = ref("nothing");
 let interval: NodeJS.Timeout | undefined = undefined
 
 // ECC crypto - DID
@@ -204,54 +204,59 @@ const compressP256Pubkey = (pubkeyBytes: Uint8Array): Uint8Array => {
 //   return publicKey
 // }
 
-const verified = ref<boolean | undefined | string>(undefined)
+const verified = ref<boolean | string>("nothing")
 
 onMounted(async () => {
   if ($q.platform.is.mobile) {
-    const prefixedKey = "com.zkorum.afterwork/v1_userid/sign"
-    const { publicKey } = await SecureSigning.generateKeyPair({ prefixedKey: prefixedKey })
-    const decodedPublicKey = base64.base64Decode(publicKey);
-    const accountDid = publicKeyToDid(decodedPublicKey)
-    const u = await ucan.Builder.create()
-      .issuedBy({
-        did: () => accountDid,
-        jwtAlg: "ES256",
-        sign: async (msg: Uint8Array) => {
-          const { signature } = await SecureSigning.sign({ prefixedKey: prefixedKey, data: base64.base64Encode(msg) })
-          return base64.base64Decode(signature);
-        }
-      })
-      .toAudience("did:web:zkorum.com")
-      .withLifetimeInSeconds(30)
-      .claimCapability({
-        // with: { scheme: "wnfs", hierPart: "//boris.fission.name/public/photos/" },
-        // can: { namespace: "wnfs", segments: ["OVERWRITE"] },
-        with: httpUrlToResourcePointer("https://zkorum.com/v1/some/endpoint"),
-        can: httpMethodToAbility("GET"),
-      })
-      .build();
-    const encodedUcan = ucan.encode(u)
+    try {
+      const prefixedKey = "com.zkorum.afterwork/v1_userid/sign"
+      const { publicKey } = await SecureSigning.generateKeyPair({ prefixedKey: prefixedKey })
+      const decodedPublicKey = base64.base64Decode(publicKey);
+      const accountDid = publicKeyToDid(decodedPublicKey)
+      const u = await ucan.Builder.create()
+        .issuedBy({
+          did: () => accountDid,
+          jwtAlg: "ES256",
+          sign: async (msg: Uint8Array) => {
+            const { signature } = await SecureSigning.sign({ prefixedKey: prefixedKey, data: base64.base64Encode(msg) })
+            return base64.base64Decode(signature);
+          }
+        })
+        .toAudience("did:web:zkorum.com")
+        .withLifetimeInSeconds(30)
+        .claimCapability({
+          // with: { scheme: "wnfs", hierPart: "//boris.fission.name/public/photos/" },
+          // can: { namespace: "wnfs", segments: ["OVERWRITE"] },
+          with: httpUrlToResourcePointer("https://zkorum.com/v1/some/endpoint"),
+          can: httpMethodToAbility("GET"),
+        })
+        .build();
+      const encodedUcan = ucan.encode(u)
 
-    // verify ucan
-    const rootIssuerDid = ucan.parse(encodedUcan).payload.iss;
-    const result = await ucan.verify(encodedUcan, {
-      audience: "did:web:zkorum.com",
-      isRevoked: async (_ucan) => false, // users' generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
-      requiredCapabilities: [
-        {
-          capability: {
-            with: httpUrlToResourcePointer("https://zkorum.com/v1/some/endpoint"),
-            can: httpMethodToAbility("GET"),
+      // verify ucan
+      const rootIssuerDid = ucan.parse(encodedUcan).payload.iss;
+      const result = await ucan.verify(encodedUcan, {
+        audience: "did:web:zkorum.com",
+        isRevoked: async (_ucan) => false, // users' generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
+        requiredCapabilities: [
+          {
+            capability: {
+              with: httpUrlToResourcePointer("https://zkorum.com/v1/some/endpoint"),
+              can: httpMethodToAbility("GET"),
+            },
+            rootIssuer: rootIssuerDid,
           },
-          rootIssuer: rootIssuerDid,
-        },
-      ],
-    });
-    if (result.ok) {
-      verified.value = true
-    } else {
-      console.error(result.error)
-      verified.value = new AggregateError(result.error).message
+        ],
+      });
+      if (result.ok) {
+        verified.value = true
+      } else {
+        console.error(result.error)
+        verified.value = new AggregateError(result.error).message
+      }
+    } catch (e: unknown) {
+      console.error(e)
+      verified.value = (e as Error)?.message;
     }
 
 

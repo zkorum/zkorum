@@ -197,10 +197,10 @@
   resolved "https://registry.yarnpkg.com/@xmldom/xmldom/-/xmldom-0.8.10.tgz#a1337ca426aa61cef9fe15b5b28e340a72f6fa99"
   integrity sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==
 
-"@zkorum/capacitor-secure-signing@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@zkorum/capacitor-secure-signing/-/capacitor-secure-signing-1.0.0.tgz#677516dad89157e8560e57a5a666816e5093530c"
-  integrity sha512-YBTQDzWgpfS1gzmSxWmkVcP3vu4YiPH3Y9ohOn91/X7Ylq+vMfgzghCdmcjQOI2ecGibAAiEyxH2ntqF3fphRg==
+"@zkorum/capacitor-secure-signing@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@zkorum/capacitor-secure-signing/-/capacitor-secure-signing-1.0.1.tgz#3703112a4db370bdb6fcf981f29827ed65dbfd18"
+  integrity sha512-pGryL3teUuZrAxdfGi34efVE1T+VUtevdX1X8DImYzdtASKtByTMZLvcQAsVDn6bPuyR1/czNpNRLotDMTtYbw==
 
 "@zkorum/capacitor-secure-storage@^8.0.6":
   version "8.0.6"

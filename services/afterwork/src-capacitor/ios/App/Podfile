@@ -13,6 +13,8 @@ def capacitor_pods
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
   pod 'CapgoCapacitorUpdater', :path => '../../node_modules/@capgo/capacitor-updater'
+  pod 'ZkorumCapacitorSecureSigning', :path => '../../node_modules/@zkorum/capacitor-secure-signing'
+  pod 'ZkorumCapacitorSecureStorage', :path => '../../node_modules/@zkorum/capacitor-secure-storage'
 end
 
 target 'App' do
