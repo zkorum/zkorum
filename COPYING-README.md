@@ -16,3 +16,6 @@
 Attribution information for ZKorum is contained in the [AUTHORS](AUTHORS) file.
 
 Every contributors have signed the [Fiduciary Licensing Agreement (FLA)](https://cla-assistant.io/zkorum/zkorum) with [ZKorum SAS](https://annuaire-entreprises.data.gouv.fr/entreprise/zkorum-984736173) as the Trustee.
+
+Note that ZKORUM is a registered trademark, the logos and custom icons and other assets are all right reserved ZKorum SAS 2024. 
+Only the source code is open-source, the registered trademarks cannot be used without written consent from ZKorum SAS.
