@@ -29,8 +29,12 @@ import isEqual from "lodash/isEqual.js";
 import postgres from "postgres";
 import { config, server } from "./app.js";
 import { DrizzleFastifyLogger } from "./logger.js";
-import { type PostAs } from "./service/credential.js";
+import { type PostAs } from "@/logic/credential.js";
 import { Service } from "./service/service.js";
+import * as authUtilService from "@/service/authUtil.js";
+import * as authService from "@/service/auth.js";
+import * as credentialService from "@/service/credential.js";
+import * as recoveryService from "@/service/recovery.js";
 import { stringToBytes } from "./shared/common/arrbufs.js";
 import { decodeCID, toCID } from "./shared/common/cid.js";
 import {
@@ -77,8 +81,8 @@ const speciallyAuthorizedEmails: string[] =
 server.register(fastifySwagger, {
     openapi: {
         info: {
-            title: "ZKorum",
-            description: "ZKorum backend",
+            title: "Afterwork by ZKorum",
+            description: "Aftework by ZKorum API",
             version: "1.0.0",
         },
         servers: [],
@@ -149,7 +153,6 @@ const pk = sk.generatePublicKeyG2(params);
 
 interface ExpectedDeviceStatus {
     userId?: string;
-    isSyncing?: boolean;
     isLoggedIn?: boolean;
 }
 
@@ -180,7 +183,6 @@ async function verifyUCAN(
     options: OptionsVerifyUcan = {
         expectedDeviceStatus: {
             isLoggedIn: true,
-            isSyncing: true,
         },
     }
 ): Promise<string> {
@@ -192,6 +194,7 @@ async function verifyUCAN(
             new URL(request.originalUrl, SERVER_URL)
         );
         const encodedUcan = authHeader.substring(7, authHeader.length);
+        server.log.info(`Received UCAN: ${encodedUcan}`);
         const rootIssuerDid = ucans.parse(encodedUcan).payload.iss;
         const result = await ucans.verify(encodedUcan, {
             audience: SERVER_DID,
@@ -207,6 +210,13 @@ async function verifyUCAN(
             ],
         });
         if (!result.ok) {
+            for (const err of result.error) {
+                if (err instanceof Error) {
+                    server.log.error(`Error verifying UCAN - ${err.name}: ${err.message} - ${err.cause} - ${err.stack}`);
+                } else {
+                    server.log.error(`Unknown Error verifying UCAN: ${err}`);
+                }
+            }
             throw server.httpErrors.createError(
                 401,
                 "UCAN validation failed",
@@ -214,7 +224,7 @@ async function verifyUCAN(
             );
         }
         if (options.expectedDeviceStatus !== undefined) {
-            const deviceStatus = await Service.getDeviceStatus(
+            const deviceStatus = await authService.getDeviceStatus(
                 db,
                 rootIssuerDid
             );
@@ -227,15 +237,9 @@ async function verifyUCAN(
                     throw server.httpErrors.forbidden(
                         `[${rootIssuerDid}] has not been registered but is expected to have a specific userId`
                     );
-                } else if (
-                    options.expectedDeviceStatus.isSyncing !== undefined
-                ) {
-                    throw server.httpErrors.forbidden(
-                        `[${rootIssuerDid}] has not been registered but is expected to have a syncing status`
-                    );
                 }
             } else {
-                const { userId, isLoggedIn, isSyncing } = deviceStatus;
+                const { userId, isLoggedIn } = deviceStatus;
                 if (
                     options.expectedDeviceStatus.isLoggedIn !== undefined &&
                     options.expectedDeviceStatus.isLoggedIn !== isLoggedIn
@@ -249,13 +253,6 @@ async function verifyUCAN(
                 ) {
                     throw server.httpErrors.forbidden(
                         `[${rootIssuerDid}] is expected to have 'userId=${options.expectedDeviceStatus.userId}' but has 'userId=${userId}'`
-                    );
-                } else if (
-                    options.expectedDeviceStatus.isSyncing !== undefined &&
-                    options.expectedDeviceStatus.isSyncing !== isSyncing
-                ) {
-                    throw server.httpErrors.forbidden(
-                        `[${rootIssuerDid}] is expected to have 'isSyncing=${options.expectedDeviceStatus.isSyncing}' but has 'isSyncing=${isSyncing}'`
                     );
                 }
             }
@@ -547,7 +544,7 @@ server.after(() => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: undefined,
                 });
-                const { type, userId } = await Service.getAuthenticateType(
+                const { type, userId } = await authService.getAuthenticateType(
                     db,
                     request.body,
                     didWrite,
@@ -557,7 +554,7 @@ server.after(() => {
                     request.headers["user-agent"] === undefined
                         ? "Unknown device"
                         : request.headers["user-agent"];
-                return await Service.authenticateAttempt({
+                return await authService.authenticateAttempt({
                     db,
                     type,
                     doSendEmail: config.NODE_ENV === "production",
@@ -601,21 +598,12 @@ server.after(() => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: undefined,
                 });
-                return await Service.verifyOtp({
+                return await authService.verifyOtp({
                     db,
                     maxAttempt: config.EMAIL_OTP_MAX_ATTEMPT_AMOUNT,
                     didWrite,
                     code: request.body.code,
-                    encryptedSymmKey: request.body.encryptedSymmKey,
-                    sk,
-                    pkVersion: config.PK_VERSION,
-                    emailCredentialVersion: config.EMAIL_CREDENTIAL_VERSION,
-                    secretCredentialVersion: config.SECRET_CREDENTIAL_VERSION,
                     httpErrors: server.httpErrors,
-                    unboundSecretCredentialRequest:
-                        request.body.unboundSecretCredentialRequest,
-                    timeboundSecretCredentialRequest:
-                        request.body.timeboundSecretCredentialRequest,
                 });
             },
         });
@@ -628,7 +616,7 @@ server.after(() => {
                         isLoggedIn: true,
                     },
                 });
-                await Service.logout(db, didWrite);
+                await authService.logout(db, didWrite);
             },
         });
     server
@@ -644,10 +632,9 @@ server.after(() => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
                         isLoggedIn: true,
-                        isSyncing: false,
                     },
                 });
-                return await Service.recoverAccount({
+                return await recoveryService.recoverAccount({
                     db,
                     didWrite,
                     pkVersion: config.PK_VERSION,
@@ -658,31 +645,8 @@ server.after(() => {
                         request.body.timeboundSecretCredentialRequest,
                     unboundSecretCredentialRequest:
                         request.body.unboundSecretCredentialRequest,
-                    encryptedSymmKey: request.body.encryptedSymmKey,
                     sk,
                 });
-            },
-        });
-    // TODO
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/auth/sync`, {
-            schema: {
-                // body: Dto.createOrGetEmailCredentialsReq,
-                response: {
-                    // TODO 200: Dto.createOrGetEmailCredentialsRes,
-                    409: Dto.sync409,
-                },
-            },
-            handler: async (request, _reply) => {
-                const _didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                        isSyncing: false,
-                    },
-                });
-                // TODO
-                // return await AuthService.syncAttempt(db, didWrite);
             },
         });
     server
@@ -697,10 +661,9 @@ server.after(() => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
                         isLoggedIn: true,
-                        isSyncing: true,
                     },
                 });
-                return await Service.getUserCredentials(db, didWrite);
+                return await credentialService.getUserCredentials(db, didWrite);
             },
         });
     server
@@ -718,10 +681,9 @@ server.after(() => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
                         isLoggedIn: true,
-                        isSyncing: true,
                     },
                 });
-                const isAdmin = await Service.isAdmin(db, didWrite);
+                const isAdmin = await authUtilService.isAdmin(db, didWrite);
                 if (isAdmin) {
                     throw server.httpErrors.forbidden(
                         "Admin cannot renew credentials"
@@ -729,7 +691,7 @@ server.after(() => {
                 }
                 const email = request.body.email;
                 const isEmailAssociatedWithDevice =
-                    await Service.isEmailAssociatedWithDevice(
+                    await authUtilService.isEmailAssociatedWithDevice(
                         db,
                         didWrite,
                         email
@@ -739,9 +701,9 @@ server.after(() => {
                         `Email ${email} is not associated with this didWrite ${didWrite}`
                     );
                 }
-                const uid = await Service.getUidFromDevice(db, didWrite);
+                const uid = await authUtilService.getUidFromDevice(db, didWrite);
                 const emailCredential =
-                    await Service.createAndStoreEmailCredential({
+                    await credentialService.createAndStoreEmailCredential({
                         db,
                         email,
                         pkVersion: config.PK_VERSION,
@@ -768,19 +730,18 @@ server.after(() => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
                         isLoggedIn: true,
-                        isSyncing: true,
                     },
                 });
-                const isAdmin = await Service.isAdmin(db, didWrite);
+                const isAdmin = await authUtilService.isAdmin(db, didWrite);
                 if (isAdmin) {
                     throw server.httpErrors.forbidden(
                         "Admin cannot renew credentials"
                     );
                 }
-                const userId = await Service.getUserIdFromDevice(db, didWrite);
-                const uid = await Service.getUidFromDevice(db, didWrite);
+                const userId = await authUtilService.getUserIdFromDevice(db, didWrite);
+                const uid = await authUtilService.getUidFromDevice(db, didWrite);
                 const secretCredential =
-                    await Service.createAndStoreSecretCredential({
+                    await credentialService.createAndStoreSecretCredential({
                         db,
                         userId,
                         uid,
@@ -902,7 +863,7 @@ server.after(() => {
                         isLoggedIn: true,
                     },
                 });
-                const isAdmin = await Service.isAdmin(db, didWrite);
+                const isAdmin = await authUtilService.isAdmin(db, didWrite);
                 if (isAdmin !== true) {
                     throw server.httpErrors.forbidden(
                         "Only admin can moderate content"
@@ -926,7 +887,7 @@ server.after(() => {
                         isLoggedIn: true,
                     },
                 });
-                const isAdmin = await Service.isAdmin(db, didWrite);
+                const isAdmin = await authUtilService.isAdmin(db, didWrite);
                 if (isAdmin !== true) {
                     throw server.httpErrors.forbidden(
                         "Only admin can moderate content"
@@ -950,7 +911,7 @@ server.after(() => {
                         isLoggedIn: true,
                     },
                 });
-                const isAdmin = await Service.isAdmin(db, didWrite);
+                const isAdmin = await authUtilService.isAdmin(db, didWrite);
                 if (isAdmin !== true) {
                     throw server.httpErrors.forbidden(
                         "Only admin can moderate content"
@@ -974,7 +935,7 @@ server.after(() => {
                         isLoggedIn: true,
                     },
                 });
-                const isAdmin = await Service.isAdmin(db, didWrite);
+                const isAdmin = await authUtilService.isAdmin(db, didWrite);
                 if (isAdmin !== true) {
                     throw server.httpErrors.forbidden(
                         "Only admin can moderate content"

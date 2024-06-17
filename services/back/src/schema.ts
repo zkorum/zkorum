@@ -50,6 +50,7 @@ export const userTable = pgTable("user", {
     id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
     uid: char("uid", { length: 64 }).unique().notNull(), // @see generateRandomHex() - crypto random hex number for anonymous credential - should be kept secret. We cannot use the already existing UUID because it is not secured across the stack the same way and UUID is too long (36 bytes) to be used by the Dock crypto-wasm-ts library that we use for ZKP and anonymous credentials
     isAdmin: boolean("is_admin").notNull().default(false), // if true, can moderate content
+    encryptedDek: bytea("encrypted_symm_key"), // Data Encryption Key used to encrypt other data (credentials secrets). Shared between devices which must know the Key Encryption Key (KEK) to decrypt it.  TODO: 1. rotate DEK periodically / enable manual rotation, 2. make sure new devices can decrypt this before sending other data
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -101,19 +102,14 @@ export const emailTable = pgTable("email", {
         .notNull(),
 });
 
-// A device corresponds in fact to a browser instance. But since the app is installable, we can expect that the user will only use one browser per device, hence the name of this table.
-// When logging in, the browser generates an asymmetric key pair, which translates into a set of two did:key: didWrite is used to sign/verify messages (and hence used for UCAN), while didExchange is exclusively used to encrypt/decrypt data. This separation is due to the WebCrypto API, see: https://github.com/fission-codes/keystore-idb
-// Devices in that table are associated with a user that have been successfully registered.
 export const deviceTable = pgTable("device", {
     didWrite: varchar("did_write", { length: 1000 }).primaryKey(), // TODO: make sure of length
-    didExchange: varchar("did_exchange", { length: 1000 }).unique().notNull(), // TODO: make sure of length
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
     userAgent: text("user_agent").notNull(), // user-agent length is not fixed
     // TODO: isTrusted: boolean("is_trusted").notNull(), // if set to true by user then, device should stay logged-in indefinitely until log out action
     sessionExpiry: timestamp("session_expiry").notNull(), // on register, a new login session is always started, hence the notNull. This column is updated to now + 15 minutes at each request when isTrusted == false. Otherwise, expiry will be now + 1000 years - meaning no expiry.
-    encryptedSymmKey: bytea("encrypted_symm_key"), // symmetric key used for client-side encryption. Devices belonging to the same user and with encryptedSymmKey!=null automatically sync credentials and presentations between each other
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -144,7 +140,6 @@ export const authAttemptTable = pgTable("auth_attempt", {
     type: authType("type").notNull(),
     email: varchar("email", { length: 254 }).notNull(),
     userId: uuid("user_id").notNull(),
-    didExchange: varchar("did_exchange", { length: 1000 }).notNull(), // TODO: make sure of length
     userAgent: text("user_agent").notNull(), // user-agent length is not fixed
     code: integer("code").notNull(), // one-time password sent to the email ("otp")
     codeExpiry: timestamp("code_expiry").notNull(),

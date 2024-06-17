@@ -11,7 +11,7 @@
     "@capacitor/core": "^5.0.0",
     "@capacitor/ios": "^5.0.0",
     "@capgo/capacitor-updater": "^5.9.4",
-    "@zkorum/capacitor-secure-signing": "^1.0.1",
+    "@zkorum/capacitor-secure-signing": "^1.0.13",
     "@zkorum/capacitor-secure-storage": "^8.0.6"
   }
 }

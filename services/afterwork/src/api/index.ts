@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * ZKorum
- * ZKorum backend
+ * Afterwork by ZKorum
+ * Aftework by ZKorum API
  *
  * The version of the OpenAPI document: 1.0.0
  * 

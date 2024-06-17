@@ -1,4 +1,4 @@
-package com.zkorum.feed;
+package com.zkorum.afterwork;
 
 import com.getcapacitor.BridgeActivity;
 

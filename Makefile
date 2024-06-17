@@ -7,11 +7,10 @@ all: dev
 # and change version to latest?
 generate:
 	docker run --rm \
-  -v ${PWD}:/local openapitools/openapi-generator-cli:v7.0.0-beta generate \
+  -v ${PWD}:/local openapitools/openapi-generator-cli:latest-release generate \
   -i /local/services/back/openapi-zkorum.json \
   -g typescript-axios \
-  -t /local/.openapi-generator/templates \
-  -o /local/services/app/src/api
+  -o /local/services/afterwork/src/api
 
 sync:
 	cd services/shared && pnpm run sync

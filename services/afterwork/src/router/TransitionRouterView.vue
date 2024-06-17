@@ -5,7 +5,7 @@
     <!--   :leave-active-class="'animated fadeOut fast'" mode="out-in"> -->
     <!--   <component :is="Component" :key="route.path" /> -->
     <!-- </transition> -->
-    <transition appear enter-active-class="animated fadeIn slow" leave-active-class="animated fadeOut " mode="out-in">
+    <transition appear enter-active-class="animated fadeIn slow" leave-active-class="animated fadeOut" mode="out-in">
       <component :is="Component" :key="route.path" />
     </transition>
   </router-view>

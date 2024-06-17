@@ -9,6 +9,9 @@
       "app/*": [
         "*"
       ],
+      "views/*": [
+        "src/views/*"
+      ],
       "components/*": [
         "src/components/*"
       ],
@@ -29,6 +32,9 @@
       ],
       "router/*": [
         "src/router/*"
+      ],
+      "model/*": [
+        "src/model/*"
       ],
       "utils/*": [
         "src/utils/*"

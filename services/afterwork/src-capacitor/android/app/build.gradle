@@ -17,10 +17,10 @@ try {
 }
 
 android {
-    namespace "com.zkorum.feed"
+    namespace "com.zkorum.afterwork"
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.zkorum.feed"
+        applicationId "com.zkorum.afterwork"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appCode

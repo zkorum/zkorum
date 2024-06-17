@@ -26,15 +26,11 @@ export class Dto {
     static authenticateRequestBody = z
         .object({
             email: zodauthorizedEmail,
-            didExchange: zodDidKey,
             isRequestingNewCode: z.boolean(),
         })
         .strict();
     static verifyOtpReqBody = z.object({
         code: zodcode,
-        encryptedSymmKey: z.string().optional(),
-        timeboundSecretCredentialRequest: zodsecretCredentialRequest.optional(),
-        unboundSecretCredentialRequest: zodsecretCredentialRequest.optional(),
     });
     static authenticateResponse = z
         .object({
@@ -47,11 +43,7 @@ export class Dto {
             .object({
                 success: z.literal(true),
                 userId: zoduserId,
-                encryptedSymmKey: z.string().optional(), // if undefined, device is awaiting synchronization
                 sessionExpiry: z.date(),
-                syncingDevices: zodDevices,
-                emailCredentialsPerEmail: zodemailCredentialsPerEmail,
-                secretCredentialsPerType: zodsecretCredentialsPerType,
             })
             .strict(),
         z
@@ -61,39 +53,17 @@ export class Dto {
                     "expired_code",
                     "wrong_guess",
                     "too_many_wrong_guess",
-                    "encrypted_symm_key_required",
-                    "unbound_secret_credential_request_required",
-                    "timebound_secret_credential_request_required",
-                    "secret_credential_requests_required", // both are undefined
                 ]),
             })
             .strict(),
     ]);
     // WARNING when changing auth 409 - also change expected type in frontend manually!
-    static auth409 = z.discriminatedUnion("reason", [
-        z.object({
-            reason: z.literal("awaiting_syncing"),
-            userId: zoduserId,
-            sessionExpiry: z.date(),
-            syncingDevices: zodDevices,
-        }),
+    static auth409 =
         z.object({
             reason: z.literal("already_logged_in"),
             userId: zoduserId,
             sessionExpiry: z.date(),
-            encryptedSymmKey: z.string(),
-            syncingDevices: zodDevices,
-            emailCredentialsPerEmail: zodemailCredentialsPerEmail,
-            secretCredentialsPerType: zodsecretCredentialsPerType,
-        }),
-    ]);
-
-    static sync409 = z
-        .object({
-            reason: z.literal("already_syncing"),
-            userId: zoduserId,
-        })
-        .strict();
+        });
     static recoverAccountReq = z.object({
         encryptedSymmKey: z.string(),
         timeboundSecretCredentialRequest: zodsecretCredentialRequest,
@@ -102,7 +72,6 @@ export class Dto {
     static recoverAccountResp = z.object({
         userId: zoduserId,
         sessionExpiry: z.date(),
-        syncingDevices: zodDevices,
         emailCredentialsPerEmail: zodemailCredentialsPerEmail,
         secretCredentialsPerType: zodsecretCredentialsPerType,
     });
@@ -114,27 +83,11 @@ export class Dto {
             })
             .strict(),
     ]);
-    static getDeviceStatusResp = z
-        .discriminatedUnion("isSyncing", [
-            z
-                .object({
-                    userId: zoduserId,
-                    isLoggedIn: z.boolean(),
-                    isSyncing: z.literal(true),
-                    sessionExpiry: z.date(),
-                    encryptedSymmKey: z.string(),
-                })
-                .strict(),
-            z
-                .object({
-                    userId: zoduserId,
-                    isLoggedIn: z.boolean(),
-                    sessionExpiry: z.date(),
-                    isSyncing: z.literal(false),
-                })
-                .strict(),
-        ])
-        .optional();
+    static getDeviceStatusResp = z.object({
+        userId: zoduserId,
+        isLoggedIn: z.boolean(),
+        sessionExpiry: z.date(),
+    }).strict().optional();
     static userCredentials = z
         .object({
             emailCredentialsPerEmail: zodemailCredentialsPerEmail,

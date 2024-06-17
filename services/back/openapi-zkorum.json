@@ -1,8 +1,8 @@
 {
     "openapi": "3.0.3",
     "info": {
-        "title": "ZKorum",
-        "description": "ZKorum backend",
+        "title": "Afterwork by ZKorum",
+        "description": "Aftework by ZKorum API",
         "version": "1.0.0"
     },
     "components": {
@@ -30,18 +30,12 @@
                                         "minLength": 1,
                                         "description": "Email address"
                                     },
-                                    "didExchange": {
-                                        "type": "string",
-                                        "maxLength": 1000,
-                                        "description": "Decentralized Identifier with did:key method"
-                                    },
                                     "isRequestingNewCode": {
                                         "type": "boolean"
                                     }
                                 },
                                 "required": [
                                     "email",
-                                    "didExchange",
                                     "isRequestingNewCode"
                                 ],
                                 "additionalProperties": false
@@ -81,245 +75,30 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "reason": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "awaiting_syncing"
-                                                    ]
-                                                },
-                                                "userId": {
-                                                    "type": "string",
-                                                    "format": "uuid",
-                                                    "minLength": 1
-                                                },
-                                                "sessionExpiry": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                },
-                                                "syncingDevices": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "didWrite": {
-                                                                "type": "string",
-                                                                "maxLength": 1000,
-                                                                "description": "Decentralized Identifier with did:key method"
-                                                            },
-                                                            "userAgent": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "didWrite",
-                                                            "userAgent"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "reason",
-                                                "userId",
-                                                "sessionExpiry",
-                                                "syncingDevices"
-                                            ],
-                                            "additionalProperties": false
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
                                         },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "reason": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "already_logged_in"
-                                                    ]
-                                                },
-                                                "userId": {
-                                                    "type": "string",
-                                                    "format": "uuid",
-                                                    "minLength": 1
-                                                },
-                                                "sessionExpiry": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                },
-                                                "encryptedSymmKey": {
-                                                    "type": "string"
-                                                },
-                                                "syncingDevices": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "didWrite": {
-                                                                "type": "string",
-                                                                "maxLength": 1000,
-                                                                "description": "Decentralized Identifier with did:key method"
-                                                            },
-                                                            "userAgent": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "didWrite",
-                                                            "userAgent"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                },
-                                                "emailCredentialsPerEmail": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "active": {
-                                                                "type": "string"
-                                                            },
-                                                            "revoked": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "string"
-                                                                }
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "revoked"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                },
-                                                "secretCredentialsPerType": {
-                                                    "type": "object",
-                                                    "required": [
-                                                        "unbound",
-                                                        "timebound"
-                                                    ],
-                                                    "properties": {
-                                                        "unbound": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "active": {
-                                                                    "type": "object",
-                                                                    "properties": {
-                                                                        "blindedCredential": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlinding": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlindedSubject": {
-                                                                            "type": "string"
-                                                                        }
-                                                                    },
-                                                                    "required": [
-                                                                        "blindedCredential",
-                                                                        "encryptedBlinding",
-                                                                        "encryptedBlindedSubject"
-                                                                    ],
-                                                                    "additionalProperties": false
-                                                                },
-                                                                "revoked": {
-                                                                    "type": "array",
-                                                                    "items": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "blindedCredential": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlinding": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlindedSubject": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "blindedCredential",
-                                                                            "encryptedBlinding",
-                                                                            "encryptedBlindedSubject"
-                                                                        ],
-                                                                        "additionalProperties": false
-                                                                    }
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "revoked"
-                                                            ],
-                                                            "additionalProperties": false
-                                                        },
-                                                        "timebound": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "active": {
-                                                                    "type": "object",
-                                                                    "properties": {
-                                                                        "blindedCredential": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlinding": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlindedSubject": {
-                                                                            "type": "string"
-                                                                        }
-                                                                    },
-                                                                    "required": [
-                                                                        "blindedCredential",
-                                                                        "encryptedBlinding",
-                                                                        "encryptedBlindedSubject"
-                                                                    ],
-                                                                    "additionalProperties": false
-                                                                },
-                                                                "revoked": {
-                                                                    "type": "array",
-                                                                    "items": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "blindedCredential": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlinding": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlindedSubject": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "blindedCredential",
-                                                                            "encryptedBlinding",
-                                                                            "encryptedBlindedSubject"
-                                                                        ],
-                                                                        "additionalProperties": false
-                                                                    }
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "revoked"
-                                                            ],
-                                                            "additionalProperties": false
-                                                        }
-                                                    },
-                                                    "additionalProperties": false
-                                                }
-                                            },
-                                            "required": [
-                                                "reason",
-                                                "userId",
-                                                "sessionExpiry",
-                                                "encryptedSymmKey",
-                                                "syncingDevices",
-                                                "emailCredentialsPerEmail",
-                                                "secretCredentialsPerType"
-                                            ],
-                                            "additionalProperties": false
+                                        "userId": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "minLength": 1
+                                        },
+                                        "sessionExpiry": {
+                                            "type": "string",
+                                            "format": "date-time"
                                         }
-                                    ]
+                                    },
+                                    "required": [
+                                        "reason",
+                                        "userId",
+                                        "sessionExpiry"
+                                    ],
+                                    "additionalProperties": false
                                 }
                             }
                         }
@@ -339,51 +118,6 @@
                                         "type": "number",
                                         "minimum": 0,
                                         "maximum": 999999
-                                    },
-                                    "encryptedSymmKey": {
-                                        "type": "string"
-                                    },
-                                    "timeboundSecretCredentialRequest": {
-                                        "type": "object",
-                                        "properties": {
-                                            "blindedRequest": {
-                                                "type": "object",
-                                                "additionalProperties": {}
-                                            },
-                                            "encryptedEncodedBlindedSubject": {
-                                                "type": "string"
-                                            },
-                                            "encryptedEncodedBlinding": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "required": [
-                                            "blindedRequest",
-                                            "encryptedEncodedBlindedSubject",
-                                            "encryptedEncodedBlinding"
-                                        ],
-                                        "additionalProperties": false
-                                    },
-                                    "unboundSecretCredentialRequest": {
-                                        "type": "object",
-                                        "properties": {
-                                            "blindedRequest": {
-                                                "type": "object",
-                                                "additionalProperties": {}
-                                            },
-                                            "encryptedEncodedBlindedSubject": {
-                                                "type": "string"
-                                            },
-                                            "encryptedEncodedBlinding": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "required": [
-                                            "blindedRequest",
-                                            "encryptedEncodedBlindedSubject",
-                                            "encryptedEncodedBlinding"
-                                        ],
-                                        "additionalProperties": false
                                     }
                                 },
                                 "required": [
@@ -416,177 +150,15 @@
                                                     "format": "uuid",
                                                     "minLength": 1
                                                 },
-                                                "encryptedSymmKey": {
-                                                    "type": "string"
-                                                },
                                                 "sessionExpiry": {
                                                     "type": "string",
                                                     "format": "date-time"
-                                                },
-                                                "syncingDevices": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "didWrite": {
-                                                                "type": "string",
-                                                                "maxLength": 1000,
-                                                                "description": "Decentralized Identifier with did:key method"
-                                                            },
-                                                            "userAgent": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "didWrite",
-                                                            "userAgent"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                },
-                                                "emailCredentialsPerEmail": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "active": {
-                                                                "type": "string"
-                                                            },
-                                                            "revoked": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "string"
-                                                                }
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "revoked"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                },
-                                                "secretCredentialsPerType": {
-                                                    "type": "object",
-                                                    "required": [
-                                                        "unbound",
-                                                        "timebound"
-                                                    ],
-                                                    "properties": {
-                                                        "unbound": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "active": {
-                                                                    "type": "object",
-                                                                    "properties": {
-                                                                        "blindedCredential": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlinding": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlindedSubject": {
-                                                                            "type": "string"
-                                                                        }
-                                                                    },
-                                                                    "required": [
-                                                                        "blindedCredential",
-                                                                        "encryptedBlinding",
-                                                                        "encryptedBlindedSubject"
-                                                                    ],
-                                                                    "additionalProperties": false
-                                                                },
-                                                                "revoked": {
-                                                                    "type": "array",
-                                                                    "items": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "blindedCredential": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlinding": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlindedSubject": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "blindedCredential",
-                                                                            "encryptedBlinding",
-                                                                            "encryptedBlindedSubject"
-                                                                        ],
-                                                                        "additionalProperties": false
-                                                                    }
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "revoked"
-                                                            ],
-                                                            "additionalProperties": false
-                                                        },
-                                                        "timebound": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "active": {
-                                                                    "type": "object",
-                                                                    "properties": {
-                                                                        "blindedCredential": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlinding": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlindedSubject": {
-                                                                            "type": "string"
-                                                                        }
-                                                                    },
-                                                                    "required": [
-                                                                        "blindedCredential",
-                                                                        "encryptedBlinding",
-                                                                        "encryptedBlindedSubject"
-                                                                    ],
-                                                                    "additionalProperties": false
-                                                                },
-                                                                "revoked": {
-                                                                    "type": "array",
-                                                                    "items": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "blindedCredential": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlinding": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlindedSubject": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "blindedCredential",
-                                                                            "encryptedBlinding",
-                                                                            "encryptedBlindedSubject"
-                                                                        ],
-                                                                        "additionalProperties": false
-                                                                    }
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "revoked"
-                                                            ],
-                                                            "additionalProperties": false
-                                                        }
-                                                    },
-                                                    "additionalProperties": false
                                                 }
                                             },
                                             "required": [
                                                 "success",
                                                 "userId",
-                                                "sessionExpiry",
-                                                "syncingDevices",
-                                                "emailCredentialsPerEmail",
-                                                "secretCredentialsPerType"
+                                                "sessionExpiry"
                                             ],
                                             "additionalProperties": false
                                         },
@@ -604,11 +176,7 @@
                                                     "enum": [
                                                         "expired_code",
                                                         "wrong_guess",
-                                                        "too_many_wrong_guess",
-                                                        "encrypted_symm_key_required",
-                                                        "unbound_secret_credential_request_required",
-                                                        "timebound_secret_credential_request_required",
-                                                        "secret_credential_requests_required"
+                                                        "too_many_wrong_guess"
                                                     ]
                                                 }
                                             },
@@ -628,245 +196,30 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "reason": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "awaiting_syncing"
-                                                    ]
-                                                },
-                                                "userId": {
-                                                    "type": "string",
-                                                    "format": "uuid",
-                                                    "minLength": 1
-                                                },
-                                                "sessionExpiry": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                },
-                                                "syncingDevices": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "didWrite": {
-                                                                "type": "string",
-                                                                "maxLength": 1000,
-                                                                "description": "Decentralized Identifier with did:key method"
-                                                            },
-                                                            "userAgent": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "didWrite",
-                                                            "userAgent"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "reason",
-                                                "userId",
-                                                "sessionExpiry",
-                                                "syncingDevices"
-                                            ],
-                                            "additionalProperties": false
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
                                         },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "reason": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "already_logged_in"
-                                                    ]
-                                                },
-                                                "userId": {
-                                                    "type": "string",
-                                                    "format": "uuid",
-                                                    "minLength": 1
-                                                },
-                                                "sessionExpiry": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                },
-                                                "encryptedSymmKey": {
-                                                    "type": "string"
-                                                },
-                                                "syncingDevices": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "didWrite": {
-                                                                "type": "string",
-                                                                "maxLength": 1000,
-                                                                "description": "Decentralized Identifier with did:key method"
-                                                            },
-                                                            "userAgent": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "didWrite",
-                                                            "userAgent"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                },
-                                                "emailCredentialsPerEmail": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "active": {
-                                                                "type": "string"
-                                                            },
-                                                            "revoked": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "string"
-                                                                }
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "revoked"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                },
-                                                "secretCredentialsPerType": {
-                                                    "type": "object",
-                                                    "required": [
-                                                        "unbound",
-                                                        "timebound"
-                                                    ],
-                                                    "properties": {
-                                                        "unbound": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "active": {
-                                                                    "type": "object",
-                                                                    "properties": {
-                                                                        "blindedCredential": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlinding": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlindedSubject": {
-                                                                            "type": "string"
-                                                                        }
-                                                                    },
-                                                                    "required": [
-                                                                        "blindedCredential",
-                                                                        "encryptedBlinding",
-                                                                        "encryptedBlindedSubject"
-                                                                    ],
-                                                                    "additionalProperties": false
-                                                                },
-                                                                "revoked": {
-                                                                    "type": "array",
-                                                                    "items": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "blindedCredential": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlinding": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlindedSubject": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "blindedCredential",
-                                                                            "encryptedBlinding",
-                                                                            "encryptedBlindedSubject"
-                                                                        ],
-                                                                        "additionalProperties": false
-                                                                    }
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "revoked"
-                                                            ],
-                                                            "additionalProperties": false
-                                                        },
-                                                        "timebound": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "active": {
-                                                                    "type": "object",
-                                                                    "properties": {
-                                                                        "blindedCredential": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlinding": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "encryptedBlindedSubject": {
-                                                                            "type": "string"
-                                                                        }
-                                                                    },
-                                                                    "required": [
-                                                                        "blindedCredential",
-                                                                        "encryptedBlinding",
-                                                                        "encryptedBlindedSubject"
-                                                                    ],
-                                                                    "additionalProperties": false
-                                                                },
-                                                                "revoked": {
-                                                                    "type": "array",
-                                                                    "items": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "blindedCredential": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlinding": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "encryptedBlindedSubject": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "blindedCredential",
-                                                                            "encryptedBlinding",
-                                                                            "encryptedBlindedSubject"
-                                                                        ],
-                                                                        "additionalProperties": false
-                                                                    }
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "revoked"
-                                                            ],
-                                                            "additionalProperties": false
-                                                        }
-                                                    },
-                                                    "additionalProperties": false
-                                                }
-                                            },
-                                            "required": [
-                                                "reason",
-                                                "userId",
-                                                "sessionExpiry",
-                                                "encryptedSymmKey",
-                                                "syncingDevices",
-                                                "emailCredentialsPerEmail",
-                                                "secretCredentialsPerType"
-                                            ],
-                                            "additionalProperties": false
+                                        "userId": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "minLength": 1
+                                        },
+                                        "sessionExpiry": {
+                                            "type": "string",
+                                            "format": "date-time"
                                         }
-                                    ]
+                                    },
+                                    "required": [
+                                        "reason",
+                                        "userId",
+                                        "sessionExpiry"
+                                    ],
+                                    "additionalProperties": false
                                 }
                             }
                         }
@@ -964,27 +317,6 @@
                                         "sessionExpiry": {
                                             "type": "string",
                                             "format": "date-time"
-                                        },
-                                        "syncingDevices": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "didWrite": {
-                                                        "type": "string",
-                                                        "maxLength": 1000,
-                                                        "description": "Decentralized Identifier with did:key method"
-                                                    },
-                                                    "userAgent": {
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "required": [
-                                                    "didWrite",
-                                                    "userAgent"
-                                                ],
-                                                "additionalProperties": false
-                                            }
                                         },
                                         "emailCredentialsPerEmail": {
                                             "type": "object",
@@ -1125,43 +457,8 @@
                                     "required": [
                                         "userId",
                                         "sessionExpiry",
-                                        "syncingDevices",
                                         "emailCredentialsPerEmail",
                                         "secretCredentialsPerType"
-                                    ],
-                                    "additionalProperties": false
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/sync": {
-            "post": {
-                "responses": {
-                    "409": {
-                        "description": "Default Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "reason": {
-                                            "type": "string",
-                                            "enum": [
-                                                "already_syncing"
-                                            ]
-                                        },
-                                        "userId": {
-                                            "type": "string",
-                                            "format": "uuid",
-                                            "minLength": 1
-                                        }
-                                    },
-                                    "required": [
-                                        "reason",
-                                        "userId"
                                     ],
                                     "additionalProperties": false
                                 }

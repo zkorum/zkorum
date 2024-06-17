@@ -5,7 +5,7 @@
         <q-btn @click="$router.push('/login')" style="width: 100%">Login</q-btn>
         <div style="width: 100%">
           <q-avatar>
-            <img src=" logo.svg" />
+            <img src="logo.svg" />
           </q-avatar>
         </div>
         <div>About</div>
