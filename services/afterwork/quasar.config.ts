@@ -15,7 +15,7 @@ export default configure((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ctx.modeName === "capacitor" ? ["i18n", "axios", "capgo", "crypto", "passphrase"] : ["i18n", "axios", "crypto"],
+    boot: ctx.modeName === "capacitor" ? ["i18n", "axios", "crypto", "capgo", "capacitor-storage"] : ["i18n", "axios", "crypto"],
 
     bin: {
       linuxAndroidStudio: "/home/nicobao/.local/bin/studio.sh",
@@ -70,7 +70,7 @@ export default configure((ctx) => {
               ? "a17f8e504a42e53d53ae5ff92a7ba592f8a290cd2a6ed590a32265189cad76dd970b36582a8faca1697711c2fb8560ed084387bcb367f2d90b69887a51e7f41746678d4fc893a53ee6c7a2427b5bb277c6a35670530fbddfcddd1ce131b34288"
               : "94dbc0cc2cc457d9fc23823d7bbb46f3a59f5ec5062628147c89aabcef565593858ffb4f2897c2b8fc2336de2f84dab00eb1b91675e0e89ca18c37b29fde190f266ab2592caf88276ea8fe0449d91b84a32adc95cd969fe266db462a75147352",
         // https://quasar.dev/quasar-cli-webpack/handling-process-env/#using-dotenv
-        HANKO_API_URL: process.env.HANKO_API_URL
+        VITE_BACK_DID: ctx.dev ? "did:web:localhost%3A8080" : ctx.debug ? "https://staging1.zkorum.com" : "https://zkorum.com"
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

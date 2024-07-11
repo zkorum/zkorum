@@ -6,6 +6,13 @@ export default {
   welcome: {
     login: "Login"
   },
+  boot: {
+    capacitorStorage: {
+      title: "Fatal error",
+      message: "A fatal error occured while setting up secure storage. Try updating the app, or try again later. An error log has been sent to our server, we are onto it! We apologize for the inconvenience.",
+      ok: "Close app",
+    }
+  },
   onboarding: {
     login: {
       title: "Join Your Community",
@@ -16,5 +23,18 @@ export default {
         unauthorized: "Please provide a valid {'@'}essec.edu email address",
       }
     }
+  },
+  capacitorStore: {
+    secureLockScreenError: {
+      title: "Secure storage error",
+      message: "Agora requires you to enable a secure lock screen (PIN code, password, biometrics - not swipe)",
+      ok: "Close app",
+    },
+    fatalError: {
+      title: "Secure storage error",
+      message: "Fatal error while trying to access secure storage",
+      ok: "Close app",
+    },
+
   }
 };

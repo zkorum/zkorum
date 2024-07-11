@@ -7,6 +7,16 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
+"@aparajita/capacitor-biometric-auth@^8.0.0":
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/@aparajita/capacitor-biometric-auth/-/capacitor-biometric-auth-8.0.0.tgz#265a20acdb396dbb65921b1b295ae1a389785d93"
+  integrity sha512-ILRZMvPkx6BvDozJP39Xg6YWQq4rEXCq7itQIAQpi2/+HBi7UM/3a7Ws9fpQBrPTjrenle/h4T2M1MMHyc8dvw==
+  dependencies:
+    "@capacitor/android" "^6.0.0"
+    "@capacitor/app" "^6.0.0"
+    "@capacitor/core" "^6.0.0"
+    "@capacitor/ios" "^6.0.0"
+
 "@babel/code-frame@^7.12.13":
   version "7.24.2"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.24.2.tgz#718b4b19841809a58b29b68cde80bc5e1aa6d9ae"
@@ -1121,15 +1131,15 @@
   resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.4.23.tgz#e536a6dfd2f5f950d08c2e8ebcfe7e5329a851a1"
   integrity sha512-wBQ0gvf+SMwsCQOyusNw/GoXPV47WGd1xB5A1Pgzy0sQ3Bi5r5xm3n+92y3gCnB3MWqnRDdvfkRGxhKtbBRNgg==
 
-"@zkorum/capacitor-secure-signing@^1.0.13":
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/@zkorum/capacitor-secure-signing/-/capacitor-secure-signing-1.0.13.tgz#7300aca590baa7fa1b874a561537089ae522b08f"
-  integrity sha512-fO/oOWzNasHa7u+Lb7a/Zq3IH4yjdwH1QfDdGIPzD51pObdZVVNmy+BR6eOIRb+/o2xYK01ozMr30TVyW84TAQ==
+"@zkorum/capacitor-secure-signing@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@zkorum/capacitor-secure-signing/-/capacitor-secure-signing-1.2.1.tgz#82a9dddf070aa5cc72ce897b06f658d55730ae03"
+  integrity sha512-qDQlYAFfiFWplPrIX00e793SJhS6/3wgAjubG0Xhc7BvsYDxF0/LnxMYz4yWQ9OZruaYw0Xqr7kDPvkIuFXVLw==
 
-"@zkorum/capacitor-secure-storage@^8.0.6":
-  version "8.0.6"
-  resolved "https://registry.yarnpkg.com/@zkorum/capacitor-secure-storage/-/capacitor-secure-storage-8.0.6.tgz#4adcb2da844258891370216daf98baf284e26c7b"
-  integrity sha512-INMc/PRck8OyB0WUBkrj3q0ZlcTMHmo+5TuAGYIFSyMo8r6u47Q0O4M4bOvsQYjInpxMulUBq1n9tpIUknyaww==
+"@zkorum/capacitor-secure-storage@^8.2.2":
+  version "8.2.2"
+  resolved "https://registry.yarnpkg.com/@zkorum/capacitor-secure-storage/-/capacitor-secure-storage-8.2.2.tgz#0485cd3262ed45a2c58cd7d09dc965588f705943"
+  integrity sha512-KZxzd5wigA7oXLb3NvyJa/doVHRpWCckmdp1eqY/e8jB9QXfDayDmixgKvuquYv3OQMlGctpj3Ohej/UGbktDg==
   dependencies:
     "@capacitor/android" "^6.0.0"
     "@capacitor/app" "^6.0.0"
@@ -3283,6 +3293,13 @@ picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.3.1:
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.1.tgz#3ba3833733646d9d3e4995946c1365a67fb07a42"
   integrity sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==
 
+pinia-plugin-persistedstate-2@^2.0.20:
+  version "2.0.20"
+  resolved "https://registry.yarnpkg.com/pinia-plugin-persistedstate-2/-/pinia-plugin-persistedstate-2-2.0.20.tgz#dc8382d0b18d33cf09e4f6af67a5184b5468930c"
+  integrity sha512-fpak1nZWen1z/Gt+SnpBE2nj9NikkKhpw7DcvixLl3OTZOksCHV6/b5iTyj1R9sKidiS+SPsdUgL6Oy4faGsbA==
+  dependencies:
+    shvl "^3.0.0"
+
 pinia@^2.1.7:
   version "2.1.7"
   resolved "https://registry.yarnpkg.com/pinia/-/pinia-2.1.7.tgz#4cf5420d9324ca00b7b4984d3fbf693222115bbc"
@@ -3685,6 +3702,11 @@ shebang-regex@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-3.0.0.tgz#ae16f1644d873ecad843b0307b143362d4c42172"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
+
+shvl@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/shvl/-/shvl-3.0.0.tgz#63b8e888730c24a779f8c574305924a144efc35e"
+  integrity sha512-5IomAM3ykE/g9K9L6lhODc+TpCuN03rrhlboegeKyyfh66DDdpRD5JN37DYhNHH+RaYjiIDx64K/Ms/xQYOR5w==
 
 side-channel@^1.0.4:
   version "1.0.6"

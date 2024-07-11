@@ -1,12 +1,9 @@
 <template>
-  <q-input v-bind="props.inputTextFieldProps" />
+  <q-input v-bind="props" />
 </template>
 
 <script setup lang="ts">
 import { QInputProps } from "quasar";
 
-interface Props {
-  inputTextFieldProps?: QInputProps
-}
-const props = defineProps<Props>();
+const props = defineProps<QInputProps>();
 </script>

@@ -58,14 +58,15 @@ import PollResultView from "components/poll/PollResultView.vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
-import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
+import { getTrimmedPseudonym, getTimeFromNow, getPlatform } from "src/utils/common";
 import { useQuasar } from "quasar";
 import { KeychainAccess, SecureStorage } from "@zkorum/capacitor-secure-storage";
 import { generateRandomPassphrase } from "@/shared/passphrase/generate";
 import { SecureSigning } from "@zkorum/capacitor-secure-signing";
 import * as ucans from "@ucans/ucans";
-import { httpMethodToAbility, httpUrlToResourcePointer } from "@/shared/ucan/ucan";
-import { publicKeyToDid } from "@/shared/did/util";
+import { httpMethodToAbility, httpUrlToResourcePointer } from "shared/ucan/ucan";
+import { publicKeyToDid } from "shared/did/util";
+import * as requestAuth from "request/auth";
 
 const $q = useQuasar();
 const passphrase = ref("nothing");
@@ -83,75 +84,76 @@ function decodeFromBase64(base64: string): Uint8Array {
 }
 
 onMounted(async () => {
-  if ($q.platform.is.mobile) {
-    try {
-      const prefixedKey = "com.zkorum.afterwork/v1_userid/sign"
-      const { publicKey } = await SecureSigning.generateKeyPair({ prefixedKey: prefixedKey })
-      const decodedPublicKey = decodeFromBase64(publicKey);
-      const accountDid = publicKeyToDid(decodedPublicKey)
-      const u = await ucans.Builder.create()
-        .issuedBy({
-          did: () => accountDid,
-          jwtAlg: "ES256",
-          sign: async (msg: Uint8Array) => {
-            const { signature } = await SecureSigning.sign({ prefixedKey: prefixedKey, data: encodeToBase64(msg) })
-            return decodeFromBase64(signature);
-          }
-        })
-        .toAudience("did:web:localhost%3A8080")
-        .withLifetimeInSeconds(30)
-        .claimCapability({
-          // with: { scheme: "wnfs", hierPart: "//boris.fission.name/public/photos/" },
-          // can: { namespace: "wnfs", segments: ["OVERWRITE"] },
-          with: httpUrlToResourcePointer("http://localhost:8080/api/v1/testing"),
-          can: httpMethodToAbility("POST"),
-        })
-        .build();
-      const encodedUcan = ucans.encode(u)
-
-      // api.defaults.headers?.Authorization = `Bearer ${encodedUcan}`;
-      // verify ucan
-      await DefaultApiFactory(
-        undefined,
-        undefined,
-        api
-      ).apiV1TestingPost({
-        headers: {
-          "Authorization": `Bearer ${encodedUcan}`
-        }
-      });
-    } catch (e: unknown) {
-      console.error("Error while verifying UCAN", (e as Error)?.message)
-      verified.value = (e as Error)?.message;
-    }
-
-
-    interval = setInterval(async () => {
-      try {
-        const passphraseDataType = await SecureStorage.get("userid/passphrase", true, true);
-        if (passphraseDataType === null) {
-          passphrase.value = "";
-        }
-
-        if (passphraseDataType instanceof Date) {
-          passphrase.value = passphraseDataType.toISOString();
-        } else {
-          passphrase.value = JSON.stringify(passphraseDataType);
-        }
-        console.log(`Extracted passphrase: ${passphrase.value}`);
-        const newPassphrase = generateRandomPassphrase()
-        await SecureStorage.set(
-          "userid/passphrase",
-          newPassphrase,
-          true,
-          true,
-          KeychainAccess.whenUnlocked
-        )
-      } catch (e) {
-        console.error("An error occured", e)
-      }
-    }, 1000)
-  }
+  await requestAuth.authenticate("test@email.com", false, getPlatform($q.platform));
+  // if ($q.platform.is.mobile) {
+  //   // try {
+  //   // const prefixedKey = "com.zkorum.afterwork/v1_userid/sign"
+  //   // const { publicKey } = await SecureSigning.generateKeyPair({ prefixedKey: prefixedKey })
+  //   // const decodedPublicKey = decodeFromBase64(publicKey);
+  //   // const accountDid = publicKeyToDid(decodedPublicKey)
+  //   // const _u = await ucans.Builder.create()
+  //   //   .issuedBy({
+  //   //     did: () => accountDid,
+  //   //     jwtAlg: "ES256",
+  //   //     sign: async (msg: Uint8Array) => {
+  //   //       const { signature } = await SecureSigning.sign({ prefixedKey: prefixedKey, data: encodeToBase64(msg) })
+  //   //       return decodeFromBase64(signature);
+  //   //     }
+  //   //   })
+  //   //   .toAudience("did:web:localhost%3A8080")
+  //   //   .withLifetimeInSeconds(30)
+  //   //   .claimCapability({
+  //   //     // with: { scheme: "wnfs", hierPart: "//boris.fission.name/public/photos/" },
+  //   //     // can: { namespace: "wnfs", segments: ["OVERWRITE"] },
+  //   //     with: httpUrlToResourcePointer("http://localhost:8080/api/v1/testing"),
+  //   //     can: httpMethodToAbility("POST"),
+  //   //   })
+  //   //   .build();
+  //   // const encodedUcan = ucans.encode(u)
+  //
+  //   // api.defaults.headers?.Authorization = `Bearer ${encodedUcan}`;
+  //   // verify ucan
+  //   // await DefaultApiFactory(
+  //   //   undefined,
+  //   //   undefined,
+  //   //   api
+  //   // ).apiV1TestingPost({
+  //   //   headers: {
+  //   //     "Authorization": `Bearer ${encodedUcan}`
+  //   //   }
+  //   // });
+  //   // } catch (e: unknown) {
+  //   //   console.error("Error while verifying UCAN", (e as Error)?.message)
+  //   //   verified.value = (e as Error)?.message;
+  //   // }
+  //
+  //
+  //   // interval = setInterval(async () => {
+  //   //   try {
+  //   //     const passphraseDataType = await SecureStorage.get("userid/passphrase", true, true);
+  //   //     if (passphraseDataType === null) {
+  //   //       passphrase.value = "";
+  //   //     }
+  //   //
+  //   //     if (passphraseDataType instanceof Date) {
+  //   //       passphrase.value = passphraseDataType.toISOString();
+  //   //     } else {
+  //   //       passphrase.value = JSON.stringify(passphraseDataType);
+  //   //     }
+  //   //     console.log(`Extracted passphrase: ${passphrase.value}`);
+  //   //     const newPassphrase = generateRandomPassphrase()
+  //   //     await SecureStorage.set(
+  //   //       "userid/passphrase",
+  //   //       newPassphrase,
+  //   //       true,
+  //   //       true,
+  //   //       KeychainAccess.whenUnlocked
+  //   //     )
+  //   //   } catch (e) {
+  //   //     console.error("An error occured", e)
+  //   //   }
+  //   // }, 1000)
+  // }
 });
 
 onBeforeUnmount(() => {

@@ -11,31 +11,35 @@ export type MessageSchema = (typeof messages)["en-US"];
 // See https://vue-i18n.intlify.dev/guide/advanced/typescript.html#global-resource-schema-type-definition
 /* eslint-disable @typescript-eslint/no-empty-interface */
 declare module "vue-i18n" {
-    // define the locale messages schema
-    export interface DefineLocaleMessage extends MessageSchema {}
+  // define the locale messages schema
+  export interface DefineLocaleMessage extends MessageSchema { }
 
-    // define the datetime format schema
-    export interface DefineDateTimeFormat {}
+  // define the datetime format schema
+  export interface DefineDateTimeFormat { }
 
-    // define the number format schema
-    export interface DefineNumberFormat {}
+  // define the number format schema
+  export interface DefineNumberFormat { }
 }
 /* eslint-enable @typescript-eslint/no-empty-interface */
 
-export default boot(({ app }) => {
-    const fallbackLocale = "en-US";
-    let defaultLocale = fallbackLocale;
-    const detectedLang = Quasar.lang.getLocale();
-    if (detectedLang !== undefined) {
-        defaultLocale = detectedLang;
-    }
-    const i18n = createI18n({
-        locale: defaultLocale,
-        fallbackLocale: fallbackLocale,
-        legacy: false,
-        messages,
-    });
+function loadAndConfigureI18n() {
+  const fallbackLocale = "en-US";
+  let defaultLocale = fallbackLocale;
+  const detectedLang = Quasar.lang.getLocale();
+  if (detectedLang !== undefined) {
+    defaultLocale = detectedLang;
+  }
+  const i18n = createI18n({
+    locale: defaultLocale,
+    fallbackLocale: fallbackLocale,
+    legacy: false,
+    messages,
+  });
+  return i18n;
+}
 
-    // Set i18n instance on app
-    app.use(i18n);
+export const i18n = loadAndConfigureI18n()
+
+export default boot(({ app }) => {
+  app.use(i18n);
 });

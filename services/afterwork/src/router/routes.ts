@@ -19,17 +19,21 @@ const routes: RouteRecordRaw[] = [
     component: OnboardingLayout,
     props: { hasGoBackButton: true, hasHelpButton: true } as OnboardingLayoutProps,
     children: [
-      { path: "", component: () => import("pages/LoginPage.vue") },
+      { path: "", component: () => import("pages/onboarding/LoginPage.vue") },
     ],
   },
-  // {
-  //   path: "/onboarding/:flowId/email-verification",
-  //   component: () => import("pages/EmailVerification.vue"),
-  // },
-  // {
-  //   path: "/rules/promise",
-  //   component: () => import("pages/ModerationRules.vue"),
-  // },
+  {
+    path: "/onboarding/:flowId/verify",
+    component: () => import("pages/onboarding/VerificationPage.vue"),
+  },
+  {
+    path: "/onboarding/passphrase",
+    component: () => import("pages/onboarding/PassphrasePage.vue"),
+  },
+  {
+    path: "/onboarding/rules",
+    component: () => import("pages/onboarding/PromiseRulesPage.vue"),
+  },
   {
     path: "/post",
     component: () => import("layouts/PostLayout.vue"),

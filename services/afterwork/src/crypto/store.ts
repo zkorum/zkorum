@@ -9,7 +9,7 @@ export async function getWebCryptoStore(): Promise<Implementation> {
     return webCryptoStore;
   }
   webCryptoStore = await BrowserCrypto.implementation({
-    storeName: `afterwork-keys`,
+    storeName: "afterwork-keys",
   });
   return webCryptoStore;
 }

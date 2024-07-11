@@ -5,13 +5,14 @@
   "author": "Nicolas Gimenez <46368291+nicobao@users.noreply.github.com>",
   "private": true,
   "dependencies": {
-    "@capacitor/android": "^5.0.0",
-    "@capacitor/app": "^5.0.0",
-    "@capacitor/cli": "^5.0.0",
-    "@capacitor/core": "^5.0.0",
-    "@capacitor/ios": "^5.0.0",
-    "@capgo/capacitor-updater": "^5.9.4",
-    "@zkorum/capacitor-secure-signing": "^1.0.13",
-    "@zkorum/capacitor-secure-storage": "^8.0.6"
+    "@aparajita/capacitor-biometric-auth": "^8.0.0",
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/cli": "^6.1.0",
+    "@capacitor/core": "^6.1.0",
+    "@capacitor/ios": "^6.1.0",
+    "@capgo/capacitor-updater": "^6.0.33",
+    "@zkorum/capacitor-secure-signing": "^1.2.0",
+    "@zkorum/capacitor-secure-storage": "^8.2.0"
   }
 }

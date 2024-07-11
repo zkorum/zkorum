@@ -8,5 +8,6 @@ declare namespace NodeJS {
     BASE_URL: string;
     BACK_PUBLIC_KEY: string;
     HANKO_API_URL: string;
+    VITE_BACK_DID: string;
   }
 }

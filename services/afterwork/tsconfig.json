@@ -42,6 +42,12 @@
       "crypto/*": [
         "src/crypto/*"
       ],
+      "request/*": [
+        "src/request/*"
+      ],
+      "shared/*": [
+        "src/shared/*"
+      ]
     }
   },
   "exclude": [

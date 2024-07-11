@@ -1,4 +1,6 @@
 import { nowZeroMs } from "@/shared/common/util";
+import { Platform } from "quasar";
+import { z } from "zod";
 
 export function getTimeFromNow(time: Date): string {
   const now = nowZeroMs();
@@ -74,4 +76,19 @@ export async function isDataPersisted(): Promise<boolean> {
     console.warn("The browser does not support persistence");
     return false;
   }
+}
+
+const suportedPlatforms = z.enum(["mobile", "web"]);
+export type SupportedPlatform = z.infer<typeof suportedPlatforms>;
+
+export function getPlatform(platform: Platform): SupportedPlatform {
+  if (platform.is.nativeMobile) {
+    return "mobile"
+  }
+  if (!platform.is.desktop && !platform.is.bex) {
+    return "web"
+  }
+  // TODO: throw warning
+  console.warn("This platform is not supported")
+  return "web"
 }

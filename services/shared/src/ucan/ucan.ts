@@ -13,6 +13,15 @@ export function httpUrlToResourcePointer(url: URL | string): {
     return { scheme, hierPart };
 }
 
+export function httpPathnameToResourcePointer(pathname: string): {
+    scheme: string;
+    hierPart: string;
+} {
+    const scheme = "https";
+    const hierPart = `//zkorum.com${pathname}`;
+    return { scheme, hierPart };
+}
+
 export function httpMethodToAbility(method: string) {
     return { namespace: "http", segments: [method.toUpperCase()] };
 }
