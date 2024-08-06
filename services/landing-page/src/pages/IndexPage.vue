@@ -34,7 +34,7 @@
             <div>
               <a href="https://www.eu-startups.com/2024/07/these-are-the-15-startups-combating-online-misinformation-that-have-been-granted-e1-8-million-by-the-ec/"
                 target="_blank">
-                <q-img src="funded_by_eu.png" style="min-width: 280px" />
+                <q-img :src="fundedByEu" style="min-width: 280px" />
               </a>
             </div>
             <div>
@@ -138,7 +138,7 @@
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import LanguageSwitcher from 'components/LanguageSwitcher.vue';
 import { useI18n } from 'vue-i18n';
 
@@ -150,36 +150,24 @@ const buttonSize = computed(() => {
   return $q.screen.lt.md ? 'lg' : 'xl';
 });
 
-const imagesEn: Array<string> & { length: 4 } = ['1.png', '2.png', '3.png', '4.png'];
-const imagesFr: Array<string> & { length: 4 } = ['5.png', '6.png', '7.png', '8.png'];
-let chosenImages: Array<string> & { length: 4 } = imagesEn;
-if (locale.value.includes('fr')) {
-  chosenImages = imagesFr;
-} else {
-  chosenImages = imagesEn;
-}
-const images = ref(chosenImages)
-
-const indexShownImage = ref(0);
-
 const discordUrl = 'https://discord.gg/cAkAJQSTEU';
 
-onMounted(() => {
-  setInterval(function () {
-    if (indexShownImage.value < 3) {
-      const newIndex = indexShownImage.value + 1;
-      indexShownImage.value = newIndex;
-    } else {
-      const newIndex = 0;
-      indexShownImage.value = newIndex;
-    }
-  }, 5000);
-});
+const fundedByEuEn = 'funded_by_eu.png'
+const fundedByEuFr = 'funded_by_eu_fr.png'
+
+let fundedByEuStart: string;
+if (locale.value.includes('fr')) {
+  fundedByEuStart = fundedByEuFr;
+} else {
+  fundedByEuStart = fundedByEuEn;
+}
+const fundedByEu = ref(fundedByEuStart)
+
 watch(locale, () => {
   if (locale.value.includes('fr')) {
-    images.value = imagesFr
+    fundedByEu.value = fundedByEuFr
   } else {
-    images.value = imagesEn
+    fundedByEu.value = fundedByEuEn
   }
 });
 </script>
