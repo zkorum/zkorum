@@ -1,119 +1,108 @@
 <template>
   <q-page class="width-max">
     <div class="column justify-start items-start">
-      <div class="row width-100">
-        <div class="column justify-start items-start bg-brand first-intro q-pa-md col-grow">
-          <div class="row width-100 justify-start items-center">
-            <q-img class="q-my-lg q-mr-lg" src="logo.png" style="max-width: 280px" srcset="logo.png 70w,
+      <div class="column width-100 justify-start items-start bg-brand first-intro q-pa-md col-grow">
+        <div class="row width-100 justify-start items-center">
+          <q-img class="q-my-lg q-mr-lg" src="logo.png" style="max-width: 280px" srcset="logo.png 70w,
                 logo.png 139w,
                 logo.png 278w" sizes="(max-width: 140px) 70w,
               (min-width: 140px) and (max-width: 279px) 139w,
               (min-width: 280px) and (max-width: 556px) 279w,
               (min-width: 556px) 279w" />
-            <LanguageSwitcher class="q-mr-lg" style="margin-left: auto;" />
-          </div>
-          <div class="q-my-lg col-auto">
-            <h1 style="white-space: pre-line;" class="motto">{{ $t("title") }}</h1>
-            <!-- <h1 style="white-space: pre-line; line-height: 1.5;" class="motto">{{ $t("title.anonymous.pre") }}<strong>{{ -->
-            <!--   $t("title.anonymous.bold") }}</strong>{{ $t("title.anonymous.post") }}<br />{{ $t("title.honest.pre") -->
-            <!--   }}<strong>{{ -->
-            <!--   $t("title.honest.bold") }}</strong>{{ $t("title.honest.post") }}<br />{{ $t("title.verified.pre") -->
-            <!--   }}<strong>{{ -->
-            <!--   $t("title.verified.bold") }}</strong>{{ $t("title.verified.post") }}</h1> -->
-          </div>
-          <div class="q-my-lg col-auto min-width-33">
-            <q-btn class="full-width" rounded no-caps no-wrap unelevated icon-right="trending_flat" color="brand-teal"
-              :size="buttonSize" text-color="brand-dark" :label="$t('goToFeed')" :href="feedUrl" />
-          </div>
+          <LanguageSwitcher class="q-mr-lg" style="margin-left: auto;" />
         </div>
-        <div class="column justify-center items-center col-grow" style="max-width: 100%; min-width: 50%">
-          <q-img :src="images[indexShownImage]" style="max-width: 440px" :srcset="(images[indexShownImage] + ' 270w', images[indexShownImage] + ' 360w', images[indexShownImage] + ' 432w')
-              " sizes="(max-width: 279px) 270w,
-              (min-width: 280px) and (max-width: 369px) 360w,
-              (min-width: 370px) and (max-width: 556px) 432w,
-              (min-width: 557px) 432w" />
+        <div class="self-center q-my-lg col-auto width-title">
+          <h2 style="white-space: pre-line;" class="motto">
+            <div v-html="$t('title')"></div>
+          </h2>
+          <!-- <h1 style="white-space: pre-line; line-height: 1.5;" class="motto">{{ $t("title.anonymous.pre") }}<strong>{{ -->
+          <!--   $t("title.anonymous.bold") }}</strong>{{ $t("title.anonymous.post") }}<br />{{ $t("title.honest.pre") -->
+          <!--   }}<strong>{{ -->
+          <!--   $t("title.honest.bold") }}</strong>{{ $t("title.honest.post") }}<br />{{ $t("title.verified.pre") -->
+          <!--   }}<strong>{{ -->
+          <!--   $t("title.verified.bold") }}</strong>{{ $t("title.verified.post") }}</h1> -->
+        </div>
+        <div class="self-center q-my-lg col-auto min-width-33">
+          <q-btn class="full-width" rounded no-caps no-wrap unelevated icon-right="trending_flat" color="brand-teal"
+            :size="buttonSize" text-color="brand-dark" :label="$t('getInTouch')" :href="discordUrl" target="_blank" />
         </div>
       </div>
       <q-separator class="width-100 bg-brand" />
-      <div class="width-100">
-        <div class="row justify-around items-center">
-          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
-            <q-card flat class="text-center" style="max-width: 400px">
-              <q-card-section>
-                <q-avatar size="100px" color="brand" text-color="white" icon="bi-incognito" />
-                <p class="text-h4 q-mt-xs">{{ $t('anonymous.title') }}</p>
-                <p class="text-body1 text-justify">
-                  {{ $t('anonymous.description') }}
-                </p>
-              </q-card-section>
-            </q-card>
+      <div class="column flex-center q-pa-md">
+        <div class=" width-title">
+          <div class="row flex-center" style="gap: 25px;">
+            <div>
+              <a href="https://www.eu-startups.com/2024/07/these-are-the-15-startups-combating-online-misinformation-that-have-been-granted-e1-8-million-by-the-ec/"
+                target="_blank">
+                <q-img src="funded_by_eu.png" style="min-width: 280px" />
+              </a>
+            </div>
+            <div>
+              <a href="https://ngi.eu/" target="_blank">
+                <q-img src="ngi.png" style="min-width: 280px" />
+              </a>
+            </div>
           </div>
-          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
-            <q-card flat class="text-center" style="max-width: 400px">
-              <q-card-section>
-                <q-avatar size="100px" color="brand" text-color="white" icon="bi-person-check" />
-                <p class="text-h4 q-mt-xs">{{ $t('verifiable.title') }}</p>
-                <p class="text-body1 text-justify">
-                  {{ $t('verifiable.description') }}
-                </p>
-              </q-card-section>
-            </q-card>
-          </div>
-          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
-            <q-card flat class="text-center" style="max-width: 400px">
-              <q-card-section>
-                <q-avatar size="100px" color="brand" text-color="white" icon="bi-robot" />
-                <p class="text-h4 q-mt-xs">{{ $t('nontoxic.title') }}</p>
-                <p class="text-body1 text-justify">
-                  {{ $t('nontoxic.description') }}
-                </p>
-              </q-card-section>
-            </q-card>
-          </div>
-          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
-            <q-card flat class="text-center" style="max-width: 400px">
-              <q-card-section>
-                <q-avatar size="100px" color="brand" text-color="white" icon="bi-vignette" />
-                <p class="text-h4 q-mt-xs">{{ $t('auditable.title') }}</p>
-                <p class="text-body1 text-justify">
-                  {{ $t('auditable.description') }}
-                </p>
-              </q-card-section>
-            </q-card>
-          </div>
-          <div class="row flex-center col-xs-12 col-md-6 col-lg-4 col-xl-4">
-            <q-card flat class="text-center" style="max-width: 400px">
-              <q-card-section>
-                <q-avatar size="100px" color="brand" text-color="white" icon="bi-code-slash" />
-                <p class="text-h4 q-mt-xs">{{ $t('foss.title') }}</p>
-                <p class="text-body1 text-justify">
-                  {{ $t('foss.description') }}
-                </p>
-              </q-card-section>
-            </q-card>
-          </div>
+          <h5>
+            <div v-html="$t('buildingAgora')" />
+          </h5>
+          <h5>{{ $t('whatIsCompPropaganda') }}</h5>
+          <h4>{{ $t('coreInnovationTitle') }}</h4>
+          <h5>
+            <div v-html="$t('coreInnovationPart1')" />
+          </h5>
+          <h5>{{ $t('coreInnovationPart2') }}</h5>
+          <h4>{{ $t('otherBuildingBlocksTitle') }}</h4>
+          <h5>
+            <ul>
+              <li>
+                {{ $t('otherBuildingBlocksPart1') }}
+              </li>
+              <li>
+                {{ $t('otherBuildingBlocksPart2') }}
+              </li>
+            </ul>
+          </h5>
+          <h4>{{ $t('teamTitle') }}</h4>
+          <h5><strong><a href="https://www.linkedin.com/in/yuting-jiang-zkorum/" target="_blank">Yuting Jiang -
+                CEO</a></strong></h5>
+          <q-img src="yuting.jpg" style="max-width: 280px" />
+          <h5>
+            <div v-html="$t('yutingDescription')" />
+          </h5>
+          <h5><strong><a href="https://www.linkedin.com/in/nicolas-gimenez-5155aba1/" target="_blank">Nicolas Gimenez -
+                CTO</a></strong></h5>
+          <q-img src="nicolas.jpg" style="max-width: 280px" />
+          <h5>
+            <div v-html="$t('nicolasDescription')" />
+          </h5>
+          <h4>{{ $t('featuredIn') }}</h4>
+          <h5>
+            <ul>
+              <li>
+                <a href="https://ssimeetup.org/zkorum-building-next-generation-eagora-powered-ssi-webinar-70-nicolas-gimenez/"
+                  target="_blank">SSI Meetup</a>
+              </li>
+              <li>
+                <a href="https://www.eu-startups.com/2024/07/these-are-the-15-startups-combating-online-misinformation-that-have-been-granted-e1-8-million-by-the-ec/"
+                  target="_blank">EU-Startups</a>
+              </li>
+              <li>
+                <a href="https://fission.codes/blog/projects-we-love-zkorum/" target="_blank">Fission - Projects We Love
+                </a>
+              </li>
+            </ul>
+          </h5>
         </div>
       </div>
     </div>
     <div class="column flex-center bg-brand-teal width-100">
-      <div class="q-my-lg width-between">
+      <div class="q-mt-lg q-mb-sm width-between">
         <q-btn class="full-width" rounded no-caps no-wrap unelevated icon-right="trending_flat" color="brand"
-          :size="buttonSize" text-color="white" :label="$t('goToFeed')" :href="feedUrl" />
+          :size="buttonSize" text-color="white" :label="$t('getInTouch')" :href="discordUrl" />
       </div>
-      <div class="row items-center justify-around">
+      <div class="row items-center justify-around q-my-sm">
         <!-- NOTE: `style="width: fit-content;"` serves to make the button size fits the text size, however it renders the "col" directives useless :/ -->
-        <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
-          unelevated flat rounded outline no-caps type="a"
-          href="https://www.notion.so/zkorum/Legal-notice-90ddbd5ebddc48de93512241a6157095" target="_blank"
-          text-color="brand-dark">{{ $t('legal') }}</q-btn>
-        <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
-          unelevated flat rounded outline no-caps type="a"
-          href="https://www.notion.so/zkorum/Privacy-policy-ac5d0d7c91f142e481daa8f826b0e2b2" target="_blank"
-          text-color="brand-dark">{{ $t('privacy') }}</q-btn>
-        <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
-          unelevated flat rounded outline no-caps type="a"
-          href="https://www.notion.so/zkorum/Terms-of-service-c37b34e934c240878b7d5af53888e72c" target="_blank"
-          text-color="brand-dark">{{ $t('terms') }}</q-btn>
         <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
           unelevated flat rounded outline no-caps type="a" href="https://about.zkorum.com" target="_blank"
           text-color="brand-dark">{{
@@ -126,8 +115,8 @@
           href="https://www.linkedin.com/company/zkorum/" target="_blank" icon="bi-linkedin" />
         <q-btn text-color="brand-dark" unelevated flat rounded outline no-caps type="a"
           href="https://github.com/zkorum/zkorum" target="_blank" icon="bi-github" />
-        <q-btn text-color="brand-dark" unelevated flat rounded outline no-caps type="a"
-          href="https://discord.gg/cAkAJQSTEU" target="_blank" icon="bi-discord" />
+        <q-btn text-color="brand-dark" unelevated flat rounded outline no-caps type="a" :href="discordUrl"
+          target="_blank" icon="bi-discord" />
       </div>
       <div class="text-brand-dark row flex-center">
         <div class="text-center text-body1 q-pt-md q-pb-sm">
@@ -173,8 +162,7 @@ const images = ref(chosenImages)
 
 const indexShownImage = ref(0);
 
-const baseUrl = window.location.origin;
-const feedUrl = `${baseUrl}/feed/`;
+const discordUrl = 'https://discord.gg/cAkAJQSTEU';
 
 onMounted(() => {
   setInterval(function () {
@@ -209,15 +197,15 @@ watch(locale, () => {
   }
 
   body.screen--md & {
-    @extend .text-h3;
+    @extend .text-h4;
   }
 
   body.screen--lg & {
-    @extend .text-h3;
+    @extend .text-h4;
   }
 
   body.screen--xl & {
-    @extend .text-h2;
+    @extend .text-h3;
   }
 }
 
@@ -227,6 +215,28 @@ watch(locale, () => {
 
 .width-100 {
   width: 100%;
+}
+
+.width-title {
+  body.screen--xs & {
+    width: 100%;
+  }
+
+  body.screen--sm & {
+    width: 100%;
+  }
+
+  body.screen--md & {
+    width: 50%;
+  }
+
+  body.screen--lg & {
+    width: 50%;
+  }
+
+  body.screen--xl & {
+    width: 50%;
+  }
 }
 
 .logo {
