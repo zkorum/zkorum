@@ -43,7 +43,7 @@
               </a>
             </div>
           </div>
-          <div class="q-mt-lg">
+          <div class="q-mt-xl">
             <p v-html="$t('buildingAgora')" />
           </div>
           <p>{{ $t('whatIsCompPropaganda') }}</p>
@@ -66,13 +66,13 @@
           <h4>{{ $t('teamTitle') }}</h4>
           <h5><strong><a href="https://www.linkedin.com/in/yuting-jiang-zkorum/" target="_blank">Yuting Jiang -
                 CEO</a></strong></h5>
-          <q-img src="yuting.jpg" style="max-width: 280px" />
+          <q-img src="yuting.jpg" style="max-width: 260px" />
           <div class="q-mt-lg">
             <p v-html="$t('yutingDescription')" />
           </div>
           <h5><strong><a href="https://www.linkedin.com/in/nicolas-gimenez-5155aba1/" target="_blank">Nicolas Gimenez -
                 CTO</a></strong></h5>
-          <q-img src="nicolas.jpg" style="max-width: 280px" />
+          <q-img src="nicolas.jpg" style="max-width: 260px" />
           <div class="q-mt-lg">
             <p v-html="$t('nicolasDescription')" />
           </div>
