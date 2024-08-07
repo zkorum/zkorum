@@ -5,7 +5,7 @@ export default {
   title:
     'Open-source solutions to <strong>rehumanize</strong> and <strong>depolarize</strong> the online social landscape.\n\nFor a more inclusive and democratic world.',
   getInTouch: 'Join the Community',
-  buildingAgora: 'We are building <strong>Agora</strong>, an open-source digital democracy tool aimed at enhancing <i>civic participation</i> and combatting <i>censorship</i> and <i>computational propaganda</i> in a privacy-preserving way.',
+  buildingAgora: 'We are building <strong>Agora</strong>, an open-source <a href="https://en.wikipedia.org/wiki/Wiki_survey" target="_blank">Wiki surveys</a> platform aimed at enhancing <i>civic participation</i> and combatting <i>censorship</i> and <i>computational propaganda</i> in a privacy-preserving way.',
   whatIsCompPropaganda: 'Computational propaganda refers to the "use of algorithms, automation, and human curation to purposefully distribute misleading information over social media networks" (Woolley & Howard, 2018). It exacerbates societal divisions, creates confusions, and manipulates electoral outcomes, thus undermining democracies.',
   coreInnovationTitle: 'Our Core Innovation',
   coreInnovationPart1: 'We have developed a <a href="https://github.com/zkorum/poc/blob/main/vc-flow/README.md" target="_blank">Verifiable and Privacy-Preserving Posting Protocol</a>, based on Verifiable Credentials and Zero Knowledge (ZK) proofs, that allows users to have granular control over their identities and data on social media. This solution not only is resistant to bots or fake accounts but also maximizes user privacy.',
