@@ -80,12 +80,12 @@
           <h6>
             <ul>
               <li>
-                <a href="https://ssimeetup.org/zkorum-building-next-generation-eagora-powered-ssi-webinar-70-nicolas-gimenez/"
-                  target="_blank">SSI Meetup</a>
-              </li>
-              <li>
                 <a href="https://www.eu-startups.com/2024/07/these-are-the-15-startups-combating-online-misinformation-that-have-been-granted-e1-8-million-by-the-ec/"
                   target="_blank">EU-Startups</a>
+              </li>
+              <li>
+                <a href="https://ssimeetup.org/zkorum-building-next-generation-eagora-powered-ssi-webinar-70-nicolas-gimenez/"
+                  target="_blank">SSI Meetup</a>
               </li>
               <li>
                 <a href="https://fission.codes/blog/projects-we-love-zkorum/" target="_blank">Fission - Projects We Love
