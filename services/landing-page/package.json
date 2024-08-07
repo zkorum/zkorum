@@ -11,7 +11,7 @@
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
-    "build": "quasar build -m pwa",
+    "build": "quasar build -m spa",
     "image:build": "docker build -f Dockerfile.prod -t zkorum-landing-page .",
     "image:tag": "docker tag zkorum-landing-page:latest zkorum/landing-page:<TODO>",
     "image:push": "docker image push zkorum/frontJustForExample:0.1.0"
