@@ -43,56 +43,56 @@
               </a>
             </div>
           </div>
-          <h6>
+          <p class="q-mt-lg">
             <div v-html="$t('buildingAgora')" />
-          </h6>
-          <h6>{{ $t('whatIsCompPropaganda') }}</h6>
+          </p>
+          <p>{{ $t('whatIsCompPropaganda') }}</p>
           <h4>{{ $t('coreInnovationTitle') }}</h4>
           <div>
-            <h6 v-html="$t('coreInnovationPart1')" />
+            <p v-html="$t('coreInnovationPart1')" />
           </div>
-          <h6>{{ $t('coreInnovationPart2') }}</h6>
+          <p>{{ $t('coreInnovationPart2') }}</p>
           <h4>{{ $t('otherBuildingBlocksTitle') }}</h4>
-          <h6>
-            <ul>
-              <li>
-                {{ $t('otherBuildingBlocksPart1') }}
-              </li>
-              <li>
-                {{ $t('otherBuildingBlocksPart2') }}
-              </li>
-            </ul>
-          </h6>
+          <p>
+          <ul>
+            <li>
+              {{ $t('otherBuildingBlocksPart1') }}
+            </li>
+            <li>
+              {{ $t('otherBuildingBlocksPart2') }}
+            </li>
+          </ul>
+          </p>
           <h4>{{ $t('teamTitle') }}</h4>
           <h5><strong><a href="https://www.linkedin.com/in/yuting-jiang-zkorum/" target="_blank">Yuting Jiang -
                 CEO</a></strong></h5>
           <q-img src="yuting.jpg" style="max-width: 280px" />
-          <h6>
+          <p class="q-mt-lg">
             <div v-html="$t('yutingDescription')" />
-          </h6>
+          </p>
           <h5><strong><a href="https://www.linkedin.com/in/nicolas-gimenez-5155aba1/" target="_blank">Nicolas Gimenez -
                 CTO</a></strong></h5>
           <q-img src="nicolas.jpg" style="max-width: 280px" />
-          <h6>
+          <p class="q-mt-lg">
             <div v-html="$t('nicolasDescription')" />
-          </h6>
+          </p>
           <h4>{{ $t('featuredIn') }}</h4>
-          <h6>
-            <ul>
-              <li>
-                <a href="https://www.eu-startups.com/2024/07/these-are-the-15-startups-combating-online-misinformation-that-have-been-granted-e1-8-million-by-the-ec/"
-                  target="_blank">EU-Startups</a>
-              </li>
-              <li>
-                <a href="https://ssimeetup.org/zkorum-building-next-generation-eagora-powered-ssi-webinar-70-nicolas-gimenez/"
-                  target="_blank">SSI Meetup</a>
-              </li>
-              <li>
-                <a href="https://fission.codes/blog/projects-we-love-zkorum/" target="_blank">Fission - Projects We Love
-                </a>
-              </li>
-            </ul>
-          </h6>
+          <p>
+          <ul>
+            <li>
+              <a href="https://www.eu-startups.com/2024/07/these-are-the-15-startups-combating-online-misinformation-that-have-been-granted-e1-8-million-by-the-ec/"
+                target="_blank">EU-Startups</a>
+            </li>
+            <li>
+              <a href="https://ssimeetup.org/zkorum-building-next-generation-eagora-powered-ssi-webinar-70-nicolas-gimenez/"
+                target="_blank">SSI Meetup</a>
+            </li>
+            <li>
+              <a href="https://fission.codes/blog/projects-we-love-zkorum/" target="_blank">Fission - Projects We Love
+              </a>
+            </li>
+          </ul>
+          </p>
         </div>
       </div>
     </div>
