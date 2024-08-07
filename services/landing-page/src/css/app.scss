@@ -32,16 +32,8 @@ html,
 body {
   max-width: 100%;
   overflow-x: hidden;
-
- @media (max-width: 768px) {
-    p {
-      font-size: 16px;
-    }
-  }
- @media (min-width: 768px) {
-    p {
-      font-size: 20px;
-    }
+  p {
+    font-size: 20px;
   }
 }
 
