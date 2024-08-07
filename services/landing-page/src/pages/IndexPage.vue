@@ -43,17 +43,17 @@
               </a>
             </div>
           </div>
-          <h5>
+          <h6>
             <div v-html="$t('buildingAgora')" />
-          </h5>
-          <h5>{{ $t('whatIsCompPropaganda') }}</h5>
+          </h6>
+          <h6>{{ $t('whatIsCompPropaganda') }}</h6>
           <h4>{{ $t('coreInnovationTitle') }}</h4>
-          <h5>
-            <div v-html="$t('coreInnovationPart1')" />
-          </h5>
-          <h5>{{ $t('coreInnovationPart2') }}</h5>
+          <div>
+            <h6 v-html="$t('coreInnovationPart1')" />
+          </div>
+          <h6>{{ $t('coreInnovationPart2') }}</h6>
           <h4>{{ $t('otherBuildingBlocksTitle') }}</h4>
-          <h5>
+          <h6>
             <ul>
               <li>
                 {{ $t('otherBuildingBlocksPart1') }}
@@ -62,22 +62,22 @@
                 {{ $t('otherBuildingBlocksPart2') }}
               </li>
             </ul>
-          </h5>
+          </h6>
           <h4>{{ $t('teamTitle') }}</h4>
           <h5><strong><a href="https://www.linkedin.com/in/yuting-jiang-zkorum/" target="_blank">Yuting Jiang -
                 CEO</a></strong></h5>
           <q-img src="yuting.jpg" style="max-width: 280px" />
-          <h5>
+          <h6>
             <div v-html="$t('yutingDescription')" />
-          </h5>
+          </h6>
           <h5><strong><a href="https://www.linkedin.com/in/nicolas-gimenez-5155aba1/" target="_blank">Nicolas Gimenez -
                 CTO</a></strong></h5>
           <q-img src="nicolas.jpg" style="max-width: 280px" />
-          <h5>
+          <h6>
             <div v-html="$t('nicolasDescription')" />
-          </h5>
+          </h6>
           <h4>{{ $t('featuredIn') }}</h4>
-          <h5>
+          <h6>
             <ul>
               <li>
                 <a href="https://ssimeetup.org/zkorum-building-next-generation-eagora-powered-ssi-webinar-70-nicolas-gimenez/"
@@ -92,7 +92,7 @@
                 </a>
               </li>
             </ul>
-          </h5>
+          </h6>
         </div>
       </div>
     </div>
