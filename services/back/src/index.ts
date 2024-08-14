@@ -52,18 +52,18 @@ server.register(fastifySensible);
 server.register(fastifyAuth);
 server.register(fastifyCors, {
     // put your options here
-    // origin: (origin, cb) => {
-    //     if (origin !== undefined) {
-    //         const hostname = new URL(origin).hostname
-    //         if (hostname === "localhost" || hostname === "192.168.1.96" || hostname === "113.0.5672.136") {
-    //             //  Request from localhost will pass
-    //             cb(null, true)
-    //             return
-    //         }
-    //         // Generate an error on other origins, disabling access
-    //         cb(new Error("Not allowed"), false)
-    //     }
-    // }
+    origin: (origin, cb) => {
+        if (origin !== undefined) {
+            const hostname = new URL(origin).hostname
+            if (hostname === "localhost" || hostname === config.CORS_HOSTNAME) {
+                //  Request from localhost will pass
+                cb(null, true)
+                return
+            }
+            // Generate an error on other origins, disabling access
+            cb(new Error("Not allowed"), false)
+        }
+    }
 });
 
 // Add schema validator and serializer

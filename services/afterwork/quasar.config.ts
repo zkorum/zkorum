@@ -58,7 +58,7 @@ export default configure((ctx) => {
       env: {
         BASE_URL: ctx.dev
           ? ctx.modeName === "capacitor"
-            ? "http://192.168.1.96:8080"
+            ? process.env.FRONTEND_DEV_BASE_URL
             : "http://localhost:8080"
           : ctx.debug
             ? "https://staging1.zkorum.com"
