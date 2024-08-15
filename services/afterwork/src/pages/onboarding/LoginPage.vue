@@ -13,7 +13,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import ZKInputField from "@/views/ZKInputField.vue";
 import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
-import { authenticate } from "@/request/auth";
+// import { authenticate } from "@/request/auth";
 const { t } = useI18n()
 const email = ref("")
 const emailHelper = ref("")
