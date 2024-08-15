@@ -18,10 +18,7 @@
     </q-header>
 
     <q-page-container>
-      <!-- <transition appear enter-active-class="animated slideInRight" leave-active-class="animated slideOutRight" -->
-      <!-- mode="out-in"> -->
-      <transition-router-view />
-      <!-- </transition> -->
+      <router-view />
     </q-page-container>
 
     <q-footer reveal bordered class="bg-white text-brand">
@@ -91,7 +88,6 @@
 <script setup lang="ts">
 // import { ref } from 'vue';
 import { useRoute } from "vue-router";
-import TransitionRouterView from "router/TransitionRouterView.vue"
 // import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
 //
 // defineOptions({

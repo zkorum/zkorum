@@ -10,10 +10,7 @@
     </q-header>
 
     <q-page-container>
-      <!-- <transition appear enter-active-class="animated slideInRight" leave-active-class="animated slideOutRight" -->
-      <!-- mode="out-in"> -->
-      <transition-router-view />
-      <!-- </transition> -->
+      <router-view />
     </q-page-container>
 
   </q-layout>
@@ -23,6 +20,5 @@
 import ZKGoBackButton from "views/ZKGoBackButton.vue";
 import ZKHelpButton from "views/ZKHelpButton.vue";
 import { OnboardingLayoutProps } from "model/props";
-import TransitionRouterView from "router/TransitionRouterView.vue"
 const props = withDefaults(defineProps<OnboardingLayoutProps>(), { hasGoBackButton: true, hasHelpButton: true })
 </script>
