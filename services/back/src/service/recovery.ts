@@ -9,7 +9,7 @@ import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import {
     BBSPlusSecretKey as SecretKey,
 } from "@docknetwork/crypto-wasm-ts";
-import type { SecretCredentialRequest, SecretCredentialRequest } from "@/shared/types/zod.js";
+import type { SecretCredentialRequest } from "@/shared/types/zod.js";
 import type { RecoverAccountResp } from "@/shared/types/dto.js";
 
 interface RecoverAccountProps {

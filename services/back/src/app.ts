@@ -8,6 +8,7 @@ export type Environment = "development" | "production" | "staging1";
 const defaultPort = 8080;
 
 const configSchema = z.object({
+    CORS_HOSTNAME: z.string(),
     CONNECTION_STRING: z.string(),
     PORT: z.coerce.number().int().nonnegative().default(defaultPort),
     NODE_ENV: z
@@ -49,19 +50,19 @@ export const config = configSchema.parse(process.env);
 
 function envToLogger(env: Environment) {
     switch (env) {
-        case "development":
-            return {
-                transport: {
-                    target: "pino-pretty",
-                    options: {
-                        translateTime: "HH:MM:ss Z",
-                        ignore: "pid,hostname",
-                    },
+    case "development":
+        return {
+            transport: {
+                target: "pino-pretty",
+                options: {
+                    translateTime: "HH:MM:ss Z",
+                    ignore: "pid,hostname",
                 },
-            };
-        case "production":
-        case "staging1":
-            return true;
+            },
+        };
+    case "production":
+    case "staging1":
+        return true;
     }
 }
 
