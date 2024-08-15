@@ -4,7 +4,7 @@
       <div class="text-bold q-pa-md">{{ passphrase }}</div>
       <div class="text-bold q-pa-md">{{ verified }}</div>
       <!-- <example-component title="Example component" active :todos="todos" :meta="meta"></example-component> -->
-      <div v-for="(item, index) in  items " :key="index" style="max-width: 600px" class="full-width">
+      <div v-for="(item, index) in items " :key="index" style="max-width: 600px" class="full-width">
         <q-card @click="$router.push('/post')" class="q-mb-sm q-pa-sm">
           <div class="column full-width" style="gap: 15px;">
             <div class="row items-center justify-start" style="gap: 5px; background-color: white">
@@ -17,7 +17,7 @@
                   {{ getTrimmedPseudonym(item.author.pseudonym) }}
                 </div>
                 <div class="text-caption" style="color: rgba(0, 0, 0, 0.6);">{{
-      getTimeFromNow(item.metadata.lastReactedAt) }}</div>
+                  getTimeFromNow(item.metadata.lastReactedAt) }}</div>
               </div>
             </div>
             <div class="column q-pa-md" style="gap: 10px; border-radius: 8px; border: 1px solid #e6e9ec;">
@@ -26,7 +26,7 @@
               </div>
               <div class="text-body2" style="color: rgba(0, 0, 0, 0.6);" v-if="item.payload?.body !== undefined">
                 {{
-      item.payload.body.length <= 200 ? item.payload.body : `${item.payload.body.slice(0, 200)} ...` }} </div>
+                  item.payload.body.length <= 200 ? item.payload.body : `${item.payload.body.slice(0, 200)} ...` }} </div>
                   <div class="q-my-sm" v-if="item.payload.poll !== undefined">
                     <poll-result-view :result="item.payload.poll.result" :options="item.payload.poll.options"
                       :pollResponse="undefined" /> <!-- TODO: pollResponse -->
@@ -60,12 +60,6 @@ import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
 import { getTrimmedPseudonym, getTimeFromNow, getPlatform } from "src/utils/common";
 import { useQuasar } from "quasar";
-import { KeychainAccess, SecureStorage } from "@zkorum/capacitor-secure-storage";
-import { generateRandomPassphrase } from "@/shared/passphrase/generate";
-import { SecureSigning } from "@zkorum/capacitor-secure-signing";
-import * as ucans from "@ucans/ucans";
-import { httpMethodToAbility, httpUrlToResourcePointer } from "shared/ucan/ucan";
-import { publicKeyToDid } from "shared/did/util";
 import * as requestAuth from "request/auth";
 
 const $q = useQuasar();
@@ -74,6 +68,7 @@ let interval: NodeJS.Timeout | undefined = undefined
 
 const verified = ref<boolean | string>("nothing")
 
+/*
 function encodeToBase64(uint8Array: Uint8Array): string {
   return Buffer.from(uint8Array).toString("base64");
 }
@@ -82,6 +77,7 @@ function encodeToBase64(uint8Array: Uint8Array): string {
 function decodeFromBase64(base64: string): Uint8Array {
   return new Uint8Array(Buffer.from(base64, "base64"));
 }
+*/
 
 onMounted(async () => {
   await requestAuth.authenticate("test@email.com", false, getPlatform($q.platform));

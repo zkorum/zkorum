@@ -8,12 +8,12 @@ export async function nativeAuthenticate() {
   if (info.isAvailable) {
     try {
       await BiometricAuth.authenticate({
-        reason: 'Please authenticate',
-        cancelTitle: 'Cancel',
+        reason: "Please authenticate",
+        cancelTitle: "Cancel",
         allowDeviceCredential: true,
-        iosFallbackTitle: 'Use passcode',
-        androidTitle: 'Biometric login',
-        androidSubtitle: 'Log in using biometric authentication',
+        iosFallbackTitle: "Use passcode",
+        androidTitle: "Biometric login",
+        androidSubtitle: "Log in using biometric authentication",
         androidConfirmationRequired: false,
         androidBiometryStrength: AndroidBiometryStrength.weak,
       })

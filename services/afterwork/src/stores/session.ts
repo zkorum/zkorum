@@ -21,6 +21,7 @@ export const useSessionStore = defineStore("session", {
 
   getters: {
     doubleCount(state) {
+      console.log(state);
       // return state.session * 2;
     }
   },
