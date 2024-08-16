@@ -58,11 +58,8 @@ import PollResultView from "components/poll/PollResultView.vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
-import { getTrimmedPseudonym, getTimeFromNow, getPlatform } from "src/utils/common";
-import { useQuasar } from "quasar";
-import * as requestAuth from "request/auth";
+import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
 
-const $q = useQuasar();
 const passphrase = ref("nothing");
 let interval: NodeJS.Timeout | undefined = undefined
 
@@ -80,7 +77,7 @@ function decodeFromBase64(base64: string): Uint8Array {
 */
 
 onMounted(async () => {
-  await requestAuth.authenticate("test@email.com", false, getPlatform($q.platform));
+  // await requestAuth.authenticate("test@email.com", false, getPlatform($q.platform));
   // if ($q.platform.is.mobile) {
   //   // try {
   //   // const prefixedKey = "com.zkorum.afterwork/v1_userid/sign"

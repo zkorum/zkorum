@@ -9,10 +9,12 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: "", component: () => import("pages/IndexPage.vue") },
     ],
+    name: "home-screen"
   },
   {
     path: "/welcome",
     component: () => import("pages/WelcomePage.vue"),
+    name: "welcome"
   },
   {
     path: "/onboarding/login",
@@ -49,6 +51,7 @@ const routes: RouteRecordRaw[] = [
     path: "/:catchAll(.*)*",
     redirect: "/",
   },
+
 ];
 
 export default routes;
