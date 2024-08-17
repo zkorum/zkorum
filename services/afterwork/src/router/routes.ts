@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from "vue-router";
 import OnboardingLayout from "layouts/OnboardingLayout.vue";
-import { OnboardingLayoutProps } from "model/props";
+import { OnboardingLayoutProps } from "@/utils/model/props";
 
 const routes: RouteRecordRaw[] = [
   {

@@ -3,8 +3,8 @@
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
 import * as uint8arrays from "uint8arrays";
 import * as Crypto from "../implementation.js";
-import { arrbufs } from "../../../shared/common/index.js";
-import { BASE58_DID_PREFIX } from "../../../shared/did/util.js";
+import { arrbufs } from "@/shared/common/index.js";
+import { BASE58_DID_PREFIX } from "@/shared/did/util.js";
 
 /**
  * Determines if an ArrayBuffer has a given indeterminate length-prefix.

@@ -5,7 +5,7 @@ import {
 import { Dialog } from "quasar"
 import { i18n } from "src/boot/i18n"
 import { App } from "@capacitor/app"
-import { nativeAuthenticate } from "@/native/auth"
+import { nativeAuthenticate } from "@/utils/native/auth"
 
 
 // "async" is optional;

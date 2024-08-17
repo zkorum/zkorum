@@ -2,8 +2,8 @@ import { ApiV1AuthAuthenticatePost200Response, ApiV1AuthAuthenticatePost409Respo
 import { api } from "@/boot/axios";
 import axios from "axios";
 import { SupportedPlatform } from "utils/common";
-import * as ucanOperation from "crypto/ucan/operation";
-import { buildAuthorizationHeader } from "crypto/ucan/operation";
+import * as ucanOperation from "../crypto/ucan/operation";
+import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 
 interface AuthenticateReturn {
   data: ApiV1AuthAuthenticatePost200Response;

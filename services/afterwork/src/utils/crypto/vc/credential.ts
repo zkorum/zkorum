@@ -1,4 +1,3 @@
-import { randomNumbers } from "@/crypto/shared";
 import { base64 } from "@/shared/common/index";
 import {
   BBSPlusBlindedCredentialRequest,
@@ -7,6 +6,7 @@ import {
   CredentialSchema,
   SUBJECT_STR,
 } from "@docknetwork/crypto-wasm-ts";
+import { randomNumbers } from "../shared";
 
 function secretCredSchema() {
   const schema = CredentialSchema.essential();
