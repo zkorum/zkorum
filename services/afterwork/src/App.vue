@@ -3,7 +3,7 @@
 
   <router-view v-slot="{ Component }">
     <transition appear enter-active-class="animated fadeIn slow" leave-active-class="animated fadeOut" mode="out-in">
-      <component :is="Component" />
+      <component :is="Component" class="container" />
     </transition>
   </router-view>
 
@@ -18,3 +18,9 @@ defineOptions({
   name: "App",
 });
 </script>
+
+<style scoped>
+.container {
+  padding-bottom: 10rem;
+}
+</style>
