@@ -1,8 +1,6 @@
 <template>
   <q-page class="full-width q-px-md" style="background-color: #e6e9ec">
     <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
-      <div class="text-bold q-pa-md">{{ passphrase }}</div>
-      <div class="text-bold q-pa-md">{{ verified }}</div>
       <!-- <example-component title="Example component" active :todos="todos" :meta="meta"></example-component> -->
       <div v-for="(item, index) in items " :key="index" style="max-width: 600px" class="full-width">
         <q-card @click="$router.push('/post')" class="q-mb-sm q-pa-sm">
@@ -60,10 +58,10 @@ import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
 import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
 
-const passphrase = ref("nothing");
-let interval: NodeJS.Timeout | undefined = undefined
+// const passphrase = ref("nothing");
+// const verified = ref<boolean | string>("nothing")
 
-const verified = ref<boolean | string>("nothing")
+let interval: NodeJS.Timeout | undefined = undefined
 
 /*
 function encodeToBase64(uint8Array: Uint8Array): string {
@@ -191,18 +189,37 @@ async function fetchFeedMore({
   }
 }
 
-const items: Ref<ExtendedPostData[]> = ref([]);
+const postData: ExtendedPostData = {
+  metadata: {
+    uid: "TEST",
+    slugId: "TEST",
+    isHidden: false,
+    updatedAt: new Date(),
+    lastReactedAt: new Date(),
+    commentCount: 10
+  },
+  payload: {
+    title: "TEST TITLE",
+    body: "TEST BODY"
+  },
+  author: {
+    pseudonym: "TEST",
+    domain: "google.com"
+  }
+};
+const items: Ref<ExtendedPostData[]> = ref([postData]);
 
 defineOptions({
   name: "IndexPage",
 });
 
 async function onLoad() {
-  items.value = await fetchFeedMore({
-    showHidden: false,
-    lastReactedAt: undefined,
-  });
-
+  if (false) {
+    items.value = await fetchFeedMore({
+      showHidden: false,
+      lastReactedAt: undefined,
+    });
+  }
 }
 
 // const todos = ref<Todo[]>([
