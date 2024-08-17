@@ -12,7 +12,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/welcome",
-    component: () => import("pages/welcome/index.vue"),
+    component: () => import("@/pages/welcome/index.vue"),
     name: "welcome"
   },
   {
@@ -25,7 +25,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/onboarding/:flowId/verify",
-    component: () => import("pages/onboarding/verification/index.vue"),
+    component: () => import("@/pages/onboarding/verification/index.vue"),
   },
   {
     path: "/onboarding/passphrase",
@@ -35,6 +35,7 @@ const routes: RouteRecordRaw[] = [
     path: "/onboarding/rules",
     component: () => import("@/pages/onboarding/promise-rules/index.vue"),
   },
+  /*
   {
     path: "/post",
     component: () => import("layouts/PostLayout.vue"),
@@ -43,6 +44,7 @@ const routes: RouteRecordRaw[] = [
       { path: "", component: () => import("components/TestComponent.vue") },
     ],
   },
+  */
 
   // Always leave this as last one,
   // but you can also remove it
