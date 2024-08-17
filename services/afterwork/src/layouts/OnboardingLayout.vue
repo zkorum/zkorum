@@ -4,7 +4,7 @@
       <q-toolbar>
         <ZKGoBackButton v-if="props.hasGoBackButton" />
         <q-space />
-        <ZKButton v-if="props.hasHelpButton" :btnProps="{ icon: 'help' }" />
+        <ZKButton v-if="props.hasHelpButton" icon="help" />
       </q-toolbar>
     </q-header>
 

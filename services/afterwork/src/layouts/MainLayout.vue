@@ -2,19 +2,13 @@
   <q-layout view="hHh lpR fFf">
     <q-header reveal bordered class="bg-white text-brand" height-hint="98">
       <q-toolbar class="content-between" style="width: 100%">
-        <q-btn @click="$router.push('/login')" style="width: 100%">Login</q-btn>
         <div style="width: 100%">
           <q-avatar>
-            <img src=" logo.svg" />
+            <img src="logo.svg" />
           </q-avatar>
         </div>
         <div>About</div>
       </q-toolbar>
-
-      <q-tabs no-caps align="justify">
-        <q-route-tab to="/page1" label="Feed" />
-        <q-route-tab to="/page2" label="ESSEC" />
-      </q-tabs>
     </q-header>
 
     <q-page-container>

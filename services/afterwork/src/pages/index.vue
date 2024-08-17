@@ -1,5 +1,5 @@
 <template>
-  <q-page class="full-width q-px-md" style="background-color: #e6e9ec">
+  <q-page>
     <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
       <!-- <example-component title="Example component" active :todos="todos" :meta="meta"></example-component> -->
       <div v-for="(item, index) in items " :key="index" style="max-width: 600px" class="full-width">
