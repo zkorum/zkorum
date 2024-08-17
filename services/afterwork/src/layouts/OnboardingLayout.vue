@@ -1,11 +1,10 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header v-if="props.hasGoBackButton || props.hasHelpButton" reveal bordered class="bg-white text-brand"
-      height-hint="98">
+    <q-header v-if="props.hasGoBackButton || props.hasHelpButton" reveal bordered class="bg-white text-brand">
       <q-toolbar>
         <ZKGoBackButton v-if="props.hasGoBackButton" />
         <q-space />
-        <ZKHelpButton v-if="props.hasHelpButton" />
+        <ZKButton v-if="props.hasHelpButton" :btnProps="{ icon: 'help' }" />
       </q-toolbar>
     </q-header>
 
@@ -18,7 +17,7 @@
 
 <script setup lang="ts">
 import ZKGoBackButton from "views/ZKGoBackButton.vue";
-import ZKHelpButton from "views/ZKHelpButton.vue";
+import ZKButton from "views/ZKButton.vue";
 import { OnboardingLayoutProps } from "model/props";
 const props = withDefaults(defineProps<OnboardingLayoutProps>(), { hasGoBackButton: true, hasHelpButton: true })
 </script>

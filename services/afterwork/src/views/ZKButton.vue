@@ -1,14 +1,14 @@
 <template>
-  <q-btn v-bind="props.btnProps" color="brand" no-caps>
-    <slot></slot>
+  <q-btn :label="label" :to="to" color="brand" no-caps>
   </q-btn>
 </template>
 
 <script setup lang="ts">
-import { QBtnProps } from "quasar";
 
 interface Props {
-  btnProps?: QBtnProps
+  label?: string
+  to?: string
 }
-const props = defineProps<Props>();
+defineProps<Props>();
+
 </script>

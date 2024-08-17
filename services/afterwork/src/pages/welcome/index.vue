@@ -1,9 +1,9 @@
 <template>
   <div class="window-width window-height column flex-center" style="gap: 20px; background-color: #4BE7DE;">
-    <q-img src="afterwork.png" style="width: 336px; height: 390px;" />
+    <q-img src="afterwork.png" class="welcomeImage" />
     <div class="buttonFlex">
-      <ZKButton :btnProps="{ to: '/onboarding/login' }">{{ t("welcome.login") }}</ZKButton>
-      <ZKButton v-if="isDevMode()" @click="skipAuthentication()">Skip Authentication</ZKButton>
+      <ZKButton :label="t('welcome.login')" to="/onboarding/login" />
+      <ZKButton v-if="isDevMode()" @click="skipAuthentication()" label="Skip Authentication" />
     </div>
   </div>
 </template>
@@ -37,5 +37,11 @@ function isDevMode() {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+</style>
+
+<style scoped>
+.welcomeImage {
+  width: min(100%, 30rem);
 }
 </style>
