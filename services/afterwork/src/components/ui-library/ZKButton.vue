@@ -1,24 +1,26 @@
 <template>
-  <q-btn :label="label" :to="to" color="brand" :icon="definedIcon" no-caps :round="round" :flat="flat" />
+  <q-btn :label="label" :to="to" :color="color" :text-color="textColor" :icon="definedIcon" no-caps :rounded="rounded"
+    unelevated />
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
 
 interface Props {
-  label?: string
-  to?: string
-  icon?: string
+  label?: string;
+  to?: string;
+  icon?: string;
+  rounded?: boolean;
+  color?: string;
+  textColor?: string;
 }
 const props = defineProps<Props>();
 
 const definedIcon = ref<undefined | string>(undefined);
-const round = ref(false);
 const flat = ref(false);
 
 if (props.icon != undefined) {
   definedIcon.value = props.icon;
-  round.value = true;
   flat.value = true;
 }
 

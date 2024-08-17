@@ -1,48 +1,8 @@
 <template>
   <q-page>
     <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
-      <!-- <example-component title="Example component" active :todos="todos" :meta="meta"></example-component> -->
-      <div v-for="(item, index) in items " :key="index" style="max-width: 600px" class="full-width">
-        <q-card @click="$router.push('/post')" class="q-mb-sm q-pa-sm">
-          <div class="column full-width" style="gap: 15px;">
-            <div class="row items-center justify-start" style="gap: 5px; background-color: white">
-              <q-avatar size="42px" color="essec-blue" text-color="white">E</q-avatar>
-              <div class="column">
-                <!-- <div class="row flex-center" style="gap: 3px;"> -->
-                <div class="text-bold" style="margin-bottom: -5px;">essec.edu <q-icon name="verified" />
-                </div>
-                <div class="text-caption" style="color: rgba(0, 0, 0, 0.6); margin-bottom: -5px;">
-                  {{ getTrimmedPseudonym(item.author.pseudonym) }}
-                </div>
-                <div class="text-caption" style="color: rgba(0, 0, 0, 0.6);">{{
-                  getTimeFromNow(item.metadata.lastReactedAt) }}</div>
-              </div>
-            </div>
-            <div class="column q-pa-md" style="gap: 10px; border-radius: 8px; border: 1px solid #e6e9ec;">
-              <div style="font-weight: bold; font-size: 1.125rem; line-height: 1.5rem;">
-                {{ item.payload.title }}
-              </div>
-              <div class="text-body2" style="color: rgba(0, 0, 0, 0.6);" v-if="item.payload?.body !== undefined">
-                {{
-                  item.payload.body.length <= 200 ? item.payload.body : `${item.payload.body.slice(0, 200)} ...` }} </div>
-                  <div class="q-my-sm" v-if="item.payload.poll !== undefined">
-                    <poll-result-view :result="item.payload.poll.result" :options="item.payload.poll.options"
-                      :pollResponse="undefined" /> <!-- TODO: pollResponse -->
-                  </div>
-              </div>
-              <div>
-                <q-btn dense align="left" icon="o_insert_comment" class="text-body2" style="color: rgba(0, 0, 0, 0.6);"
-                  unelevated no-caps color="white" text-color="rgba(0, 0, 0, 0.6)"
-                  :label="item.metadata.commentCount === 0 ? 'Comment' : item.metadata.commentCount === 1 ? '1 Comment' : `${item.metadata.commentCount} Comments`" />
-              </div>
-            </div>
-        </q-card>
-        <!-- <p>{{ item.author }}</p> -->
-        <!-- <p>{{ item.payload.title }}</p> -->
-        <!-- <p>{{ item.metadata.uid }}</p> -->
-        <!-- <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum repellendus sit voluptate voluptas eveniet -->
-        <!--   porro. Rerum blanditiis perferendis totam, ea at omnis vel numquam exercitationem aut, natus minima, porro -->
-        <!--   labore.</p> -->
+      <div class="postListFlex">
+        <CompactPost :extended-post-data="item" v-for="(item, index) in compactPostDataList" :key="index" />
       </div>
     </q-infinite-scroll>
   </q-page>
@@ -52,11 +12,10 @@
 import { Ref, onBeforeUnmount, onMounted, ref } from "vue";
 // import { Todo, Meta } from 'components/models';
 // import ExampleComponent from 'components/ExampleComponent.vue';
-import PollResultView from "components/poll/PollResultView.vue";
+import CompactPost from "@/components/feed/CompactPost.vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
-import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
 
 // const passphrase = ref("nothing");
 // const verified = ref<boolean | string>("nothing")
@@ -191,8 +150,8 @@ async function fetchFeedMore({
 
 const postData: ExtendedPostData = {
   metadata: {
-    uid: "TEST",
-    slugId: "TEST",
+    uid: "TEST UID",
+    slugId: "TEST SLUG ID",
     isHidden: false,
     updatedAt: new Date(),
     lastReactedAt: new Date(),
@@ -200,14 +159,14 @@ const postData: ExtendedPostData = {
   },
   payload: {
     title: "TEST TITLE",
-    body: "TEST BODY"
+    body: "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted. "
   },
   author: {
-    pseudonym: "TEST",
+    pseudonym: "TEST pseudonym",
     domain: "google.com"
   }
 };
-const items: Ref<ExtendedPostData[]> = ref([postData]);
+const compactPostDataList: Ref<ExtendedPostData[]> = ref([postData, postData, postData]);
 
 defineOptions({
   name: "IndexPage",
@@ -215,7 +174,7 @@ defineOptions({
 
 async function onLoad() {
   if (false) {
-    items.value = await fetchFeedMore({
+    compactPostDataList.value = await fetchFeedMore({
       showHidden: false,
       lastReactedAt: undefined,
     });
@@ -249,3 +208,13 @@ async function onLoad() {
 //   totalCount: 1200
 // });
 </script>
+
+<style scoped>
+.postListFlex {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: min(40rem, 100%);
+  padding-top: 2rem;
+}
+</style>
