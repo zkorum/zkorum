@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import ZKInputField from "@/views/ZKInputField.vue";
+import ZKInputField from "@/components/ui-library/ZKInputField.vue";
 import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
 // import { authenticate } from "@/request/auth";
 const { t } = useI18n()
