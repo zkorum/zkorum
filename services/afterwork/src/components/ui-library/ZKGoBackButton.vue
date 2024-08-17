@@ -4,7 +4,7 @@
 </template>
 
 <script setup lang="ts">
-import ZKButton from "views/ZKButton.vue";
+import ZKButton from "./ZKButton.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter()

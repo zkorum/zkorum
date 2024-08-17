@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { useAuthenticationStore } from "@/stores/authentication";
-import ZKButton from "views/ZKButton.vue";
+import ZKButton from "@/components/ui-library/ZKButton.vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 const { t } = useI18n()

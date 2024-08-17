@@ -16,8 +16,8 @@
 </template>
 
 <script setup lang="ts">
-import ZKGoBackButton from "views/ZKGoBackButton.vue";
-import ZKButton from "views/ZKButton.vue";
+import ZKGoBackButton from "@/components/ui-library/ZKGoBackButton.vue";
+import ZKButton from "@/components/ui-library/ZKButton.vue";
 import { OnboardingLayoutProps } from "model/props";
 const props = withDefaults(defineProps<OnboardingLayoutProps>(), { hasGoBackButton: true, hasHelpButton: true })
 </script>
