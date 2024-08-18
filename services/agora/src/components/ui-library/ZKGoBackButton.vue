@@ -1,6 +1,5 @@
 <template>
-  <ZKButton :onclick="goBack" flat outline icon="arrow_back">
-  </ZKButton>
+  <ZKButton :onclick="goBack" icon="arrow_back" />
 </template>
 
 <script setup lang="ts">
