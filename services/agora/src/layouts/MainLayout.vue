@@ -19,15 +19,14 @@
 
     <q-footer reveal bordered class="bg-white text-brand">
       <q-tabs no-caps align="center" outside-arrows mobile-arrows>
-        <q-route-tab to="/" :icon="currentRoute === '/' ? 'home' : 'o_home'" />
-        <q-route-tab to="/communities" :icon="currentRoute === '/communities' ? 'group' : 'o_group'
+        <q-route-tab :to="{ name: 'default-home-feed' }" :icon="currentRoute === '/' ? 'home' : 'o_home'" />
+        <q-route-tab :to="{ name: 'communities' }" :icon="currentRoute === '/communities' ? 'group' : 'o_group'
           " />
-        <q-tab icon="add_box" />
-        <q-route-tab to="/notifications" :icon="currentRoute === '/notifications'
+        <q-route-tab :to="{ name: 'notifications' }" :icon="currentRoute === '/notifications'
           ? 'notifications'
           : 'o_notifications'
           " />
-        <q-route-tab to="/settings" :icon="currentRoute === '/settings' ? 'settings' : 'o_settings'
+        <q-route-tab :to="{ name: 'settings' }" :icon="currentRoute === '/settings' ? 'settings' : 'o_settings'
           " />
       </q-tabs>
     </q-footer>

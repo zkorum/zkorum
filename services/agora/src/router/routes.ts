@@ -13,12 +13,44 @@ const routes: RouteRecordRaw[] = [
         name: "default-home-feed"
       },
     ],
-
   },
   {
     path: "/welcome",
     component: () => import("@/pages/onboarding/index.vue"),
     name: "welcome"
+  },
+  {
+    path: "/",
+    component: () => import("layouts/MainLayout.vue"),
+    children: [
+      {
+        path: "/communities",
+        component: () => import("@/pages/communities/index.vue"),
+        name: "communities"
+      },
+    ],
+  },
+  {
+    path: "/",
+    component: () => import("layouts/MainLayout.vue"),
+    children: [
+      {
+        path: "/notifications",
+        component: () => import("@/pages/notifications/index.vue"),
+        name: "notifications"
+      },
+    ],
+  },
+  {
+    path: "/",
+    component: () => import("layouts/MainLayout.vue"),
+    children: [
+      {
+        path: "/settings",
+        component: () => import("@/pages/settings/index.vue"),
+        name: "settings"
+      },
+    ],
   },
   {
     path: "/onboarding",
