@@ -42,13 +42,15 @@ export default route(function (/* { store, ssrContext } */) {
     }
   })
 
-  const STARTING_PAGE = "welcome";
+  if (!process.env.DEV) {
+    const STARTING_PAGE = "welcome";
 
-  Router.beforeEach(async (to) => {
-    if (!useAuthenticationStore().isAuthenticated && to.name !== STARTING_PAGE) {
-      return { name: STARTING_PAGE }
-    }
-  })
+    Router.beforeEach(async (to) => {
+      if (!useAuthenticationStore().isAuthenticated && to.name !== STARTING_PAGE) {
+        return { name: STARTING_PAGE }
+      }
+    })
+  }
 
   return Router;
 });

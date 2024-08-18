@@ -7,8 +7,13 @@ const routes: RouteRecordRaw[] = [
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
     children: [
-      { path: "", name: "home-screen", component: () => import("pages/index.vue") },
-    ]
+      {
+        path: "",
+        component: () => import("pages/index.vue"),
+        name: "default-home-feed"
+      },
+    ],
+
   },
   {
     path: "/welcome",
@@ -45,16 +50,6 @@ const routes: RouteRecordRaw[] = [
 
     ]
   },
-  /*
-  {
-    path: "/post",
-    component: () => import("layouts/PostLayout.vue"),
-    meta: { transition: "slide-enter" },
-    children: [
-      { path: "", component: () => import("components/TestComponent.vue") },
-    ],
-  },
-  */
 
   // Always leave this as last one,
   // but you can also remove it

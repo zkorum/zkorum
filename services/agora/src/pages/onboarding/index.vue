@@ -3,7 +3,7 @@
     <q-img src="agora.png" class="welcomeImage" />
     <div class="buttonFlex">
       <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
-      <ZKButton v-if="isDevMode()" @click="skipAuthentication()" label="Skip Authentication" />
+      <ZKButton v-if="isDevMode()" color-flex="black" @click="skipAuthentication()" label="Skip Authentication" />
     </div>
   </div>
 </template>
@@ -19,7 +19,7 @@ const router = useRouter();
 
 function skipAuthentication() {
   useAuthenticationStore().isAuthenticated = true;
-  router.push({ name: "home-screen" });
+  router.push({ name: "default-home-feed" });
 }
 
 function isDevMode() {

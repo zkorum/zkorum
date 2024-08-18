@@ -1,6 +1,7 @@
 <template>
   <q-layout view="hHh lpR fFf">
     <q-header reveal bordered class="bg-white text-brand" height-hint="98">
+      <!--
       <q-toolbar class="content-between" style="width: 100%">
         <div style="width: 100%">
           <q-avatar>
@@ -9,6 +10,7 @@
         </div>
         <div>About</div>
       </q-toolbar>
+      -->
     </q-header>
 
     <q-page-container>
