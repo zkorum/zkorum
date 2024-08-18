@@ -1,6 +1,6 @@
 <template>
-  <q-btn :label="label" :to="to" :color="color" :text-color="textColor" :icon="definedIcon" no-caps :rounded="true"
-    unelevated />
+  <q-btn :label="label" :type="type" :to="to" :color="color" :text-color="textColor" :icon="definedIcon" no-caps
+    :rounded="true" unelevated />
 </template>
 
 <script setup lang="ts">
@@ -14,7 +14,8 @@ const props = defineProps({
     type: String,
     default: "deep-purple"
   },
-  textColor: String
+  textColor: String,
+  type: String
 });
 
 const definedIcon = ref<undefined | string>(undefined);
