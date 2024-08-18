@@ -22,7 +22,7 @@ if (props.colorFlex == undefined) {
 
 const buttonTextColor = ref("");
 if (props.textColorFlex == undefined) {
-  buttonTextColor.value = "deep-purple";
+  buttonTextColor.value = "white";
 } else {
   buttonTextColor.value = props.textColorFlex;
 }
