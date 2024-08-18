@@ -1,18 +1,18 @@
 <template>
-
-  <q-page>
-    <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
-      <div class="postListFlex">
-        <CompactPostItem :extended-post-data="item" v-for="(item, index) in compactPostDataList" :key="index" />
-      </div>
-    </q-infinite-scroll>
-  </q-page>
-
+  <div>
+    <q-page class="container">
+      <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
+        <div class="postListFlex">
+          <PostItem :extended-post-data="item" v-for="(item, index) in compactPostDataList" :key="index" />
+        </div>
+      </q-infinite-scroll>
+    </q-page>
+  </div>
 </template>
 
 <script setup lang="ts">
 
-import CompactPostItem from "./CompactPostItem.vue";
+import PostItem from "./PostItem.vue";
 import { Ref, onBeforeUnmount, onMounted, ref } from "vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
@@ -149,7 +149,19 @@ const postData: ExtendedPostData = {
   },
   payload: {
     title: "TEST TITLE",
-    body: "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted. "
+    body: "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted. ",
+    poll: {
+      options: {
+        option1: "OPTION 1",
+        option2: "OPTION 2",
+        option3: "OPTION 3"
+      },
+      result: {
+        option1Response: 15,
+        option2Response: 20,
+        option3Response: 23
+      }
+    }
   },
   author: {
     pseudonym: "TEST pseudonym",
@@ -206,5 +218,9 @@ async function onLoad() {
   gap: 2rem;
   width: min(40rem, 100%);
   padding-top: 2rem;
+}
+
+.container {
+  padding: 0.5rem;
 }
 </style>
