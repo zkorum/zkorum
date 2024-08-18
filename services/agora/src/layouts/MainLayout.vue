@@ -17,8 +17,8 @@
       <router-view />
     </q-page-container>
 
-    <q-footer reveal bordered class="bg-white text-brand">
-      <q-tabs no-caps align="center" outside-arrows mobile-arrows>
+    <q-footer bordered class="bg-white">
+      <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
         <q-route-tab :to="{ name: 'default-home-feed' }" :icon="currentRoute === '/' ? 'home' : 'o_home'" />
         <q-route-tab :to="{ name: 'communities' }" :icon="currentRoute === '/communities' ? 'group' : 'o_group'
           " />

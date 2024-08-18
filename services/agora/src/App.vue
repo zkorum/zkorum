@@ -3,7 +3,7 @@
 
   <router-view v-slot="{ Component }">
     <transition appear enter-active-class="animated fadeIn slow" leave-active-class="animated fadeOut" mode="out-in">
-      <component :is="Component" class="container" />
+      <component :is="Component" class="container text-brand" />
     </transition>
   </router-view>
 
