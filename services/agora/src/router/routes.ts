@@ -36,7 +36,7 @@ const routes: RouteRecordRaw[] = [
         props: { hasGoBackButton: true, hasHelpButton: true } as OnboardingLayoutProps,
         children: [
           {
-            path: "",
+            path: ":emailAddressEncoded",
             component: () => import("@/pages/onboarding/passphrase/index.vue"),
             name: "passphrase"
           }

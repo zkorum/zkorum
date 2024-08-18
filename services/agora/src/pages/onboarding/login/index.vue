@@ -1,7 +1,7 @@
 <template>
   <div>
     <form @submit.prevent="sendVerificationCode()" class="container">
-      <h3>{{ t("onboarding.login.title") }}</h3>
+      <h4>{{ t("onboarding.login.title") }}</h4>
       <ZKInputField v-model="emailInput" type="email" :label="t('onboarding.login.email.label')"
         :hint="t('onboarding.login.email.hint')" hide-hint :rules="[(val: string) => isEmailValid(val) || emailHelper]"
         :onclick="handleAuthenticate" />
@@ -17,6 +17,9 @@
 
       <ZKButton label="Send Verification Code" :disabled="!acceptedAgreements || emailInput.length == 0"
         type="submit" />
+
+      <ZKButton label="Skip Page"
+        @click="router.push({ name: 'passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
     </form>
   </div>
 
@@ -29,6 +32,8 @@ import ZKInputField from "@/components/ui-library/ZKInputField.vue";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
 import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
 import { useRouter } from "vue-router";
+import { urlEncode } from "@/shared/common/base64";
+
 // import { authenticate } from "@/request/auth";
 const { t } = useI18n()
 const emailInput = ref("")

@@ -27,6 +27,8 @@
         "@tanstack/vue-query": "^5.29.0",
         "@teamhanko/hanko-elements": "^0.11.0",
         "@ucans/ucans": "^0.12.0",
+        "@vueuse/core": "^11.0.0",
+        "@vueuse/router": "^11.0.0",
         "@zkorum/capacitor-secure-signing": "^1.2.1",
         "@zkorum/capacitor-secure-storage": "^8.2.2",
         "@zkorum/keystore-idb": "^0.17.1",

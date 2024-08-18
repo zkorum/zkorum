@@ -22,17 +22,6 @@ import { ExtendedPostData } from "src/shared/types/zod";
 
 let interval: NodeJS.Timeout | undefined = undefined
 
-/*
-function encodeToBase64(uint8Array: Uint8Array): string {
-  return Buffer.from(uint8Array).toString("base64");
-}
-
-// Convert a Base64 string to a Uint8Array
-function decodeFromBase64(base64: string): Uint8Array {
-  return new Uint8Array(Buffer.from(base64, "base64"));
-}
-*/
-
 onMounted(async () => {
   // await requestAuth.authenticate("test@email.com", false, getPlatform($q.platform));
   // if ($q.platform.is.mobile) {
