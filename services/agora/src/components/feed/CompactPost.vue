@@ -31,7 +31,7 @@
       </div>
 
       <div>
-        <ZKButton rounded :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color="grey-4"
+        <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color="grey-4"
           text-color="grey-10" />
       </div>
 
