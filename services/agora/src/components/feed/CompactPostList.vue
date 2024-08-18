@@ -1,6 +1,12 @@
 <template>
   <div>
     <q-page class="container">
+
+      <q-tabs v-model="countryTab" class="text-teal">
+        <q-tab name="world" label="World" />
+        <q-tab name="france" label="France" />
+      </q-tabs>
+
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
           <PostItem :extended-post-data="item" v-for="(item, index) in compactPostDataList" :key="index" />
@@ -20,6 +26,8 @@ import { ExtendedPostData } from "src/shared/types/zod";
 
 // const passphrase = ref("nothing");
 // const verified = ref<boolean | string>("nothing")
+
+const countryTab = ref("world")
 
 let interval: NodeJS.Timeout | undefined = undefined
 
