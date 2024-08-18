@@ -17,10 +17,9 @@
 
         <ZKButton label="Submit" :disabled="verificationCode.length == 0" @click="submitCode(verificationCode)" />
 
-        <ZKFormBackButton />
+        <FormBackButton />
 
         <ZKButton label="Skip Verification Page" color="black" @click="submitBypass()" />
-
 
       </div>
     </div>
@@ -33,7 +32,7 @@ import { useRouteParams } from "@vueuse/router";
 import { ref } from "vue";
 import ZKInputField from "@/components/ui-library/ZKInputField.vue";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
-import ZKFormBackButton from "@/components/ui-library/onboarding/ZKFormBackButton.vue";
+import FormBackButton from "@/components/feed/FormBackButton.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
