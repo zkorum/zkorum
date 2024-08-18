@@ -31,8 +31,8 @@
       </div>
 
       <div>
-        <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color="grey-4"
-          text-color="grey-10" />
+        <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="grey-4"
+          text-color-flex="teal-8" />
       </div>
 
     </div>

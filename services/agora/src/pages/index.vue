@@ -10,8 +10,6 @@
 
 <script setup lang="ts">
 import { Ref, onBeforeUnmount, onMounted, ref } from "vue";
-// import { Todo, Meta } from 'components/models';
-// import ExampleComponent from 'components/ExampleComponent.vue';
 import CompactPost from "@/components/feed/CompactPost.vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
