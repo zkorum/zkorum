@@ -2,7 +2,7 @@
   <div class="window-width window-height column flex-center" style="gap: 20px; background-color: #4BE7DE;">
     <q-img src="agora.png" class="welcomeImage" />
     <div class="buttonFlex">
-      <ZKButton :label="t('welcome.login')" to="/onboarding/login" />
+      <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
       <ZKButton v-if="isDevMode()" @click="skipAuthentication()" label="Skip Authentication" />
     </div>
   </div>

@@ -1,22 +1,39 @@
 <template>
-  <div class="full-width full-height column flex-center" style="gap: 20px;">
-    <h3 class="text-brand">{{ t("onboarding.login.title") }}</h3>
-    <q-space />
-    <ZKInputField v-model="email" type="email" :label="t('onboarding.login.email.label')"
-      :hint="t('onboarding.login.email.hint')" hide-hint :rules="[(val: string) => isEmailValid(val) || emailHelper]"
-      :onclick="handleAuthenticate" />
+  <div>
+    <div class="container">
+      <h3>{{ t("onboarding.login.title") }}</h3>
+      <ZKInputField v-model="emailInput" type="email" :label="t('onboarding.login.email.label')"
+        :hint="t('onboarding.login.email.hint')" hide-hint :rules="[(val: string) => isEmailValid(val) || emailHelper]"
+        :onclick="handleAuthenticate" />
+
+      <div class="acceptanceDiv">
+        <q-checkbox v-model="acceptedAgreements" />
+        <div>
+          By continuing, you are confirming that you have read and agree to our
+          <a href="https://zkorum.com/" target="_blank">User Agreement</a> and
+          <a href="https://zkorum.com/" target="_blank">Privacy Policy</a>.
+        </div>
+      </div>
+
+      <ZKButton label="Send Verification Code" :disabled="!acceptedAgreements || emailInput.length == 0" />
+
+    </div>
   </div>
+
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import ZKInputField from "@/components/ui-library/ZKInputField.vue";
+import ZKButton from "@/components/ui-library/ZKButton.vue";
 import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
 // import { authenticate } from "@/request/auth";
 const { t } = useI18n()
-const email = ref("")
+const emailInput = ref("")
 const emailHelper = ref("")
+
+const acceptedAgreements = ref(false);
 
 function handleAuthenticate() {
   // await authenticate(email, false, )
@@ -46,5 +63,18 @@ function isEmailValid(emailToValidate: string): boolean {
   }
 }
 
-
 </script>
+
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.acceptanceDiv {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+</style>

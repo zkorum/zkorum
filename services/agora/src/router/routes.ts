@@ -12,28 +12,32 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/welcome",
-    component: () => import("@/pages/welcome/index.vue"),
+    component: () => import("@/pages/onboarding/index.vue"),
     name: "welcome"
   },
   {
-    path: "/onboarding/login",
+    path: "/onboarding",
     component: OnboardingLayout,
-    props: { hasGoBackButton: true, hasHelpButton: true } as OnboardingLayoutProps,
     children: [
-      { path: "", component: () => import("@/pages/onboarding/login/index.vue") },
-    ],
-  },
-  {
-    path: "/onboarding/:flowId/verify",
-    component: () => import("@/pages/onboarding/verification/index.vue"),
-  },
-  {
-    path: "/onboarding/passphrase",
-    component: () => import("@/pages/onboarding/passphrase/index.vue"),
-  },
-  {
-    path: "/onboarding/rules",
-    component: () => import("@/pages/onboarding/promise-rules/index.vue"),
+      {
+        path: "login",
+        component: () => import("@/pages/onboarding/login/index.vue"),
+        props: { hasGoBackButton: true, hasHelpButton: true } as OnboardingLayoutProps,
+        name: "login",
+      },
+      {
+        path: ":flowId/verify",
+        component: () => import("@/pages/onboarding/verification/index.vue"),
+      },
+      {
+        path: "passphrase",
+        component: () => import("@/pages/onboarding/passphrase/index.vue"),
+      },
+      {
+        path: "rules",
+        component: () => import("@/pages/onboarding/promise-rules/index.vue"),
+      },
+    ]
   },
   /*
   {

@@ -8,7 +8,7 @@ import { ref } from "vue";
 
 const props = defineProps({
   label: String,
-  to: String,
+  to: [String, Object],
   icon: String,
   color: {
     type: String,
