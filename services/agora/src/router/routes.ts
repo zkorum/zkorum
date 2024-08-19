@@ -31,6 +31,17 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: "/post",
+    component: () => import("layouts/MainLayout.vue"),
+    children: [
+      {
+        path: ":postSlugId",
+        component: () => import("@/pages/post/index.vue"),
+        name: "single-post"
+      }
+    ]
+  },
+  {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
     children: [

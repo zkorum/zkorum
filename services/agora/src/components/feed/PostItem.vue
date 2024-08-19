@@ -25,17 +25,23 @@
           {{ trimBody(extendedPostData.payload.body || '') }}
         </div>
 
-        <poll-result-view v-if="extendedPostData.payload.poll !== undefined && displayPoll"
+        <poll-result-view v-if="extendedPostData.payload.poll !== undefined && !compactMode"
           :result="extendedPostData.payload.poll.result" :options="extendedPostData.payload.poll.options"
           :pollResponse="undefined" /> <!-- TODO: pollResponse -->
       </div>
 
       <div class="bottomButtons">
         <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="grey-4"
-          text-color-flex="teal-8" />
+          text-color-flex="teal-8" @click="(event) => jumpToComments(event)" />
 
-        <ZKButton label="23" icon="bar_chart" color-flex="grey-4" text-color-flex="teal-8" />
+        <ZKButton label=" 23" icon="bar_chart" color-flex="grey-4" text-color-flex="teal-8" />
       </div>
+
+      <q-list separator v-if="!compactMode">
+        <q-item v-for="comment in commentList" v-bind:key="comment" class="commentItem">
+          <q-item-section>{{ comment }}</q-item-section>
+        </q-item>
+      </q-list>
 
     </div>
   </div>
@@ -46,11 +52,34 @@ import { ExtendedPostData } from "@/shared/types/zod";
 import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
 import PollResultView from "../poll/PollResultView.vue";
+import { useRouter } from "vue-router";
+import { ref } from "vue";
 
-defineProps<{
+const router = useRouter();
+
+const commentList = ref<string[]>([
+  "This is dummy comment 1",
+  "This is dummy comment 2",
+  "This is dummy comment 3",
+  "This is dummy comment 4",
+  "This is dummy comment 5",
+  "This is dummy comment 6",
+  "This is dummy comment 7",
+  "This is dummy comment 8",
+]);
+
+const props = defineProps<{
   extendedPostData: ExtendedPostData,
-  displayPoll: boolean
+  compactMode: boolean
 }>()
+
+function jumpToComments(event: Event) {
+  // now we have access to the native event
+  if (event) {
+    event.preventDefault();
+    router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId } });
+  }
+}
 
 function trimBody(body: string) {
   if (body.length <= 200) {
@@ -64,9 +93,10 @@ function trimBody(body: string) {
 
 <style scoped>
 .container {
-  background-color: #f1f5f9;
-  border-radius: 15px;
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .topTag {
@@ -101,13 +131,15 @@ function trimBody(body: string) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
 }
 
 .bottomButtons {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.commentItem {
+  padding: 1rem;
 }
 </style>

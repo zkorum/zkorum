@@ -2,16 +2,13 @@
   <div>
     <q-page class="container">
 
-      <!--
-      <div class="worldTags">
-        <ZKButton :label="country" v-for="country in countryTagList" v-bind:key="country" />
-      </div>
-      -->
-
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
-          <PostItem :extended-post-data="item" v-for="(item, index) in compactPostDataList" :key="index"
-            :display-poll="false" />
+          <div v-for="(item, index) in compactPostDataList" :key="index" class="postElement">
+            <RouterLink :to="{ name: 'single-post', params: { postSlugId: 'TEST_SLUG_ID_PARENT' } }">
+              <PostItem :extended-post-data="item" :compact-mode="true" />
+            </RouterLink>
+          </div>
         </div>
       </q-infinite-scroll>
     </q-page>
@@ -25,14 +22,12 @@ import { Ref, onBeforeUnmount, onMounted, ref } from "vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
-// import ZKButton from "../ui-library/ZKButton.vue";
+import { usePostStore } from "@/stores/post";
 
 // const passphrase = ref("nothing");
 // const verified = ref<boolean | string>("nothing")
 
 let interval: NodeJS.Timeout | undefined = undefined
-
-// const countryTagList = ref<string[]>(["France", "United States", "World", "Russia", "Japan", "China"]);
 
 onMounted(async () => {
   // await requestAuth.authenticate("test@email.com", false, getPlatform($q.platform));
@@ -149,36 +144,7 @@ async function fetchFeedMore({
   }
 }
 
-const postData: ExtendedPostData = {
-  metadata: {
-    uid: "TEST UID",
-    slugId: "TEST SLUG ID",
-    isHidden: false,
-    updatedAt: new Date(),
-    lastReactedAt: new Date(),
-    commentCount: 10
-  },
-  payload: {
-    title: "TEST TITLE",
-    body: "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted. ",
-    poll: {
-      options: {
-        option1: "OPTION 1",
-        option2: "OPTION 2",
-        option3: "OPTION 3"
-      },
-      result: {
-        option1Response: 15,
-        option2Response: 20,
-        option3Response: 23
-      }
-    }
-  },
-  author: {
-    pseudonym: "TEST pseudonym",
-    domain: "google.com"
-  }
-};
+const postData = usePostStore().dummyPostData;
 const compactPostDataList: Ref<ExtendedPostData[]> = ref([postData, postData, postData]);
 
 defineOptions({
@@ -239,5 +205,15 @@ async function onLoad() {
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem;
+}
+
+a {
+  text-decoration: none;
+  color: unset
+}
+
+.postElement {
+  background-color: #f1f5f9;
+  border-radius: 15px;
 }
 </style>
