@@ -4,7 +4,7 @@
 
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
-          <div v-for="(item, index) in compactPostDataList" :key="index" class="postElement">
+          <div v-for="(item, index) in compactPostDataList" :key="index">
             <RouterLink :to="{ name: 'single-post', params: { postSlugId: 'TEST_SLUG_ID_PARENT' } }">
               <PostItem :extended-post-data="item" :compact-mode="true" />
             </RouterLink>
@@ -210,10 +210,5 @@ async function onLoad() {
 a {
   text-decoration: none;
   color: unset
-}
-
-.postElement {
-  background-color: #f1f5f9;
-  border-radius: 15px;
 }
 </style>

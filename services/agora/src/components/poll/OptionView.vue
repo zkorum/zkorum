@@ -17,8 +17,8 @@ const props = defineProps<{
   optionResponded: boolean
 }>()
 const percentageStyle = props.optionPercentage <= 50
-  ? `linear-gradient(90deg, #e6e9ec ${props.optionPercentage}%, #FFFFFF 0)`
-  : `linear-gradient(to right, #e6e9ec ${props.optionPercentage}%, #FFFFFF ${100 - props.optionPercentage
+  ? `linear-gradient(90deg, #22d3ee ${props.optionPercentage}%, #FFFFFF 0)`
+  : `linear-gradient(to right, #22d3ee ${props.optionPercentage}%, #FFFFFF ${100 - props.optionPercentage
   }%)`
 // import { computed, ref } from "vue";
 // import { Todo, Meta } from "./models";

@@ -1,49 +1,64 @@
 <template>
   <div>
     <div class="container">
-      <div class="topTag">
-        <q-avatar size="3rem" color="essec-blue" text-color="white">E</q-avatar>
-        <div class="metadata">
-          <div class="domain">
-            {{ extendedPostData.author.domain }}
-          </div>
-          <div>
-            {{ getTrimmedPseudonym(extendedPostData.author.pseudonym) }}
-          </div>
-          <div>
-            {{ getTimeFromNow(extendedPostData.metadata.lastReactedAt) }}
+      <div class="coreBlock postBackground">
+        <div class="topTag">
+          <q-avatar size="3rem" color="essec-blue" text-color="white">E</q-avatar>
+          <div class="metadata">
+            <div class="domain">
+              {{ extendedPostData.author.domain }}
+            </div>
+            <div>
+              {{ getTrimmedPseudonym(extendedPostData.author.pseudonym) }}
+            </div>
+            <div>
+              {{ getTimeFromNow(extendedPostData.metadata.lastReactedAt) }}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="postDiv">
-        <div class="titleDiv">
-          {{ extendedPostData.payload.title }}
+        <div class="postDiv">
+          <div class="titleDiv">
+            {{ extendedPostData.payload.title }}
+          </div>
+
+          <div class="bodyDiv">
+            {{ trimBody(extendedPostData.payload.body || '') }}
+          </div>
+
+          <poll-result-view v-if="extendedPostData.payload.poll !== undefined && !compactMode"
+            :result="extendedPostData.payload.poll.result" :options="extendedPostData.payload.poll.options"
+            :pollResponse="undefined" /> <!-- TODO: pollResponse -->
         </div>
 
-        <div class="bodyDiv">
-          {{ trimBody(extendedPostData.payload.body || '') }}
+        <div class="bottomButtons">
+          <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="light-blue-8"
+            text-color-flex="white" @click="(event) => jumpToComments(event)" />
+
+          <ZKButton label="8" icon="thumb_up" color-flex="light-blue-8" text-color-flex="white"
+            @click="(event) => castVoteOnPost(event, true)" />
+
+          <ZKButton label=" 2" icon="thumb_down" color-flex="light-blue-8" text-color-flex="white"
+            @click="(event) => castVoteOnPost(event, false)" />
+
+          <ZKButton icon="share" color-flex="light-blue-8" text-color-flex="white"
+            @click="(event) => shareClicked(event)" />
+
         </div>
 
-        <poll-result-view v-if="extendedPostData.payload.poll !== undefined && !compactMode"
-          :result="extendedPostData.payload.poll.result" :options="extendedPostData.payload.poll.options"
-          :pollResponse="undefined" /> <!-- TODO: pollResponse -->
       </div>
 
-      <div class="bottomButtons">
-        <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="grey-4"
-          text-color-flex="teal-8" @click="(event) => jumpToComments(event)" />
+      <div class="container postBackground" v-if="!compactMode">
 
-        <ZKButton label=" 23" icon="bar_chart" color-flex="grey-4" text-color-flex="teal-8" />
+        <q-list separator>
+          <q-item v-for="comment in commentList" v-bind:key="comment" class="commentItem">
+            <q-item-section>{{ comment }}</q-item-section>
+          </q-item>
+        </q-list>
+
       </div>
-
-      <q-list separator v-if="!compactMode">
-        <q-item v-for="comment in commentList" v-bind:key="comment" class="commentItem">
-          <q-item-section>{{ comment }}</q-item-section>
-        </q-item>
-      </q-list>
-
     </div>
+
   </div>
 </template>
 
@@ -73,8 +88,20 @@ const props = defineProps<{
   compactMode: boolean
 }>()
 
+function shareClicked(event: Event) {
+  if (event) {
+    event.preventDefault();
+  }
+}
+
+function castVoteOnPost(event: Event, isUpvote: boolean) {
+  if (event) {
+    event.preventDefault();
+    console.log(isUpvote);
+  }
+}
+
 function jumpToComments(event: Event) {
-  // now we have access to the native event
   if (event) {
     event.preventDefault();
     router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId } });
@@ -92,7 +119,7 @@ function trimBody(body: string) {
 </script>
 
 <style scoped>
-.container {
+.coreBlock {
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -119,12 +146,10 @@ function trimBody(body: string) {
 .titleDiv {
   font-size: 1.3rem;
   font-weight: bolder;
-  padding-bottom: 0.5rem;
 }
 
 .bodyDiv {
   font-size: 1.1rem;
-  padding-bottom: 1rem;
 }
 
 .postDiv {
@@ -141,5 +166,17 @@ function trimBody(body: string) {
 
 .commentItem {
   padding: 1rem;
+}
+
+.postBackground {
+  background-color: #cffafe;
+  border-radius: 15px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem;
 }
 </style>
