@@ -35,12 +35,6 @@
           <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="light-blue-8"
             text-color-flex="white" @click="(event) => jumpToComments(event)" />
 
-          <ZKButton label="8" icon="thumb_up" color-flex="light-blue-8" text-color-flex="white"
-            @click="(event) => castVoteOnPost(event, true)" />
-
-          <ZKButton label=" 2" icon="thumb_down" color-flex="light-blue-8" text-color-flex="white"
-            @click="(event) => castVoteOnPost(event, false)" />
-
           <ZKButton icon="share" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => shareClicked(event)" />
 
@@ -50,11 +44,7 @@
 
       <div class="container postBackground" v-if="!compactMode">
 
-        <q-list separator>
-          <q-item v-for="comment in commentList" v-bind:key="comment" class="commentItem">
-            <q-item-section>{{ comment }}</q-item-section>
-          </q-item>
-        </q-list>
+        <CommentSwiper :comment-list="commentList" />
 
       </div>
     </div>
@@ -67,6 +57,7 @@ import { ExtendedPostData } from "@/shared/types/zod";
 import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
 import PollResultView from "../poll/PollResultView.vue";
+import CommentSwiper from "./CommentSwiper.vue";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
 
@@ -91,13 +82,6 @@ const props = defineProps<{
 function shareClicked(event: Event) {
   if (event) {
     event.preventDefault();
-  }
-}
-
-function castVoteOnPost(event: Event, isUpvote: boolean) {
-  if (event) {
-    event.preventDefault();
-    console.log(isUpvote);
   }
 }
 
