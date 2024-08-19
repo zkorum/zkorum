@@ -2,10 +2,11 @@
   <div>
     <q-page class="container">
 
-      <q-tabs v-model="countryTab" class="text-teal">
-        <q-tab name="world" label="World" />
-        <q-tab name="france" label="France" />
-      </q-tabs>
+      <!--
+      <div class="worldTags">
+        <ZKButton :label="country" v-for="country in countryTagList" v-bind:key="country" />
+      </div>
+      -->
 
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
@@ -23,13 +24,14 @@ import { Ref, onBeforeUnmount, onMounted, ref } from "vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
 import { ExtendedPostData } from "src/shared/types/zod";
+// import ZKButton from "../ui-library/ZKButton.vue";
 
 // const passphrase = ref("nothing");
 // const verified = ref<boolean | string>("nothing")
 
-const countryTab = ref("world")
-
 let interval: NodeJS.Timeout | undefined = undefined
+
+// const countryTagList = ref<string[]>(["France", "United States", "World", "Russia", "Japan", "China"]);
 
 onMounted(async () => {
   // await requestAuth.authenticate("test@email.com", false, getPlatform($q.platform));
@@ -224,11 +226,17 @@ async function onLoad() {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  width: min(40rem, 100%);
-  padding-top: 2rem;
+  padding-top: 1rem;
 }
 
 .container {
   padding: 0.5rem;
+}
+
+.worldTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
 }
 </style>

@@ -1,16 +1,15 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header reveal bordered class="bg-white text-brand" height-hint="98">
-      <!--
+    <q-header :reveal="false" bordered class="bg-white text-brand" height-hint="98">
       <q-toolbar class="content-between" style="width: 100%">
         <div style="width: 100%">
-          <q-avatar>
-            <img src="logo.svg" />
-          </q-avatar>
+          <ZKButton icon="menu" text-color-flex="black" flat />
         </div>
-        <div>About</div>
+        <div class="menuButtons">
+          <ZKButton icon="search" text-color-flex="black" flat />
+          <ZKButton icon="person" text-color-flex="black" flat />
+        </div>
       </q-toolbar>
-      -->
     </q-header>
 
     <q-page-container>
@@ -82,6 +81,7 @@
 <!---->
 <script setup lang="ts">
 // import { ref } from 'vue';
+import ZKButton from "@/components/ui-library/ZKButton.vue";
 import { useRoute } from "vue-router";
 // import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
 //
@@ -143,3 +143,10 @@ import { useRoute } from "vue-router";
 const route = useRoute();
 const currentRoute = route.path;
 </script>
+
+<style scoped>
+.menuButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+</style>
