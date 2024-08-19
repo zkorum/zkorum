@@ -10,7 +10,8 @@
 
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
-          <PostItem :extended-post-data="item" v-for="(item, index) in compactPostDataList" :key="index" />
+          <PostItem :extended-post-data="item" v-for="(item, index) in compactPostDataList" :key="index"
+            :display-poll="false" />
         </div>
       </q-infinite-scroll>
     </q-page>

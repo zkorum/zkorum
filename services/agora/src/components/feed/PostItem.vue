@@ -25,14 +25,16 @@
           {{ trimBody(extendedPostData.payload.body || '') }}
         </div>
 
-        <poll-result-view v-if="extendedPostData.payload.poll !== undefined"
+        <poll-result-view v-if="extendedPostData.payload.poll !== undefined && displayPoll"
           :result="extendedPostData.payload.poll.result" :options="extendedPostData.payload.poll.options"
           :pollResponse="undefined" /> <!-- TODO: pollResponse -->
       </div>
 
-      <div>
+      <div class="bottomButtons">
         <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="grey-4"
           text-color-flex="teal-8" />
+
+        <ZKButton label="23" icon="bar_chart" color-flex="grey-4" text-color-flex="teal-8" />
       </div>
 
     </div>
@@ -46,7 +48,8 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import PollResultView from "../poll/PollResultView.vue";
 
 defineProps<{
-  extendedPostData: ExtendedPostData
+  extendedPostData: ExtendedPostData,
+  displayPoll: boolean
 }>()
 
 function trimBody(body: string) {
@@ -100,5 +103,11 @@ function trimBody(body: string) {
   gap: 1rem;
   padding-top: 2rem;
   padding-bottom: 2rem;
+}
+
+.bottomButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 </style>
