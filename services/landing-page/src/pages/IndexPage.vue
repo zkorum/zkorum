@@ -47,6 +47,7 @@
             <p v-html="$t('buildingAgora')" />
           </div>
           <p>{{ $t('whatIsCompPropaganda') }}</p>
+          <q-img src="agora-mobile.png" style="min-width: 280px" />
           <h4>{{ $t('coreInnovationTitle') }}</h4>
           <div>
             <p v-html="$t('coreInnovationPart1')" />
