@@ -7,7 +7,7 @@ import {
 } from "vue-router";
 
 import routes from "./routes";
-import { useAuthenticationStore } from "@/stores/authentication";
+// import { useAuthenticationStore } from "@/stores/authentication";
 
 /*
  * If not building with SSR mode, you can
@@ -42,6 +42,7 @@ export default route(function (/* { store, ssrContext } */) {
     }
   })
 
+  /*
   if (!process.env.DEV) {
     const STARTING_PAGE = "welcome";
 
@@ -51,6 +52,7 @@ export default route(function (/* { store, ssrContext } */) {
       }
     })
   }
+  */
 
   return Router;
 });
