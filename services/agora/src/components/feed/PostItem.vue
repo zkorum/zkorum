@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="container">
-      <div class="coreBlock postBackground">
+      <div class="innerContainer postBackground">
         <div class="topTag">
           <q-avatar size="3rem" color="essec-blue" text-color="white">E</q-avatar>
           <div class="metadata">
@@ -23,17 +23,17 @@
           </div>
 
           <div class="bodyDiv">
-            {{ trimBody(extendedPostData.payload.body || '') }}
+            {{ processPostBody(extendedPostData.payload.body || '') }}
           </div>
 
-          <poll-result-view v-if="extendedPostData.payload.poll !== undefined && !compactMode"
-            :result="extendedPostData.payload.poll.result" :options="extendedPostData.payload.poll.options"
-            :pollResponse="undefined" /> <!-- TODO: pollResponse -->
         </div>
 
         <div class="bottomButtons">
           <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="light-blue-8"
             text-color-flex="white" @click="(event) => jumpToComments(event)" />
+
+          <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"
+            @click="(event) => showResultClicked(event)" />
 
           <ZKButton icon="share" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => shareClicked(event)" />
@@ -42,11 +42,24 @@
 
       </div>
 
-      <div class="container postBackground" v-if="!compactMode">
+      <div class="innerContainer postBackground" v-if="!compactMode && !displayResults">
+        <div class="componentTitle">
+          Vote on other people's statements
+        </div>
 
         <CommentSwiper :comment-list="commentList" />
-
       </div>
+
+      <div class="innerContainer postBackground" v-if="!compactMode && extendedPostData.payload.poll !== undefined">
+
+        <div class="componentTitle">
+          What other people think about the statement
+        </div>
+
+        <poll-result-view :result="extendedPostData.payload.poll.result"
+          :options="extendedPostData.payload.poll.options" :pollResponse="undefined" /> <!-- TODO: pollResponse -->
+      </div>
+
     </div>
 
   </div>
@@ -64,15 +77,17 @@ import { ref } from "vue";
 const router = useRouter();
 
 const commentList = ref<string[]>([
-  "This is dummy comment 1",
-  "This is dummy comment 2",
-  "This is dummy comment 3",
+  "This is dummy comment 1 This is dummy comment 1 This is dummy comment 1 This is dummy comment 1",
+  "This is dummy comment 2 This is dummy comment 2 This is dummy comment 2 This is dummy comment 2",
+  "This is dummy comment 3 This is dummy comment 3 This is dummy comment 3 This is dummy comment 3",
   "This is dummy comment 4",
   "This is dummy comment 5",
   "This is dummy comment 6",
   "This is dummy comment 7",
   "This is dummy comment 8",
 ]);
+
+const displayResults = ref(false);
 
 const props = defineProps<{
   extendedPostData: ExtendedPostData,
@@ -85,6 +100,13 @@ function shareClicked(event: Event) {
   }
 }
 
+function showResultClicked(event: Event) {
+  if (event) {
+    event.preventDefault();
+    displayResults.value = true;
+  }
+}
+
 function jumpToComments(event: Event) {
   if (event) {
     event.preventDefault();
@@ -92,8 +114,8 @@ function jumpToComments(event: Event) {
   }
 }
 
-function trimBody(body: string) {
-  if (body.length <= 200) {
+function processPostBody(body: string) {
+  if (body.length <= 200 || !props.compactMode) {
     return body;
   } else {
     return body.slice(0, 200) + "...";
@@ -103,7 +125,7 @@ function trimBody(body: string) {
 </script>
 
 <style scoped>
-.coreBlock {
+.innerContainer {
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -162,5 +184,11 @@ function trimBody(body: string) {
   flex-direction: column;
   gap: 1rem;
   padding: 0.5rem;
+}
+
+.componentTitle {
+  font-size: 1.2rem;
+  padding-top: 1rem;
+  padding-left: 0.5rem;
 }
 </style>

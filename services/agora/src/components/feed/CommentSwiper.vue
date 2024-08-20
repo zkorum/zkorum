@@ -1,13 +1,9 @@
 <template>
   <div>
-    <div class="title">
-      Anonymized Comment
-    </div>
-
     <swiper-container direction="vertical" slides-per-view="1" @swiperslidechange="onSlideChange" navigation="true"
       class="commentBlock">
       <swiper-slide v-for="comment in commentList" v-bind:key="comment" class="slideComponent">
-        <div>
+        <div class="userComment">
           {{ comment }}
         </div>
 
@@ -49,7 +45,7 @@ const onSlideChange = () => { // e: unknown
 .slideComponent {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 4rem;
   align-items: center;
   justify-content: center;
 }
@@ -60,11 +56,8 @@ const onSlideChange = () => { // e: unknown
   width: min(100%, 20rem);
 }
 
-
-.title {
-  font-size: 1.2rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  padding-left: 0.5rem;
+.userComment {
+  width: min(100%, 30rem);
+  text-align: center;
 }
 </style>

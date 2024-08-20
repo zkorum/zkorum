@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header :reveal="false" bordered class="bg-white text-brand" height-hint="98">
+    <q-header :reveal="false" bordered class="bg-white" height-hint="98">
       <q-toolbar class="content-between" style="width: 100%">
         <div style="width: 100%">
           <ZKButton icon="menu" text-color-flex="black" flat />
@@ -12,7 +12,7 @@
       </q-toolbar>
     </q-header>
 
-    <q-page-container>
+    <q-page-container class="container">
       <router-view />
     </q-page-container>
 
@@ -148,5 +148,11 @@ const currentRoute = route.path;
 .menuButtons {
   display: flex;
   gap: 0.5rem;
+}
+
+.container {
+  max-width: min(50rem, 100%);
+  margin: auto;
+  padding: 1rem;
 }
 </style>
