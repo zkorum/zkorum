@@ -1,14 +1,14 @@
 <template>
   <div>
-    <BokehEffect />
-
-    <div class="container">
-      <q-img src="agora.png" class="welcomeImage" />
-      <div class="buttonFlex">
-        <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
-        <ZKButton color-flex="black" @click="skipAuthentication()" label="Skip Authentication" />
+    <BokehEffect>
+      <div class="container">
+        <q-img src="agora.png" class="welcomeImage" />
+        <div class="buttonFlex">
+          <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
+          <ZKButton color-flex="black" @click="skipAuthentication()" label="Skip Authentication" />
+        </div>
       </div>
-    </div>
+    </BokehEffect>
   </div>
 
 </template>
@@ -46,11 +46,11 @@ function isDevMode() {
   flex-direction: column;
   gap: 2rem;
 }
-</style>
 
-<style scoped>
 .welcomeImage {
   width: min(20rem, 100%);
+  border-radius: 15px;
+  opacity: 0.8;
 }
 
 .container {
@@ -59,8 +59,6 @@ function isDevMode() {
   align-items: center;
   justify-content: center;
   gap: 3rem;
-  width: 100%;
-  height: 100vh;
-  padding: 1rem;
+  height: 100%;
 }
 </style>

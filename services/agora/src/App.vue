@@ -24,6 +24,6 @@ defineOptions({
 
 <style scoped>
 .container {
-  padding-bottom: 10rem;
+  padding-bottom: 0rem;
 }
 </style>
