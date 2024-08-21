@@ -1,5 +1,6 @@
 <template>
   <div>
+    <CompactCommunity />
     <CompactPostList />
   </div>
 
@@ -11,5 +12,5 @@
 
 <script setup lang="ts">
 import CompactPostList from "@/components/feed/CompactPostList.vue";
-
+import CompactCommunity from "@/components/feed/CompactCommunity.vue";
 </script>

@@ -6,8 +6,8 @@
           <ZKButton icon="menu" text-color-flex="black" flat />
         </div>
         <div class="menuButtons">
-          <ZKButton icon="search" text-color-flex="black" flat />
-          <ZKButton icon="person" text-color-flex="black" flat />
+          <ZKButton icon="settings" text-color-flex="black" flat />
+          <ZKButton icon="help" text-color-flex="black" flat />
         </div>
       </q-toolbar>
     </q-header>
