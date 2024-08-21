@@ -47,3 +47,7 @@ See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-
 ## License
 
 See [COPYING](./COPYING)
+
+### Country Flags
+
+MIT - [https://gitlab.com/catamphetamine/country-flag-icons/](https://gitlab.com/catamphetamine/country-flag-icons/)

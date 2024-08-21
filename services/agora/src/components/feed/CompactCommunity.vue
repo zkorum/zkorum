@@ -1,9 +1,14 @@
 <template>
-  <div>
+  <div class="container">
     <swiper-container slidesPerView="4" pagination="true">
       <swiper-slide v-for="communityItem in communityList" v-bind:key="communityItem.emoji" class="communityItem">
-        <div class="flagIcon">
-          {{ communityItem.emoji }}
+        <div class="flagStyle">
+          <span v-if="communityItem.isEmote" class="flagIcon">
+            {{ communityItem.emoji }}
+          </span>
+          <span v-if="!communityItem.isEmote">
+            <img class="flagImage" :src="'/public/images/communities/flags/' + communityItem.code + '.svg'" />
+          </span>
         </div>
         <span class="flagCountryName">
           {{ communityItem.countryName }}
@@ -20,32 +25,46 @@
 interface FlagItem {
   emoji: string
   countryName: string
+  isEmote: boolean
+  code: string
 }
 
 const communityList: FlagItem[] = [
   {
     "emoji": "🌎",
-    "countryName": "World"
+    "countryName": "World",
+    "isEmote": true,
+    "code": ""
   },
   {
     "emoji": "🇫🇷",
-    "countryName": "France"
+    "countryName": "France",
+    "isEmote": false,
+    "code": "FR"
   },
   {
     "emoji": "🇨🇳",
-    "countryName": "China"
+    "countryName": "China",
+    "isEmote": false,
+    "code": "CN"
   },
   {
     "emoji": "🇺🇸",
-    "countryName": "United States"
+    "countryName": "United States",
+    "isEmote": false,
+    "code": "US"
   },
   {
     "emoji": "🇷🇺",
-    "countryName": "Russia"
+    "countryName": "Russia",
+    "isEmote": false,
+    "code": "RU"
   },
   {
     "emoji": "🇯🇵",
-    "countryName": "Japan"
+    "countryName": "Japan",
+    "isEmote": false,
+    "code": "JP"
   }
 ];
 
@@ -53,10 +72,9 @@ const communityList: FlagItem[] = [
 
 <style scoped>
 .container {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  gap: 2rem;
+  background-color: aliceblue;
+  border-radius: 15px;
+  margin: 1rem;
 }
 
 .communityItem {
@@ -71,8 +89,18 @@ const communityList: FlagItem[] = [
   font-size: 3rem;
 }
 
+.flagImage {
+  width: 3rem;
+}
+
 .flagCountryName {
   font-size: 1.1rem;
   text-align: center;
+}
+
+.flagStyle {
+  display: flex;
+  align-items: center;
+  height: 5rem;
 }
 </style>
