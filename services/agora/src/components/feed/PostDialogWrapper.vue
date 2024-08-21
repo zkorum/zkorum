@@ -1,11 +1,11 @@
 <template>
-  <div>
-    <div class="container">
-      <div class="innerContent">
+  <div @click="closeDialog()">
+    <div class="innerContent">
+      <div @click="(event: Event) => disablePropagation(event)">
         <slot />
-        <ZKButton icon="close" flat round dense v-close-popup size="3rem" />
       </div>
 
+      <ZKButton icon="close" flat round dense size="3rem" @click="closeDialog()" />
     </div>
   </div>
 
@@ -13,13 +13,20 @@
 
 <script setup lang="ts">
 import ZKButton from "../ui-library/ZKButton.vue";
+
+const openPostDialog = defineModel<boolean>()
+
+function closeDialog() {
+  openPostDialog.value = false;
+}
+
+function disablePropagation(event: Event) {
+  event.stopPropagation();
+}
+
 </script>
 
 <style scoped>
-.container {
-  width: 100%;
-}
-
 .innerContent {
   display: flex;
   flex-direction: column;

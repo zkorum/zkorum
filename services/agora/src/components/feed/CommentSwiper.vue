@@ -1,7 +1,6 @@
 <template>
   <div>
-    <swiper-container direction="vertical" slides-per-view="1" @swiperslidechange="onSlideChange" navigation="true"
-      class="commentBlock">
+    <swiper-container slides-per-view="1" @swiperslidechange="onSlideChange" navigation="true" class="commentBlock">
       <swiper-slide v-for="comment in commentList" v-bind:key="comment" class="slideComponent">
         <div class="userComment">
           {{ comment }}
@@ -30,7 +29,6 @@ const onSlideChange = () => { // e: unknown
   // console.log(indexNumber);
 }
 
-
 </script>
 
 <style scoped>
@@ -45,15 +43,17 @@ const onSlideChange = () => { // e: unknown
 .slideComponent {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: 3rem;
   align-items: center;
   justify-content: center;
+
 }
 
 .thumbsButtonBlock {
   display: flex;
   justify-content: space-between;
-  width: min(100%, 20rem);
+  flex-wrap: wrap;
+  width: min(100%, 15rem);
 }
 
 .userComment {

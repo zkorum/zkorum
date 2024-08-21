@@ -11,7 +11,7 @@
     </q-page>
 
     <q-dialog v-model="openPostDialog" class="bg-accent" maximized>
-      <PostDialogWrapper>
+      <PostDialogWrapper v-model="openPostDialog">
         <PostItem :extended-post-data="dyanmicPostData" :compact-mode="false" />
       </PostDialogWrapper>
     </q-dialog>
