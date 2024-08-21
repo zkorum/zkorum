@@ -92,7 +92,7 @@ export default configure((ctx) => {
         // see https://docs.hanko.io/quickstarts/frontend/vue#configure-component-resolution
         template: {
           compilerOptions: {
-            isCustomElement: (tag) => tag.startsWith("hanko-") || tag.startsWith("swiper-")
+            isCustomElement: (tag) => tag.startsWith("swiper-")
           }
         }
       },
