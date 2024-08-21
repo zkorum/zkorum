@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header :reveal="false" bordered class="bg-white" height-hint="98">
+    <q-header :reveal="true" bordered class="bg-white" height-hint="98">
       <q-toolbar class="content-between" style="width: 100%">
         <div style="width: 100%">
           <ZKButton icon="menu" text-color-flex="black" flat />
