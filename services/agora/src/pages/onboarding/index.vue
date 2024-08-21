@@ -1,14 +1,10 @@
 <template>
-  <div>
-    <BokehEffect>
-      <div class="container">
-        <q-img src="agora.png" class="welcomeImage" />
-        <div class="buttonFlex">
-          <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
-          <ZKButton color-flex="black" @click="skipAuthentication()" label="Skip Authentication" />
-        </div>
-      </div>
-    </BokehEffect>
+  <div class="container">
+    <q-img src="/public/images/onboarding/brand.webp" class="welcomeImage" />
+    <div class="buttonFlex">
+      <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
+      <ZKButton color-flex="black" @click="skipAuthentication()" label="Skip Authentication" />
+    </div>
   </div>
 
 </template>
@@ -16,7 +12,6 @@
 <script setup lang="ts">
 import { useAuthenticationStore } from "@/stores/authentication";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
-import BokehEffect from "@/components/backgrounds/BokehEffect.vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 const { t } = useI18n()
@@ -48,9 +43,7 @@ function isDevMode() {
 }
 
 .welcomeImage {
-  width: min(20rem, 100%);
-  border-radius: 15px;
-  opacity: 0.8;
+  width: min(15rem, 100%);
 }
 
 .container {
@@ -59,6 +52,8 @@ function isDevMode() {
   align-items: center;
   justify-content: center;
   gap: 3rem;
-  height: 100%;
+  height: 100vh;
+  background-image: url('/public/images/onboarding/background.webp');
+  background-size: cover;
 }
 </style>
