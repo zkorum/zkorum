@@ -1,23 +1,28 @@
 <template>
   <div>
     <q-page class="container">
-
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
-          <div v-for="(item, index) in compactPostDataList" :key="index">
-            <RouterLink :to="{ name: 'single-post', params: { postSlugId: 'TEST_SLUG_ID_PARENT' } }">
-              <PostItem :extended-post-data="item" :compact-mode="true" />
-            </RouterLink>
+          <div v-for="(postData, index) in compactPostDataList" :key="index">
+            <PostItem :extended-post-data="postData" :compact-mode="true" @click="launchPost(postData)" />
           </div>
         </div>
       </q-infinite-scroll>
     </q-page>
+
+    <q-dialog v-model="openPostDialog" class="bg-accent" maximized>
+      <PostDialogWrapper>
+        <PostItem :extended-post-data="dyanmicPostData" :compact-mode="false" />
+      </PostDialogWrapper>
+    </q-dialog>
+
   </div>
 </template>
 
 <script setup lang="ts">
 
 import PostItem from "./PostItem.vue";
+import PostDialogWrapper from "./PostDialogWrapper.vue";
 import { Ref, onBeforeUnmount, onMounted, ref } from "vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
@@ -26,6 +31,12 @@ import { usePostStore } from "@/stores/post";
 
 // const passphrase = ref("nothing");
 // const verified = ref<boolean | string>("nothing")
+
+const postDataStatic = usePostStore().postDataStatic;
+
+const dyanmicPostData = ref<ExtendedPostData>(postDataStatic);
+
+const openPostDialog = ref(false);
 
 let interval: NodeJS.Timeout | undefined = undefined
 
@@ -109,6 +120,11 @@ onBeforeUnmount(() => {
 interface FetchFeedProps {
   showHidden: boolean;
   lastReactedAt: Date | undefined;
+}
+
+function launchPost(postData: ExtendedPostData) {
+  dyanmicPostData.value = postData;
+  openPostDialog.value = true;
 }
 
 async function fetchFeedMore({
@@ -210,5 +226,9 @@ async function onLoad() {
 a {
   text-decoration: none;
   color: unset
+}
+
+.dialogDiv {
+  width: min(100%, 40rem);
 }
 </style>

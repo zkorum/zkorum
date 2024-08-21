@@ -6,7 +6,7 @@ export const usePostStore = defineStore("post", () => {
     // post: [] as Post[],
 
 
-    const postData: ExtendedPostData = {
+    const postDataStatic: ExtendedPostData = {
         metadata: {
             uid: "TEST UID",
             slugId: "DUMMY_SLUG_ID",
@@ -37,8 +37,8 @@ export const usePostStore = defineStore("post", () => {
         }
     };
 
-    const dummyPostData = ref<ExtendedPostData>(postData);
-    return { dummyPostData };
+    const dummyPostData = ref<ExtendedPostData>(postDataStatic);
+    return { dummyPostData, postDataStatic };
 
     // getters: {
     //   doubleCount (state) {

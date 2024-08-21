@@ -32,8 +32,10 @@
           <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="light-blue-8"
             text-color-flex="white" @click="(event) => jumpToComments(event)" />
 
+          <!--
           <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => showResultClicked(event)" />
+          -->
 
           <ZKButton icon="share" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => shareClicked(event)" />
@@ -42,7 +44,7 @@
 
       </div>
 
-      <div class="innerContainer postBackground" v-if="!compactMode && !displayResults">
+      <div class="innerContainer postBackground" v-if="!compactMode">
         <div class="componentTitle">
           Vote on other people's statements
         </div>
@@ -87,7 +89,7 @@ const commentList = ref<string[]>([
   "This is dummy comment 8",
 ]);
 
-const displayResults = ref(false);
+// const displayResults = ref(false);
 
 const props = defineProps<{
   extendedPostData: ExtendedPostData,
@@ -100,12 +102,14 @@ function shareClicked(event: Event) {
   }
 }
 
+/*
 function showResultClicked(event: Event) {
   if (event) {
     event.preventDefault();
     displayResults.value = true;
   }
 }
+*/
 
 function jumpToComments(event: Event) {
   if (event) {
