@@ -19,7 +19,7 @@
     <q-footer bordered class="bg-white">
       <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
         <q-route-tab :to="{ name: 'default-home-feed' }" :icon="currentRoute === '/' ? 'home' : 'o_home'" />
-        <q-route-tab :to="{ name: 'communities' }" :icon="currentRoute === '/communities' ? 'group' : 'o_group'
+        <q-route-tab :to="{ name: 'community-explore' }" :icon="currentRoute === '/community/explore' ? 'group' : 'o_group'
           " />
         <q-route-tab :to="{ name: 'notifications' }" :icon="currentRoute === '/notifications'
           ? 'notifications'

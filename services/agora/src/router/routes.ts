@@ -20,15 +20,20 @@ const routes: RouteRecordRaw[] = [
     name: "welcome"
   },
   {
-    path: "/",
+    path: "/community",
     component: () => import("layouts/MainLayout.vue"),
     children: [
       {
-        path: "/communities",
-        component: () => import("@/pages/communities/index.vue"),
-        name: "communities"
+        path: "explore",
+        component: () => import("@/pages/community/explore/index.vue"),
+        name: "community-explore",
       },
-    ],
+      {
+        path: ":countryCode",
+        component: () => import("@/pages/community/[countryCode].vue"),
+        name: "community-single"
+      }
+    ]
   },
   {
     path: "/post",

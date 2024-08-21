@@ -1,18 +1,23 @@
 <template>
   <div class="container">
     <swiper-container slidesPerView="4" pagination="true">
-      <swiper-slide v-for="communityItem in communityList" v-bind:key="communityItem.emoji" class="communityItem">
-        <div class="flagStyle">
-          <span v-if="communityItem.isEmote" class="flagIcon">
-            {{ communityItem.emoji }}
-          </span>
-          <span v-if="!communityItem.isEmote">
-            <img class="flagImage" :src="'/public/images/communities/flags/' + communityItem.code + '.svg'" />
-          </span>
-        </div>
-        <span class="flagCountryName">
-          {{ communityItem.countryName }}
-        </span>
+      <swiper-slide v-for="communityItem in communityList" v-bind:key="communityItem.emoji">
+        <RouterLink :to="{ name: 'community-single', params: { countryCode: communityItem.code.toLowerCase() } }">
+          <div class="communityItem">
+            <div class="flagStyle">
+              <span v-if="communityItem.isEmote" class="flagIcon">
+                {{ communityItem.emoji }}
+              </span>
+              <span v-if="!communityItem.isEmote">
+                <img class="flagImage" :src="'/public/images/communities/flags/' + communityItem.code + '.svg'" />
+              </span>
+            </div>
+            <span class="flagCountryName">
+              {{ communityItem.countryName }}
+            </span>
+          </div>
+
+        </RouterLink>
       </swiper-slide>
     </swiper-container>
   </div>
@@ -34,7 +39,7 @@ const communityList: FlagItem[] = [
     "emoji": "🌎",
     "countryName": "World",
     "isEmote": true,
-    "code": ""
+    "code": "all"
   },
   {
     "emoji": "🇫🇷",
@@ -71,6 +76,10 @@ const communityList: FlagItem[] = [
 </script>
 
 <style scoped>
+a {
+  text-decoration: none;
+}
+
 .container {
   background-color: aliceblue;
   border-radius: 15px;
@@ -86,16 +95,17 @@ const communityList: FlagItem[] = [
 }
 
 .flagIcon {
-  font-size: 3rem;
+  font-size: 2.5rem;
 }
 
 .flagImage {
   width: 3rem;
+  border-radius: 5px;
 }
 
 .flagCountryName {
-  font-size: 1.1rem;
   text-align: center;
+  color: black;
 }
 
 .flagStyle {
