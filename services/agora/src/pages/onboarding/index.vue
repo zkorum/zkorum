@@ -1,6 +1,8 @@
 <template>
-  <BokehEffect />
   <div class="window-width window-height column flex-center" style="gap: 20px; background-color: #4BE7DE;">
+
+    <BokehEffect />
+
     <q-img src="agora.png" class="welcomeImage" />
     <div class="buttonFlex">
       <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
