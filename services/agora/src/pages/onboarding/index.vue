@@ -1,4 +1,5 @@
 <template>
+  <BokehEffect />
   <div class="window-width window-height column flex-center" style="gap: 20px; background-color: #4BE7DE;">
     <q-img src="agora.png" class="welcomeImage" />
     <div class="buttonFlex">
@@ -11,6 +12,7 @@
 <script setup lang="ts">
 import { useAuthenticationStore } from "@/stores/authentication";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
+import BokehEffect from "@/components/backgrounds/BokehEffect.vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 const { t } = useI18n()
