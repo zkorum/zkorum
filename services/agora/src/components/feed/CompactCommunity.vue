@@ -1,20 +1,15 @@
 <template>
   <div class="container">
-    <swiper-container slidesPerView="4" pagination="true">
+    <swiper-container slidesPerView="3.5">
       <swiper-slide v-for="communityItem in communityList" v-bind:key="communityItem.emoji">
         <RouterLink :to="{ name: 'community-single', params: { countryCode: communityItem.code.toLowerCase() } }">
-          <div class="communityItem">
+          <div class="communityItemStyle">
             <div class="flagStyle">
-              <span v-if="communityItem.isEmote" class="flagIcon">
-                {{ communityItem.emoji }}
-              </span>
-              <span v-if="!communityItem.isEmote">
-                <img class="flagImage" :src="'/public/images/communities/flags/' + communityItem.code + '.svg'" />
-              </span>
+              <img class="flagImage" :src="'/public/images/communities/flags/' + communityItem.code + '.svg'" />
             </div>
-            <span class="flagCountryName">
+            <div class="flagCountryName">
               {{ communityItem.countryName }}
-            </span>
+            </div>
           </div>
 
         </RouterLink>
@@ -30,7 +25,6 @@
 interface FlagItem {
   emoji: string
   countryName: string
-  isEmote: boolean
   code: string
 }
 
@@ -38,37 +32,31 @@ const communityList: FlagItem[] = [
   {
     "emoji": "🌎",
     "countryName": "World",
-    "isEmote": true,
-    "code": "all"
+    "code": "WORLD"
   },
   {
     "emoji": "🇫🇷",
     "countryName": "France",
-    "isEmote": false,
     "code": "FR"
   },
   {
     "emoji": "🇨🇳",
     "countryName": "China",
-    "isEmote": false,
     "code": "CN"
   },
   {
     "emoji": "🇺🇸",
     "countryName": "United States",
-    "isEmote": false,
     "code": "US"
   },
   {
     "emoji": "🇷🇺",
     "countryName": "Russia",
-    "isEmote": false,
     "code": "RU"
   },
   {
     "emoji": "🇯🇵",
     "countryName": "Japan",
-    "isEmote": false,
     "code": "JP"
   }
 ];
@@ -86,16 +74,13 @@ a {
   margin: 1rem;
 }
 
-.communityItem {
+.communityItemStyle {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 10rem;
-  height: 9rem;
-}
-
-.flagIcon {
-  font-size: 2.5rem;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
 }
 
 .flagImage {
@@ -111,6 +96,6 @@ a {
 .flagStyle {
   display: flex;
   align-items: center;
-  height: 5rem;
+  justify-content: center;
 }
 </style>
