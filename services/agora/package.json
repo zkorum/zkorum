@@ -25,7 +25,6 @@
         "@docknetwork/crypto-wasm-ts": "^0.59.0",
         "@quasar/extras": "^1.16.4",
         "@tanstack/vue-query": "^5.29.0",
-        "@teamhanko/hanko-elements": "^0.11.0",
         "@ucans/ucans": "^0.12.0",
         "@vueuse/core": "^11.0.0",
         "@vueuse/router": "^11.0.0",

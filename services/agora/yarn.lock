@@ -86,11 +86,6 @@
   resolved "https://registry.yarnpkg.com/@capgo/capacitor-updater/-/capacitor-updater-5.9.4.tgz#e240fc6fd0957f0b7fe8a7fccc290894a27cd30c"
   integrity sha512-xxeOpetra4uuOVKNFZBX/uB6KL4qkZIAtvITVcyJUnnSFOROF+U/jBqkS6kiWG8vYkj7jlSQuebu6kJUWe5cWQ==
 
-"@denysvuika/preact-translate@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@denysvuika/preact-translate/-/preact-translate-0.5.0.tgz#06fe1d31497b13734def2cc8a64a68001b03bd2f"
-  integrity sha512-hcWbmA5+05JRYGPhl64kDiJ+rWLOKe4tDi0y7cXVKe+hwu6H0KphyAwLvVbCSTTtnfXvAijnEZMOf/kCsdPFrQ==
-
 "@docknetwork/crypto-wasm-ts@^0.59.0":
   version "0.59.0"
   resolved "https://registry.yarnpkg.com/@docknetwork/crypto-wasm-ts/-/crypto-wasm-ts-0.59.0.tgz#51786846ad45626dc5e3c3d6acac523444c88d68"
@@ -683,29 +678,6 @@
     "@vue/devtools-api" "^6.5.1"
     vue-demi "^0.14.6"
 
-"@teamhanko/hanko-elements@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@teamhanko/hanko-elements/-/hanko-elements-0.11.0.tgz#8ae0ef719dce60fcd8ca637b24491fee9786aae0"
-  integrity sha512-k9CqYv/QL1c4Yf/LJdTN2fV+1CHroubm//Os/k64MBX04bl5trgOaYSJAoEU74uaDp4CyDijx6CAEc9HEGA2yA==
-  dependencies:
-    "@denysvuika/preact-translate" "^0.5.0"
-    "@teamhanko/hanko-frontend-sdk" "^0.11.0"
-    "@teamhanko/preact-custom-element" "^4.2.2"
-    classnames "^2.3.2"
-    preact "^10.13.1"
-
-"@teamhanko/hanko-frontend-sdk@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@teamhanko/hanko-frontend-sdk/-/hanko-frontend-sdk-0.11.0.tgz#7e8560f500c04a114a68e3ff5539eece40733635"
-  integrity sha512-d3tumag/dUMuPeho+p20iHOdO/koYJmqHjHIT5shQPYPiJrg6olFobjvC599+EsdMZvzdY9w4OipjQlherEQig==
-  dependencies:
-    "@types/js-cookie" "^3.0.3"
-
-"@teamhanko/preact-custom-element@^4.2.2":
-  version "4.2.2"
-  resolved "https://registry.yarnpkg.com/@teamhanko/preact-custom-element/-/preact-custom-element-4.2.2.tgz#67e9ebb54da2607e818f360be0b69e9fde9c01ee"
-  integrity sha512-3djCQr25IxQIgpidxD8J0fTQ7/hMuoa5Nmv7delQc6sX4kXgv9e/pE01cywpmGZLi69H1KUH4dmZ4cPPJQrsQQ==
-
 "@types/body-parser@*":
   version "1.19.5"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.5.tgz#04ce9a3b677dc8bd681a17da1ab9835dc9d3ede4"
@@ -804,11 +776,6 @@
   integrity sha512-SSrD0c1OQzlFX7pGu1eXxSEjemej64aaNPRhhVYUGqXh0BtldAAx37MG8btcumvpgKyZp1F5Gn3JkktdxiFv6w==
   dependencies:
     "@types/node" "*"
-
-"@types/js-cookie@^3.0.3":
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/@types/js-cookie/-/js-cookie-3.0.6.tgz#a04ca19e877687bd449f5ad37d33b104b71fdf95"
-  integrity sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==
 
 "@types/json-schema@^7.0.12":
   version "7.0.15"
@@ -1580,11 +1547,6 @@ ci-info@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/ci-info/-/ci-info-4.0.0.tgz#65466f8b280fc019b9f50a5388115d17a63a44f2"
   integrity sha512-TdHqgGf9odd8SXNuxtUBVx8Nv+qZOejE6qyqiy5NtbYYQOeFa6zmHkxlPzmaLxWWHsU6nJmB7AETdVPi+2NBUg==
-
-classnames@^2.3.2:
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.5.1.tgz#ba774c614be0f016da105c858e7159eae8e7687b"
-  integrity sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==
 
 clean-css@^4.2.1:
   version "4.2.4"
@@ -3373,11 +3335,6 @@ postcss@^8.4.38:
     nanoid "^3.3.7"
     picocolors "^1.0.0"
     source-map-js "^1.2.0"
-
-preact@^10.13.1:
-  version "10.22.0"
-  resolved "https://registry.yarnpkg.com/preact/-/preact-10.22.0.tgz#a50f38006ae438d255e2631cbdaf7488e6dd4e16"
-  integrity sha512-RRurnSjJPj4rp5K6XoP45Ui33ncb7e4H7WiOHVpjbkvqvA3U+N8Z6Qbo0AE6leGYBV66n8EhEaFixvIu3SkxFw==
 
 prelude-ls@^1.2.1:
   version "1.2.1"
