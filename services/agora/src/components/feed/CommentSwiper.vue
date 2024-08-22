@@ -1,6 +1,7 @@
 <template>
   <div>
-    <swiper-container slides-per-view="1" @swiperslidechange="onSlideChange" navigation="true" class="commentBlock">
+    <swiper-container slides-per-view="1" @swiperslidechange="onSlideChange" navigation="true"
+      class=" zk-background-sheet commentBlock">
       <swiper-slide v-for="comment in commentList" v-bind:key="comment" class="slideComponent">
         <div class="userComment">
           {{ comment }}
@@ -31,13 +32,11 @@ const onSlideChange = () => { // e: unknown
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .commentBlock {
   font-size: 1.2rem;
   width: 100%;
   height: 18rem;
-  background-color: #ecfeff;
-  border-radius: 15px;
 }
 
 .slideComponent {

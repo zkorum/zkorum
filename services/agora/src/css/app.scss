@@ -1,23 +1,9 @@
 // app global css in SCSS form
 
-$color-brand: #00275b;
+$color-brand: #000000;
 
-.bg-brand {
-    background-color: $color-brand !important;
-}
-
-.text-brand {
+.zk-text-brand {
     color: $color-brand !important;
-}
-
-$color-brand-teal: #4be7de;
-
-.bg-brand-teal {
-    background-color: $color-brand-teal !important;
-}
-
-.text-brand-teal {
-    color: $color-brand-teal !important;
 }
 
 $color-brand-dark: #00204a;
@@ -26,16 +12,16 @@ $color-brand-dark: #00204a;
     background-color: $color-brand-dark !important;
 }
 
-.text-brand-dark {
-    color: $color-brand-dark !important;
-}
-
 $color-essec-blue: #1da1e1;
 
 .bg-essec-blue {
     background-color: $color-essec-blue !important;
 }
 
-.text-essec-blue {
-    color: $color-essec-blue !important;
+.zk-background-sheet {
+    background-color: $secondary;
+    border-radius: 15px;
+    border-color: $accent;
+    border-width: 1px;
+    border-style: solid;
 }

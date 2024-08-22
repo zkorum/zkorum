@@ -15,7 +15,7 @@
         <router-view />
       </q-page-container>
     -->
-      <router-view />
+      <router-view class="" />
 
     </div>
   </div>
@@ -27,7 +27,7 @@
 // const props = withDefaults(defineProps<OnboardingLayoutProps>(), { hasGoBackButton: true, hasHelpButton: true })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .container {
   max-width: min(30rem, 100%);
   margin: auto;

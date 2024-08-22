@@ -1,5 +1,5 @@
   <template>
-    <ZKButton label="Go Back" color-flex="secondary" @click="backButtonClicked()" />
+    <ZKButton label="Go Back" color-flex="info" @click="backButtonClicked()" />
   </template>
 
 <script setup lang="ts">

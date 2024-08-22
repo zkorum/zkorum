@@ -15,7 +15,7 @@ const props = defineProps<ButtonProps>();
 
 const buttonColor = ref("");
 if (props.colorFlex == undefined) {
-  buttonColor.value = "deep-purple";
+  buttonColor.value = "accent";
 } else {
   buttonColor.value = props.colorFlex;
 }

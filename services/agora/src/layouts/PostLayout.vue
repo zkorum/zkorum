@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header reveal bordered class="bg-white text-brand" height-hint="98">
+    <q-header reveal bordered height-hint="98">
       <q-toolbar class="content-between" style="width: 100%">
         <q-btn @click="$router.push('/login')" style="width: 100%">Login</q-btn>
         <div style="width: 100%">
@@ -21,7 +21,7 @@
       <router-view />
     </q-page-container>
 
-    <q-footer reveal bordered class="bg-white text-brand">
+    <q-footer reveal bordered>
       <q-tabs no-caps align="center" outside-arrows mobile-arrows>
         <q-route-tab to="/" :icon="currentRoute === '/' ? 'home' : 'o_home'" />
         <q-route-tab to="/communities" :icon="currentRoute === '/communities' ? 'group' : 'o_group'

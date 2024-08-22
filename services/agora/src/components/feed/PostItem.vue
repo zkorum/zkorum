@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="container">
-      <div class="innerContainer postBackground">
+      <div class="innerContainer zk-background-sheet">
         <div class="topTag">
-          <q-avatar size="3rem" color="essec-blue" text-color="white">E</q-avatar>
+          <q-avatar size="3rem" color="primary" text-color="white">E</q-avatar>
           <div class="metadata">
             <div class="domain">
               {{ extendedPostData.author.domain }}
@@ -30,21 +30,20 @@
 
         <div class="bottomButtons">
           <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment"
-            color-flex="light-blue-8" text-color-flex="white" @click="(event) => jumpToComments(event)" />
+            @click="(event) => jumpToComments(event)" />
 
           <!--
           <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => showResultClicked(event)" />
           -->
 
-          <ZKButton icon="mdi-share-variant-outline" color-flex="light-blue-8" text-color-flex="white"
-            @click="(event) => shareClicked(event)" />
+          <ZKButton icon="mdi-share-variant-outline" @click="(event) => shareClicked(event)" />
 
         </div>
 
       </div>
 
-      <div class="innerContainer postBackground" v-if="!compactMode">
+      <div class="innerContainer" v-if="!compactMode">
         <div class="componentTitle">
           Vote on other people's statements
         </div>
@@ -52,7 +51,8 @@
         <CommentSwiper :comment-list="commentList" />
       </div>
 
-      <div class="innerContainer postBackground" v-if="!compactMode && extendedPostData.payload.poll !== undefined">
+      <div class="innerContainer zk-background-sheet"
+        v-if="!compactMode && extendedPostData.payload.poll !== undefined">
 
         <div class="componentTitle">
           What other people think about the statement
@@ -128,7 +128,7 @@ function processPostBody(body: string) {
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .innerContainer {
   padding: 1rem;
   display: flex;
@@ -145,8 +145,6 @@ function processPostBody(body: string) {
 .metadata {
   display: flex;
   flex-direction: column;
-  gap: 0rem;
-  font-size: 0.8rem;
 }
 
 .domain {
@@ -154,12 +152,12 @@ function processPostBody(body: string) {
 }
 
 .titleDiv {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: bolder;
 }
 
 .bodyDiv {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .postDiv {
@@ -176,11 +174,6 @@ function processPostBody(body: string) {
 
 .commentItem {
   padding: 1rem;
-}
-
-.postBackground {
-  background-color: #cffafe;
-  border-radius: 15px;
 }
 
 .container {
