@@ -5,7 +5,7 @@
         <RouterLink :to="{ name: 'community-single', params: { countryCode: communityItem.code.toLowerCase() } }">
           <div class="communityItemStyle">
             <div class="flagStyle">
-              <img class="flagImage" :src="'/public/images/communities/flags/' + communityItem.code + '.svg'" />
+              <img class="flagImage" :src="'/images/communities/flags/' + communityItem.code + '.svg'" />
             </div>
             <div class="flagCountryName">
               {{ communityItem.countryName }}
