@@ -19,15 +19,13 @@
     <q-footer bordered class="bg-white">
       <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
         <q-route-tab :to="{ name: 'default-home-feed' }"
-          :icon="currentRoute === '/' ? 'mdi-newspaper' : 'mdi-newspaper'" />
-        <q-route-tab :to="{ name: 'community-explore' }" :icon="currentRoute === '/community/explore' ? 'mdi-account-group' : 'mdi-account-group'
-          " />
-        <q-route-tab :to="{ name: 'notifications' }" :icon="currentRoute === '/notifications'
-          ? 'mdi-bell'
-          : 'mdi-bell'
-          " />
-        <q-route-tab :to="{ name: 'settings' }" :icon="currentRoute === '/settings' ? 'mdi-account-circle' : 'mdi-account-circle'
-          " />
+          :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
+        <q-route-tab :to="{ name: 'community-explore' }"
+          :icon="currentRouteName === 'community-explore' ? 'mdi-account-group' : 'mdi-account-group'" />
+        <q-route-tab :to="{ name: 'notifications' }"
+          :icon="currentRouteName === 'notifications' ? 'mdi-bell' : 'mdi-bell'" />
+        <q-route-tab :to="{ name: 'user-profile', params: { userId: 'TEST_USER_ID' } }"
+          :icon="currentRouteName === 'user-profile' ? 'mdi-account-circle' : 'mdi-account-circle'" />
       </q-tabs>
     </q-footer>
   </q-layout>
@@ -146,7 +144,7 @@ const props = defineProps<MainLayoutProps>()
 // }
 
 const route = useRoute();
-const currentRoute = route.path;
+const currentRouteName = route.name;
 </script>
 
 <style scoped>

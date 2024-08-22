@@ -18,6 +18,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/community",
     component: () => import("layouts/MainLayout.vue"),
+    props: { hasGoBackButton: false } as MainLayoutProps,
     children: [
       {
         path: "explore",
@@ -46,22 +47,22 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
+    props: { hasGoBackButton: false } as MainLayoutProps,
     children: [
       {
         path: "/notifications",
         component: () => import("@/pages/notifications/index.vue"),
         name: "notifications"
       },
-    ],
-  },
-  {
-    path: "/",
-    component: () => import("layouts/MainLayout.vue"),
-    children: [
       {
-        path: "/settings",
-        component: () => import("@/pages/settings/index.vue"),
-        name: "settings"
+        path: "/user-profile",
+        children: [
+          {
+            path: ":userId",
+            component: () => import("@/pages/user-profile/index.vue"),
+            name: "user-profile"
+          }
+        ]
       },
     ],
   },
