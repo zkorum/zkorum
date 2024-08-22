@@ -7,9 +7,9 @@
         </div>
 
         <div class="thumbsButtonBlock">
-          <ZKButton icon="thumb_up" />
+          <ZKButton icon="mdi-thumb-up" />
           <ZKButton label="Pass" outline text-color-flex="black" />
-          <ZKButton icon="thumb_down" />
+          <ZKButton icon="mdi-thumb-down" />
         </div>
       </swiper-slide>
     </swiper-container>

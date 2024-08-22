@@ -3,11 +3,11 @@
     <q-header :reveal="true" bordered class="bg-white" height-hint="98">
       <q-toolbar class="content-between" style="width: 100%">
         <div style="width: 100%">
-          <ZKButton icon="arrow_back" text-color-flex="black" flat v-if="props.hasGoBackButton" />
+          <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="props.hasGoBackButton" />
         </div>
         <div class="menuButtons">
-          <ZKButton icon="settings" text-color-flex="black" flat />
-          <ZKButton icon="help" text-color-flex="black" flat />
+          <ZKButton icon="mdi-cog" text-color-flex="black" flat />
+          <ZKButton icon="mdi-help" text-color-flex="black" flat />
         </div>
       </q-toolbar>
     </q-header>
@@ -18,14 +18,15 @@
 
     <q-footer bordered class="bg-white">
       <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
-        <q-route-tab :to="{ name: 'default-home-feed' }" :icon="currentRoute === '/' ? 'home' : 'o_home'" />
-        <q-route-tab :to="{ name: 'community-explore' }" :icon="currentRoute === '/community/explore' ? 'group' : 'o_group'
+        <q-route-tab :to="{ name: 'default-home-feed' }"
+          :icon="currentRoute === '/' ? 'mdi-newspaper' : 'mdi-newspaper'" />
+        <q-route-tab :to="{ name: 'community-explore' }" :icon="currentRoute === '/community/explore' ? 'mdi-account-group' : 'mdi-account-group'
           " />
         <q-route-tab :to="{ name: 'notifications' }" :icon="currentRoute === '/notifications'
-          ? 'notifications'
-          : 'o_notifications'
+          ? 'mdi-bell'
+          : 'mdi-bell'
           " />
-        <q-route-tab :to="{ name: 'settings' }" :icon="currentRoute === '/settings' ? 'settings' : 'o_settings'
+        <q-route-tab :to="{ name: 'settings' }" :icon="currentRoute === '/settings' ? 'mdi-account-circle' : 'mdi-account-circle'
           " />
       </q-tabs>
     </q-footer>

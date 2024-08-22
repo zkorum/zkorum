@@ -29,15 +29,15 @@
         </div>
 
         <div class="bottomButtons">
-          <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="comment" color-flex="light-blue-8"
-            text-color-flex="white" @click="(event) => jumpToComments(event)" />
+          <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment"
+            color-flex="light-blue-8" text-color-flex="white" @click="(event) => jumpToComments(event)" />
 
           <!--
           <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => showResultClicked(event)" />
           -->
 
-          <ZKButton icon="share" color-flex="light-blue-8" text-color-flex="white"
+          <ZKButton icon="mdi-share" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => shareClicked(event)" />
 
         </div>
