@@ -1,11 +1,12 @@
 import { RouteRecordRaw } from "vue-router";
 import OnboardingLayout from "layouts/OnboardingLayout.vue";
-import { OnboardingLayoutProps } from "@/utils/model/props";
+import { MainLayoutProps, OnboardingLayoutProps } from "@/utils/model/props";
 
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
+    props: { hasGoBackButton: false } as MainLayoutProps,
     children: [
       {
         path: "",
@@ -13,11 +14,6 @@ const routes: RouteRecordRaw[] = [
         name: "default-home-feed"
       },
     ],
-  },
-  {
-    path: "/welcome",
-    component: () => import("@/pages/onboarding/index.vue"),
-    name: "welcome"
   },
   {
     path: "/community",
@@ -38,6 +34,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/post",
     component: () => import("layouts/MainLayout.vue"),
+    props: { hasGoBackButton: true } as MainLayoutProps,
     children: [
       {
         path: ":postSlugId",
@@ -69,12 +66,16 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: "/welcome",
+    component: () => import("@/pages/welcome/index.vue"),
+    name: "welcome"
+  },
+  {
     path: "/onboarding",
     children: [
       {
         path: "login",
         component: OnboardingLayout,
-        props: { hasGoBackButton: true, hasHelpButton: true } as OnboardingLayoutProps,
         children: [
           {
             path: "",

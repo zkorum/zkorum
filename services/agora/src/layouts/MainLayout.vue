@@ -3,7 +3,7 @@
     <q-header :reveal="true" bordered class="bg-white" height-hint="98">
       <q-toolbar class="content-between" style="width: 100%">
         <div style="width: 100%">
-          <ZKButton icon="menu" text-color-flex="black" flat />
+          <ZKButton icon="arrow_back" text-color-flex="black" flat v-if="props.hasGoBackButton" />
         </div>
         <div class="menuButtons">
           <ZKButton icon="settings" text-color-flex="black" flat />
@@ -82,7 +82,11 @@
 <script setup lang="ts">
 // import { ref } from 'vue';
 import ZKButton from "@/components/ui-library/ZKButton.vue";
+import { MainLayoutProps } from "@/utils/model/props";
 import { useRoute } from "vue-router";
+
+const props = defineProps<MainLayoutProps>()
+
 // import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
 //
 // defineOptions({

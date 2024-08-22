@@ -5,3 +5,7 @@ export interface OnboardingLayoutProps {
   hasGoBackButton: boolean;
   hasHelpButton: boolean;
 }
+
+export interface MainLayoutProps {
+  hasGoBackButton: boolean;
+}
