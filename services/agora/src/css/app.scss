@@ -21,7 +21,7 @@ $color-essec-blue: #1da1e1;
 .zk-background-sheet {
     background-color: $secondary;
     border-radius: 15px;
-    border-color: $accent;
-    border-width: 1px;
-    border-style: solid;
+    box-shadow:
+        rgba(0, 0, 0, 0.15) 0px 6px 15px 0px,
+        rgba(0, 0, 0, 0.15) 0px 0px 0px 1px;
 }
