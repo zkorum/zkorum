@@ -4,17 +4,13 @@
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
           <div v-for="(postData, index) in compactPostDataList" :key="index">
-            <PostItem :extended-post-data="postData" :compact-mode="true" @click="launchPost(postData)" />
+            <RouterLink :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId } }">
+              <PostItem :extended-post-data="postData" :compact-mode="true" @click="launchPost(postData)" />
+            </RouterLink>
           </div>
         </div>
       </q-infinite-scroll>
     </q-page>
-
-    <q-dialog v-model="openPostDialog" class="bg-accent" maximized>
-      <PostDialogWrapper v-model="openPostDialog">
-        <PostItem :extended-post-data="dyanmicPostData" :compact-mode="false" />
-      </PostDialogWrapper>
-    </q-dialog>
 
   </div>
 </template>
@@ -22,7 +18,6 @@
 <script setup lang="ts">
 
 import PostItem from "./PostItem.vue";
-import PostDialogWrapper from "./PostDialogWrapper.vue";
 import { Ref, onBeforeUnmount, onMounted, ref } from "vue";
 import { DefaultApiFactory } from "src/api/api";
 import { api } from "src/boot/axios";
