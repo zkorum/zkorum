@@ -37,7 +37,7 @@
             @click="(event) => showResultClicked(event)" />
           -->
 
-          <ZKButton icon="mdi-share" color-flex="light-blue-8" text-color-flex="white"
+          <ZKButton icon="mdi-share-variant-outline" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => shareClicked(event)" />
 
         </div>
