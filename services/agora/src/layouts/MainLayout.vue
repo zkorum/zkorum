@@ -157,6 +157,6 @@ const currentRoute = route.path;
 .container {
   max-width: min(50rem, 100%);
   margin: auto;
-  padding: 1rem;
+  padding: 0.5rem;
 }
 </style>

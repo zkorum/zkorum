@@ -187,7 +187,6 @@ function processPostBody(body: string) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 0.5rem;
 }
 
 .componentTitle {

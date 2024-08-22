@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-page class="container">
+    <q-page>
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
           <div v-for="(postData, index) in compactPostDataList" :key="index">
@@ -204,11 +204,6 @@ async function onLoad() {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  padding-top: 1rem;
-}
-
-.container {
-  padding: 0.5rem;
 }
 
 .worldTags {

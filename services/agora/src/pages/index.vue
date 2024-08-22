@@ -1,7 +1,9 @@
 <template>
   <div>
-    <CompactCommunity />
-    <CompactPostList />
+    <div class="container">
+      <CompactCommunity />
+      <CompactPostList />
+    </div>
   </div>
 
   <q-page-sticky position="bottom-right" :offset="[18, 18]">
@@ -14,3 +16,11 @@
 import CompactPostList from "@/components/feed/CompactPostList.vue";
 import CompactCommunity from "@/components/feed/CompactCommunity.vue";
 </script>
+
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+</style>

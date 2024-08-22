@@ -1,23 +1,23 @@
 <template>
-  <div class="container">
-    <swiper-container slidesPerView="3.5">
-      <swiper-slide v-for="communityItem in communityList" v-bind:key="communityItem.emoji">
-        <RouterLink :to="{ name: 'community-single', params: { countryCode: communityItem.code.toLowerCase() } }">
-          <div class="communityItemStyle">
-            <div class="flagStyle">
-              <img class="flagImage" :src="'/images/communities/flags/' + communityItem.code + '.svg'" />
+  <div>
+    <div class="container">
+      <swiper-container slidesPerView="4.5">
+        <swiper-slide v-for="communityItem in communityList" v-bind:key="communityItem.emoji">
+          <RouterLink :to="{ name: 'community-single', params: { countryCode: communityItem.code.toLowerCase() } }">
+            <div class="communityItemStyle">
+              <div class="flagStyle">
+                <img class="flagImage" :src="'/images/communities/flags/' + communityItem.code + '.svg'" />
+              </div>
+              <div class="flagCountryName">
+                {{ communityItem.countryName }}
+              </div>
             </div>
-            <div class="flagCountryName">
-              {{ communityItem.countryName }}
-            </div>
-          </div>
 
-        </RouterLink>
-      </swiper-slide>
-    </swiper-container>
+          </RouterLink>
+        </swiper-slide>
+      </swiper-container>
+    </div>
   </div>
-
-
 </template>
 
 <script setup lang="ts">
@@ -69,9 +69,7 @@ a {
 }
 
 .container {
-  background-color: aliceblue;
   border-radius: 15px;
-  margin: 1rem;
 }
 
 .communityItemStyle {
