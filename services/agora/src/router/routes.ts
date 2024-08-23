@@ -38,6 +38,11 @@ const routes: RouteRecordRaw[] = [
     props: { hasGoBackButton: true } as MainLayoutProps,
     children: [
       {
+        path: "create/:communityName?",
+        component: () => import("@/pages/post/create/index.vue"),
+        name: "create-post"
+      },
+      {
         path: ":postSlugId",
         component: () => import("@/pages/post/index.vue"),
         name: "single-post"

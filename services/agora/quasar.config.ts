@@ -36,6 +36,7 @@ export default configure((ctx) => {
 
       "roboto-font", // optional, you are not bound to it
       "mdi-v7", // optional, you are not bound to it
+      "material-icons"
     ],
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
