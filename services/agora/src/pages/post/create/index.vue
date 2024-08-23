@@ -30,7 +30,7 @@
 
           <div>
             <ZKButton label="Submit" type="submit" />
-            <ZKButton label="Reset" type="reset" color-flex="primary" class="q-ml-sm" />
+            <ZKButton label="Reset" type="reset" color-flex="positive" class="q-ml-sm" />
           </div>
 
         </div>
@@ -74,7 +74,8 @@ function onReset() {
 
 <style scoped lang="scss">
 .header {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
 }
 
 .formStyle {
@@ -82,5 +83,11 @@ function onReset() {
   flex-direction: column;
   gap: 2rem;
   padding: 1rem;
+}
+
+.formElement {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 </style>
