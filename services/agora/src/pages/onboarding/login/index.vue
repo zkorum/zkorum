@@ -18,8 +18,6 @@
       <ZKButton label="Send Verification Code" :disabled="!acceptedAgreements || emailInput.length == 0"
         type="submit" />
 
-      <FormBackButton />
-
       <ZKButton label="Skip Email Page" color-flex="black"
         @click="router.push({ name: 'passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
 
@@ -33,7 +31,6 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import ZKInputField from "@/components/ui-library/ZKInputField.vue";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
-import FormBackButton from "@/components/feed/FormBackButton.vue";
 import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
 import { useRouter } from "vue-router";
 import { urlEncode } from "@/shared/common/base64";
