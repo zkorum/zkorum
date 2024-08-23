@@ -17,15 +17,107 @@
 <script setup lang="ts">
 
 import PostItem from "./PostItem.vue";
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { ref } from "vue";
 import { usePostStore } from "@/stores/post";
 
-// const passphrase = ref("nothing");
-// const verified = ref<boolean | string>("nothing")
+const postData = usePostStore().dummyPostData;
+const compactPostDataList = ref([postData, postData, postData]);
 
-let interval: NodeJS.Timeout | undefined = undefined
+async function onLoad() {
+  console.log("Infinite list to be implemented");
+  /*
+  // Fetch more data from backend
+  if (false) {
+    compactPostDataList.value = await fetchFeedMore({
+      showHidden: false,
+      lastReactedAt: undefined,
+    });
+  }
+  */
+}
+
+/*
+// let interval: NodeJS.Timeout | undefined = undefined
+
+onBeforeUnmount(() => {
+  clearInterval(interval);
+})
+
+
+// const todos = ref<Todo[]>([
+//   {
+//     id: 1,
+//     content: 'ct1'
+//   },
+//   {
+//     id: 2,
+//     content: 'ct2'
+//   },
+//   {
+//     id: 3,
+//     content: 'ct3'
+//   },
+//   {
+//     id: 4,
+//     content: 'ct4'
+//   },
+//   {
+//     id: 5,
+//     content: 'ct5'
+//   }
+// ]);
+
+// const meta = ref<Meta>({
+//   totalCount: 1200
+// });
+
+
+interface FetchFeedProps {
+  showHidden: boolean;
+  lastReactedAt: Date | undefined;
+}
+
+
+
+async function fetchFeedMore({
+  showHidden,
+  lastReactedAt,
+}: FetchFeedProps): Promise<ExtendedPostData[]> {
+  const response = await DefaultApiFactory(
+    undefined,
+    undefined,
+    api
+  ).apiV1FeedFetchMorePost({
+    showHidden: showHidden,
+    lastReactedAt: lastReactedAt?.toISOString(),
+  });
+  if (response.data !== undefined) {
+    return response.data.map((value) => {
+      return {
+        metadata: {
+          uid: value.metadata.uid,
+          slugId: value.metadata.slugId,
+          isHidden: value.metadata.isHidden,
+          updatedAt: new Date(value.metadata.updatedAt),
+          lastReactedAt: new Date(value.metadata.lastReactedAt),
+          commentCount: value.metadata.commentCount,
+        },
+        payload: value.payload,
+        author: value.author,
+      };
+    });
+  } else {
+    console.warn("No data fetched");
+    return [];
+  }
+}
+
+
 
 onMounted(async () => {
+  // const passphrase = ref("nothing");
+  // const verified = ref<boolean | string>("nothing")
+
   // await requestAuth.authenticate("test@email.com", false, getPlatform($q.platform));
   // if ($q.platform.is.mobile) {
   //   // try {
@@ -97,99 +189,8 @@ onMounted(async () => {
   //   // }, 1000)
   // }
 });
-
-onBeforeUnmount(() => {
-  clearInterval(interval);
-})
-
-/*
-interface FetchFeedProps {
-  showHidden: boolean;
-  lastReactedAt: Date | undefined;
-}
 */
 
-/*
-async function fetchFeedMore({
-  showHidden,
-  lastReactedAt,
-}: FetchFeedProps): Promise<ExtendedPostData[]> {
-  const response = await DefaultApiFactory(
-    undefined,
-    undefined,
-    api
-  ).apiV1FeedFetchMorePost({
-    showHidden: showHidden,
-    lastReactedAt: lastReactedAt?.toISOString(),
-  });
-  if (response.data !== undefined) {
-    return response.data.map((value) => {
-      return {
-        metadata: {
-          uid: value.metadata.uid,
-          slugId: value.metadata.slugId,
-          isHidden: value.metadata.isHidden,
-          updatedAt: new Date(value.metadata.updatedAt),
-          lastReactedAt: new Date(value.metadata.lastReactedAt),
-          commentCount: value.metadata.commentCount,
-        },
-        payload: value.payload,
-        author: value.author,
-      };
-    });
-  } else {
-    console.warn("No data fetched");
-    return [];
-  }
-}
-*/
-
-const postData = usePostStore().dummyPostData;
-const compactPostDataList = ref([postData, postData, postData]);
-
-defineOptions({
-  name: "IndexPage",
-});
-
-async function onLoad() {
-  console.log("Infinite list to be implemented");
-  /*
-  // Fetch more data from backend
-  if (false) {
-    compactPostDataList.value = await fetchFeedMore({
-      showHidden: false,
-      lastReactedAt: undefined,
-    });
-  }
-  */
-}
-
-// const todos = ref<Todo[]>([
-//   {
-//     id: 1,
-//     content: 'ct1'
-//   },
-//   {
-//     id: 2,
-//     content: 'ct2'
-//   },
-//   {
-//     id: 3,
-//     content: 'ct3'
-//   },
-//   {
-//     id: 4,
-//     content: 'ct4'
-//   },
-//   {
-//     id: 5,
-//     content: 'ct5'
-//   }
-// ]);
-
-// const meta = ref<Meta>({
-//   totalCount: 1200
-// });
 </script>
 
 <style scoped>
