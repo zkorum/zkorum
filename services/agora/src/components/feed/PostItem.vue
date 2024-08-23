@@ -1,67 +1,73 @@
 <template>
   <div>
     <div class="container">
-      <div class="innerContainer zk-background-sheet">
-        <div class="topTag">
-          <q-avatar size="3rem" color="primary" text-color="white">E</q-avatar>
-          <div class="metadata">
-            <div class="domain">
-              {{ extendedPostData.author.domain }}
-            </div>
-            <div>
-              {{ getTrimmedPseudonym(extendedPostData.author.pseudonym) }}
-            </div>
-            <div>
-              {{ getTimeFromNow(extendedPostData.metadata.lastReactedAt) }}
+      <ZKCard>
+        <div class="innerContainer">
+          <div class="topTag">
+            <q-avatar size="3rem" color="primary" text-color="white">E</q-avatar>
+            <div class="metadata">
+              <div class="domain">
+                {{ extendedPostData.author.domain }}
+              </div>
+              <div>
+                {{ getTrimmedPseudonym(extendedPostData.author.pseudonym) }}
+              </div>
+              <div>
+                {{ getTimeFromNow(extendedPostData.metadata.lastReactedAt) }}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="postDiv">
-          <div class="titleDiv">
-            {{ extendedPostData.payload.title }}
+          <div class="postDiv">
+            <div class="titleDiv">
+              {{ extendedPostData.payload.title }}
+            </div>
+
+            <div class="bodyDiv">
+              {{ processPostBody(extendedPostData.payload.body || '') }}
+            </div>
+
           </div>
 
-          <div class="bodyDiv">
-            {{ processPostBody(extendedPostData.payload.body || '') }}
-          </div>
+          <div class="bottomButtons">
+            <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment"
+              @click="(event) => jumpToComments(event)" />
 
-        </div>
-
-        <div class="bottomButtons">
-          <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment"
-            @click="(event) => jumpToComments(event)" />
-
-          <!--
+            <!--
           <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"
             @click="(event) => showResultClicked(event)" />
           -->
 
-          <ZKButton icon="mdi-share-variant-outline" @click="(event) => shareClicked(event)" />
+            <ZKButton icon="mdi-share-variant-outline" @click="(event) => shareClicked(event)" />
+
+          </div>
 
         </div>
+      </ZKCard>
 
-      </div>
+      <div v-if="!compactMode">
+        <div>
+          <div class="componentTitle">
+            Vote on other people's statements
+          </div>
 
-      <div class="innerContainer" v-if="!compactMode">
-        <div class="componentTitle">
-          Vote on other people's statements
+          <ZKCard>
+            <CommentSwiper :comment-list="commentList" />
+          </ZKCard>
         </div>
-
-        <CommentSwiper :comment-list="commentList" />
       </div>
 
-      <div class="innerContainer zk-background-sheet"
-        v-if="!compactMode && extendedPostData.payload.poll !== undefined">
+      <ZKCard v-if="!compactMode && extendedPostData.payload.poll !== undefined">
+        <div class="innerContainer">
 
-        <div class="componentTitle">
-          What other people think about the statement
+          <div class="componentTitle">
+            What other people think about the statement
+          </div>
+
+          <poll-result-view :result="extendedPostData.payload.poll.result"
+            :options="extendedPostData.payload.poll.options" :pollResponse="undefined" /> <!-- TODO: pollResponse -->
         </div>
-
-        <poll-result-view :result="extendedPostData.payload.poll.result"
-          :options="extendedPostData.payload.poll.options" :pollResponse="undefined" /> <!-- TODO: pollResponse -->
-      </div>
-
+      </ZKCard>
     </div>
 
   </div>
@@ -71,6 +77,7 @@
 import { ExtendedPostData } from "@/shared/types/zod";
 import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
+import ZKCard from "../ui-library/ZKCard.vue";
 import PollResultView from "../poll/PollResultView.vue";
 import CommentSwiper from "./CommentSwiper.vue";
 import { useRouter } from "vue-router";

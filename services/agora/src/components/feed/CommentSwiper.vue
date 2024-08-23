@@ -1,7 +1,6 @@
 <template>
   <div>
-    <swiper-container slides-per-view="1" @swiperslidechange="onSlideChange" navigation="true"
-      class=" zk-background-sheet commentBlock">
+    <swiper-container slides-per-view="1" @swiperslidechange="onSlideChange" navigation="true" class="commentBlock">
       <swiper-slide v-for="comment in commentList" v-bind:key="comment" class="slideComponent">
         <div class="userComment">
           {{ comment }}
