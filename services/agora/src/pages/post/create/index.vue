@@ -8,6 +8,7 @@
           <div class="formElement">
             <div class="header">
               Community
+              <ZKButton round size="0.4rem" icon="mdi-help" />
             </div>
             <q-select no-error-icon v-model="communityName" :options="communityOptions" />
           </div>
