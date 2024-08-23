@@ -1,5 +1,11 @@
 <template>
   <div>
+    <div class="componentTitle">
+      <div class="titleTag">
+        Vote on other people's statements
+      </div>
+    </div>
+
     <swiper-container slides-per-view="1" @swiperslidechange="onSlideChange" navigation="true" class="commentBlock">
       <swiper-slide v-for="comment in commentList" v-bind:key="comment" class="slideComponent">
         <div class="userComment">
@@ -57,5 +63,15 @@ const onSlideChange = () => { // e: unknown
 .userComment {
   width: min(100%, 30rem);
   text-align: center;
+}
+
+.componentTitle {
+  margin: 0.5rem;
+}
+
+.titleTag {
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 </style>

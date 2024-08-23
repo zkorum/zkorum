@@ -42,3 +42,5 @@ const percentageStyle = props.optionPercentage <= 50
 //
 // const todoCount = computed(() => props.todos.length);
 </script>
+
+<style scoped></style>

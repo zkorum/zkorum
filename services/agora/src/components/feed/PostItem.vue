@@ -29,6 +29,12 @@
 
           </div>
 
+          <div class="innerContainer" v-if="!compactMode && extendedPostData.payload.poll !== undefined">
+
+            <poll-result-view :result="extendedPostData.payload.poll.result"
+              :options="extendedPostData.payload.poll.options" :pollResponse="undefined" /> <!-- TODO: pollResponse -->
+          </div>
+
           <div class="bottomButtons">
             <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment"
               @click="(event) => jumpToComments(event)" />
@@ -46,28 +52,11 @@
       </ZKCard>
 
       <div v-if="!compactMode">
-        <div>
-          <div class="componentTitle">
-            Vote on other people's statements
-          </div>
-
-          <ZKCard>
-            <CommentSwiper :comment-list="commentList" />
-          </ZKCard>
-        </div>
+        <ZKCard>
+          <CommentSwiper :comment-list="commentList" />
+        </ZKCard>
       </div>
 
-      <ZKCard v-if="!compactMode && extendedPostData.payload.poll !== undefined">
-        <div class="innerContainer">
-
-          <div class="componentTitle">
-            What other people think about the statement
-          </div>
-
-          <poll-result-view :result="extendedPostData.payload.poll.result"
-            :options="extendedPostData.payload.poll.options" :pollResponse="undefined" /> <!-- TODO: pollResponse -->
-        </div>
-      </ZKCard>
     </div>
 
   </div>
@@ -187,11 +176,5 @@ function processPostBody(body: string) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.componentTitle {
-  font-size: 1.2rem;
-  padding-top: 1rem;
-  padding-left: 0.5rem;
 }
 </style>

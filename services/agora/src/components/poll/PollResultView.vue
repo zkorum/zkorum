@@ -1,6 +1,11 @@
 <template>
-  <div class="column justify-center" style="gap: 10px;">
-    <div class="column justify-center full-width q-px-sm">
+  <div>
+
+    <div class="headerTitle">
+      What other people think about the statement
+    </div>
+
+    <div class="pollOptionList">
       <option-view :option="options.option1"
         :optionResponded="pollResponse !== undefined && pollResponse.optionChosen === 1"
         :optionPercentage="totalCount === 0 ? 0 : Math.round((result.option1Response * 100) / totalCount)" />
@@ -47,3 +52,16 @@ const totalCount =
   zeroIfUndefined(props.result.option5Response) +
   zeroIfUndefined(props.result.option6Response);
 </script>
+
+<style scoped>
+.pollOptionList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.headerTitle {
+  font-size: 1rem;
+  padding-bottom: 0.5rem;
+}
+</style>
