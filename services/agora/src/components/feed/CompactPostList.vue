@@ -5,33 +5,23 @@
         <div class="postListFlex">
           <div v-for="(postData, index) in compactPostDataList" :key="index">
             <RouterLink :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId } }">
-              <PostItem :extended-post-data="postData" :compact-mode="true" @click="launchPost(postData)" />
+              <PostItem :extended-post-data="postData" :compact-mode="true" />
             </RouterLink>
           </div>
         </div>
       </q-infinite-scroll>
     </q-page>
-
   </div>
 </template>
 
 <script setup lang="ts">
 
 import PostItem from "./PostItem.vue";
-import { Ref, onBeforeUnmount, onMounted, ref } from "vue";
-import { DefaultApiFactory } from "src/api/api";
-import { api } from "src/boot/axios";
-import { ExtendedPostData } from "src/shared/types/zod";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { usePostStore } from "@/stores/post";
 
 // const passphrase = ref("nothing");
 // const verified = ref<boolean | string>("nothing")
-
-const postDataStatic = usePostStore().postDataStatic;
-
-const dyanmicPostData = ref<ExtendedPostData>(postDataStatic);
-
-const openPostDialog = ref(false);
 
 let interval: NodeJS.Timeout | undefined = undefined
 
@@ -112,16 +102,14 @@ onBeforeUnmount(() => {
   clearInterval(interval);
 })
 
+/*
 interface FetchFeedProps {
   showHidden: boolean;
   lastReactedAt: Date | undefined;
 }
+*/
 
-function launchPost(postData: ExtendedPostData) {
-  dyanmicPostData.value = postData;
-  openPostDialog.value = true;
-}
-
+/*
 async function fetchFeedMore({
   showHidden,
   lastReactedAt,
@@ -154,21 +142,26 @@ async function fetchFeedMore({
     return [];
   }
 }
+*/
 
 const postData = usePostStore().dummyPostData;
-const compactPostDataList: Ref<ExtendedPostData[]> = ref([postData, postData, postData]);
+const compactPostDataList = ref([postData, postData, postData]);
 
 defineOptions({
   name: "IndexPage",
 });
 
 async function onLoad() {
+  console.log("Infinite list to be implemented");
+  /*
+  // Fetch more data from backend
   if (false) {
     compactPostDataList.value = await fetchFeedMore({
       showHidden: false,
       lastReactedAt: undefined,
     });
   }
+  */
 }
 
 // const todos = ref<Todo[]>([

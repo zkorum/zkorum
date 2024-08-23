@@ -29,10 +29,10 @@
 
           </div>
 
-          <div class="innerContainer" v-if="!compactMode && extendedPostData.payload.poll !== undefined">
+          <div class="innerContainer" v-if="!compactMode && extendedPostData.payload.poll.hasPoll">
 
-            <poll-result-view :result="extendedPostData.payload.poll.result"
-              :options="extendedPostData.payload.poll.options" :pollResponse="undefined" /> <!-- TODO: pollResponse -->
+            <poll-result-view :poll-options="extendedPostData.payload.poll.options" :pollResponse="undefined" />
+            <!-- TODO: pollResponse -->
           </div>
 
           <div class="bottomButtons">
@@ -63,7 +63,6 @@
 </template>
 
 <script setup lang="ts">
-import { ExtendedPostData } from "@/shared/types/zod";
 import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
@@ -71,6 +70,7 @@ import PollResultView from "../poll/PollResultView.vue";
 import CommentSwiper from "./CommentSwiper.vue";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
+import { DummyPostDataFormat } from "@/stores/post";
 
 const router = useRouter();
 
@@ -88,7 +88,7 @@ const commentList = ref<string[]>([
 // const displayResults = ref(false);
 
 const props = defineProps<{
-  extendedPostData: ExtendedPostData,
+  extendedPostData: DummyPostDataFormat,
   compactMode: boolean
 }>()
 
