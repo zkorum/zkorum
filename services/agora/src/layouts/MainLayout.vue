@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header :reveal="true" bordered class="bg-white" height-hint="98">
+    <q-header :reveal="true" bordered class="menuStyle" height-hint="98">
       <q-toolbar class="content-between" style="width: 100%">
         <div style="width: 100%">
           <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="props.hasGoBackButton"
@@ -17,7 +17,7 @@
       <router-view />
     </q-page-container>
 
-    <q-footer bordered class="bg-white">
+    <q-footer bordered class="menuStyle">
       <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
         <q-route-tab :to="{ name: 'default-home-feed' }"
           :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
@@ -56,5 +56,9 @@ const currentRouteName = route.name;
   max-width: min(50rem, 100%);
   margin: auto;
   padding: 0.5rem;
+}
+
+.menuStyle {
+  background-color: #fafafa;
 }
 </style>
