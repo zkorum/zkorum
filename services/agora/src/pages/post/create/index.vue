@@ -1,7 +1,5 @@
 <template>
   <div>
-    <h3>Create Post</h3>
-
     <q-form @submit="onSubmit" @reset="onReset">
       <ZKCard>
         <div class="formStyle">

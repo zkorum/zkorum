@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="container">
-      <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat @click="router.back()" />
+      <TopMenuBar :has-back-button="true" />
 
       <!--
       <q-toolbar>
@@ -21,17 +21,13 @@
 
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
-import ZKButton from "@/components/ui-library/ZKButton.vue";
+import TopMenuBar from "@/components/navigation/TopMenuBar.vue";
 
 // import { OnboardingLayoutProps } from "@/utils/model/props";
 // const props = withDefaults(defineProps<OnboardingLayoutProps>(), { hasGoBackButton: true, hasHelpButton: true })
-
-const router = useRouter();
 
 </script>
 
