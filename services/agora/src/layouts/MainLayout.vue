@@ -21,9 +21,9 @@
       <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
         <q-route-tab :to="{ name: 'default-home-feed' }"
           :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
-        <!--
         <q-route-tab :to="{ name: 'community-explore' }"
           :icon="currentRouteName === 'community-explore' ? 'mdi-account-group' : 'mdi-account-group'" />
+        <!--
         <q-route-tab :to="{ name: 'notifications' }"
           :icon="currentRouteName === 'notifications' ? 'mdi-bell' : 'mdi-bell'" />
         -->
