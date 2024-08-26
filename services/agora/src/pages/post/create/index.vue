@@ -19,7 +19,7 @@
 
         <div class="formElement">
           <q-input borderless no-error-icon type="text" label="Title" v-model="postTitle" lazy-rules
-            :rules="[val => val && val.length > 0]" class="titleStyle" autofocus />
+            :rules="[val => val && val.length > 0]" class="titleStyle" />
         </div>
 
         <div class="formElement">
@@ -50,7 +50,7 @@
     </q-form>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="mdi-poll" color="accent" @click="enablePolling = !enablePolling" />
+      <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent" @click="enablePolling = !enablePolling" />
     </q-page-sticky>
 
   </div>
