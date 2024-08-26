@@ -2,7 +2,6 @@
   <div>
     <q-form @submit="onSubmit">
       <div class="formStyle">
-
         <div>
           <ZKButton @click="openCommunitySheet()">
             <div class="communityButton">
@@ -25,17 +24,19 @@
           <q-input autogrow borderless no-error-icon type="textarea" label="Body text" v-model="postBody" lazy-rules />
 
           <ZKCard v-if="enablePolling" class="pollingForm">
-            <div class="cardPadding">
-              <PollingFormInputOption title="Option 1 *" v-model="pollingOption1" />
-              <PollingFormInputOption title="Option 2 *" v-model="pollingOption2" />
-              <PollingFormInputOption title="Option 3 *" v-model="pollingOption3" v-if="numPollOptions > 2" />
-              <PollingFormInputOption title="Option 4 *" v-model="pollingOption4" v-if="numPollOptions > 3" />
-              <PollingFormInputOption title="Option 5 *" v-model="pollingOption5" v-if="numPollOptions > 4" />
-              <PollingFormInputOption title="Option 6 *" v-model="pollingOption6" v-if="numPollOptions > 5" />
+            <div class="pollingFlexStyle">
+              <div v-for="(item, index) in pollingOptionList" :key="index" class="pollingItem">
+                <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index + 1)"
+                  v-model="pollingOptionList[index]" :style="{ width: '100%', padding: '1rem' }" />
+                <div :style="{ width: '2rem' }">
+                  <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
+                    v-if="pollingOptionList.length != 2" text-color-flex="primary" />
+                </div>
 
-              <div class="buttonCluster">
-                <ZKButton label="Option" icon="mdi-plus" @click="numPollOptions++" :disable="numPollOptions == 6" />
-                <ZKButton label="Option" icon="mdi-minus" @click="numPollOptions--" :disable="numPollOptions == 2" />
+              </div>
+
+              <div>
+                <ZKButton label="Add Option" @click="addPollOption()" :disable="pollingOptionList.length == 6" />
               </div>
             </div>
           </ZKCard>
@@ -56,7 +57,6 @@
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
-import PollingFormInputOption from "@/components/poll/PollingFormInputOption.vue";
 import ZKCard from "@/components/ui-library/ZKCard.vue";
 import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
@@ -72,15 +72,18 @@ const postTitle = ref("");
 const postBody = ref("");
 
 const enablePolling = ref(false);
-const pollingOption1 = ref("");
-const pollingOption2 = ref("");
-const pollingOption3 = ref("");
-const pollingOption4 = ref("");
-const pollingOption5 = ref("");
-const pollingOption6 = ref("");
-const numPollOptions = ref(2);
+
+const pollingOptionList = ref<string[]>(["", ""]);
 
 onReset();
+
+function addPollOption() {
+  pollingOptionList.value.push("");
+}
+
+function removePollOption(index: number) {
+  pollingOptionList.value.splice(index, 1);
+}
 
 function openCommunitySheet() {
   showCreatePostCommunitySelector(false, selectedCommunityId);
@@ -132,7 +135,10 @@ function onReset() {
   padding: 0.2rem;
 }
 
-.cardPadding {
+.pollingFlexStyle {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   padding: 1rem;
 }
 
@@ -149,5 +155,12 @@ function onReset() {
 .titleStyle {
   font-size: 1.2rem;
   font-weight: bold;
+}
+
+.pollingItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 </style>
