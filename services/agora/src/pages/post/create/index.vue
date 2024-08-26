@@ -2,15 +2,17 @@
   <div>
     <q-form @submit="onSubmit">
       <div class="formStyle">
-        <div>
-          <ZKButton @click="openCommunitySheet()">
-            <div class="communityButton">
+        <div class="topbarFlex">
+          <div class="communitySelector">
+            <div class="communityButton" @click="openCommunitySheet()">
               <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
               <div>
                 a/{{ selectedCommunityId }}
               </div>
+
+              <q-icon name="mdi-menu-down-outline" />
             </div>
-          </ZKButton>
+          </div>
 
           <ZKButton label="Post" type="submit" class="floatRight" />
         </div>
@@ -26,7 +28,7 @@
           <ZKCard v-if="enablePolling" class="pollingForm">
             <div class="pollingFlexStyle">
               <div v-for="(item, index) in pollingOptionList" :key="index" class="pollingItem">
-                <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index + 1)"
+                <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Poll Option ' + (index + 1)"
                   v-model="pollingOptionList[index]" :style="{ width: '100%', padding: '1rem' }" />
                 <div :style="{ width: '2rem' }">
                   <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
@@ -36,7 +38,8 @@
               </div>
 
               <div>
-                <ZKButton label="Add Option" @click="addPollOption()" :disable="pollingOptionList.length == 6" />
+                <ZKButton flat text-color-flex="primary" label="Add Option" @click="addPollOption()"
+                  :disable="pollingOptionList.length == 6" />
               </div>
             </div>
           </ZKCard>
@@ -103,14 +106,6 @@ function onReset() {
 </script>
 
 <style scoped lang="scss">
-.header {
-  font-size: 1.1rem;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
 .formStyle {
   display: flex;
   flex-direction: column;
@@ -124,7 +119,8 @@ function onReset() {
 }
 
 .floatRight {
-  float: right;
+  position: absolute;
+  right: 0;
 }
 
 .communityButton {
@@ -162,5 +158,19 @@ function onReset() {
   align-items: center;
   justify-content: center;
   width: 100%;
+}
+
+.topbarFlex {
+  display: flex;
+}
+
+.communitySelector {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.communitySelector:hover {
+  cursor: pointer;
 }
 </style>
