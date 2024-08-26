@@ -4,7 +4,8 @@
       <ZKCard>
         <div class="innerContainer">
           <div class="topTag">
-            <CommunityIcon :community-name="extendedPostData.metadata.communityName" :showCountryName="false" />
+            <CommunityIcon :community-id="extendedPostData.metadata.communityId" :showCountryName="false"
+              :compact="false" />
             <div class="metadata">
               <div>
                 {{ getTimeFromNow(extendedPostData.metadata.lastReactedAt) }}

@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { useCommunityStore } from "./community";
 
 export interface DummyPollOptionFormat {
     index: number;
@@ -22,7 +23,7 @@ export interface DummyPostDataFormat {
         updatedAt: Date;
         lastReactedAt: Date;
         commentCount: number;
-        communityName: string;
+        communityId: string;
     },
     payload: {
         title: string;
@@ -60,8 +61,8 @@ export const usePostStore = defineStore("post", () => {
 
     function generateDummyPostData() {
 
-        const communityNameList = ["world", "china", "france", "russia", "japan"];
-        const randomCommunityName = communityNameList[Math.floor(Math.random() * communityNameList.length)];
+        const communityNameList = useCommunityStore().communityList;
+        const selectedRandomCommunityItem = communityNameList[Math.floor(Math.random() * communityNameList.length)];
 
         const postDataStatic: DummyPostDataFormat = {
             metadata: {
@@ -71,7 +72,7 @@ export const usePostStore = defineStore("post", () => {
                 updatedAt: new Date(),
                 lastReactedAt: new Date(),
                 commentCount: 10,
-                communityName: randomCommunityName,
+                communityId: selectedRandomCommunityItem.id,
             },
             payload: {
                 title: "TEST TITLE",

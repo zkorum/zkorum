@@ -26,8 +26,8 @@ const routes: RouteRecordRaw[] = [
         name: "community-explore",
       },
       {
-        path: ":countryCode",
-        component: () => import("@/pages/community/[countryCode].vue"),
+        path: ":communityId",
+        component: () => import("@/pages/community/[communityId].vue"),
         name: "community-single"
       }
     ]
@@ -38,7 +38,7 @@ const routes: RouteRecordRaw[] = [
     props: { hasGoBackButton: true } as MainLayoutProps,
     children: [
       {
-        path: "create/:communityName?",
+        path: "create/:communityId?",
         component: () => import("@/pages/post/create/index.vue"),
         name: "create-post"
       },

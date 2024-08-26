@@ -2,7 +2,7 @@
   <div>
     <div class="communityItemStyle">
       <div class="flagStyle">
-        <img class="flagImage" :src="imageLink" />
+        <img class="flagImage" :src="imageLink" :style="{ width: compact ? '2rem' : '3rem' }" />
       </div>
       <div class="flagCountryName" v-if="showCountryName">
         {{ countryName }}
@@ -12,71 +12,38 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { useCommunityStore } from "@/stores/community";
+import { onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
-  communityName: string
+  communityId: string
   showCountryName: boolean
+  compact: boolean
 }>()
 
 const imageLink = ref("");
 const countryName = ref("");
 
+const communityList = useCommunityStore().communityList;
+
 onMounted(() => {
-  mapCommunityItem(props.communityName);
+  mapCommunityItem();
 })
 
-interface CommunityItem {
-  name: string
-  countryName: string
-  code: string
-}
+watch(() => props.communityId, () => {
+  mapCommunityItem();
+})
 
-const communityList: CommunityItem[] = [
-  {
-    "name": "world",
-    "countryName": "World",
-    "code": "WORLD"
-  },
-  {
-    "name": "france",
-    "countryName": "France",
-    "code": "FR"
-  },
-  {
-    "name": "china",
-    "countryName": "China",
-    "code": "CN"
-  },
-  {
-    "name": "united-states",
-    "countryName": "United States",
-    "code": "US"
-  },
-  {
-    "name": "russia",
-    "countryName": "Russia",
-    "code": "RU"
-  },
-  {
-    "name": "japan",
-    "countryName": "Japan",
-    "code": "JP"
-  }
-];
-
-function mapCommunityItem(communityName: string) {
+function mapCommunityItem() {
   for (let i = 0; i < communityList.length; i++) {
     const communityItem = communityList[i];
-    if (communityItem.name == communityName) {
+    if (communityItem.id == props.communityId) {
       imageLink.value = "/images/communities/flags/" + communityItem.code + ".svg";
       countryName.value = communityItem.countryName;
       break;
     }
   }
 }
-
-props.communityName
 
 </script>
 
@@ -87,7 +54,6 @@ props.communityName
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem;
 }
 
 .flagStyle {
@@ -97,7 +63,6 @@ props.communityName
 }
 
 .flagImage {
-  width: 3rem;
   border-radius: 5px;
   border-style: solid;
   border-width: 1px;

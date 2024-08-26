@@ -2,10 +2,10 @@
   <div>
     <div class="container">
       <swiper-container slidesPerView="4.5">
-        <swiper-slide v-for="communityName in communityList" v-bind:key="communityName">
-          <RouterLink :to="{ name: 'community-single', params: { countryCode: communityName } }">
+        <swiper-slide v-for="communityItem in communityList" v-bind:key="communityItem.code">
+          <RouterLink :to="{ name: 'community-single', params: { communityId: communityItem.id } }">
             <div class="outerPadding hoverEffect">
-              <CommunityIcon :communityName="communityName" :showCountryName="false" />
+              <CommunityIcon :community-id="communityItem.id" :showCountryName="false" :compact="false" />
             </div>
           </RouterLink>
         </swiper-slide>
@@ -15,9 +15,10 @@
 </template>
 
 <script setup lang="ts">
+import { useCommunityStore } from "@/stores/community";
 import CommunityIcon from "../community/CommunityIcon.vue";
 
-const communityList = ["world", "france", "china", "united-states", "russia", "japan"];
+const { communityList } = useCommunityStore();
 
 </script>
 

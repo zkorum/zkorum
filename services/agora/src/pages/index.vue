@@ -20,7 +20,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 function createNewPost() {
-  router.push({ name: "create-post", params: { communityName: "world" } })
+  router.push({ name: "create-post", params: { communityId: "world" } })
 }
 
 </script>
