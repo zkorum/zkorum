@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-form @submit="onSubmit" @reset="onReset">
+    <q-form @submit="onSubmit">
       <div class="formStyle">
 
         <div>
@@ -12,55 +12,42 @@
               </div>
             </div>
           </ZKButton>
+
+          <ZKButton label="Post" type="submit" class="floatRight" />
         </div>
 
         <div class="formElement">
-          <div class="header">
-            Title *
-          </div>
-          <q-input outlined no-error-icon type="text" v-model="postTitle" lazy-rules
-            :rules="[val => val && val.length > 0]" />
+          <q-input borderless no-error-icon type="text" label="Title" v-model="postTitle" lazy-rules
+            :rules="[val => val && val.length > 0]" class="titleStyle" />
         </div>
 
         <div class="formElement">
-          <div class="header">
-            Description (optional)
-          </div>
-          <q-input outlined no-error-icon type="textarea" v-model="postBody" lazy-rules />
-        </div>
+          <q-input autogrow borderless no-error-icon type="textarea" label="Body text" v-model="postBody" lazy-rules />
 
-        <!--<q-toggle v-model="accept" label="I accept the license and terms" />-->
+          <ZKCard v-if="enablePolling" class="pollingForm">
+            <div class="cardPadding">
+              <PollingFormInputOption title="Option 1 *" v-model="pollingOption1" />
+              <PollingFormInputOption title="Option 2 *" v-model="pollingOption2" />
+              <PollingFormInputOption title="Option 3 *" v-model="pollingOption3" v-if="numPollOptions > 2" />
+              <PollingFormInputOption title="Option 4 *" v-model="pollingOption4" v-if="numPollOptions > 3" />
+              <PollingFormInputOption title="Option 5 *" v-model="pollingOption5" v-if="numPollOptions > 4" />
+              <PollingFormInputOption title="Option 6 *" v-model="pollingOption6" v-if="numPollOptions > 5" />
 
-        <div class="formElement">
-          <div class="header">
-            Enable Polling <q-toggle v-model="enablePolling" />
-          </div>
-
-          <div v-if="enablePolling">
-            <PollingFormInputOption title="Option 1 *" v-model="pollingOption1" />
-            <PollingFormInputOption title="Option 2 *" v-model="pollingOption2" />
-            <PollingFormInputOption title="Option 3 *" v-model="pollingOption3" v-if="numPollOptions > 2" />
-            <PollingFormInputOption title="Option 4 *" v-model="pollingOption4" v-if="numPollOptions > 3" />
-            <PollingFormInputOption title="Option 5 *" v-model="pollingOption5" v-if="numPollOptions > 4" />
-            <PollingFormInputOption title="Option 6 *" v-model="pollingOption6" v-if="numPollOptions > 5" />
-
-            <div class="buttonCluster">
-              <ZKButton label="Option" icon="mdi-plus" @click="numPollOptions++" :disable="numPollOptions == 6" />
-              <ZKButton label="Option" icon="mdi-minus" @click="numPollOptions--" :disable="numPollOptions == 2" />
+              <div class="buttonCluster">
+                <ZKButton label="Option" icon="mdi-plus" @click="numPollOptions++" :disable="numPollOptions == 6" />
+                <ZKButton label="Option" icon="mdi-minus" @click="numPollOptions--" :disable="numPollOptions == 2" />
+              </div>
             </div>
+          </ZKCard>
 
-          </div>
-
-        </div>
-
-
-        <div class="buttonCluster">
-          <ZKButton label="Submit" type="submit" />
-          <ZKButton label="Reset" type="reset" color-flex="positive" class="q-ml-sm" />
         </div>
 
       </div>
     </q-form>
+
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn fab icon="mdi-poll" color="accent" @click="enablePolling = !enablePolling" />
+    </q-page-sticky>
 
   </div>
 </template>
@@ -70,11 +57,12 @@ import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
 import PollingFormInputOption from "@/components/poll/PollingFormInputOption.vue";
+import ZKCard from "@/components/ui-library/ZKCard.vue";
 import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
 
-const route = useRoute();
 const router = useRouter();
+const route = useRoute();
 
 const selectedCommunityId = ref("");
 
@@ -92,14 +80,10 @@ const pollingOption5 = ref("");
 const pollingOption6 = ref("");
 const numPollOptions = ref(2);
 
-initialize();
+onReset();
 
 function openCommunitySheet() {
   showCreatePostCommunitySelector(false, selectedCommunityId);
-}
-
-function initialize() {
-  onReset();
 }
 
 function onSubmit() {
@@ -107,15 +91,10 @@ function onSubmit() {
 }
 
 function onReset() {
-  postTitle.value = "";
-  postBody.value = "";
-  enablePolling.value = false;
-
   const initialCommunityId = route.params.communityId;
   if (typeof initialCommunityId == "string") {
     selectedCommunityId.value = initialCommunityId;
   }
-
 }
 
 </script>
@@ -132,20 +111,17 @@ function onReset() {
 .formStyle {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
   padding: 1rem;
 }
 
 .formElement {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
 }
 
-.buttonCluster {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+.floatRight {
+  float: right;
 }
 
 .communityButton {
@@ -154,5 +130,24 @@ function onReset() {
   align-items: center;
   gap: 1rem;
   padding: 0.2rem;
+}
+
+.cardPadding {
+  padding: 1rem;
+}
+
+.buttonCluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pollingForm {
+  padding-top: 1rem;
+}
+
+.titleStyle {
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 </style>
