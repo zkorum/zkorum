@@ -16,7 +16,7 @@ export const useBottomSheet = () => {
       const communitItem = communityList[i];
       actionList.push({
         label: communitItem.countryName,
-        img: "/public/images/communities/flags/" + communitItem.code + ".svg",
+        img: "/images/communities/flags/" + communitItem.code + ".svg",
         id: communitItem.id
       });
     }
