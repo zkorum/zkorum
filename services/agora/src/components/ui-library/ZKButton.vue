@@ -1,5 +1,7 @@
 <template>
-  <q-btn v-bind="props" :color="buttonColor" :text-color="buttonTextColor" no-caps :rounded="true" unelevated />
+  <q-btn v-bind="props" :color="buttonColor" :text-color="buttonTextColor" no-caps :rounded="true" unelevated>
+    <slot />
+  </q-btn>
 </template>
 
 <script setup lang="ts">

@@ -4,14 +4,8 @@
       <ZKCard>
         <div class="innerContainer">
           <div class="topTag">
-            <q-avatar size="3rem" color="primary" text-color="white">E</q-avatar>
+            <CommunityIcon :community-name="extendedPostData.metadata.communityName" :showCountryName="false" />
             <div class="metadata">
-              <div class="domain">
-                {{ extendedPostData.author.domain }}
-              </div>
-              <div>
-                {{ getTrimmedPseudonym(extendedPostData.author.pseudonym) }}
-              </div>
               <div>
                 {{ getTimeFromNow(extendedPostData.metadata.lastReactedAt) }}
               </div>
@@ -63,11 +57,12 @@
 </template>
 
 <script setup lang="ts">
-import { getTrimmedPseudonym, getTimeFromNow } from "src/utils/common";
+import { getTimeFromNow } from "src/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 import PollResultView from "../poll/PollResultView.vue";
 import CommentSwiper from "./CommentSwiper.vue";
+import CommunityIcon from "../community/CommunityIcon.vue";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
 import { DummyPostDataFormat } from "@/stores/post";
@@ -129,7 +124,7 @@ function processPostBody(body: string) {
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .topTag {
@@ -141,10 +136,6 @@ function processPostBody(body: string) {
 .metadata {
   display: flex;
   flex-direction: column;
-}
-
-.domain {
-  font-weight: bold;
 }
 
 .titleDiv {
@@ -166,6 +157,7 @@ function processPostBody(body: string) {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+  padding-top: 1rem;
 }
 
 .commentItem {

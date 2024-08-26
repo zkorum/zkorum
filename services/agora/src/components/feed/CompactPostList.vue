@@ -18,10 +18,14 @@
 
 import PostItem from "./PostItem.vue";
 import { ref } from "vue";
-import { usePostStore } from "@/stores/post";
+import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 
-const postData = usePostStore().dummyPostData;
-const compactPostDataList = ref([postData, postData, postData]);
+const { generateDummyPostData } = usePostStore();
+
+const compactPostDataList = ref<DummyPostDataFormat[]>([]);
+for (let i = 0; i < 10; i++) {
+  compactPostDataList.value.push(generateDummyPostData());
+}
 
 async function onLoad() {
   console.log("Infinite list to be implemented");

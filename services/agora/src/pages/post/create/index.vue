@@ -8,7 +8,6 @@
           <div class="formElement">
             <div class="header">
               Community
-              <ZKButton round size="0.4rem" icon="mdi-help" />
             </div>
             <q-select no-error-icon v-model="communityName" :options="communityOptions" />
           </div>
@@ -16,7 +15,6 @@
           <div class="formElement">
             <div class="header">
               Title *
-              <ZKButton round size="0.4rem" icon="mdi-help" />
             </div>
             <q-input outlined no-error-icon type="text" v-model="postTitle" lazy-rules
               :rules="[val => val && val.length > 0]" />
@@ -25,7 +23,6 @@
           <div class="formElement">
             <div class="header">
               Description (optional)
-              <ZKButton round size="0.4rem" icon="mdi-help" />
             </div>
             <q-input outlined no-error-icon type="textarea" v-model="postBody" lazy-rules />
           </div>
@@ -35,7 +32,6 @@
           <div class="formElement">
             <div class="header">
               Enable Polling <q-toggle v-model="enablePolling" />
-              <ZKButton round size="0.4rem" icon="mdi-help" />
             </div>
 
             <div v-if="enablePolling">
