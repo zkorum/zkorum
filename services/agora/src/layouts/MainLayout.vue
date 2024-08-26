@@ -1,7 +1,7 @@
 <template>
   <q-layout view="hHh lpR fFf">
     <q-header :reveal="true" bordered class="menuStyle" height-hint="98">
-      <TopMenuBar :has-back-button="props.hasGoBackButton" />
+      <TopMenuBar :has-back-button="props.hasGoBackButton" :show-settings-menu="true" />
     </q-header>
 
     <q-page-container class="container">

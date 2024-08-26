@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="container">
-      <TopMenuBar :has-back-button="true" />
+      <TopMenuBar :has-back-button="true" :show-settings-menu="false" />
 
       <!--
       <q-toolbar>
@@ -33,7 +33,8 @@ import TopMenuBar from "@/components/navigation/TopMenuBar.vue";
 
 <style scoped lang="scss">
 .container {
-  padding: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .innerContent {

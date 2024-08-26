@@ -4,7 +4,7 @@
       <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
     </div>
     <div class="menuButtons">
-      <ZKButton icon="mdi-cog" text-color-flex="black" flat />
+      <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="showSettingsMenu" />
       <ZKButton icon="mdi-help" text-color-flex="black" flat />
     </div>
   </q-toolbar>
@@ -16,6 +16,7 @@ import ZKButton from "../ui-library/ZKButton.vue";
 
 defineProps<{
   hasBackButton: boolean
+  showSettingsMenu: boolean
 }>();
 
 const router = useRouter();
