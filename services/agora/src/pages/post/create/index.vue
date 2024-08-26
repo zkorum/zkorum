@@ -17,7 +17,7 @@
 
         <div class="formElement">
           <q-input borderless no-error-icon type="text" label="Title" v-model="postTitle" lazy-rules
-            :rules="[val => val && val.length > 0]" class="titleStyle" />
+            :rules="[val => val && val.length > 0]" class="titleStyle" autofocus />
         </div>
 
         <div class="formElement">
