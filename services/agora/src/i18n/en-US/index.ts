@@ -15,12 +15,12 @@ export default {
   },
   onboarding: {
     login: {
-      title: "Join Your Community",
+      title: "What is your email address?",
       email: {
-        label: "ESSEC Email Address",
-        hint: "such as name.surname{'@'}essec.edu", // to avoid Message compilation error: Unexpected empty linked key:  https://github.com/intlify/bundle-tools/issues/53#issuecomment-1879024073
-        invalid: "Please provide a valid {'@'}essec.edu email address",
-        unauthorized: "Please provide a valid {'@'}essec.edu email address",
+        label: "Email Address",
+        hint: "Such as xxx{'@'}gmail.com", // to avoid Message compilation error: Unexpected empty linked key:  https://github.com/intlify/bundle-tools/issues/53#issuecomment-1879024073
+        invalid: "Not a valid email address",
+        unauthorized: "Please provide a valid email address",
       }
     }
   },

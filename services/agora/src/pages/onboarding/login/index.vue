@@ -2,21 +2,28 @@
   <div>
     <form @submit.prevent="sendVerificationCode()" class="container">
       <h4>{{ t("onboarding.login.title") }}</h4>
-      <ZKInputField v-model="emailInput" type="email" :label="t('onboarding.login.email.label')"
-        :hint="t('onboarding.login.email.hint')" hide-hint :rules="[(val: string) => isEmailValid(val) || emailHelper]"
-        :onclick="handleAuthenticate" />
+      <div>
+        Email Address
+
+        <ZKInputField v-model="emailInput" type="email" hide-hint
+          :rules="[(val: string) => isEmailValid(val) || emailHelper]" />
+      </div>
 
       <div class="acceptanceDiv">
-        <q-checkbox v-model="acceptedAgreements" />
+        <q-checkbox v-model="stayLoggedIn" />
         <div>
-          By continuing, you are confirming that you have read and agree to our
-          <a href="https://zkorum.com/" target="_blank">User Agreement</a> and
-          <a href="https://zkorum.com/" target="_blank">Privacy Policy</a>.
+          This is not a shared device. Stay logged in.
         </div>
       </div>
 
-      <ZKButton label="Send Verification Code" :disabled="!acceptedAgreements || emailInput.length == 0"
-        type="submit" />
+      <ZKButton label="Send Verification Code" :disabled="emailInput.length == 0" type="submit"
+        :onclick="handleAuthenticate" />
+
+      <div>
+        By continuing, you are confirming that you have read and agree to our
+        <a href="https://zkorum.com/" target="_blank">User Agreement</a> and
+        <a href="https://zkorum.com/" target="_blank">Privacy Policy</a>.
+      </div>
 
       <ZKButton label="Skip Email Page" color-flex="black"
         @click="router.push({ name: 'passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
@@ -40,7 +47,7 @@ const { t } = useI18n()
 const emailInput = ref("")
 const emailHelper = ref("")
 
-const acceptedAgreements = ref(false);
+const stayLoggedIn = ref(false);
 
 const router = useRouter();
 
