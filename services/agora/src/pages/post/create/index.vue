@@ -49,7 +49,7 @@
       </div>
     </q-form>
 
-    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+    <q-page-sticky position="bottom-right" :offset="[30, 30]">
       <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent" @click="enablePolling = !enablePolling" />
     </q-page-sticky>
 
