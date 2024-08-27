@@ -20,11 +20,6 @@ export const useCommunityStore = defineStore("community", () => {
       "code": "FR"
     },
     {
-      "id": "china",
-      "countryName": "China",
-      "code": "CN"
-    },
-    {
       "id": "united-states",
       "countryName": "United States",
       "code": "US"
@@ -35,10 +30,20 @@ export const useCommunityStore = defineStore("community", () => {
       "code": "RU"
     },
     {
-      "id": "japan",
-      "countryName": "Japan",
-      "code": "JP"
-    }
+      "id": "india",
+      "countryName": "India",
+      "code": "IN"
+    },
+    {
+      "id": "slovakia",
+      "countryName": "Slovakia",
+      "code": "SK"
+    },
+    {
+      "id": "venezuela",
+      "countryName": "Venezuela",
+      "code": "VE"
+    },
   ];
 
   return { communityList }
