@@ -205,13 +205,14 @@ onBeforeRouteLeave(() => {
 }
 
 .container {
-  height: calc(100vh - 12rem);
+  height: calc(100vh - 8rem);
+  height: -webkit-fill-available;
   position: relative;
 }
 
 .floatingPollButton {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 1rem;
+  right: 1rem;
 }
 </style>
