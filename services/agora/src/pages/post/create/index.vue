@@ -115,6 +115,7 @@ function openCommunitySheet() {
 }
 
 function onSubmit() {
+  grantedRouteLeave = true;
   router.push({ name: "single-post", params: { postSlugId: "asdf" } })
 }
 
