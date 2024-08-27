@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-form @submit="onSubmit">
+    <q-form @submit="onSubmit" class="container">
       <div class="formStyle">
         <div class="topbarFlex">
           <div class="communitySelector">
@@ -47,11 +47,12 @@
         </div>
 
       </div>
+
+      <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent" @click="enablePolling = !enablePolling"
+        class="floatingPollButton" />
+
     </q-form>
 
-    <q-page-sticky position="bottom-right" :offset="[30, 30]">
-      <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent" @click="enablePolling = !enablePolling" />
-    </q-page-sticky>
 
   </div>
 </template>
@@ -162,6 +163,7 @@ function onReset() {
 
 .topbarFlex {
   display: flex;
+  align-items: center;
 }
 
 .communitySelector {
@@ -173,5 +175,16 @@ function onReset() {
 
 .communitySelector:hover {
   cursor: pointer;
+}
+
+.container {
+  height: calc(100vh - 8rem);
+  position: relative;
+}
+
+.floatingPollButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
 </style>

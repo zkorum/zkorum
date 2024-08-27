@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-layout view="hHh lpR fFf" class="container">
+    <q-layout view="hHh lpR fFf" class="container" :class="{ bottomPagePadding: !isFullscreen }">
       <q-header :reveal="true" bordered class="menuStyle" height-hint="98">
         <TopMenuBar :has-back-button="props.hasGoBackButton" :show-settings-menu="true" />
       </q-header>
@@ -51,5 +51,9 @@ const currentRouteName = route.name;
 
 .menuStyle {
   background-color: #fafafa;
+}
+
+.bottomPagePadding {
+  padding-bottom: 10rem;
 }
 </style>

@@ -6,7 +6,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false } as MainLayoutProps,
+    props: { hasGoBackButton: false, isFullscreen: false } as MainLayoutProps,
     children: [
       {
         path: "",
@@ -18,7 +18,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/community",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false } as MainLayoutProps,
+    props: { hasGoBackButton: false, isFullscreen: false } as MainLayoutProps,
     children: [
       {
         path: "explore",
@@ -35,7 +35,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/post",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: true } as MainLayoutProps,
+    props: { hasGoBackButton: true, isFullscreen: true } as MainLayoutProps,
     children: [
       {
         path: "create/:communityId?",
@@ -52,7 +52,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false } as MainLayoutProps,
+    props: { hasGoBackButton: false, isFullscreen: false } as MainLayoutProps,
     children: [
       {
         path: "/notifications",

@@ -3,7 +3,7 @@
 
   <router-view v-slot="{ Component }">
     <transition appear enter-active-class="animated fadeIn slow" leave-active-class="animated fadeOut" mode="out-in">
-      <component :is="Component" class="padding-page-bottom" />
+      <component :is="Component" />
     </transition>
   </router-view>
 
@@ -22,8 +22,4 @@ defineOptions({
 });
 </script>
 
-<style scoped lang="scss">
-.padding-page-bottom {
-  padding-bottom: 10rem;
-}
-</style>
+<style scoped lang="scss"></style>

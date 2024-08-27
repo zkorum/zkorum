@@ -8,4 +8,5 @@ export interface OnboardingLayoutProps {
 
 export interface MainLayoutProps {
   hasGoBackButton: boolean;
+  isFullscreen: boolean;
 }
