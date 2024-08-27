@@ -18,28 +18,29 @@
         </div>
 
         <div class="formElement">
-          <q-input borderless no-error-icon type="text" label="Title" v-model="postTitle" lazy-rules
+          <q-input borderless no-error-icon type="text" label="Title" v-model="postDraft.postTitle" lazy-rules
             :rules="[val => val && val.length > 0]" class="titleStyle" />
         </div>
 
         <div class="formElement">
-          <q-input autogrow borderless no-error-icon type="textarea" label="body text" v-model="postBody" lazy-rules />
+          <q-input autogrow borderless no-error-icon type="textarea" label="body text" v-model="postDraft.postBody"
+            lazy-rules />
 
-          <ZKCard v-if="enablePolling" class="pollingForm">
+          <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
             <div class="pollingFlexStyle">
-              <div v-for="(item, index) in pollingOptionList" :key="index" class="pollingItem">
+              <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
                 <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Poll Option ' + (index + 1)"
-                  v-model="pollingOptionList[index]" :style="{ width: '100%', padding: '1rem' }" />
+                  v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%', padding: '1rem' }" />
                 <div :style="{ width: '2rem' }">
                   <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
-                    v-if="pollingOptionList.length != 2" text-color-flex="primary" />
+                    v-if="postDraft.pollingOptionList.length != 2" text-color-flex="primary" />
                 </div>
 
               </div>
 
               <div>
                 <ZKButton flat text-color-flex="primary" label="Add Option" @click="addPollOption()"
-                  :disable="pollingOptionList.length == 6" />
+                  :disable="postDraft.pollingOptionList.length == 6" />
               </div>
             </div>
           </ZKCard>
@@ -48,39 +49,36 @@
 
       </div>
 
-      <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent" @click="enablePolling = !enablePolling"
-        class="floatingPollButton" />
+      <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent"
+        @click="postDraft.enablePolling = !postDraft.enablePolling" class="floatingPollButton" />
 
     </q-form>
 
     <q-dialog v-model="showExitDialog">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Alert</div>
-        </q-card-section>
+      <ZKCard>
+        <div class="exitDialogStyle">
+          <div class="dialogTitle">Discard this post?</div>
 
-        <q-card-section class="q-pt-none">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum repellendus sit voluptate voluptas eveniet
-          porro. Rerum blanditiis perferendis totam, ea at omnis vel numquam exercitationem aut, natus minima, porro
-          labore.
-        </q-card-section>
+          <div>Your drafted post will not be saved.</div>
 
-        <q-card-actions align="right">
-          <q-btn flat label="OK" color="primary" v-close-popup />
-        </q-card-actions>
-      </q-card>
+          <div class="dialogButtons">
+            <ZKButton flat label="Cancel" text-color-flex="primary" v-close-popup />
+            <ZKButton label="Discard" v-close-popup @click="leaveRoute()" />
+          </div>
+        </div>
+      </ZKCard>
     </q-dialog>
-
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { onBeforeRouteLeave, RouteLocationNormalized, useRoute, useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
 import ZKCard from "@/components/ui-library/ZKCard.vue";
 import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
+import { useNewPostDraftsStore } from "@/stores/newPostDrafts";
 
 const router = useRouter();
 const route = useRoute();
@@ -91,21 +89,18 @@ const selectedCommunityId = ref("");
 
 const { showCreatePostCommunitySelector } = useBottomSheet();
 
-const postTitle = ref("");
-const postBody = ref("");
+const { postDraft, isPostEdited } = useNewPostDraftsStore();
 
-const enablePolling = ref(false);
-
-const pollingOptionList = ref<string[]>(["", ""]);
+let grantedRouteLeave = false;
 
 onReset();
 
 function addPollOption() {
-  pollingOptionList.value.push("");
+  postDraft.value.pollingOptionList.push("");
 }
 
 function removePollOption(index: number) {
-  pollingOptionList.value.splice(index, 1);
+  postDraft.value.pollingOptionList.splice(index, 1);
 }
 
 function openCommunitySheet() {
@@ -123,13 +118,32 @@ function onReset() {
   }
 }
 
-/*
-onBeforeRouteLeave(() => {
-  window.confirm(
-    "Do you really want to leave? you have unsaved changes!"
-  )
+let savedToRoute: RouteLocationNormalized = {
+  matched: [],
+  fullPath: "",
+  query: {},
+  hash: "",
+  name: "",
+  path: "",
+  meta: {},
+  params: {},
+  redirectedFrom: undefined
+};
+
+function leaveRoute() {
+  grantedRouteLeave = true;
+  router.push(savedToRoute);
+}
+
+onBeforeRouteLeave((to) => {
+  if (isPostEdited() && !grantedRouteLeave) {
+    savedToRoute = to;
+    showExitDialog.value = true;
+    return false;
+  } else {
+    return true;
+  }
 })
-  */
 
 </script>
 
@@ -214,5 +228,22 @@ onBeforeRouteLeave(() => {
   position: absolute;
   bottom: 1rem;
   right: 1rem;
+}
+
+.exitDialogStyle {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.dialogTitle {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.dialogButtons {
+  display: flex;
+  justify-content: space-around;
 }
 </style>
