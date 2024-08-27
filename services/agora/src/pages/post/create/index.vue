@@ -96,6 +96,12 @@ let grantedRouteLeave = false;
 
 onReset();
 
+window.onbeforeunload = function () {
+  if (isPostEdited()) {
+    return "Changes that you made may not be saved.";
+  }
+}
+
 function addPollOption() {
   postDraft.value.pollingOptionList.push("");
 }
