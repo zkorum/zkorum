@@ -23,7 +23,7 @@
         </div>
 
         <div class="formElement">
-          <q-input autogrow borderless no-error-icon type="textarea" label="Body text" v-model="postBody" lazy-rules />
+          <q-input autogrow borderless no-error-icon type="textarea" label="body text" v-model="postBody" lazy-rules />
 
           <ZKCard v-if="enablePolling" class="pollingForm">
             <div class="pollingFlexStyle">
