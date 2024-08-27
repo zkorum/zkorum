@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-form @submit="onSubmit" class="container">
+    <q-form @submit="onSubmit">
       <div class="formStyle">
         <div class="topbarFlex">
           <div class="communitySelector">
@@ -48,10 +48,6 @@
         </div>
 
       </div>
-
-      <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent"
-        @click="postDraft.enablePolling = !postDraft.enablePolling" class="floatingPollButton" />
-
     </q-form>
 
     <q-dialog v-model="showExitDialog">
@@ -68,6 +64,11 @@
         </div>
       </ZKCard>
     </q-dialog>
+
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent"
+        @click="postDraft.enablePolling = !postDraft.enablePolling" />
+    </q-page-sticky>
   </div>
 </template>
 
@@ -94,12 +95,6 @@ const { postDraft, isPostEdited } = useNewPostDraftsStore();
 let grantedRouteLeave = false;
 
 onReset();
-
-window.onbeforeunload = function () {
-  if (isPostEdited()) {
-    return "Changes that you made may not be saved.";
-  }
-}
 
 function addPollOption() {
   postDraft.value.pollingOptionList.push("");
@@ -222,18 +217,6 @@ onBeforeRouteLeave((to) => {
 
 .communitySelector:hover {
   cursor: pointer;
-}
-
-.container {
-  height: calc(100vh - 8rem);
-  height: -webkit-fill-available;
-  position: relative;
-}
-
-.floatingPollButton {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
 }
 
 .exitDialogStyle {
