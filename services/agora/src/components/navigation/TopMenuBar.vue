@@ -5,7 +5,7 @@
     </div>
     <div class="menuButtons">
       <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="hasSettingsButton" />
-      <ZKButton icon="mdi-help" text-color-flex="black" flat />
+      <HelpButton />
     </div>
   </TopMenuWarpper>
 </template>
@@ -14,6 +14,7 @@
 import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
 import TopMenuWarpper from "@/components/navigation/TopMenuWarpper.vue";
+import HelpButton from "./buttons/HelpButton.vue";
 
 defineProps<{
   hasBackButton: boolean

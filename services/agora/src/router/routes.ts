@@ -16,6 +16,18 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: "/help",
+    component: MainLayout,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
+    children: [
+      {
+        path: "",
+        component: () => import("pages/help/index.vue"),
+        name: "help-page"
+      },
+    ],
+  },
+  {
     path: "/community",
     component: MainLayout,
     props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,

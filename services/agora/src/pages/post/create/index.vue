@@ -1,11 +1,16 @@
 <template>
   <div>
-    <div class="topBar">
-      <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
-      <ZKButton label="Post" type="submit" class="floatRight" />
-    </div>
-
     <q-form @submit="onSubmit">
+      <div class="topBar">
+        <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
+
+        <div class="floatRight submissionButtons">
+          <HelpButton />
+          <ZKButton label="Post" type="submit" />
+        </div>
+
+      </div>
+
       <div class="formStyle">
         <div class="communitySelector communityFlex">
           <div class="communityButton" @click="openCommunitySheet()">
@@ -78,6 +83,7 @@ import { onUnmounted, ref } from "vue";
 import { onBeforeRouteLeave, RouteLocationNormalized, useRoute, useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
 import ZKCard from "@/components/ui-library/ZKCard.vue";
+import HelpButton from "@/components/navigation/buttons/HelpButton.vue";
 import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
 import { useNewPostDraftsStore } from "@/stores/newPostDrafts";
@@ -251,8 +257,12 @@ onBeforeRouteLeave((to) => {
 .topBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+
+.submissionButtons {
+  display: flex;
+  gap: 1rem;
 }
 </style>
