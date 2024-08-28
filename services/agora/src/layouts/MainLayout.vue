@@ -1,9 +1,7 @@
 <template>
   <div>
     <q-layout view="hHh lpR fFf" class="container" :class="{ bottomPagePadding: !isFullscreen }">
-      <q-header :reveal="true" bordered class="menuStyle" height-hint="98">
-        <TopMenuBar :has-back-button="props.hasGoBackButton" :show-settings-menu="true" />
-      </q-header>
+      <TopMenuBar :has-back-button="props.hasGoBackButton" :show-settings-menu="true" v-if="enableHeader" />
 
       <q-page-container>
         <router-view />

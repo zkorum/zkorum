@@ -6,7 +6,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false, isFullscreen: false } as MainLayoutProps,
+    props: { hasGoBackButton: false, isFullscreen: false, enableHeader: true } as MainLayoutProps,
     children: [
       {
         path: "",
@@ -18,7 +18,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/community",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false, isFullscreen: false } as MainLayoutProps,
+    props: { hasGoBackButton: false, isFullscreen: false, enableHeader: true } as MainLayoutProps,
     children: [
       {
         path: "explore",
@@ -35,13 +35,8 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/post",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: true, isFullscreen: true } as MainLayoutProps,
+    props: { hasGoBackButton: true, isFullscreen: true, enableHeader: true } as MainLayoutProps,
     children: [
-      {
-        path: "create/:communityId?",
-        component: () => import("@/pages/post/create/index.vue"),
-        name: "create-post"
-      },
       {
         path: ":postSlugId",
         component: () => import("@/pages/post/index.vue"),
@@ -50,9 +45,21 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: "/post",
+    component: () => import("layouts/MainLayout.vue"),
+    props: { hasGoBackButton: false, isFullscreen: false, enableHeader: false } as MainLayoutProps,
+    children: [
+      {
+        path: "create/:communityId?",
+        component: () => import("@/pages/post/create/index.vue"),
+        name: "create-post"
+      }
+    ]
+  },
+  {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false, isFullscreen: false } as MainLayoutProps,
+    props: { hasGoBackButton: false, isFullscreen: false, enableHeader: true } as MainLayoutProps,
     children: [
       {
         path: "/notifications",
@@ -93,7 +100,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "passphrase",
         component: OnboardingLayout,
-        props: { hasGoBackButton: true, hasHelpButton: true } as OnboardingLayoutProps,
+        props: { hasGoBackButton: true, hasHelpButton: true, enableHeader: true } as OnboardingLayoutProps,
         children: [
           {
             path: ":emailAddressEncoded",

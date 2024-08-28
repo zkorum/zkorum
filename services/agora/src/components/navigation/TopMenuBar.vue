@@ -1,5 +1,5 @@
 <template>
-  <q-toolbar class="content-between" style="width: 100%">
+  <TopMenuWarpper>
     <div style="width: 100%">
       <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
     </div>
@@ -7,12 +7,13 @@
       <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="showSettingsMenu" />
       <ZKButton icon="mdi-help" text-color-flex="black" flat />
     </div>
-  </q-toolbar>
+  </TopMenuWarpper>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
+import TopMenuWarpper from "@/components/navigation/TopMenuWarpper.vue";
 
 defineProps<{
   hasBackButton: boolean
@@ -27,5 +28,9 @@ const router = useRouter();
 .menuButtons {
   display: flex;
   gap: 0.5rem;
+}
+
+.menuStyle {
+  background-color: #fafafa;
 }
 </style>

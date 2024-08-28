@@ -1,20 +1,21 @@
 <template>
   <div>
+    <div class="topBar">
+      <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
+      <ZKButton label="Post" type="submit" class="floatRight" />
+    </div>
+
     <q-form @submit="onSubmit">
       <div class="formStyle">
-        <div class="topbarFlex">
-          <div class="communitySelector">
-            <div class="communityButton" @click="openCommunitySheet()">
-              <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
-              <div>
-                a/{{ selectedCommunityId }}
-              </div>
-
-              <q-icon name="mdi-menu-down-outline" />
+        <div class="communitySelector communityFlex">
+          <div class="communityButton" @click="openCommunitySheet()">
+            <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
+            <div>
+              a/{{ selectedCommunityId }}
             </div>
-          </div>
 
-          <ZKButton label="Post" type="submit" class="floatRight" />
+            <q-icon name="mdi-menu-down-outline" />
+          </div>
         </div>
 
         <div class="formElement">
@@ -73,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onUnmounted, ref } from "vue";
 import { onBeforeRouteLeave, RouteLocationNormalized, useRoute, useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
 import ZKCard from "@/components/ui-library/ZKCard.vue";
@@ -101,6 +102,10 @@ window.onbeforeunload = function () {
     return "Changes that you made may not be saved.";
   }
 }
+
+onUnmounted(() => {
+  window.onbeforeunload = () => { };
+})
 
 function addPollOption() {
   postDraft.value.pollingOptionList.push("");
@@ -210,7 +215,7 @@ onBeforeRouteLeave((to) => {
   width: 100%;
 }
 
-.topbarFlex {
+.communityFlex {
   display: flex;
   align-items: center;
 }
@@ -241,5 +246,13 @@ onBeforeRouteLeave((to) => {
 .dialogButtons {
   display: flex;
   justify-content: space-around;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 </style>
