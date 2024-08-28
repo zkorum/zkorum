@@ -4,74 +4,9 @@ import { MainLayoutProps } from "@/utils/model/props";
 
 const routes: RouteRecordRaw[] = [
   {
-    path: "/",
-    component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
-    children: [
-      {
-        path: "",
-        component: () => import("pages/index.vue"),
-        name: "default-home-feed"
-      },
-    ],
-  },
-  {
-    path: "/help",
-    component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
-    children: [
-      {
-        path: "",
-        component: () => import("pages/help/index.vue"),
-        name: "help-page"
-      },
-    ],
-  },
-  {
-    path: "/settings",
-    component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
-    children: [
-      {
-        path: "",
-        component: () => import("pages/settings/index.vue"),
-        name: "settings-page"
-      },
-    ],
-  },
-  {
-    path: "/community",
-    component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
-    children: [
-      {
-        path: "explore",
-        component: () => import("@/pages/community/explore/index.vue"),
-        name: "community-explore",
-      },
-      {
-        path: ":communityId",
-        component: () => import("@/pages/community/[communityId].vue"),
-        name: "community-single"
-      }
-    ]
-  },
-  {
     path: "/post",
     component: MainLayout,
-    props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
-    children: [
-      {
-        path: ":postSlugId",
-        component: () => import("@/pages/post/index.vue"),
-        name: "single-post"
-      }
-    ]
-  },
-  {
-    path: "/post",
-    component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: false, useStylelessFooter: true } as MainLayoutProps,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: false, enableFooter: true, useStylelessFooter: true } as MainLayoutProps,
     children: [
       {
         path: "create/:communityId?",
@@ -83,7 +18,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, enableFooter: true, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
         path: "/notifications",
@@ -100,6 +35,58 @@ const routes: RouteRecordRaw[] = [
           }
         ]
       },
+      {
+        path: "/community",
+        children: [
+          {
+            path: "explore",
+            component: () => import("@/pages/community/explore/index.vue"),
+            name: "community-explore",
+          }
+        ]
+      },
+      {
+        path: "/settings",
+        component: () => import("pages/settings/index.vue"),
+        name: "settings-page"
+      },
+      {
+        path: "/help",
+        component: () => import("pages/help/index.vue"),
+        name: "help-page"
+      },
+      {
+        path: "/",
+        component: () => import("pages/index.vue"),
+        name: "default-home-feed"
+      },
+    ]
+  },
+  {
+    path: "/",
+    component: MainLayout,
+    props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, enableFooter: true, useStylelessFooter: false } as MainLayoutProps,
+    children: [
+      {
+        path: "/post",
+        children: [
+          {
+            path: ":postSlugId",
+            component: () => import("@/pages/post/index.vue"),
+            name: "single-post"
+          }
+        ]
+      },
+      {
+        path: "/community",
+        children: [
+          {
+            path: ":communityId",
+            component: () => import("@/pages/community/[communityId].vue"),
+            name: "community-single"
+          }
+        ]
+      },
     ],
   },
   {
@@ -109,11 +96,11 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/onboarding",
+    component: MainLayout,
+    props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
         path: "login",
-        component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
             path: "",
@@ -124,8 +111,6 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: "passphrase",
-        component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
             path: ":emailAddressEncoded",

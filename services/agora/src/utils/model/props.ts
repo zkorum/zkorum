@@ -3,5 +3,6 @@ export interface MainLayoutProps {
   headerHasSettingsButton: boolean;
   addBottomPadding: boolean;
   enableHeader: boolean;
+  enableFooter: boolean;
   useStylelessFooter: boolean;
 }
