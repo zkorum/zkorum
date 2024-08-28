@@ -1,13 +1,15 @@
 <template>
   <TopMenuWrapper>
-    <div style="width: 100%">
-      <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
-    </div>
-    <div class="menuButtons">
-      <HelpButton />
-      <RouterLink :to="{ name: 'settings-page' }">
-        <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="hasSettingsButton" />
-      </RouterLink>
+    <div class="topMenu">
+      <div>
+        <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
+      </div>
+      <div class="menuButtons">
+        <HelpButton />
+        <RouterLink :to="{ name: 'settings-page' }">
+          <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="hasSettingsButton" />
+        </RouterLink>
+      </div>
     </div>
   </TopMenuWrapper>
 </template>
@@ -35,5 +37,11 @@ const router = useRouter();
 
 .menuStyle {
   background-color: #fafafa;
+}
+
+.topMenu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

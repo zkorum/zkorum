@@ -265,7 +265,7 @@ onBeforeRouteLeave((to) => {
 .floatButton {
   position: fixed;
   bottom: 2rem;
-  left: 1rem;
+  left: calc(calc(100vw - calc(min(40rem, 100%))) / 2 + 1rem);
 }
 
 .scrollArea {
