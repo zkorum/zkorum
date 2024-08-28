@@ -1,19 +1,20 @@
 <template>
   <div>
-    <q-form @submit="onSubmit()" class="container"
-      :class="{ formHeightWebkit: Platform.is.safari, formHeightChromeium: !Platform.is.safari }">
+    <div class="outerDiv">
 
-      <div class="topMatter">
-
-        <div class="topBar">
+      <TopMenuWrapper>
+        <div class="topMenu">
           <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
 
-          <div class="floatRight submissionButtons">
+          <div class="submissionButtons">
             <HelpButton />
             <ZKButton label="Post" type="submit" />
           </div>
         </div>
 
+      </TopMenuWrapper>
+
+      <q-form @submit=" onSubmit()" class="container">
         <div class="communitySelector communityFlex">
           <div class="communityButton" @click="openCommunitySheet()">
             <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
@@ -28,15 +29,11 @@
         <q-input borderless no-error-icon type="text" label="Title" v-model="postDraft.postTitle" lazy-rules
           :rules="[val => val && val.length > 0]" class="titleStyle" />
 
-      </div>
-
-      <div class="midMatter">
-        <q-scroll-area class="scrollArea">
-          <q-input autogrow borderless no-error-icon type="textarea" label="body text" v-model="postDraft.postBody"
-            lazy-rules />
+        <div>
+          <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="3rem" flat />
 
           <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
-            <div class="pollingFlexStyle">
+            <div class="pollingFlexStyle" ref="pollRef">
               <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
                 <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Poll Option ' + (index + 1)"
                   v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%', padding: '1rem' }" />
@@ -54,46 +51,50 @@
             </div>
           </ZKCard>
 
-        </q-scroll-area>
-      </div>
-
-      <div class="bottomMatter">
-        <q-btn outline rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
-          color="accent" @click="postDraft.enablePolling = !postDraft.enablePolling" />
-      </div>
-    </q-form>
-
-    <q-dialog v-model="showExitDialog">
-      <ZKCard>
-        <div class="exitDialogStyle">
-          <div class="dialogTitle">Discard this post?</div>
-
-          <div>Your drafted post will not be saved.</div>
-
-          <div class="dialogButtons">
-            <ZKButton flat label="Cancel" text-color-flex="primary" v-close-popup />
-            <ZKButton label="Discard" v-close-popup @click="leaveRoute()" />
-          </div>
         </div>
-      </ZKCard>
-    </q-dialog>
 
+      </q-form>
+
+      <div class="floatButton">
+        <q-btn unelevated rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
+          color="accent" @click="togglePolling()" />
+      </div>
+
+      <q-dialog v-model="showExitDialog">
+        <ZKCard>
+          <div class="exitDialogStyle">
+            <div class="dialogTitle">Discard this post?</div>
+
+            <div>Your drafted post will not be saved.</div>
+
+            <div class="dialogButtons">
+              <ZKButton flat label="Cancel" text-color-flex="primary" v-close-popup />
+              <ZKButton label="Discard" v-close-popup @click="leaveRoute()" />
+            </div>
+          </div>
+        </ZKCard>
+      </q-dialog>
+
+    </div>
   </div>
+
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref } from "vue";
+import { nextTick, onUnmounted, ref } from "vue";
 import { onBeforeRouteLeave, RouteLocationNormalized, useRoute, useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
 import ZKCard from "@/components/ui-library/ZKCard.vue";
+import TopMenuWrapper from "@/components/navigation/TopMenuWrapper.vue";
 import HelpButton from "@/components/navigation/buttons/HelpButton.vue";
 import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
 import { useNewPostDraftsStore } from "@/stores/newPostDrafts";
-import { Platform } from "quasar";
 
 const router = useRouter();
 const route = useRoute();
+
+const pollRef = ref<HTMLElement | null>(null);
 
 const showExitDialog = ref(false);
 
@@ -106,7 +107,19 @@ const { postDraft, isPostEdited } = useNewPostDraftsStore();
 let grantedRouteLeave = false;
 
 
-onReset();
+loadCommunityId();
+
+let savedToRoute: RouteLocationNormalized = {
+  matched: [],
+  fullPath: "",
+  query: {},
+  hash: "",
+  name: "",
+  path: "",
+  meta: {},
+  params: {},
+  redirectedFrom: undefined
+};
 
 window.onbeforeunload = function () {
   if (isPostEdited()) {
@@ -117,6 +130,19 @@ window.onbeforeunload = function () {
 onUnmounted(() => {
   window.onbeforeunload = () => { };
 })
+
+async function togglePolling() {
+  postDraft.value.enablePolling = !postDraft.value.enablePolling;
+
+  await nextTick();
+  scrollToPoll();
+}
+
+function scrollToPoll() {
+  if (postDraft.value.enablePolling) {
+    pollRef.value?.scrollIntoView({ behavior: "smooth", "inline": "start" });
+  }
+}
 
 function addPollOption() {
   postDraft.value.pollingOptionList.push("");
@@ -135,24 +161,12 @@ function onSubmit() {
   router.push({ name: "single-post", params: { postSlugId: "asdf" } })
 }
 
-function onReset() {
+function loadCommunityId() {
   const initialCommunityId = route.params.communityId;
   if (typeof initialCommunityId == "string") {
     selectedCommunityId.value = initialCommunityId;
   }
 }
-
-let savedToRoute: RouteLocationNormalized = {
-  matched: [],
-  fullPath: "",
-  query: {},
-  hash: "",
-  name: "",
-  path: "",
-  meta: {},
-  params: {},
-  redirectedFrom: undefined
-};
 
 function leaveRoute() {
   grantedRouteLeave = true;
@@ -172,11 +186,6 @@ onBeforeRouteLeave((to) => {
 </script>
 
 <style scoped lang="scss">
-.floatRight {
-  position: absolute;
-  right: 1rem;
-}
-
 .communityButton {
   display: flex;
   font-size: 1rem;
@@ -200,6 +209,7 @@ onBeforeRouteLeave((to) => {
 
 .pollingForm {
   padding-top: 1rem;
+  padding-bottom: 10rem;
 }
 
 .titleStyle {
@@ -247,54 +257,32 @@ onBeforeRouteLeave((to) => {
   justify-content: space-around;
 }
 
-.topBar {
-  display: flex;
-  align-items: center;
-}
-
 .submissionButtons {
   display: flex;
   gap: 1rem;
 }
 
-.formHeightWebkit {
-  height: -webkit-fill-available;
-}
-
-.formHeightChromeium {
-  height: 100vh;
-}
-
-.container {
-  padding: 1rem;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: min-content auto min-content;
-  gap: 0px 0px;
-  grid-template-areas:
-    "topMatter"
-    "midMatter"
-    "bottomMatter";
-}
-
-.topMatter {
-  grid-area: topMatter;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.midMatter {
-  grid-area: midMatter;
-}
-
-.bottomMatter {
-  grid-area: bottomMatter;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+.floatButton {
+  position: fixed;
+  bottom: 2rem;
+  left: 1rem;
 }
 
 .scrollArea {
   height: 100%;
+}
+
+.outerDiv {
+  position: relative;
+}
+
+.container {
+  padding: 1rem;
+}
+
+.topMenu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>
