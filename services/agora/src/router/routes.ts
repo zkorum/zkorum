@@ -28,6 +28,18 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: "/settings",
+    component: MainLayout,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
+    children: [
+      {
+        path: "",
+        component: () => import("pages/settings/index.vue"),
+        name: "settings-page"
+      },
+    ],
+  },
+  {
     path: "/community",
     component: MainLayout,
     props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,

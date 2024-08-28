@@ -4,8 +4,10 @@
       <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
     </div>
     <div class="menuButtons">
-      <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="hasSettingsButton" />
       <HelpButton />
+      <RouterLink :to="{ name: 'settings-page' }">
+        <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="hasSettingsButton" />
+      </RouterLink>
     </div>
   </TopMenuWarpper>
 </template>
