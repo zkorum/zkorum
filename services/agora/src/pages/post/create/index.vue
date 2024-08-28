@@ -9,7 +9,6 @@
           <HelpButton />
           <ZKButton label="Post" type="submit" />
         </div>
-
       </div>
 
       <div class="formStyle">
@@ -186,7 +185,7 @@ onBeforeRouteLeave((to) => {
 
 .floatRight {
   position: absolute;
-  right: 0;
+  right: 1rem;
 }
 
 .communityButton {
@@ -262,8 +261,7 @@ onBeforeRouteLeave((to) => {
 .topBar {
   display: flex;
   align-items: center;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding: 0.5rem;
 }
 
 .submissionButtons {
