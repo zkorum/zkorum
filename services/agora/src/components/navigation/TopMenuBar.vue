@@ -4,7 +4,7 @@
       <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
     </div>
     <div class="menuButtons">
-      <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="showSettingsMenu" />
+      <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="hasSettingsButton" />
       <ZKButton icon="mdi-help" text-color-flex="black" flat />
     </div>
   </TopMenuWarpper>
@@ -17,7 +17,7 @@ import TopMenuWarpper from "@/components/navigation/TopMenuWarpper.vue";
 
 defineProps<{
   hasBackButton: boolean
-  showSettingsMenu: boolean
+  hasSettingsButton: boolean
 }>();
 
 const router = useRouter();

@@ -1,12 +1,12 @@
 import { RouteRecordRaw } from "vue-router";
-import OnboardingLayout from "layouts/OnboardingLayout.vue";
-import { MainLayoutProps, OnboardingLayoutProps } from "@/utils/model/props";
+import MainLayout from "layouts/MainLayout.vue";
+import { MainLayoutProps } from "@/utils/model/props";
 
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
-    component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false, isFullscreen: false, enableHeader: true } as MainLayoutProps,
+    component: MainLayout,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
         path: "",
@@ -17,8 +17,8 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/community",
-    component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false, isFullscreen: false, enableHeader: true } as MainLayoutProps,
+    component: MainLayout,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
         path: "explore",
@@ -34,8 +34,8 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/post",
-    component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: true, isFullscreen: true, enableHeader: true } as MainLayoutProps,
+    component: MainLayout,
+    props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
         path: ":postSlugId",
@@ -46,8 +46,8 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/post",
-    component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false, isFullscreen: true, enableHeader: false } as MainLayoutProps,
+    component: MainLayout,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: false, useStylelessFooter: true } as MainLayoutProps,
     children: [
       {
         path: "create/:communityId?",
@@ -58,8 +58,8 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/",
-    component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false, isFullscreen: false, enableHeader: true } as MainLayoutProps,
+    component: MainLayout,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
         path: "/notifications",
@@ -88,7 +88,8 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: "login",
-        component: OnboardingLayout,
+        component: MainLayout,
+        props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
             path: "",
@@ -99,8 +100,8 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: "passphrase",
-        component: OnboardingLayout,
-        props: { hasGoBackButton: true, hasHelpButton: true, enableHeader: true } as OnboardingLayoutProps,
+        component: MainLayout,
+        props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
             path: ":emailAddressEncoded",

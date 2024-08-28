@@ -1,13 +1,14 @@
 <template>
   <div>
-    <q-layout view="hHh lpR fFf" class="container" :class="{ bottomPagePadding: !isFullscreen }">
-      <TopMenuBar :has-back-button="props.hasGoBackButton" :show-settings-menu="true" v-if="enableHeader" />
+    <q-layout view="hHh lpR fFf" class="container" :class="{ bottomPagePadding: addBottomPadding }">
+      <TopMenuBar :has-back-button="props.headerHasGoBackButton" :has-settings-button="props.headerHasSettingsButton"
+        v-if="enableHeader" />
 
       <q-page-container>
         <router-view />
       </q-page-container>
 
-      <q-footer bordered :class="{ coloredFooter: !isFullscreen, stylelessFooter: isFullscreen }">
+      <q-footer bordered :class="{ coloredFooter: !useStylelessFooter, stylelessFooter: useStylelessFooter }">
         <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
           <q-route-tab :to="{ name: 'default-home-feed' }"
             :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
