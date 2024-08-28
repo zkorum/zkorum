@@ -2,16 +2,18 @@
   <div>
     <q-form @submit="onSubmit()" class="container"
       :class="{ formHeightWebkit: Platform.is.safari, formHeightChromeium: !Platform.is.safari }">
-      <div class="topBar">
-        <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
 
-        <div class="floatRight submissionButtons">
-          <HelpButton />
-          <ZKButton label="Post" type="submit" />
+      <div class="topMatter">
+
+        <div class="topBar">
+          <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
+
+          <div class="floatRight submissionButtons">
+            <HelpButton />
+            <ZKButton label="Post" type="submit" />
+          </div>
         </div>
-      </div>
 
-      <div class="formStyle">
         <div class="communitySelector communityFlex">
           <div class="communityButton" @click="openCommunitySheet()">
             <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
@@ -23,12 +25,13 @@
           </div>
         </div>
 
-        <div class="formElement">
-          <q-input borderless no-error-icon type="text" label="Title" v-model="postDraft.postTitle" lazy-rules
-            :rules="[val => val && val.length > 0]" class="titleStyle" />
-        </div>
+        <q-input borderless no-error-icon type="text" label="Title" v-model="postDraft.postTitle" lazy-rules
+          :rules="[val => val && val.length > 0]" class="titleStyle" />
 
-        <div class="formElement">
+      </div>
+
+      <div class="midMatter">
+        <q-scroll-area class="scrollArea">
           <q-input autogrow borderless no-error-icon type="textarea" label="body text" v-model="postDraft.postBody"
             lazy-rules />
 
@@ -51,15 +54,13 @@
             </div>
           </ZKCard>
 
-        </div>
-
+        </q-scroll-area>
       </div>
 
-      <div class="bottomFloater">
-        <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent"
-          @click="postDraft.enablePolling = !postDraft.enablePolling" />
+      <div class="bottomMatter">
+        <q-btn outline rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
+          color="accent" @click="postDraft.enablePolling = !postDraft.enablePolling" />
       </div>
-
     </q-form>
 
     <q-dialog v-model="showExitDialog">
@@ -171,18 +172,6 @@ onBeforeRouteLeave((to) => {
 </script>
 
 <style scoped lang="scss">
-.formStyle {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.formElement {
-  display: flex;
-  flex-direction: column;
-}
-
 .floatRight {
   position: absolute;
   right: 1rem;
@@ -261,7 +250,6 @@ onBeforeRouteLeave((to) => {
 .topBar {
   display: flex;
   align-items: center;
-  padding: 0.5rem;
 }
 
 .submissionButtons {
@@ -269,21 +257,44 @@ onBeforeRouteLeave((to) => {
   gap: 1rem;
 }
 
-.container {
-  position: relative;
-}
-
 .formHeightWebkit {
-  min-height: -webkit-fill-available;
+  height: -webkit-fill-available;
 }
 
 .formHeightChromeium {
-  min-height: 100vh;
+  height: 100vh;
 }
 
-.bottomFloater {
-  position: absolute;
-  left: 1rem;
-  bottom: 2rem;
+.container {
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: min-content auto min-content;
+  gap: 0px 0px;
+  grid-template-areas:
+    "topMatter"
+    "midMatter"
+    "bottomMatter";
+}
+
+.topMatter {
+  grid-area: topMatter;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.midMatter {
+  grid-area: midMatter;
+}
+
+.bottomMatter {
+  grid-area: bottomMatter;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.scrollArea {
+  height: 100%;
 }
 </style>
