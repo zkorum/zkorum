@@ -1,6 +1,7 @@
 <template>
   <div>
-    <q-layout view="hHh lpR fFf" class="container" :class="{ bottomPagePadding: addBottomPadding }">
+    <q-layout view="hHh lpR fFf" class="container"
+      :class="{ bottomPagePadding: addBottomPadding, outerPadding: addOuterPadding }">
       <TopMenuBar :has-back-button="props.headerHasGoBackButton" :has-settings-button="props.headerHasSettingsButton"
         v-if="enableHeader" />
 
@@ -24,9 +25,7 @@
         </q-tabs>
       </q-footer>
     </q-layout>
-
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -46,6 +45,9 @@ const currentRouteName = route.name;
 .container {
   width: min(40rem, 100%);
   margin: auto;
+}
+
+.outerPadding {
   padding: 0.5rem;
 }
 

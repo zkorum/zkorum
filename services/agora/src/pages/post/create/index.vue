@@ -1,6 +1,7 @@
 <template>
   <div>
-    <q-form @submit="onSubmit">
+    <q-form @submit="onSubmit()" class="container"
+      :class="{ formHeightWebkit: Platform.is.safari, formHeightChromeium: !Platform.is.safari }">
       <div class="topBar">
         <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
 
@@ -54,6 +55,12 @@
         </div>
 
       </div>
+
+      <div class="bottomFloater">
+        <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent"
+          @click="postDraft.enablePolling = !postDraft.enablePolling" />
+      </div>
+
     </q-form>
 
     <q-dialog v-model="showExitDialog">
@@ -71,10 +78,6 @@
       </ZKCard>
     </q-dialog>
 
-    <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn outline rounded label="Poll" icon="mdi-poll" color="accent"
-        @click="postDraft.enablePolling = !postDraft.enablePolling" />
-    </q-page-sticky>
   </div>
 </template>
 
@@ -87,6 +90,7 @@ import HelpButton from "@/components/navigation/buttons/HelpButton.vue";
 import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
 import { useNewPostDraftsStore } from "@/stores/newPostDrafts";
+import { Platform } from "quasar";
 
 const router = useRouter();
 const route = useRoute();
@@ -100,6 +104,7 @@ const { showCreatePostCommunitySelector } = useBottomSheet();
 const { postDraft, isPostEdited } = useNewPostDraftsStore();
 
 let grantedRouteLeave = false;
+
 
 onReset();
 
@@ -264,5 +269,23 @@ onBeforeRouteLeave((to) => {
 .submissionButtons {
   display: flex;
   gap: 1rem;
+}
+
+.container {
+  position: relative;
+}
+
+.formHeightWebkit {
+  min-height: -webkit-fill-available;
+}
+
+.formHeightChromeium {
+  min-height: 100vh;
+}
+
+.bottomFloater {
+  position: absolute;
+  left: 1rem;
+  bottom: 2rem;
 }
 </style>
