@@ -26,8 +26,8 @@
           </div>
         </div>
 
-        <q-input borderless no-error-icon type="text" label="Title" v-model="postDraft.postTitle" lazy-rules
-          :rules="[val => val && val.length > 0]" class="titleStyle" />
+        <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
+          :rules="[val => val && val.length > 0]" class="titleStyle" autogrow />
 
         <div>
           <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="3rem" flat />
