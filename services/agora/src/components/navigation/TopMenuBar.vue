@@ -1,5 +1,5 @@
 <template>
-  <TopMenuWarpper>
+  <TopMenuWrapper>
     <div style="width: 100%">
       <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
     </div>
@@ -9,13 +9,13 @@
         <ZKButton icon="mdi-cog" text-color-flex="black" flat v-if="hasSettingsButton" />
       </RouterLink>
     </div>
-  </TopMenuWarpper>
+  </TopMenuWrapper>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
-import TopMenuWarpper from "@/components/navigation/TopMenuWarpper.vue";
+import TopMenuWrapper from "./TopMenuWrapper.vue";
 import HelpButton from "./buttons/HelpButton.vue";
 
 defineProps<{
