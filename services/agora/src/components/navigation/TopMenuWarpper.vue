@@ -10,11 +10,6 @@
 </script>
 
 <style scoped>
-.menuButtons {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .menuStyle {
   display: flex;
   justify-content: space-around;

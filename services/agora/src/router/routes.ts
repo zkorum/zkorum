@@ -47,7 +47,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/post",
     component: () => import("layouts/MainLayout.vue"),
-    props: { hasGoBackButton: false, isFullscreen: false, enableHeader: false } as MainLayoutProps,
+    props: { hasGoBackButton: false, isFullscreen: true, enableHeader: false } as MainLayoutProps,
     children: [
       {
         path: "create/:communityId?",
