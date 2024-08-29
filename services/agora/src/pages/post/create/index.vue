@@ -29,18 +29,20 @@
           </div>
 
           <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
-            :rules="[val => val && val.length > 0]" class="titleStyle" autogrow />
+            :rules="[val => val && val.length > 0]" class="titleStyle" autogrow
+            :counter="postDraft.postTitle.length > POST_TITLE_LENGTH_WARNING" :maxlength="POST_TITLE_LENGTH_MAX"
+            clearable />
 
           <div>
             <div :class="{ editorPadding: !postDraft.enablePolling }">
               <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" flat
                 @update:model-value="checkWordCount()" />
 
-              <div class="wordCountDiv">
-                <q-icon name="mdi-alert-circle" v-if="bodyWordCount > MAX_POST_BODY_LENGTH"
+              <div class="wordCountDiv" v-if="bodyWordCount > POST_BODY_LENGTH_WARNING">
+                <q-icon name="mdi-alert-circle" v-if="bodyWordCount > POST_BODY_LENGTH_MAX"
                   class="bodySizeWarningIcon" />
-                <span :class="{ wordCountWarning: bodyWordCount > MAX_POST_BODY_LENGTH }">{{
-                  bodyWordCount }} </span> &nbsp; / {{ MAX_POST_BODY_LENGTH }}
+                <span :class="{ wordCountWarning: bodyWordCount > POST_BODY_LENGTH_MAX }">{{
+                  bodyWordCount }} </span> &nbsp; / {{ POST_BODY_LENGTH_MAX }}
               </div>
             </div>
 
@@ -48,8 +50,9 @@
               <div class="pollingFlexStyle" ref="pollRef">
                 <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
                   <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Poll Option ' + (index + 1)"
-                    v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%', padding: '1rem' }" />
-                  <div :style="{ width: '2rem' }">
+                    v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%' }"
+                    :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
+                  <div class="deletePollOptionDiv">
                     <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
                       v-if="postDraft.pollingOptionList.length != 2" text-color-flex="primary" />
                   </div>
@@ -103,7 +106,11 @@ import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
 import { useNewPostDraftsStore } from "@/stores/newPostDrafts";
 
-const MAX_POST_BODY_LENGTH = 260;
+const POST_BODY_LENGTH_MAX = 260;
+const POST_BODY_LENGTH_WARNING = 200;
+const POST_TITLE_LENGTH_MAX = 130;
+const POST_TITLE_LENGTH_WARNING = 100;
+const POLL_OPTION_LENGTH_MAX = 100;
 const bodyWordCount = ref(0);
 const exceededBodyWordCount = ref(false);
 
@@ -151,7 +158,7 @@ function checkWordCount() {
   const text = div.innerText || "";
   bodyWordCount.value = text.length;
 
-  if (bodyWordCount.value > MAX_POST_BODY_LENGTH) {
+  if (bodyWordCount.value > POST_BODY_LENGTH_MAX) {
     exceededBodyWordCount.value = true;
   } else {
     exceededBodyWordCount.value = false;
@@ -332,5 +339,11 @@ onBeforeRouteLeave((to) => {
 .bodySizeWarningIcon {
   font-size: 1rem;
   padding-right: 0.5rem;
+}
+
+.deletePollOptionDiv {
+  width: 3rem;
+  padding-bottom: 20px;
+  padding-left: 1rem;
 }
 </style>
