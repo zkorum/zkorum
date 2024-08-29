@@ -4,7 +4,7 @@
 
       <q-form @submit=" onSubmit()">
 
-        <TopMenuWrapper>
+        <TopMenuWrapper :reveal="false">
           <div class="topMenu">
             <div class="menuFlexGroup">
               <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />

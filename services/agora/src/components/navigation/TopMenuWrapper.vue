@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-header :reveal="true" bordered class="menuStyle">
+    <q-header :reveal="reveal" bordered class="menuStyle">
       <WidthWrapper>
         <slot />
       </WidthWrapper>
@@ -10,6 +10,11 @@
 
 <script setup lang="ts">
 import WidthWrapper from "./WidthWrapper.vue";
+
+defineProps<{
+  reveal: boolean
+}>()
+
 </script>
 
 <style scoped>

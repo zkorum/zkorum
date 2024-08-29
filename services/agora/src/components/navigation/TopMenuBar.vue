@@ -1,5 +1,5 @@
 <template>
-  <TopMenuWrapper>
+  <TopMenuWrapper :reveal="true">
     <div class="topMenu">
       <div>
         <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
