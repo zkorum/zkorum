@@ -32,7 +32,7 @@
             :rules="[val => val && val.length > 0]" class="titleStyle" autogrow />
 
           <div>
-            <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="3rem" flat />
+            <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" flat />
 
             <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
               <div class="pollingFlexStyle" ref="pollRef">
