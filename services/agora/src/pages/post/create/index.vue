@@ -81,8 +81,8 @@
       </q-form>
 
       <div class="floatButton" :class="{ lessTransparency: postDraft.enablePolling }">
-        <q-btn outline rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
-          color="accent" @click="togglePolling()" />
+        <ZKButton unelevated rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
+          color-flex="grey-8" text-color-flex="white" @click="togglePolling()" />
       </div>
 
       <q-dialog v-model="showExitDialog">
@@ -364,7 +364,7 @@ onBeforeRouteLeave((to) => {
 }
 
 .lessTransparency {
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .pollTopBar {
