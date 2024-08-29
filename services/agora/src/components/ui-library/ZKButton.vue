@@ -1,0 +1,32 @@
+<template>
+  <q-btn v-bind="props" :color="buttonColor" :text-color="buttonTextColor" no-caps :rounded="true" unelevated>
+    <slot />
+  </q-btn>
+</template>
+
+<script setup lang="ts">
+import { QBtnProps } from "quasar";
+import { ref } from "vue";
+
+interface ButtonProps extends Omit<QBtnProps, "color" | "textColor"> {
+  colorFlex?: string;
+  textColorFlex?: string;
+}
+
+const props = defineProps<ButtonProps>();
+
+const buttonColor = ref("");
+if (props.colorFlex == undefined) {
+  buttonColor.value = "accent";
+} else {
+  buttonColor.value = props.colorFlex;
+}
+
+const buttonTextColor = ref("");
+if (props.textColorFlex == undefined) {
+  buttonTextColor.value = "white";
+} else {
+  buttonTextColor.value = props.textColorFlex;
+}
+
+</script>

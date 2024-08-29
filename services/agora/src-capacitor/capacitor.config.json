@@ -1,0 +1,9 @@
+{
+  "appId": "com.zkorum.agora",
+  "appName": "Agora",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "url": "http://192.168.1.96:9500"
+  }
+}
