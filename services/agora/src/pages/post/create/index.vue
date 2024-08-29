@@ -177,9 +177,14 @@ function checkWordCount() {
 async function togglePolling() {
   postDraft.value.enablePolling = !postDraft.value.enablePolling;
 
-  setTimeout(function () {
-    scrollToPoll();
-  }, 100);
+  if (postDraft.value.enablePolling) {
+    setTimeout(function () {
+      scrollToPoll();
+    }, 100);
+  } else {
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
 
 }
 
