@@ -10,7 +10,7 @@
 
             <div class="submissionButtons">
               <HelpButton />
-              <ZKButton label="Post" type="submit" />
+              <ZKButton label="Post" type="submit" :disable="exceededBodyWordCount" />
             </div>
           </div>
 
@@ -33,7 +33,15 @@
 
           <div>
             <div :class="{ editorPadding: !postDraft.enablePolling }">
-              <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" flat />
+              <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" flat
+                @update:model-value="checkWordCount()" />
+
+              <div class="wordCountDiv">
+                <q-icon name="mdi-alert-circle" v-if="bodyWordCount > MAX_POST_BODY_LENGTH"
+                  class="bodySizeWarningIcon" />
+                <span :class="{ wordCountWarning: bodyWordCount > MAX_POST_BODY_LENGTH }">{{
+                  bodyWordCount }} </span> &nbsp; / {{ MAX_POST_BODY_LENGTH }}
+              </div>
             </div>
 
             <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
@@ -95,6 +103,10 @@ import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
 import { useNewPostDraftsStore } from "@/stores/newPostDrafts";
 
+const MAX_POST_BODY_LENGTH = 260;
+const bodyWordCount = ref(0);
+const exceededBodyWordCount = ref(false);
+
 const router = useRouter();
 const route = useRoute();
 
@@ -109,7 +121,6 @@ const { showCreatePostCommunitySelector } = useBottomSheet();
 const { postDraft, isPostEdited } = useNewPostDraftsStore();
 
 let grantedRouteLeave = false;
-
 
 loadCommunityId();
 
@@ -134,6 +145,19 @@ window.onbeforeunload = function () {
 onUnmounted(() => {
   window.onbeforeunload = () => { };
 })
+function checkWordCount() {
+  const div = document.createElement("div");
+  div.innerHTML = postDraft.value.postBody;
+  const text = div.innerText || "";
+  bodyWordCount.value = text.length;
+
+  if (bodyWordCount.value > MAX_POST_BODY_LENGTH) {
+    exceededBodyWordCount.value = true;
+  } else {
+    exceededBodyWordCount.value = false;
+  }
+
+}
 
 async function togglePolling() {
   postDraft.value.enablePolling = !postDraft.value.enablePolling;
@@ -292,5 +316,21 @@ onBeforeRouteLeave((to) => {
 
 .editorPadding {
   padding-bottom: 6rem;
+}
+
+.wordCountDiv {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+}
+
+.wordCountWarning {
+  color: $negative;
+  font-weight: bold;
+}
+
+.bodySizeWarningIcon {
+  font-size: 1rem;
+  padding-right: 0.5rem;
 }
 </style>
