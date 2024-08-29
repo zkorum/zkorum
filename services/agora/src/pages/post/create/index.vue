@@ -47,20 +47,25 @@
             </div>
 
             <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
+              <div class="pollTopBar">
+                <div>
+                  Poll
+                </div>
+                <ZKButton flat text-color-flex="black" icon="mdi-close" @click="togglePolling()" />
+              </div>
               <div class="pollingFlexStyle" ref="pollRef">
                 <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
-                  <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Poll Option ' + (index + 1)"
+                  <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index + 1)"
                     v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%' }"
                     :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
-                  <div class="deletePollOptionDiv">
-                    <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
-                      v-if="postDraft.pollingOptionList.length != 2" text-color-flex="primary" />
+                  <div class="deletePollOptionDiv" v-if="postDraft.pollingOptionList.length != 2">
+                    <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)" text-color-flex="primary" />
                   </div>
 
                 </div>
 
                 <div>
-                  <ZKButton flat text-color-flex="primary" label="Add Option" @click="addPollOption()"
+                  <ZKButton flat text-color-flex="primary" icon="mdi-plus" label="Add Option" @click="addPollOption()"
                     :disable="postDraft.pollingOptionList.length == 6" />
                 </div>
               </div>
@@ -70,8 +75,8 @@
         </div>
       </q-form>
 
-      <div class="floatButton">
-        <q-btn unelevated rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
+      <div class="floatButton" :class="{ lessTransparency: !postDraft.enablePolling }">
+        <q-btn outline rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
           color="accent" @click="togglePolling()" />
       </div>
 
@@ -234,7 +239,6 @@ onBeforeRouteLeave((to) => {
 .pollingFlexStyle {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
   padding: 1rem;
 }
 
@@ -347,5 +351,18 @@ onBeforeRouteLeave((to) => {
   width: 3rem;
   padding-bottom: 20px;
   padding-left: 1rem;
+}
+
+.lessTransparency {
+  opacity: 0.6;
+}
+
+.pollTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
 }
 </style>
