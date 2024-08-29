@@ -32,7 +32,9 @@
             :rules="[val => val && val.length > 0]" class="titleStyle" autogrow />
 
           <div>
-            <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" flat />
+            <div :class="{ editorPadding: !postDraft.enablePolling }">
+              <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" flat />
+            </div>
 
             <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
               <div class="pollingFlexStyle" ref="pollRef">
@@ -211,7 +213,7 @@ onBeforeRouteLeave((to) => {
 
 .pollingForm {
   padding-top: 1rem;
-  padding-bottom: 10rem;
+  padding-bottom: 6rem;
 }
 
 .titleStyle {
@@ -286,5 +288,9 @@ onBeforeRouteLeave((to) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.editorPadding {
+  padding-bottom: 6rem;
 }
 </style>
