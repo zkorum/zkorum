@@ -1,24 +1,20 @@
 <template>
   <div>
     <q-header :reveal="true" bordered class="menuStyle">
-      <div class="innerStyle">
+      <WidthWrapper>
         <slot />
-      </div>
+      </WidthWrapper>
     </q-header>
   </div>
 </template>
 
 <script setup lang="ts">
+import WidthWrapper from "./WidthWrapper.vue";
 </script>
 
 <style scoped>
 .menuStyle {
   background-color: #fafafa;
-}
-
-.innerStyle {
-  padding: 0.5rem;
-  width: min(40rem, 100%);
-  margin: auto;
+  padding: 0.3rem;
 }
 </style>

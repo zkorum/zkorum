@@ -215,8 +215,4 @@ a {
   text-decoration: none;
   color: unset
 }
-
-.dialogDiv {
-  width: min(100%, 40rem);
-}
 </style>
