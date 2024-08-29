@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onUnmounted, ref } from "vue";
+import { onUnmounted, ref } from "vue";
 import { onBeforeRouteLeave, RouteLocationNormalized, useRoute, useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
 import ZKCard from "@/components/ui-library/ZKCard.vue";
@@ -169,8 +169,10 @@ function checkWordCount() {
 async function togglePolling() {
   postDraft.value.enablePolling = !postDraft.value.enablePolling;
 
-  await nextTick();
-  scrollToPoll();
+  setTimeout(function () {
+    scrollToPoll();
+  }, 400);
+
 }
 
 function scrollToPoll() {
