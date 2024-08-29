@@ -6,9 +6,22 @@
 
         <TopMenuWrapper>
           <div class="topMenu">
-            <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
+            <div class="menuFlexGroup">
+              <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
 
-            <div class="submissionButtons">
+              <div class="communitySelector communityFlex">
+                <div class="communityButton" @click="openCommunitySheet()">
+                  <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
+                  <div>
+                    a/{{ selectedCommunityId }}
+                  </div>
+
+                  <q-icon name="mdi-menu-down-outline" />
+                </div>
+              </div>
+            </div>
+
+            <div class="menuFlexGroup">
               <HelpButton />
               <ZKButton label="Post" type="submit" :disable="exceededBodyWordCount" />
             </div>
@@ -17,17 +30,6 @@
         </TopMenuWrapper>
 
         <div class="container">
-          <div class="communitySelector communityFlex">
-            <div class="communityButton" @click="openCommunitySheet()">
-              <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
-              <div>
-                a/{{ selectedCommunityId }}
-              </div>
-
-              <q-icon name="mdi-menu-down-outline" />
-            </div>
-          </div>
-
           <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
             :rules="[val => val && val.length > 0]" class="titleStyle" autogrow
             :counter="postDraft.postTitle.length > POST_TITLE_LENGTH_WARNING" :maxlength="POST_TITLE_LENGTH_MAX"
@@ -78,7 +80,7 @@
         </div>
       </q-form>
 
-      <div class="floatButton" :class="{ lessTransparency: !postDraft.enablePolling }">
+      <div class="floatButton" :class="{ lessTransparency: postDraft.enablePolling }">
         <q-btn outline rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
           color="accent" @click="togglePolling()" />
       </div>
@@ -240,7 +242,7 @@ onBeforeRouteLeave((to) => {
   display: flex;
   font-size: 1rem;
   align-items: center;
-  gap: 1rem;
+  gap: 0.7rem;
   padding: 0.2rem;
 }
 
@@ -279,6 +281,7 @@ onBeforeRouteLeave((to) => {
 
 .communitySelector {
   font-weight: bold;
+  color: black;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   padding-right: 0.5rem;
@@ -305,9 +308,9 @@ onBeforeRouteLeave((to) => {
   justify-content: space-around;
 }
 
-.submissionButtons {
+.menuFlexGroup {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .floatButton {
