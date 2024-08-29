@@ -15,6 +15,6 @@ import WidthWrapper from "./WidthWrapper.vue";
 <style scoped>
 .menuStyle {
   background-color: #fafafa;
-  padding: 0.3rem;
+  padding: 0.6rem;
 }
 </style>
