@@ -2,57 +2,59 @@
   <div>
     <div class="outerDiv">
 
-      <TopMenuWrapper>
-        <div class="topMenu">
-          <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
+      <q-form @submit=" onSubmit()">
 
-          <div class="submissionButtons">
-            <HelpButton />
-            <ZKButton label="Post" type="submit" />
-          </div>
-        </div>
+        <TopMenuWrapper>
+          <div class="topMenu">
+            <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
 
-      </TopMenuWrapper>
-
-      <q-form @submit=" onSubmit()" class="container">
-        <div class="communitySelector communityFlex">
-          <div class="communityButton" @click="openCommunitySheet()">
-            <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
-            <div>
-              a/{{ selectedCommunityId }}
+            <div class="submissionButtons">
+              <HelpButton />
+              <ZKButton label="Post" type="submit" />
             </div>
-
-            <q-icon name="mdi-menu-down-outline" />
           </div>
-        </div>
 
-        <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
-          :rules="[val => val && val.length > 0]" class="titleStyle" autogrow />
+        </TopMenuWrapper>
 
-        <div>
-          <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="3rem" flat />
+        <div class="container">
+          <div class="communitySelector communityFlex">
+            <div class="communityButton" @click="openCommunitySheet()">
+              <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
+              <div>
+                a/{{ selectedCommunityId }}
+              </div>
 
-          <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
-            <div class="pollingFlexStyle" ref="pollRef">
-              <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
-                <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Poll Option ' + (index + 1)"
-                  v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%', padding: '1rem' }" />
-                <div :style="{ width: '2rem' }">
-                  <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
-                    v-if="postDraft.pollingOptionList.length != 2" text-color-flex="primary" />
+              <q-icon name="mdi-menu-down-outline" />
+            </div>
+          </div>
+
+          <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
+            :rules="[val => val && val.length > 0]" class="titleStyle" autogrow />
+
+          <div>
+            <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="3rem" flat />
+
+            <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
+              <div class="pollingFlexStyle" ref="pollRef">
+                <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
+                  <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Poll Option ' + (index + 1)"
+                    v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%', padding: '1rem' }" />
+                  <div :style="{ width: '2rem' }">
+                    <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
+                      v-if="postDraft.pollingOptionList.length != 2" text-color-flex="primary" />
+                  </div>
+
                 </div>
 
+                <div>
+                  <ZKButton flat text-color-flex="primary" label="Add Option" @click="addPollOption()"
+                    :disable="postDraft.pollingOptionList.length == 6" />
+                </div>
               </div>
+            </ZKCard>
 
-              <div>
-                <ZKButton flat text-color-flex="primary" label="Add Option" @click="addPollOption()"
-                  :disable="postDraft.pollingOptionList.length == 6" />
-              </div>
-            </div>
-          </ZKCard>
-
+          </div>
         </div>
-
       </q-form>
 
       <div class="floatButton">
