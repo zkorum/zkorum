@@ -47,26 +47,29 @@
             </div>
 
             <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
-              <div class="pollTopBar">
-                <div>
-                  Poll
+              <div class="pollPadding">
+                <div class="pollTopBar">
+                  <div>
+                    Poll
+                  </div>
+                  <ZKButton flat text-color-flex="black" icon="mdi-close" @click="togglePolling()" />
                 </div>
-                <ZKButton flat text-color-flex="black" icon="mdi-close" @click="togglePolling()" />
-              </div>
-              <div class="pollingFlexStyle" ref="pollRef">
-                <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
-                  <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index + 1)"
-                    v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%' }"
-                    :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
-                  <div class="deletePollOptionDiv" v-if="postDraft.pollingOptionList.length != 2">
-                    <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)" text-color-flex="primary" />
+                <div class="pollingFlexStyle" ref="pollRef">
+                  <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
+                    <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index + 1)"
+                      v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%' }"
+                      :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
+                    <div class="deletePollOptionDiv" v-if="postDraft.pollingOptionList.length != 2">
+                      <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
+                        text-color-flex="primary" />
+                    </div>
+
                   </div>
 
-                </div>
-
-                <div>
-                  <ZKButton flat text-color-flex="primary" icon="mdi-plus" label="Add Option" @click="addPollOption()"
-                    :disable="postDraft.pollingOptionList.length == 6" />
+                  <div>
+                    <ZKButton flat text-color-flex="primary" icon="mdi-plus" label="Add Option" @click="addPollOption()"
+                      :disable="postDraft.pollingOptionList.length == 6" />
+                  </div>
                 </div>
               </div>
             </ZKCard>
@@ -239,7 +242,6 @@ onBeforeRouteLeave((to) => {
 .pollingFlexStyle {
   display: flex;
   flex-direction: column;
-  padding: 1rem;
 }
 
 .buttonCluster {
@@ -361,8 +363,11 @@ onBeforeRouteLeave((to) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
   font-size: 1rem;
   font-weight: bold;
+}
+
+.pollPadding {
+  padding: 1rem;
 }
 </style>
