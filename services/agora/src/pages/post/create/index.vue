@@ -171,7 +171,7 @@ async function togglePolling() {
 
   setTimeout(function () {
     scrollToPoll();
-  }, 400);
+  }, 100);
 
 }
 
