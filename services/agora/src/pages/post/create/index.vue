@@ -12,10 +12,6 @@
               <div class="communitySelector communityFlex">
                 <div class="communityButton" @click="openCommunitySheet()">
                   <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
-                  <div>
-                    a/{{ selectedCommunityId }}
-                  </div>
-
                   <q-icon name="mdi-menu-down-outline" />
                 </div>
               </div>
@@ -78,6 +74,9 @@
 
           </div>
         </div>
+
+        <div ref="endOfForm">
+        </div>
       </q-form>
 
       <div class="floatButton" :class="{ lessTransparency: postDraft.enablePolling }">
@@ -128,6 +127,7 @@ const router = useRouter();
 const route = useRoute();
 
 const pollRef = ref<HTMLElement | null>(null);
+const endOfFormRef = ref<HTMLElement | null>();
 
 const showExitDialog = ref(false);
 
@@ -181,18 +181,12 @@ async function togglePolling() {
 
   if (postDraft.value.enablePolling) {
     setTimeout(function () {
-      scrollToPoll();
+      pollRef.value?.scrollIntoView({ behavior: "smooth", "inline": "start" });
     }, 100);
   } else {
-    window.scrollTo(0, document.body.scrollHeight);
-  }
-
-
-}
-
-function scrollToPoll() {
-  if (postDraft.value.enablePolling) {
-    pollRef.value?.scrollIntoView({ behavior: "smooth", "inline": "start" });
+    setTimeout(function () {
+      endOfFormRef.value?.scrollIntoView({ behavior: "smooth", "inline": "start" });
+    }, 100);
   }
 }
 
