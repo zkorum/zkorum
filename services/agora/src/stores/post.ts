@@ -17,16 +17,18 @@ export interface DummyCommentFormat {
     numDownvotes: number;
 }
 
+export interface DummyPostMetadataFormat {
+    uid: string;
+    slugId: string;
+    isHidden: boolean;
+    updatedAt: Date;
+    lastReactedAt: Date;
+    commentCount: number;
+    communityId: string;
+}
+
 export interface DummyPostDataFormat {
-    metadata: {
-        uid: string;
-        slugId: string;
-        isHidden: boolean;
-        updatedAt: Date;
-        lastReactedAt: Date;
-        commentCount: number;
-        communityId: string;
-    },
+    metadata: DummyPostMetadataFormat,
     payload: {
         title: string;
         body: string;
