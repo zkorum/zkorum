@@ -20,6 +20,7 @@ defineProps<{
 <style scoped>
 .menuStyle {
   background-color: #fafafa;
-  padding: 0.6rem;
+  height: 3.5rem;
+  display: flex;
 }
 </style>

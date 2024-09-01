@@ -46,6 +46,6 @@ function mapCommunityItem() {
   border-style: solid;
   border-width: 1px;
   border-color: #e5e7eb;
-  max-width: 100%
+  max-width: 100%;
 }
 </style>

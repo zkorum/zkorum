@@ -1,7 +1,6 @@
 <template>
   <div>
-    <div class="outerDiv">
-
+    <div>
       <q-form @submit=" onSubmit()">
 
         <TopMenuWrapper :reveal="false">
@@ -11,7 +10,7 @@
 
               <div class="communitySelector communityFlex">
                 <div class="communityButton" @click="openCommunitySheet()">
-                  <CommunityIcon :community-id="selectedCommunityId" :show-country-name="false" :compact="true" />
+                  <CommunityIcon :community-id="selectedCommunityId" />
                   <q-icon name="mdi-menu-down-outline" />
                 </div>
               </div>
@@ -236,8 +235,8 @@ onBeforeRouteLeave((to) => {
   display: flex;
   font-size: 1rem;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.2rem;
+  gap: 0.8rem;
+  width: 3rem;
 }
 
 .pollingFlexStyle {
@@ -315,10 +314,6 @@ onBeforeRouteLeave((to) => {
 
 .scrollArea {
   height: 100%;
-}
-
-.outerDiv {
-  position: relative;
 }
 
 .container {
