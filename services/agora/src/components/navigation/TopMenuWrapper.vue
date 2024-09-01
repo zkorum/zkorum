@@ -22,5 +22,7 @@ defineProps<{
   background-color: #fafafa;
   height: 3.5rem;
   display: flex;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 </style>
