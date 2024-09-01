@@ -72,18 +72,16 @@ const routes: RouteRecordRaw[] = [
         children: [
           {
             path: ":communityId",
-            component: () => import("@/pages/a/[communityId]/index.vue"),
-            name: "community-single",
             children: [
               {
-                path: "post",
-                children: [
-                  {
-                    path: ":postSlugId",
-                    component: () => import("pages/a/[communityId]/post/[postSlugId].vue"),
-                    name: "single-post"
-                  }
-                ]
+                path: "",
+                component: () => import("@/pages/a/[communityId]/index.vue"),
+                name: "community-single",
+              },
+              {
+                path: "post/:postSlugId",
+                component: () => import("pages/a/[communityId]/post/[postSlugId].vue"),
+                name: "single-post"
               }
             ]
           }

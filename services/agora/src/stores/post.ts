@@ -59,10 +59,47 @@ export const usePostStore = defineStore("post", () => {
         }
     };
 
-    function generateDummyPostData() {
+    function getRandomInt(min: number, max: number) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
+    function generateDummyPostData() {
+        const numComments = getRandomInt(0, 20);
         const communityNameList = useCommunityStore().communityList;
         const selectedRandomCommunityItem = communityNameList[Math.floor(Math.random() * communityNameList.length)];
+        const hasPoll = Math.random() < 0.5;
+        let pollOptions: DummyPollOptionFormat[] = [];
+        if (hasPoll) {
+            pollOptions = [
+                {
+                    index: 0,
+                    name: "Option 1",
+                    numResponses: 15
+                },
+                {
+                    index: 1,
+                    name: "Option 2",
+                    numResponses: 20
+                },
+                {
+                    index: 2,
+                    name: "Option 3",
+                    numResponses: 23
+                }
+            ];
+        }
+        const postComments: DummyCommentFormat[] = [];
+        for (let i = 0; i < numComments; i++) {
+            const commentItem: DummyCommentFormat = {
+                index: 0,
+                comment: "This is a random comment at index " + i,
+                numUpvotes: getRandomInt(0, 100),
+                numDownvotes: getRandomInt(0, 100)
+            };
+            postComments.push(commentItem);
+        }
 
         const postDataStatic: DummyPostDataFormat = {
             metadata: {
@@ -71,58 +108,17 @@ export const usePostStore = defineStore("post", () => {
                 isHidden: false,
                 updatedAt: new Date(),
                 lastReactedAt: new Date(),
-                commentCount: 10,
+                commentCount: numComments,
                 communityId: selectedRandomCommunityItem.id,
             },
             payload: {
                 title: "TEST TITLE",
                 body: "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted. ",
                 poll: {
-                    hasPoll: true,
-                    options: [
-                        {
-                            index: 0,
-                            name: "Option 1",
-                            numResponses: 15
-                        },
-                        {
-                            index: 1,
-                            name: "Option 2",
-                            numResponses: 20
-                        },
-                        {
-                            index: 2,
-                            name: "Option 3",
-                            numResponses: 23
-                        }
-                    ]
+                    hasPoll: hasPoll,
+                    options: pollOptions
                 },
-                comments: [
-                    {
-                        index: 0,
-                        comment: "I really don't like this comment 1",
-                        numUpvotes: 5,
-                        numDownvotes: 2
-                    },
-                    {
-                        index: 1,
-                        comment: "I really don't like this comment 2",
-                        numUpvotes: 4,
-                        numDownvotes: 3
-                    },
-                    {
-                        index: 2,
-                        comment: "I really don't like this comment 3",
-                        numUpvotes: 2,
-                        numDownvotes: 7
-                    },
-                    {
-                        index: 3,
-                        comment: "I really don't like this comment 4",
-                        numUpvotes: 1444,
-                        numDownvotes: 2222
-                    }
-                ]
+                comments: postComments
             }
         };
 
