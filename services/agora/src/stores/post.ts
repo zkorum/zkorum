@@ -21,8 +21,7 @@ export interface DummyPostMetadataFormat {
     uid: string;
     slugId: string;
     isHidden: boolean;
-    updatedAt: Date;
-    lastReactedAt: Date;
+    createdAt: Date;
     commentCount: number;
     communityId: string;
 }
@@ -69,6 +68,16 @@ export const usePostStore = defineStore("post", () => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    function generateRandomDate(minDate: Date) {
+        const returnDate = structuredClone(minDate);
+
+        const subtractDays = getRandomInt(0, 90);
+
+        returnDate.setDate(returnDate.getDate() + subtractDays);
+
+        return returnDate;
+    }
+
     function generateRandomCommunityItem(): CommunityItem {
         const communityNameList = useCommunityStore().communityList;
         const communityItem = communityNameList[Math.floor(Math.random() * communityNameList.length)];
@@ -76,6 +85,9 @@ export const usePostStore = defineStore("post", () => {
     }
 
     function generateDummyPostData() {
+        const postCreatedAtDate = new Date();
+        postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 100));
+
         const numComments = getRandomInt(0, 20);
         const selectedRandomCommunityItem = generateRandomCommunityItem();
         const hasPoll = true;
@@ -100,7 +112,7 @@ export const usePostStore = defineStore("post", () => {
             const commentItem: DummyCommentFormat = {
                 index: 0,
                 communityId: generateRandomCommunityItem().id,
-                createdAt: new Date(),
+                createdAt: generateRandomDate(postCreatedAtDate),
                 comment: "This is random comment number " + (i + 1),
                 numUpvotes: getRandomInt(0, 100),
                 numDownvotes: getRandomInt(0, 100)
@@ -113,8 +125,7 @@ export const usePostStore = defineStore("post", () => {
                 uid: "TEST UID",
                 slugId: "DUMMY_SLUG_ID",
                 isHidden: false,
-                updatedAt: new Date(),
-                lastReactedAt: new Date(),
+                createdAt: postCreatedAtDate,
                 commentCount: numComments,
                 communityId: selectedRandomCommunityItem.id,
             },
