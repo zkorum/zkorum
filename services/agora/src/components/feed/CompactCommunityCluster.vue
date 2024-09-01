@@ -3,11 +3,15 @@
     <div class="container">
       <swiper-container slidesPerView="4.5">
         <swiper-slide v-for="communityItem in communityList" v-bind:key="communityItem.code">
-          <RouterLink :to="{ name: 'community-single', params: { communityId: communityItem.id } }">
-            <div class="iconPositioning hoverEffect">
-              <CommunityIcon :community-id="communityItem.id" :compact="false" />
-            </div>
-          </RouterLink>
+          <div class="hoverEffect">
+            <RouterLink :to="{ name: 'community-single', params: { communityId: communityItem.id } }">
+              <div class="iconPositioning">
+                <div class="iconPadding">
+                  <CommunityIcon :community-id="communityItem.id" :compact="false" />
+                </div>
+              </div>
+            </RouterLink>
+          </div>
         </swiper-slide>
       </swiper-container>
     </div>
@@ -37,10 +41,14 @@ a {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
 
+.iconPadding {
+  padding: 1rem;
+  width: 4rem;
+}
+
 .iconPositioning {
   display: flex;
   justify-content: center;
-  padding: 1rem;
-  width: 4rem;
+  width: 100%;
 }
 </style>

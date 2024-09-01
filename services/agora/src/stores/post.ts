@@ -68,10 +68,10 @@ export const usePostStore = defineStore("post", () => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function generateRandomDate(minDate: Date) {
+    function generateRandomDate(minDate: Date, maxAdditionDays: number) {
         const returnDate = structuredClone(minDate);
 
-        const subtractDays = getRandomInt(0, 90);
+        const subtractDays = getRandomInt(0, maxAdditionDays);
 
         returnDate.setDate(returnDate.getDate() + subtractDays);
 
@@ -86,7 +86,7 @@ export const usePostStore = defineStore("post", () => {
 
     function generateDummyPostData() {
         const postCreatedAtDate = new Date();
-        postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 100));
+        postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 14));
 
         const numComments = getRandomInt(0, 20);
         const selectedRandomCommunityItem = generateRandomCommunityItem();
@@ -112,7 +112,7 @@ export const usePostStore = defineStore("post", () => {
             const commentItem: DummyCommentFormat = {
                 index: 0,
                 communityId: generateRandomCommunityItem().id,
-                createdAt: generateRandomDate(postCreatedAtDate),
+                createdAt: generateRandomDate(postCreatedAtDate, 5),
                 comment: "This is random comment number " + (i + 1),
                 numUpvotes: getRandomInt(0, 100),
                 numDownvotes: getRandomInt(0, 100)

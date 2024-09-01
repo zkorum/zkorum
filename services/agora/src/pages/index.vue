@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="container">
-      <CompactCommunity />
+      <CompactCommunityCluster />
       <CompactPostList />
     </div>
   </div>
@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import CompactPostList from "@/components/feed/CompactPostList.vue";
-import CompactCommunity from "@/components/feed/CompactCommunity.vue";
+import CompactCommunityCluster from "@/components/feed/CompactCommunityCluster.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
