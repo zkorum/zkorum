@@ -23,13 +23,26 @@ import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 
 const { generateDummyPostData } = usePostStore();
 
+const FETCH_POST_COUNT = 10;
 const compactPostDataList = ref<DummyPostDataFormat[]>([]);
-for (let i = 0; i < 10; i++) {
-  compactPostDataList.value.push(generateDummyPostData());
+
+generateNewPosts();
+
+function generateNewPosts() {
+  for (let i = 0; i < FETCH_POST_COUNT; i++) {
+    compactPostDataList.value.push(generateDummyPostData());
+  }
 }
 
-async function onLoad() {
-  console.log("Infinite list to be implemented");
+interface DoneFunction {
+  (): void;
+}
+
+async function onLoad(index: number, done: DoneFunction) {
+
+  generateNewPosts();
+  done();
+
   /*
   // Fetch more data from backend
   if (false) {
