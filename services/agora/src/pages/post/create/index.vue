@@ -204,7 +204,7 @@ function openCommunitySheet() {
 
 function onSubmit() {
   grantedRouteLeave = true;
-  router.push({ name: "single-post", params: { postSlugId: "asdf" } })
+  router.push({ name: "single-post", params: { postSlugId: "DUMMY_POST_SLUG_ID", communityId: "DUMMY_COMMUNITY_ID" } })
 }
 
 function loadCommunityId() {
