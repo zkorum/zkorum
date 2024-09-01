@@ -1,12 +1,12 @@
 import { defineStore } from "pinia";
 
-export const useCommunityStore = defineStore("community", () => {
+export interface CommunityItem {
+  id: string
+  countryName: string
+  code: string
+}
 
-  interface CommunityItem {
-    id: string
-    countryName: string
-    code: string
-  }
+export const useCommunityStore = defineStore("community", () => {
 
   const communityList: CommunityItem[] = [
     {
