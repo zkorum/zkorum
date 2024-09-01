@@ -70,7 +70,6 @@ const onSlideChange = () => { // e: unknown
 }
 
 .titleTag {
-  padding: 1rem;
   font-size: 1.2rem;
   font-weight: bold;
 }

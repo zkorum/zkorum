@@ -4,8 +4,11 @@
       <ZKCard>
         <div class="innerContainer">
           <div class="topTag">
-            <CommunityIcon :community-id="extendedPostData.metadata.communityId" :showCountryName="false"
-              :compact="false" />
+            <div class="posterCommunityIcon">
+              <CommunityIcon :community-id="extendedPostData.metadata.communityId" :showCountryName="false"
+                :compact="false" />
+            </div>
+
             <div class="metadata">
               <div>
                 {{ getTimeFromNow(extendedPostData.metadata.lastReactedAt) }}
@@ -46,10 +49,16 @@
         </div>
       </ZKCard>
 
+      <!--
       <div v-if="!compactMode">
         <ZKCard>
           <CommentSwiper :comment-list="commentList" />
         </ZKCard>
+      </div>
+      -->
+
+      <div v-if="!compactMode && props.extendedPostData.metadata.commentCount > 0">
+        <CommentSection :comment-list="extendedPostData.payload.comments" />
       </div>
 
     </div>
@@ -62,24 +71,13 @@ import { getTimeFromNow } from "src/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 import PollResultView from "../poll/PollResultView.vue";
-import CommentSwiper from "./CommentSwiper.vue";
+// import CommentSwiper from "./CommentSwiper.vue";
 import CommunityIcon from "../community/CommunityIcon.vue";
+import CommentSection from "./CommentSection.vue";
 import { useRouter } from "vue-router";
-import { ref } from "vue";
 import { DummyPostDataFormat } from "@/stores/post";
 
 const router = useRouter();
-
-const commentList = ref<string[]>([
-  "This is dummy comment 1 This is dummy comment 1 This is dummy comment 1 This is dummy comment 1",
-  "This is dummy comment 2 This is dummy comment 2 This is dummy comment 2 This is dummy comment 2",
-  "This is dummy comment 3 This is dummy comment 3 This is dummy comment 3 This is dummy comment 3",
-  "This is dummy comment 4",
-  "This is dummy comment 5",
-  "This is dummy comment 6",
-  "This is dummy comment 7",
-  "This is dummy comment 8",
-]);
 
 // const displayResults = ref(false);
 
@@ -122,7 +120,6 @@ function processPostBody(body: string) {
 
 <style scoped lang="scss">
 .innerContainer {
-  padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -161,13 +158,13 @@ function processPostBody(body: string) {
   padding-top: 1rem;
 }
 
-.commentItem {
-  padding: 1rem;
-}
-
 .container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.posterCommunityIcon {
+  width: 4rem;
 }
 </style>

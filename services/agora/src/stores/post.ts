@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { useCommunityStore } from "./community";
+import { CommunityItem, useCommunityStore } from "./community";
 
 export interface DummyPollOptionFormat {
     index: number;
@@ -10,6 +10,8 @@ export interface DummyPollOptionFormat {
 
 export interface DummyCommentFormat {
     index: number;
+    communityId: string;
+    createdAt: Date;
     comment: string;
     numUpvotes: number;
     numDownvotes: number;
@@ -65,10 +67,15 @@ export const usePostStore = defineStore("post", () => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    function generateRandomCommunityItem(): CommunityItem {
+        const communityNameList = useCommunityStore().communityList;
+        const communityItem = communityNameList[Math.floor(Math.random() * communityNameList.length)];
+        return communityItem;
+    }
+
     function generateDummyPostData() {
         const numComments = getRandomInt(0, 20);
-        const communityNameList = useCommunityStore().communityList;
-        const selectedRandomCommunityItem = communityNameList[Math.floor(Math.random() * communityNameList.length)];
+        const selectedRandomCommunityItem = generateRandomCommunityItem();
         const hasPoll = Math.random() < 0.5;
         let pollOptions: DummyPollOptionFormat[] = [];
         if (hasPoll) {
@@ -94,7 +101,9 @@ export const usePostStore = defineStore("post", () => {
         for (let i = 0; i < numComments; i++) {
             const commentItem: DummyCommentFormat = {
                 index: 0,
-                comment: "This is a random comment at index " + i,
+                communityId: generateRandomCommunityItem().id,
+                createdAt: new Date(),
+                comment: "This is random comment number " + (i + 1),
                 numUpvotes: getRandomInt(0, 100),
                 numDownvotes: getRandomInt(0, 100)
             };
