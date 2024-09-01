@@ -1,8 +1,10 @@
 <template>
   <div>
-    <NewPostButtonWrapper class="container" @on-click="createNewPost()">
-      <CompactCommunityCluster />
-      <CompactPostList />
+    <NewPostButtonWrapper @on-click="createNewPost()">
+      <div class="container">
+        <CompactCommunityCluster />
+        <CompactPostList />
+      </div>
     </NewPostButtonWrapper>
   </div>
 </template>
