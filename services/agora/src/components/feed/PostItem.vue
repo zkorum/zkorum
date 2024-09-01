@@ -106,7 +106,7 @@ function showResultClicked(event: Event) {
 function jumpToComments(event: Event) {
   if (event) {
     event.preventDefault();
-    router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId } });
+    router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, communityId: props.extendedPostData.metadata.communityId } });
   }
 }
 

@@ -59,34 +59,36 @@ const routes: RouteRecordRaw[] = [
         path: "/",
         component: () => import("pages/index.vue"),
         name: "default-home-feed"
-      },
+      }
     ]
   },
   {
     path: "/",
     component: MainLayout,
-    props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: false, addOuterPadding: true, enableHeader: true, enableFooter: true, useStylelessFooter: false } as MainLayoutProps,
+    props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, addOuterPadding: true, enableHeader: true, enableFooter: true, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
-        path: "/post",
-        children: [
-          {
-            path: ":postSlugId",
-            component: () => import("@/pages/post/index.vue"),
-            name: "single-post"
-          }
-        ]
-      },
-      {
-        path: "/community",
+        path: "/a",
         children: [
           {
             path: ":communityId",
-            component: () => import("@/pages/community/[communityId].vue"),
-            name: "community-single"
+            component: () => import("@/pages/a/[communityId]/index.vue"),
+            name: "community-single",
+            children: [
+              {
+                path: "post",
+                children: [
+                  {
+                    path: ":postSlugId",
+                    component: () => import("pages/a/[communityId]/post/[postSlugId].vue"),
+                    name: "single-post"
+                  }
+                ]
+              }
+            ]
           }
         ]
-      },
+      }
     ],
   },
   {
