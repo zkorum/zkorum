@@ -4,7 +4,7 @@
       <ZKCard>
         <div class="innerContainer">
           <PostMetadata :community-id="extendedPostData.metadata.communityId"
-            :created-at="extendedPostData.metadata.lastReactedAt" :isCompatSize="false" />
+            :created-at="extendedPostData.metadata.createdAt" :isCompatSize="false" />
 
           <div class="postDiv">
             <div class="titleDiv">
