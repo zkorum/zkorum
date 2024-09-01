@@ -4,9 +4,8 @@
       <div>
         <ZKCard>
           <div class="contentLayout">
-            <div class="communityIconStyle">
-              <CommunityIcon :community-id="commentItem.communityId" :compact="false" />
-            </div>
+            <PostMetadata :community-id="commentItem.communityId" :created-at="commentItem.createdAt"
+              :isCompatSize="true" />
             <div>{{ commentItem.comment }}</div>
           </div>
 
@@ -19,7 +18,7 @@
 <script setup lang="ts">
 import { DummyCommentFormat } from "@/stores/post";
 import ZKCard from "../ui-library/ZKCard.vue";
-import CommunityIcon from "../community/CommunityIcon.vue";
+import PostMetadata from "./PostMetadata.vue";
 
 defineProps<{
   commentList: DummyCommentFormat[]

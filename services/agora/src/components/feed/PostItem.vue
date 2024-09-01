@@ -3,18 +3,8 @@
     <div class="container">
       <ZKCard>
         <div class="innerContainer">
-          <div class="topTag">
-            <div class="posterCommunityIcon">
-              <CommunityIcon :community-id="extendedPostData.metadata.communityId" :showCountryName="false"
-                :compact="false" />
-            </div>
-
-            <div class="metadata">
-              <div>
-                {{ getTimeFromNow(extendedPostData.metadata.lastReactedAt) }}
-              </div>
-            </div>
-          </div>
+          <PostMetadata :community-id="extendedPostData.metadata.communityId"
+            :created-at="extendedPostData.metadata.lastReactedAt" :isCompatSize="false" />
 
           <div class="postDiv">
             <div class="titleDiv">
@@ -67,13 +57,12 @@
 </template>
 
 <script setup lang="ts">
-import { getTimeFromNow } from "src/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 import PollResultView from "../poll/PollResultView.vue";
 // import CommentSwiper from "./CommentSwiper.vue";
-import CommunityIcon from "../community/CommunityIcon.vue";
 import CommentSection from "./CommentSection.vue";
+import PostMetadata from "./PostMetadata.vue";
 import { useRouter } from "vue-router";
 import { DummyPostDataFormat } from "@/stores/post";
 
@@ -125,17 +114,6 @@ function processPostBody(body: string) {
   gap: 1rem;
 }
 
-.topTag {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.metadata {
-  display: flex;
-  flex-direction: column;
-}
-
 .titleDiv {
   font-size: 1.2rem;
   font-weight: bolder;
@@ -162,9 +140,5 @@ function processPostBody(body: string) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.posterCommunityIcon {
-  width: 4rem;
 }
 </style>
