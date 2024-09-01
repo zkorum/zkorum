@@ -76,26 +76,22 @@ export const usePostStore = defineStore("post", () => {
     function generateDummyPostData() {
         const numComments = getRandomInt(0, 20);
         const selectedRandomCommunityItem = generateRandomCommunityItem();
-        const hasPoll = Math.random() < 0.5;
+        const hasPoll = true;
+
+        const numPollOptions = getRandomInt(2, 6);
+        const pollOptionList: DummyPollOptionFormat[] = [];
+        for (let i = 0; i < numPollOptions; i++) {
+            const pollItem: DummyPollOptionFormat = {
+                index: i,
+                name: "Dummy Option " + (i + 1),
+                numResponses: getRandomInt(0, 100)
+            };
+            pollOptionList.push(pollItem);
+        }
+
         let pollOptions: DummyPollOptionFormat[] = [];
         if (hasPoll) {
-            pollOptions = [
-                {
-                    index: 0,
-                    name: "Option 1",
-                    numResponses: 15
-                },
-                {
-                    index: 1,
-                    name: "Option 2",
-                    numResponses: 20
-                },
-                {
-                    index: 2,
-                    name: "Option 3",
-                    numResponses: 23
-                }
-            ];
+            pollOptions = pollOptionList;
         }
         const postComments: DummyCommentFormat[] = [];
         for (let i = 0; i < numComments; i++) {
