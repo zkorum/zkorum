@@ -1,20 +1,16 @@
 <template>
   <div>
-    <div class="container">
+    <NewPostButtonWrapper class="container" @on-click="createNewPost()">
       <CompactCommunityCluster />
       <CompactPostList />
-    </div>
+    </NewPostButtonWrapper>
   </div>
-
-  <q-page-sticky position="bottom-right" :offset="[18, 18]">
-    <q-btn fab icon="mdi-plus" color="accent" @click="createNewPost()" />
-  </q-page-sticky>
-
 </template>
 
 <script setup lang="ts">
 import CompactPostList from "@/components/feed/CompactPostList.vue";
 import CompactCommunityCluster from "@/components/feed/CompactCommunityCluster.vue";
+import NewPostButtonWrapper from "@/components/feed/NewPostButtonWrapper.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
