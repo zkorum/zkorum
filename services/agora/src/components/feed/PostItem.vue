@@ -40,7 +40,7 @@
               @click="(event) => showResultClicked(event)" />
             -->
 
-            <div v-if="isSupportedSharePlatform()">
+            <div>
               <ZKButton outline text-color-flex="secondary" icon="mdi-share-outline"
                 @click.stop.prevent="shareClicked()" />
             </div>
@@ -69,6 +69,22 @@
       <div v-if="!compactMode && commentList.length > 0">
         <CommentSection :comment-list="commentList" />
       </div>
+
+      <q-dialog v-model="showFallbackShareDialog">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Share Link</div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            {{ sharePostUrl }}
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="OK" color="primary" v-close-popup />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
 
     </div>
 
@@ -103,6 +119,10 @@ const webShare = useShare()
 
 const newCommentRef = ref<HTMLElement | null>(null);
 
+const showFallbackShareDialog = ref(false);
+
+const sharePostUrl = window.location.origin + "/a/" + props.extendedPostData.metadata.communityId + "/post/" + props.extendedPostData.metadata.slugId;
+
 function replyButtonClicked() {
   const commentItem = composeDummyCommentItem(commentComposerText.value, commentList.value.length);
   commentList.value.unshift(commentItem);
@@ -136,12 +156,17 @@ function isSupportedSharePlatform() {
 }
 
 function shareClicked() {
-  const targetUrl = window.location.origin + "/a/" + props.extendedPostData.metadata.communityId + "/post/" + props.extendedPostData.metadata.slugId;
-  webShare.share({
-    title: "Agora - " + props.extendedPostData.payload.title,
-    text: targetUrl,
-    url: targetUrl,
-  })
+
+  if (isSupportedSharePlatform()) {
+    webShare.share({
+      title: "Agora - " + props.extendedPostData.payload.title,
+      text: sharePostUrl,
+      url: sharePostUrl,
+    })
+  } else {
+    showFallbackShareDialog.value = true;
+  }
+
 }
 
 function processPostBody(body: string) {
