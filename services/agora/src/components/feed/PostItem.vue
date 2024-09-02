@@ -31,8 +31,7 @@
 
               <ZKButton :outline="!showCommentComposer" :color-flex="showCommentComposer ? 'secondary' : ''"
                 :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
-                @click="(event) => clickedCommentButton(event)" />
-
+                @click="(event) => clickedReplyButton(event)" />
             </div>
 
 
@@ -41,7 +40,10 @@
               @click="(event) => showResultClicked(event)" />
             -->
 
-            <ZKButton outline text-color-flex="secondary" icon="mdi-share" @click="(event) => shareClicked(event)" />
+            <div v-if="isSupportedSharePlatform()">
+              <ZKButton outline text-color-flex="secondary" icon="mdi-share-outline"
+                @click.stop.prevent="shareClicked()" />
+            </div>
 
           </div>
 
@@ -82,6 +84,8 @@ import PostMetadata from "./PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 import { ref } from "vue";
+import { useShare } from "@vueuse/core";
+import { Platform } from "quasar";
 
 const showCommentComposer = ref(false);
 const commentComposerText = ref("");
@@ -95,6 +99,8 @@ const commentList = ref(props.extendedPostData.payload.comments);
 
 const { composeDummyCommentItem } = usePostStore();
 
+const webShare = useShare()
+
 const newCommentRef = ref<HTMLElement | null>(null);
 
 function replyButtonClicked() {
@@ -104,7 +110,7 @@ function replyButtonClicked() {
   commentComposerText.value = "";
 }
 
-function clickedCommentButton(event: Event) {
+function clickedReplyButton(event: Event) {
   if (event) {
     event.stopPropagation();
   }
@@ -121,10 +127,21 @@ function clickedCommentButton(event: Event) {
 
 }
 
-function shareClicked(event: Event) {
-  if (event) {
-    event.preventDefault();
+function isSupportedSharePlatform() {
+  if (webShare.isSupported && !(Platform.is.firefox && Platform.is.desktop)) {
+    return true;
+  } else {
+    return false;
   }
+}
+
+function shareClicked() {
+  const targetUrl = window.location.origin + "/a/" + props.extendedPostData.metadata.communityId + "/post/" + props.extendedPostData.metadata.slugId;
+  webShare.share({
+    title: "Agora - " + props.extendedPostData.payload.title,
+    text: targetUrl,
+    url: targetUrl,
+  })
 }
 
 function processPostBody(body: string) {
