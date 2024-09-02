@@ -100,8 +100,7 @@ import PostMetadata from "./PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 import { ref } from "vue";
-import { useShare } from "@vueuse/core";
-import { Platform } from "quasar";
+import { useWebShare } from "@/utils/share/WebShare";
 
 const showCommentComposer = ref(false);
 const commentComposerText = ref("");
@@ -115,7 +114,7 @@ const commentList = ref(props.extendedPostData.payload.comments);
 
 const { composeDummyCommentItem } = usePostStore();
 
-const webShare = useShare()
+const webShare = useWebShare()
 
 const newCommentRef = ref<HTMLElement | null>(null);
 
@@ -147,26 +146,12 @@ function clickedReplyButton(event: Event) {
 
 }
 
-function isSupportedSharePlatform() {
-  if (webShare.isSupported && !(Platform.is.firefox && Platform.is.desktop)) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 function shareClicked() {
-
-  if (isSupportedSharePlatform()) {
-    webShare.share({
-      title: "Agora - " + props.extendedPostData.payload.title,
-      text: sharePostUrl,
-      url: sharePostUrl,
-    })
+  if (webShare.isSupportedSharePlatform()) {
+    webShare.share("Agora - " + props.extendedPostData.payload.title, sharePostUrl);
   } else {
     showFallbackShareDialog.value = true;
   }
-
 }
 
 function processPostBody(body: string) {
