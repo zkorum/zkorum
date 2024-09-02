@@ -31,6 +31,16 @@ export interface DummyPostUserVote {
     voteIndex: number;
 }
 
+export interface UserRankedCommentItem {
+    index: number;
+    action: "like" | "dislike" | "pass";
+}
+
+export interface DummyCommentRankingForamat {
+    rankedCommentList: UserRankedCommentItem[];
+    unrankedCommentIndexList: number[];
+}
+
 export interface DummyPostDataFormat {
     metadata: DummyPostMetadataFormat,
     payload: {
@@ -43,7 +53,8 @@ export interface DummyPostDataFormat {
         comments: DummyCommentFormat[]
     },
     userInteraction: {
-        voting: DummyPostUserVote
+        voting: DummyPostUserVote,
+        ranking: DummyCommentRankingForamat,
     }
 }
 
@@ -108,7 +119,7 @@ export const usePostStore = defineStore("post", () => {
         const postCreatedAtDate = new Date();
         postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 14));
 
-        const numComments = getRandomInt(0, 20);
+        const numCommentsInPost = getRandomInt(0, 20);
         const selectedRandomCommunityItem = generateRandomCommunityItem();
         const hasPoll = true;
 
@@ -127,10 +138,11 @@ export const usePostStore = defineStore("post", () => {
         if (hasPoll) {
             pollOptions = pollOptionList;
         }
+
         const postComments: DummyCommentFormat[] = [];
-        for (let i = 0; i < numComments; i++) {
+        for (let i = 0; i < numCommentsInPost; i++) {
             const commentItem: DummyCommentFormat = {
-                index: 0,
+                index: i,
                 userCommunityId: generateRandomCommunityItem().id,
                 createdAt: generateRandomDate(postCreatedAtDate, 5),
                 comment: "This is random comment number " + (i + 1),
@@ -140,13 +152,33 @@ export const usePostStore = defineStore("post", () => {
             postComments.push(commentItem);
         }
 
+        const unrankedCommentIndexList: number[] = [];
+        const rankedCommentList: UserRankedCommentItem[] = [];
+        const numUnrankedComment = Math.min(numCommentsInPost, 2);
+        const numRankedComment = Math.min(2, numCommentsInPost - numUnrankedComment);
+
+        let currentRankedCommentIndex = 0;
+        for (let i = 0; i < numUnrankedComment; i++) {
+            unrankedCommentIndexList.push(currentRankedCommentIndex);
+            currentRankedCommentIndex += 1;
+        }
+
+        for (let i = 0; i < numRankedComment; i++) {
+            const rankedItem: UserRankedCommentItem = {
+                index: currentRankedCommentIndex,
+                action: "like"
+            };
+            rankedCommentList.push(rankedItem);
+            currentRankedCommentIndex += 1;
+        }
+
         const postDataStatic: DummyPostDataFormat = {
             metadata: {
                 uid: "TEST UID",
                 slugId: "DUMMY_SLUG_ID",
                 isHidden: false,
                 createdAt: postCreatedAtDate,
-                commentCount: numComments,
+                commentCount: numCommentsInPost,
                 communityId: selectedRandomCommunityItem.id,
             },
             payload: {
@@ -162,6 +194,10 @@ export const usePostStore = defineStore("post", () => {
                 voting: {
                     hasVoted: false,
                     voteIndex: 0
+                },
+                ranking: {
+                    rankedCommentList: rankedCommentList,
+                    unrankedCommentIndexList: unrankedCommentIndexList
                 }
             }
         };

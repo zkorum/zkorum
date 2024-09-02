@@ -25,6 +25,7 @@
               <ZKButton outline text-color-flex="black" label="Vote" @click="showResults = true"
                 :disable="votedOptionIndex == -1" />
             </div>
+
             <div>
               <ZKButton outline text-color-flex="black" label="Show Results" @click="showResults = true" />
             </div>
