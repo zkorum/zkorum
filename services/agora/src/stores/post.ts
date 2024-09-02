@@ -26,6 +26,11 @@ export interface DummyPostMetadataFormat {
     communityId: string;
 }
 
+export interface DummyPostUserVote {
+    hasVoted: boolean;
+    voteIndex: number;
+}
+
 export interface DummyPostDataFormat {
     metadata: DummyPostMetadataFormat,
     payload: {
@@ -36,6 +41,9 @@ export interface DummyPostDataFormat {
             options: DummyPollOptionFormat[]
         };
         comments: DummyCommentFormat[]
+    },
+    userInteraction: {
+        voting: DummyPostUserVote
     }
 }
 
@@ -137,6 +145,12 @@ export const usePostStore = defineStore("post", () => {
                     options: pollOptions
                 },
                 comments: postComments
+            },
+            userInteraction: {
+                voting: {
+                    hasVoted: false,
+                    voteIndex: 0
+                }
             }
         };
 

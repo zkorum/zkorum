@@ -18,8 +18,8 @@
           </div>
 
           <div class="innerContainer" v-if="!compactMode && extendedPostData.payload.poll.hasPoll">
-
-            <poll-result-view :poll-options="extendedPostData.payload.poll.options" :pollResponse="undefined" />
+            <PollWrapper :user-vote="extendedPostData.userInteraction.voting"
+              :poll-options="extendedPostData.payload.poll.options" />
             <!-- TODO: pollResponse -->
           </div>
 
@@ -59,10 +59,10 @@
 <script setup lang="ts">
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
-import PollResultView from "../poll/PollResultView.vue";
 // import CommentSwiper from "./CommentSwiper.vue";
 import CommentSection from "./CommentSection.vue";
 import PostMetadata from "./PostMetadata.vue";
+import PollWrapper from "../poll/PollWrapper.vue";
 import { useRouter } from "vue-router";
 import { DummyPostDataFormat } from "@/stores/post";
 
