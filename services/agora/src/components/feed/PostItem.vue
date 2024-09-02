@@ -31,7 +31,7 @@
 
               <ZKButton :outline="!showCommentComposer" :color-flex="showCommentComposer ? 'secondary' : ''"
                 :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
-                @click="(event) => clickedReplyButton(event)" />
+                @click="(event) => clickedReplyButton(event)" v-if="!compactMode" />
             </div>
 
 
@@ -66,6 +66,11 @@
       </div>
       -->
 
+      <div v-if="!compactMode">
+        <CommentRanking :comment-list="commentList"
+          :unranked-comment-index-list="props.extendedPostData.userInteraction.ranking.unrankedCommentIndexList" />
+      </div>
+
       <div v-if="!compactMode && commentList.length > 0">
         <CommentSection :comment-list="commentList" />
       </div>
@@ -96,6 +101,7 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 // import CommentSwiper from "./CommentSwiper.vue";
 import CommentSection from "./CommentSection.vue";
+import CommentRanking from "./CommentRanking.vue";
 import PostMetadata from "./PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
