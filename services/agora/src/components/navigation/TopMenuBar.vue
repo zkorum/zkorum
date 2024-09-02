@@ -2,7 +2,7 @@
   <TopMenuWrapper :reveal="true">
     <div class="topMenu">
       <div>
-        <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat v-if="hasBackButton" @click="router.back()" />
+        <BackButton v-if="hasBackButton" />
       </div>
       <div class="menuButtons">
         <HelpButton />
@@ -15,17 +15,15 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
 import TopMenuWrapper from "./TopMenuWrapper.vue";
 import HelpButton from "./buttons/HelpButton.vue";
+import BackButton from "./buttons/BackButton.vue";
 
 defineProps<{
   hasBackButton: boolean
   hasSettingsButton: boolean
 }>();
-
-const router = useRouter();
 
 </script>
 
