@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { QBtnProps } from "quasar";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
 interface ButtonProps extends Omit<QBtnProps, "color" | "textColor"> {
   colorFlex?: string;
@@ -14,19 +14,34 @@ interface ButtonProps extends Omit<QBtnProps, "color" | "textColor"> {
 }
 
 const props = defineProps<ButtonProps>();
-
 const buttonColor = ref("");
-if (props.colorFlex == undefined) {
-  buttonColor.value = "accent";
-} else {
-  buttonColor.value = props.colorFlex;
+const buttonTextColor = ref("");
+
+changeButtonColor();
+changeButtonTextColor();
+
+function changeButtonColor() {
+  if (props.colorFlex == undefined) {
+    buttonColor.value = "accent";
+  } else {
+    buttonColor.value = props.colorFlex;
+  }
 }
 
-const buttonTextColor = ref("");
-if (props.textColorFlex == undefined) {
-  buttonTextColor.value = "white";
-} else {
-  buttonTextColor.value = props.textColorFlex;
+function changeButtonTextColor() {
+  if (props.textColorFlex == undefined) {
+    buttonTextColor.value = "white";
+  } else {
+    buttonTextColor.value = props.textColorFlex;
+  }
 }
+
+watch(() => props.colorFlex, () => {
+  changeButtonColor();
+})
+
+watch(() => props.textColorFlex, () => {
+  changeButtonTextColor();
+})
 
 </script>
