@@ -1,15 +1,16 @@
 <template>
-  <div class="container">
-    <div v-for="(commentItem, index) in commentList" v-bind:key="index">
-      <div>
-        <ZKCard>
-          <div class="contentLayout">
-            <PostMetadata :community-id="commentItem.communityId" :created-at="commentItem.createdAt"
-              :isCompatSize="true" />
-            <div>{{ commentItem.comment }}</div>
-          </div>
-
-        </ZKCard>
+  <div>
+    <div class="container">
+      <div v-for="(commentItem, index) in commentList" v-bind:key="index">
+        <div>
+          <ZKCard>
+            <div class="contentLayout">
+              <PostMetadata :community-id="commentItem.communityId" :created-at="commentItem.createdAt"
+                :isCompatSize="true" />
+              <div>{{ commentItem.comment }}</div>
+            </div>
+          </ZKCard>
+        </div>
       </div>
     </div>
   </div>
@@ -30,7 +31,7 @@ defineProps<{
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .contentLayout {
