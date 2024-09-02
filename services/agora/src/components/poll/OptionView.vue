@@ -6,7 +6,7 @@
           {{ option }}
         </div>
         <div v-if="optionResponded">
-          <q-icon name="mdi-check-decagram-outline" size="1rem" class="iconPadding" />
+          <q-icon name="mdi-check-circle" size="1rem" class="iconPadding" />
         </div>
       </div>
       <div class="q-ml-auto">
