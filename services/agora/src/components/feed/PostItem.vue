@@ -24,16 +24,33 @@
           </div>
 
           <div class="bottomButtons">
-            <ZKButton :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment"
-              @click="(event) => jumpToComments(event)" />
+
+            <div class="leftButtonCluster">
+              <ZKButton outline text-color-flex="secondary" :label="extendedPostData.metadata.commentCount.toString()"
+                icon="mdi-chat-outline" />
+
+              <ZKButton :outline="!showCommentComposer" :color-flex="showCommentComposer ? 'secondary' : ''"
+                :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
+                @click="(event) => clickedCommentButton(event)" />
+
+            </div>
+
 
             <!--
-          <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"
-            @click="(event) => showResultClicked(event)" />
-          -->
+            <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"
+              @click="(event) => showResultClicked(event)" />
+            -->
 
-            <ZKButton icon="mdi-share-variant-outline" @click="(event) => shareClicked(event)" />
+            <ZKButton outline text-color-flex="secondary" icon="mdi-share" @click="(event) => shareClicked(event)" />
 
+          </div>
+
+          <div v-if="!compactMode && showCommentComposer" class="newCommentBlock" ref="newCommentRef">
+            <q-input outline v-model="commentComposerText" label="Add a comment" class="newCommentInput" />
+            <div>
+              <ZKButton outline text-color-flex="secondary" label="Reply" @click="replyButtonClicked()"
+                :disable="commentComposerText.length == 0" />
+            </div>
           </div>
 
         </div>
@@ -47,8 +64,8 @@
       </div>
       -->
 
-      <div v-if="!compactMode && props.extendedPostData.metadata.commentCount > 0">
-        <CommentSection :comment-list="extendedPostData.payload.comments" />
+      <div v-if="!compactMode && commentList.length > 0">
+        <CommentSection :comment-list="commentList" />
       </div>
 
     </div>
@@ -63,37 +80,50 @@ import ZKCard from "../ui-library/ZKCard.vue";
 import CommentSection from "./CommentSection.vue";
 import PostMetadata from "./PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
-import { useRouter } from "vue-router";
-import { DummyPostDataFormat } from "@/stores/post";
+import { DummyPostDataFormat, usePostStore } from "@/stores/post";
+import { ref } from "vue";
 
-const router = useRouter();
-
-// const displayResults = ref(false);
+const showCommentComposer = ref(false);
+const commentComposerText = ref("");
 
 const props = defineProps<{
   extendedPostData: DummyPostDataFormat,
   compactMode: boolean
 }>()
 
+const commentList = ref(props.extendedPostData.payload.comments);
+
+const { composeDummyCommentItem } = usePostStore();
+
+const newCommentRef = ref<HTMLElement | null>(null);
+
+function replyButtonClicked() {
+  const commentItem = composeDummyCommentItem(commentComposerText.value, commentList.value.length);
+  commentList.value.unshift(commentItem);
+
+  commentComposerText.value = "";
+}
+
+function clickedCommentButton(event: Event) {
+  if (event) {
+    event.stopPropagation();
+  }
+
+  showCommentComposer.value = !showCommentComposer.value;
+
+  if (showCommentComposer.value) {
+    setTimeout(function () {
+      if (newCommentRef.value) {
+        newCommentRef.value.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+  }
+
+}
+
 function shareClicked(event: Event) {
   if (event) {
     event.preventDefault();
-  }
-}
-
-/*
-function showResultClicked(event: Event) {
-  if (event) {
-    event.preventDefault();
-    displayResults.value = true;
-  }
-}
-*/
-
-function jumpToComments(event: Event) {
-  if (event) {
-    event.preventDefault();
-    router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, communityId: props.extendedPostData.metadata.communityId } });
   }
 }
 
@@ -132,6 +162,7 @@ function processPostBody(body: string) {
 .bottomButtons {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 1rem;
   padding-top: 1rem;
 }
@@ -139,6 +170,21 @@ function processPostBody(body: string) {
 .container {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
+}
+
+.newCommentInput {
+  width: calc(100% - 5rem);
+}
+
+.newCommentBlock {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.leftButtonCluster {
+  display: flex;
   gap: 1rem;
 }
 </style>

@@ -10,7 +10,7 @@ export interface DummyPollOptionFormat {
 
 export interface DummyCommentFormat {
     index: number;
-    communityId: string;
+    userCommunityId: string;
     createdAt: Date;
     comment: string;
     numUpvotes: number;
@@ -92,6 +92,18 @@ export const usePostStore = defineStore("post", () => {
         return communityItem;
     }
 
+    function composeDummyCommentItem(commentText: string, index: number) {
+        const newComment: DummyCommentFormat = {
+            index: index,
+            userCommunityId: generateRandomCommunityItem().id,
+            createdAt: new Date(),
+            comment: commentText,
+            numUpvotes: 0,
+            numDownvotes: 0
+        }
+        return newComment;
+    }
+
     function generateDummyPostData() {
         const postCreatedAtDate = new Date();
         postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 14));
@@ -119,7 +131,7 @@ export const usePostStore = defineStore("post", () => {
         for (let i = 0; i < numComments; i++) {
             const commentItem: DummyCommentFormat = {
                 index: 0,
-                communityId: generateRandomCommunityItem().id,
+                userCommunityId: generateRandomCommunityItem().id,
                 createdAt: generateRandomDate(postCreatedAtDate, 5),
                 comment: "This is random comment number " + (i + 1),
                 numUpvotes: getRandomInt(0, 100),
@@ -159,17 +171,5 @@ export const usePostStore = defineStore("post", () => {
     }
 
     const dummyUserPostData = ref(userPostData);
-    return { generateDummyPostData, dummyUserPostData };
-
-    // getters: {
-    //   doubleCount (state) {
-    //     return state.counter * 2;
-    //   }
-    // },
-
-    // actions: {
-    //   increment() {
-    //     this.counter++;
-    //   }
-    // }
+    return { generateDummyPostData, composeDummyCommentItem, dummyUserPostData };
 });

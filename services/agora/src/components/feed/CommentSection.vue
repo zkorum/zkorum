@@ -5,7 +5,7 @@
         <div>
           <ZKCard>
             <div class="contentLayout">
-              <PostMetadata :community-id="commentItem.communityId" :created-at="commentItem.createdAt"
+              <PostMetadata :community-id="commentItem.userCommunityId" :created-at="commentItem.createdAt"
                 :isCompatSize="true" />
               <div>{{ commentItem.comment }}</div>
             </div>
