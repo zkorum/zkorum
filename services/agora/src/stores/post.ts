@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { CommunityItem, useCommunityStore } from "./community";
 import { ref } from "vue";
+import { useStorage } from "@vueuse/core";
 
 export interface DummyPollOptionFormat {
     index: number;
@@ -69,7 +70,8 @@ export interface DummyUserPostDataFormat {
 }
 
 export const usePostStore = defineStore("post", () => {
-    // post: [] as Post[],
+
+    const forceAddPolls = useStorage("force-add-polls", false);
 
     const emptyPost: DummyPostDataFormat = {
         metadata: {
@@ -233,7 +235,7 @@ export const usePostStore = defineStore("post", () => {
 
         const numCommentsInPost = getRandomInt(0, 20);
         const selectedRandomCommunityItem = generateRandomCommunityItem();
-        const hasPoll = true;
+        const hasPoll = forceAddPolls.value ? true : getRandomInt(0, 100) < 20;
 
         const numPollOptions = getRandomInt(2, 6);
         const pollOptionList: DummyPollOptionFormat[] = [];

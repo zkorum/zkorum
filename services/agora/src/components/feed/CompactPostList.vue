@@ -44,7 +44,14 @@ function generateNewPosts() {
   for (let i = 0; i < postList.length; i++) {
     compactPostDataList.value.push(postList[i]);
   }
-  lastSlugId = postList[postList.length - 1].metadata.slugId;
+
+  if (postList.length > 0) {
+    lastSlugId = postList[postList.length - 1].metadata.slugId;
+  } else {
+    // Force infinite scroll to go back to the top
+    lastSlugId = "";
+  }
+
 }
 
 interface DoneFunction {
