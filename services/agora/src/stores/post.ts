@@ -69,9 +69,50 @@ export interface DummyUserPostDataFormat {
 export const usePostStore = defineStore("post", () => {
     // post: [] as Post[],
 
+    const emptyPost: DummyPostDataFormat = {
+        metadata: {
+            uid: "",
+            slugId: "",
+            isHidden: false,
+            createdAt: new Date(),
+            commentCount: 0,
+            communityId: ""
+        },
+        payload: {
+            title: "",
+            body: "",
+            poll: {
+                hasPoll: false,
+                options: []
+            },
+            comments: []
+        },
+        userInteraction: {
+            voting: {
+                hasVoted: false,
+                voteIndex: 0
+            },
+            ranking: {
+                rankedCommentList: [],
+                unrankedCommentIndexList: []
+            }
+        }
+    };
+
     const masterPostDataList: DummyPostDataFormat[] = [];
     for (let i = 0; i < 200; i++) {
         masterPostDataList.push(generateDummyPostData(i));
+    }
+
+    function getPostBySlugId(slugId: string) {
+        for (let i = 0; i < masterPostDataList.length; i++) {
+            const postItem = masterPostDataList[i];
+            if (slugId == postItem.metadata.slugId) {
+                return postItem;
+            }
+        }
+
+        return emptyPost;
     }
 
     function fetchCommunityPosts(communityId: string, afterSlugId: string, fetchCount: number) {
@@ -227,5 +268,5 @@ export const usePostStore = defineStore("post", () => {
 
     }
 
-    return { generateDummyPostData, composeDummyCommentItem, fetchCommunityPosts };
+    return { getPostBySlugId, composeDummyCommentItem, fetchCommunityPosts, emptyPost };
 });
