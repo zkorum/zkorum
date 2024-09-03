@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
 import { CommunityItem, useCommunityStore } from "./community";
 
 export interface DummyPollOptionFormat {
@@ -72,19 +71,8 @@ export const usePostStore = defineStore("post", () => {
 
     const masterPostDataList: DummyPostDataFormat[] = [];
     for (let i = 0; i < 200; i++) {
-        masterPostDataList.push(generateDummyPostData());
+        masterPostDataList.push(generateDummyPostData(i));
     }
-
-    const userPostData: DummyUserPostDataFormat = {
-        slugId: "DUMMY_SLUG_ID",
-        poll: {
-            castedVote: false,
-            votedIndex: 0
-        },
-        comment: {
-            ratedIndexList: [0]
-        }
-    };
 
     function fetchCommunityPosts(communityId: string, afterSlugId: string, fetchCount: number) {
         const dataList: DummyPostDataFormat[] = [];
@@ -148,7 +136,7 @@ export const usePostStore = defineStore("post", () => {
         return newComment;
     }
 
-    function generateDummyPostData() {
+    function generateDummyPostData(postNumber: number) {
         const postCreatedAtDate = new Date();
         postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 14));
 
@@ -208,14 +196,14 @@ export const usePostStore = defineStore("post", () => {
         const postDataStatic: DummyPostDataFormat = {
             metadata: {
                 uid: "TEST UID",
-                slugId: "DUMMY_SLUG_ID",
+                slugId: "DUMMY_SLUG_ID_" + postNumber.toString(),
                 isHidden: false,
                 createdAt: postCreatedAtDate,
                 commentCount: numCommentsInPost,
                 communityId: selectedRandomCommunityItem.id,
             },
             payload: {
-                title: "TEST POST TITLE",
+                title: "TEST POST TITLE - " + postNumber,
                 body: "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted. ",
                 poll: {
                     hasPoll: hasPoll,
@@ -239,6 +227,5 @@ export const usePostStore = defineStore("post", () => {
 
     }
 
-    const dummyUserPostData = ref(userPostData);
-    return { generateDummyPostData, composeDummyCommentItem, fetchCommunityPosts, dummyUserPostData };
+    return { generateDummyPostData, composeDummyCommentItem, fetchCommunityPosts };
 });

@@ -8,7 +8,7 @@
 import { usePostStore } from "@/stores/post";
 import PostItem from "@/components/feed/PostItem.vue";
 
-const postData = usePostStore().generateDummyPostData();
+const postData = usePostStore().generateDummyPostData(0);
 
 </script>
 
