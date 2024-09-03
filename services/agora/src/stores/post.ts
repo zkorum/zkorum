@@ -35,9 +35,9 @@ export interface UserRankedCommentItem {
     action: "like" | "dislike" | "pass";
 }
 
-export interface DummyCommentRankingForamat {
+export interface DummyCommentRankingFormat {
     rankedCommentList: UserRankedCommentItem[];
-    unrankedCommentIndexList: number[];
+    assignedRankingItems: number[];
 }
 
 export interface DummyPostDataFormat {
@@ -52,8 +52,8 @@ export interface DummyPostDataFormat {
         comments: DummyCommentFormat[]
     },
     userInteraction: {
-        voting: DummyPostUserVote,
-        ranking: DummyCommentRankingForamat,
+        pollVoting: DummyPostUserVote,
+        commentRanking: DummyCommentRankingFormat,
     }
 }
 
@@ -88,13 +88,13 @@ export const usePostStore = defineStore("post", () => {
             comments: []
         },
         userInteraction: {
-            voting: {
+            pollVoting: {
                 hasVoted: false,
                 voteIndex: 0
             },
-            ranking: {
+            commentRanking: {
                 rankedCommentList: [],
-                unrankedCommentIndexList: []
+                assignedRankingItems: []
             }
         }
     };
@@ -207,21 +207,21 @@ export const usePostStore = defineStore("post", () => {
                 index: i,
                 userCommunityId: generateRandomCommunityItem().id,
                 createdAt: generateRandomDate(postCreatedAtDate, 5),
-                comment: "This is random comment number " + (i + 1),
+                comment: "This is random comment index " + (i),
                 numUpvotes: getRandomInt(0, 100),
                 numDownvotes: getRandomInt(0, 100)
             };
             postComments.push(commentItem);
         }
 
-        const unrankedCommentIndexList: number[] = [];
+        const numRequiredCommentRanking = Math.min(3, numCommentsInPost);
+        const assignedRankingItems: number[] = [];
         const rankedCommentList: UserRankedCommentItem[] = [];
-        const numUnrankedComment = Math.min(numCommentsInPost, 2);
-        const numRankedComment = Math.min(2, numCommentsInPost - numUnrankedComment);
+        const numRankedComment = getRandomInt(0, numCommentsInPost - numRequiredCommentRanking);
 
         let currentRankedCommentIndex = 0;
-        for (let i = 0; i < numUnrankedComment; i++) {
-            unrankedCommentIndexList.push(currentRankedCommentIndex);
+        for (let i = 0; i < numRequiredCommentRanking; i++) {
+            assignedRankingItems.push(currentRankedCommentIndex);
             currentRankedCommentIndex += 1;
         }
 
@@ -253,13 +253,13 @@ export const usePostStore = defineStore("post", () => {
                 comments: postComments
             },
             userInteraction: {
-                voting: {
+                pollVoting: {
                     hasVoted: false,
                     voteIndex: 0
                 },
-                ranking: {
+                commentRanking: {
                     rankedCommentList: rankedCommentList,
-                    unrankedCommentIndexList: unrankedCommentIndexList
+                    assignedRankingItems: assignedRankingItems
                 }
             }
         };

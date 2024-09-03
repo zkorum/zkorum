@@ -18,7 +18,7 @@
           </div>
 
           <div class="innerContainer" v-if="extendedPostData.payload.poll.hasPoll">
-            <PollWrapper :user-vote="extendedPostData.userInteraction.voting"
+            <PollWrapper :user-vote="extendedPostData.userInteraction.pollVoting"
               :poll-options="extendedPostData.payload.poll.options" />
             <!-- TODO: pollResponse -->
           </div>
@@ -67,11 +67,12 @@
 
       <div v-if="!compactMode">
         <CommentRanking :comment-list="commentList"
-          :unranked-comment-index-list="props.extendedPostData.userInteraction.ranking.unrankedCommentIndexList" />
+          :assigned-ranking-items="props.extendedPostData.userInteraction.commentRanking.assignedRankingItems" />
       </div>
 
       <div v-if="!compactMode && commentList.length > 0">
-        <CommentSection :comment-list="commentList" />
+        <CommentSection :comment-list="commentList"
+          :comment-ranking="extendedPostData.userInteraction.commentRanking" />
       </div>
 
       <q-dialog v-model="showFallbackShareDialog">

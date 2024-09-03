@@ -13,9 +13,9 @@
             </div>
 
             <div class="rankingButtonCluster">
-              <ZKButton flat text-color-flex="black" icon="mdi-thumb-up" />
-              <ZKButton flat text-color-flex="black" label="Pass" />
               <ZKButton flat text-color-flex="black" icon="mdi-thumb-down" />
+              <ZKButton flat text-color-flex="black" label="Pass" />
+              <ZKButton flat text-color-flex="black" icon="mdi-thumb-up" />
             </div>
           </div>
         </ZKCard>
@@ -32,14 +32,14 @@ import ZKButton from "../ui-library/ZKButton.vue";
 
 const props = defineProps<{
   commentList: DummyCommentFormat[],
-  unrankedCommentIndexList: number[]
+  assignedRankingItems: number[]
 }>()
 
 const filteredCommentList: DummyCommentFormat[] = [];
 
 for (let i = 0; i < props.commentList.length; i++) {
   const commentItem = props.commentList[i];
-  if (props.unrankedCommentIndexList.includes(commentItem.index)) {
+  if (props.assignedRankingItems.includes(commentItem.index)) {
     filteredCommentList.push(commentItem);
   }
 }
