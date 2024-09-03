@@ -5,10 +5,8 @@
         <CommunityIcon :community-id="communityId" :showCountryName="false" />
       </div>
 
-      <div class="metadata">
-        <div>
-          {{ getTimeFromNow(createdAt) }}
-        </div>
+      <div>
+        {{ getTimeFromNow(createdAt) }}
       </div>
     </div>
   </div>
@@ -38,11 +36,6 @@ defineProps<{
 }
 
 .iconSizeSmall {
-  width: 3rem;
-}
-
-.metadata {
-  display: flex;
-  flex-direction: column;
+  width: 2.5rem;
 }
 </style>
