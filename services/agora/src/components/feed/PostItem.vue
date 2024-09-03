@@ -71,7 +71,7 @@
       </div>
 
       <div v-if="!compactMode && commentList.length > 0">
-        <CommentSection :comment-list="commentList"
+        <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
           :comment-ranking="extendedPostData.userInteraction.commentRanking" />
       </div>
 

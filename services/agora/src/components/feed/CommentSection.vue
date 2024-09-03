@@ -12,11 +12,13 @@
               <div class="actionButtonCluster">
                 <ZKButton flat text-color-flex="black" icon="mdi-dots-horizontal" size="0.8rem" />
 
-                <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem" />
+                <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
+                  @click="toggleVote(commentItem.index, true)" />
                 <div v-if="getCommentItemRankStatus(commentItem.index) != undefined">
                   {{ commentItem.numUpvotes - commentItem.numDownvotes }}
                 </div>
-                <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem" />
+                <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem"
+                  @click="toggleVote(commentItem.index, false)" />
               </div>
 
             </div>
@@ -28,15 +30,18 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, DummyCommentRankingFormat } from "@/stores/post";
+import { DummyCommentFormat, DummyCommentRankingFormat, usePostStore } from "@/stores/post";
 import ZKCard from "../ui-library/ZKCard.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
 import PostMetadata from "./PostMetadata.vue";
 
 const props = defineProps<{
+  postSlugId: string,
   commentList: DummyCommentFormat[],
   commentRanking: DummyCommentRankingFormat
 }>()
+
+const { updateCommentRanking } = usePostStore();
 
 function getCommentItemRankStatus(commentIndex: number) {
   const action = props.commentRanking.rankedCommentList.get(commentIndex);
@@ -58,6 +63,10 @@ function getButtonIcon(commentIndex: number, isUpvoteButton: boolean): string {
       return "mdi-arrow-down-bold-outline";
     }
   }
+}
+
+function toggleVote(commentIndex: number, isUpvoteButton: boolean) {
+  updateCommentRanking(props.postSlugId, commentIndex, isUpvoteButton);
 }
 
 </script>
