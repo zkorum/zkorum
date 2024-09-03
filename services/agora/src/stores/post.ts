@@ -30,9 +30,10 @@ export interface DummyPostUserVote {
     voteIndex: number;
 }
 
+type PossibleCommentActions = "like" | "dislike" | "pass"
 export interface UserRankedCommentItem {
     index: number;
-    action: "like" | "dislike" | "pass";
+    action: PossibleCommentActions;
 }
 
 export interface DummyCommentRankingFormat {
@@ -226,9 +227,11 @@ export const usePostStore = defineStore("post", () => {
         }
 
         for (let i = 0; i < numRankedComment; i++) {
+            const possibleCommentActions: PossibleCommentActions[] = ["like", "dislike", "pass"];
+            const randomActionIndex = getRandomInt(0, possibleCommentActions.length - 1);
             const rankedItem: UserRankedCommentItem = {
                 index: currentRankedCommentIndex,
-                action: "like"
+                action: possibleCommentActions[randomActionIndex]
             };
             rankedCommentList.push(rankedItem);
             currentRankedCommentIndex += 1;
