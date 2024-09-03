@@ -4,42 +4,39 @@
       <div v-if="showResults" class="pollContainer">
 
         <div class="pollOptionList">
-          <option-view v-for="option in pollOptions" v-bind:key="option.index" :option="option.name"
-            :optionResponded="votedOptionIndex == option.index"
+          <option-view v-for="option in localPollOptions" v-bind:key="option.index" :option="option.name"
+            :optionResponded="localUserVote.voteIndex == option.index && localUserVote.hasVoted"
             :optionPercentage="totalCount === 0 ? 0 : Math.round((option.numResponses * 100) / totalCount)" />
         </div>
 
         <div class="voteCounter">
-          {{ totalCount <= 1 ? `${totalCount} vote` : `${totalCount} votes` }} </div>
+          {{ totalCount }} vote<span v-if="totalCount > 1">s</span>
         </div>
 
-        <div v-if="!showResults" class="pollContainer">
-
-          <div class="pollOptionList">
-            <q-radio v-for="option in pollOptions" v-bind:key="option.index" v-model="votedOptionIndex"
-              :val="option.index" :label="option.name" />
-          </div>
-
-          <div class="actionButtonCluster" v-if="!showResults">
-            <div>
-              <ZKButton outline text-color-flex="black" label="Vote" @click="showResults = true"
-                :disable="votedOptionIndex == -1" />
-            </div>
-
-            <div>
-              <ZKButton outline text-color-flex="black" label="Show Results" @click="showResults = true" />
-            </div>
-          </div>
-
+        <div>
+          <ZKButton outline text-color-flex="primary" label="Vote" icon="mdi-vote" v-if="!localUserVote.hasVoted"
+            @click.stop.prevent="castVoteRequested()" />
         </div>
-
-        <!--
-      <option-view v-for="option in pollOptions" v-bind:key="option.name" :option="option.name"
-        :optionResponded="pollResponse !== undefined && pollResponse.optionChosen === 1"
-        :optionPercentage="totalCount === 0 ? 0 : Math.round((option.numResponses * 100) / totalCount)" />
-      -->
       </div>
+
+
     </div>
+
+    <div v-if="!showResults" class="pollContainer">
+
+      <div class="pollOptionList">
+        <ZKButton outline v-for="option in localPollOptions" v-bind:key="option.index" :label="option.name"
+          text-color-flex="primary" @click.stop.prevent="voteCasted(option.index)" />
+      </div>
+
+      <div class="actionButtonCluster">
+        <ZKButton outline text-color-flex="primary" icon="mdi-chart-bar" label="Results"
+          @click.stop.prevent="showPollResults()" />
+      </div>
+
+    </div>
+
+  </div>
 
 </template>
 
@@ -49,24 +46,38 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import type {
 } from "@/shared/types/zod";
 import { DummyPollOptionFormat, DummyPostUserVote } from "@/stores/post";
-import { ref } from "vue";
+import { ref, toRaw } from "vue";
 
 const props = defineProps<{
   pollOptions: DummyPollOptionFormat[];
   userVote: DummyPostUserVote;
 }>()
 
-const showResults = ref(props.userVote.hasVoted);
-
-const votedOptionIndex = ref<number>(-1);
-if (props.userVote.hasVoted) {
-  votedOptionIndex.value = props.userVote.voteIndex;
-}
+const localPollOptions = structuredClone(toRaw(props.pollOptions));
+const localUserVote = structuredClone(toRaw(props.userVote));
+const showResults = ref(localUserVote.hasVoted);
 
 let totalCount = 0;
 props.pollOptions.forEach(option => {
   totalCount += option.numResponses;
 });
+
+function castVoteRequested() {
+  showResults.value = false;
+}
+
+function showPollResults() {
+  showResults.value = true;
+}
+
+function voteCasted(selectedIndex: number) {
+  localPollOptions[selectedIndex].numResponses += 1;
+  localUserVote.voteIndex = selectedIndex;
+
+  localUserVote.hasVoted = true;
+  showResults.value = true;
+}
+
 </script>
 
 <style scoped>

@@ -17,7 +17,7 @@
 
           </div>
 
-          <div class="innerContainer" v-if="!compactMode && extendedPostData.payload.poll.hasPoll">
+          <div class="innerContainer" v-if="extendedPostData.payload.poll.hasPoll">
             <PollWrapper :user-vote="extendedPostData.userInteraction.voting"
               :poll-options="extendedPostData.payload.poll.options" />
             <!-- TODO: pollResponse -->
