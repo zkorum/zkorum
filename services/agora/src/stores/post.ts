@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { CommunityItem, useCommunityStore } from "./community";
+import { ref } from "vue";
 
 export interface DummyPollOptionFormat {
     index: number;
@@ -30,14 +31,14 @@ export interface DummyPostUserVote {
     voteIndex: number;
 }
 
-type PossibleCommentActions = "like" | "dislike" | "pass"
+type PossibleCommentActions = "like" | "dislike"
 export interface UserRankedCommentItem {
     index: number;
     action: PossibleCommentActions;
 }
 
 export interface DummyCommentRankingFormat {
-    rankedCommentList: UserRankedCommentItem[];
+    rankedCommentList: Map<number, PossibleCommentActions>;
     assignedRankingItems: number[];
 }
 
@@ -94,26 +95,32 @@ export const usePostStore = defineStore("post", () => {
                 voteIndex: 0
             },
             commentRanking: {
-                rankedCommentList: [],
+                rankedCommentList: new Map(),
                 assignedRankingItems: []
             }
         }
     };
 
-    const masterPostDataList: DummyPostDataFormat[] = [];
+    const masterPostDataList = ref<DummyPostDataFormat[]>([]);
     for (let i = 0; i < 200; i++) {
-        masterPostDataList.push(generateDummyPostData(i));
+        masterPostDataList.value.push(generateDummyPostData(i));
     }
 
     function getPostBySlugId(slugId: string) {
-        for (let i = 0; i < masterPostDataList.length; i++) {
-            const postItem = masterPostDataList[i];
+        for (let i = 0; i < masterPostDataList.value.length; i++) {
+            const postItem = masterPostDataList.value[i];
             if (slugId == postItem.metadata.slugId) {
                 return postItem;
             }
         }
 
         return emptyPost;
+    }
+
+    function updateCommentRanking(postSlugId: string, commentIndex: number, action: PossibleCommentActions) {
+        const post = getPostBySlugId(postSlugId);
+        const rankedCommentMap = post.userInteraction.commentRanking.rankedCommentList;
+        rankedCommentMap.set(commentIndex, action);
     }
 
     function fetchCommunityPosts(communityId: string, afterSlugId: string, fetchCount: number) {
@@ -123,9 +130,9 @@ export const usePostStore = defineStore("post", () => {
             locatedId = true;
         }
 
-        for (let i = 0; i < masterPostDataList.length; i++) {
+        for (let i = 0; i < masterPostDataList.value.length; i++) {
 
-            const postItem = masterPostDataList[i];
+            const postItem = masterPostDataList.value[i];
             if (locatedId) {
                 if (postItem.metadata.communityId == communityId) {
                     dataList.push(postItem);
@@ -178,7 +185,7 @@ export const usePostStore = defineStore("post", () => {
         return newComment;
     }
 
-    function generateDummyPostData(postNumber: number) {
+    function generateDummyPostData(postIndex: number) {
         const postCreatedAtDate = new Date();
         postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 14));
 
@@ -217,7 +224,7 @@ export const usePostStore = defineStore("post", () => {
 
         const numRequiredCommentRanking = Math.min(3, numCommentsInPost);
         const assignedRankingItems: number[] = [];
-        const rankedCommentList: UserRankedCommentItem[] = [];
+        const rankedCommentList = new Map<number, PossibleCommentActions>();
         const numRankedComment = getRandomInt(0, numCommentsInPost - numRequiredCommentRanking);
 
         let currentRankedCommentIndex = 0;
@@ -227,27 +234,23 @@ export const usePostStore = defineStore("post", () => {
         }
 
         for (let i = 0; i < numRankedComment; i++) {
-            const possibleCommentActions: PossibleCommentActions[] = ["like", "dislike", "pass"];
+            const possibleCommentActions: PossibleCommentActions[] = ["like", "dislike"];
             const randomActionIndex = getRandomInt(0, possibleCommentActions.length - 1);
-            const rankedItem: UserRankedCommentItem = {
-                index: currentRankedCommentIndex,
-                action: possibleCommentActions[randomActionIndex]
-            };
-            rankedCommentList.push(rankedItem);
+            rankedCommentList.set(currentRankedCommentIndex, possibleCommentActions[randomActionIndex]);
             currentRankedCommentIndex += 1;
         }
 
         const postDataStatic: DummyPostDataFormat = {
             metadata: {
                 uid: "TEST UID",
-                slugId: "DUMMY_SLUG_ID_" + postNumber.toString(),
+                slugId: "DUMMY_SLUG_ID_" + postIndex.toString(),
                 isHidden: false,
                 createdAt: postCreatedAtDate,
                 commentCount: numCommentsInPost,
                 communityId: selectedRandomCommunityItem.id,
             },
             payload: {
-                title: "TEST POST TITLE - " + postNumber,
+                title: "TEST POST TITLE INDEX - " + postIndex,
                 body: "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted. ",
                 poll: {
                     hasPoll: hasPoll,
@@ -271,5 +274,5 @@ export const usePostStore = defineStore("post", () => {
 
     }
 
-    return { getPostBySlugId, composeDummyCommentItem, fetchCommunityPosts, emptyPost };
+    return { getPostBySlugId, composeDummyCommentItem, fetchCommunityPosts, updateCommentRanking, emptyPost };
 });

@@ -13,7 +13,7 @@
                 <ZKButton flat text-color-flex="black" icon="mdi-dots-horizontal" size="0.8rem" />
 
                 <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem" />
-                <div v-if="getCommentItemRankStatus(commentItem.index).action != 'pass'">
+                <div v-if="getCommentItemRankStatus(commentItem.index) != undefined">
                   {{ commentItem.numUpvotes - commentItem.numDownvotes }}
                 </div>
                 <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem" />
@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, DummyCommentRankingFormat, UserRankedCommentItem } from "@/stores/post";
+import { DummyCommentFormat, DummyCommentRankingFormat } from "@/stores/post";
 import ZKCard from "../ui-library/ZKCard.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
 import PostMetadata from "./PostMetadata.vue";
@@ -38,38 +38,26 @@ const props = defineProps<{
   commentRanking: DummyCommentRankingFormat
 }>()
 
-function getCommentItemRankStatus(commentIndex: number): UserRankedCommentItem {
-  for (let i = 0; i < props.commentRanking.rankedCommentList.length; i++) {
-    const rankingItem = props.commentRanking.rankedCommentList[i];
-    if (rankingItem.index == commentIndex) {
-      return rankingItem;
-    }
-  }
-
-  const emptyItem: UserRankedCommentItem = {
-    index: 0,
-    action: "pass"
-  }
-  return emptyItem;
+function getCommentItemRankStatus(commentIndex: number) {
+  const action = props.commentRanking.rankedCommentList.get(commentIndex);
+  return action;
 }
 
 function getButtonIcon(commentIndex: number, isUpvoteButton: boolean): string {
-  const rankingItem = getCommentItemRankStatus(commentIndex);
+  const commentAction = getCommentItemRankStatus(commentIndex);
   if (isUpvoteButton) {
-    if (rankingItem.action == "like") {
+    if (commentAction == "like") {
       return "mdi-arrow-up-bold";
     } else {
       return "mdi-arrow-up-bold-outline";
     }
   } else {
-    if (rankingItem.action == "dislike") {
+    if (commentAction == "dislike") {
       return "mdi-arrow-down-bold";
     } else {
       return "mdi-arrow-down-bold-outline";
     }
   }
-
-
 }
 
 </script>
