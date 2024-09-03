@@ -117,10 +117,52 @@ export const usePostStore = defineStore("post", () => {
         return emptyPost;
     }
 
-    function updateCommentRanking(postSlugId: string, commentIndex: number, action: PossibleCommentActions) {
+    function updateCommentRanking(postSlugId: string, commentIndex: number, isUpvoteButton: boolean) {
         const post = getPostBySlugId(postSlugId);
         const rankedCommentMap = post.userInteraction.commentRanking.rankedCommentList;
-        rankedCommentMap.set(commentIndex, action);
+        const currentAction = rankedCommentMap.get(commentIndex);
+
+        let upvoteDiff = 0;
+        let downvoteDiff = 0;
+
+        if (currentAction != undefined) {
+            if (currentAction == "like") {
+                if (isUpvoteButton) {
+                    rankedCommentMap.delete(commentIndex);
+                    upvoteDiff -= 1;
+                } else {
+                    rankedCommentMap.set(commentIndex, "dislike");
+                    upvoteDiff -= 1;
+                    downvoteDiff += 1;
+                }
+            } else {
+                if (isUpvoteButton) {
+                    rankedCommentMap.set(commentIndex, "like");
+                    upvoteDiff += 1;
+                    downvoteDiff -= 1;
+                } else {
+                    rankedCommentMap.delete(commentIndex);
+                    downvoteDiff -= 1;
+                }
+            }
+        } else {
+            if (isUpvoteButton) {
+                rankedCommentMap.set(commentIndex, "like");
+                upvoteDiff += 1;
+            } else {
+                rankedCommentMap.set(commentIndex, "dislike");
+                downvoteDiff += 1;
+            }
+        }
+
+        for (let i = 0; i < post.payload.comments.length; i++) {
+            const commentItem = post.payload.comments[i];
+            if (commentItem.index == commentIndex) {
+                commentItem.numUpvotes += upvoteDiff;
+                commentItem.numDownvotes += downvoteDiff;
+                break;
+            }
+        }
     }
 
     function fetchCommunityPosts(communityId: string, afterSlugId: string, fetchCount: number) {
