@@ -70,6 +70,11 @@ export interface DummyUserPostDataFormat {
 export const usePostStore = defineStore("post", () => {
     // post: [] as Post[],
 
+    const masterPostDataList: DummyPostDataFormat[] = [];
+    for (let i = 0; i < 200; i++) {
+        masterPostDataList.push(generateDummyPostData());
+    }
+
     const userPostData: DummyUserPostDataFormat = {
         slugId: "DUMMY_SLUG_ID",
         poll: {
@@ -80,6 +85,34 @@ export const usePostStore = defineStore("post", () => {
             ratedIndexList: [0]
         }
     };
+
+    function fetchCommunityPosts(communityId: string, afterSlugId: string, fetchCount: number) {
+        const dataList: DummyPostDataFormat[] = [];
+        let locatedId = false;
+        if (afterSlugId == "") {
+            locatedId = true;
+        }
+
+        for (let i = 0; i < masterPostDataList.length; i++) {
+
+            const postItem = masterPostDataList[i];
+            if (locatedId) {
+                if (postItem.metadata.communityId == communityId) {
+                    dataList.push(postItem);
+                }
+            }
+
+            if (postItem.metadata.slugId == afterSlugId) {
+                locatedId = true;
+            }
+
+            if (dataList.length == fetchCount) {
+                break;
+            }
+        };
+
+        return dataList;
+    }
 
     function getRandomInt(min: number, max: number) {
         min = Math.ceil(min);
@@ -207,5 +240,5 @@ export const usePostStore = defineStore("post", () => {
     }
 
     const dummyUserPostData = ref(userPostData);
-    return { generateDummyPostData, composeDummyCommentItem, dummyUserPostData };
+    return { generateDummyPostData, composeDummyCommentItem, fetchCommunityPosts, dummyUserPostData };
 });

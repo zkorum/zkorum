@@ -2,8 +2,16 @@
   <div>
     <NewPostButtonWrapper @on-click="createNewPost()">
       <div class="container">
-        <CompactCommunityCluster />
-        <CompactPostList />
+
+        <div class="menuBar">
+          <q-btn-toggle v-model="selectedCommunityId" class="my-custom-toggle" no-caps rounded toggle-color="primary"
+            toggle-text-color="white" color="white" text-color="black" :options="[
+              { label: 'World', value: 'world' },
+              { label: 'French', value: 'france' }
+            ]" />
+        </div>
+
+        <CompactPostList :community-id="selectedCommunityId" />
       </div>
     </NewPostButtonWrapper>
   </div>
@@ -11,11 +19,13 @@
 
 <script setup lang="ts">
 import CompactPostList from "@/components/feed/CompactPostList.vue";
-import CompactCommunityCluster from "@/components/feed/CompactCommunityCluster.vue";
 import NewPostButtonWrapper from "@/components/feed/NewPostButtonWrapper.vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
+
+const selectedCommunityId = ref("world");
 
 function createNewPost() {
   router.push({ name: "create-post", params: { communityId: "world" } })
@@ -28,5 +38,10 @@ function createNewPost() {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.menuBar {
+  display: flex;
+  justify-content: center;
 }
 </style>

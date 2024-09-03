@@ -18,20 +18,33 @@
 <script setup lang="ts">
 
 import PostItem from "./PostItem.vue";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 
-const { generateDummyPostData } = usePostStore();
+const props = defineProps<{
+  communityId: string
+}>()
 
-const FETCH_POST_COUNT = 10;
+const { fetchCommunityPosts } = usePostStore();
+
+const FETCH_POST_COUNT = 5;
 const compactPostDataList = ref<DummyPostDataFormat[]>([]);
+let lastSlugId = "";
 
 generateNewPosts();
 
+watch(() => props.communityId, () => {
+  compactPostDataList.value = [];
+  lastSlugId = "";
+  generateNewPosts();
+});
+
 function generateNewPosts() {
-  for (let i = 0; i < FETCH_POST_COUNT; i++) {
-    compactPostDataList.value.push(generateDummyPostData());
+  const postList = fetchCommunityPosts(props.communityId, lastSlugId, FETCH_POST_COUNT);
+  for (let i = 0; i < postList.length; i++) {
+    compactPostDataList.value.push(postList[i]);
   }
+  lastSlugId = postList[postList.length - 1].metadata.slugId;
 }
 
 interface DoneFunction {

@@ -4,7 +4,7 @@
       <ZKCard>
         <div class="innerContainer">
           <PostMetadata :community-id="extendedPostData.metadata.communityId"
-            :created-at="extendedPostData.metadata.createdAt" :isCompatSize="false" />
+            :created-at="extendedPostData.metadata.createdAt" :isCompatSize="true" />
 
           <div class="postDiv">
             <div class="titleDiv">
@@ -33,7 +33,6 @@
                 :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
                 @click="(event) => clickedReplyButton(event)" v-if="!compactMode" />
             </div>
-
 
             <!--
             <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"

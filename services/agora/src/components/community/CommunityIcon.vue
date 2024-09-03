@@ -35,12 +35,6 @@ function mapCommunityItem() {
 </script>
 
 <style scoped>
-.flagStyle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .flagImage {
   border-radius: 5px;
   border-style: solid;
