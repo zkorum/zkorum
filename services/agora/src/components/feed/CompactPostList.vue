@@ -34,10 +34,14 @@ let lastSlugId = "";
 generateNewPosts();
 
 watch(() => props.communityId, () => {
-  compactPostDataList.value = [];
-  lastSlugId = "";
+  resetList();
   generateNewPosts();
 });
+
+function resetList() {
+  compactPostDataList.value = [];
+  lastSlugId = "";
+}
 
 function generateNewPosts() {
   const postList = fetchCommunityPosts(props.communityId, lastSlugId, FETCH_POST_COUNT);
@@ -49,7 +53,7 @@ function generateNewPosts() {
     lastSlugId = postList[postList.length - 1].metadata.slugId;
   } else {
     // Force infinite scroll to go back to the top
-    lastSlugId = "";
+    resetList();
   }
 
 }
