@@ -10,7 +10,7 @@
 
               <div class="communitySelector communityFlex">
                 <div class="communityButton" @click="openCommunitySheet()">
-                  <CommunityIcon />
+                  <CommunityIcon :image-path="selectedCommunityImagePath" />
                   <q-icon name="mdi-menu-down-outline" />
                 </div>
               </div>
@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref } from "vue";
+import { onUnmounted, ref, watch } from "vue";
 import { onBeforeRouteLeave, RouteLocationNormalized, useRoute, useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
 import ZKCard from "@/components/ui-library/ZKCard.vue";
@@ -113,6 +113,7 @@ import HelpButton from "@/components/navigation/buttons/HelpButton.vue";
 import { useBottomSheet } from "@/utils/ui/bottomSheet";
 import CommunityIcon from "@/components/community/CommunityIcon.vue";
 import { useNewPostDraftsStore } from "@/stores/newPostDrafts";
+import { usePostStore } from "@/stores/post";
 
 const POST_BODY_LENGTH_MAX = 260;
 const POST_BODY_LENGTH_WARNING = 200;
@@ -131,10 +132,12 @@ const endOfFormRef = ref<HTMLElement | null>();
 const showExitDialog = ref(false);
 
 const selectedCommunityId = ref("");
+const selectedCommunityImagePath = ref("");
 
 const { showCreatePostCommunitySelector } = useBottomSheet();
 
 const { postDraft, isPostEdited } = useNewPostDraftsStore();
+const { getCommunityImageFromId } = usePostStore();
 
 let grantedRouteLeave = false;
 
@@ -161,6 +164,11 @@ window.onbeforeunload = function () {
 onUnmounted(() => {
   window.onbeforeunload = () => { };
 })
+
+watch(selectedCommunityId, () => {
+  selectedCommunityImagePath.value = getCommunityImageFromId(selectedCommunityId.value);
+})
+
 function checkWordCount() {
   const div = document.createElement("div");
   div.innerHTML = postDraft.value.postBody;
@@ -211,6 +219,8 @@ function loadCommunityId() {
   if (typeof initialCommunityId == "string") {
     selectedCommunityId.value = initialCommunityId;
   }
+
+  selectedCommunityImagePath.value = getCommunityImageFromId(selectedCommunityId.value);
 }
 
 function leaveRoute() {

@@ -130,7 +130,7 @@ const showFallbackShareDialog = ref(false);
 const sharePostUrl = window.location.origin + "/a/" + props.extendedPostData.metadata.communityId + "/post/" + props.extendedPostData.metadata.slugId;
 
 function replyButtonClicked() {
-  const commentItem = composeDummyCommentItem(commentComposerText.value, commentList.value.length);
+  const commentItem = composeDummyCommentItem(commentComposerText.value, commentList.value.length, new Date());
   commentList.value.unshift(commentItem);
 
   commentComposerText.value = "";

@@ -12,6 +12,7 @@ export interface DummyPollOptionFormat {
 export interface DummyCommentFormat {
     index: number;
     userCommunityId: string;
+    userCommunityImage: string;
     createdAt: Date;
     comment: string;
     numUpvotes: number;
@@ -221,15 +222,30 @@ export const usePostStore = defineStore("post", () => {
         return communityItem;
     }
 
-    function composeDummyCommentItem(commentText: string, index: number) {
+    function getCommunityImageFromId(communityId: string) {
+        const communityList = useCommunityStore().communityList;
+
+        for (let i = 0; i < communityList.length; i++) {
+            const communityItem = communityList[i];
+            if (communityItem.id == communityId) {
+                return "/images/communities/flags/" + communityItem.code + ".svg";
+            }
+        }
+
+        return ""
+    }
+
+    function composeDummyCommentItem(commentText: string, index: number, createdAt: Date) {
+        const communityItem = generateRandomCommunityItem();
 
         const newComment: DummyCommentFormat = {
             index: index,
-            userCommunityId: generateRandomCommunityItem().id,
-            createdAt: new Date(),
+            userCommunityId: communityItem.id,
+            userCommunityImage: getCommunityImageFromId(communityItem.id),
+            createdAt: createdAt,
             comment: commentText,
-            numUpvotes: 0,
-            numDownvotes: 0
+            numUpvotes: getRandomInt(0, 100),
+            numDownvotes: getRandomInt(0, 100)
         }
         return newComment;
     }
@@ -271,14 +287,8 @@ export const usePostStore = defineStore("post", () => {
 
         const postComments: DummyCommentFormat[] = [];
         for (let i = 0; i < numCommentsInPost; i++) {
-            const commentItem: DummyCommentFormat = {
-                index: i,
-                userCommunityId: generateRandomCommunityItem().id,
-                createdAt: generateRandomDate(postCreatedAtDate, 5),
-                comment: "This is random comment index " + (i),
-                numUpvotes: getRandomInt(0, 100),
-                numDownvotes: getRandomInt(0, 100)
-            };
+            const comment = "This is random comment index " + (i);
+            const commentItem = composeDummyCommentItem(comment, i, generateRandomDate(postCreatedAtDate, 5));
             postComments.push(commentItem);
         }
 
@@ -338,5 +348,5 @@ export const usePostStore = defineStore("post", () => {
 
     }
 
-    return { getPostBySlugId, composeDummyCommentItem, fetchCommunityPosts, updateCommentRanking, emptyPost };
+    return { getPostBySlugId, composeDummyCommentItem, fetchCommunityPosts, updateCommentRanking, getCommunityImageFromId, emptyPost };
 });
