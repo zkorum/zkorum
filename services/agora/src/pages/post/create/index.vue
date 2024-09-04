@@ -10,7 +10,7 @@
 
               <div class="communitySelector communityFlex">
                 <div class="communityButton" @click="openCommunitySheet()">
-                  <CommunityIcon :community-id="selectedCommunityId" />
+                  <CommunityIcon />
                   <q-icon name="mdi-menu-down-outline" />
                 </div>
               </div>

@@ -1,12 +1,24 @@
 <template>
   <div>
-    <div class="topTag">
-      <div :class="{ iconSizeLarge: !isCompatSize, iconSizeSmall: isCompatSize }">
-        <CommunityIcon :community-id="communityId" :showCountryName="false" />
-      </div>
+    <div class="container">
 
-      <div>
-        {{ getTimeFromNow(createdAt) }}
+      <div class="metadata">
+        <img :src="posterImagePath" class="companyIcon" />
+
+        <div>
+          {{ posterName }}
+        </div>
+
+        <div>
+          •
+        </div>
+
+        <div>
+          {{ getTimeFromNow(createdAt) }}
+        </div>
+
+        <div>
+        </div>
       </div>
     </div>
   </div>
@@ -14,18 +26,17 @@
 
 <script setup lang="ts">
 import { getTimeFromNow } from "@/utils/common";
-import CommunityIcon from "../community/CommunityIcon.vue";
 
 defineProps<{
-  communityId: string;
-  createdAt: Date;
-  isCompatSize: boolean;
+  posterName: string
+  posterImagePath: string
+  createdAt: Date
 }>()
 
 </script>
 
 <style scoped>
-.topTag {
+.container {
   display: flex;
   gap: 1rem;
   align-items: center;
@@ -35,7 +46,15 @@ defineProps<{
   width: 4rem;
 }
 
-.iconSizeSmall {
-  width: 2.5rem;
+.companyIcon {
+  border-radius: 50%;
+  width: 3rem;
+}
+
+.metadata {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  height: 100%;
 }
 </style>

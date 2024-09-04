@@ -5,8 +5,12 @@
         <div>
           <ZKCard>
             <div class="contentLayout">
-              <PostMetadata :community-id="commentItem.userCommunityId" :created-at="commentItem.createdAt"
-                :isCompatSize="true" />
+              <div class="iconSizeSmall metadata">
+                <CommunityIcon />
+
+                {{ getTimeFromNow(commentItem.createdAt) }}
+              </div>
+
               <div>{{ commentItem.comment }}</div>
 
               <div class="actionButtonCluster">
@@ -33,7 +37,8 @@
 import { DummyCommentFormat, DummyCommentRankingFormat, usePostStore } from "@/stores/post";
 import ZKCard from "../ui-library/ZKCard.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
-import PostMetadata from "./PostMetadata.vue";
+import CommunityIcon from "../community/CommunityIcon.vue";
+import { getTimeFromNow } from "@/utils/common";
 
 const props = defineProps<{
   postSlugId: string,
@@ -95,5 +100,15 @@ function toggleVote(commentIndex: number, isUpvoteButton: boolean) {
   justify-content: right;
   font-size: 0.8rem;
   font-weight: bold;
+}
+
+.iconSizeSmall {
+  width: 2.5rem;
+}
+
+.metadata {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 </style>

@@ -25,6 +25,8 @@ export interface DummyPostMetadataFormat {
     createdAt: Date;
     commentCount: number;
     communityId: string;
+    posterName: string;
+    posterImagePath: string;
 }
 
 export interface DummyPostUserVote {
@@ -80,7 +82,9 @@ export const usePostStore = defineStore("post", () => {
             isHidden: false,
             createdAt: new Date(),
             commentCount: 0,
-            communityId: ""
+            communityId: "",
+            posterName: "",
+            posterImagePath: ""
         },
         payload: {
             title: "",
@@ -218,6 +222,7 @@ export const usePostStore = defineStore("post", () => {
     }
 
     function composeDummyCommentItem(commentText: string, index: number) {
+
         const newComment: DummyCommentFormat = {
             index: index,
             userCommunityId: generateRandomCommunityItem().id,
@@ -227,6 +232,17 @@ export const usePostStore = defineStore("post", () => {
             numDownvotes: 0
         }
         return newComment;
+    }
+
+    function generateRandomCompanyItem() {
+        const nameIndex = getRandomInt(1, 8);
+        const companyName = "Company " + nameIndex;
+
+        return {
+            name: companyName,
+            imageName: "/images/companies/company" + nameIndex.toString() + ".jpeg"
+        }
+
     }
 
     function generateDummyPostData(postIndex: number) {
@@ -284,6 +300,8 @@ export const usePostStore = defineStore("post", () => {
             currentRankedCommentIndex += 1;
         }
 
+        const companyItem = generateRandomCompanyItem();
+
         const postDataStatic: DummyPostDataFormat = {
             metadata: {
                 uid: "TEST UID",
@@ -292,6 +310,8 @@ export const usePostStore = defineStore("post", () => {
                 createdAt: postCreatedAtDate,
                 commentCount: numCommentsInPost,
                 communityId: selectedRandomCommunityItem.id,
+                posterName: companyItem.name,
+                posterImagePath: companyItem.imageName
             },
             payload: {
                 title: "TEST POST TITLE INDEX - " + postIndex,
