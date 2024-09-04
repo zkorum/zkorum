@@ -1,11 +1,12 @@
 <template>
-  <img class="flagImage" :src="imageLink" />
+  <img class="flagImage" :src="imagePath" />
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
 
-const imageLink = ref("/images/communities/flags/WORLD.svg");
+defineProps<{
+  imagePath: string
+}>()
 
 </script>
 

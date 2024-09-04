@@ -6,7 +6,7 @@
           <ZKCard>
             <div class="contentLayout">
               <div class="iconSizeSmall metadata">
-                <CommunityIcon />
+                <CommunityIcon :image-path="getCommunityImageFromId(commentItem.userCommunityId)" />
 
                 {{ getTimeFromNow(commentItem.createdAt) }}
               </div>
@@ -46,7 +46,7 @@ const props = defineProps<{
   commentRanking: DummyCommentRankingFormat
 }>()
 
-const { updateCommentRanking } = usePostStore();
+const { updateCommentRanking, getCommunityImageFromId } = usePostStore();
 
 function getCommentItemRankStatus(commentIndex: number) {
   const action = props.commentRanking.rankedCommentList.get(commentIndex);
