@@ -3,34 +3,9 @@
 </template>
 
 <script setup lang="ts">
-import { useCommunityStore } from "@/stores/community";
-import { onMounted, ref, watch } from "vue";
+import { ref } from "vue";
 
-const props = defineProps<{
-  communityId: string
-}>()
-
-const imageLink = ref("");
-
-const communityList = useCommunityStore().communityList;
-
-onMounted(() => {
-  mapCommunityItem();
-})
-
-watch(() => props.communityId, () => {
-  mapCommunityItem();
-})
-
-function mapCommunityItem() {
-  for (let i = 0; i < communityList.length; i++) {
-    const communityItem = communityList[i];
-    if (communityItem.id == props.communityId) {
-      imageLink.value = "/images/communities/flags/" + communityItem.code + ".svg";
-      break;
-    }
-  }
-}
+const imageLink = ref("/images/communities/flags/WORLD.svg");
 
 </script>
 

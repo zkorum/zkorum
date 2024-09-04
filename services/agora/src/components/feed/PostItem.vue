@@ -3,8 +3,9 @@
     <div class="container">
       <ZKCard>
         <div class="innerContainer">
-          <PostMetadata :community-id="extendedPostData.metadata.communityId"
-            :created-at="extendedPostData.metadata.createdAt" :isCompatSize="true" />
+          <PostMetadata :poster-name="extendedPostData.metadata.posterName"
+            :poster-image-path="extendedPostData.metadata.posterImagePath"
+            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" />
 
           <div class="postDiv">
             <div class="titleDiv">

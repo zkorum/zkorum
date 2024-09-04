@@ -7,7 +7,7 @@
             <RouterLink :to="{ name: 'community-single', params: { communityId: communityItem.id } }">
               <div class="iconPositioning">
                 <div class="iconPadding">
-                  <CommunityIcon :community-id="communityItem.id" :compact="false" />
+                  <CommunityIcon />
                 </div>
               </div>
             </RouterLink>
