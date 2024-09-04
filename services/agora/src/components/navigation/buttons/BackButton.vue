@@ -1,15 +1,15 @@
 <template>
-  <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat @click="goBack()" />
+  <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat @click="buttonClicked()" />
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
 import ZKButton from "@/components/ui-library/ZKButton.vue";
+import { useGoBackButtonHandler } from "@/utils/nav/goBackButton";
 
-const router = useRouter();
+const goBackButtonHandler = useGoBackButtonHandler();
 
-function goBack() {
-  router.back();
+function buttonClicked() {
+  goBackButtonHandler.goBack();
 }
 
 </script>
