@@ -77,11 +77,6 @@ const routes: RouteRecordRaw[] = [
                 path: "",
                 component: () => import("@/pages/a/[communityId]/index.vue"),
                 name: "community-single",
-              },
-              {
-                path: "post/:postSlugId",
-                component: () => import("pages/a/[communityId]/post/[postSlugId].vue"),
-                name: "single-post"
               }
             ]
           }
@@ -90,7 +85,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "/a",
         component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: false, addOuterPadding: true, enableHeader: true, enableFooter: true, useStylelessFooter: false } as MainLayoutProps,
+        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: false, addOuterPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
             path: ":communityId",
@@ -99,6 +94,11 @@ const routes: RouteRecordRaw[] = [
                 path: "rank/:postSlugId",
                 component: () => import("pages/a/[communityId]/rank/[postSlugId].vue"),
                 name: "single-ranking"
+              },
+              {
+                path: "post/:postSlugId",
+                component: () => import("pages/a/[communityId]/post/[postSlugId].vue"),
+                name: "single-post"
               }
             ]
           }

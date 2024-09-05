@@ -34,14 +34,7 @@
                 :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
                 @click.stop.prevent="clickedReplyButton()" v-if="!compactMode" />
 
-              <ZKButton icon="mdi-ballot-outline" @click.stop.prevent="clickedTestButton()" />
-
             </div>
-
-            <!--
-            <ZKButton icon="bar_chart" color-flex="light-blue-8" text-color-flex="white"
-              @click="(event) => showResultClicked(event)" />
-            -->
 
             <div>
               <ZKButton outline text-color-flex="secondary" icon="mdi-share-outline"
@@ -97,7 +90,6 @@ import PollWrapper from "../poll/PollWrapper.vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 import { ref } from "vue";
 import { useWebShare } from "@/utils/share/WebShare";
-import { useRouter } from "vue-router";
 
 const showCommentComposer = ref(false);
 const commentComposerText = ref("");
@@ -106,8 +98,6 @@ const props = defineProps<{
   extendedPostData: DummyPostDataFormat,
   compactMode: boolean
 }>()
-
-const router = useRouter();
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
@@ -126,10 +116,6 @@ function replyButtonClicked() {
   commentList.value.unshift(commentItem);
 
   commentComposerText.value = "";
-}
-
-function clickedTestButton() {
-  router.push({ name: "single-ranking", params: { postSlugId: props.extendedPostData.metadata.slugId, communityId: props.extendedPostData.metadata.communityId } });
 }
 
 function clickedReplyButton() {

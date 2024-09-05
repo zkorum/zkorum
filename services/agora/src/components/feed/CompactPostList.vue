@@ -5,7 +5,7 @@
         <div class="postListFlex">
           <div v-for="(postData, index) in compactPostDataList" :key="index">
             <RouterLink
-              :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId, communityId: postData.metadata.communityId } }">
+              :to="{ name: 'single-ranking', params: { postSlugId: postData.metadata.slugId, communityId: postData.metadata.communityId } }">
               <PostItem :extended-post-data="postData" :compact-mode="true" />
             </RouterLink>
           </div>
