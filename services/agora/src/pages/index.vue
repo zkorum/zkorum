@@ -7,7 +7,7 @@
           <q-btn-toggle v-model="selectedCommunityId" class="my-custom-toggle" no-caps rounded toggle-color="primary"
             toggle-text-color="white" color="white" text-color="black" :options="[
               { label: 'World', value: 'world' },
-              { label: 'French', value: 'france' }
+              { label: 'France', value: 'france' }
             ]" />
         </div>
 
