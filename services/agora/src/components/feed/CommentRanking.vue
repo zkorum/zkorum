@@ -11,7 +11,21 @@
           {{ postItem.payload.body }}
         </div>
 
-        <ZKCard>
+        <ZKCard v-if="finishedRanking">
+          <div class="finishedMessage">
+
+            <div>
+              <q-icon name="mdi-check" size="3rem" />
+            </div>
+
+            <div>
+              All comments had been ranked!
+            </div>
+          </div>
+        </ZKCard>
+
+
+        <ZKCard v-if="!finishedRanking">
           <div class="progressBar">
             <q-linear-progress :value="progress" />
           </div>
@@ -27,10 +41,10 @@
 
             <div class="rankingButtonCluster">
               <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-down" size="1.3rem"
-                @click="rankComment('downvote')" />
+                @click="rankComment('dislike')" />
               <ZKButton outline text-color-flex="secondary" label="Pass" size="1rem" @click="rankComment('pass')" />
               <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
-                @click="rankComment('upvote')" />
+                @click="rankComment('like')" />
             </div>
           </div>
 
@@ -42,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, usePostStore } from "@/stores/post";
+import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "@/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 import { ref } from "vue";
@@ -51,10 +65,15 @@ const props = defineProps<{
   postSlugId: string
 }>()
 
-const { getUnrankedComments, getPostBySlugId } = usePostStore();
+const { getUnrankedComments, getPostBySlugId, updateCommentRanking } = usePostStore();
 
 const postItem = getPostBySlugId(props.postSlugId);
 const unrankedCommentList = getUnrankedComments(props.postSlugId)
+
+let currentRankIndex = 0;
+
+const finishedRanking = ref(false);
+checkFinishedRanking();
 
 let displayCommentItem: DummyCommentFormat = {
   index: 0,
@@ -66,10 +85,18 @@ let displayCommentItem: DummyCommentFormat = {
   numDownvotes: 0
 }
 
-let currentRankIndex = 0;
 const progress = ref(0);
 
 loadNextComment(currentRankIndex);
+
+function checkFinishedRanking() {
+  if ((unrankedCommentList.length - 1) < currentRankIndex) {
+    finishedRanking.value = true;
+    return true;
+  } else {
+    return false;
+  }
+}
 
 function loadNextComment(index: number) {
   displayCommentItem = unrankedCommentList[index];
@@ -80,17 +107,17 @@ function updateProgressBar() {
   progress.value = currentRankIndex / unrankedCommentList.length;
 }
 
-function rankComment(action: "upvote" | "downvote" | "pass") {
+function rankComment(commentAction: PossibleCommentRankingActions) {
+
+  updateCommentRanking(props.postSlugId, displayCommentItem.index, commentAction);
+
   currentRankIndex += 1;
   updateProgressBar();
 
-  if (currentRankIndex < unrankedCommentList.length) {
+  const isDone = checkFinishedRanking();
+  if (!isDone) {
     loadNextComment(currentRankIndex);
-  } else {
-    // done
   }
-
-  console.log(action);
 }
 
 </script>
@@ -144,5 +171,17 @@ function rankComment(action: "upvote" | "downvote" | "pass") {
 
 .progressBar {
   padding-bottom: 0.4rem;
+}
+
+.finishedMessage {
+  font-size: 1.2rem;
+  height: 10rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
 }
 </style>

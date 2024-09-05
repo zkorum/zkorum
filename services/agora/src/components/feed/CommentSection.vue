@@ -17,12 +17,12 @@
                 <ZKButton flat text-color-flex="black" icon="mdi-dots-horizontal" size="0.8rem" />
 
                 <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
-                  @click="toggleVote(commentItem.index, true)" />
+                  @click="toggleVote(commentItem.index, 'like')" />
                 <div v-if="getCommentItemRankStatus(commentItem.index) != undefined">
                   {{ commentItem.numUpvotes - commentItem.numDownvotes }}
                 </div>
                 <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem"
-                  @click="toggleVote(commentItem.index, false)" />
+                  @click="toggleVote(commentItem.index, 'dislike')" />
               </div>
 
             </div>
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, DummyCommentRankingFormat, usePostStore } from "@/stores/post";
+import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions, usePostStore } from "@/stores/post";
 import ZKCard from "../ui-library/ZKCard.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
 import CommunityIcon from "../community/CommunityIcon.vue";
@@ -70,7 +70,7 @@ function getButtonIcon(commentIndex: number, isUpvoteButton: boolean): string {
   }
 }
 
-function toggleVote(commentIndex: number, isUpvoteButton: boolean) {
+function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRankingActions) {
   updateCommentRanking(props.postSlugId, commentIndex, isUpvoteButton);
 }
 
