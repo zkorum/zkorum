@@ -21,6 +21,12 @@
             <div>
               All comments had been ranked!
             </div>
+
+            <RouterLink
+              :to="{ name: 'single-post', params: { communityId: postItem.metadata.communityId, postSlugId: postItem.metadata.slugId } }">
+              <ZKButton label="Open Post" icon="mdi-arrow-right-box" />
+            </RouterLink>
+
           </div>
         </ZKCard>
 
@@ -50,6 +56,8 @@
 
         </ZKCard>
       </div>
+
+
     </div>
   </div>
 
@@ -175,13 +183,18 @@ function rankComment(commentAction: PossibleCommentRankingActions) {
 
 .finishedMessage {
   font-size: 1.2rem;
-  height: 10rem;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 2rem;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 1rem;
+}
+
+.seePostButton {
+  display: flex;
+  justify-content: right;
+  width: 100%;
 }
 </style>
