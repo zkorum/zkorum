@@ -113,7 +113,7 @@ export const usePostStore = defineStore("post", () => {
         masterPostDataList.value.push(generateDummyPostData(i));
     }
 
-    function getUnrankedComment(postSlugId: string): DummyCommentFormat | null {
+    function getUnrankedComments(postSlugId: string): DummyCommentFormat[] {
         const postItem = getPostBySlugId(postSlugId);
         const assignedRankingItems = postItem.userInteraction.commentRanking.assignedRankingItems;
         const rankedCommentList = postItem.userInteraction.commentRanking.rankedCommentList;
@@ -133,17 +133,18 @@ export const usePostStore = defineStore("post", () => {
             }
         }
 
-        if (unrankedCommentIndexes.length > 0) {
-            for (let i = 0; i < postItem.payload.comments.length; i++) {
-                const commentItem = postItem.payload.comments[i];
-                if (unrankedCommentIndexes[0] == commentItem.index) {
-                    return commentItem;
+        const unrankedComments: DummyCommentFormat[] = [];
+        for (let unrankedIndex = 0; unrankedIndex < unrankedCommentIndexes.length; unrankedIndex++) {
+            for (let commentIndex = 0; commentIndex < postItem.payload.comments.length; commentIndex++) {
+                const commentItem = postItem.payload.comments[commentIndex];
+                if (unrankedCommentIndexes[unrankedIndex] == commentItem.index) {
+                    unrankedComments.push(commentItem);
+                    break;
                 }
             }
-            return null;
-        } else {
-            return null;
         }
+
+        return unrankedComments;
     }
 
     function getPostBySlugId(slugId: string) {
@@ -382,7 +383,7 @@ export const usePostStore = defineStore("post", () => {
     }
 
     return {
-        getUnrankedComment,
+        getUnrankedComments,
         getPostBySlugId,
         composeDummyCommentItem,
         fetchCommunityPosts,
