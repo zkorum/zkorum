@@ -1,12 +1,15 @@
 <template>
   <div>
-    <CommentRanking :post-slug-id="postData.metadata.slugId" />
+    <PostViewWrapper>
+      <CommentRanking :post-slug-id="postData.metadata.slugId" />
+    </PostViewWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
 
 import CommentRanking from "@/components/feed/CommentRanking.vue";
+import PostViewWrapper from "@/components/navigation/PostViewWrapper.vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 import { useRoute } from "vue-router";
 

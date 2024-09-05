@@ -1,12 +1,15 @@
 <template>
   <div>
-    <PostItem :compact-mode="false" :extended-post-data="postData" />
+    <PostViewWrapper>
+      <PostItem :compact-mode="false" :extended-post-data="postData" />
+    </PostViewWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 import PostItem from "@/components/feed/PostItem.vue";
+import PostViewWrapper from "@/components/navigation/PostViewWrapper.vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
