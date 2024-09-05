@@ -113,6 +113,39 @@ export const usePostStore = defineStore("post", () => {
         masterPostDataList.value.push(generateDummyPostData(i));
     }
 
+    function getUnrankedComment(postSlugId: string): DummyCommentFormat | null {
+        const postItem = getPostBySlugId(postSlugId);
+        const assignedRankingItems = postItem.userInteraction.commentRanking.assignedRankingItems;
+        const rankedCommentList = postItem.userInteraction.commentRanking.rankedCommentList;
+
+        const unrankedCommentIndexes: number[] = [];
+
+        for (let i = 0; i < assignedRankingItems.length; i++) {
+            const assignedIndex = assignedRankingItems[i];
+            let isRanked = false;
+            for (const [key] of rankedCommentList.entries()) {
+                if (assignedIndex == key) {
+                    isRanked = true;
+                }
+            }
+            if (!isRanked) {
+                unrankedCommentIndexes.push(assignedIndex);
+            }
+        }
+
+        if (unrankedCommentIndexes.length > 0) {
+            for (let i = 0; i < postItem.payload.comments.length; i++) {
+                const commentItem = postItem.payload.comments[i];
+                if (unrankedCommentIndexes[0] == commentItem.index) {
+                    return commentItem;
+                }
+            }
+            return null;
+        } else {
+            return null;
+        }
+    }
+
     function getPostBySlugId(slugId: string) {
         for (let i = 0; i < masterPostDataList.value.length; i++) {
             const postItem = masterPostDataList.value[i];
@@ -348,5 +381,13 @@ export const usePostStore = defineStore("post", () => {
 
     }
 
-    return { getPostBySlugId, composeDummyCommentItem, fetchCommunityPosts, updateCommentRanking, getCommunityImageFromId, emptyPost };
+    return {
+        getUnrankedComment,
+        getPostBySlugId,
+        composeDummyCommentItem,
+        fetchCommunityPosts,
+        updateCommentRanking,
+        getCommunityImageFromId,
+        emptyPost
+    };
 });

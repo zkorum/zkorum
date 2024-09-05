@@ -1,15 +1,20 @@
 <template>
   <div>
     <div class="container">
-      <div v-for="commentItem in filteredCommentList" v-bind:key="commentItem.index">
-        <ZKCard>
-          <div class="contentLayout">
-            <div>
-              Vote on other people's statements
-            </div>
 
+      <div class="contentLayout" v-if="unrankedComment != null">
+        <div class="postTitle">
+          {{ postItem.payload.title }}
+        </div>
+
+        <div class="postBody">
+          {{ postItem.payload.body }}
+        </div>
+
+        <ZKCard>
+          <div class="rankingDiv">
             <div class="userComment">
-              {{ commentItem.comment }}
+              {{ unrankedComment?.comment }}
             </div>
 
             <div class="rankingButtonCluster">
@@ -18,6 +23,7 @@
               <ZKButton flat text-color-flex="black" icon="mdi-thumb-up" />
             </div>
           </div>
+
         </ZKCard>
       </div>
     </div>
@@ -26,23 +32,18 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat } from "@/stores/post";
-import ZKCard from "../ui-library/ZKCard.vue";
+import { usePostStore } from "@/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
+import ZKCard from "../ui-library/ZKCard.vue";
 
 const props = defineProps<{
-  commentList: DummyCommentFormat[],
-  assignedRankingItems: number[]
+  postSlugId: string
 }>()
 
-const filteredCommentList: DummyCommentFormat[] = [];
+const { getUnrankedComment, getPostBySlugId } = usePostStore();
 
-for (let i = 0; i < props.commentList.length; i++) {
-  const commentItem = props.commentList[i];
-  if (props.assignedRankingItems.includes(commentItem.index)) {
-    filteredCommentList.push(commentItem);
-  }
-}
+const postItem = getPostBySlugId(props.postSlugId);
+const unrankedComment = getUnrankedComment(props.postSlugId)
 
 </script>
 
@@ -51,6 +52,8 @@ for (let i = 0; i < props.commentList.length; i++) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: min(100%, 30rem);
+  margin: auto;
 }
 
 .rankingButtonCluster {
@@ -61,11 +64,28 @@ for (let i = 0; i < props.commentList.length; i++) {
 .contentLayout {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 3rem;
 }
 
 .userComment {
   text-align: center;
   font-size: 1.2rem;
+}
+
+.postTitle {
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.postBody {
+  font-size: 1rem;
+  text-align: center;
+}
+
+.rankingDiv {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
 }
 </style>

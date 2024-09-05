@@ -32,7 +32,10 @@
 
               <ZKButton :outline="!showCommentComposer" :color-flex="showCommentComposer ? 'secondary' : ''"
                 :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
-                @click="(event) => clickedReplyButton(event)" v-if="!compactMode" />
+                @click.stop.prevent="clickedReplyButton()" v-if="!compactMode" />
+
+              <ZKButton icon="mdi-ballot-outline" @click.stop.prevent="clickedTestButton()" />
+
             </div>
 
             <!--
@@ -57,19 +60,6 @@
 
         </div>
       </ZKCard>
-
-      <!--
-      <div v-if="!compactMode">
-        <ZKCard>
-          <CommentSwiper :comment-list="commentList" />
-        </ZKCard>
-      </div>
-      -->
-
-      <div v-if="!compactMode">
-        <CommentRanking :comment-list="commentList"
-          :assigned-ranking-items="props.extendedPostData.userInteraction.commentRanking.assignedRankingItems" />
-      </div>
 
       <div v-if="!compactMode && commentList.length > 0">
         <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
@@ -102,12 +92,12 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 // import CommentSwiper from "./CommentSwiper.vue";
 import CommentSection from "./CommentSection.vue";
-import CommentRanking from "./CommentRanking.vue";
 import PostMetadata from "./PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 import { ref } from "vue";
 import { useWebShare } from "@/utils/share/WebShare";
+import { useRouter } from "vue-router";
 
 const showCommentComposer = ref(false);
 const commentComposerText = ref("");
@@ -116,6 +106,8 @@ const props = defineProps<{
   extendedPostData: DummyPostDataFormat,
   compactMode: boolean
 }>()
+
+const router = useRouter();
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
@@ -136,10 +128,11 @@ function replyButtonClicked() {
   commentComposerText.value = "";
 }
 
-function clickedReplyButton(event: Event) {
-  if (event) {
-    event.stopPropagation();
-  }
+function clickedTestButton() {
+  router.push({ name: "single-ranking", params: { postSlugId: props.extendedPostData.metadata.slugId, communityId: props.extendedPostData.metadata.communityId } });
+}
+
+function clickedReplyButton() {
 
   showCommentComposer.value = !showCommentComposer.value;
 
