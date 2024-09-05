@@ -35,14 +35,15 @@ export interface DummyPostUserVote {
     voteIndex: number;
 }
 
-type PossibleCommentActions = "like" | "dislike"
+export type PossibleCommentRankingActions = "like" | "dislike" | "pass"
+
 export interface UserRankedCommentItem {
     index: number;
-    action: PossibleCommentActions;
+    action: PossibleCommentRankingActions;
 }
 
 export interface DummyCommentRankingFormat {
-    rankedCommentList: Map<number, PossibleCommentActions>;
+    rankedCommentList: Map<number, PossibleCommentRankingActions>;
     assignedRankingItems: number[];
 }
 
@@ -158,7 +159,7 @@ export const usePostStore = defineStore("post", () => {
         return emptyPost;
     }
 
-    function updateCommentRanking(postSlugId: string, commentIndex: number, isUpvoteButton: boolean) {
+    function updateCommentRanking(postSlugId: string, commentIndex: number, rankingAction: PossibleCommentRankingActions) {
         const post = getPostBySlugId(postSlugId);
         const rankedCommentMap = post.userInteraction.commentRanking.rankedCommentList;
         const currentAction = rankedCommentMap.get(commentIndex);
@@ -166,33 +167,39 @@ export const usePostStore = defineStore("post", () => {
         let upvoteDiff = 0;
         let downvoteDiff = 0;
 
-        if (currentAction != undefined) {
+        if (currentAction != undefined && rankingAction != "pass") {
             if (currentAction == "like") {
-                if (isUpvoteButton) {
+                if (rankingAction == "like") {
                     rankedCommentMap.delete(commentIndex);
                     upvoteDiff -= 1;
-                } else {
+                } else if (rankingAction == "dislike") {
                     rankedCommentMap.set(commentIndex, "dislike");
                     upvoteDiff -= 1;
                     downvoteDiff += 1;
+                } else {
+                    console.log("Invalid state");
                 }
-            } else {
-                if (isUpvoteButton) {
+            } else if (currentAction == "dislike") {
+                if (rankingAction == "like") {
                     rankedCommentMap.set(commentIndex, "like");
                     upvoteDiff += 1;
                     downvoteDiff -= 1;
-                } else {
+                } else if (rankingAction == "dislike") {
                     rankedCommentMap.delete(commentIndex);
                     downvoteDiff -= 1;
+                } else {
+                    console.log("Invalid state");
                 }
             }
         } else {
-            if (isUpvoteButton) {
+            if (rankingAction == "like") {
                 rankedCommentMap.set(commentIndex, "like");
                 upvoteDiff += 1;
-            } else {
+            } else if (rankingAction == "dislike") {
                 rankedCommentMap.set(commentIndex, "dislike");
                 downvoteDiff += 1;
+            } else {
+                rankedCommentMap.set(commentIndex, "pass");
             }
         }
 
@@ -328,7 +335,7 @@ export const usePostStore = defineStore("post", () => {
 
         const numRequiredCommentRanking = Math.min(3, numCommentsInPost);
         const assignedRankingItems: number[] = [];
-        const rankedCommentList = new Map<number, PossibleCommentActions>();
+        const rankedCommentList = new Map<number, PossibleCommentRankingActions>();
         const numRankedComment = getRandomInt(0, numCommentsInPost - numRequiredCommentRanking);
 
         let currentRankedCommentIndex = 0;
@@ -338,7 +345,7 @@ export const usePostStore = defineStore("post", () => {
         }
 
         for (let i = 0; i < numRankedComment; i++) {
-            const possibleCommentActions: PossibleCommentActions[] = ["like", "dislike"];
+            const possibleCommentActions: PossibleCommentRankingActions[] = ["like", "dislike"];
             const randomActionIndex = getRandomInt(0, possibleCommentActions.length - 1);
             rankedCommentList.set(currentRankedCommentIndex, possibleCommentActions[randomActionIndex]);
             currentRankedCommentIndex += 1;
