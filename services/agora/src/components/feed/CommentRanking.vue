@@ -12,15 +12,19 @@
         </div>
 
         <ZKCard>
+          <div>
+            Vote on other people's statements (1/3)
+          </div>
+
           <div class="rankingDiv">
             <div class="userComment">
               {{ unrankedComment?.comment }}
             </div>
 
             <div class="rankingButtonCluster">
-              <ZKButton flat text-color-flex="black" icon="mdi-thumb-down" />
-              <ZKButton flat text-color-flex="black" label="Pass" />
-              <ZKButton flat text-color-flex="black" icon="mdi-thumb-up" />
+              <ZKButton flat text-color-flex="black" icon="mdi-thumb-down" size="1.3rem" />
+              <ZKButton outline text-color-flex="black" label="Pass" size="1rem" />
+              <ZKButton flat text-color-flex="black" icon="mdi-thumb-up" size="1.3rem" />
             </div>
           </div>
 
@@ -54,17 +58,18 @@ const unrankedComment = getUnrankedComment(props.postSlugId)
   gap: 1rem;
   width: min(100%, 30rem);
   margin: auto;
+  font-size: 1rem;
 }
 
 .rankingButtonCluster {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between
 }
 
 .contentLayout {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 2rem;
 }
 
 .userComment {
@@ -74,7 +79,8 @@ const unrankedComment = getUnrankedComment(props.postSlugId)
 
 .postTitle {
   text-align: center;
-  font-size: 1.5rem;
+  font-weight: bold;
+  font-size: 1.2rem;
 }
 
 .postBody {
@@ -85,7 +91,10 @@ const unrankedComment = getUnrankedComment(props.postSlugId)
 .rankingDiv {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  padding: 2rem;
+  gap: 3rem;
+  padding-top: 2rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 2rem;
 }
 </style>
