@@ -13,6 +13,7 @@
 
 <style scoped lang="scss">
 .card-decoration {
+  background-color: #f5f5f5;
   border-radius: 15px;
   border-style: solid;
   border-width: 1px;

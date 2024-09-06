@@ -24,7 +24,7 @@
 
             <RouterLink
               :to="{ name: 'single-post', params: { communityId: postItem.metadata.communityId, postSlugId: postItem.metadata.slugId } }">
-              <ZKButton label="Open Post" icon="mdi-arrow-right-box" />
+              <ZKButton outline text-color-flex="secondary" label="Open Post" icon="mdi-arrow-right-box" />
             </RouterLink>
 
           </div>
@@ -37,8 +37,8 @@
             </q-linear-progress>
           </div>
 
-          <div>
-            Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
+          <div class="lowOpacity">
+            Vote on other people's statements
           </div>
 
           <div class="rankingDiv">
@@ -53,6 +53,10 @@
               <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
                 @click="rankComment('like')" />
             </div>
+          </div>
+
+          <div class="currentIndexText lowOpacity">
+            {{ currentRankIndex + 1 }} of {{ unrankedCommentList.length }}
           </div>
 
         </ZKCard>
@@ -158,7 +162,6 @@ function rankComment(commentAction: PossibleCommentRankingActions) {
 }
 
 .postTitle {
-  text-align: center;
   font-weight: bold;
   font-size: 1.3rem;
   padding-top: 2rem;
@@ -166,7 +169,6 @@ function rankComment(commentAction: PossibleCommentRankingActions) {
 
 .postBody {
   font-size: 1rem;
-  text-align: center;
 }
 
 .rankingDiv {
@@ -205,5 +207,14 @@ function rankComment(commentAction: PossibleCommentRankingActions) {
   border-style: solid;
   border-width: 2px;
   padding: 0.5rem;
+}
+
+.currentIndexText {
+  text-align: right;
+  font-size: 0.8rem;
+}
+
+.lowOpacity {
+  opacity: 0.6;
 }
 </style>
