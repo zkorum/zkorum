@@ -3,16 +3,15 @@
     <div class="container">
       <div v-for="(commentItem, index) in commentList" v-bind:key="index">
         <div>
-          <ZKCard>
-            <div class="contentLayout">
-              <div class="iconSizeSmall metadata">
-                <CommunityIcon :image-path="getCommunityImageFromId(commentItem.userCommunityId)" />
+          <div class="contentLayout">
+            <div class="iconSizeSmall metadata">
+              <CommunityIcon :image-path="getCommunityImageFromId(commentItem.userCommunityId)" />
 
-                {{ getTimeFromNow(commentItem.createdAt) }}
-              </div>
+              {{ getTimeFromNow(commentItem.createdAt) }}
+            </div>
 
-              <div>{{ commentItem.comment }}</div>
-
+            <div>
+              {{ commentItem.comment }}
               <div class="actionButtonCluster">
                 <ZKButton flat text-color-flex="black" icon="mdi-dots-horizontal" size="0.8rem" />
 
@@ -24,10 +23,15 @@
                 <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem"
                   @click="toggleVote(commentItem.index, 'dislike')" />
               </div>
-
             </div>
-          </ZKCard>
+
+          </div>
         </div>
+
+        <div class="separator">
+          <q-separator />
+        </div>
+
       </div>
     </div>
   </div>
@@ -35,7 +39,6 @@
 
 <script setup lang="ts">
 import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions, usePostStore } from "@/stores/post";
-import ZKCard from "../ui-library/ZKCard.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
 import CommunityIcon from "../community/CommunityIcon.vue";
 import { getTimeFromNow } from "@/utils/common";
@@ -83,11 +86,15 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   gap: 0.5rem;
 }
 
+.separator {
+  padding-top: 0.5rem;
+}
+
 .contentLayout {
   display: flex;
   flex-direction: column;
   justify-content: left;
-  gap: 0.2rem;
+  gap: 1rem;
 }
 
 .communityIconStyle {
@@ -110,5 +117,7 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   display: flex;
   gap: 1rem;
   align-items: center;
+  color: #737373;
+  font-size: 0.8rem;
 }
 </style>

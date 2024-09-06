@@ -4,11 +4,19 @@
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
           <div v-for="(postData, index) in compactPostDataList" :key="index">
-            <RouterLink
-              :to="{ name: 'single-ranking', params: { postSlugId: postData.metadata.slugId, communityId: postData.metadata.communityId } }">
-              <PostItem :extended-post-data="postData" :compact-mode="true" />
-            </RouterLink>
+            <div class="hoverEffect">
+              <RouterLink
+                :to="{ name: 'single-ranking', params: { postSlugId: postData.metadata.slugId, communityId: postData.metadata.communityId } }">
+                <PostItem :extended-post-data="postData" :compact-mode="true" />
+              </RouterLink>
+            </div>
+
+            <div class="seperator">
+              <q-separator />
+            </div>
+
           </div>
+
         </div>
       </q-infinite-scroll>
     </q-page>
@@ -239,7 +247,7 @@ onMounted(async () => {
 .postListFlex {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .worldTags {
@@ -252,5 +260,18 @@ onMounted(async () => {
 a {
   text-decoration: none;
   color: unset
+}
+
+.seperator {
+  margin-top: 1rem;
+}
+
+.hoverEffect {
+  padding: 1rem;
+}
+
+.hoverEffect:hover {
+  background-color: #f5f5f5;
+  border-radius: 15px;
 }
 </style>

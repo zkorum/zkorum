@@ -2,7 +2,7 @@
   <div>
     <slot />
 
-    <q-page-sticky position="bottom" :offset="[18, 18]">
+    <q-page-sticky position="bottom" :offset="[30, 30]">
       <q-btn-toggle v-model="toggleValue" class="my-custom-toggle" no-caps rounded toggle-color="primary"
         toggle-text-color="white" color="white" text-color="black" :options="[
           { label: 'Rank', value: 'rank' },
