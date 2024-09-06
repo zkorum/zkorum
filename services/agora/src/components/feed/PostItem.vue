@@ -27,7 +27,7 @@
 
           <div class="leftButtonCluster">
             <ZKButton outline text-color-flex="secondary" :label="extendedPostData.metadata.commentCount.toString()"
-              icon="mdi-chat-outline" />
+              icon="mdi-chat-outline" @click.stop.prevent="clickedCommentButton()" />
 
             <ZKButton :outline="!showCommentComposer" :color-flex="showCommentComposer ? 'secondary' : ''"
               :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
@@ -87,6 +87,7 @@ import PollWrapper from "../poll/PollWrapper.vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 import { ref } from "vue";
 import { useWebShare } from "@/utils/share/WebShare";
+import { useRouter } from "vue-router";
 
 const showCommentComposer = ref(false);
 const commentComposerText = ref("");
@@ -101,6 +102,7 @@ const commentList = ref(props.extendedPostData.payload.comments);
 const { composeDummyCommentItem } = usePostStore();
 
 const webShare = useWebShare()
+const router = useRouter();
 
 const newCommentRef = ref<HTMLElement | null>(null);
 
@@ -113,6 +115,16 @@ function replyButtonClicked() {
   commentList.value.unshift(commentItem);
 
   commentComposerText.value = "";
+}
+
+function clickedCommentButton() {
+  router.push({
+    name: "single-post",
+    params: {
+      communityId: props.extendedPostData.metadata.communityId,
+      postSlugId: props.extendedPostData.metadata.slugId
+    }
+  });
 }
 
 function clickedReplyButton() {
