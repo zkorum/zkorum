@@ -36,13 +36,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import ZKInputField from "@/components/ui-library/ZKInputField.vue";
-import ZKButton from "@/components/ui-library/ZKButton.vue";
-import { zodauthorizedEmail, zodemail } from "@/shared/types/zod";
+import ZKInputField from "src/components/ui-library/ZKInputField.vue";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
+import { zodauthorizedEmail, zodemail } from "src/shared/types/zod";
 import { useRouter } from "vue-router";
-import { urlEncode } from "@/shared/common/base64";
+import { urlEncode } from "src/shared/common/base64";
 
-// import { authenticate } from "@/request/auth";
 const { t } = useI18n()
 const emailInput = ref("")
 const emailHelper = ref("")

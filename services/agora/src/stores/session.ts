@@ -1,4 +1,4 @@
-import { generateFlowId } from "@/utils/crypto/shared";
+import { generateFlowId } from "src/utils/crypto/shared";
 import { defineStore } from "pinia";
 
 export const useSessionStore = defineStore("session", {

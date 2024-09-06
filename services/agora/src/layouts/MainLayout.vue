@@ -30,9 +30,9 @@
 </template>
 
 <script setup lang="ts">
-import TopMenuBar from "@/components/navigation/TopMenuBar.vue";
-import WidthWrapper from "@/components/navigation/WidthWrapper.vue";
-import { MainLayoutProps } from "@/utils/model/props";
+import TopMenuBar from "src/components/navigation/TopMenuBar.vue";
+import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
+import { MainLayoutProps } from "src/utils/model/props";
 import { useRoute } from "vue-router";
 
 const props = defineProps<MainLayoutProps>()

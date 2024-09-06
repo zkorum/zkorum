@@ -7,9 +7,9 @@
 </template>
 
 <script setup lang="ts">
-import { DummyPostDataFormat, usePostStore } from "@/stores/post";
-import PostItem from "@/components/feed/PostItem.vue";
-import PostViewWrapper from "@/components/navigation/PostViewWrapper.vue";
+import { DummyPostDataFormat, usePostStore } from "src/stores/post";
+import PostItem from "src/components/feed/PostItem.vue";
+import PostViewWrapper from "src/components/navigation/PostViewWrapper.vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();

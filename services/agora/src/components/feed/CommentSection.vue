@@ -38,10 +38,10 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions, usePostStore } from "@/stores/post";
+import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
 import CommunityIcon from "../community/CommunityIcon.vue";
-import { getTimeFromNow } from "@/utils/common";
+import { getTimeFromNow } from "src/utils/common";
 
 const props = defineProps<{
   postSlugId: string,

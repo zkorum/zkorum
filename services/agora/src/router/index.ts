@@ -7,8 +7,6 @@ import {
 } from "vue-router";
 
 import routes from "./routes";
-// import { useAuthenticationStore } from "@/stores/authentication";
-
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;

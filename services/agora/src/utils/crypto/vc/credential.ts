@@ -1,4 +1,4 @@
-import { base64 } from "@/shared/common/index";
+import { base64 } from "src/shared/common/index";
 import {
   BBSPlusBlindedCredentialRequest,
   BBSPlusBlindedCredentialRequestBuilder,

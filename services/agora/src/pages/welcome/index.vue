@@ -10,8 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthenticationStore } from "@/stores/authentication";
-import ZKButton from "@/components/ui-library/ZKButton.vue";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
+import { useAuthenticationStore } from "src/stores/authentication";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 const { t } = useI18n()

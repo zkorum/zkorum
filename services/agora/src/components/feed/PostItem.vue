@@ -84,9 +84,9 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import CommentSection from "./CommentSection.vue";
 import PostMetadata from "./PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
-import { DummyPostDataFormat, usePostStore } from "@/stores/post";
+import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 import { ref } from "vue";
-import { useWebShare } from "@/utils/share/WebShare";
+import { useWebShare } from "src/utils/share/WebShare";
 import { useRouter } from "vue-router";
 
 const showCommentComposer = ref(false);

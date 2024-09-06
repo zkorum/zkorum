@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from "vue-router";
 import MainLayout from "layouts/MainLayout.vue";
-import { MainLayoutProps } from "@/utils/model/props";
+import { MainLayoutProps } from "src/utils/model/props";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -10,7 +10,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: "create/:communityId?",
-        component: () => import("@/pages/post/create/index.vue"),
+        component: () => import("pages/post/create/index.vue"),
         name: "create-post"
       }
     ]
@@ -22,7 +22,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: "/notifications",
-        component: () => import("@/pages/notifications/index.vue"),
+        component: () => import("pages/notifications/index.vue"),
         name: "notifications"
       },
       {
@@ -30,7 +30,7 @@ const routes: RouteRecordRaw[] = [
         children: [
           {
             path: ":userId",
-            component: () => import("@/pages/user-profile/index.vue"),
+            component: () => import("pages/user-profile/index.vue"),
             name: "user-profile"
           }
         ]
@@ -40,7 +40,7 @@ const routes: RouteRecordRaw[] = [
         children: [
           {
             path: "explore",
-            component: () => import("@/pages/community/explore/index.vue"),
+            component: () => import("pages/community/explore/index.vue"),
             name: "community-explore",
           }
         ]
@@ -75,7 +75,7 @@ const routes: RouteRecordRaw[] = [
             children: [
               {
                 path: "",
-                component: () => import("@/pages/a/[communityId]/index.vue"),
+                component: () => import("pages/a/[communityId]/index.vue"),
                 name: "community-single",
               }
             ]
@@ -108,7 +108,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/welcome",
-    component: () => import("@/pages/welcome/index.vue"),
+    component: () => import("pages/welcome/index.vue"),
     name: "welcome"
   },
   {
@@ -121,7 +121,7 @@ const routes: RouteRecordRaw[] = [
         children: [
           {
             path: "",
-            component: () => import("@/pages/onboarding/login/index.vue"),
+            component: () => import("pages/onboarding/login/index.vue"),
             name: "login"
           }
         ]
@@ -131,7 +131,7 @@ const routes: RouteRecordRaw[] = [
         children: [
           {
             path: ":emailAddressEncoded",
-            component: () => import("@/pages/onboarding/passphrase/index.vue"),
+            component: () => import("pages/onboarding/passphrase/index.vue"),
             name: "passphrase"
           }
         ]

@@ -1,7 +1,7 @@
-import { ApiV1AuthAuthenticatePost200Response, ApiV1AuthAuthenticatePost409Response, ApiV1AuthAuthenticatePostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "@/api";
-import { api } from "@/boot/axios";
+import { ApiV1AuthAuthenticatePost200Response, ApiV1AuthAuthenticatePost409Response, ApiV1AuthAuthenticatePostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
+import { api } from "src/boot/axios";
 import axios from "axios";
-import { SupportedPlatform } from "utils/common";
+import { SupportedPlatform } from "src/utils/common";
 import * as ucanOperation from "../crypto/ucan/operation";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 

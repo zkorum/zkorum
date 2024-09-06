@@ -6,8 +6,6 @@ import {
     zodauthorizedEmail,
     zodblindedCredential,
     zodcode,
-    zodDevices,
-    zodDidKey,
     zodemail,
     zodemailCredential,
     zodemailCredentialsPerEmail,
