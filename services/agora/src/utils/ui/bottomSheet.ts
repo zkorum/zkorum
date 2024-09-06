@@ -72,7 +72,7 @@ export const useBottomSheet = () => {
     }).onOk(() => {
       quasar.dialog({
         title: "Thank you for the report",
-        message: "We will investigate if the clip contains inappropriate content",
+        message: "We will investigate if the post contains inappropriate content",
       });
     });
   }
