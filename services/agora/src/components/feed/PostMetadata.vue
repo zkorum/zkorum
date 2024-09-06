@@ -25,12 +25,14 @@
         <ZKButton flat text-color-flex="primary" icon="mdi-dots-vertical" @click.stop.prevent="clickedMoreIcon()" />
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { getTimeFromNow } from "@/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
+import { useBottomSheet } from "@/utils/ui/bottomSheet";
 
 defineProps<{
   posterName: string
@@ -38,8 +40,10 @@ defineProps<{
   createdAt: Date
 }>()
 
+const { showPostOptionSelector } = useBottomSheet();
+
 function clickedMoreIcon() {
-  // Add later
+  showPostOptionSelector(false);
 }
 
 </script>
@@ -66,5 +70,9 @@ function clickedMoreIcon() {
   gap: 0.5rem;
   align-items: center;
   height: 100%;
+}
+
+.reportDialog {
+  background-color: white;
 }
 </style>
