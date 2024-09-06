@@ -14,7 +14,7 @@
         <ZKCard v-if="finishedRanking">
           <div class="finishedMessage">
 
-            <div>
+            <div class="finishedIcon">
               <q-icon name="mdi-check" size="3rem" />
             </div>
 
@@ -24,7 +24,7 @@
 
             <RouterLink
               :to="{ name: 'single-post', params: { communityId: postItem.metadata.communityId, postSlugId: postItem.metadata.slugId } }">
-              <ZKButton label="See Post" icon="mdi-arrow-right-box" />
+              <ZKButton label="Open Post" icon="mdi-arrow-right-box" />
             </RouterLink>
 
           </div>
@@ -197,5 +197,12 @@ function rankComment(commentAction: PossibleCommentRankingActions) {
   display: flex;
   justify-content: right;
   width: 100%;
+}
+
+.finishedIcon {
+  border-radius: 50%;
+  border-style: solid;
+  border-width: 2px;
+  padding: 0.5rem;
 }
 </style>
