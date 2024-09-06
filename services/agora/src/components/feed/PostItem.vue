@@ -1,58 +1,56 @@
 <template>
   <div>
     <div class="container">
-      <ZKCard>
-        <div class="innerContainer">
-          <PostMetadata :poster-name="extendedPostData.metadata.posterName"
-            :poster-image-path="extendedPostData.metadata.posterImagePath"
-            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" />
+      <div class="innerContainer">
+        <PostMetadata :poster-name="extendedPostData.metadata.posterName"
+          :poster-image-path="extendedPostData.metadata.posterImagePath"
+          :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" />
 
-          <div class="postDiv">
-            <div class="titleDiv">
-              {{ extendedPostData.payload.title }}
-            </div>
-
-            <div class="bodyDiv">
-              {{ processPostBody(extendedPostData.payload.body || '') }}
-            </div>
-
+        <div class="postDiv">
+          <div class="titleDiv">
+            {{ extendedPostData.payload.title }}
           </div>
 
-          <div class="innerContainer" v-if="extendedPostData.payload.poll.hasPoll">
-            <PollWrapper :user-vote="extendedPostData.userInteraction.pollVoting"
-              :poll-options="extendedPostData.payload.poll.options" />
-            <!-- TODO: pollResponse -->
-          </div>
-
-          <div class="bottomButtons">
-
-            <div class="leftButtonCluster">
-              <ZKButton outline text-color-flex="secondary" :label="extendedPostData.metadata.commentCount.toString()"
-                icon="mdi-chat-outline" />
-
-              <ZKButton :outline="!showCommentComposer" :color-flex="showCommentComposer ? 'secondary' : ''"
-                :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
-                @click.stop.prevent="clickedReplyButton()" v-if="!compactMode" />
-
-            </div>
-
-            <div>
-              <ZKButton outline text-color-flex="secondary" icon="mdi-share-outline"
-                @click.stop.prevent="shareClicked()" />
-            </div>
-
-          </div>
-
-          <div v-if="!compactMode && showCommentComposer" class="newCommentBlock" ref="newCommentRef">
-            <q-input outline v-model="commentComposerText" label="Add a comment" class="newCommentInput" />
-            <div>
-              <ZKButton outline text-color-flex="secondary" label="Reply" @click="replyButtonClicked()"
-                :disable="commentComposerText.length == 0" />
-            </div>
+          <div class="bodyDiv">
+            {{ processPostBody(extendedPostData.payload.body || '') }}
           </div>
 
         </div>
-      </ZKCard>
+
+        <div class="innerContainer" v-if="extendedPostData.payload.poll.hasPoll">
+          <PollWrapper :user-vote="extendedPostData.userInteraction.pollVoting"
+            :poll-options="extendedPostData.payload.poll.options" />
+          <!-- TODO: pollResponse -->
+        </div>
+
+        <div class="bottomButtons">
+
+          <div class="leftButtonCluster">
+            <ZKButton outline text-color-flex="secondary" :label="extendedPostData.metadata.commentCount.toString()"
+              icon="mdi-chat-outline" />
+
+            <ZKButton :outline="!showCommentComposer" :color-flex="showCommentComposer ? 'secondary' : ''"
+              :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
+              @click.stop.prevent="clickedReplyButton()" v-if="!compactMode" />
+
+          </div>
+
+          <div>
+            <ZKButton outline text-color-flex="secondary" icon="mdi-share-outline"
+              @click.stop.prevent="shareClicked()" />
+          </div>
+
+        </div>
+
+        <div v-if="!compactMode && showCommentComposer" class="newCommentBlock" ref="newCommentRef">
+          <q-input outline v-model="commentComposerText" label="Add a comment" class="newCommentInput" />
+          <div>
+            <ZKButton outline text-color-flex="secondary" label="Reply" @click="replyButtonClicked()"
+              :disable="commentComposerText.length == 0" />
+          </div>
+        </div>
+
+      </div>
 
       <div v-if="!compactMode && commentList.length > 0">
         <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
@@ -82,7 +80,6 @@
 
 <script setup lang="ts">
 import ZKButton from "../ui-library/ZKButton.vue";
-import ZKCard from "../ui-library/ZKCard.vue";
 // import CommentSwiper from "./CommentSwiper.vue";
 import CommentSection from "./CommentSection.vue";
 import PostMetadata from "./PostMetadata.vue";
@@ -183,7 +180,7 @@ function processPostBody(body: string) {
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 4rem;
 }
 
 .newCommentInput {

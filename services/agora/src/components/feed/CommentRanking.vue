@@ -24,7 +24,7 @@
 
             <RouterLink
               :to="{ name: 'single-post', params: { communityId: postItem.metadata.communityId, postSlugId: postItem.metadata.slugId } }">
-              <ZKButton label="Open Post" icon="mdi-arrow-right-box" />
+              <ZKButton label="See Post" icon="mdi-arrow-right-box" />
             </RouterLink>
 
           </div>
