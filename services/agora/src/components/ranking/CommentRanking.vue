@@ -61,10 +61,10 @@
 
                 <div class="rankingButtonCluster">
                   <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-down" size="1.3rem"
-                    @click="rankComment('dislike')" />
-                  <ZKButton flat text-color-flex="secondary" label="Pass" @click="rankComment('pass')" />
+                    @click="rankComment('dislike', false)" />
+                  <ZKButton flat text-color-flex="secondary" label="Pass" @click="rankComment('pass', false)" />
                   <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
-                    @click="rankComment('like')" />
+                    @click="rankComment('like', false)" />
                 </div>
               </div>
             </swiper-slide>
@@ -97,6 +97,7 @@ import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from 
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 import { onMounted, ref } from "vue";
+import { SwiperContainer } from "swiper/element";
 
 const props = defineProps<{
   postSlugId: string
@@ -126,32 +127,20 @@ const progress = ref(0);
 
 loadNextComment(currentRankIndex.value);
 
+let swiperEl: SwiperContainer | null = null;
+
 onMounted(() => {
 
-  const swiperEl = document.querySelector("swiper-container");
+  swiperEl = document.querySelector("swiper-container");
   if (swiperEl != null) {
     swiperEl.addEventListener("swiperslidechange", () => {
-      if (swiperEl.swiper.activeIndex == 2) {
-        rankComment("like");
-      } else if (swiperEl.swiper.activeIndex == 0) {
-        rankComment("dislike");
+      if (swiperEl?.swiper.activeIndex == 2) {
+        rankComment("like", true);
+      } else if (swiperEl?.swiper.activeIndex == 0) {
+        rankComment("dislike", true);
       } else {
         return;
       }
-
-      updateProgressBar();
-
-      setTimeout(
-        function () {
-          currentRankIndex.value += 1;
-          const isDone = checkFinishedRanking();
-          if (!isDone) {
-            loadNextComment(currentRankIndex.value);
-            swiperEl.swiper.slideTo(1, 500);
-          }
-
-        }, 2000);
-
     });
   }
 })
@@ -174,8 +163,26 @@ function updateProgressBar() {
   progress.value = currentRankIndex.value / unrankedCommentList.length;
 }
 
-function rankComment(commentAction: PossibleCommentRankingActions) {
+function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boolean) {
   updateCommentRanking(props.postSlugId, displayCommentItem.index, commentAction);
+  updateProgressBar();
+  currentRankIndex.value += 1;
+
+  if (isSwiper) {
+    setTimeout(
+      function () {
+        const isDone = checkFinishedRanking();
+        if (!isDone) {
+          loadNextComment(currentRankIndex.value);
+          swiperEl?.swiper.slideTo(1, 500);
+        }
+      }, 1500);
+  } else {
+    const isDone = checkFinishedRanking();
+    if (!isDone) {
+      loadNextComment(currentRankIndex.value);
+    }
+  }
 }
 
 </script>
