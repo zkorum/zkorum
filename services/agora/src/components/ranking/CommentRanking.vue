@@ -43,7 +43,7 @@
           <swiper-container slides-per-view="1" initialSlide="1">
             <swiper-slide>
               <div class="sidePage">
-                <q-icon name="mdi-check-circle" flat color="secondary" size="4rem" />
+                <q-icon name="mdi-chevron-double-down" flat color="secondary" size="3rem" />
                 <div>
                   Downvoted
                 </div>
@@ -71,7 +71,7 @@
 
             <swiper-slide>
               <div class="sidePage">
-                <q-icon name="mdi-check-circle" flat color="secondary" size="4rem" />
+                <q-icon name="mdi-chevron-double-up" flat color="secondary" size="3rem" />
                 <div>
                   Upvoted
                 </div>
@@ -80,7 +80,7 @@
           </swiper-container>
 
           <div class="currentIndexText lowOpacity">
-            Completed {{ currentRankIndex }} of {{ unrankedCommentList.length }}
+            Ranked {{ currentRankIndex }} of {{ unrankedCommentList.length }}
           </div>
 
         </ZKCard>
@@ -156,7 +156,6 @@ function checkFinishedRanking() {
 
 function loadNextComment(index: number) {
   displayCommentItem = unrankedCommentList[index];
-  updateProgressBar();
 }
 
 function updateProgressBar() {
@@ -164,9 +163,10 @@ function updateProgressBar() {
 }
 
 function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boolean) {
-  updateCommentRanking(props.postSlugId, displayCommentItem.index, commentAction);
-  updateProgressBar();
   currentRankIndex.value += 1;
+  updateProgressBar();
+
+  updateCommentRanking(props.postSlugId, displayCommentItem.index, commentAction);
 
   if (isSwiper) {
     setTimeout(
