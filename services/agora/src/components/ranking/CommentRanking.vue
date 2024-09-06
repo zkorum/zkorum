@@ -33,7 +33,8 @@
 
         <ZKCard v-if="!finishedRanking">
           <div class="progressBar">
-            <q-linear-progress :value="progress" />
+            <q-linear-progress size="0.5rem" color="primary" track-color="secondary" :value="progress">
+            </q-linear-progress>
           </div>
 
           <div>
@@ -48,7 +49,7 @@
             <div class="rankingButtonCluster">
               <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-down" size="1.3rem"
                 @click="rankComment('dislike')" />
-              <ZKButton outline text-color-flex="secondary" label="Pass" size="1rem" @click="rankComment('pass')" />
+              <ZKButton flat text-color-flex="secondary" label="Pass" @click="rankComment('pass')" />
               <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
                 @click="rankComment('like')" />
             </div>
@@ -159,7 +160,7 @@ function rankComment(commentAction: PossibleCommentRankingActions) {
 .postTitle {
   text-align: center;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
 }
 
 .postBody {

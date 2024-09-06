@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 
-import CommentRanking from "@/components/feed/CommentRanking.vue";
+import CommentRanking from "@/components/ranking/CommentRanking.vue";
 import PostViewWrapper from "@/components/navigation/PostViewWrapper.vue";
 import { DummyPostDataFormat, usePostStore } from "@/stores/post";
 import { useRoute } from "vue-router";
