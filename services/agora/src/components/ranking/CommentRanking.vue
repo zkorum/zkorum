@@ -30,7 +30,6 @@
           </div>
         </ZKCard>
 
-
         <ZKCard v-if="!finishedRanking">
           <div class="progressBar">
             <q-linear-progress color="primary" track-color="secondary" :value="progress">
@@ -41,27 +40,52 @@
             Vote on other people's statements
           </div>
 
-          <div class="rankingDiv">
-            <div class="userComment">
-              {{ displayCommentItem.comment }}
-            </div>
+          <swiper-container slides-per-view="1" initialSlide="1">
+            <swiper-slide>
+              <div class="sidePage">
+                <q-icon name="mdi-check-circle" flat color="secondary" size="4rem" />
+                <div>
+                  Downvoted
+                </div>
+              </div>
+            </swiper-slide>
 
-            <div class="rankingButtonCluster">
-              <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-down" size="1.3rem"
-                @click="rankComment('dislike')" />
-              <ZKButton flat text-color-flex="secondary" label="Pass" @click="rankComment('pass')" />
-              <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
-                @click="rankComment('like')" />
-            </div>
-          </div>
+            <swiper-slide>
+
+              <div class="rankingDiv">
+                <div class="userComment">
+                  <div>
+                    {{ displayCommentItem.comment }}
+                  </div>
+                </div>
+
+                <div class="rankingButtonCluster">
+                  <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-down" size="1.3rem"
+                    @click="rankComment('dislike')" />
+                  <ZKButton flat text-color-flex="secondary" label="Pass" @click="rankComment('pass')" />
+                  <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
+                    @click="rankComment('like')" />
+                </div>
+              </div>
+            </swiper-slide>
+
+            <swiper-slide>
+              <div class="sidePage">
+                <q-icon name="mdi-check-circle" flat color="secondary" size="4rem" />
+                <div>
+                  Upvoted
+                </div>
+              </div>
+            </swiper-slide>
+          </swiper-container>
 
           <div class="currentIndexText lowOpacity">
-            {{ currentRankIndex + 1 }} of {{ unrankedCommentList.length }}
+            Completed {{ currentRankIndex }} of {{ unrankedCommentList.length }}
           </div>
 
         </ZKCard>
-      </div>
 
+      </div>
 
     </div>
   </div>
@@ -72,7 +96,7 @@
 import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 
 const props = defineProps<{
   postSlugId: string
@@ -83,7 +107,7 @@ const { getUnrankedComments, getPostBySlugId, updateCommentRanking } = usePostSt
 const postItem = getPostBySlugId(props.postSlugId);
 const unrankedCommentList = getUnrankedComments(props.postSlugId)
 
-let currentRankIndex = 0;
+let currentRankIndex = ref(0);
 
 const finishedRanking = ref(false);
 checkFinishedRanking();
@@ -100,10 +124,40 @@ let displayCommentItem: DummyCommentFormat = {
 
 const progress = ref(0);
 
-loadNextComment(currentRankIndex);
+loadNextComment(currentRankIndex.value);
+
+onMounted(() => {
+
+  const swiperEl = document.querySelector("swiper-container");
+  if (swiperEl != null) {
+    swiperEl.addEventListener("swiperslidechange", () => {
+      if (swiperEl.swiper.activeIndex == 2) {
+        rankComment("like");
+      } else if (swiperEl.swiper.activeIndex == 0) {
+        rankComment("dislike");
+      } else {
+        return;
+      }
+
+      updateProgressBar();
+
+      setTimeout(
+        function () {
+          currentRankIndex.value += 1;
+          const isDone = checkFinishedRanking();
+          if (!isDone) {
+            loadNextComment(currentRankIndex.value);
+            swiperEl.swiper.slideTo(1, 500);
+          }
+
+        }, 2000);
+
+    });
+  }
+})
 
 function checkFinishedRanking() {
-  if ((unrankedCommentList.length - 1) < currentRankIndex) {
+  if (unrankedCommentList.length == currentRankIndex.value) {
     finishedRanking.value = true;
     return true;
   } else {
@@ -117,20 +171,11 @@ function loadNextComment(index: number) {
 }
 
 function updateProgressBar() {
-  progress.value = currentRankIndex / unrankedCommentList.length;
+  progress.value = currentRankIndex.value / unrankedCommentList.length;
 }
 
 function rankComment(commentAction: PossibleCommentRankingActions) {
-
   updateCommentRanking(props.postSlugId, displayCommentItem.index, commentAction);
-
-  currentRankIndex += 1;
-  updateProgressBar();
-
-  const isDone = checkFinishedRanking();
-  if (!isDone) {
-    loadNextComment(currentRankIndex);
-  }
 }
 
 </script>
@@ -216,5 +261,14 @@ function rankComment(commentAction: PossibleCommentRankingActions) {
 
 .lowOpacity {
   opacity: 0.6;
+}
+
+.sidePage {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  padding-top: 3rem;
 }
 </style>
