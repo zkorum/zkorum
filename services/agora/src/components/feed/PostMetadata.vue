@@ -20,18 +20,27 @@
         <div>
         </div>
       </div>
+
+      <div>
+        <ZKButton flat text-color-flex="primary" icon="mdi-dots-vertical" @click.stop.prevent="clickedMoreIcon()" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { getTimeFromNow } from "@/utils/common";
+import ZKButton from "../ui-library/ZKButton.vue";
 
 defineProps<{
   posterName: string
   posterImagePath: string
   createdAt: Date
 }>()
+
+function clickedMoreIcon() {
+  // Add later
+}
 
 </script>
 
@@ -40,6 +49,7 @@ defineProps<{
   display: flex;
   gap: 1rem;
   align-items: center;
+  justify-content: space-between;
 }
 
 .iconSizeLarge {
