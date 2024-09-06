@@ -19,7 +19,7 @@
             </div>
 
             <div>
-              All comments had been ranked!
+              All comments have been ranked!
             </div>
 
             <RouterLink
@@ -176,7 +176,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
           loadNextComment(currentRankIndex.value);
           swiperEl?.swiper.slideTo(1, 500);
         }
-      }, 1500);
+      }, 500);
   } else {
     const isDone = checkFinishedRanking();
     if (!isDone) {
@@ -187,7 +187,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .container {
   display: flex;
   flex-direction: column;
@@ -277,5 +277,6 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   align-items: center;
   justify-content: center;
   padding-top: 3rem;
+  color: $secondary;
 }
 </style>

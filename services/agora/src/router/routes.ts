@@ -75,7 +75,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "/a",
         component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: false, addOuterPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
+        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, addOuterPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
             path: ":communityId",
