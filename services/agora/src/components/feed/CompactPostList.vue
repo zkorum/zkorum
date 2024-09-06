@@ -27,7 +27,7 @@
 
 import PostItem from "./PostItem.vue";
 import { ref, watch } from "vue";
-import { DummyPostDataFormat, usePostStore } from "@/stores/post";
+import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 
 const props = defineProps<{
   communityId: string

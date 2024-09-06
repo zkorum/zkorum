@@ -18,8 +18,8 @@
 </template>
 
 <script setup lang="ts">
-import CompactPostList from "@/components/feed/CompactPostList.vue";
-import NewPostButtonWrapper from "@/components/feed/NewPostButtonWrapper.vue";
+import CompactPostList from "src/components/feed/CompactPostList.vue";
+import NewPostButtonWrapper from "src/components/feed/NewPostButtonWrapper.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 

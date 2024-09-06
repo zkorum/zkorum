@@ -52,7 +52,7 @@
                   <ZKButton flat text-color-flex="black" icon="mdi-close" @click="togglePolling()" />
                 </div>
                 <div class="pollingFlexStyle" ref="pollRef">
-                  <div v-for="(item, index) in postDraft.pollingOptionList" :key="index" class="pollingItem">
+                  <div v-for="index in postDraft.pollingOptionList.length" :key="index" class="pollingItem">
                     <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index + 1)"
                       v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%' }"
                       :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
@@ -106,14 +106,14 @@
 <script setup lang="ts">
 import { onUnmounted, ref, watch } from "vue";
 import { onBeforeRouteLeave, RouteLocationNormalized, useRoute, useRouter } from "vue-router";
-import ZKButton from "@/components/ui-library/ZKButton.vue";
-import ZKCard from "@/components/ui-library/ZKCard.vue";
-import TopMenuWrapper from "@/components/navigation/TopMenuWrapper.vue";
-import HelpButton from "@/components/navigation/buttons/HelpButton.vue";
-import { useBottomSheet } from "@/utils/ui/bottomSheet";
-import CommunityIcon from "@/components/community/CommunityIcon.vue";
-import { useNewPostDraftsStore } from "@/stores/newPostDrafts";
-import { usePostStore } from "@/stores/post";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
+import ZKCard from "src/components/ui-library/ZKCard.vue";
+import TopMenuWrapper from "src/components/navigation/TopMenuWrapper.vue";
+import HelpButton from "src/components/navigation/buttons/HelpButton.vue";
+import { useBottomSheet } from "src/utils/ui/bottomSheet";
+import CommunityIcon from "src/components/community/CommunityIcon.vue";
+import { useNewPostDraftsStore } from "src/stores/newPostDrafts";
+import { usePostStore } from "src/stores/post";
 
 const POST_BODY_LENGTH_MAX = 260;
 const POST_BODY_LENGTH_WARNING = 200;

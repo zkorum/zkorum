@@ -37,7 +37,7 @@
         "localforage": "^1.10.0",
         "pinia": "^2.1.7",
         "pinia-plugin-persistedstate-2": "^2.0.20",
-        "quasar": "^2.6.0",
+        "quasar": "^2.16.11",
         "swiper": "^11.1.9",
         "tweetnacl": "^1.0.3",
         "uint8arrays": "^5.1.0",
@@ -49,7 +49,7 @@
     "devDependencies": {
         "@faker-js/faker": "^8.4.1",
         "@intlify/unplugin-vue-i18n": "^2.0.0",
-        "@quasar/app-vite": "^2.0.0-beta.5",
+        "@quasar/app-vite": "^2.0.0-beta.21",
         "@types/node": "^20.5.9",
         "@typescript-eslint/eslint-plugin": "^6.6.0",
         "@typescript-eslint/parser": "^6.6.0",

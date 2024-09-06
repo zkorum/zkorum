@@ -43,9 +43,7 @@
 <script setup lang="ts">
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
-import type {
-} from "@/shared/types/zod";
-import { DummyPollOptionFormat, DummyPostUserVote } from "@/stores/post";
+import { DummyPollOptionFormat, DummyPostUserVote } from "src/stores/post";
 import { ref, toRaw } from "vue";
 
 const props = defineProps<{

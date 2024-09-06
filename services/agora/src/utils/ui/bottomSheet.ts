@@ -1,4 +1,4 @@
-import { useCommunityStore } from "@/stores/community";
+import { useCommunityStore } from "src/stores/community";
 import { useQuasar } from "quasar";
 import { Ref } from "vue";
 

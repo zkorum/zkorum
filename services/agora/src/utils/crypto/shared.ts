@@ -1,5 +1,5 @@
 const webcrypto = window.crypto;
-import { base64 } from "@/shared/common/index";
+import { base64 } from "src/shared/common/index";
 
 export function randomNumbers(options: { amount: number }): Uint8Array {
   return webcrypto.getRandomValues(new Uint8Array(options.amount));

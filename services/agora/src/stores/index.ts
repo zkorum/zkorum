@@ -14,7 +14,7 @@ import {
 } from "@zkorum/capacitor-secure-storage"
 import { i18n } from "src/boot/i18n"
 import { App } from "@capacitor/app"
-import { nativeAuthenticate } from "@/utils/native/auth";
+import { nativeAuthenticate } from "src/utils/native/auth";
 
 /*
  * When adding new properties to stores, you should also

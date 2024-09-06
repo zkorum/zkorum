@@ -30,9 +30,9 @@
 </template>
 
 <script setup lang="ts">
-import { getTimeFromNow } from "@/utils/common";
+import { getTimeFromNow } from "src/utils/common";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { useBottomSheet } from "@/utils/ui/bottomSheet";
+import { useBottomSheet } from "src/utils/ui/bottomSheet";
 
 defineProps<{
   posterName: string

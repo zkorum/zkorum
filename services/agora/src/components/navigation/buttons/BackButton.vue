@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import ZKButton from "@/components/ui-library/ZKButton.vue";
-import { useGoBackButtonHandler } from "@/utils/nav/goBackButton";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
+import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
 
 const goBackButtonHandler = useGoBackButtonHandler();
 

@@ -25,11 +25,11 @@
   </template>
 
 <script setup lang="ts">
-import { urlDecode } from "@/shared/common/base64";
+import { urlDecode } from "src/shared/common/base64";
 import { useRouteParams } from "@vueuse/router";
 import { ref } from "vue";
-import ZKInputField from "@/components/ui-library/ZKInputField.vue";
-import ZKButton from "@/components/ui-library/ZKButton.vue";
+import ZKInputField from "src/components/ui-library/ZKInputField.vue";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();

@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "@/stores/post";
+import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 import { ref } from "vue";

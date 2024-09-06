@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import ZKButton from "@/components/ui-library/ZKButton.vue";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
 </script>
 
 <style scoped></style>
