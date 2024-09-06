@@ -2,15 +2,16 @@
   <div>
     <slot />
 
-    <q-page-sticky position="bottom-right" :offset="[30, 30]">
+    <div class="bottomRightIcon">
       <q-btn-toggle v-model="toggleValue" class="my-custom-toggle" no-caps rounded toggle-color="primary"
         toggle-text-color="white" color="white" text-color="black" :options="[
           { label: 'Rank', value: 'rank' },
           { label: 'Post', value: 'post' }
         ]" />
-    </q-page-sticky>
+    </div>
 
   </div>
+
 </template>
 
 <script setup lang="ts">
@@ -46,3 +47,11 @@ watch(toggleValue, () => {
 });
 
 </script>
+
+<style scoped>
+.bottomRightIcon {
+  bottom: 2rem;
+  position: fixed;
+  right: calc(calc(100vw - calc(min(40rem, 100%))) / 2 + 1rem);
+}
+</style>

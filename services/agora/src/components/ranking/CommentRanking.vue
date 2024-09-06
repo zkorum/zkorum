@@ -192,8 +192,6 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  width: min(100%, 30rem);
-  margin: auto;
   font-size: 1rem;
 }
 
@@ -262,7 +260,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 }
 
 .currentIndexText {
-  text-align: right;
+  text-align: left;
   font-size: 0.8rem;
 }
 
