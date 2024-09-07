@@ -2,7 +2,6 @@
   <div>
     <div>
       <q-form @submit=" onSubmit()">
-
         <TopMenuWrapper :reveal="false">
           <div class="topMenu">
             <div class="menuFlexGroup">
@@ -18,6 +17,7 @@
         </TopMenuWrapper>
 
         <div class="container">
+
           <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
             :rules="[val => val && val.length > 0]" class="titleStyle" autogrow
             :counter="postDraft.postTitle.length > POST_TITLE_LENGTH_WARNING" :maxlength="POST_TITLE_LENGTH_MAX"
@@ -71,7 +71,8 @@
         </div>
       </q-form>
 
-      <div class="floatButton" :class="{ lessTransparency: postDraft.enablePolling }">
+      <div class="addPollBar" :class="{ lessTransparency: postDraft.enablePolling }"
+        :style="{ top: (visualViewPortHeight - 50) + 'px' }">
         <ZKButton unelevated rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
           color-flex="grey-8" text-color-flex="white" @click="togglePolling()" />
       </div>
@@ -105,6 +106,7 @@ import TopMenuWrapper from "src/components/navigation/TopMenuWrapper.vue";
 import HelpButton from "src/components/navigation/buttons/HelpButton.vue";
 import { useNewPostDraftsStore } from "src/stores/newPostDrafts";
 import { usePostStore } from "src/stores/post";
+import { useViewPorts } from "src/utils/html/viewPort";
 
 const POST_BODY_LENGTH_MAX = 260;
 const POST_BODY_LENGTH_WARNING = 200;
@@ -116,6 +118,8 @@ const exceededBodyWordCount = ref(false);
 
 const router = useRouter();
 const route = useRoute();
+
+const { visualViewPortHeight } = useViewPorts();
 
 const pollRef = ref<HTMLElement | null>(null);
 const endOfFormRef = ref<HTMLElement | null>();
@@ -270,14 +274,12 @@ onBeforeRouteLeave((to) => {
   gap: 1.5rem;
 }
 
-.floatButton {
-  position: fixed;
-  bottom: 2rem;
-  left: calc(calc(100vw - calc(min(40rem, 100%))) / 2 + 1rem);
-}
-
-.scrollArea {
-  height: 100%;
+.addPollBar {
+  position: absolute;
+  width: 100%;
+  padding-right: 0.5rem;
+  display: flex;
+  justify-content: right;
 }
 
 .container {
