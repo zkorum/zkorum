@@ -2,7 +2,7 @@
   <div>
     <slot />
 
-    <div class="bottomRightIcon">
+    <div class="navDiv">
       <q-btn-toggle v-model="toggleValue" class="my-custom-toggle" no-caps rounded toggle-color="primary"
         toggle-text-color="white" color="white" text-color="black" :options="[
           { label: 'Rank', value: 'rank' },
@@ -49,9 +49,11 @@ watch(toggleValue, () => {
 </script>
 
 <style scoped>
-.bottomRightIcon {
-  bottom: 2rem;
+.navDiv {
+  display: flex;
+  justify-content: center;
+  left: calc(calc(100vw / 2) - 4rem);
   position: fixed;
-  right: calc(calc(100vw - calc(min(40rem, 100%))) / 2 + 1rem);
+  bottom: 2rem;
 }
 </style>
