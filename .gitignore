@@ -14,3 +14,9 @@ private-keys/
 *.staging.key
 
 services/app-native
+
+# doc
+doc/.*
+
+# local
+.local*
