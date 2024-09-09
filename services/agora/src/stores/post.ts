@@ -213,7 +213,7 @@ export const usePostStore = defineStore("post", () => {
         }
     }
 
-    function fetchCommunityPosts(communityId: string, afterSlugId: string, fetchCount: number) {
+    function fetchUnifiedPosts(afterSlugId: string, fetchCount: number) {
         const dataList: DummyPostDataFormat[] = [];
         let locatedId = false;
         if (afterSlugId == "") {
@@ -224,9 +224,7 @@ export const usePostStore = defineStore("post", () => {
 
             const postItem = masterPostDataList.value[i];
             if (locatedId) {
-                if (postItem.metadata.communityId == communityId) {
-                    dataList.push(postItem);
-                }
+                dataList.push(postItem);
             }
 
             if (postItem.metadata.slugId == afterSlugId) {
@@ -393,7 +391,7 @@ export const usePostStore = defineStore("post", () => {
         getUnrankedComments,
         getPostBySlugId,
         composeDummyCommentItem,
-        fetchCommunityPosts,
+        fetchUnifiedPosts,
         updateCommentRanking,
         getCommunityImageFromId,
         emptyPost

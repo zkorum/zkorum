@@ -26,14 +26,10 @@
 <script setup lang="ts">
 
 import PostItem from "./PostItem.vue";
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 
-const props = defineProps<{
-  communityId: string
-}>()
-
-const { fetchCommunityPosts } = usePostStore();
+const { fetchUnifiedPosts } = usePostStore();
 
 const FETCH_POST_COUNT = 5;
 const compactPostDataList = ref<DummyPostDataFormat[]>([]);
@@ -41,18 +37,13 @@ let lastSlugId = "";
 
 generateNewPosts();
 
-watch(() => props.communityId, () => {
-  resetList();
-  generateNewPosts();
-});
-
 function resetList() {
   compactPostDataList.value = [];
   lastSlugId = "";
 }
 
 function generateNewPosts() {
-  const postList = fetchCommunityPosts(props.communityId, lastSlugId, FETCH_POST_COUNT);
+  const postList = fetchUnifiedPosts(lastSlugId, FETCH_POST_COUNT);
   for (let i = 0; i < postList.length; i++) {
     compactPostDataList.value.push(postList[i]);
   }
