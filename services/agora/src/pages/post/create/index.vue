@@ -7,13 +7,6 @@
           <div class="topMenu">
             <div class="menuFlexGroup">
               <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
-
-              <div class="communitySelector communityFlex">
-                <div class="communityButton" @click="openCommunitySheet()">
-                  <CommunityIcon :image-path="selectedCommunityImagePath" />
-                  <q-icon name="mdi-menu-down-outline" />
-                </div>
-              </div>
             </div>
 
             <div class="menuFlexGroup">
@@ -110,8 +103,6 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import TopMenuWrapper from "src/components/navigation/TopMenuWrapper.vue";
 import HelpButton from "src/components/navigation/buttons/HelpButton.vue";
-import { useBottomSheet } from "src/utils/ui/bottomSheet";
-import CommunityIcon from "src/components/community/CommunityIcon.vue";
 import { useNewPostDraftsStore } from "src/stores/newPostDrafts";
 import { usePostStore } from "src/stores/post";
 
@@ -133,8 +124,6 @@ const showExitDialog = ref(false);
 
 const selectedCommunityId = ref("");
 const selectedCommunityImagePath = ref("");
-
-const { showCreatePostCommunitySelector } = useBottomSheet();
 
 const { postDraft, isPostEdited } = useNewPostDraftsStore();
 const { getCommunityImageFromId } = usePostStore();
@@ -203,10 +192,6 @@ function addPollOption() {
 
 function removePollOption(index: number) {
   postDraft.value.pollingOptionList.splice(index, 1);
-}
-
-function openCommunitySheet() {
-  showCreatePostCommunitySelector(false, selectedCommunityId);
 }
 
 function onSubmit() {
