@@ -112,6 +112,7 @@ const elementSizer = useElementSize(metadataElement);
 const postItem = getPostBySlugId(props.postSlugId);
 const unrankedCommentList = getUnrankedComments(props.postSlugId)
 
+
 let currentRankIndex = ref(0);
 
 const finishedRanking = ref(false);
@@ -281,12 +282,12 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 }
 
 .sidePage {
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   align-items: center;
   justify-content: center;
-  padding-top: 3rem;
   color: $secondary;
 }
 </style>

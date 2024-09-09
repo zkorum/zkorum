@@ -324,9 +324,11 @@ export const usePostStore = defineStore("post", () => {
             pollOptions = pollOptionList;
         }
 
+        const randomText = "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted.";
+
         const postComments: DummyCommentFormat[] = [];
         for (let i = 0; i < numCommentsInPost; i++) {
-            const comment = "This is random comment index " + (i);
+            const comment = "This is random comment index " + (i) + ". " + randomText;
             const commentItem = composeDummyCommentItem(comment, i, generateRandomDate(postCreatedAtDate, 5));
             postComments.push(commentItem);
         }
@@ -351,6 +353,9 @@ export const usePostStore = defineStore("post", () => {
 
         const companyItem = generateRandomCompanyItem();
 
+        // postBody = postBody.substring(0, Math.min(postBody.length, 600));
+        const postBody = randomText;
+
         const postDataStatic: DummyPostDataFormat = {
             metadata: {
                 uid: "TEST UID",
@@ -364,7 +369,7 @@ export const usePostStore = defineStore("post", () => {
             },
             payload: {
                 title: "TEST POST TITLE INDEX - " + postIndex,
-                body: "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted. ",
+                body: postBody,
                 poll: {
                     hasPoll: hasPoll,
                     options: pollOptions
