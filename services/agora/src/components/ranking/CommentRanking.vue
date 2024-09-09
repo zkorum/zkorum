@@ -1,18 +1,19 @@
 <template>
   <div>
     <div class="container">
+      <div>
+        <div class="contentLayout" ref="metadataElement">
+          <div class="postTitle">
+            {{ postItem.payload.title }}
+          </div>
 
-      <div class="contentLayout">
-        <div class="postTitle">
-          {{ postItem.payload.title }}
-        </div>
-
-        <div class="postBody">
-          {{ postItem.payload.body }}
+          <div class="postBody">
+            {{ postItem.payload.body }}
+          </div>
         </div>
 
         <ZKCard v-if="finishedRanking">
-          <div class="finishedMessage">
+          <div class="finishedMessage" :style="{ height: swipingDivHeight + 'px' }">
 
             <div class="finishedIcon">
               <q-icon name="mdi-check" size="3rem" />
@@ -36,11 +37,11 @@
             </q-linear-progress>
           </div>
 
-          <div class="lowOpacity">
+          <div class="lowOpacity" :style="{ paddingBottom: '1rem' }">
             Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
           </div>
 
-          <swiper-container slides-per-view="1" initialSlide="1">
+          <swiper-container slides-per-view="1" initialSlide="1" :style="{ height: swipingDivHeight + 'px' }">
             <swiper-slide>
               <div class="sidePage">
                 <q-icon name="mdi-chevron-double-down" flat color="secondary" size="3rem" />
@@ -92,14 +93,21 @@
 import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { SwiperContainer } from "swiper/element";
+import { useViewPorts } from "src/utils/html/viewPort";
+import { useElementSize } from "@vueuse/core";
 
 const props = defineProps<{
   postSlugId: string
 }>()
 
 const { getUnrankedComments, getPostBySlugId, updateCommentRanking } = usePostStore();
+
+const viewPorts = useViewPorts();
+const swipingDivHeight = ref(0);
+const metadataElement = ref();
+const elementSizer = useElementSize(metadataElement);
 
 const postItem = getPostBySlugId(props.postSlugId);
 const unrankedCommentList = getUnrankedComments(props.postSlugId)
@@ -124,6 +132,19 @@ const progress = ref(0);
 loadNextComment(currentRankIndex.value);
 
 let swiperEl: SwiperContainer | null = null;
+
+onMounted(() => {
+  setCardHeight();
+});
+
+watch([elementSizer.height, elementSizer.width], () => {
+  setCardHeight();
+})
+
+function setCardHeight() {
+  console.log(elementSizer.height.value);
+  swipingDivHeight.value = viewPorts.visualViewPortHeight.value - elementSizer.height.value - 300;
+}
 
 onMounted(() => {
 
@@ -200,6 +221,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  padding-bottom: 2rem;
 }
 
 .userComment {
@@ -218,13 +240,12 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 }
 
 .rankingDiv {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
-  padding-top: 2rem;
+  justify-content: space-around;
   padding-left: 1rem;
   padding-right: 1rem;
-  padding-bottom: 2rem;
 }
 
 .progressBar {
