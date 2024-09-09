@@ -36,16 +36,6 @@ const routes: RouteRecordRaw[] = [
         ]
       },
       {
-        path: "/community",
-        children: [
-          {
-            path: "explore",
-            component: () => import("pages/community/explore/index.vue"),
-            name: "community-explore",
-          }
-        ]
-      },
-      {
         path: "/settings",
         component: () => import("pages/settings/index.vue"),
         name: "settings-page"
