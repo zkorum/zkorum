@@ -37,7 +37,7 @@
           </div>
 
           <div class="lowOpacity">
-            Vote on other people's statements
+            Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
           </div>
 
           <swiper-container slides-per-view="1" initialSlide="1">
@@ -78,10 +78,6 @@
               </div>
             </swiper-slide>
           </swiper-container>
-
-          <div class="currentIndexText lowOpacity">
-            Ranked {{ currentRankIndex }} of {{ unrankedCommentList.length }}
-          </div>
 
         </ZKCard>
 
@@ -257,11 +253,6 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   border-style: solid;
   border-width: 2px;
   padding: 0.5rem;
-}
-
-.currentIndexText {
-  text-align: left;
-  font-size: 0.8rem;
 }
 
 .lowOpacity {
