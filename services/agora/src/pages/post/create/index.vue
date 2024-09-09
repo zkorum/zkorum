@@ -226,23 +226,9 @@ onBeforeRouteLeave((to) => {
 </script>
 
 <style scoped lang="scss">
-.communityButton {
-  display: flex;
-  font-size: 1rem;
-  align-items: center;
-  gap: 0.8rem;
-  width: 3rem;
-}
-
 .pollingFlexStyle {
   display: flex;
   flex-direction: column;
-}
-
-.buttonCluster {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
 }
 
 .pollingForm {
@@ -260,23 +246,6 @@ onBeforeRouteLeave((to) => {
   align-items: center;
   justify-content: center;
   width: 100%;
-}
-
-.communityFlex {
-  display: flex;
-  align-items: center;
-}
-
-.communitySelector {
-  font-weight: bold;
-  color: black;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-.communitySelector:hover {
-  cursor: pointer;
 }
 
 .exitDialogStyle {
