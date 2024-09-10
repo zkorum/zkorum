@@ -328,7 +328,7 @@ export const usePostStore = defineStore("post", () => {
 
         const postComments: DummyCommentFormat[] = [];
         for (let i = 0; i < numCommentsInPost; i++) {
-            const comment = "This is random comment index " + (i) + ". " + randomText;
+            const comment = "This is random comment index " + (i) + ". " + randomText.substring(0, 270);
             const commentItem = composeDummyCommentItem(comment, i, generateRandomDate(postCreatedAtDate, 5));
             postComments.push(commentItem);
         }
@@ -354,7 +354,7 @@ export const usePostStore = defineStore("post", () => {
         const companyItem = generateRandomCompanyItem();
 
         // postBody = postBody.substring(0, Math.min(postBody.length, 600));
-        const postBody = randomText;
+        const postBody = randomText.substring(0, 140);
 
         const postDataStatic: DummyPostDataFormat = {
             metadata: {
