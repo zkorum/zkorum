@@ -12,7 +12,7 @@
               Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
             </div>
 
-            <div class="swiperElement">
+            <div>
               <swiper-container slides-per-view="1" initialSlide="1" ref="el">
                 <swiper-slide>
                   <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
@@ -148,7 +148,7 @@ watch(elementSize.height, () => {
 })
 
 function updatePaddingSize() {
-  const newPadding = elementSize.height.value / 2 - 50;
+  const newPadding = elementSize.height.value / 2 - 60;
   topPadding.value = newPadding;
 }
 
@@ -203,7 +203,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 
 .rankingButtonCluster {
   display: flex;
-  justify-content: space-between
+  justify-content: space-between;
 }
 
 .userComment {
@@ -217,6 +217,8 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   flex-direction: column;
   justify-content: space-around;
   gap: 2rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 .progressBar {
@@ -258,9 +260,5 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   align-items: center;
   justify-content: center;
   color: $secondary;
-}
-
-.swiperElement {
-  padding-bottom: 2rem;
 }
 </style>
