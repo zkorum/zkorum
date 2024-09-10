@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="container">
+    <div class="container mobileHoverEffect postPadding">
       <div class="innerContainer">
         <PostMetadata :poster-name="extendedPostData.metadata.posterName"
           :poster-image-path="extendedPostData.metadata.posterImagePath"
@@ -199,5 +199,19 @@ function processPostBody(body: string) {
 
 .shareDialog {
   min-width: 20rem;
+}
+
+.postPadding {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mobileHoverEffect:hover {
+    background-color: #f5f5f5;
+    border-radius: 15px;
+  }
 }
 </style>
