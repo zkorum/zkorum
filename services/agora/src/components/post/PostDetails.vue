@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="container mobileHoverEffect postPadding">
+    <div class="container postPadding" :class="{ mobileHoverEffect: compactMode }">
       <div class="innerContainer">
         <PostMetadata :poster-name="extendedPostData.metadata.posterName"
           :poster-image-path="extendedPostData.metadata.posterImagePath"

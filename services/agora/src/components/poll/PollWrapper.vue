@@ -14,7 +14,7 @@
         </div>
 
         <div>
-          <ZKButton outline text-color-flex="primary" label="Vote" icon="mdi-vote" v-if="!localUserVote.hasVoted"
+          <ZKButton outline text-color-flex="primary" label="Cast Vote" icon="mdi-vote" v-if="!localUserVote.hasVoted"
             @click.stop.prevent="castVoteRequested()" />
         </div>
       </div>
