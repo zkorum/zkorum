@@ -1,7 +1,7 @@
 <template>
   <div>
     <WidthWrapper>
-      <q-layout view="hHh lpR fFf" :class="{ bottomPagePadding: addBottomPadding, outerPadding: addOuterPadding }">
+      <q-layout view="hHh lpR fFf" :class="{ bottomPagePadding: addBottomPadding }">
         <TopMenuBar :has-back-button="props.headerHasGoBackButton" :has-settings-button="props.headerHasSettingsButton"
           v-if="enableHeader" />
 

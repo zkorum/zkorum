@@ -6,7 +6,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/post",
     component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, addOuterPadding: false, enableHeader: false, enableFooter: false, useStylelessFooter: true } as MainLayoutProps,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: false, enableFooter: false, useStylelessFooter: true } as MainLayoutProps,
     children: [
       {
         path: "create/:communityId?",
@@ -18,7 +18,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, addOuterPadding: true, enableHeader: true, enableFooter: true, useStylelessFooter: false } as MainLayoutProps,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, enableFooter: true, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
         path: "/notifications",
@@ -56,26 +56,9 @@ const routes: RouteRecordRaw[] = [
     path: "/",
     children: [
       {
-        path: "/a",
-        component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, addOuterPadding: true, enableHeader: true, enableFooter: true, useStylelessFooter: false } as MainLayoutProps,
-        children: [
-          {
-            path: ":communityId",
-            children: [
-              {
-                path: "",
-                component: () => import("pages/a/[communityId]/index.vue"),
-                name: "community-single",
-              }
-            ]
-          }
-        ]
-      },
-      {
         path: "/",
         component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, addOuterPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
+        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
             path: "post/:postSlugId/:displayMode?",
@@ -94,7 +77,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/onboarding",
     component: MainLayout,
-    props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, addOuterPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
+    props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
         path: "login",

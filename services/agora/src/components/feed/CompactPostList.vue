@@ -3,7 +3,7 @@
     <q-page>
       <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
         <div class="postListFlex">
-          <div v-for="(postData, index) in compactPostDataList" :key="index">
+          <div v-for="(postData, index) in compactPostDataList" :key="index" class="postPadding">
             <div class="hoverEffect">
               <RouterLink
                 :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId, displayMode: 'ranking' } }">
@@ -238,14 +238,6 @@ onMounted(async () => {
 .postListFlex {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-
-.worldTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1rem;
 }
 
 a {
@@ -258,11 +250,20 @@ a {
 }
 
 .hoverEffect {
-  padding: 1rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
-.hoverEffect:hover {
-  background-color: #f5f5f5;
-  border-radius: 15px;
+@media (hover: hover) and (pointer: fine) {
+  .hoverEffect:hover {
+    background-color: #f5f5f5;
+    border-radius: 15px;
+  }
+}
+
+.postPadding {
+  padding-bottom: 1rem;
 }
 </style>
