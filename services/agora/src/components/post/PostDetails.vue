@@ -27,7 +27,7 @@
 
           <div class="leftButtonCluster">
             <ZKButton outline text-color-flex="secondary" :label="extendedPostData.metadata.commentCount.toString()"
-              icon="mdi-comment-text" @click.stop.prevent="clickedCommentButton()" />
+              icon="mdi-comment-text" @click="clickedCommentButton()" />
 
             <ZKButton :outline="!showCommentSection" :color-flex="showCommentSection ? 'secondary' : ''"
               :text-color-flex="showCommentSection ? '' : 'secondary'" icon="mdi-post"

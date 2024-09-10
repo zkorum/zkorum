@@ -63,6 +63,7 @@ function clickedMoreIcon() {
 .companyIcon {
   border-radius: 50%;
   width: 3rem;
+  margin-right: 0.5rem;
 }
 
 .metadata {

@@ -249,20 +249,6 @@ a {
   margin-top: 1rem;
 }
 
-.hoverEffect {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .hoverEffect:hover {
-    background-color: #f5f5f5;
-    border-radius: 15px;
-  }
-}
-
 .postPadding {
   padding-bottom: 1rem;
 }
