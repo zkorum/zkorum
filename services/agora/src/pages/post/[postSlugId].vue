@@ -11,7 +11,7 @@ import { ref, watch } from "vue";
 
 const props = defineProps<{
   postSlugId: string
-  displayMode: "ranking" | "comments"
+  displayMode: "ranking" | ""
 }>()
 
 const postStore = usePostStore();

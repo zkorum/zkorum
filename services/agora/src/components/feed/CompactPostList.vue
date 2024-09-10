@@ -31,7 +31,7 @@ import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 
 const { fetchUnifiedPosts } = usePostStore();
 
-const FETCH_POST_COUNT = 5;
+const FETCH_POST_COUNT = 10;
 const compactPostDataList = ref<DummyPostDataFormat[]>([]);
 let lastSlugId = "";
 
