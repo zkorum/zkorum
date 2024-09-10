@@ -9,6 +9,7 @@ export function useWebShare() {
     if (webShare.isSupported && !(Platform.is.firefox && Platform.is.desktop)) {
       return true;
     } else {
+      console.log("Not a supported platform");
       return false;
     }
   }

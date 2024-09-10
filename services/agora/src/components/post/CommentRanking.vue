@@ -2,18 +2,8 @@
   <div>
     <div class="container">
       <div>
-        <div class="contentLayout" ref="metadataElement">
-          <div class="postTitle">
-            {{ postItem.payload.title }}
-          </div>
-
-          <div class="postBody">
-            {{ postItem.payload.body }}
-          </div>
-        </div>
-
         <ZKCard>
-          <div v-if="!finishedRanking">
+          <div v-if="!finishedRanking" ref="cardElement">
             <div class="progressBar">
               <q-linear-progress color="primary" track-color="secondary" :value="progress" />
             </div>
@@ -22,48 +12,51 @@
               Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
             </div>
 
-            <swiper-container slides-per-view="1" initialSlide="1" :style="{ height: swipingDivHeight + 'px' }">
-              <swiper-slide>
-                <div class="sidePage">
-                  <q-icon name="mdi-chevron-double-down" flat color="secondary" size="3rem" />
-                  <div>
-                    Downvoted
-                  </div>
-                </div>
-              </swiper-slide>
-
-              <swiper-slide>
-
-                <div class="rankingDiv">
-                  <div class="userComment">
+            <div class="swiperElement">
+              <swiper-container slides-per-view="1" initialSlide="1" ref="el">
+                <swiper-slide>
+                  <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
+                    <q-icon name="mdi-chevron-double-up" flat color="secondary" size="3rem" />
                     <div>
-                      {{ displayCommentItem.comment }}
+                      Upvoted
                     </div>
                   </div>
+                </swiper-slide>
 
-                  <div class="rankingButtonCluster">
-                    <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-down" size="1.3rem"
-                      @click="rankComment('dislike', false)" />
-                    <ZKButton flat text-color-flex="secondary" label="Pass" @click="rankComment('pass', false)" />
-                    <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
-                      @click="rankComment('like', false)" />
-                  </div>
-                </div>
-              </swiper-slide>
+                <swiper-slide>
 
-              <swiper-slide>
-                <div class="sidePage">
-                  <q-icon name="mdi-chevron-double-up" flat color="secondary" size="3rem" />
-                  <div>
-                    Upvoted
+                  <div class="rankingDiv">
+                    <div class="userComment">
+                      <div>
+                        {{ displayCommentItem.comment }}
+                      </div>
+                    </div>
+
+                    <div class="rankingButtonCluster">
+                      <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-down" size="1.3rem"
+                        @click="rankComment('dislike', false)" />
+                      <ZKButton flat text-color-flex="secondary" label="Pass" @click="rankComment('pass', false)" />
+                      <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
+                        @click="rankComment('like', false)" />
+                    </div>
                   </div>
-                </div>
-              </swiper-slide>
-            </swiper-container>
+                </swiper-slide>
+
+                <swiper-slide>
+                  <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
+                    <q-icon name="mdi-chevron-double-down" flat color="secondary" size="3rem" />
+                    <div>
+                      Downvoted
+                    </div>
+                  </div>
+                </swiper-slide>
+              </swiper-container>
+            </div>
+
 
           </div>
 
-          <div class="finishedMessage" v-if="finishedRanking" :style="{ height: swipingDivHeight + 'px' }">
+          <div class="finishedMessage" v-if="finishedRanking">
 
             <div class="finishedIcon">
               <q-icon name="mdi-check" size="3rem" />
@@ -94,7 +87,6 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import ZKCard from "../ui-library/ZKCard.vue";
 import { onMounted, ref, watch } from "vue";
 import { SwiperContainer } from "swiper/element";
-import { useViewPorts } from "src/utils/html/viewPort";
 import { useElementSize } from "@vueuse/core";
 
 const props = defineProps<{
@@ -103,14 +95,13 @@ const props = defineProps<{
 
 const { getUnrankedComments, getPostBySlugId, updateCommentRanking } = usePostStore();
 
-const viewPorts = useViewPorts();
-const swipingDivHeight = ref(0);
-const metadataElement = ref();
-const elementSizer = useElementSize(metadataElement);
+const cardElement = ref();
+
+const el = ref(null)
+const elementSize = useElementSize(el)
 
 const postItem = getPostBySlugId(props.postSlugId);
 const unrankedCommentList = getUnrankedComments(props.postSlugId)
-
 
 let currentRankIndex = ref(0);
 
@@ -129,23 +120,15 @@ let displayCommentItem: DummyCommentFormat = {
 
 const progress = ref(0);
 
+const topPadding = ref(0);
+
 loadNextComment(currentRankIndex.value);
 
 let swiperEl: SwiperContainer | null = null;
 
 onMounted(() => {
-  setCardHeight();
-});
 
-watch([elementSizer.height, viewPorts.visualViewPortHeight], () => {
-  setCardHeight();
-})
-
-function setCardHeight() {
-  swipingDivHeight.value = viewPorts.visualViewPortHeight.value - elementSizer.height.value - 250;
-}
-
-onMounted(() => {
+  updatePaddingSize();
 
   swiperEl = document.querySelector("swiper-container");
   if (swiperEl != null) {
@@ -160,6 +143,15 @@ onMounted(() => {
     });
   }
 })
+
+watch(elementSize.height, () => {
+  updatePaddingSize();
+})
+
+function updatePaddingSize() {
+  const newPadding = elementSize.height.value / 2 - 50;
+  topPadding.value = newPadding;
+}
 
 function checkFinishedRanking() {
   if (unrankedCommentList.length == currentRankIndex.value) {
@@ -216,26 +208,9 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   justify-content: space-between
 }
 
-.contentLayout {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  padding-bottom: 2rem;
-}
-
 .userComment {
   text-align: left;
   font-size: 1.2rem;
-}
-
-.postTitle {
-  font-weight: bold;
-  font-size: 1.3rem;
-  padding-top: 2rem;
-}
-
-.postBody {
-  font-size: 1rem;
 }
 
 .rankingDiv {
@@ -279,12 +254,15 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 }
 
 .sidePage {
-  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   align-items: center;
   justify-content: center;
   color: $secondary;
+}
+
+.swiperElement {
+  padding-bottom: 2rem;
 }
 </style>

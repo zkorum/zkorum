@@ -27,11 +27,14 @@
 
           <div class="leftButtonCluster">
             <ZKButton outline text-color-flex="secondary" :label="extendedPostData.metadata.commentCount.toString()"
-              icon="mdi-chat-outline" @click.stop.prevent="clickedCommentButton()" />
+              icon="mdi-comment-text" @click.stop.prevent="clickedCommentButton()" />
 
-            <ZKButton :outline="!showCommentComposer" :color-flex="showCommentComposer ? 'secondary' : ''"
-              :text-color-flex="showCommentComposer ? '' : 'secondary'" icon="mdi-reply"
-              @click.stop.prevent="clickedReplyButton()" v-if="!compactMode" />
+            <ZKButton :outline="!showCommentSection" :color-flex="showCommentSection ? 'secondary' : ''"
+              :text-color-flex="showCommentSection ? '' : 'secondary'" icon="mdi-post"
+              @click.stop.prevent="clickedPostDetailsButton()" v-if="!compactMode" />
+
+            <ZKButton :outline="true" :color-flex="'secondary'" :text-color-flex="'secondary'" icon="mdi-post"
+              @click.stop.prevent="clickedPostDetailsButton()" v-if="compactMode" />
 
           </div>
 
@@ -41,104 +44,98 @@
           </div>
 
         </div>
+      </div>
 
-        <div v-if="!compactMode && showCommentComposer" class="newCommentBlock" ref="newCommentRef">
-          <q-input outline v-model="commentComposerText" label="Add a comment" class="newCommentInput" />
-          <div>
-            <ZKButton outline text-color-flex="secondary" label="Reply" @click="replyButtonClicked()"
-              :disable="commentComposerText.length == 0" />
-          </div>
+      <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="!showCommentSection && !compactMode" />
+
+      <div v-if="!compactMode && showCommentSection">
+        <div v-if="commentList.length > 0">
+          <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
+            :comment-ranking="extendedPostData.userInteraction.commentRanking" />
         </div>
 
+        <div v-if="commentList.length == 0">
+          There are no comments in this post.
+        </div>
       </div>
-
-      <div v-if="!compactMode && commentList.length > 0">
-        <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
-          :comment-ranking="extendedPostData.userInteraction.commentRanking" />
-      </div>
-
-      <q-dialog v-model="showFallbackShareDialog">
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">Share Link</div>
-          </q-card-section>
-
-          <q-card-section class="q-pt-none">
-            {{ sharePostUrl }}
-          </q-card-section>
-
-          <q-card-actions align="right">
-            <q-btn flat label="OK" color="primary" v-close-popup />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
 
     </div>
+
+    <q-dialog v-model="showFallbackShareDialog">
+      <q-card class="shareDialog">
+        <q-card-section>
+          <div class="text-h6">Share Link</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          {{ sharePostUrl }}
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="OK" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
   </div>
 </template>
 
 <script setup lang="ts">
 import ZKButton from "../ui-library/ZKButton.vue";
-// import CommentSwiper from "./CommentSwiper.vue";
-import CommentSection from "./CommentSection.vue";
-import PostMetadata from "./PostMetadata.vue";
+import CommentSection from "../feed/CommentSection.vue";
+import PostMetadata from "../feed/PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
-import { DummyPostDataFormat, usePostStore } from "src/stores/post";
+import CommentRanking from "./CommentRanking.vue";
+import { DummyPostDataFormat } from "src/stores/post";
 import { ref } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
-import { useRouter } from "vue-router";
-
-const showCommentComposer = ref(false);
-const commentComposerText = ref("");
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
   extendedPostData: DummyPostDataFormat,
-  compactMode: boolean
-}>()
+  compactMode: boolean,
+  showCommentSection: boolean
+}>();
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
-const { composeDummyCommentItem } = usePostStore();
+// const { composeDummyCommentItem } = usePostStore();
+
+const router = useRouter();
+const route = useRoute();
 
 const webShare = useWebShare()
-const router = useRouter();
-
-const newCommentRef = ref<HTMLElement | null>(null);
 
 const showFallbackShareDialog = ref(false);
 
-const sharePostUrl = window.location.origin + "/a/" + props.extendedPostData.metadata.communityId + "/post/" + props.extendedPostData.metadata.slugId;
+const sharePostUrl = window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
 
+/*
 function replyButtonClicked() {
   const commentItem = composeDummyCommentItem(commentComposerText.value, commentList.value.length, new Date());
   commentList.value.unshift(commentItem);
 
   commentComposerText.value = "";
 }
+*/
 
 function clickedCommentButton() {
-  router.push({
-    name: "single-post",
-    params: {
-      communityId: props.extendedPostData.metadata.communityId,
-      postSlugId: props.extendedPostData.metadata.slugId
-    }
-  });
+  // TODO: scroll down to comment section
 }
 
-function clickedReplyButton() {
-
-  showCommentComposer.value = !showCommentComposer.value;
-
-  if (showCommentComposer.value) {
-    setTimeout(function () {
-      if (newCommentRef.value) {
-        newCommentRef.value.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }, 100);
+function clickedPostDetailsButton() {
+  if (route.name != "single-post") {
+    router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "" } })
+  } else {
+    if (props.showCommentSection) {
+      router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "ranking" } })
+    } else {
+      router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "" } })
+    }
+    // showCommentSection.value = !showCommentSection.value;
+    //console.log("!")
+    //route.params.displayMode = ""
   }
-
 }
 
 function shareClicked() {
@@ -192,21 +189,15 @@ function processPostBody(body: string) {
 .container {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
-}
-
-.newCommentInput {
-  width: calc(100% - 5rem);
-}
-
-.newCommentBlock {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .leftButtonCluster {
   display: flex;
   gap: 1rem;
+}
+
+.shareDialog {
+  min-width: 20rem;
 }
 </style>

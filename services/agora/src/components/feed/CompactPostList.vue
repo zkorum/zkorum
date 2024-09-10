@@ -6,8 +6,8 @@
           <div v-for="(postData, index) in compactPostDataList" :key="index">
             <div class="hoverEffect">
               <RouterLink
-                :to="{ name: 'single-ranking', params: { postSlugId: postData.metadata.slugId, communityId: postData.metadata.communityId } }">
-                <PostItem :extended-post-data="postData" :compact-mode="true" />
+                :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId, displayMode: 'ranking' } }">
+                <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
               </RouterLink>
             </div>
 
@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 
-import PostItem from "./PostItem.vue";
+import PostDetails from "../post/PostDetails.vue";
 import { ref } from "vue";
 import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 
