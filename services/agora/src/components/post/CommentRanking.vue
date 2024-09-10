@@ -66,8 +66,7 @@
               All comments have been ranked!
             </div>
 
-            <RouterLink
-              :to="{ name: 'single-post', params: { communityId: postItem.metadata.communityId, postSlugId: postItem.metadata.slugId } }">
+            <RouterLink :to="{ name: 'single-post', params: { postSlugId: postItem.metadata.slugId } }">
               <ZKButton outline text-color-flex="secondary" label="Open Post" icon="mdi-arrow-right-box" />
             </RouterLink>
 
@@ -108,7 +107,7 @@ let currentRankIndex = ref(0);
 const finishedRanking = ref(false);
 checkFinishedRanking();
 
-let displayCommentItem: DummyCommentFormat = {
+let displayCommentItem = ref<DummyCommentFormat>({
   index: 0,
   userCommunityId: "",
   userCommunityImage: "",
@@ -116,13 +115,13 @@ let displayCommentItem: DummyCommentFormat = {
   comment: "",
   numUpvotes: 0,
   numDownvotes: 0
-}
+});
 
 const progress = ref(0);
 
 const topPadding = ref(0);
 
-loadNextComment(currentRankIndex.value);
+loadNextComment();
 
 let swiperEl: SwiperContainer | null = null;
 
@@ -134,9 +133,9 @@ onMounted(() => {
   if (swiperEl != null) {
     swiperEl.addEventListener("swiperslidechange", () => {
       if (swiperEl?.swiper.activeIndex == 2) {
-        rankComment("like", true);
-      } else if (swiperEl?.swiper.activeIndex == 0) {
         rankComment("dislike", true);
+      } else if (swiperEl?.swiper.activeIndex == 0) {
+        rankComment("like", true);
       } else {
         return;
       }
@@ -162,8 +161,8 @@ function checkFinishedRanking() {
   }
 }
 
-function loadNextComment(index: number) {
-  displayCommentItem = unrankedCommentList[index];
+function loadNextComment() {
+  displayCommentItem.value = unrankedCommentList[currentRankIndex.value];
 }
 
 function updateProgressBar() {
@@ -174,21 +173,20 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   currentRankIndex.value += 1;
   updateProgressBar();
 
-  updateCommentRanking(props.postSlugId, displayCommentItem.index, commentAction);
+  updateCommentRanking(props.postSlugId, displayCommentItem.value.index, commentAction);
 
   if (isSwiper) {
-    setTimeout(
-      function () {
-        const isDone = checkFinishedRanking();
-        if (!isDone) {
-          loadNextComment(currentRankIndex.value);
-          swiperEl?.swiper.slideTo(1, 500);
-        }
-      }, 500);
+    setTimeout(() => {
+      const isDone = checkFinishedRanking();
+      if (!isDone) {
+        loadNextComment();
+        swiperEl?.swiper.slideTo(1, 500);
+      }
+    }, 500);
   } else {
     const isDone = checkFinishedRanking();
     if (!isDone) {
-      loadNextComment(currentRankIndex.value);
+      loadNextComment();
     }
   }
 }
