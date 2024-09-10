@@ -1,11 +1,12 @@
 <template>
-  <img class="flagImage" :src="imagePath" />
+  <img class="flagImage" :src="imagePath" :style="{ width: size }" />
 </template>
 
 <script setup lang="ts">
 
 defineProps<{
-  imagePath: string
+  imagePath: string;
+  size: string;
 }>()
 
 </script>
@@ -16,6 +17,5 @@ defineProps<{
   border-style: solid;
   border-width: 1px;
   border-color: #e5e7eb;
-  max-width: 100%;
 }
 </style>

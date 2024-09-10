@@ -4,8 +4,8 @@
       <div v-for="(commentItem, index) in commentList" v-bind:key="index">
         <div>
           <div class="contentLayout">
-            <div class="iconSizeSmall metadata">
-              <CommunityIcon :image-path="getCommunityImageFromId(commentItem.userCommunityId)" />
+            <div class="metadata">
+              <CommunityIcon :image-path="getCommunityImageFromId(commentItem.userCommunityId)" size="2.5rem" />
 
               {{ getTimeFromNow(commentItem.createdAt) }}
             </div>
@@ -83,7 +83,7 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
 .container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1.5rem;
 }
 
 .separator {
@@ -97,10 +97,6 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   gap: 1rem;
 }
 
-.communityIconStyle {
-  width: 2rem;
-}
-
 .actionButtonCluster {
   display: flex;
   align-items: center;
@@ -109,10 +105,7 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   font-size: 0.8rem;
   font-weight: bold;
   padding-top: 0.5rem;
-}
-
-.iconSizeSmall {
-  width: 2.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .metadata {
