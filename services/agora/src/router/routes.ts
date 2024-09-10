@@ -9,7 +9,7 @@ const routes: RouteRecordRaw[] = [
     props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: false, enableFooter: false, useStylelessFooter: true } as MainLayoutProps,
     children: [
       {
-        path: "create/:communityId?",
+        path: "create",
         component: () => import("pages/post/create/index.vue"),
         name: "create-post"
       }
@@ -63,7 +63,8 @@ const routes: RouteRecordRaw[] = [
           {
             path: "post/:postSlugId/:displayMode?",
             component: () => import("pages/post/[postSlugId].vue"),
-            name: "single-post"
+            name: "single-post",
+            props: true
           }
         ]
       }

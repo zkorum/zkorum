@@ -9,6 +9,6 @@ import { useRouter } from "vue-router";
 const router = useRouter()
 
 function goBack() {
-  router.back();
+  router.push({ name: "default-home-feed" });
 }
 </script>

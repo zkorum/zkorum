@@ -24,12 +24,14 @@ export default route(function (/* { store, ssrContext } */) {
       : createWebHashHistory;
 
   const Router = createRouter({
-    scrollBehavior: (to, from, savedPosition) => {
-      if (to.name == "default-home-feed") {
+    scrollBehavior: () => { // to, from, savedPosition
+      /*
+      if (to.name == "post-single") {
         if (savedPosition != null) {
           return { left: savedPosition.left, top: savedPosition.top };
         }
       }
+      */
       return { left: 0, top: 0 };
     },
     routes,

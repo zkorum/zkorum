@@ -77,6 +77,8 @@ export const usePostStore = defineStore("post", () => {
 
     const forceAddPolls = useStorage("force-add-polls", false);
 
+    let largestPostIndex = 0;
+
     const emptyPost: DummyPostDataFormat = {
         metadata: {
             uid: "",
@@ -111,7 +113,7 @@ export const usePostStore = defineStore("post", () => {
 
     const masterPostDataList = ref<DummyPostDataFormat[]>([]);
     for (let i = 0; i < 200; i++) {
-        masterPostDataList.value.push(generateDummyPostData(i));
+        masterPostDataList.value.push(generateDummyPostData());
     }
 
     function getUnrankedComments(postSlugId: string): DummyCommentFormat[] {
@@ -300,7 +302,20 @@ export const usePostStore = defineStore("post", () => {
 
     }
 
-    function generateDummyPostData(postIndex: number) {
+    function submitNewPost(postTitle: string, postBody: string) {
+        const postData = generateDummyPostData();
+        postData.payload.title = postTitle;
+        postData.payload.body = postBody;
+
+        masterPostDataList.value.push(postData);
+
+        return postData.metadata.slugId;
+    }
+
+    function generateDummyPostData() {
+
+        const postIndex = largestPostIndex;
+
         const postCreatedAtDate = new Date();
         postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 14));
 
@@ -388,6 +403,8 @@ export const usePostStore = defineStore("post", () => {
             }
         };
 
+        largestPostIndex++;
+
         return postDataStatic;
 
     }
@@ -399,6 +416,7 @@ export const usePostStore = defineStore("post", () => {
         fetchUnifiedPosts,
         updateCommentRanking,
         getCommunityImageFromId,
+        submitNewPost,
         emptyPost
     };
 });

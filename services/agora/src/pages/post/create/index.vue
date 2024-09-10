@@ -98,15 +98,15 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from "vue";
-import { onBeforeRouteLeave, RouteLocationNormalized, useRoute, useRouter } from "vue-router";
+import { onUnmounted, ref } from "vue";
+import { onBeforeRouteLeave, RouteLocationNormalized, useRouter } from "vue-router";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import TopMenuWrapper from "src/components/navigation/TopMenuWrapper.vue";
 import HelpButton from "src/components/navigation/buttons/HelpButton.vue";
 import { useNewPostDraftsStore } from "src/stores/newPostDrafts";
-import { usePostStore } from "src/stores/post";
 import { useViewPorts } from "src/utils/html/viewPort";
+import { usePostStore } from "src/stores/post";
 
 const POST_BODY_LENGTH_MAX = 260;
 const POST_BODY_LENGTH_WARNING = 200;
@@ -117,7 +117,6 @@ const bodyWordCount = ref(0);
 const exceededBodyWordCount = ref(false);
 
 const router = useRouter();
-const route = useRoute();
 
 const { visualViewPortHeight } = useViewPorts();
 
@@ -126,15 +125,9 @@ const endOfFormRef = ref<HTMLElement | null>();
 
 const showExitDialog = ref(false);
 
-const selectedCommunityId = ref("");
-const selectedCommunityImagePath = ref("");
-
 const { postDraft, isPostEdited } = useNewPostDraftsStore();
-const { getCommunityImageFromId } = usePostStore();
 
 let grantedRouteLeave = false;
-
-loadCommunityId();
 
 let savedToRoute: RouteLocationNormalized = {
   matched: [],
@@ -156,10 +149,6 @@ window.onbeforeunload = function () {
 
 onUnmounted(() => {
   window.onbeforeunload = () => { };
-})
-
-watch(selectedCommunityId, () => {
-  selectedCommunityImagePath.value = getCommunityImageFromId(selectedCommunityId.value);
 })
 
 function checkWordCount() {
@@ -197,19 +186,12 @@ function addPollOption() {
 function removePollOption(index: number) {
   postDraft.value.pollingOptionList.splice(index, 1);
 }
-
+const { submitNewPost } = usePostStore();
 function onSubmit() {
   grantedRouteLeave = true;
-  router.push({ name: "single-post", params: { postSlugId: "DUMMY_POST_SLUG_ID", communityId: "DUMMY_COMMUNITY_ID" } })
-}
 
-function loadCommunityId() {
-  const initialCommunityId = route.params.communityId;
-  if (typeof initialCommunityId == "string") {
-    selectedCommunityId.value = initialCommunityId;
-  }
-
-  selectedCommunityImagePath.value = getCommunityImageFromId(selectedCommunityId.value);
+  const slugId = submitNewPost(postDraft.value.postTitle, postDraft.value.postBody);
+  router.push({ name: "single-post", params: { postSlugId: slugId, displayMode: "comments" } })
 }
 
 function leaveRoute() {

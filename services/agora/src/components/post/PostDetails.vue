@@ -54,7 +54,7 @@
             :comment-ranking="extendedPostData.userInteraction.commentRanking" />
         </div>
 
-        <div v-if="commentList.length == 0">
+        <div v-if="commentList.length == 0" class="noCommentMessage">
           There are no comments in this post.
         </div>
       </div>
@@ -213,5 +213,11 @@ function processPostBody(body: string) {
     background-color: #f5f5f5;
     border-radius: 15px;
   }
+}
+
+.noCommentMessage {
+  display: flex;
+  justify-content: center;
+  padding-top: 4rem;
 }
 </style>
