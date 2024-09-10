@@ -250,7 +250,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 }
 
 .lowOpacity {
-  opacity: 0.6;
+  color: $color-text-weak;
 }
 
 .sidePage {

@@ -48,12 +48,14 @@ function clickedMoreIcon() {
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .container {
   display: flex;
   gap: 1rem;
   align-items: center;
   justify-content: space-between;
+  font-size: 0.9rem;
+  color: $color-text-weak;
 }
 
 .iconSizeLarge {
