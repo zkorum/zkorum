@@ -105,8 +105,10 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   display: flex;
   align-items: center;
   justify-content: right;
+  gap: 0.5rem;
   font-size: 0.8rem;
   font-weight: bold;
+  padding-top: 0.5rem;
 }
 
 .iconSizeSmall {

@@ -22,4 +22,8 @@ defineOptions({
 });
 </script>
 
-<style scoped lang="scss"></style>
+<style lang="scss">
+body {
+  font-size: 1rem;
+}
+</style>
