@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import { getTimeFromNow } from "src/utils/common";
-import ZKButton from "../ui-library/ZKButton.vue";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 
 defineProps<{

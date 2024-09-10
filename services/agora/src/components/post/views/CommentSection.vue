@@ -39,8 +39,8 @@
 
 <script setup lang="ts">
 import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
-import ZKButton from "../ui-library/ZKButton.vue";
-import CommunityIcon from "../community/CommunityIcon.vue";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
+import CommunityIcon from "src/components/community/CommunityIcon.vue";
 import { getTimeFromNow } from "src/utils/common";
 
 const props = defineProps<{

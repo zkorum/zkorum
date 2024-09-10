@@ -82,10 +82,10 @@
 
 <script setup lang="ts">
 import ZKButton from "../ui-library/ZKButton.vue";
-import CommentSection from "../feed/CommentSection.vue";
-import PostMetadata from "../feed/PostMetadata.vue";
+import CommentSection from "./views/CommentSection.vue";
+import PostMetadata from "./views/PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
-import CommentRanking from "./CommentRanking.vue";
+import CommentRanking from "./views/CommentRanking.vue";
 import { DummyPostDataFormat } from "src/stores/post";
 import { ref } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";

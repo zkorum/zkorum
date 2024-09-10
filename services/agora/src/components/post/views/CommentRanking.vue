@@ -83,8 +83,8 @@
 
 <script setup lang="ts">
 import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
-import ZKButton from "../ui-library/ZKButton.vue";
-import ZKCard from "../ui-library/ZKCard.vue";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
+import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { onMounted, ref, watch } from "vue";
 import { SwiperContainer } from "swiper/element";
 import { useElementSize } from "@vueuse/core";
