@@ -2,7 +2,7 @@
   <div>
     <WidthWrapper>
       <div class="container">
-        <q-editor v-model="commentText" placeholder="Add a comment" min-height="2rem" flat />
+        <q-editor v-model="commentText" placeholder="Add a comment" min-height="2rem" flat ref="editorRef" />
         <!--@update:model-value="checkWordCount()"-->
         <div class="postButton">
           <ZKButton label="Cancel" color="secondary" @click="cancelClicked()" />
@@ -14,13 +14,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 
 const emit = defineEmits(["cancelClicked", "postClicked"]);
 
 const commentText = ref("");
+
+const editorRef = ref();
+
+onMounted(() => {
+  editorRef.value.focus();
+})
 
 function cancelClicked() {
   emit("cancelClicked")

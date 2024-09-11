@@ -91,6 +91,7 @@ import { DummyPostDataFormat } from "src/stores/post";
 import { ref } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useRoute, useRouter } from "vue-router";
+import { useRouteQuery } from "@vueuse/router";
 
 const props = defineProps<{
   extendedPostData: DummyPostDataFormat,
@@ -114,6 +115,11 @@ const showFallbackShareDialog = ref(false);
 
 const sharePostUrl = window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
 
+const action = useRouteQuery("action");
+if (action.value == "comment") {
+  showCommentDialog.value = true;
+}
+
 /*
 function replyButtonClicked() {
   const commentItem = composeDummyCommentItem(commentComposerText.value, commentList.value.length, new Date());
@@ -127,7 +133,8 @@ function clickedCommentButton() {
   if (route.name != "single-post") {
     router.push({
       name: "single-post",
-      params: { postSlugId: props.extendedPostData.metadata.slugId }
+      params: { postSlugId: props.extendedPostData.metadata.slugId },
+      query: { action: "comment" }
     })
   } else {
     if (!props.compactMode) {
