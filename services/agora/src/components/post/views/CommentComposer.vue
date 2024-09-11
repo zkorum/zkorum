@@ -19,7 +19,8 @@ const commentText = ref("");
 
 <style scoped lang="scss">
 .container {
-  background-color: #a3a3a3;
-  padding-top: 0.3rem;
+  background-color: #d4d4d4;
+  padding: 0.5rem;
+  border-radius: 5px;
 }
 </style>
