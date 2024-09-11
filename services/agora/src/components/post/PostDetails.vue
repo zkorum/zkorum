@@ -61,7 +61,7 @@
     </div>
 
     <FloatingBottomContainer v-if="!compactMode && showCommentDialog">
-      <CommentComposer />
+      <CommentComposer @cancel-clicked="showCommentDialog = false" @post-clicked="showCommentDialog = false" />
     </FloatingBottomContainer>
 
     <q-dialog v-model="showFallbackShareDialog">
