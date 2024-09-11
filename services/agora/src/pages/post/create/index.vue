@@ -5,7 +5,7 @@
         <TopMenuWrapper :reveal="false">
           <div class="topMenu">
             <div class="menuFlexGroup">
-              <ZKButton icon="mdi-close" text-color-flex="black" flat @click="router.back()" />
+              <ZKButton icon="mdi-close" text-color="black" flat @click="router.back()" />
             </div>
 
             <div class="menuFlexGroup">
@@ -42,7 +42,7 @@
                   <div>
                     Poll
                   </div>
-                  <ZKButton flat text-color-flex="black" icon="mdi-close" @click="togglePolling()" />
+                  <ZKButton flat text-color="black" icon="mdi-close" @click="togglePolling()" />
                 </div>
                 <div class="pollingFlexStyle" ref="pollRef">
                   <div v-for="index in postDraft.pollingOptionList.length" :key="index" class="pollingItem">
@@ -50,14 +50,13 @@
                       v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%' }"
                       :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
                     <div class="deletePollOptionDiv" v-if="postDraft.pollingOptionList.length != 2">
-                      <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)"
-                        text-color-flex="primary" />
+                      <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)" text-color="primary" />
                     </div>
 
                   </div>
 
                   <div>
-                    <ZKButton flat text-color-flex="primary" icon="mdi-plus" label="Add Option" @click="addPollOption()"
+                    <ZKButton flat text-color="primary" icon="mdi-plus" label="Add Option" @click="addPollOption()"
                       :disable="postDraft.pollingOptionList.length == 6" />
                   </div>
                 </div>
@@ -74,7 +73,7 @@
       <div class="addPollBar" :class="{ lessTransparency: postDraft.enablePolling }"
         :style="{ top: (visualViewPortHeight - 50) + 'px' }">
         <ZKButton unelevated rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
-          color-flex="grey-8" text-color-flex="white" @click="togglePolling()" />
+          color="grey-8" text-color="white" @click="togglePolling()" />
       </div>
 
       <q-dialog v-model="showExitDialog">
@@ -85,7 +84,7 @@
             <div>Your drafted post will not be saved.</div>
 
             <div class="dialogButtons">
-              <ZKButton flat label="Cancel" text-color-flex="primary" v-close-popup />
+              <ZKButton flat label="Cancel" text-color="primary" v-close-popup />
               <ZKButton label="Discard" v-close-popup @click="leaveRoute()" />
             </div>
           </div>

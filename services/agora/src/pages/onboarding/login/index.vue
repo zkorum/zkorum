@@ -25,7 +25,7 @@
         <a href="https://zkorum.com/" target="_blank">Privacy Policy</a>.
       </div>
 
-      <ZKButton label="Skip Email Page" color-flex="black"
+      <ZKButton label="Skip Email Page" color="black"
         @click="router.push({ name: 'passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
 
     </form>

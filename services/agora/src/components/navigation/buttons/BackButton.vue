@@ -1,5 +1,5 @@
 <template>
-  <ZKButton icon="mdi-arrow-left" text-color-flex="black" flat @click="buttonClicked()" />
+  <ZKButton icon="mdi-arrow-left" text-color="black" flat @click="buttonClicked()" />
 </template>
 
 <script setup lang="ts">

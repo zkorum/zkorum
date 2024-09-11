@@ -33,10 +33,10 @@
                     </div>
 
                     <div class="rankingButtonCluster">
-                      <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-down" size="1.3rem"
+                      <ZKButton flat text-color="secondary" icon="mdi-thumb-down" size="1.3rem"
                         @click="rankComment('dislike', false)" />
-                      <ZKButton flat text-color-flex="secondary" label="Pass" @click="rankComment('pass', false)" />
-                      <ZKButton flat text-color-flex="secondary" icon="mdi-thumb-up" size="1.3rem"
+                      <ZKButton flat text-color="secondary" label="Pass" @click="rankComment('pass', false)" />
+                      <ZKButton flat text-color="secondary" icon="mdi-thumb-up" size="1.3rem"
                         @click="rankComment('like', false)" />
                     </div>
                   </div>
@@ -68,7 +68,7 @@
 
             <RouterLink
               :to="{ name: 'single-post', params: { postSlugId: postItem.metadata.slugId, displayMode: '' } }">
-              <ZKButton outline text-color-flex="secondary" label="Open Post" icon="mdi-arrow-right-box" />
+              <ZKButton outline text-color="secondary" label="Open Post" icon="mdi-arrow-right-box" />
             </RouterLink>
 
           </div>

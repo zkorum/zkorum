@@ -3,7 +3,7 @@
     <q-img src="/images/onboarding/brand.webp" class="welcomeImage" />
     <div class="buttonFlex">
       <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
-      <ZKButton color-flex="black" @click="skipAuthentication()" label="Skip Authentication" />
+      <ZKButton color="black" @click="skipAuthentication()" label="Skip Authentication" />
     </div>
   </div>
 

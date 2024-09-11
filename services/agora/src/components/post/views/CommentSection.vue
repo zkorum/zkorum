@@ -13,14 +13,14 @@
             <div>
               {{ commentItem.comment }}
               <div class="actionButtonCluster">
-                <ZKButton flat text-color-flex="black" icon="mdi-dots-horizontal" size="0.8rem" />
+                <ZKButton flat text-color="black" icon="mdi-dots-horizontal" size="0.8rem" />
 
-                <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
+                <ZKButton flat text-color="black" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
                   @click="toggleVote(commentItem.index, 'like')" />
                 <div v-if="getCommentItemRankStatus(commentItem.index) != undefined">
                   {{ commentItem.numUpvotes - commentItem.numDownvotes }}
                 </div>
-                <ZKButton flat text-color-flex="black" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem"
+                <ZKButton flat text-color="black" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem"
                   @click="toggleVote(commentItem.index, 'dislike')" />
               </div>
             </div>

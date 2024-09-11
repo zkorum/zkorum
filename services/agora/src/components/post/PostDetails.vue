@@ -26,21 +26,20 @@
         <div class="bottomButtons">
 
           <div class="leftButtonCluster">
-            <ZKButton outline text-color-flex="secondary" :label="extendedPostData.metadata.commentCount.toString()"
+            <ZKButton outline text-color="secondary" :label="extendedPostData.metadata.commentCount.toString()"
               icon="mdi-comment-text" @click.stop.prevent="clickedCommentButton()" />
 
-            <ZKButton :outline="!showCommentSection" :color-flex="showCommentSection ? 'secondary' : ''"
-              :text-color-flex="showCommentSection ? '' : 'secondary'" icon="mdi-post"
+            <ZKButton :outline="!showCommentSection" :color="showCommentSection ? 'secondary' : ''"
+              :text-color="showCommentSection ? '' : 'secondary'" icon="mdi-post"
               @click.stop.prevent="clickedPostDetailsButton()" v-if="!compactMode" />
 
-            <ZKButton :outline="true" :color-flex="'secondary'" :text-color-flex="'secondary'" icon="mdi-post"
+            <ZKButton :outline="true" :color="'secondary'" :text-color="'secondary'" icon="mdi-post"
               @click.stop.prevent="clickedPostDetailsButton()" v-if="compactMode" />
 
           </div>
 
           <div>
-            <ZKButton outline text-color-flex="secondary" icon="mdi-share-outline"
-              @click.stop.prevent="shareClicked()" />
+            <ZKButton outline text-color="secondary" icon="mdi-share-outline" @click.stop.prevent="shareClicked()" />
           </div>
 
         </div>

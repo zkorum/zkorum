@@ -14,7 +14,7 @@
         </div>
 
         <div>
-          <ZKButton outline text-color-flex="primary" label="Cast Vote" icon="mdi-vote" v-if="!localUserVote.hasVoted"
+          <ZKButton outline text-color="primary" label="Cast Vote" icon="mdi-vote" v-if="!localUserVote.hasVoted"
             @click.stop.prevent="castVoteRequested()" />
         </div>
       </div>
@@ -26,11 +26,11 @@
 
       <div class="pollOptionList">
         <ZKButton outline v-for="option in localPollOptions" v-bind:key="option.index" :label="option.name"
-          text-color-flex="primary" @click.stop.prevent="voteCasted(option.index)" />
+          text-color="primary" @click.stop.prevent="voteCasted(option.index)" />
       </div>
 
       <div class="actionButtonCluster">
-        <ZKButton outline text-color-flex="primary" icon="mdi-chart-bar" label="Results"
+        <ZKButton outline text-color="primary" icon="mdi-chart-bar" label="Results"
           @click.stop.prevent="showPollResults()" />
       </div>
 

@@ -22,7 +22,7 @@
       </div>
 
       <div>
-        <ZKButton flat text-color-flex="primary" icon="mdi-dots-vertical" @click.stop.prevent="clickedMoreIcon()" />
+        <ZKButton flat text-color="primary" icon="mdi-dots-vertical" @click.stop.prevent="clickedMoreIcon()" />
       </div>
     </div>
 

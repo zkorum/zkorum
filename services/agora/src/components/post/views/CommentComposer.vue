@@ -5,8 +5,8 @@
         <q-editor v-model="commentText" placeholder="Add a comment" min-height="2rem" flat />
         <!--@update:model-value="checkWordCount()"-->
         <div class="postButton">
-          <ZKButton label="Cancel" color-flex="secondary" @click="cancelClicked()" />
-          <ZKButton label="Post" @click="postClicked()" />
+          <ZKButton label="Cancel" color="secondary" @click="cancelClicked()" />
+          <ZKButton label="Post" color="primary" @click="postClicked()" />
         </div>
       </div>
     </WidthWrapper>
@@ -34,7 +34,7 @@ function postClicked() {
 
 <style scoped lang="scss">
 .container {
-  background-color: #d4d4d4;
+  background-color: #e5e7eb;
   padding: 0.5rem;
   border-radius: 5px;
 }
