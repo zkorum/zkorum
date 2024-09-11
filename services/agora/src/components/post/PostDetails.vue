@@ -27,7 +27,7 @@
 
           <div class="leftButtonCluster">
             <ZKButton outline text-color-flex="secondary" :label="extendedPostData.metadata.commentCount.toString()"
-              icon="mdi-comment-text" @click="clickedCommentButton()" />
+              icon="mdi-comment-text" @click.stop.prevent="clickedCommentButton()" />
 
             <ZKButton :outline="!showCommentSection" :color-flex="showCommentSection ? 'secondary' : ''"
               :text-color-flex="showCommentSection ? '' : 'secondary'" icon="mdi-post"
@@ -46,6 +46,7 @@
         </div>
       </div>
 
+      {{ showCommentDialog }}
       <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="!showCommentSection && !compactMode" />
 
       <div v-if="!compactMode && showCommentSection">
@@ -58,8 +59,11 @@
           There are no comments in this post.
         </div>
       </div>
-
     </div>
+
+    <FloatingBottomContainer v-if="!compactMode && showCommentDialog">
+      <CommentComposer />
+    </FloatingBottomContainer>
 
     <q-dialog v-model="showFallbackShareDialog">
       <q-card class="shareDialog">
@@ -86,6 +90,8 @@ import CommentSection from "./views/CommentSection.vue";
 import PostMetadata from "./views/PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
 import CommentRanking from "./views/CommentRanking.vue";
+import FloatingBottomContainer from "../navigation/FloatingBottomContainer.vue";
+import CommentComposer from "./views/CommentComposer.vue";
 import { DummyPostDataFormat } from "src/stores/post";
 import { ref } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
@@ -104,6 +110,8 @@ const commentList = ref(props.extendedPostData.payload.comments);
 const router = useRouter();
 const route = useRoute();
 
+const showCommentDialog = ref(false);
+
 const webShare = useWebShare()
 
 const showFallbackShareDialog = ref(false);
@@ -120,7 +128,7 @@ function replyButtonClicked() {
 */
 
 function clickedCommentButton() {
-  // TODO: scroll down to comment section
+  showCommentDialog.value = !showCommentDialog.value;
 }
 
 function clickedPostDetailsButton() {
