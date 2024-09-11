@@ -46,7 +46,6 @@
         </div>
       </div>
 
-      {{ showCommentDialog }}
       <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="!showCommentSection && !compactMode" />
 
       <div v-if="!compactMode && showCommentSection">
