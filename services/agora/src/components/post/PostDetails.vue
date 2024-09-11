@@ -56,8 +56,8 @@
       </div>
     </div>
 
-    <FloatingBottomContainer v-if="!compactMode && showCommentDialog">
-      <CommentComposer @cancel-clicked="showCommentDialog = false" @post-clicked="showCommentDialog = false" />
+    <FloatingBottomContainer v-if="!compactMode">
+      <CommentComposer :show-controls="focusCommentElement" />
     </FloatingBottomContainer>
 
     <q-dialog v-model="showFallbackShareDialog">
@@ -107,27 +107,18 @@ const commentList = ref(props.extendedPostData.payload.comments);
 const router = useRouter();
 const route = useRoute();
 
-const showCommentDialog = ref(false);
-
 const webShare = useWebShare()
 
 const showFallbackShareDialog = ref(false);
 
 const sharePostUrl = window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
 
+const focusCommentElement = ref(false);
+
 const action = useRouteQuery("action");
 if (action.value == "comment") {
-  showCommentDialog.value = true;
+  focusCommentElement.value = true;
 }
-
-/*
-function replyButtonClicked() {
-  const commentItem = composeDummyCommentItem(commentComposerText.value, commentList.value.length, new Date());
-  commentList.value.unshift(commentItem);
-
-  commentComposerText.value = "";
-}
-*/
 
 function clickedCommentButton() {
   if (route.name != "single-post") {
@@ -137,9 +128,7 @@ function clickedCommentButton() {
       query: { action: "comment" }
     })
   } else {
-    if (!props.compactMode) {
-      showCommentDialog.value = !showCommentDialog.value;
-    }
+    focusCommentElement.value = true;
   }
 }
 

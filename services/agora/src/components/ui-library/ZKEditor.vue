@@ -1,30 +1,58 @@
 <template>
   <div>
     <form autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
-      <q-editor v-model="commentText" :placeholder="placeholder" :min-height="minHeight" flat ref="editorRef" :toolbar="[
-        ['bold', 'italic', 'strike', 'underline'],
-        ['undo', 'redo']
-      ]" @paste="onPaste" />
+      <q-editor v-model="commentText" :placeholder="placeholder" :min-height="minHeight" flat ref="editorRef"
+        :toolbar="showToolbar ? toolbarButtons : []" @paste="onPaste" @focus="editorFocused()" />
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 
-defineProps<{
+const props = defineProps<{
+  showToolbar: boolean
   placeholder: string
   minHeight: string
+  focusEditor: boolean;
 }>()
 
-const editorRef = ref();
+const emit = defineEmits(["manuallyFocused"])
+
+const editorRef = ref<HTMLElement | null>(null);
 
 const commentText = ref("");
-const modelText = defineModel();
+
+const modelText = defineModel<string>();
+
+const toolbarButtons = [
+  ["bold", "italic", "strike", "underline"],
+  ["undo", "redo"]
+];
+
+onMounted(() => {
+  processFocus();
+});
+
+watch(() => props.focusEditor, () => {
+  if (props.focusEditor) {
+    processFocus();
+  }
+})
 
 watch(commentText, () => {
   modelText.value = commentText.value;
 })
+
+function editorFocused() {
+  emit("manuallyFocused");
+}
+
+function processFocus() {
+  if (props.focusEditor == true) {
+    editorRef.value?.focus();
+  }
+}
 
 function onPaste(evt: Event) {
   // Let inputs do their thing, so we don't break pasting of links.
@@ -37,19 +65,22 @@ function onPaste(evt: Event) {
   if (evt.originalEvent && evt.originalEvent.clipboardData.getData) {
     /* @ts-expect-error Event definition is missing */
     text = evt.originalEvent.clipboardData.getData("text/plain")
-    editorRef.value.runCmd("insertText", text)
+    /* @ts-expect-error Element not properly defined */
+    editorRef.value?.runCmd("insertText", text)
   }
   /* @ts-expect-error Event definition is missing */
   else if (evt.clipboardData && evt.clipboardData.getData) {
     /* @ts-expect-error Event definition is missing */
     text = evt.clipboardData.getData("text/plain")
-    editorRef.value.runCmd("insertText", text)
+    /* @ts-expect-error Element not properly defined */
+    editorRef.value?.runCmd("insertText", text)
   }
   /* @ts-expect-error Definition is missing */
   else if (window.clipboardData && window.clipboardData.getData) {
     if (!onPasteStripFormattingIEPaste) {
       onPasteStripFormattingIEPaste = true
-      editorRef.value.runCmd("ms-pasteTextOnly", text)
+      /* @ts-expect-error Element not properly defined */
+      editorRef.value?.runCmd("ms-pasteTextOnly", text)
     }
     onPasteStripFormattingIEPaste = false
   }

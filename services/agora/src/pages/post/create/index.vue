@@ -27,7 +27,7 @@
           <div>
             <div :class="{ editorPadding: !postDraft.enablePolling }">
               <ZKEditor v-model="postDraft.postBody" placeholder="body text" min-height="5rem"
-                @update:model-value="checkWordCount()" />
+                @update:model-value="checkWordCount()" :focus-editor="false" :show-toolbar="true" />
 
               <div class="wordCountDiv">
                 <q-icon name="mdi-alert-circle" v-if="bodyWordCount > POST_BODY_LENGTH_MAX"

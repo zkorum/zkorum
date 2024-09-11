@@ -3,9 +3,9 @@
     <WidthWrapper>
       <div class="container">
         <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem"
-          @update:model-value="checkWordCount()" />
-        <!--@update:model-value="checkWordCount()" -->
-        <div class="actionBar">
+          @update:model-value="checkWordCount()" :focus-editor="showControls" @manually-focused="innerFocus = true"
+          :show-toolbar="innerFocus" />
+        <div class="actionBar" v-if="innerFocus">
           <div class="characterCountDiv">
             {{ characterCount }} / {{ MAX_COMMENT_CHARACTERS }}
           </div>
@@ -28,6 +28,12 @@ import ZKEditor from "src/components/ui-library/ZKEditor.vue";
 import { getCharacterCount } from "src/utils/component/editor";
 import { ref } from "vue";
 
+defineProps<{
+  showControls: boolean
+}>()
+
+const innerFocus = ref(false);
+
 const MAX_COMMENT_CHARACTERS = 280;
 
 const commentText = ref("");
@@ -41,6 +47,7 @@ function checkWordCount() {
 
 function cancelClicked() {
   emit("cancelClicked")
+  innerFocus.value = false;
 }
 
 function postClicked() {
