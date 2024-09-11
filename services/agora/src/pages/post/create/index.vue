@@ -10,7 +10,7 @@
 
             <div class="menuFlexGroup">
               <HelpButton />
-              <ZKButton label="Post" type="submit" :disable="exceededBodyWordCount" />
+              <ZKButton color="primary" label="Post" type="submit" :disable="exceededBodyWordCount" />
             </div>
           </div>
 
