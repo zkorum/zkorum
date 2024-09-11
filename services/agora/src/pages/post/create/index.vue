@@ -19,8 +19,10 @@
         <div class="container">
 
           <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
-            :rules="[val => val && val.length > 0]" class="titleStyle" autogrow :counter="true"
-            :maxlength="POST_TITLE_LENGTH_MAX" clearable />
+            :rules="[val => val && val.length > 0]" class="titleStyle" autogrow :maxlength="POST_TITLE_LENGTH_MAX"
+            clearable />
+
+          <div class="wordCountDiv">{{ postDraft.postTitle.length }} / {{ POST_TITLE_LENGTH_MAX }}</div>
 
           <div>
             <div :class="{ editorPadding: !postDraft.enablePolling }">
@@ -106,6 +108,7 @@ import ZKEditor from "src/components/ui-library/ZKEditor.vue";
 import { useNewPostDraftsStore } from "src/stores/newPostDrafts";
 import { useViewPorts } from "src/utils/html/viewPort";
 import { usePostStore } from "src/stores/post";
+import { getCharacterCount } from "src/utils/component/editor";
 
 const POST_BODY_LENGTH_MAX = 260;
 const POST_TITLE_LENGTH_MAX = 130;
@@ -151,17 +154,14 @@ onUnmounted(() => {
 })
 
 function checkWordCount() {
-  const div = document.createElement("div");
-  div.innerHTML = postDraft.value.postBody;
-  const text = div.innerText || "";
-  bodyWordCount.value = text.length;
+
+  bodyWordCount.value = getCharacterCount(postDraft.value.postBody);
 
   if (bodyWordCount.value > POST_BODY_LENGTH_MAX) {
     exceededBodyWordCount.value = true;
   } else {
     exceededBodyWordCount.value = false;
   }
-
 }
 
 async function togglePolling() {

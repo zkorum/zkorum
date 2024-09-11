@@ -2,11 +2,12 @@
   <div>
     <WidthWrapper>
       <div class="container">
-        <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem" />
+        <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem"
+          @update:model-value="checkWordCount()" />
         <!--@update:model-value="checkWordCount()" -->
         <div class="actionBar">
           <div class="characterCountDiv">
-            {{ commentText.length }} / {{ MAX_COMMENT_CHARACTERS }}
+            {{ characterCount }} / {{ MAX_COMMENT_CHARACTERS }}
           </div>
 
           <div class="actionButtonCluster">
@@ -24,13 +25,19 @@
 import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKEditor from "src/components/ui-library/ZKEditor.vue";
+import { getCharacterCount } from "src/utils/component/editor";
 import { ref } from "vue";
 
 const MAX_COMMENT_CHARACTERS = 280;
 
 const commentText = ref("");
+const characterCount = ref(0);
 
 const emit = defineEmits(["cancelClicked", "postClicked"]);
+
+function checkWordCount() {
+  characterCount.value = getCharacterCount(commentText.value);
+}
 
 function cancelClicked() {
   emit("cancelClicked")
