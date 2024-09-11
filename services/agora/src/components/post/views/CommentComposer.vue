@@ -4,9 +4,16 @@
       <div class="container">
         <ZKEditor v-model="commentText" />
         <!--@update:model-value="checkWordCount()" -->
-        <div class="postButton">
-          <ZKButton label="Cancel" color="secondary" @click="cancelClicked()" />
-          <ZKButton label="Post" color="primary" @click="postClicked()" />
+        <div class="actionBar">
+          <div class="characterCountDiv">
+            {{ commentText.length }} / {{ MAX_COMMENT_CHARACTERS }}
+          </div>
+
+          <div class="actionButtonCluster">
+            <ZKButton label="Cancel" color="secondary" @click="cancelClicked()" />
+            <ZKButton label="Post" color="primary" @click="postClicked()" />
+          </div>
+
         </div>
       </div>
     </WidthWrapper>
@@ -18,6 +25,8 @@ import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKEditor from "src/components/ui-library/ZKEditor.vue";
 import { ref } from "vue";
+
+const MAX_COMMENT_CHARACTERS = 280;
 
 const commentText = ref("");
 
@@ -40,11 +49,21 @@ function postClicked() {
   border-radius: 5px;
 }
 
-.postButton {
+.actionBar {
   display: flex;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  justify-content: right;
+  padding: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
+  color: $color-text-weak;
+}
+
+.actionButtonCluster {
+  display: flex;
+  gap: 1rem;
+}
+
+.characterCountDiv {
+  font-size: 0.9rem;
 }
 </style>
