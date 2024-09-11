@@ -2,7 +2,7 @@
   <div>
     <WidthWrapper>
       <div class="container">
-        <ZKEditor v-model="commentText" />
+        <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem" />
         <!--@update:model-value="checkWordCount()" -->
         <div class="actionBar">
           <div class="characterCountDiv">

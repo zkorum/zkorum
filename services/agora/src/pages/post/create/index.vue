@@ -19,16 +19,15 @@
         <div class="container">
 
           <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
-            :rules="[val => val && val.length > 0]" class="titleStyle" autogrow
-            :counter="postDraft.postTitle.length > POST_TITLE_LENGTH_WARNING" :maxlength="POST_TITLE_LENGTH_MAX"
-            clearable />
+            :rules="[val => val && val.length > 0]" class="titleStyle" autogrow :counter="true"
+            :maxlength="POST_TITLE_LENGTH_MAX" clearable />
 
           <div>
             <div :class="{ editorPadding: !postDraft.enablePolling }">
-              <q-editor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" flat
+              <ZKEditor v-model="postDraft.postBody" placeholder="body text" min-height="5rem"
                 @update:model-value="checkWordCount()" />
 
-              <div class="wordCountDiv" v-if="bodyWordCount > POST_BODY_LENGTH_WARNING">
+              <div class="wordCountDiv">
                 <q-icon name="mdi-alert-circle" v-if="bodyWordCount > POST_BODY_LENGTH_MAX"
                   class="bodySizeWarningIcon" />
                 <span :class="{ wordCountWarning: bodyWordCount > POST_BODY_LENGTH_MAX }">{{
@@ -103,14 +102,13 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import TopMenuWrapper from "src/components/navigation/TopMenuWrapper.vue";
 import HelpButton from "src/components/navigation/buttons/HelpButton.vue";
+import ZKEditor from "src/components/ui-library/ZKEditor.vue";
 import { useNewPostDraftsStore } from "src/stores/newPostDrafts";
 import { useViewPorts } from "src/utils/html/viewPort";
 import { usePostStore } from "src/stores/post";
 
 const POST_BODY_LENGTH_MAX = 260;
-const POST_BODY_LENGTH_WARNING = 200;
 const POST_TITLE_LENGTH_MAX = 130;
-const POST_TITLE_LENGTH_WARNING = 100;
 const POLL_OPTION_LENGTH_MAX = 100;
 const bodyWordCount = ref(0);
 const exceededBodyWordCount = ref(false);
@@ -224,7 +222,7 @@ onBeforeRouteLeave((to) => {
 }
 
 .titleStyle {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
 }
 
@@ -283,6 +281,9 @@ onBeforeRouteLeave((to) => {
   display: flex;
   justify-content: right;
   align-items: center;
+  color: $color-text-weak;
+  font-size: 0.8rem;
+  font-weight: bold;
 }
 
 .wordCountWarning {

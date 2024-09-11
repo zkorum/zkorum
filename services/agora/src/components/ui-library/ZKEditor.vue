@@ -1,7 +1,7 @@
 <template>
   <div>
     <form autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
-      <q-editor v-model="commentText" placeholder="Add a comment" min-height="2rem" flat ref="editorRef" :toolbar="[
+      <q-editor v-model="commentText" :placeholder="placeholder" :min-height="minHeight" flat ref="editorRef" :toolbar="[
         ['bold', 'italic', 'strike', 'underline'],
         ['undo', 'redo']
       ]" @paste="onPaste" />
@@ -11,6 +11,11 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
+
+defineProps<{
+  placeholder: string
+  minHeight: string
+}>()
 
 const editorRef = ref();
 
