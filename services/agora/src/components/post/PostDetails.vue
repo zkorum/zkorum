@@ -126,7 +126,13 @@ function replyButtonClicked() {
 */
 
 function clickedCommentButton() {
-  showCommentDialog.value = !showCommentDialog.value;
+  if (route.name != "single-post") {
+    router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "" } })
+  } else {
+    if (!props.compactMode) {
+      showCommentDialog.value = !showCommentDialog.value;
+    }
+  }
 }
 
 function clickedPostDetailsButton() {
@@ -138,9 +144,6 @@ function clickedPostDetailsButton() {
     } else {
       router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "" } })
     }
-    // showCommentSection.value = !showCommentSection.value;
-    //console.log("!")
-    //route.params.displayMode = ""
   }
 }
 
