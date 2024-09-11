@@ -128,6 +128,8 @@ const { postDraft, isPostEdited } = useNewPostDraftsStore();
 
 let grantedRouteLeave = false;
 
+const { submitNewPost } = usePostStore();
+
 let savedToRoute: RouteLocationNormalized = {
   matched: [],
   fullPath: "",
@@ -185,12 +187,12 @@ function addPollOption() {
 function removePollOption(index: number) {
   postDraft.value.pollingOptionList.splice(index, 1);
 }
-const { submitNewPost } = usePostStore();
+
 function onSubmit() {
   grantedRouteLeave = true;
 
   const slugId = submitNewPost(postDraft.value.postTitle, postDraft.value.postBody);
-  router.push({ name: "single-post", params: { postSlugId: slugId, displayMode: "comments" } })
+  router.push({ name: "single-post", params: { postSlugId: slugId } })
 }
 
 function leaveRoute() {

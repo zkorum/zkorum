@@ -61,7 +61,7 @@ const routes: RouteRecordRaw[] = [
         props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
-            path: "post/:postSlugId/:displayMode?",
+            path: "post/:postSlugId",
             component: () => import("pages/post/[postSlugId].vue"),
             name: "single-post",
             props: true

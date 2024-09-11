@@ -5,8 +5,7 @@
         <div class="postListFlex">
           <div v-for="(postData, index) in compactPostDataList" :key="index" class="postPadding">
             <div>
-              <RouterLink
-                :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId, displayMode: 'ranking' } }">
+              <RouterLink :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId } }">
                 <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
               </RouterLink>
             </div>

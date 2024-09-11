@@ -29,12 +29,9 @@
             <ZKButton outline text-color="secondary" :label="extendedPostData.metadata.commentCount.toString()"
               icon="mdi-comment-text" @click.stop.prevent="clickedCommentButton()" />
 
-            <ZKButton :outline="!showCommentSection" :color="showCommentSection ? 'secondary' : ''"
-              :text-color="showCommentSection ? '' : 'secondary'" icon="mdi-post"
-              @click.stop.prevent="clickedPostDetailsButton()" v-if="!compactMode" />
-
-            <ZKButton :outline="true" :color="'secondary'" :text-color="'secondary'" icon="mdi-post"
-              @click.stop.prevent="clickedPostDetailsButton()" v-if="compactMode" />
+            <ZKButton outline text-color="secondary" icon="mdi-swap-horizontal"
+              :label="showRankingMode ? 'Comments' : 'Ranking'" @click.stop.prevent="clickedPostDetailsButton()"
+              v-if="!props.compactMode" />
 
           </div>
 
@@ -45,9 +42,9 @@
         </div>
       </div>
 
-      <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="!showCommentSection && !compactMode" />
+      <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="showRankingMode && !compactMode" />
 
-      <div v-if="!compactMode && showCommentSection">
+      <div v-if="!compactMode && !showRankingMode">
         <div v-if="commentList.length > 0">
           <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
             :comment-ranking="extendedPostData.userInteraction.commentRanking" />
@@ -98,8 +95,9 @@ import { useRoute, useRouter } from "vue-router";
 const props = defineProps<{
   extendedPostData: DummyPostDataFormat,
   compactMode: boolean,
-  showCommentSection: boolean
 }>();
+
+const showRankingMode = ref(true);
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
@@ -127,7 +125,10 @@ function replyButtonClicked() {
 
 function clickedCommentButton() {
   if (route.name != "single-post") {
-    router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "" } })
+    router.push({
+      name: "single-post",
+      params: { postSlugId: props.extendedPostData.metadata.slugId }
+    })
   } else {
     if (!props.compactMode) {
       showCommentDialog.value = !showCommentDialog.value;
@@ -136,15 +137,7 @@ function clickedCommentButton() {
 }
 
 function clickedPostDetailsButton() {
-  if (route.name != "single-post") {
-    router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "" } })
-  } else {
-    if (props.showCommentSection) {
-      router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "ranking" } })
-    } else {
-      router.push({ name: "single-post", params: { postSlugId: props.extendedPostData.metadata.slugId, displayMode: "" } })
-    }
-  }
+  showRankingMode.value = !showRankingMode.value;
 }
 
 function shareClicked() {
