@@ -132,11 +132,13 @@ watch(viewMode, () => {
   } else {
     showRankingMode.value = false;
   }
+  window.scrollTo(0, 0);
 })
 
 function switchToCommentView() {
   showRankingMode.value = false;
   viewMode.value = "comments";
+  window.scrollTo(0, 0);
 }
 
 function postedCommentFromComposor() {
