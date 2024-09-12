@@ -30,9 +30,11 @@
               :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment-text"
               @click.stop.prevent="clickedCommentButton()" />
 
-            <ZKButton outline text-color="secondary" icon="mdi-swap-horizontal"
-              :label="showRankingMode ? 'Comments' : 'Ranking'" @click.stop.prevent="clickedPostDetailsButton()"
-              v-if="!props.compactMode" />
+            <q-btn-toggle v-model="viewMode" no-caps rounded unelevated toggle-color="primary" color="teal-1"
+              text-color="primary" :options="[
+                { label: 'Ranking', value: 'ranking' },
+                { label: 'Comments', value: 'comments' }
+              ]" v-if="!props.compactMode" />
 
           </div>
 
@@ -90,7 +92,7 @@ import CommentRanking from "./views/CommentRanking.vue";
 import FloatingBottomContainer from "../navigation/FloatingBottomContainer.vue";
 import CommentComposer from "./views/CommentComposer.vue";
 import { DummyPostDataFormat } from "src/stores/post";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useRoute, useRouter } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
@@ -101,6 +103,8 @@ const props = defineProps<{
 }>();
 
 const showRankingMode = ref(true);
+
+const viewMode = ref("ranking");
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
@@ -122,6 +126,14 @@ if (action.value == "comment") {
   focusCommentElement.value = true;
 }
 
+watch(viewMode, () => {
+  if (viewMode.value == "ranking") {
+    showRankingMode.value = true;
+  } else {
+    showRankingMode.value = false;
+  }
+})
+
 function cancelledCommentComposor() {
   focusCommentElement.value = false;
 }
@@ -136,10 +148,6 @@ function clickedCommentButton() {
   } else {
     focusCommentElement.value = !focusCommentElement.value;
   }
-}
-
-function clickedPostDetailsButton() {
-  showRankingMode.value = !showRankingMode.value;
 }
 
 function shareClicked() {
