@@ -3,12 +3,16 @@
     <div class="container">
 
       <div class="optionBar">
-        <div class="sortingOption">
-          <ZKButton icon="mdi-sort" @click="clickedCommentSortButton()" />
-          <div :style="{ fontSize: '0.7rem' }">
-            {{ commentSortLabel }}
+
+        <ZKButton @click="clickedCommentSortButton()">
+          <div class="sortingOption">
+            <q-icon name="mdi-sort" />
+            <div :style="{ fontSize: '0.7rem' }">
+              {{ commentSortLabel }}
+            </div>
           </div>
-        </div>
+        </ZKButton>
+
       </div>
 
       <div v-for="(commentItem, index) in commentList" v-bind:key="index">
