@@ -1,6 +1,16 @@
 <template>
   <div>
     <div class="container">
+
+      <div class="optionBar">
+        <div class="sortingOption">
+          <ZKButton icon="mdi-sort" @click="clickedCommentSortButton()" />
+          <div :style="{ fontSize: '0.7rem' }">
+            {{ commentSortLabel }}
+          </div>
+        </div>
+      </div>
+
       <div v-for="(commentItem, index) in commentList" v-bind:key="index">
         <div>
           <div class="contentLayout">
@@ -42,6 +52,12 @@ import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingAc
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import CommunityIcon from "src/components/community/CommunityIcon.vue";
 import { getTimeFromNow } from "src/utils/common";
+import { useBottomSheet } from "src/utils/ui/bottomSheet";
+import { useStorage } from "@vueuse/core";
+import { useCommentOptions } from "src/utils/component/comments";
+import { onMounted, ref, watch } from "vue";
+
+const bottomSheet = useBottomSheet();
 
 const props = defineProps<{
   postSlugId: string,
@@ -49,7 +65,29 @@ const props = defineProps<{
   commentRanking: DummyCommentRankingFormat
 }>()
 
+const commentSortPreference = useStorage("comment-sort-preference-id", "new");
+
+const { mapCommentSortOption } = useCommentOptions();
+
 const { updateCommentRanking, getCommunityImageFromId } = usePostStore();
+
+const commentSortLabel = ref("");
+
+onMounted(() => {
+  updateSortLabel();
+})
+
+watch(commentSortPreference, () => {
+  updateSortLabel();
+})
+
+function updateSortLabel() {
+  commentSortLabel.value = mapCommentSortOption(commentSortPreference.value);
+}
+
+function clickedCommentSortButton() {
+  bottomSheet.showCommentSortSelector(commentSortPreference);
+}
 
 function getCommentItemRankStatus(commentIndex: number) {
   const action = props.commentRanking.rankedCommentList.get(commentIndex);
@@ -114,5 +152,18 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   align-items: center;
   color: #737373;
   font-size: 0.8rem;
+}
+
+.optionBar {
+  display: flex;
+  align-items: center;
+  justify-content: right;
+}
+
+.sortingOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: right;
 }
 </style>
