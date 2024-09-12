@@ -5,16 +5,17 @@
         <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem"
           @update:model-value="checkWordCount()" :focus-editor="showControls" @manually-focused="innerFocus = true"
           :show-toolbar="innerFocus" :key="resetKey" />
-        <div class="actionBar" v-if="innerFocus">
-          <div class="characterCountDiv">
-            {{ characterCount }} / {{ MAX_COMMENT_CHARACTERS }}
+        <div class="actionButtonCluster" v-if="innerFocus">
+          <div v-if="characterProgress > 100">
+            {{ MAX_COMMENT_CHARACTERS - characterCount }}
           </div>
 
-          <div class="actionButtonCluster">
-            <ZKButton label="Cancel" color="secondary" @click="cancelClicked()" />
-            <ZKButton label="Post" color="primary" @click="postClicked()" />
-          </div>
+          <q-circular-progress :value="characterProgress" size="1.5rem" :thickness="0.3" />
 
+          <q-separator vertical inset />
+
+          <ZKButton label="Cancel" color="secondary" @click="cancelClicked()" />
+          <ZKButton label="Post" color="primary" @click="postClicked()" :disable="characterProgress > 100" />
         </div>
       </div>
     </WidthWrapper>
@@ -26,7 +27,7 @@ import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKEditor from "src/components/ui-library/ZKEditor.vue";
 import { getCharacterCount } from "src/utils/component/editor";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
   showControls: boolean
@@ -35,6 +36,10 @@ const props = defineProps<{
 const innerFocus = ref(false);
 
 const MAX_COMMENT_CHARACTERS = 280;
+
+const characterProgress = computed(() => {
+  return characterCount.value / MAX_COMMENT_CHARACTERS * 100;
+})
 
 const commentText = ref("");
 const characterCount = ref(0);
@@ -85,10 +90,9 @@ function postClicked() {
 
 .actionButtonCluster {
   display: flex;
+  align-items: center;
+  justify-content: right;
   gap: 1rem;
-}
-
-.characterCountDiv {
-  font-size: 0.9rem;
+  padding: 1rem;
 }
 </style>
