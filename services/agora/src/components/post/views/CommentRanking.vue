@@ -35,9 +35,15 @@
                     <div class="rankingButtonCluster">
                       <ZKButton flat text-color="secondary" icon="mdi-thumb-down" size="1.3rem"
                         @click="rankComment('dislike', false)" />
-                      <ZKButton flat text-color="secondary" label="Pass" @click="rankComment('pass', false)" />
+                      <ZKButton flat text-color="secondary" label="Pass" size="1rem"
+                        @click="rankComment('pass', false)" />
                       <ZKButton flat text-color="secondary" icon="mdi-thumb-up" size="1.3rem"
                         @click="rankComment('like', false)" />
+                    </div>
+
+                    <div class="reportButton">
+                      <ZKButton outline text-color="secondary" label="Report" icon="mdi-alert-outline" size="0.8rem"
+                        @click="reportButtonClicked()" />
                     </div>
                   </div>
                 </swiper-slide>
@@ -86,6 +92,7 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { onMounted, ref, watch } from "vue";
 import { SwiperContainer } from "swiper/element";
 import { useElementSize } from "@vueuse/core";
+import { useBottomSheet } from "src/utils/ui/bottomSheet";
 
 const props = defineProps<{
   postSlugId: string
@@ -94,6 +101,8 @@ const props = defineProps<{
 const emit = defineEmits(["exitRanking"]);
 
 const { getUnrankedComments, updateCommentRanking } = usePostStore();
+
+const { showCommentRankingReportSelector } = useBottomSheet();
 
 const cardElement = ref();
 
@@ -125,6 +134,8 @@ loadNextComment();
 
 let swiperEl: SwiperContainer | null = null;
 
+const selectedCommentReportId = ref("");
+
 onMounted(() => {
 
   updatePaddingSize();
@@ -146,6 +157,18 @@ onMounted(() => {
 watch(elementSize.height, () => {
   updatePaddingSize();
 })
+
+watch(selectedCommentReportId, () => {
+  // Send report
+  if (selectedCommentReportId.value != "") {
+    rankComment("pass", false);
+    selectedCommentReportId.value = "";
+  }
+})
+
+function reportButtonClicked() {
+  showCommentRankingReportSelector(selectedCommentReportId)
+}
 
 function clickedOpenPostButton() {
   emit("exitRanking");
@@ -264,5 +287,10 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   align-items: center;
   justify-content: center;
   color: $secondary;
+}
+
+.reportButton {
+  display: flex;
+  justify-content: right;
 }
 </style>

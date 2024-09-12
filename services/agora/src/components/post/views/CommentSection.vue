@@ -5,7 +5,7 @@
       <div class="optionBar">
 
         <ZKButton @click="clickedCommentSortButton()">
-          <div class="sortingOption">
+          <div class=" sortingOption">
             <q-icon name="mdi-sort" />
             <div :style="{ fontSize: '0.7rem' }">
               {{ commentSortLabel }}

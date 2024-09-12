@@ -33,6 +33,59 @@ export const useBottomSheet = () => {
     })
   }
 
+  function showCommentRankingReportSelector(reportReasonId: Ref<string>) {
+
+    const actionList = [];
+
+    const icon = "mdi-circle-small";
+
+    actionList.push(
+      {
+        label: "Spam",
+        icon: icon,
+        id: "spam"
+      },
+      {
+        label: "Harassment",
+        icon: icon,
+        id: "harassment"
+      },
+      {
+        label: "Hate",
+        icon: icon,
+        id: "hate"
+      },
+      {
+        label: "Sharing personal information",
+        icon: icon,
+        id: "personal-information"
+      },
+      {
+        label: "Threatening violence",
+        icon: icon,
+        id: "violence"
+      },
+      {
+        label: "Sexualization",
+        icon: icon,
+        id: "sexualization"
+      }
+    );
+
+    quasar.bottomSheet({
+      message: "Why do you think this comment is not appropriate for ranking?",
+      grid: false,
+      actions: actionList
+    }).onOk(action => {
+      console.log("Selected action: " + action.id);
+      reportReasonId.value = action.id;
+    }).onCancel(() => {
+      console.log("Dismissed");
+    }).onDismiss(() => {
+      // console.log('I am triggered on both OK and Cancel')
+    })
+  }
+
   function showCommentSortSelector(currentPreferenceId: Ref<string>) {
 
     const actionList = useCommentOptions().getCommentSortOptions();
@@ -72,5 +125,5 @@ export const useBottomSheet = () => {
     });
   }
 
-  return { showPostOptionSelector, showCommentSortSelector };
+  return { showPostOptionSelector, showCommentSortSelector, showCommentRankingReportSelector };
 }
