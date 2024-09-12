@@ -4,7 +4,7 @@
       <div class="container">
         <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem"
           @update:model-value="checkWordCount()" :focus-editor="showControls" @manually-focused="innerFocus = true"
-          :show-toolbar="innerFocus" />
+          :show-toolbar="innerFocus" :key="resetKey" />
         <div class="actionBar" v-if="innerFocus">
           <div class="characterCountDiv">
             {{ characterCount }} / {{ MAX_COMMENT_CHARACTERS }}
@@ -26,9 +26,9 @@ import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKEditor from "src/components/ui-library/ZKEditor.vue";
 import { getCharacterCount } from "src/utils/component/editor";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
-defineProps<{
+const props = defineProps<{
   showControls: boolean
 }>()
 
@@ -38,8 +38,17 @@ const MAX_COMMENT_CHARACTERS = 280;
 
 const commentText = ref("");
 const characterCount = ref(0);
+const resetKey = ref(0);
 
 const emit = defineEmits(["cancelClicked", "postClicked"]);
+
+watch(() => props.showControls, () => {
+  if (props.showControls == false) {
+    innerFocus.value = false;
+  } else {
+    innerFocus.value = true;
+  }
+})
 
 function checkWordCount() {
   characterCount.value = getCharacterCount(commentText.value);
@@ -48,6 +57,8 @@ function checkWordCount() {
 function cancelClicked() {
   emit("cancelClicked")
   innerFocus.value = false;
+  resetKey.value = resetKey.value + 1;
+  characterCount.value = 0;
 }
 
 function postClicked() {
@@ -58,7 +69,7 @@ function postClicked() {
 
 <style scoped lang="scss">
 .container {
-  background-color: #e5e7eb;
+  background-color: #e2e8f0;
   padding: 0.5rem;
   border-radius: 5px;
 }

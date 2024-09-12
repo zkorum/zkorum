@@ -20,14 +20,15 @@
         <div class="innerContainer" v-if="extendedPostData.payload.poll.hasPoll">
           <PollWrapper :user-vote="extendedPostData.userInteraction.pollVoting"
             :poll-options="extendedPostData.payload.poll.options" />
-          <!-- TODO: pollResponse -->
         </div>
 
         <div class="bottomButtons">
 
           <div class="leftButtonCluster">
-            <ZKButton outline text-color="secondary" :label="extendedPostData.metadata.commentCount.toString()"
-              icon="mdi-comment-text" @click.stop.prevent="clickedCommentButton()" />
+            <ZKButton :outline="focusCommentElement ? false : true" color="primary"
+              :text-color="focusCommentElement ? 'white' : 'secondary'"
+              :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment-text"
+              @click.stop.prevent="clickedCommentButton()" />
 
             <ZKButton outline text-color="secondary" icon="mdi-swap-horizontal"
               :label="showRankingMode ? 'Comments' : 'Ranking'" @click.stop.prevent="clickedPostDetailsButton()"
@@ -57,7 +58,7 @@
     </div>
 
     <FloatingBottomContainer v-if="!compactMode">
-      <CommentComposer :show-controls="focusCommentElement" />
+      <CommentComposer :show-controls="focusCommentElement" @cancel-clicked="cancelledCommentComposor()" />
     </FloatingBottomContainer>
 
     <q-dialog v-model="showFallbackShareDialog">
@@ -120,6 +121,10 @@ if (action.value == "comment") {
   focusCommentElement.value = true;
 }
 
+function cancelledCommentComposor() {
+  focusCommentElement.value = false;
+}
+
 function clickedCommentButton() {
   if (route.name != "single-post") {
     router.push({
@@ -128,7 +133,7 @@ function clickedCommentButton() {
       query: { action: "comment" }
     })
   } else {
-    focusCommentElement.value = true;
+    focusCommentElement.value = !focusCommentElement.value;
   }
 }
 

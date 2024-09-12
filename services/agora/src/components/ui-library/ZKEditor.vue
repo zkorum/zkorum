@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 
-const props = defineProps<{
+defineProps<{
   showToolbar: boolean
   placeholder: string
   minHeight: string
@@ -31,14 +31,16 @@ const toolbarButtons = [
 ];
 
 onMounted(() => {
-  processFocus();
+  // processFocus();
 });
 
+/*
 watch(() => props.focusEditor, () => {
   if (props.focusEditor) {
     processFocus();
   }
 })
+  */
 
 watch(commentText, () => {
   modelText.value = commentText.value;
@@ -48,11 +50,13 @@ function editorFocused() {
   emit("manuallyFocused");
 }
 
+/*
 function processFocus() {
   if (props.focusEditor == true) {
     editorRef.value?.focus();
   }
 }
+*/
 
 function onPaste(evt: Event) {
   // Let inputs do their thing, so we don't break pasting of links.
