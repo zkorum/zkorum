@@ -85,7 +85,8 @@
               </div>
 
               <div>
-                You have ranked {{ unrankedCommentList.length }} comments!
+                You have ranked {{ postItem.userInteraction.commentRanking.rankedCommentList.size }}
+                comment<span v-if="postItem.userInteraction.commentRanking.rankedCommentList.size > 1">s</span>!
               </div>
 
               <div class="finishedActionButtons">
