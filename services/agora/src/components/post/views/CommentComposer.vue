@@ -73,6 +73,9 @@ function cancelClicked() {
 
 function postClicked() {
   emit("postClicked");
+  innerFocus.value = false;
+  resetKey.value = resetKey.value + 1;
+  characterCount.value = 0;
 }
 
 </script>

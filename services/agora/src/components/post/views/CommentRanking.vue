@@ -66,9 +66,8 @@
               All comments have been ranked!
             </div>
 
-            <RouterLink :to="{ name: 'single-post', params: { postSlugId: postItem.metadata.slugId } }">
-              <ZKButton outline text-color="secondary" label="Open Post" icon="mdi-arrow-right-box" />
-            </RouterLink>
+            <ZKButton outline text-color="secondary" label="Open Post" icon="mdi-arrow-right-box"
+              @click="clickedOpenPostButton()" />
 
           </div>
         </ZKCard>
@@ -92,14 +91,15 @@ const props = defineProps<{
   postSlugId: string
 }>()
 
-const { getUnrankedComments, getPostBySlugId, updateCommentRanking } = usePostStore();
+const emit = defineEmits(["exitRanking"]);
+
+const { getUnrankedComments, updateCommentRanking } = usePostStore();
 
 const cardElement = ref();
 
 const el = ref(null)
 const elementSize = useElementSize(el)
 
-const postItem = getPostBySlugId(props.postSlugId);
 const unrankedCommentList = getUnrankedComments(props.postSlugId)
 
 let currentRankIndex = ref(0);
@@ -146,6 +146,10 @@ onMounted(() => {
 watch(elementSize.height, () => {
   updatePaddingSize();
 })
+
+function clickedOpenPostButton() {
+  emit("exitRanking");
+}
 
 function updatePaddingSize() {
   const newPadding = elementSize.height.value / 2 - 60;

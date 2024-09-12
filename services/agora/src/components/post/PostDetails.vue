@@ -45,7 +45,8 @@
         </div>
       </div>
 
-      <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="showRankingMode && !compactMode" />
+      <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="showRankingMode && !compactMode"
+        @exit-ranking="switchToCommentView()" />
 
       <div v-if="!compactMode && !showRankingMode">
         <div v-if="commentList.length > 0">
@@ -61,7 +62,7 @@
 
     <FloatingBottomContainer v-if="!compactMode">
       <CommentComposer :show-controls="focusCommentElement" @cancel-clicked="cancelledCommentComposor()"
-        @editor-focused="focusCommentElement = true" />
+        @post-clicked="postedCommentFromComposor()" @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
 
     <q-dialog v-model="showFallbackShareDialog">
@@ -103,7 +104,6 @@ const props = defineProps<{
 }>();
 
 const showRankingMode = ref(true);
-
 const viewMode = ref("ranking");
 
 const commentList = ref(props.extendedPostData.payload.comments);
@@ -133,6 +133,16 @@ watch(viewMode, () => {
     showRankingMode.value = false;
   }
 })
+
+function switchToCommentView() {
+  showRankingMode.value = false;
+  viewMode.value = "comments";
+}
+
+function postedCommentFromComposor() {
+  focusCommentElement.value = false;
+  switchToCommentView();
+}
 
 function cancelledCommentComposor() {
   focusCommentElement.value = false;
