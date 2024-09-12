@@ -62,18 +62,41 @@
 
           </div>
 
-          <div class="finishedMessage" v-if="finishedRanking">
+          <div v-if="finishedRanking">
 
-            <div class="finishedIcon">
-              <q-icon name="mdi-check" size="3rem" />
+            <div class="finishedMessage" v-if="postItem.payload.comments.length == 0">
+              <div class="finishedIcon">
+                <q-icon name="mdi-vote" size="3rem" />
+              </div>
+
+              <div>
+                There are no comments available to rank yet!
+              </div>
+
+              <div>
+                <ZKButton outline text-color="primary" icon="comment" size="1rem" label="Add a comment"
+                  @click="clickedCommentButton()" />
+              </div>
             </div>
 
-            <div>
-              All comments have been ranked!
+            <div class="finishedMessage" v-if="postItem.userInteraction.commentRanking.assignedRankingItems.length > 0">
+              <div class="finishedIcon">
+                <q-icon name="mdi-check" size="3rem" />
+              </div>
+
+              <div>
+                You have ranked {{ unrankedCommentList.length }} comments!
+              </div>
+
+              <div class="finishedActionButtons">
+                <ZKButton outline text-color="secondary" label="Rank More" icon="mdi-vote"
+                  @click="clickedRankMoreButton()" />
+
+                <ZKButton outline text-color="secondary" label="See Results" icon="mdi-chart-bar"
+                  @click="clickedSeeResultsButton()" />
+              </div>
             </div>
 
-            <ZKButton outline text-color="secondary" label="Open Post" icon="mdi-arrow-right-box"
-              @click="clickedOpenPostButton()" />
 
           </div>
         </ZKCard>
@@ -98,9 +121,9 @@ const props = defineProps<{
   postSlugId: string
 }>()
 
-const emit = defineEmits(["exitRanking"]);
+const emit = defineEmits(["clickedCommentButton"])
 
-const { getUnrankedComments, updateCommentRanking } = usePostStore();
+const { getUnrankedComments, updateCommentRanking, getPostBySlugId } = usePostStore();
 
 const { showCommentRankingReportSelector } = useBottomSheet();
 
@@ -110,6 +133,8 @@ const el = ref(null)
 const elementSize = useElementSize(el)
 
 const unrankedCommentList = getUnrankedComments(props.postSlugId)
+
+const postItem = getPostBySlugId(props.postSlugId);
 
 let currentRankIndex = ref(0);
 
@@ -166,12 +191,18 @@ watch(selectedCommentReportId, () => {
   }
 })
 
+function clickedCommentButton() {
+  emit("clickedCommentButton")
+}
+
 function reportButtonClicked() {
   showCommentRankingReportSelector(selectedCommentReportId)
 }
 
-function clickedOpenPostButton() {
-  emit("exitRanking");
+function clickedRankMoreButton() {
+}
+
+function clickedSeeResultsButton() {
 }
 
 function updatePaddingSize() {
@@ -292,5 +323,10 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 .reportButton {
   display: flex;
   justify-content: right;
+}
+
+.finishedActionButtons {
+  display: flex;
+  gap: 2rem;
 }
 </style>

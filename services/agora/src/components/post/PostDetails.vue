@@ -46,7 +46,7 @@
       </div>
 
       <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="showRankingMode && !compactMode"
-        @exit-ranking="switchToCommentView()" />
+        @clicked-comment-button="clickedCommentButton()" />
 
       <div v-if="!compactMode && !showRankingMode">
         <div v-if="commentList.length > 0">
