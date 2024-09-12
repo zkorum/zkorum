@@ -4,8 +4,8 @@
       <div class="container">
         <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem"
           @update:model-value="checkWordCount()" :focus-editor="showControls" @manually-focused="editorFocused()"
-          :show-toolbar="innerFocus" :key="resetKey" />
-        <div class="actionButtonCluster" v-if="innerFocus">
+          :show-toolbar="innerFocus || showControls" :key="resetKey" />
+        <div class="actionButtonCluster" v-if="innerFocus || showControls">
           <div v-if="characterProgress > 100">
             {{ MAX_COMMENT_CHARACTERS - characterCount }}
           </div>
