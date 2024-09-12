@@ -3,7 +3,7 @@
     <WidthWrapper>
       <div class="container">
         <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem"
-          @update:model-value="checkWordCount()" :focus-editor="showControls" @manually-focused="innerFocus = true"
+          @update:model-value="checkWordCount()" :focus-editor="showControls" @manually-focused="editorFocused()"
           :show-toolbar="innerFocus" :key="resetKey" />
         <div class="actionButtonCluster" v-if="innerFocus">
           <div v-if="characterProgress > 100">
@@ -45,7 +45,7 @@ const commentText = ref("");
 const characterCount = ref(0);
 const resetKey = ref(0);
 
-const emit = defineEmits(["cancelClicked", "postClicked"]);
+const emit = defineEmits(["cancelClicked", "postClicked", "editorFocused"]);
 
 watch(() => props.showControls, () => {
   if (props.showControls == false) {
@@ -54,6 +54,11 @@ watch(() => props.showControls, () => {
     innerFocus.value = true;
   }
 })
+
+function editorFocused() {
+  innerFocus.value = true;
+  emit("editorFocused");
+}
 
 function checkWordCount() {
   characterCount.value = getCharacterCount(commentText.value);

@@ -58,7 +58,8 @@
     </div>
 
     <FloatingBottomContainer v-if="!compactMode">
-      <CommentComposer :show-controls="focusCommentElement" @cancel-clicked="cancelledCommentComposor()" />
+      <CommentComposer :show-controls="focusCommentElement" @cancel-clicked="cancelledCommentComposor()"
+        @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
 
     <q-dialog v-model="showFallbackShareDialog">
