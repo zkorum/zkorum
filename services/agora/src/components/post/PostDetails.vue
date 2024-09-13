@@ -25,13 +25,13 @@
         <div class="bottomButtons">
 
           <div class="leftButtonCluster">
-            <ZKButton :color="focusCommentElement ? 'secondary' : 'button-background-color'"
-              :text-color="focusCommentElement ? 'white' : 'secondary'"
+            <ZKButton :color="focusCommentElement ? 'color-text-weak' : 'button-background-color'"
+              :text-color="focusCommentElement ? 'white' : 'color-text-weak'"
               :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-chat-outline"
               @click.stop.prevent="clickedCommentButton()" />
 
-            <q-btn-toggle v-model="viewMode" no-caps rounded unelevated toggle-color="secondary"
-              color="button-background-color" text-color="secondary" :options="[
+            <q-btn-toggle v-model="viewMode" no-caps rounded unelevated toggle-color="color-text-weak"
+              color="button-background-color" text-color="color-text-weak" :options="[
                 { label: 'Ranking', value: 'ranking' },
                 { label: 'Comments', value: 'comments' }
               ]" v-if="!props.compactMode" />
@@ -39,7 +39,7 @@
           </div>
 
           <div>
-            <ZKButton color="button-background-color" text-color="secondary" icon="mdi-share-outline"
+            <ZKButton color="button-background-color" text-color="color-text-weak" icon="mdi-share-outline"
               @click.stop.prevent="shareClicked()" />
           </div>
 
