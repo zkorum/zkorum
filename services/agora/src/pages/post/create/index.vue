@@ -47,11 +47,11 @@
                 </div>
                 <div class="pollingFlexStyle" ref="pollRef">
                   <div v-for="index in postDraft.pollingOptionList.length" :key="index" class="pollingItem">
-                    <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index + 1)"
-                      v-model="postDraft.pollingOptionList[index]" :style="{ width: '100%' }"
+                    <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index)"
+                      v-model="postDraft.pollingOptionList[index - 1]" :style="{ width: '100%' }"
                       :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
                     <div class="deletePollOptionDiv" v-if="postDraft.pollingOptionList.length != 2">
-                      <ZKButton flat round icon="mdi-delete" @click="removePollOption(index)" text-color="primary" />
+                      <ZKButton flat round icon="mdi-delete" @click="removePollOption(index - 1)" text-color="primary" />
                     </div>
 
                   </div>
@@ -71,7 +71,7 @@
         </div>
       </q-form>
 
-      <div class="addPollBar" :class="{ lessTransparency: postDraft.enablePolling }"
+      <div class="addPollBar" :class="{ weakColor: postDraft.enablePolling }"
         :style="{ top: (visualViewPortHeight - 50) + 'px' }">
         <ZKButton unelevated rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
           color="grey-8" text-color="white" @click="togglePolling()" />
@@ -301,8 +301,8 @@ onBeforeRouteLeave((to) => {
   padding-left: 1rem;
 }
 
-.lessTransparency {
-  opacity: 0.8;
+.weakColor {
+  color: $color-text-weak;
 }
 
 .pollTopBar {
