@@ -158,7 +158,7 @@ export const usePostStore = defineStore("post", () => {
                 false,
                 [],
                 [
-                    "In my view, misinformation can result from incorrect knowledge, incomplete knowledge, ignorance or even an attempt to prank or tease. There is no real malice or gain. When people refuse to correct their information or even admit the possibility of incorrect information, they enter the realm of disinformation.",
+                    "In my view, misinformation can result from incorrect knowledge, incomplete knowledge, ignorance or even an attempt to prank or tease.<br /><br />There is no real malice or gain. When people refuse to correct their information or even admit the possibility of incorrect information, they enter the realm of disinformation.",
                     "All people are misinformed to a certain degree. No one knows everything or is correct about everything. Or more specifically, because most people get most of their information from other people and do not have first-hand knowledge.",
                     "A propaganda term used to silence opposition",
                     "Misinformation is anything that doesn’t correspond to reality. Anything that doesn’t stand up to scrutiny or critical examination.",

@@ -28,9 +28,7 @@
                   <div class="rankingDiv">
                     <div class="userComment">
                       “
-                      <span>
-                        {{ displayCommentItem.comment }}
-                      </span>
+                      <span v-html="displayCommentItem.comment"></span>
                       ”
                     </div>
 
@@ -278,6 +276,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   flex-direction: column;
   justify-content: space-around;
   gap: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .progressBar {

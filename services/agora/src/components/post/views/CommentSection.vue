@@ -27,7 +27,8 @@
             </div>
 
             <div>
-              {{ commentItem.comment }}
+              <span v-html="commentItem.comment"></span>
+
               <div class="actionButtonCluster">
                 <ZKButton flat text-color="color-text-weak" icon="mdi-dots-horizontal" size="0.8rem" />
 
