@@ -113,6 +113,11 @@
           unelevated flat rounded outline no-caps type="a" href="https://about.zkorum.com" target="_blank"
           text-color="brand-dark">{{
               $t('about') }}</q-btn>
+        <q-btn style="width: fit-content;" class="text-no-wrap text-h6 col-xs-6 col-sm-6 col-md-3 col-lg-3 col-xl-3"
+          unelevated flat rounded outline no-caps type="a"
+          href="https://www.notion.so/zkorum/Legal-notice-French-90ddbd5ebddc48de93512241a6157095" target="_blank"
+          text-color="brand-dark">{{
+              $t('legal') }}</q-btn>
       </div>
       <div class="row flex-center">
         <q-btn text-color="brand-dark" unelevated flat rounded outline no-caps type="a"

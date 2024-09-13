@@ -17,7 +17,8 @@ export default {
   yutingDescription: 'Deeply passionate about how technologies and democracy intersect, Yuting is a social entrepreneur with a multicultural and interdisciplinary background.<br /><br /> Fluent in English, Chinese, and French, she served as a Commercial Executive at Microsoft France, leading  negotiations on 7-figure contracts with corporate clients. She has a filmmaking degree from New York University Abu Dhabi and a master degree from ESSEC Business School.',
   nicolasDescription: 'Nicolas is an innately curious full-stack software engineer with ten years of experience. Strong advocate for open-source software, he is driven by the ethical use of technologies that allow humans to do more and better than in real life.<br /><br />Previously a Software Architect in the Protocol Labs Network, an ecosystem of innovative startups driving breakthroughs in computing, Nicolas developed expertise in Privacy Tech and Decentralized Web solutions.',
   featuredIn: 'Featured In',
-  about: 'Documentation'
+  about: 'Documentation',
+  legal: 'Legal notice (FR)'
 };
 
 
