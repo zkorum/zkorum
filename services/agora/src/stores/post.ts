@@ -209,7 +209,7 @@ export const usePostStore = defineStore("post", () => {
             const postItem = createSingleRealisticPost(
                 "unherd",
                 "How the AfD revolution ends - Can Germany adopt its policies?",
-                "Have the worst fears of the Berliner establishment finally come to pass? If banning the AfD isn’t a viable option, can the centre adopt some of its policies? Link in bio.",
+                "Have the worst fears of the Berliner establishment finally come to pass?<Br /><br />If banning the AfD isn’t a viable option, can the centre adopt some of its policies? Link in bio.",
                 false,
                 [],
                 [
