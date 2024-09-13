@@ -9,8 +9,7 @@
           <router-view />
         </q-page-container>
 
-        <q-footer bordered :class="{ coloredFooter: !useStylelessFooter, stylelessFooter: useStylelessFooter }"
-          v-if="enableFooter">
+        <q-footer bordered class="coloredFooter" v-if="enableFooter">
           <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
             <q-route-tab :to="{ name: 'default-home-feed' }"
               :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
@@ -37,17 +36,13 @@ const currentRouteName = route.name;
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .outerPadding {
   padding: 0.5rem;
 }
 
 .coloredFooter {
-  background-color: #fafafa;
-}
-
-.stylelessFooter {
-  background-color: #ffffff;
+  background-color: $navigation-bar-color;
 }
 
 .bottomPagePadding {

@@ -17,9 +17,9 @@ defineProps<{
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .menuStyle {
-  background-color: #fafafa;
+  background-color: $navigation-bar-color;
   height: 3.5rem;
   display: flex;
   padding-left: 1rem;

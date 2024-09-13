@@ -27,14 +27,10 @@ defineProps<{
 
 </script>
 
-<style scoped>
+<style scoped style="scss">
 .menuButtons {
   display: flex;
   gap: 0.5rem;
-}
-
-.menuStyle {
-  background-color: #fafafa;
 }
 
 .topMenu {
