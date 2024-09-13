@@ -39,7 +39,7 @@
           </div>
 
           <div>
-            <ZKButton color="teal-1" text-color="primary" icon="mdi-share-outline"
+            <ZKButton color="button-filled-background" text-color="primary" icon="mdi-share-outline"
               @click.stop.prevent="shareClicked()" />
           </div>
 
