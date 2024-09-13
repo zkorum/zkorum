@@ -18,7 +18,7 @@
       </ZKCard>
 
       <div v-for="(commentItem, index) in commentList" v-bind:key="index">
-        <ZKCard padding="0.5rem">
+        <ZKCard padding="0rem">
           <div class="contentLayout">
             <div class="metadata">
               <CommunityIcon :image-path="getCommunityImageFromId(commentItem.userCommunityId)" size="2.5rem" />
@@ -124,7 +124,7 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .contentLayout {
@@ -132,6 +132,9 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   flex-direction: column;
   justify-content: left;
   gap: 1rem;
+  padding-top: 0.8rem;
+  padding-left: 0.8rem;
+  padding-right: 0.8rem;
 }
 
 .actionButtonCluster {

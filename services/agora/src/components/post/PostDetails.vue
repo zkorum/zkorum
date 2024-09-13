@@ -12,7 +12,7 @@
           </div>
 
           <div class="bodyDiv" v-if="extendedPostData.payload.body.length > 0">
-            {{ extendedPostData.payload.body }}
+            <span v-html="extendedPostData.payload.body"></span>
           </div>
 
         </div>

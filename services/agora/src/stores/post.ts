@@ -192,7 +192,7 @@ export const usePostStore = defineStore("post", () => {
             const postItem = createSingleRealisticPost(
                 "hrw",
                 "Venezuela: Brutal crackdown on protesters",
-                "(Bogota) - Venezuelan authorities are committing widespread human rights violations against protesters, bystanders, opposition leaders, and critics following the July 28, 2024, presidential election. Link to article: https://www.hrw.org/news/2024/09/04/venezuela-brutal-crackdown-protesters-voters",
+                "(Bogota) - Venezuelan authorities are committing widespread human rights violations against protesters, bystanders, opposition leaders, and critics following the July 28, 2024, presidential election.<br /><br />Link to article:<br />https://www.hrw.org/news/2024/09/04/venezuela-brutal-crackdown-protesters-voters",
                 false,
                 [],
                 [

@@ -28,7 +28,11 @@
 
                     <div class="rankingDiv">
                       <div class="userComment">
-                        {{ displayCommentItem.comment }}
+                        “
+                        <span>
+                          {{ displayCommentItem.comment }}
+                        </span>
+                        ”
                       </div>
 
                       <div class="rankingButtonCluster">
@@ -270,6 +274,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   font-size: 1rem;
   padding-left: 1rem;
   padding-right: 1rem;
+  line-height: 1.8;
 }
 
 .rankingDiv {
