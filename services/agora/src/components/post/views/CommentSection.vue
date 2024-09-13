@@ -2,21 +2,23 @@
   <div>
     <div class="container">
 
-      <div class="optionBar">
+      <ZKCard padding="0.5rem">
+        <div class="optionBar">
 
-        <ZKButton @click="clickedCommentSortButton()">
-          <div class=" sortingOption">
-            <q-icon name="mdi-sort" />
-            <div :style="{ fontSize: '0.7rem' }">
-              {{ commentSortLabel }}
+          <ZKButton @click="clickedCommentSortButton()">
+            <div class="sortingOption">
+              <q-icon name="mdi-sort" size="1.5rem" />
+              <div class="sortLabelStyle">
+                {{ commentSortLabel }}
+              </div>
             </div>
-          </div>
-        </ZKButton>
+          </ZKButton>
 
-      </div>
+        </div>
+      </ZKCard>
 
       <div v-for="(commentItem, index) in commentList" v-bind:key="index">
-        <div>
+        <ZKCard padding="0.5rem">
           <div class="contentLayout">
             <div class="metadata">
               <CommunityIcon :image-path="getCommunityImageFromId(commentItem.userCommunityId)" size="2.5rem" />
@@ -40,11 +42,7 @@
             </div>
 
           </div>
-        </div>
-
-        <div class="separator">
-          <q-separator />
-        </div>
+        </ZKCard>
 
       </div>
     </div>
@@ -55,6 +53,7 @@
 import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import CommunityIcon from "src/components/community/CommunityIcon.vue";
+import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { getTimeFromNow } from "src/utils/common";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import { useStorage } from "@vueuse/core";
@@ -121,15 +120,11 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .container {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.separator {
-  padding-top: 0.5rem;
 }
 
 .contentLayout {
@@ -161,13 +156,17 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
 .optionBar {
   display: flex;
   align-items: center;
-  justify-content: right;
+  justify-content: left;
 }
 
 .sortingOption {
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: right;
+  gap: 0.5rem;
+}
+
+.sortLabelStyle {
+  font-size: 0.8rem;
 }
 </style>

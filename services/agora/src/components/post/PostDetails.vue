@@ -11,8 +11,8 @@
             {{ extendedPostData.payload.title }}
           </div>
 
-          <div class="bodyDiv">
-            {{ processPostBody(extendedPostData.payload.body || '') }}
+          <div class="bodyDiv" v-if="extendedPostData.payload.body.length > 0">
+            {{ extendedPostData.payload.body }}
           </div>
 
         </div>
@@ -27,7 +27,7 @@
           <div class="leftButtonCluster">
             <ZKButton :outline="focusCommentElement ? false : true" color="primary"
               :text-color="focusCommentElement ? 'white' : 'secondary'"
-              :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment-text"
+              :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-chat-outline"
               @click.stop.prevent="clickedCommentButton()" />
 
             <q-btn-toggle v-model="viewMode" no-caps rounded unelevated toggle-color="primary" color="teal-1"
@@ -167,14 +167,6 @@ function shareClicked() {
     webShare.share("Agora - " + props.extendedPostData.payload.title, sharePostUrl);
   } else {
     showFallbackShareDialog.value = true;
-  }
-}
-
-function processPostBody(body: string) {
-  if (body.length <= 200 || !props.compactMode) {
-    return body;
-  } else {
-    return body.slice(0, 200) + "...";
   }
 }
 

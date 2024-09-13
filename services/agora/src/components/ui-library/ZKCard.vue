@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="card-decoration">
+    <div class="card-decoration" :style="{ padding: padding }">
       <slot />
     </div>
   </div>
@@ -8,6 +8,9 @@
 
 <script setup lang="ts">
 
+defineProps<{
+  padding: string
+}>()
 
 </script>
 
@@ -18,7 +21,5 @@
   border-style: solid;
   border-width: 1px;
   border-color: #e7e5e4;
-  padding: 1rem;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
 }
 </style>

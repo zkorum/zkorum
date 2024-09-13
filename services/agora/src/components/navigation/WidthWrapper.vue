@@ -9,7 +9,7 @@
 
 <style scoped>
 .innerStyle {
-  width: min(40rem, 100%);
+  width: min(35rem, 100%);
   margin: auto;
 }
 </style>

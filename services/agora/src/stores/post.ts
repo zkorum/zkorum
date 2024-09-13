@@ -238,6 +238,7 @@ export const usePostStore = defineStore("post", () => {
         dummyPost.payload.body = body;
         dummyPost.payload.poll.hasPoll = hasPoll;
         dummyPost.payload.poll.options = [];
+        dummyPost.userInteraction.commentRanking.rankedCommentList = new Map();
         for (let i = 0; i < pollOptions.length; i++) {
             const pollOption: DummyPollOptionFormat = generateDummyPollItem(i, pollOptions[i]);
             dummyPost.payload.poll.options.push(pollOption);

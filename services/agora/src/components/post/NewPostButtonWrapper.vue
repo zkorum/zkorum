@@ -3,7 +3,7 @@
     <div>
       <slot />
 
-      <q-btn unelevated class="floatButton" fab icon="mdi-plus" color="accent" @click="buttonClick()" />
+      <q-btn unelevated class="floatButton" fab icon="mdi-plus" color="primary" @click="buttonClick()" />
 
     </div>
   </div>
@@ -23,6 +23,6 @@ function buttonClick() {
 .floatButton {
   position: fixed;
   bottom: 4rem;
-  right: calc(calc(100vw - calc(min(40rem, 100%))) / 2 + 1rem);
+  right: calc(calc(100vw - calc(min(35rem, 100%))) / 2 + 1rem);
 }
 </style>

@@ -2,104 +2,104 @@
   <div>
     <div class="container">
       <div>
-        <ZKCard>
-          <div v-if="!finishedRanking" ref="cardElement">
-            <div class="progressBar">
-              <q-linear-progress color="primary" track-color="secondary" :value="progress" />
-            </div>
+        <ZKCard padding="1rem">
+          <div>
+            <div v-if="!finishedRanking" ref="cardElement">
+              <div class="progressBar">
+                <q-linear-progress color="primary" track-color="secondary" :value="progress" />
+              </div>
 
-            <div class="lowOpacity" :style="{ paddingBottom: '2rem' }">
-              Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
-            </div>
+              <div class="lowOpacity" :style="{ paddingBottom: '2rem' }">
+                Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
+              </div>
 
-            <div>
-              <swiper-container slides-per-view="1" initialSlide="1" ref="el">
-                <swiper-slide>
-                  <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
-                    <q-icon name="mdi-chevron-double-up" flat color="secondary" size="3rem" />
-                    <div>
-                      Upvoted
-                    </div>
-                  </div>
-                </swiper-slide>
-
-                <swiper-slide>
-
-                  <div class="rankingDiv">
-                    <div class="userComment">
+              <div>
+                <swiper-container slides-per-view="1" initialSlide="1" ref="el">
+                  <swiper-slide>
+                    <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
+                      <q-icon name="mdi-chevron-double-up" flat color="secondary" size="3rem" />
                       <div>
-                        {{ displayCommentItem.comment }}
+                        Upvoted
                       </div>
                     </div>
+                  </swiper-slide>
 
-                    <div class="rankingButtonCluster">
-                      <ZKButton flat text-color="secondary" icon="mdi-thumb-down" size="1.3rem"
-                        @click="rankComment('dislike', false)" />
-                      <ZKButton flat text-color="secondary" label="Pass" size="1rem"
-                        @click="rankComment('pass', false)" />
-                      <ZKButton flat text-color="secondary" icon="mdi-thumb-up" size="1.3rem"
-                        @click="rankComment('like', false)" />
-                    </div>
+                  <swiper-slide>
 
-                    <div class="reportButton">
-                      <ZKButton outline text-color="secondary" label="Report" icon="mdi-alert-outline" size="0.8rem"
-                        @click="reportButtonClicked()" />
-                    </div>
-                  </div>
-                </swiper-slide>
+                    <div class="rankingDiv">
+                      <div class="userComment">
+                        {{ displayCommentItem.comment }}
+                      </div>
 
-                <swiper-slide>
-                  <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
-                    <q-icon name="mdi-chevron-double-down" flat color="secondary" size="3rem" />
-                    <div>
-                      Downvoted
+                      <div class="rankingButtonCluster">
+                        <ZKButton flat text-color="secondary" icon="mdi-thumb-down" size="1.3rem"
+                          @click="rankComment('dislike', false)" />
+                        <ZKButton flat text-color="secondary" label="Pass" size="1rem"
+                          @click="rankComment('pass', false)" />
+                        <ZKButton flat text-color="secondary" icon="mdi-thumb-up" size="1.3rem"
+                          @click="rankComment('like', false)" />
+                      </div>
+
+                      <div class="reportButton">
+                        <ZKButton outline text-color="secondary" label="Report" icon="mdi-alert-outline" size="0.8rem"
+                          @click="reportButtonClicked()" />
+                      </div>
                     </div>
-                  </div>
-                </swiper-slide>
-              </swiper-container>
+                  </swiper-slide>
+
+                  <swiper-slide>
+                    <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
+                      <q-icon name="mdi-chevron-double-down" flat color="secondary" size="3rem" />
+                      <div>
+                        Downvoted
+                      </div>
+                    </div>
+                  </swiper-slide>
+                </swiper-container>
+              </div>
             </div>
 
+            <div v-if="finishedRanking">
 
+              <div class="finishedMessage" v-if="postItem.payload.comments.length == 0">
+                <div class="finishedIcon">
+                  <q-icon name="mdi-vote" size="3rem" />
+                </div>
+
+                <div>
+                  There are no comments available to rank yet!
+                </div>
+
+                <div>
+                  <ZKButton outline text-color="primary" icon="comment" size="1rem" label="Add a comment"
+                    @click="clickedCommentButton()" />
+                </div>
+              </div>
+
+              <div class="finishedMessage"
+                v-if="postItem.userInteraction.commentRanking.assignedRankingItems.length > 0">
+                <div class="finishedIcon">
+                  <q-icon name="mdi-check" size="3rem" />
+                </div>
+
+                <div>
+                  You have ranked {{ postItem.userInteraction.commentRanking.rankedCommentList.size }}
+                  comment<span v-if="postItem.userInteraction.commentRanking.rankedCommentList.size > 1">s</span>!
+                </div>
+
+                <div class="finishedActionButtons">
+                  <ZKButton outline text-color="secondary" label="Rank More" icon="mdi-vote"
+                    @click="clickedRankMoreButton()" />
+
+                  <ZKButton outline text-color="secondary" label="See Results" icon="mdi-chart-bar"
+                    @click="clickedSeeResultsButton()" />
+                </div>
+              </div>
+
+
+            </div>
           </div>
 
-          <div v-if="finishedRanking">
-
-            <div class="finishedMessage" v-if="postItem.payload.comments.length == 0">
-              <div class="finishedIcon">
-                <q-icon name="mdi-vote" size="3rem" />
-              </div>
-
-              <div>
-                There are no comments available to rank yet!
-              </div>
-
-              <div>
-                <ZKButton outline text-color="primary" icon="comment" size="1rem" label="Add a comment"
-                  @click="clickedCommentButton()" />
-              </div>
-            </div>
-
-            <div class="finishedMessage" v-if="postItem.userInteraction.commentRanking.assignedRankingItems.length > 0">
-              <div class="finishedIcon">
-                <q-icon name="mdi-check" size="3rem" />
-              </div>
-
-              <div>
-                You have ranked {{ postItem.userInteraction.commentRanking.rankedCommentList.size }}
-                comment<span v-if="postItem.userInteraction.commentRanking.rankedCommentList.size > 1">s</span>!
-              </div>
-
-              <div class="finishedActionButtons">
-                <ZKButton outline text-color="secondary" label="Rank More" icon="mdi-vote"
-                  @click="clickedRankMoreButton()" />
-
-                <ZKButton outline text-color="secondary" label="See Results" icon="mdi-chart-bar"
-                  @click="clickedSeeResultsButton()" />
-              </div>
-            </div>
-
-
-          </div>
         </ZKCard>
 
       </div>
@@ -267,7 +267,9 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 
 .userComment {
   text-align: left;
-  font-size: 1.2rem;
+  font-size: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .rankingDiv {

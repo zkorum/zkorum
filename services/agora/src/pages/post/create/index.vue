@@ -37,8 +37,8 @@
               </div>
             </div>
 
-            <ZKCard v-if="postDraft.enablePolling" class="pollingForm">
-              <div class="pollPadding">
+            <ZKCard padding="1rem" v-if="postDraft.enablePolling" :style="{ marginTop: '1rem' }">
+              <div>
                 <div class="pollTopBar">
                   <div>
                     Poll
@@ -78,15 +78,15 @@
       </div>
 
       <q-dialog v-model="showExitDialog">
-        <ZKCard>
+        <ZKCard padding="1rem">
           <div class="exitDialogStyle">
             <div class="dialogTitle">Discard this post?</div>
 
             <div>Your drafted post will not be saved.</div>
 
             <div class="dialogButtons">
-              <ZKButton flat label="Cancel" text-color="primary" v-close-popup />
-              <ZKButton label="Discard" v-close-popup @click="leaveRoute()" />
+              <ZKButton flat label="Cancel" v-close-popup />
+              <ZKButton label="Discard" text-color="warning" v-close-popup @click="leaveRoute()" />
             </div>
           </div>
         </ZKCard>
@@ -237,7 +237,6 @@ onBeforeRouteLeave((to) => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1rem;
 }
 
 .dialogTitle {
@@ -312,9 +311,5 @@ onBeforeRouteLeave((to) => {
   justify-content: space-between;
   font-size: 1rem;
   font-weight: bold;
-}
-
-.pollPadding {
-  padding: 1rem;
 }
 </style>
