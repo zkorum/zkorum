@@ -25,8 +25,8 @@
         <div class="bottomButtons">
 
           <div class="leftButtonCluster">
-            <ZKButton :outline="focusCommentElement ? false : true" color="primary"
-              :text-color="focusCommentElement ? 'white' : 'secondary'"
+            <ZKButton :color="focusCommentElement ? 'primary' : 'teal-1'"
+              :text-color="focusCommentElement ? 'white' : 'primary'"
               :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-chat-outline"
               @click.stop.prevent="clickedCommentButton()" />
 
@@ -39,7 +39,8 @@
           </div>
 
           <div>
-            <ZKButton outline text-color="secondary" icon="mdi-share-outline" @click.stop.prevent="shareClicked()" />
+            <ZKButton color="teal-1" text-color="primary" icon="mdi-share-outline"
+              @click.stop.prevent="shareClicked()" />
           </div>
 
         </div>
