@@ -24,4 +24,20 @@ $negative: #c10015;
 $info: #31ccec;
 $warning: #dc2626;
 
-$color-text-weak: #525252;
+$color-text-weak: #737373;
+.text-color-text-weak {
+    color: $color-text-weak !important;
+}
+
+.bg-color-text-weak {
+    background: $color-text-weak !important;
+}
+
+$button-background-color: #e5e5e5;
+.text-button-background-color {
+    color: $button-background-color !important;
+}
+
+.bg-button-background-color {
+    background: $button-background-color !important;
+}

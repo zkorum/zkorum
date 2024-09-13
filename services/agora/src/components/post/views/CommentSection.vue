@@ -157,8 +157,8 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   display: flex;
   gap: 1rem;
   align-items: center;
-  color: #737373;
   font-size: 0.8rem;
+  color: $color-text-weak;
 }
 
 .optionBar {
