@@ -3,16 +3,14 @@
     <div class="container">
 
       <ZKCard padding="0.5rem">
-        <div class="optionBar">
+        <div class="optionBar" @click="clickedCommentSortButton()">
 
-          <ZKButton @click="clickedCommentSortButton()">
-            <div class="sortingOption">
-              <q-icon name="mdi-sort" size="1.5rem" />
-              <div class="sortLabelStyle">
-                {{ commentSortLabel }}
-              </div>
+          <div class="sortingOption">
+            <q-icon name="mdi-sort" size="1.5rem" color="color-text-weak" />
+            <div class="sortLabelStyle">
+              {{ commentSortLabel }}
             </div>
-          </ZKButton>
+          </div>
 
         </div>
       </ZKCard>
@@ -165,16 +163,23 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   display: flex;
   align-items: center;
   justify-content: left;
+  padding-left: 0.2rem;
+}
+
+.optionBar:hover {
+  cursor: pointer;
 }
 
 .sortingOption {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .sortLabelStyle {
   font-size: 0.8rem;
+  font-weight: 500;
+  color: $color-text-weak;
 }
 </style>
