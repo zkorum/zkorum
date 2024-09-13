@@ -27,7 +27,7 @@
           <div class="leftButtonCluster">
             <ZKButton :color="focusCommentElement ? 'color-text-weak' : 'button-background-color'"
               :text-color="focusCommentElement ? 'white' : 'color-text-weak'"
-              :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-chat-outline"
+              :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment-outline"
               @click.stop.prevent="clickedCommentButton()" />
 
             <q-btn-toggle v-model="viewMode" no-caps rounded unelevated toggle-color="color-text-weak"
@@ -39,7 +39,7 @@
           </div>
 
           <div>
-            <ZKButton color="button-background-color" text-color="color-text-weak" icon="mdi-share-outline"
+            <ZKButton color="button-background-color" text-color="color-text-weak" icon="mdi-export-variant"
               @click.stop.prevent="shareClicked()" />
           </div>
 
