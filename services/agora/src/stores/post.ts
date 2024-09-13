@@ -5,7 +5,7 @@ import { useStorage } from "@vueuse/core";
 
 export interface DummyPollOptionFormat {
     index: number;
-    name: string;
+    option: string;
     numResponses: number;
 }
 
@@ -76,6 +76,7 @@ export interface DummyUserPostDataFormat {
 export const usePostStore = defineStore("post", () => {
 
     const forceAddPolls = useStorage("force-add-polls", false);
+    const communityStore = useCommunityStore();
 
     let largestPostIndex = 0;
 
@@ -112,8 +113,62 @@ export const usePostStore = defineStore("post", () => {
     };
 
     const masterPostDataList = ref<DummyPostDataFormat[]>([]);
+
+    const preparedList = generateRealisticPosts();
+    masterPostDataList.value = preparedList;
+
     for (let i = 0; i < 200; i++) {
         masterPostDataList.value.push(generateDummyPostData());
+    }
+
+    function generateRealisticPosts() {
+        const postList: DummyPostDataFormat[] = [];
+
+        const postItem1 = createSingleRealisticPost(
+            "pirates",
+            "Do you think it's possible for people from different cultures to co-exist peacefully?",
+            "",
+            true,
+            ["Yes", "No"],
+            [
+                "I doubt it. Many humans seem easily brainwashed…cult-like…and I don’t know where they came from.",
+                "Coexistence, yes. Perfect harmony, no.",
+                "Peace is possible, but human nature seems drawn to conflict. Can we evolve beyond our instincts?",
+                "I believe peace is achievable, but greed and power often get in the way",
+                "If humans truly wanted peace, we'd stop fighting for resources and start working together",
+                "Humans are capable of peace. It's just that peace is harder than war, and we tend to take the easier path.",
+                "It is already happening! Compared to thousands of years before WWII, the world is tremendously much more peaceful today!",
+                "When all people accept the teaching of Jesus Christ, there can be peaceful coexistence as all the teaching of Jesus Christ is of love, forgiveness and compassion that shows no favoritism for race or gender.",
+                "Because of the right and wrong mentality, people always want to be on the right side. “I’m right! We’re right! Anyone that disagrees with us is wrong!” This whole mentality is the root cause of arguments and conflicts.",
+                "Sadly no. People have been in conflict with other people since the beginning of Mankind. From Tribal fights over food or land, to religious battles over beliefs, it has always been part of the nature of mankind.",
+                "Depends, conflict will always show up, so it comes down to individuals being able to regulate their feelings & behaviours relative to their desires and expectations."
+            ]
+        );
+        postList.push(postItem1);
+
+        return postList;
+    }
+
+    function createSingleRealisticPost(companyId: string, title: string, body: string, hasPoll: boolean, pollOptions: string[], commentList: string[]) {
+        const dummyPost = generateDummyPostData();
+        const companyItem = communityStore.getCompanyItemFromId(companyId);
+        dummyPost.metadata.posterName = companyItem.label;
+        dummyPost.metadata.posterImagePath = "/development/logos/" + companyItem.profilePicture;
+        dummyPost.metadata.commentCount = commentList.length;
+        dummyPost.payload.title = title;
+        dummyPost.payload.body = body;
+        dummyPost.payload.poll.hasPoll = hasPoll;
+        dummyPost.payload.poll.options = [];
+        for (let i = 0; i < pollOptions.length; i++) {
+            const pollOption: DummyPollOptionFormat = generateDummyPollItem(i, pollOptions[i]);
+            dummyPost.payload.poll.options.push(pollOption);
+        }
+        dummyPost.payload.comments = [];
+        for (let i = 0; i < commentList.length; i++) {
+            const commentItem = composeDummyCommentItem(commentList[i], i, dummyPost.metadata.createdAt);
+            dummyPost.payload.comments.push(commentItem);
+        }
+        return dummyPost;
     }
 
     function getUnrankedComments(postSlugId: string): DummyCommentFormat[] {
@@ -258,13 +313,13 @@ export const usePostStore = defineStore("post", () => {
     }
 
     function generateRandomCommunityItem(): CommunityItem {
-        const communityNameList = useCommunityStore().communityList;
+        const communityNameList = communityStore.communityList;
         const communityItem = communityNameList[Math.floor(Math.random() * communityNameList.length)];
         return communityItem;
     }
 
     function getCommunityImageFromId(communityId: string) {
-        const communityList = useCommunityStore().communityList;
+        const communityList = communityStore.communityList;
 
         for (let i = 0; i < communityList.length; i++) {
             const communityItem = communityList[i];
@@ -276,14 +331,14 @@ export const usePostStore = defineStore("post", () => {
         return ""
     }
 
-    function composeDummyCommentItem(commentText: string, index: number, createdAt: Date) {
+    function composeDummyCommentItem(commentText: string, index: number, postCreatedAtDate: Date) {
         const communityItem = generateRandomCommunityItem();
 
         const newComment: DummyCommentFormat = {
             index: index,
             userCommunityId: communityItem.id,
             userCommunityImage: getCommunityImageFromId(communityItem.id),
-            createdAt: createdAt,
+            createdAt: generateRandomDate(postCreatedAtDate, 5),
             comment: commentText,
             numUpvotes: getRandomInt(0, 100),
             numDownvotes: getRandomInt(0, 100)
@@ -312,6 +367,15 @@ export const usePostStore = defineStore("post", () => {
         return postData.metadata.slugId;
     }
 
+    function generateDummyPollItem(index: number, option: string) {
+        const pollItem: DummyPollOptionFormat = {
+            index: index,
+            option: option,
+            numResponses: getRandomInt(0, 100)
+        };
+        return pollItem;
+    }
+
     function generateDummyPostData() {
 
         const postIndex = largestPostIndex;
@@ -326,11 +390,7 @@ export const usePostStore = defineStore("post", () => {
         const numPollOptions = getRandomInt(2, 6);
         const pollOptionList: DummyPollOptionFormat[] = [];
         for (let i = 0; i < numPollOptions; i++) {
-            const pollItem: DummyPollOptionFormat = {
-                index: i,
-                name: "Dummy Option " + (i + 1),
-                numResponses: getRandomInt(0, 100)
-            };
+            const pollItem: DummyPollOptionFormat = generateDummyPollItem(i, "Dummy Option " + (i + 1));
             pollOptionList.push(pollItem);
         }
 
@@ -344,7 +404,7 @@ export const usePostStore = defineStore("post", () => {
         const postComments: DummyCommentFormat[] = [];
         for (let i = 0; i < numCommentsInPost; i++) {
             const comment = "This is random comment index " + (i) + ". " + randomText.substring(0, 270);
-            const commentItem = composeDummyCommentItem(comment, i, generateRandomDate(postCreatedAtDate, 5));
+            const commentItem = composeDummyCommentItem(comment, i, postCreatedAtDate);
             postComments.push(commentItem);
         }
 

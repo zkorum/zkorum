@@ -36,11 +36,6 @@ let lastSlugId = "";
 
 generateNewPosts();
 
-function resetList() {
-  compactPostDataList.value = [];
-  lastSlugId = "";
-}
-
 function generateNewPosts() {
   const postList = fetchUnifiedPosts(lastSlugId, FETCH_POST_COUNT);
   for (let i = 0; i < postList.length; i++) {
@@ -50,8 +45,7 @@ function generateNewPosts() {
   if (postList.length > 0) {
     lastSlugId = postList[postList.length - 1].metadata.slugId;
   } else {
-    // Force infinite scroll to go back to the top
-    resetList();
+    // Reached the end of the post list
   }
 
 }

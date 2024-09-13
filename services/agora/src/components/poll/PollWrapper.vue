@@ -4,9 +4,9 @@
       <div v-if="showResults" class="pollContainer">
 
         <div class="pollOptionList">
-          <option-view v-for="option in localPollOptions" v-bind:key="option.index" :option="option.name"
-            :optionResponded="localUserVote.voteIndex == option.index && localUserVote.hasVoted"
-            :optionPercentage="totalCount === 0 ? 0 : Math.round((option.numResponses * 100) / totalCount)" />
+          <option-view v-for="optionItem in localPollOptions" v-bind:key="optionItem.index" :option="optionItem.option"
+            :optionResponded="localUserVote.voteIndex == optionItem.index && localUserVote.hasVoted"
+            :optionPercentage="totalCount === 0 ? 0 : Math.round((optionItem.numResponses * 100) / totalCount)" />
         </div>
 
         <div class="voteCounter">
@@ -25,8 +25,8 @@
     <div v-if="!showResults" class="pollContainer">
 
       <div class="pollOptionList">
-        <ZKButton outline v-for="option in localPollOptions" v-bind:key="option.index" :label="option.name"
-          text-color="primary" @click.stop.prevent="voteCasted(option.index)" />
+        <ZKButton outline v-for="optionItem in localPollOptions" v-bind:key="optionItem.index"
+          :label="optionItem.option" text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
       </div>
 
       <div class="actionButtonCluster">
