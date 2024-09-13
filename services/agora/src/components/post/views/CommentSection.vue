@@ -29,15 +29,18 @@
             <div>
               {{ commentItem.comment }}
               <div class="actionButtonCluster">
-                <ZKButton flat text-color="black" icon="mdi-dots-horizontal" size="0.8rem" />
+                <ZKButton flat text-color="color-text-weak" icon="mdi-dots-horizontal" size="0.8rem" />
 
-                <ZKButton flat text-color="black" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
+                <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
                   @click="toggleVote(commentItem.index, 'like')" />
-                <div v-if="getCommentItemRankStatus(commentItem.index) != undefined">
+                <div v-if="getCommentItemRankStatus(commentItem.index) != null">
                   {{ commentItem.numUpvotes - commentItem.numDownvotes }}
                 </div>
-                <ZKButton flat text-color="black" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem"
-                  @click="toggleVote(commentItem.index, 'dislike')" />
+                <div v-if="getCommentItemRankStatus(commentItem.index) == null">
+                  Vote
+                </div>
+                <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(commentItem.index, false)"
+                  size="0.8rem" @click="toggleVote(commentItem.index, 'dislike')" />
               </div>
             </div>
 
@@ -143,9 +146,10 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   justify-content: right;
   gap: 0.5rem;
   font-size: 0.8rem;
-  font-weight: bold;
+  font-weight: 500;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  color: $color-text-weak;
 }
 
 .metadata {
