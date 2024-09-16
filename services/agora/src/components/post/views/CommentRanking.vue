@@ -9,7 +9,7 @@
               <q-linear-progress color="primary" track-color="secondary" :value="progress" />
             </div>
 
-            <div class="weakColor" :style="{ paddingBottom: '2rem' }">
+            <div class="weakColor unselectable" :style="{ paddingBottom: '2rem' }">
               Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
             </div>
 
@@ -27,7 +27,7 @@
                 <swiper-slide>
 
                   <div class="rankingDiv">
-                    <div class="userComment">
+                    <div class="userComment unselectable">
                       “
                       <span v-html="displayCommentItem.comment"></span>
                       ”
@@ -330,4 +330,9 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   display: flex;
   gap: 2rem;
 }
+
+.unselectable {
+  user-select: none;
+}
+
 </style>
