@@ -20,8 +20,6 @@
         <ZKCard padding="0rem">
           <div class="contentLayout">
             <div class="metadata">
-              <CommunityIcon :image-path="getCommunityImageFromId(commentItem.userCommunityId)" size="2.5rem" />
-
               {{ getTimeFromNow(commentItem.createdAt) }}
             </div>
 
@@ -29,7 +27,7 @@
               <span v-html="commentItem.comment"></span>
 
               <div class="actionButtonCluster">
-                <ZKButton flat text-color="color-text-weak" icon="mdi-dots-horizontal" size="0.8rem" />
+                <ZKButton flat text-color="color-text-weak" icon="mdi-dots-horizontal" size="0.8rem" @click="optionButtonClicked()" />
 
                 <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
                   @click="toggleVote(commentItem.index, 'like')" />
@@ -55,7 +53,6 @@
 <script setup lang="ts">
 import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import CommunityIcon from "src/components/community/CommunityIcon.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { getTimeFromNow } from "src/utils/common";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
@@ -75,7 +72,7 @@ const commentSortPreference = useStorage("comment-sort-preference-id", "new");
 
 const { mapCommentSortOption } = useCommentOptions();
 
-const { updateCommentRanking, getCommunityImageFromId } = usePostStore();
+const { updateCommentRanking } = usePostStore();
 
 const commentSortLabel = ref("");
 
@@ -86,6 +83,10 @@ onMounted(() => {
 watch(commentSortPreference, () => {
   updateSortLabel();
 });
+
+function optionButtonClicked() {
+  bottomSheet.showCommentOptionSelector();
+}
 
 function updateSortLabel() {
   commentSortLabel.value = mapCommentSortOption(commentSortPreference.value);

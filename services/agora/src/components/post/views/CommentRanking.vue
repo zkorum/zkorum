@@ -89,7 +89,7 @@
               </div>
 
               <div class="finishedActionButtons">
-                <ZKButton outline text-color="secondary" label="Rank More" icon="mdi-vote"
+                <ZKButton outline text-color="secondary" label="Vote More" icon="mdi-vote"
                   @click="clickedRankMoreButton()" />
 
                 <ZKButton outline text-color="secondary" label="See Results" icon="mdi-chart-bar"

@@ -33,8 +33,8 @@
 
             <q-btn-toggle v-if="!props.compactMode" v-model="viewMode" no-caps rounded unelevated
               toggle-color="color-text-weak" color="button-background-color" text-color="color-text-weak" :options="[
-                { label: 'Ranking', value: 'ranking' },
-                { label: 'Comments', value: 'comments' }
+                { label: 'Voting', value: 'ranking' },
+                { label: 'Results', value: 'comments' }
               ]" />
 
           </div>

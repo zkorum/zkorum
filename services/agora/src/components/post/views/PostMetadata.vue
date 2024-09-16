@@ -43,7 +43,7 @@ defineProps<{
 const { showPostOptionSelector } = useBottomSheet();
 
 function clickedMoreIcon() {
-  showPostOptionSelector(false);
+  showPostOptionSelector();
 }
 
 </script>

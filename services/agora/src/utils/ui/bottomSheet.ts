@@ -6,8 +6,33 @@ export const useBottomSheet = () => {
 
   const quasar = useQuasar();
 
-  // Return the selected community name
-  function showPostOptionSelector(grid: boolean) {
+  function showCommentOptionSelector() {
+
+    const actionList = [];
+
+    actionList.push({
+      label: "Report Comment",
+      icon: "mdi-flag",
+      id: "report"
+    });
+
+    quasar.bottomSheet({
+      message: "Select an action for this comment",
+      grid: false,
+      actions: actionList
+    }).onOk(action => {
+      console.log("Selected action: " + action.id);
+      if (action.id == "report") {
+        showStandardReportSelector(false);
+      }
+    }).onCancel(() => {
+      console.log("Dismissed");
+    }).onDismiss(() => {
+      // console.log('I am triggered on both OK and Cancel')
+    });
+  }
+
+  function showPostOptionSelector() {
 
     const actionList = [];
 
@@ -19,13 +44,77 @@ export const useBottomSheet = () => {
 
     quasar.bottomSheet({
       message: "Select an action for this post",
-      grid,
+      grid: false,
       actions: actionList
     }).onOk(action => {
       console.log("Selected action: " + action.id);
       if (action.id == "report") {
-        processReportAction();
+        showStandardReportSelector(true);
       }
+    }).onCancel(() => {
+      console.log("Dismissed");
+    }).onDismiss(() => {
+      // console.log('I am triggered on both OK and Cancel')
+    });
+  }
+
+
+  function showStandardReportSelector(isPost: boolean) {
+
+    const actionList = [];
+
+    const icon = "mdi-circle-small";
+
+    actionList.push(
+      {
+        label: "Spam",
+        icon: icon,
+        id: "spam"
+      },
+      {
+        label: "Irrelevant",
+        icon: icon,
+        id: "irrelevant"
+      },
+      {
+        label: "Harassment",
+        icon: icon,
+        id: "harassment"
+      },
+      {
+        label: "Hate",
+        icon: icon,
+        id: "hate"
+      },
+      {
+        label: "Sharing personal information",
+        icon: icon,
+        id: "personal-information"
+      },
+      {
+        label: "Threatening violence",
+        icon: icon,
+        id: "violence"
+      },
+      {
+        label: "Sexualization",
+        icon: icon,
+        id: "sexualization"
+      }
+    );
+
+    let itemName = "post";
+    if (!isPost) {
+      itemName = "comment";
+    }
+
+    quasar.bottomSheet({
+      message: `Why do you think this ${itemName} is not appropriate?`,
+      grid: false,
+      actions: actionList
+    }).onOk(action => {
+      console.log("Selected action: " + action.id);
+      processReportAction(isPost);
     }).onCancel(() => {
       console.log("Dismissed");
     }).onDismiss(() => {
@@ -44,6 +133,11 @@ export const useBottomSheet = () => {
         label: "Spam",
         icon: icon,
         id: "spam"
+      },
+      {
+        label: "Irrelevant",
+        icon: icon,
+        id: "irrelevant"
       },
       {
         label: "Harassment",
@@ -111,19 +205,19 @@ export const useBottomSheet = () => {
     });
   }
 
-  function processReportAction() {
+  function processReportAction(isPost: boolean) {
+
+    let itemName = "post";
+    if (!isPost) {
+      itemName = "comment";
+    }
+
     quasar.dialog({
-      title: "Report System",
-      message: "Would you like to report this post?",
-      cancel: true,
-      persistent: false,
-    }).onOk(() => {
-      quasar.dialog({
-        title: "Thank you for the report",
-        message: "Admins will investigate if the post contains inappropriate content.",
-      });
+      title: "Thank you for the report",
+      message: `Admins will investigate if the ${itemName} contains inappropriate content.`,
     });
+
   }
 
-  return { showPostOptionSelector, showCommentSortSelector, showCommentRankingReportSelector };
+  return { showPostOptionSelector, showCommentSortSelector, showCommentRankingReportSelector, showCommentOptionSelector };
 };
