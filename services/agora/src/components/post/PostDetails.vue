@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
     <div class="container postPadding" :class="{ mobileHoverEffect: compactMode }">

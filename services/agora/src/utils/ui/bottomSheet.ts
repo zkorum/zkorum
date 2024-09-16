@@ -30,7 +30,7 @@ export const useBottomSheet = () => {
       console.log("Dismissed");
     }).onDismiss(() => {
       // console.log('I am triggered on both OK and Cancel')
-    })
+    });
   }
 
   function showCommentRankingReportSelector(reportReasonId: Ref<string>) {
@@ -83,7 +83,7 @@ export const useBottomSheet = () => {
       console.log("Dismissed");
     }).onDismiss(() => {
       // console.log('I am triggered on both OK and Cancel')
-    })
+    });
   }
 
   function showCommentSortSelector(currentPreferenceId: Ref<string>) {
@@ -108,7 +108,7 @@ export const useBottomSheet = () => {
       console.log("Dismissed");
     }).onDismiss(() => {
       // console.log('I am triggered on both OK and Cancel')
-    })
+    });
   }
 
   function processReportAction() {
@@ -126,4 +126,4 @@ export const useBottomSheet = () => {
   }
 
   return { showPostOptionSelector, showCommentSortSelector, showCommentRankingReportSelector };
-}
+};

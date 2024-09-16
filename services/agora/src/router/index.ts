@@ -45,9 +45,9 @@ export default route(function (/* { store, ssrContext } */) {
   // @see https://github.com/vitejs/vite/issues/11804#issuecomment-1406182566
   Router.onError((error, to) => {
     if (error.message.includes("Failed to fetch dynamically imported module")) {
-      window.location.href = to.fullPath
+      window.location.href = to.fullPath;
     }
-  })
+  });
 
   /*
   if (!process.env.DEV) {

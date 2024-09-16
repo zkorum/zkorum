@@ -408,7 +408,7 @@ export const usePostStore = defineStore("post", () => {
             }
         }
 
-        return ""
+        return "";
     }
 
     function composeDummyCommentItem(commentText: string, index: number, postCreatedAtDate: Date) {
@@ -422,7 +422,7 @@ export const usePostStore = defineStore("post", () => {
             comment: commentText,
             numUpvotes: getRandomInt(0, 100),
             numDownvotes: getRandomInt(0, 100)
-        }
+        };
         return newComment;
     }
 
@@ -433,7 +433,7 @@ export const usePostStore = defineStore("post", () => {
         return {
             name: companyName,
             imageName: "/images/companies/company" + nameIndex.toString() + ".jpeg"
-        }
+        };
 
     }
 

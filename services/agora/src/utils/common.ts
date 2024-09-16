@@ -83,12 +83,12 @@ export type SupportedPlatform = z.infer<typeof suportedPlatforms>;
 
 export function getPlatform(platform: Platform): SupportedPlatform {
   if (platform.is.nativeMobile) {
-    return "mobile"
+    return "mobile";
   }
   if (!platform.is.desktop && !platform.is.bex) {
-    return "web"
+    return "web";
   }
   // TODO: throw warning
-  console.warn("This platform is not supported")
-  return "web"
+  console.warn("This platform is not supported");
+  return "web";
 }

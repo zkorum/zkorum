@@ -28,14 +28,14 @@ export const useSessionStore = defineStore("session", {
 
   actions: {
     setPrefixedKey(email: string, prefixedKey: string) {
-      this.sign.emailToPrefixedKey[email] = prefixedKey
+      this.sign.emailToPrefixedKey[email] = prefixedKey;
     },
     getOrSetFlowId(email: string): string {
       const existingEntry = Object.entries(this.sign.flowIdToEmail).find(([_key, value]) => {
-        return value === email
+        return value === email;
       });
       if (existingEntry !== undefined) {
-        return existingEntry[0]
+        return existingEntry[0];
       }
       const flowId = generateFlowId();
       this.sign.flowIdToEmail[flowId] = email;

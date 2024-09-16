@@ -7,7 +7,7 @@ export function useViewPorts() {
   onMounted(() => {
     updateHeight();
     window.visualViewport?.addEventListener("resize", updateHeight);
-  })
+  });
 
   function updateHeight() {
     const windowPort = window.visualViewport;
@@ -17,6 +17,6 @@ export function useViewPorts() {
     }
   }
 
-  return { visualViewPortHeight }
+  return { visualViewPortHeight };
 
 }

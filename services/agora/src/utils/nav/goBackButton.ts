@@ -4,7 +4,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 
 export function useGoBackButtonHandler() {
   const router = useRouter();
-  const route = useRoute()
+  const route = useRoute();
 
   const lastNavigatedRouteName = useStorage("last-navigated-route-name", "");
 
@@ -23,7 +23,7 @@ export function useGoBackButtonHandler() {
 
   function goBack() {
     if (lastNavigatedRouteName.value == "") {
-      router.push({ name: "default-home-feed" })
+      router.push({ name: "default-home-feed" });
     } else {
       router.back();
     }

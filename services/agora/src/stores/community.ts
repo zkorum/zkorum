@@ -54,7 +54,7 @@ export const useCommunityStore = defineStore("community", () => {
       label: "",
       id: "",
       profilePicture: ""
-    }
+    };
   }
 
   const communityList: CommunityItem[] = [
@@ -95,6 +95,6 @@ export const useCommunityStore = defineStore("community", () => {
     },
   ];
 
-  return { communityList, companyList, getCompanyItemFromId }
+  return { communityList, companyList, getCompanyItemFromId };
 
 });

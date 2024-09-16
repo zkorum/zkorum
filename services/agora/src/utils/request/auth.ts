@@ -32,10 +32,10 @@ export async function authenticate(
   const params: ApiV1AuthAuthenticatePostRequest = {
     email: email,
     isRequestingNewCode: isRequestingNewCode
-  }
+  };
   try {
-    const { url, options } = await DefaultApiAxiosParamCreator().apiV1AuthAuthenticatePost(params)
-    const encodedUcan = await ucanOperation.buildUcan({ did, prefixedKey, pathname: url, method: options.method, platform })
+    const { url, options } = await DefaultApiAxiosParamCreator().apiV1AuthAuthenticatePost(params);
+    const encodedUcan = await ucanOperation.buildUcan({ did, prefixedKey, pathname: url, method: options.method, platform });
     const otpDetails = await DefaultApiFactory(
       undefined,
       undefined,

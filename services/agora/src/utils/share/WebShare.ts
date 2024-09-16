@@ -22,5 +22,5 @@ export function useWebShare() {
     });
   }
 
-  return { isSupportedSharePlatform, share }
+  return { isSupportedSharePlatform, share };
 }
