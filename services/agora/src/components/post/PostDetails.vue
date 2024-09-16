@@ -11,13 +11,13 @@
             {{ extendedPostData.payload.title }}
           </div>
 
-          <div class="bodyDiv" v-if="extendedPostData.payload.body.length > 0">
+          <div v-if="extendedPostData.payload.body.length > 0" class="bodyDiv">
             <span v-html="extendedPostData.payload.body"></span>
           </div>
 
         </div>
 
-        <div class="innerContainer" v-if="extendedPostData.payload.poll.hasPoll">
+        <div v-if="extendedPostData.payload.poll.hasPoll" class="innerContainer">
           <PollWrapper :user-vote="extendedPostData.userInteraction.pollVoting"
             :poll-options="extendedPostData.payload.poll.options" />
         </div>
@@ -30,11 +30,11 @@
               :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment-outline"
               @click.stop.prevent="clickedCommentButton()" />
 
-            <q-btn-toggle v-model="viewMode" no-caps rounded unelevated toggle-color="color-text-weak"
-              color="button-background-color" text-color="color-text-weak" :options="[
+            <q-btn-toggle v-if="!props.compactMode" v-model="viewMode" no-caps rounded unelevated
+              toggle-color="color-text-weak" color="button-background-color" text-color="color-text-weak" :options="[
                 { label: 'Ranking', value: 'ranking' },
                 { label: 'Comments', value: 'comments' }
-              ]" v-if="!props.compactMode" />
+              ]" />
 
           </div>
 
@@ -46,7 +46,7 @@
         </div>
       </div>
 
-      <CommentRanking :post-slug-id="extendedPostData.metadata.slugId" v-if="showRankingMode && !compactMode"
+      <CommentRanking v-if="showRankingMode && !compactMode" :post-slug-id="extendedPostData.metadata.slugId"
         @clicked-comment-button="clickedCommentButton()" />
 
       <div v-if="!compactMode && !showRankingMode">
@@ -77,7 +77,7 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="OK" color="primary" v-close-popup />
+          <q-btn v-close-popup flat label="OK" color="primary" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -114,7 +114,7 @@ const commentList = ref(props.extendedPostData.payload.comments);
 const router = useRouter();
 const route = useRoute();
 
-const webShare = useWebShare()
+const webShare = useWebShare();
 
 const showFallbackShareDialog = ref(false);
 
@@ -134,7 +134,7 @@ watch(viewMode, () => {
     showRankingMode.value = false;
   }
   window.scrollTo(0, 0);
-})
+});
 
 function switchToCommentView() {
   showRankingMode.value = false;
@@ -157,7 +157,7 @@ function clickedCommentButton() {
       name: "single-post",
       params: { postSlugId: props.extendedPostData.metadata.slugId },
       query: { action: "comment" }
-    })
+    });
   } else {
     focusCommentElement.value = !focusCommentElement.value;
   }

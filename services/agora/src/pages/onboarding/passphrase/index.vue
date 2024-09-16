@@ -35,7 +35,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const emailAddressLoaded = ref("FAILED TO LOAD EMAIL");
-const emailAddressEncoded = useRouteParams("emailAddressEncoded")
+const emailAddressEncoded = useRouteParams("emailAddressEncoded");
 if (typeof emailAddressEncoded.value == "string") {
   emailAddressLoaded.value = urlDecode(emailAddressEncoded.value);
 }

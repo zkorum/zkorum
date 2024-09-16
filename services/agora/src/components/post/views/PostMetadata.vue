@@ -38,7 +38,7 @@ defineProps<{
   posterName: string
   posterImagePath: string
   createdAt: Date
-}>()
+}>();
 
 const { showPostOptionSelector } = useBottomSheet();
 

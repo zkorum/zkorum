@@ -1,7 +1,7 @@
 <template>
   <div>
     <form autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
-      <q-editor v-model="commentText" :placeholder="placeholder" :min-height="minHeight" flat ref="editorRef"
+      <q-editor ref="editorRef" v-model="commentText" :placeholder="placeholder" :min-height="minHeight" flat
         :toolbar="showToolbar ? toolbarButtons : []" @paste="onPaste" @focus="editorFocused()" />
     </form>
   </div>
@@ -15,9 +15,9 @@ defineProps<{
   placeholder: string
   minHeight: string
   focusEditor: boolean;
-}>()
+}>();
 
-const emit = defineEmits(["manuallyFocused"])
+const emit = defineEmits(["manuallyFocused"]);
 
 const editorRef = ref<HTMLElement | null>(null);
 
@@ -44,7 +44,7 @@ watch(() => props.focusEditor, () => {
 
 watch(commentText, () => {
   modelText.value = commentText.value;
-})
+});
 
 function editorFocused() {
   emit("manuallyFocused");
@@ -61,32 +61,32 @@ function processFocus() {
 function onPaste(evt: Event) {
   // Let inputs do their thing, so we don't break pasting of links.
   /* @ts-expect-error Event definition is missing */
-  if (evt.target?.nodeName === "INPUT") return
-  let text, onPasteStripFormattingIEPaste
-  evt.preventDefault()
-  evt.stopPropagation()
+  if (evt.target?.nodeName === "INPUT") return;
+  let text, onPasteStripFormattingIEPaste;
+  evt.preventDefault();
+  evt.stopPropagation();
   /* @ts-expect-error Event definition is missing */
   if (evt.originalEvent && evt.originalEvent.clipboardData.getData) {
     /* @ts-expect-error Event definition is missing */
-    text = evt.originalEvent.clipboardData.getData("text/plain")
+    text = evt.originalEvent.clipboardData.getData("text/plain");
     /* @ts-expect-error Element not properly defined */
-    editorRef.value?.runCmd("insertText", text)
+    editorRef.value?.runCmd("insertText", text);
   }
   /* @ts-expect-error Event definition is missing */
   else if (evt.clipboardData && evt.clipboardData.getData) {
     /* @ts-expect-error Event definition is missing */
-    text = evt.clipboardData.getData("text/plain")
+    text = evt.clipboardData.getData("text/plain");
     /* @ts-expect-error Element not properly defined */
-    editorRef.value?.runCmd("insertText", text)
+    editorRef.value?.runCmd("insertText", text);
   }
   /* @ts-expect-error Definition is missing */
   else if (window.clipboardData && window.clipboardData.getData) {
     if (!onPasteStripFormattingIEPaste) {
-      onPasteStripFormattingIEPaste = true
+      onPasteStripFormattingIEPaste = true;
       /* @ts-expect-error Element not properly defined */
-      editorRef.value?.runCmd("ms-pasteTextOnly", text)
+      editorRef.value?.runCmd("ms-pasteTextOnly", text);
     }
-    onPasteStripFormattingIEPaste = false
+    onPasteStripFormattingIEPaste = false;
   }
 }
 

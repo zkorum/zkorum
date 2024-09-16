@@ -15,7 +15,7 @@
         </div>
       </ZKCard>
 
-      <div v-for="(commentItem, index) in commentList" v-bind:key="index">
+      <div v-for="(commentItem, index) in commentList" :key="index">
         <ZKCard padding="0rem">
           <div class="contentLayout">
             <div class="metadata">
@@ -68,7 +68,7 @@ const props = defineProps<{
   postSlugId: string,
   commentList: DummyCommentFormat[],
   commentRanking: DummyCommentRankingFormat
-}>()
+}>();
 
 const commentSortPreference = useStorage("comment-sort-preference-id", "new");
 
@@ -80,11 +80,11 @@ const commentSortLabel = ref("");
 
 onMounted(() => {
   updateSortLabel();
-})
+});
 
 watch(commentSortPreference, () => {
   updateSortLabel();
-})
+});
 
 function updateSortLabel() {
   commentSortLabel.value = mapCommentSortOption(commentSortPreference.value);

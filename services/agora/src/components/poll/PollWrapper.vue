@@ -4,9 +4,9 @@
       <div v-if="showResults" class="pollContainer">
 
         <div class="pollOptionList">
-          <option-view v-for="optionItem in localPollOptions" v-bind:key="optionItem.index" :option="optionItem.option"
-            :optionResponded="localUserVote.voteIndex == optionItem.index && localUserVote.hasVoted"
-            :optionPercentage="totalCount === 0 ? 0 : Math.round((optionItem.numResponses * 100) / totalCount)" />
+          <option-view v-for="optionItem in localPollOptions" :key="optionItem.index" :option="optionItem.option"
+            :option-responded="localUserVote.voteIndex == optionItem.index && localUserVote.hasVoted"
+            :option-percentage="totalCount === 0 ? 0 : Math.round((optionItem.numResponses * 100) / totalCount)" />
         </div>
 
         <div class="voteCounter">
@@ -14,7 +14,7 @@
         </div>
 
         <div>
-          <ZKButton outline text-color="primary" label="Cast Vote" icon="mdi-vote" v-if="!localUserVote.hasVoted"
+          <ZKButton v-if="!localUserVote.hasVoted" outline text-color="primary" label="Cast Vote" icon="mdi-vote"
             @click.stop.prevent="castVoteRequested()" />
         </div>
       </div>
@@ -25,8 +25,8 @@
     <div v-if="!showResults" class="pollContainer">
 
       <div class="pollOptionList">
-        <ZKButton outline v-for="optionItem in localPollOptions" v-bind:key="optionItem.index"
-          :label="optionItem.option" text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
+        <ZKButton v-for="optionItem in localPollOptions" :key="optionItem.index" outline :label="optionItem.option"
+          text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
       </div>
 
       <div class="actionButtonCluster">
@@ -49,7 +49,7 @@ import { ref, toRaw } from "vue";
 const props = defineProps<{
   pollOptions: DummyPollOptionFormat[];
   userVote: DummyPostUserVote;
-}>()
+}>();
 
 const localPollOptions = structuredClone(toRaw(props.pollOptions));
 const localUserVote = structuredClone(toRaw(props.userVote));

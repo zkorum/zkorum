@@ -18,7 +18,7 @@
 
         <div class="container">
 
-          <q-input borderless no-error-icon type="textarea" label="Title" v-model="postDraft.postTitle" lazy-rules
+          <q-input v-model="postDraft.postTitle" borderless no-error-icon type="textarea" label="Title" lazy-rules
             :rules="[val => val && val.length > 0]" class="titleStyle" autogrow :maxlength="POST_TITLE_LENGTH_MAX"
             clearable />
 
@@ -27,17 +27,17 @@
           <div>
             <div :class="{ editorPadding: !postDraft.enablePolling }">
               <ZKEditor v-model="postDraft.postBody" placeholder="body text" min-height="5rem"
-                @update:model-value="checkWordCount()" :focus-editor="false" :show-toolbar="true" />
+                :focus-editor="false" :show-toolbar="true" @update:model-value="checkWordCount()" />
 
               <div class="wordCountDiv">
-                <q-icon name="mdi-alert-circle" v-if="bodyWordCount > POST_BODY_LENGTH_MAX"
+                <q-icon v-if="bodyWordCount > POST_BODY_LENGTH_MAX" name="mdi-alert-circle"
                   class="bodySizeWarningIcon" />
                 <span :class="{ wordCountWarning: bodyWordCount > POST_BODY_LENGTH_MAX }">{{
                   bodyWordCount }} </span> &nbsp; / {{ POST_BODY_LENGTH_MAX }}
               </div>
             </div>
 
-            <ZKCard padding="1rem" v-if="postDraft.enablePolling" :style="{ marginTop: '1rem' }">
+            <ZKCard v-if="postDraft.enablePolling" padding="1rem" :style="{ marginTop: '1rem' }">
               <div>
                 <div class="pollTopBar">
                   <div>
@@ -45,20 +45,20 @@
                   </div>
                   <ZKButton flat text-color="black" icon="mdi-close" @click="togglePolling()" />
                 </div>
-                <div class="pollingFlexStyle" ref="pollRef">
+                <div ref="pollRef" class="pollingFlexStyle">
                   <div v-for="index in postDraft.pollingOptionList.length" :key="index" class="pollingItem">
-                    <q-input :rules="[val => val && val.length > 0]" type="text" :label="'Option ' + (index)"
-                      v-model="postDraft.pollingOptionList[index - 1]" :style="{ width: '100%' }"
+                    <q-input v-model="postDraft.pollingOptionList[index - 1]" :rules="[val => val && val.length > 0]" type="text"
+                      :label="'Option ' + (index)" :style="{ width: '100%' }"
                       :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
-                    <div class="deletePollOptionDiv" v-if="postDraft.pollingOptionList.length != 2">
-                      <ZKButton flat round icon="mdi-delete" @click="removePollOption(index - 1)" text-color="primary" />
+                    <div v-if="postDraft.pollingOptionList.length != 2" class="deletePollOptionDiv">
+                      <ZKButton flat round icon="mdi-delete" text-color="primary" @click="removePollOption(index - 1)" />
                     </div>
 
                   </div>
 
                   <div>
-                    <ZKButton flat text-color="primary" icon="mdi-plus" label="Add Option" @click="addPollOption()"
-                      :disable="postDraft.pollingOptionList.length == 6" />
+                    <ZKButton flat text-color="primary" icon="mdi-plus" label="Add Option" :disable="postDraft.pollingOptionList.length == 6"
+                      @click="addPollOption()" />
                   </div>
                 </div>
               </div>
@@ -85,8 +85,8 @@
             <div>Your drafted post will not be saved.</div>
 
             <div class="dialogButtons">
-              <ZKButton flat label="Cancel" v-close-popup />
-              <ZKButton label="Discard" text-color="warning" v-close-popup @click="leaveRoute()" />
+              <ZKButton v-close-popup flat label="Cancel" />
+              <ZKButton v-close-popup label="Discard" text-color="warning" @click="leaveRoute()" />
             </div>
           </div>
         </ZKCard>
@@ -147,11 +147,11 @@ window.onbeforeunload = function () {
   if (isPostEdited()) {
     return "Changes that you made may not be saved.";
   }
-}
+};
 
 onUnmounted(() => {
   window.onbeforeunload = () => { };
-})
+});
 
 function checkWordCount() {
 
@@ -190,7 +190,7 @@ function onSubmit() {
   grantedRouteLeave = true;
 
   const slugId = submitNewPost(postDraft.value.postTitle, postDraft.value.postBody);
-  router.push({ name: "single-post", params: { postSlugId: slugId } })
+  router.push({ name: "single-post", params: { postSlugId: slugId } });
 }
 
 function leaveRoute() {
@@ -206,7 +206,7 @@ onBeforeRouteLeave((to) => {
   } else {
     return true;
   }
-})
+});
 
 </script>
 

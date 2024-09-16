@@ -3,7 +3,7 @@
     <q-img src="/images/onboarding/brand.webp" class="welcomeImage" />
     <div class="buttonFlex">
       <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" />
-      <ZKButton color="black" @click="skipAuthentication()" label="Skip Authentication" />
+      <ZKButton color="black" label="Skip Authentication" @click="skipAuthentication()" />
     </div>
   </div>
 
@@ -14,7 +14,7 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-const { t } = useI18n()
+const { t } = useI18n();
 
 const router = useRouter();
 

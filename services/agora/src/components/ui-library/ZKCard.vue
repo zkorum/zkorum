@@ -10,7 +10,7 @@
 
 defineProps<{
   padding: string
-}>()
+}>();
 
 </script>
 

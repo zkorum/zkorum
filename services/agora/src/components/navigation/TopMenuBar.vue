@@ -7,7 +7,7 @@
       <div class="menuButtons">
         <HelpButton />
         <RouterLink :to="{ name: 'settings-page' }">
-          <ZKButton icon="mdi-cog" text-color="black" flat v-if="hasSettingsButton" />
+          <ZKButton v-if="hasSettingsButton" icon="mdi-cog" text-color="black" flat />
         </RouterLink>
       </div>
     </div>

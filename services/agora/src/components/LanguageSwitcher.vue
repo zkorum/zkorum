@@ -1,7 +1,6 @@
 <template>
-    <q-btn-toggle
+    <q-btn-toggle v-model="actualLocale"
         size="sm"
-        v-model="actualLocale"
         no-caps
         rounded
         unelevated

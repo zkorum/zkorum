@@ -2,10 +2,10 @@
   <div>
     <WidthWrapper>
       <div class="container">
-        <ZKEditor v-model="commentText" placeholder="Add a comment" min-height="2rem"
-          @update:model-value="checkWordCount()" :focus-editor="showControls" @manually-focused="editorFocused()"
-          :show-toolbar="innerFocus || showControls" :key="resetKey" />
-        <div class="actionButtonCluster" v-if="innerFocus || showControls">
+        <ZKEditor :key="resetKey" v-model="commentText" placeholder="Add a comment"
+          min-height="2rem" :focus-editor="showControls" :show-toolbar="innerFocus || showControls"
+          @update:model-value="checkWordCount()" @manually-focused="editorFocused()" />
+        <div v-if="innerFocus || showControls" class="actionButtonCluster">
           <div v-if="characterProgress > 100">
             {{ MAX_COMMENT_CHARACTERS - characterCount }}
           </div>
@@ -15,7 +15,7 @@
           <q-separator vertical inset />
 
           <ZKButton label="Cancel" color="secondary" @click="cancelClicked()" />
-          <ZKButton label="Post" color="primary" @click="postClicked()" :disable="characterProgress > 100" />
+          <ZKButton label="Post" color="primary" :disable="characterProgress > 100" @click="postClicked()" />
         </div>
       </div>
     </WidthWrapper>
@@ -31,7 +31,7 @@ import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
   showControls: boolean
-}>()
+}>();
 
 const innerFocus = ref(false);
 
@@ -39,7 +39,7 @@ const MAX_COMMENT_CHARACTERS = 280;
 
 const characterProgress = computed(() => {
   return characterCount.value / MAX_COMMENT_CHARACTERS * 100;
-})
+});
 
 const commentText = ref("");
 const characterCount = ref(0);
@@ -53,7 +53,7 @@ watch(() => props.showControls, () => {
   } else {
     innerFocus.value = true;
   }
-})
+});
 
 function editorFocused() {
   innerFocus.value = true;
@@ -65,7 +65,7 @@ function checkWordCount() {
 }
 
 function cancelClicked() {
-  emit("cancelClicked")
+  emit("cancelClicked");
   innerFocus.value = false;
   resetKey.value = resetKey.value + 1;
   characterCount.value = 0;

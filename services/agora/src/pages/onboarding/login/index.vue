@@ -1,6 +1,6 @@
 <template>
   <div>
-    <form @submit.prevent="sendVerificationCode()" class="container">
+    <form class="container" @submit.prevent="sendVerificationCode()">
       <h4>{{ t("onboarding.login.title") }}</h4>
       <div>
         Email Address
@@ -42,9 +42,9 @@ import { zodauthorizedEmail, zodemail } from "src/shared/types/zod";
 import { useRouter } from "vue-router";
 import { urlEncode } from "src/shared/common/base64";
 
-const { t } = useI18n()
-const emailInput = ref("")
-const emailHelper = ref("")
+const { t } = useI18n();
+const emailInput = ref("");
+const emailHelper = ref("");
 
 const stayLoggedIn = ref(false);
 
@@ -62,22 +62,22 @@ function handleAuthenticate() {
 function isEmailValid(emailToValidate: string): boolean {
   if (emailToValidate === "") {
     // setIsEmailValid("incorrect");
-    emailHelper.value = ""
+    emailHelper.value = "";
     return false;
   }
   const result = zodemail.safeParse(emailToValidate);
   if (!result.success) {
     // const formatted = result.error.format();
     // emailHelper.value = formatted._errors[0]; // TODO: translate this
-    emailHelper.value = t("onboarding.login.email.invalid")
+    emailHelper.value = t("onboarding.login.email.invalid");
     return false;
   } else {
     const result = zodauthorizedEmail.safeParse(emailToValidate);
     if (!result.success) {
-      emailHelper.value = t("onboarding.login.email.unauthorized")
+      emailHelper.value = t("onboarding.login.email.unauthorized");
       return false;
     } else {
-      emailHelper.value = ""
+      emailHelper.value = "";
       return true;
     }
   }

@@ -13,7 +13,7 @@ import WidthWrapper from "./WidthWrapper.vue";
 
 defineProps<{
   reveal: boolean
-}>()
+}>();
 
 </script>
 

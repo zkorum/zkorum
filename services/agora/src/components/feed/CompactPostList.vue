@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-page>
-      <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
+      <q-infinite-scroll :offset="250" class="column flex-center" @load="onLoad">
         <div class="postListFlex">
           <div v-for="(postData, index) in compactPostDataList" :key="index" class="postPadding">
             <div>

@@ -13,7 +13,7 @@
             </div>
 
             <div>
-              <swiper-container slides-per-view="1" initialSlide="1" ref="el">
+              <swiper-container ref="el" slides-per-view="1" initial-slide="1">
                 <swiper-slide>
                   <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
                     <q-icon name="mdi-chevron-double-up" flat color="secondary" size="3rem" />
@@ -62,7 +62,7 @@
 
           <div v-if="finishedRanking">
 
-            <div class="finishedMessage" v-if="postItem.payload.comments.length == 0">
+            <div v-if="postItem.payload.comments.length == 0" class="finishedMessage">
               <div class="finishedIcon">
                 <q-icon name="mdi-vote" size="3rem" />
               </div>
@@ -77,7 +77,7 @@
               </div>
             </div>
 
-            <div class="finishedMessage" v-if="postItem.userInteraction.commentRanking.assignedRankingItems.length > 0">
+            <div v-if="postItem.userInteraction.commentRanking.assignedRankingItems.length > 0" class="finishedMessage">
               <div class="finishedIcon">
                 <q-icon name="mdi-check" size="3rem" />
               </div>
@@ -117,9 +117,9 @@ import { useBottomSheet } from "src/utils/ui/bottomSheet";
 
 const props = defineProps<{
   postSlugId: string
-}>()
+}>();
 
-const emit = defineEmits(["clickedCommentButton"])
+const emit = defineEmits(["clickedCommentButton"]);
 
 const { getUnrankedComments, updateCommentRanking, getPostBySlugId } = usePostStore();
 
@@ -127,10 +127,10 @@ const { showCommentRankingReportSelector } = useBottomSheet();
 
 const cardElement = ref();
 
-const el = ref(null)
-const elementSize = useElementSize(el)
+const el = ref(null);
+const elementSize = useElementSize(el);
 
-const unrankedCommentList = getUnrankedComments(props.postSlugId)
+const unrankedCommentList = getUnrankedComments(props.postSlugId);
 
 const postItem = getPostBySlugId(props.postSlugId);
 
@@ -175,11 +175,11 @@ onMounted(() => {
       }
     });
   }
-})
+});
 
 watch(elementSize.height, () => {
   updatePaddingSize();
-})
+});
 
 watch(selectedCommentReportId, () => {
   // Send report
@@ -187,14 +187,14 @@ watch(selectedCommentReportId, () => {
     rankComment("pass", false);
     selectedCommentReportId.value = "";
   }
-})
+});
 
 function clickedCommentButton() {
-  emit("clickedCommentButton")
+  emit("clickedCommentButton");
 }
 
 function reportButtonClicked() {
-  showCommentRankingReportSelector(selectedCommentReportId)
+  showCommentRankingReportSelector(selectedCommentReportId);
 }
 
 function clickedRankMoreButton() {

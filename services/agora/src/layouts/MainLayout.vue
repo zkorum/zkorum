@@ -2,14 +2,14 @@
   <div>
     <WidthWrapper>
       <q-layout view="hHh lpR fFf" :class="{ bottomPagePadding: addBottomPadding }">
-        <TopMenuBar :has-back-button="props.headerHasGoBackButton" :has-settings-button="props.headerHasSettingsButton"
-          v-if="enableHeader" />
+        <TopMenuBar v-if="enableHeader" :has-back-button="props.headerHasGoBackButton"
+          :has-settings-button="props.headerHasSettingsButton" />
 
         <q-page-container>
           <router-view />
         </q-page-container>
 
-        <q-footer bordered class="coloredFooter" v-if="enableFooter">
+        <q-footer v-if="enableFooter" bordered class="coloredFooter">
           <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
             <q-route-tab :to="{ name: 'default-home-feed' }"
               :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
@@ -28,7 +28,7 @@ import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
 import { MainLayoutProps } from "src/utils/model/props";
 import { useRoute } from "vue-router";
 
-const props = defineProps<MainLayoutProps>()
+const props = defineProps<MainLayoutProps>();
 
 const route = useRoute();
 

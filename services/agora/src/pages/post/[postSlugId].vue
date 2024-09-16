@@ -10,7 +10,7 @@ import PostDetails from "src/components/post/PostDetails.vue";
 
 const props = defineProps<{
   postSlugId: string
-}>()
+}>();
 
 const postStore = usePostStore();
 

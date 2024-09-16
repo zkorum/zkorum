@@ -7,7 +7,7 @@
 defineProps<{
   imagePath: string;
   size: string;
-}>()
+}>();
 
 </script>
 
