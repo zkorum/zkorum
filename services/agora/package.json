@@ -61,8 +61,8 @@
         "msw": "^2.2.14",
         "prettier": "^3.0.3",
         "typescript": "~5.3.0",
-        "vite-plugin-checker": "^0.6.4",
-        "vite-tsconfig-paths": "^4.3.2",
+        "vite-plugin-checker": "^0.8.0",
+        "vite-tsconfig-paths": "^5.0.1",
         "vue-tsc": "^1.8.22"
     },
     "engines": {
