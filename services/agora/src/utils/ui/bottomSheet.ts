@@ -1,10 +1,13 @@
 import { useQuasar } from "quasar";
 import { Ref } from "vue";
 import { useCommentOptions } from "../component/comments";
+import { useDialog } from "./dialog";
 
 export const useBottomSheet = () => {
 
   const quasar = useQuasar();
+
+  const dialog = useDialog();
 
   function showCommentOptionSelector() {
 
@@ -23,7 +26,7 @@ export const useBottomSheet = () => {
     }).onOk(action => {
       console.log("Selected action: " + action.id);
       if (action.id == "report") {
-        showStandardReportSelector(false);
+        showStandardReportSelector("comment");
       }
     }).onCancel(() => {
       console.log("Dismissed");
@@ -49,7 +52,7 @@ export const useBottomSheet = () => {
     }).onOk(action => {
       console.log("Selected action: " + action.id);
       if (action.id == "report") {
-        showStandardReportSelector(true);
+        showStandardReportSelector("post");
       }
     }).onCancel(() => {
       console.log("Dismissed");
@@ -59,7 +62,7 @@ export const useBottomSheet = () => {
   }
 
 
-  function showStandardReportSelector(isPost: boolean) {
+  function showStandardReportSelector(itemName: "post" | "comment") {
 
     const actionList = [];
 
@@ -103,18 +106,13 @@ export const useBottomSheet = () => {
       }
     );
 
-    let itemName = "post";
-    if (!isPost) {
-      itemName = "comment";
-    }
-
     quasar.bottomSheet({
       message: `Why do you think this ${itemName} is not appropriate?`,
       grid: false,
       actions: actionList
     }).onOk(action => {
       console.log("Selected action: " + action.id);
-      processReportAction(isPost);
+      dialog.showReportDialog(itemName);
     }).onCancel(() => {
       console.log("Dismissed");
     }).onDismiss(() => {
@@ -205,19 +203,10 @@ export const useBottomSheet = () => {
     });
   }
 
-  function processReportAction(isPost: boolean) {
-
-    let itemName = "post";
-    if (!isPost) {
-      itemName = "comment";
-    }
-
-    quasar.dialog({
-      title: "Thank you for the report",
-      message: `Admins will investigate if the ${itemName} contains inappropriate content.`,
-    });
-
-  }
-
-  return { showPostOptionSelector, showCommentSortSelector, showCommentRankingReportSelector, showCommentOptionSelector };
+  return {
+    showPostOptionSelector,
+    showCommentSortSelector,
+    showCommentRankingReportSelector,
+    showCommentOptionSelector
+  };
 };
