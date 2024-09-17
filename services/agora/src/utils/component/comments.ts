@@ -1,9 +1,8 @@
 export interface CommentSortingItemInterface {
-  label2: string;
-  icon2: string;
+  label: string;
+  icon: string;
   value: string;
   description: string;
-  slot: string;
 }
 
 export function useCommentOptions() {
@@ -12,32 +11,40 @@ export function useCommentOptions() {
 
     const commentOptions: CommentSortingItemInterface[] = [
       {
-        label2: "Popular",
-        icon2: "mdi-rocket",
+        label: "Popular",
+        icon: "mdi-rocket",
         value: "popular",
         description: "Highest like/dislike ratio",
-        slot: "one"
       },
       {
-        label2: "Controversial",
-        icon2: "mdi-sword",
+        label: "Controversial",
+        icon: "mdi-sword",
         value: "controversial",
         description: "Most average like/dislike ratio",
-        slot: "two"
       },
       {
-        label2: "New",
-        icon2: "mdi-decagram-outline",
+        label: "New",
+        icon: "mdi-decagram-outline",
         value: "new",
         description: "Most recent comments",
-        slot: "three"
       },
       {
-        label2: "Surprising ",
-        icon2: "mdi-lightbulb",
+        label: "Surprising",
+        icon: "mdi-lightbulb",
         value: "surprising",
         description: "Surprisingly popular comments",
-        slot: "four"
+      },
+      {
+        label: "Clusters",
+        icon: "mdi-chart-bubble",
+        value: "clusters",
+        description: "Visual representation of the opinion clusters",
+      },
+      {
+        label: "More",
+        icon: "mdi-dots-horizontal",
+        value: "more",
+        description: "You're a researcher? We're on the lookout for more algorithms",
       }
     ];
 

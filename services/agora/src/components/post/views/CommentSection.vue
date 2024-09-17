@@ -2,27 +2,14 @@
   <div>
     <div class="container">
 
-      <div class="optionBar">
-        <q-btn-toggle v-model="commentSortPreference" no-caps rounded unelevated toggle-color="color-text-weak"
-          color="button-background-color" text-color="color-text-weak" :options="getCommentSortOptions()">
-
-          <template #one>
-            <CommentSortItem :sort-item="getSortItem('popular')" />
-          </template>
-
-          <template #two>
-            <CommentSortItem :sort-item="getSortItem('controversial')" />
-          </template>
-
-          <template #three>
-            <CommentSortItem :sort-item="getSortItem('new')" />
-          </template>
-
-          <template #four>
-            <CommentSortItem :sort-item="getSortItem('surprising')" />
-          </template>
-
-        </q-btn-toggle>
+      <div class="swiperCluster">
+        <swiper-container slides-per-view="4.5">
+          <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value">
+            <div>
+              <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem" @click="commentSortPreference = sortOptionItem.value"/>
+            </div>
+          </swiper-slide>
+        </swiper-container>
 
         <div class="descriptionLabel">
           {{ description }}
@@ -56,8 +43,8 @@ import { DummyCommentFormat, DummyCommentRankingFormat } from "src/stores/post";
 import { useStorage } from "@vueuse/core";
 import { CommentSortingItemInterface, useCommentOptions } from "src/utils/component/comments";
 import CommentSingle from "./CommentSingle.vue";
-import CommentSortItem from "./CommentSortItem.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
+import CommentSortItem from "./CommentSortItem.vue";
 import { onMounted, ref, watch } from "vue";
 
 defineProps<{
@@ -95,11 +82,10 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   }
 
   return {
-    label2: "",
-    icon2: "",
+    label: "",
+    icon: "",
     value: "",
     description: "",
-    slot: ""
   };
 }
 
@@ -112,14 +98,9 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   gap: 1rem;
 }
 
-.optionBar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
 .descriptionLabel {
+  padding-top: 1rem;
+  text-align: center;
   color: $color-text-weak;
 }
 
@@ -136,6 +117,10 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   display:flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.swiperCluster {
+  cursor: pointer;
 }
 
 </style>
