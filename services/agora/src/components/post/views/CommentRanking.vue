@@ -89,8 +89,8 @@
               </div>
 
               <div class="finishedActionButtons">
-                <ZKButton outline text-color="secondary" label="Vote More" icon="mdi-vote"
-                  @click="clickedRankMoreButton()" />
+                <ZKButton v-if="postItem.payload.comments.length != postItem.userInteraction.commentRanking.rankedCommentList.size" outline text-color="secondary" label="Vote More"
+                  icon="mdi-vote" @click="clickedRankMoreButton()" />
 
                 <ZKButton outline text-color="secondary" label="See Results" icon="mdi-chart-bar"
                   @click="clickedSeeResultsButton()" />
@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
+import { DummyCommentFormat, DummyPostDataFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { onMounted, ref, watch } from "vue";
@@ -122,7 +122,7 @@ const props = defineProps<{
 
 const emit = defineEmits(["clickedCommentButton", "clickedSeeResultButton"]);
 
-const { getUnrankedComments, updateCommentRanking, getPostBySlugId } = usePostStore();
+const { updateCommentRanking, getPostBySlugId, allocateAllCommentsForRanking, emptyPost } = usePostStore();
 
 const { showCommentRankingReportSelector } = useBottomSheet();
 
@@ -131,16 +131,15 @@ const cardElement = ref();
 const el = ref(null);
 const elementSize = useElementSize(el);
 
-const unrankedCommentList = getUnrankedComments(props.postSlugId);
+const unrankedCommentList = ref<DummyCommentFormat[]>([]);
 
-const postItem = getPostBySlugId(props.postSlugId);
+const postItem = ref<DummyPostDataFormat>(emptyPost);
 
 let currentRankIndex = ref(0);
 
 const finishedRanking = ref(false);
-checkFinishedRanking();
 
-let displayCommentItem = ref<DummyCommentFormat>({
+const emptyCommentItem: DummyCommentFormat = {
   index: 0,
   userCommunityId: "",
   userCommunityImage: "",
@@ -148,19 +147,20 @@ let displayCommentItem = ref<DummyCommentFormat>({
   comment: "",
   numUpvotes: 0,
   numDownvotes: 0
-});
+};
+
+let displayCommentItem = ref<DummyCommentFormat>(emptyCommentItem);
 
 const progress = ref(0);
-
 const topPadding = ref(0);
-
-loadNextComment();
 
 let swiperEl: SwiperContainer | null = null;
 
 const selectedCommentReportId = ref("");
 
 onMounted(() => {
+
+  initializeData();
 
   updatePaddingSize();
 
@@ -190,6 +190,52 @@ watch(selectedCommentReportId, () => {
   }
 });
 
+function getUnrankedComments(): DummyCommentFormat[] {
+  const assignedRankingItems = postItem.value.userInteraction.commentRanking.assignedRankingItems;
+  const rankedCommentList = postItem.value.userInteraction.commentRanking.rankedCommentList;
+
+  const unrankedCommentIndexes: number[] = [];
+
+  for (let i = 0; i < assignedRankingItems.length; i++) {
+    const assignedIndex = assignedRankingItems[i];
+    let isRanked = false;
+    for (const [key] of rankedCommentList.entries()) {
+      if (assignedIndex == key) {
+        isRanked = true;
+      }
+    }
+    if (!isRanked) {
+      unrankedCommentIndexes.push(assignedIndex);
+    }
+  }
+
+  const unrankedComments: DummyCommentFormat[] = [];
+  for (let unrankedIndex = 0; unrankedIndex < unrankedCommentIndexes.length; unrankedIndex++) {
+    for (let commentIndex = 0; commentIndex < postItem.value.payload.comments.length; commentIndex++) {
+      const commentItem = postItem.value.payload.comments[commentIndex];
+      if (unrankedCommentIndexes[unrankedIndex] == commentItem.index) {
+        unrankedComments.push(commentItem);
+        break;
+      }
+    }
+  }
+
+  return unrankedComments;
+}
+
+function initializeData() {
+  postItem.value = getPostBySlugId(props.postSlugId);
+  currentRankIndex.value = 0;
+  unrankedCommentList.value = getUnrankedComments();
+  finishedRanking.value = false;
+
+  if (unrankedCommentList.value.length > 0) {
+    loadNextComment();
+  }
+
+  checkFinishedRanking();
+}
+
 function clickedCommentButton() {
   emit("clickedCommentButton");
 }
@@ -199,6 +245,8 @@ function reportButtonClicked() {
 }
 
 function clickedRankMoreButton() {
+  allocateAllCommentsForRanking(props.postSlugId);
+  initializeData();
 }
 
 function clickedSeeResultsButton() {
@@ -211,7 +259,7 @@ function updatePaddingSize() {
 }
 
 function checkFinishedRanking() {
-  if (unrankedCommentList.length == currentRankIndex.value) {
+  if (unrankedCommentList.value.length == currentRankIndex.value) {
     finishedRanking.value = true;
     return true;
   } else {
@@ -220,11 +268,11 @@ function checkFinishedRanking() {
 }
 
 function loadNextComment() {
-  displayCommentItem.value = unrankedCommentList[currentRankIndex.value];
+  displayCommentItem.value = unrankedCommentList.value[currentRankIndex.value];
 }
 
 function updateProgressBar() {
-  progress.value = currentRankIndex.value / unrankedCommentList.length;
+  progress.value = currentRankIndex.value / unrankedCommentList.value.length;
 }
 
 function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boolean) {

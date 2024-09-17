@@ -228,61 +228,42 @@ export const usePostStore = defineStore("post", () => {
         return postList;
     }
 
-    function createSingleRealisticPost(companyId: string, title: string, body: string, hasPoll: boolean, pollOptions: string[], commentList: string[]) {
-        const dummyPost = generateDummyPostData();
-        const companyItem = communityStore.getCompanyItemFromId(companyId);
-        dummyPost.metadata.posterName = companyItem.label;
-        dummyPost.metadata.posterImagePath = "/development/logos/" + companyItem.profilePicture;
-        dummyPost.metadata.commentCount = commentList.length;
-        dummyPost.payload.title = title;
-        dummyPost.payload.body = body;
-        dummyPost.payload.poll.hasPoll = hasPoll;
-        dummyPost.payload.poll.options = [];
-        dummyPost.userInteraction.commentRanking.rankedCommentList = new Map();
-        for (let i = 0; i < pollOptions.length; i++) {
-            const pollOption: DummyPollOptionFormat = generateDummyPollItem(i, pollOptions[i]);
-            dummyPost.payload.poll.options.push(pollOption);
-        }
-        dummyPost.payload.comments = [];
-        for (let i = 0; i < commentList.length; i++) {
-            const commentItem = composeDummyCommentItem(commentList[i], i, dummyPost.metadata.createdAt);
-            dummyPost.payload.comments.push(commentItem);
-        }
-        return dummyPost;
+    function allocateAllCommentsForRanking(postSlugId: string) {
+      const postItem = getPostBySlugId(postSlugId);
+      postItem.userInteraction.commentRanking.assignedRankingItems = [];
+      for (let i = 0; i < postItem.payload.comments.length; i++) {
+        postItem.userInteraction.commentRanking.assignedRankingItems.push(i);
+      }
     }
 
-    function getUnrankedComments(postSlugId: string): DummyCommentFormat[] {
-        const postItem = getPostBySlugId(postSlugId);
-        const assignedRankingItems = postItem.userInteraction.commentRanking.assignedRankingItems;
-        const rankedCommentList = postItem.userInteraction.commentRanking.rankedCommentList;
+    function createSingleRealisticPost(companyId: string, title: string, body: string, hasPoll: boolean, pollOptions: string[], commentList: string[]) {
+      const dummyPost = generateDummyPostData();
+      const companyItem = communityStore.getCompanyItemFromId(companyId);
+      dummyPost.metadata.posterName = companyItem.label;
+      dummyPost.metadata.posterImagePath = "/development/logos/" + companyItem.profilePicture;
+      dummyPost.metadata.commentCount = commentList.length;
+      dummyPost.payload.title = title;
+      dummyPost.payload.body = body;
+      dummyPost.payload.poll.hasPoll = hasPoll;
+      dummyPost.payload.poll.options = [];
+      dummyPost.userInteraction.commentRanking.rankedCommentList = new Map();
+      for (let i = 0; i < pollOptions.length; i++) {
+          const pollOption: DummyPollOptionFormat = generateDummyPollItem(i, pollOptions[i]);
+          dummyPost.payload.poll.options.push(pollOption);
+      }
+      dummyPost.payload.comments = [];
+      for (let i = 0; i < commentList.length; i++) {
+          const commentItem = composeDummyCommentItem(commentList[i], i, dummyPost.metadata.createdAt);
+          dummyPost.payload.comments.push(commentItem);
+      }
 
-        const unrankedCommentIndexes: number[] = [];
+      const assignedRankingCount = Math.min(3, commentList.length);
+      dummyPost.userInteraction.commentRanking.assignedRankingItems = [];
+      for (let i = 0; i < assignedRankingCount; i++) {
+        dummyPost.userInteraction.commentRanking.assignedRankingItems.push(i);
+      }
 
-        for (let i = 0; i < assignedRankingItems.length; i++) {
-            const assignedIndex = assignedRankingItems[i];
-            let isRanked = false;
-            for (const [key] of rankedCommentList.entries()) {
-                if (assignedIndex == key) {
-                    isRanked = true;
-                }
-            }
-            if (!isRanked) {
-                unrankedCommentIndexes.push(assignedIndex);
-            }
-        }
-
-        const unrankedComments: DummyCommentFormat[] = [];
-        for (let unrankedIndex = 0; unrankedIndex < unrankedCommentIndexes.length; unrankedIndex++) {
-            for (let commentIndex = 0; commentIndex < postItem.payload.comments.length; commentIndex++) {
-                const commentItem = postItem.payload.comments[commentIndex];
-                if (unrankedCommentIndexes[unrankedIndex] == commentItem.index) {
-                    unrankedComments.push(commentItem);
-                    break;
-                }
-            }
-        }
-
-        return unrankedComments;
+      return dummyPost;
     }
 
     function getPostBySlugId(slugId: string) {
@@ -550,13 +531,13 @@ export const usePostStore = defineStore("post", () => {
     }
 
     return {
-        getUnrankedComments,
-        getPostBySlugId,
-        composeDummyCommentItem,
-        fetchUnifiedPosts,
-        updateCommentRanking,
-        getCommunityImageFromId,
-        submitNewPost,
-        emptyPost
+      getPostBySlugId,
+      composeDummyCommentItem,
+      fetchUnifiedPosts,
+      updateCommentRanking,
+      getCommunityImageFromId,
+      submitNewPost,
+      allocateAllCommentsForRanking,
+      emptyPost
     };
 });
