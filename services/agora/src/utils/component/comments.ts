@@ -36,7 +36,7 @@ export function useCommentOptions() {
         label2: "Surprising ",
         icon2: "mdi-lightbulb",
         value: "surprising",
-        description: "Surprisingly popular (click to know more)",
+        description: "Surprisingly popular comments",
         slot: "four"
       }
     ];
