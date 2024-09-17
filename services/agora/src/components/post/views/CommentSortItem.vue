@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="container" :class="{ highlight: isSelected }">
-      <q-icon :name="sortItem.icon" size="2rem" />
+      <q-icon :name="sortItem.icon" size="2rem" color="color-text-weak" />
       <div class="label">
         {{ sortItem.label }}
       </div>
@@ -44,6 +44,7 @@ defineProps<{
   border-radius: 15px;
   border-style: solid;
   border-width: 1px;
+  border-color: $color-text-weak;
 }
 
 </style>

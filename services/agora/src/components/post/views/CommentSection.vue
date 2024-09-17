@@ -1,20 +1,19 @@
 <template>
   <div>
     <div class="container">
-
       <div class="swiperCluster">
-        <swiper-container slides-per-view="4.5">
+        <swiper-container :slides-per-view="slidesPerView" :initial-slide="initialSlide">
           <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value">
             <div>
-              <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem" @click="commentSortPreference = sortOptionItem.value"/>
+              <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem"
+                @click="commentSortPreference = sortOptionItem.value" />
             </div>
           </swiper-slide>
         </swiper-container>
+      </div>
 
-        <div class="descriptionLabel">
-          {{ description }}
-        </div>
-
+      <div class="descriptionLabel">
+        {{ description }}
       </div>
 
       <div v-if="commentSortPreference != 'surprising'" class="commentListFlex">
@@ -33,14 +32,13 @@
           </div>
         </ZKCard>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { DummyCommentFormat, DummyCommentRankingFormat } from "src/stores/post";
-import { useStorage } from "@vueuse/core";
+import { useStorage, useWindowSize } from "@vueuse/core";
 import { CommentSortingItemInterface, useCommentOptions } from "src/utils/component/comments";
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
@@ -53,23 +51,48 @@ defineProps<{
   commentRanking: DummyCommentRankingFormat
 }>();
 
+const slidesPerView = ref(4.5);
+
+const { width } = useWindowSize();
+
 const { getCommentSortOptions } = useCommentOptions();
 
 const commentSortPreference = useStorage("comment-sort-preference-id", "popular");
 
+const initialSlide = ref(0);
+
 const description = ref("");
 
+updateDescription(commentSortPreference.value);
+
 onMounted(() => {
-  updateDescription(commentSortPreference.value);
+  initializeSlideCount();
+});
+
+watch(width, () => {
+  initializeSlideCount();
 });
 
 watch(commentSortPreference, () => {
   updateDescription(commentSortPreference.value);
 });
 
+function initializeSlideCount() {
+  if (width.value < 300) {
+    slidesPerView.value = 2;
+  } else if (width.value < 400) {
+    slidesPerView.value = 2.5;
+  } else if (width.value < 500) {
+    slidesPerView.value = 3.5;
+  } else {
+    slidesPerView.value = 4.5;
+  }
+}
+
 function updateDescription(sortId: string) {
   const sortItem = getSortItem(sortId);
   description.value = sortItem.description;
+  initialSlide.value = sortItem.index;
 }
 
 function getSortItem(sortId: string): CommentSortingItemInterface {
@@ -86,6 +109,7 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
     icon: "",
     value: "",
     description: "",
+    index: 0
   };
 }
 
@@ -99,7 +123,6 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 }
 
 .descriptionLabel {
-  padding-top: 1rem;
   text-align: center;
   color: $color-text-weak;
 }

@@ -216,6 +216,7 @@ function shareClicked() {
 
 .leftButtonCluster {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
