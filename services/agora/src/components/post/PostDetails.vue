@@ -48,7 +48,7 @@
       </div>
 
       <CommentRanking v-if="showRankingMode && !compactMode" :post-slug-id="extendedPostData.metadata.slugId"
-        @clicked-comment-button="clickedCommentButton()" />
+        @clicked-comment-button="clickedCommentButton()" @clicked-see-result-button="clickedSeeResultButton()"/>
 
       <div v-if="!compactMode && !showRankingMode">
         <div v-if="commentList.length > 0">
@@ -150,6 +150,10 @@ function postedCommentFromComposor() {
 
 function cancelledCommentComposor() {
   focusCommentElement.value = false;
+}
+
+function clickedSeeResultButton() {
+  switchToCommentView();
 }
 
 function clickedCommentButton() {

@@ -120,7 +120,7 @@ const props = defineProps<{
   postSlugId: string
 }>();
 
-const emit = defineEmits(["clickedCommentButton"]);
+const emit = defineEmits(["clickedCommentButton", "clickedSeeResultButton"]);
 
 const { getUnrankedComments, updateCommentRanking, getPostBySlugId } = usePostStore();
 
@@ -202,6 +202,7 @@ function clickedRankMoreButton() {
 }
 
 function clickedSeeResultsButton() {
+  emit("clickedSeeResultButton");
 }
 
 function updatePaddingSize() {
