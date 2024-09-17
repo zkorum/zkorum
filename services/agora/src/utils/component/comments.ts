@@ -1,46 +1,34 @@
 export function useCommentOptions() {
 
-
-  function mapCommentSortOption(id: string) {
-    const optionList = getCommentSortOptions();
-
-    for (let i = 0; i < optionList.length; i++) {
-      const item = optionList[i];
-      if (id == item.id) {
-        return item.label;
-      }
-    }
-
-    return "";
-
-  }
-
   function getCommentSortOptions() {
 
-    const commentOptions = [{
+    interface CommentInterface {
+      label: string;
+      icon: string;
+      value: string;
+    }
+
+    const commentOptions: CommentInterface[] = [{
       label: "New",
       icon: "mdi-decagram-outline",
-      id: "new",
-      style: {}
+      value: "new",
     },
     {
       label: "Popular",
       icon: "mdi-rocket",
-      id: "popular",
-      style: {}
+      value: "popular",
     },
     {
       label: "Controversial",
       icon: "mdi-sword",
-      id: "controversial",
-      style: {}
+      value: "controversial",
     }];
 
     return commentOptions;
   }
 
   return {
-    mapCommentSortOption, getCommentSortOptions
+     getCommentSortOptions
   };
 
 }

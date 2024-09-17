@@ -1,6 +1,5 @@
 import { useQuasar } from "quasar";
 import { Ref } from "vue";
-import { useCommentOptions } from "../component/comments";
 import { useDialog } from "./dialog";
 
 export const useBottomSheet = () => {
@@ -178,34 +177,8 @@ export const useBottomSheet = () => {
     });
   }
 
-  function showCommentSortSelector(currentPreferenceId: Ref<string>) {
-
-    const actionList = useCommentOptions().getCommentSortOptions();
-
-    for (let i = 0; i < actionList.length; i++) {
-      const item = actionList[i];
-      if (currentPreferenceId.value == item.id) {
-        item.style = { fontWeight: "bold" };
-      }
-    }
-
-    quasar.bottomSheet({
-      message: "Sort comments by",
-      grid: false,
-      actions: actionList
-    }).onOk(action => {
-      console.log("Selected action: " + action.id);
-      currentPreferenceId.value = action.id;
-    }).onCancel(() => {
-      console.log("Dismissed");
-    }).onDismiss(() => {
-      // console.log('I am triggered on both OK and Cancel')
-    });
-  }
-
   return {
     showPostOptionSelector,
-    showCommentSortSelector,
     showCommentRankingReportSelector,
     showCommentOptionSelector
   };
