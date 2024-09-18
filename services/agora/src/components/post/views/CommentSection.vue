@@ -16,7 +16,8 @@
         {{ description }}
       </div>
 
-      <div v-if="commentSortPreference != 'surprising'" class="commentListFlex">
+      <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
+        class="commentListFlex">
         <div v-for="(commentItem, index) in commentList" :key="index">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :comment-ranking="commentRanking" />
         </div>
@@ -26,14 +27,30 @@
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <q-icon name="mdi-wrench" size="4rem" />
-            <div :style="{textAlign: 'center'}">
-              This sorting option is currently not available!
+            <div class="specialText">
+              This sorting option is currently under development!
             </div>
           </div>
         </ZKCard>
       </div>
+
+      <div v-if="commentSortPreference == 'clusters'" :style="{ paddingTop: '1rem' }">
+        <ZKCard padding="2rem">
+          <div class="specialMessage">
+            <img src="/development/polis/example.png" class="polisExampleImg" />
+            <div class="specialText">
+              This visualization is currently a work-in-progress!
+            </div>
+          </div>
+        </ZKCard>
+      </div>
+
+      <div v-if="commentSortPreference == 'more'" :style="{ paddingTop: '1rem' }">
+        <ResearcherContactUsForm />
+      </div>
+
+      </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -43,6 +60,7 @@ import { CommentSortingItemInterface, useCommentOptions } from "src/utils/compon
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import CommentSortItem from "./CommentSortItem.vue";
+import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
 import { onMounted, ref, watch } from "vue";
 
 defineProps<{
@@ -132,8 +150,6 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   flex-direction: column;
   align-items: center;
   gap: 2rem;
-  width: min(100%, 10rem);
-  margin: auto;
 }
 
 .commentListFlex {
@@ -144,6 +160,16 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 
 .swiperCluster {
   cursor: pointer;
+}
+
+.polisExampleImg {
+  width: 100%;
+  border-radius: 15px;
+}
+
+.specialText {
+  text-align: center;
+  width: min(15rem, 100%);
 }
 
 </style>

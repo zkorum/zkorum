@@ -34,10 +34,12 @@ defineProps<{
   margin: 0.2rem;
 }
 
-.container:hover {
-  border-radius: 15px;
-  background-color: rgb(0 0 0 / 0.08);
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+@media (hover: hover) and (pointer: fine) {
+  .container:hover {
+    border-radius: 15px;
+    background-color: rgb(0 0 0 / 0.08);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
 }
 
 .highlight {
@@ -46,5 +48,4 @@ defineProps<{
   border-width: 1px;
   border-color: $color-text-weak;
 }
-
 </style>

@@ -11,5 +11,12 @@ export const useDialog = () => {
     });
   }
 
-  return { showReportDialog };
+  function showContactUsSuccessfulDialog() {
+    quasar.dialog({
+      title: "Thank you for reaching out to us",
+      message: "Our team will contact you through email after reviewing your message!",
+    });
+  }
+
+  return { showReportDialog, showContactUsSuccessfulDialog };
 };
