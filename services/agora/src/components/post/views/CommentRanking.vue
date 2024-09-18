@@ -318,6 +318,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
   padding-left: 1rem;
   padding-right: 1rem;
   line-height: 1.8;
+  min-height: 8rem;
 }
 
 .rankingDiv {

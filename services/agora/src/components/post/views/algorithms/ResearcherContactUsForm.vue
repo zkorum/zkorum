@@ -12,15 +12,21 @@
         </div>
 
         <div>
-          <q-input v-model="name" label="Name" type="text" required />
+          <FloatLabel>
+            <InputText id="name" v-model="name" required :style="{ width: '100%' }" />
+            <label for="name">Name</label>
+          </FloatLabel>
         </div>
 
         <div>
-          <q-input v-model="email" type="email" label="Email Address" required />
+          <FloatLabel>
+            <InputText id="email" v-model="email" required :style="{ width: '100%' }" />
+            <label for="email">Email</label>
+          </FloatLabel>
         </div>
 
         <div>
-          <q-input v-model="message" label="Message (optional)" type="textarea" />
+          <Textarea v-model="message" placeholder="Message (optional)" :style="{width: '100%'}" />
         </div>
 
         <ZKButton color="primary" label="Submit" type="submit" />
@@ -35,6 +41,9 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { useDialog } from "src/utils/ui/dialog";
 import { ref } from "vue";
+import Textarea from "primevue/textarea";
+import FloatLabel from "primevue/floatlabel";
+import InputText from "primevue/inputtext";
 
 const name = ref("");
 const email = ref("");
@@ -61,11 +70,11 @@ function clearForm() {
 .container {
   display:flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .title {
-  font-size: 2rem;
+  font-size: 1.6rem;
 }
 
 </style>

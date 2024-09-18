@@ -225,6 +225,8 @@ onBeforeRouteLeave((to) => {
 .titleStyle {
   font-size: 1.1rem;
   font-weight: bold;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 .pollingItem {

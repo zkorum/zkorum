@@ -15,7 +15,7 @@
           </div>
 
           <div>
-            <ZKInputField v-model="emailInput" type="email" label="Email" required />
+            <InputText v-model="emailInput" type="email" placeholder="Email" required :style="{width: '100%'}"/>
           </div>
 
           <div class="acceptanceDiv">
@@ -43,11 +43,11 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import ZKInputField from "src/components/ui-library/ZKInputField.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useRouter } from "vue-router";
 import { urlEncode } from "src/shared/common/base64";
 import OnboardContent from "src/components/onboarding/OnboardContent.vue";
+import InputText from "primevue/inputtext";
 
 const emailInput = ref("");
 
