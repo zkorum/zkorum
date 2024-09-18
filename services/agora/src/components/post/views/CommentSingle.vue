@@ -100,7 +100,7 @@ function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRanking
   display: flex;
   gap: 1rem;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: $color-text-weak;
 }
 

@@ -54,7 +54,6 @@ function clickedMoreIcon() {
   gap: 1rem;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.9rem;
   color: $color-text-weak;
 }
 
@@ -74,6 +73,7 @@ function clickedMoreIcon() {
   gap: 0.5rem;
   align-items: center;
   height: 100%;
+  font-size: 0.9rem;
 }
 
 .reportDialog {

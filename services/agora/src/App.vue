@@ -5,9 +5,6 @@
     <component :is="Component" />
   </router-view>
 
-  <!--
-  <TransitionRouterView />
-  -->
 </template>
 
 <script setup lang="ts">
