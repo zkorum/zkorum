@@ -1,13 +1,17 @@
 <template>
   <TopMenuWrapper :reveal="true">
     <div class="topMenu">
-      <div>
+      <div class="menuButtons">
         <BackButton v-if="hasBackButton" />
       </div>
       <div class="menuButtons">
+        <RouterLink :to="{ name: 'welcome'}">
+          <ZKButton label="Login" text-color="white" color="warning" />
+        </RouterLink>
+
         <HelpButton />
         <RouterLink :to="{ name: 'settings-page' }">
-          <ZKButton v-if="hasSettingsButton" icon="mdi-cog" text-color="black" flat />
+          <ZKButton v-if="hasSettingsButton" icon="mdi-cog" text-color="color-text-strong" flat />
         </RouterLink>
       </div>
     </div>
@@ -30,7 +34,7 @@ defineProps<{
 <style scoped style="scss">
 .menuButtons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .topMenu {

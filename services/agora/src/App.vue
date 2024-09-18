@@ -2,9 +2,7 @@
   <!--<router-view />-->
 
   <router-view v-slot="{ Component }">
-    <transition appear enter-active-class="animated fadeIn slow" leave-active-class="animated fadeOut" mode="out-in">
-      <component :is="Component" />
-    </transition>
+    <component :is="Component" />
   </router-view>
 
   <!--
@@ -25,5 +23,6 @@ defineOptions({
 <style lang="scss">
 body {
   font-size: 1rem;
+  color: rgb(24, 28, 31);
 }
 </style>

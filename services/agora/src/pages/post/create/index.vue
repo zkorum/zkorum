@@ -5,7 +5,7 @@
         <TopMenuWrapper :reveal="false">
           <div class="topMenu">
             <div class="menuFlexGroup">
-              <ZKButton icon="mdi-close" text-color="black" flat @click="router.back()" />
+              <ZKButton icon="mdi-close" text-color="color-text-strong" flat @click="router.back()" />
             </div>
 
             <div class="menuFlexGroup">
@@ -26,8 +26,8 @@
 
           <div>
             <div :class="{ editorPadding: !postDraft.enablePolling }">
-              <ZKEditor v-model="postDraft.postBody" placeholder="body text" min-height="5rem"
-                :focus-editor="false" :show-toolbar="true" @update:model-value="checkWordCount()" />
+              <ZKEditor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" :focus-editor="false"
+                :show-toolbar="true" @update:model-value="checkWordCount()" />
 
               <div class="wordCountDiv">
                 <q-icon v-if="bodyWordCount > POST_BODY_LENGTH_MAX" name="mdi-alert-circle"
@@ -47,18 +47,19 @@
                 </div>
                 <div ref="pollRef" class="pollingFlexStyle">
                   <div v-for="index in postDraft.pollingOptionList.length" :key="index" class="pollingItem">
-                    <q-input v-model="postDraft.pollingOptionList[index - 1]" :rules="[val => val && val.length > 0]" type="text"
-                      :label="'Option ' + (index)" :style="{ width: '100%' }"
+                    <q-input v-model="postDraft.pollingOptionList[index - 1]" :rules="[val => val && val.length > 0]"
+                      type="text" :label="'Option ' + (index)" :style="{ width: '100%' }"
                       :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
                     <div v-if="postDraft.pollingOptionList.length != 2" class="deletePollOptionDiv">
-                      <ZKButton flat round icon="mdi-delete" text-color="primary" @click="removePollOption(index - 1)" />
+                      <ZKButton flat round icon="mdi-delete" text-color="primary"
+                        @click="removePollOption(index - 1)" />
                     </div>
 
                   </div>
 
                   <div>
-                    <ZKButton flat text-color="primary" icon="mdi-plus" label="Add Option" :disable="postDraft.pollingOptionList.length == 6"
-                      @click="addPollOption()" />
+                    <ZKButton flat text-color="primary" icon="mdi-plus" label="Add Option"
+                      :disable="postDraft.pollingOptionList.length == 6" @click="addPollOption()" />
                   </div>
                 </div>
               </div>
