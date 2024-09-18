@@ -1,25 +1,23 @@
 <template>
   <div>
     <form class="container" @submit.prevent="sendVerificationCode()">
-      <h4>{{ t("onboarding.login.title") }}</h4>
-      <div>
-        Email Address
+      <div class="title">Enter your email</div>
 
-        <ZKInputField v-model="emailInput" type="email" hide-hint
-          :rules="[(val: string) => isEmailValid(val) || emailHelper]" />
+      <div>
+        We will send you a 6-digit confirmation code to verify your email
+      </div>
+
+      <div>
+        <ZKInputField v-model="emailInput" type="email" label="Email" required />
       </div>
 
       <div class="acceptanceDiv">
-        <q-checkbox v-model="stayLoggedIn" />
-        <div>
-          This is not a shared device. Stay logged in.
-        </div>
+        <q-checkbox v-model="stayLoggedIn" label="This is not a shared device. Stay logged in." />
       </div>
 
-      <ZKButton label="Send Verification Code" :disabled="emailInput.length == 0" type="submit"
-        :onclick="handleAuthenticate" />
+      <ZKButton color="primary" label="Send Verification Code" type="submit" />
 
-      <div>
+      <div class="agreementSection">
         By continuing, you are confirming that you have read and agree to our
         <a href="https://zkorum.com/" target="_blank">User Agreement</a> and
         <a href="https://zkorum.com/" target="_blank">Privacy Policy</a>.
@@ -35,16 +33,12 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useI18n } from "vue-i18n";
 import ZKInputField from "src/components/ui-library/ZKInputField.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import { zodauthorizedEmail, zodemail } from "src/shared/types/zod";
 import { useRouter } from "vue-router";
 import { urlEncode } from "src/shared/common/base64";
 
-const { t } = useI18n();
 const emailInput = ref("");
-const emailHelper = ref("");
 
 const stayLoggedIn = ref(false);
 
@@ -55,46 +49,28 @@ function sendVerificationCode() {
   router.push({ name: "passphrase" });
 }
 
-function handleAuthenticate() {
-  // await authenticate(email, false, )
-}
-
-function isEmailValid(emailToValidate: string): boolean {
-  if (emailToValidate === "") {
-    // setIsEmailValid("incorrect");
-    emailHelper.value = "";
-    return false;
-  }
-  const result = zodemail.safeParse(emailToValidate);
-  if (!result.success) {
-    // const formatted = result.error.format();
-    // emailHelper.value = formatted._errors[0]; // TODO: translate this
-    emailHelper.value = t("onboarding.login.email.invalid");
-    return false;
-  } else {
-    const result = zodauthorizedEmail.safeParse(emailToValidate);
-    if (!result.success) {
-      emailHelper.value = t("onboarding.login.email.unauthorized");
-      return false;
-    } else {
-      emailHelper.value = "";
-      return true;
-    }
-  }
-}
-
 </script>
 
 <style scoped>
 .container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
+  padding-top: 5rem;
 }
 
 .acceptanceDiv {
   display: flex;
   gap: 1rem;
   align-items: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.agreementSection {
+  font-size: 0.9rem;
 }
 </style>
