@@ -15,7 +15,7 @@ export default configure((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ctx.modeName === "capacitor" ? ["i18n", "axios", "crypto", "capgo", "capacitor-storage"] : ["i18n", "axios", "crypto"],
+    boot: ctx.modeName === "capacitor" ? ["i18n", "axios", "crypto", "capgo", "capacitor-storage", "primevue"] : ["i18n", "axios", "crypto", "primevue"],
 
     bin: {
       linuxAndroidStudio: "/home/nicobao/.local/bin/studio.sh",

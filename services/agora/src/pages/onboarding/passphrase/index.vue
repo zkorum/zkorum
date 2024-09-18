@@ -1,36 +1,36 @@
-  <template>
-    <div>
-      <div class="container">
-        <h4>Login Verification</h4>
+<template>
+  <div>
+    <OnboardContent>
 
+      <template #title>
+        Enter the code
+      </template>
+
+      <template #body>
         <div class="instructions">
-          Please enter the verification code had been sent to the following email address:
+          Please enter the 6-digit code that we sent to {{ emailAddressLoaded }}
         </div>
 
-        <div class="emailStyle">
-          {{ emailAddressLoaded }}
+        <div class="codeInput">
+          <InputOtp v-model="verificationCode" :length="6" />
         </div>
 
-        <div>
-          <ZKInputField v-model="verificationCode" label="Verification Code" autocomplete="false" />
-        </div>
-
-        <ZKButton label="Submit" :disabled="verificationCode.length == 0" @click="submitCode(verificationCode)" />
+        <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6" @click="submitCode(verificationCode)" />
 
         <ZKButton label="Skip Verification Page" color="black" @click="submitBypass()" />
-
-      </div>
-    </div>
-
-  </template>
+      </template>
+    </OnboardContent>
+  </div>
+</template>
 
 <script setup lang="ts">
 import { urlDecode } from "src/shared/common/base64";
 import { useRouteParams } from "@vueuse/router";
 import { ref } from "vue";
-import ZKInputField from "src/components/ui-library/ZKInputField.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
+import OnboardContent from "src/components/onboarding/OnboardContent.vue";
 import { useRouter } from "vue-router";
+import InputOtp from "primevue/inputotp";
 
 const router = useRouter();
 
@@ -67,11 +67,10 @@ function submitBypass() {
   font-size: 1.1rem;
 }
 
-.emailStyle {
-  font-size: 1.3rem;
-  text-align: center;
-  background-color: #e2e8f0;
-  border-radius: 15px;
+.codeInput {
+  display: flex;
+  justify-content: center;
   padding: 1rem;
 }
+
 </style>
