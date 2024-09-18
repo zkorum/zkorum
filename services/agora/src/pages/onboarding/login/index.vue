@@ -1,30 +1,40 @@
 <template>
   <div>
-    <form class="container" @submit.prevent="sendVerificationCode()">
-      <div class="title">Enter your email</div>
+    <form @submit.prevent="sendVerificationCode()">
 
-      <div>
-        We will send you a 6-digit confirmation code to verify your email
-      </div>
+      <OnboardContent>
 
-      <div>
-        <ZKInputField v-model="emailInput" type="email" label="Email" required />
-      </div>
+        <template #title>
+          Enter your email
+        </template>
 
-      <div class="acceptanceDiv">
-        <q-checkbox v-model="stayLoggedIn" label="This is not a shared device. Stay logged in." />
-      </div>
+        <template #body>
 
-      <ZKButton color="primary" label="Send Verification Code" type="submit" />
+          <div>
+            We will send you a 6-digit confirmation code to verify your email
+          </div>
 
-      <div class="agreementSection">
-        By continuing, you are confirming that you have read and agree to our
-        <a href="https://zkorum.com/" target="_blank">User Agreement</a> and
-        <a href="https://zkorum.com/" target="_blank">Privacy Policy</a>.
-      </div>
+          <div>
+            <ZKInputField v-model="emailInput" type="email" label="Email" required />
+          </div>
 
-      <ZKButton label="Skip Email Page" color="black"
-        @click="router.push({ name: 'passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
+          <div class="acceptanceDiv">
+            <q-checkbox v-model="stayLoggedIn" label="This is not a shared device. Stay logged in." />
+          </div>
+
+          <ZKButton color="primary" label="Send Verification Code" type="submit" />
+
+          <div class="agreementSection">
+            By continuing, you are confirming that you have read and agree to our
+            <a href="https://zkorum.com/" target="_blank">User Agreement</a> and
+            <a href="https://zkorum.com/" target="_blank">Privacy Policy</a>.
+          </div>
+
+          <ZKButton label="Skip Email Page" color="black"
+            @click="router.push({ name: 'passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
+        </template>
+
+      </OnboardContent>
 
     </form>
   </div>
@@ -37,6 +47,7 @@ import ZKInputField from "src/components/ui-library/ZKInputField.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useRouter } from "vue-router";
 import { urlEncode } from "src/shared/common/base64";
+import OnboardContent from "src/components/onboarding/OnboardContent.vue";
 
 const emailInput = ref("");
 
@@ -46,28 +57,16 @@ const router = useRouter();
 
 function sendVerificationCode() {
   console.log("Submit hit");
-  router.push({ name: "passphrase" });
+  router.push({ name: "passphrase", params: { emailAddressEncoded: urlEncode(emailInput.value) } });
 }
 
 </script>
 
 <style scoped>
-.container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding-top: 5rem;
-}
-
 .acceptanceDiv {
   display: flex;
   gap: 1rem;
   align-items: center;
-}
-
-.title {
-  font-size: 1.5rem;
-  font-weight: bold;
 }
 
 .agreementSection {
