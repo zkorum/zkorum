@@ -81,9 +81,13 @@ const initialSlide = ref(0);
 
 const description = ref("");
 
-updateDescription(commentSortPreference.value);
-
 onMounted(() => {
+  if (commentSortPreference.value == "more") {
+    commentSortPreference.value = "popular";
+  }
+
+  updateDescription(commentSortPreference.value);
+
   initializeSlideCount();
 });
 
