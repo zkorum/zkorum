@@ -6,7 +6,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/post",
     component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: false, enableFooter: false } as MainLayoutProps,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: false, enableFooter: false, reducedWidth: false } as MainLayoutProps,
     children: [
       {
         path: "create",
@@ -18,7 +18,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, enableFooter: true } as MainLayoutProps,
+    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, enableFooter: true, reducedWidth: false } as MainLayoutProps,
     children: [
       {
         path: "/notifications",
@@ -58,7 +58,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "/",
         component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: true, enableFooter: false } as MainLayoutProps,
+        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: true, enableFooter: false, reducedWidth: false } as MainLayoutProps,
         children: [
           {
             path: "post/:postSlugId",
@@ -81,7 +81,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "",
         component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
+        props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false, reducedWidth: true } as MainLayoutProps,
         children: [
           {
             path: "login",

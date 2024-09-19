@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-header :reveal="reveal" bordered class="menuStyle">
-      <WidthWrapper>
+      <WidthWrapper width="35rem">
         <slot />
       </WidthWrapper>
     </q-header>

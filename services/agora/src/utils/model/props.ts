@@ -4,4 +4,5 @@ export interface MainLayoutProps {
   addBottomPadding: boolean;
   enableHeader: boolean;
   enableFooter: boolean;
+  reducedWidth: boolean;
 }

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <WidthWrapper>
+    <WidthWrapper width="35rem">
       <div class="container">
         <ZKEditor :key="resetKey" v-model="commentText" placeholder="Add a comment"
           min-height="2rem" :focus-editor="showControls" :show-toolbar="innerFocus || showControls"

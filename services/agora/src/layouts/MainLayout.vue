@@ -1,6 +1,6 @@
 <template>
   <div>
-    <WidthWrapper>
+    <WidthWrapper :width="reducedWidth ? '25rem' : '35rem'">
       <q-layout view="hHh lpR fFf" :class="{ bottomPagePadding: addBottomPadding }">
         <TopMenuBar v-if="enableHeader" :has-back-button="props.headerHasGoBackButton"
           :has-settings-button="props.headerHasSettingsButton" />
