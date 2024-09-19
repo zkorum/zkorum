@@ -15,7 +15,15 @@
           <InputOtp v-model="verificationCode" :length="6" />
         </div>
 
-        <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6" @click="submitCode(verificationCode)" />
+        <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6"
+          @click="submitCode(verificationCode)" />
+
+        <ZKButton label="Resend Code" color="secondary" :disabled="verificationTimeLeftSeconds > 0"
+          @click="resendCode()" />
+
+        <div>
+          {{ resendCodeCooldownMessage }}
+        </div>
 
         <ZKButton label="Skip Verification Page" color="black" @click="submitBypass()" />
       </template>
@@ -34,6 +42,8 @@ import InputOtp from "primevue/inputotp";
 
 const router = useRouter();
 
+const resendCodeCooldownMessage = ref("");
+
 const emailAddressLoaded = ref("FAILED TO LOAD EMAIL");
 const emailAddressEncoded = useRouteParams("emailAddressEncoded");
 if (typeof emailAddressEncoded.value == "string") {
@@ -42,9 +52,30 @@ if (typeof emailAddressEncoded.value == "string") {
 
 const verificationCode = ref("");
 
+let verificationTimeLeftSeconds = ref(0);
+
 function submitCode(verificationCode: string) {
   console.log(verificationCode);
   router.push({ name: "default-home-feed" });
+}
+
+function resendCode() {
+  verificationTimeLeftSeconds.value = 10;
+  decrementTimer();
+}
+
+function decrementTimer() {
+  verificationTimeLeftSeconds.value -= 1;
+  resendCodeCooldownMessage.value = "The new code had been sent. You may retry in " + verificationTimeLeftSeconds.value + " seconds.";
+
+  if (verificationTimeLeftSeconds.value != 0) {
+    setTimeout(
+      function () {
+        decrementTimer();
+      }, 1000);
+  } else {
+    resendCodeCooldownMessage.value = "";
+  }
 }
 
 

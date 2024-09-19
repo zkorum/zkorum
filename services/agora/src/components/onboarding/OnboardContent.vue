@@ -20,8 +20,9 @@
 }
 
 .title {
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   font-weight: bold;
+  padding-bottom: 1rem;
 }
 
 </style>
