@@ -6,7 +6,11 @@ export default boot(({ app }) => {
   // something to do
   app.use(PrimeVue, {
     theme: {
-      preset: Aura
+      preset: Aura,
+      options: {
+        darkModeSelector: "light",
+        cssLayer: false
+      }
     }
   });
 });

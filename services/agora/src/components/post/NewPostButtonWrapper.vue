@@ -3,14 +3,14 @@
     <div>
       <slot />
 
-      <q-btn unelevated class="floatButton" fab icon="mdi-plus" color="primary" @click="buttonClick()" />
-
+      <q-page-sticky position="bottom-right" :offset="[30, 30]">
+        <q-btn unelevated fab icon="mdi-plus" color="primary" @click="buttonClick()" />
+      </q-page-sticky>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-
 const emit = defineEmits(["onClick"]);
 
 function buttonClick() {
@@ -20,9 +20,4 @@ function buttonClick() {
 </script>
 
 <style scoped>
-.floatButton {
-  position: fixed;
-  bottom: 4rem;
-  right: calc(calc(100vw - calc(min(35rem, 100%))) / 2 + 1rem);
-}
 </style>

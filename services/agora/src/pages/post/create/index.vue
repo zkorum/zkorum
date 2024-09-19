@@ -1,26 +1,23 @@
 <template>
   <div>
     <div>
-      <q-form @submit=" onSubmit()">
+      <q-form @submit="onSubmit()">
         <TopMenuWrapper :reveal="false">
-          <div class="topMenu">
-            <div class="menuFlexGroup">
-              <ZKButton icon="mdi-close" text-color="color-text-strong" flat @click="router.back()" />
-            </div>
-
-            <div class="menuFlexGroup">
-              <HelpButton />
-              <ZKButton color="primary" label="Post" type="submit" :disable="exceededBodyWordCount" />
-            </div>
+          <div class="menuFlexGroup">
+            <ZKButton icon="mdi-close" text-color="color-text-strong" flat @click="router.back()" />
           </div>
 
+          <div class="menuFlexGroup">
+            <HelpButton />
+            <ZKButton color="primary" label="Post" type="submit" :disable="exceededBodyWordCount" />
+          </div>
         </TopMenuWrapper>
 
         <div class="container">
 
           <q-input v-model="postDraft.postTitle" borderless no-error-icon type="textarea" label="Title" lazy-rules
             :rules="[val => val && val.length > 0]" class="titleStyle" autogrow :maxlength="POST_TITLE_LENGTH_MAX"
-            clearable />
+            clearable required />
 
           <div class="wordCountDiv">{{ postDraft.postTitle.length }} / {{ POST_TITLE_LENGTH_MAX }}</div>
 
@@ -259,20 +256,13 @@ onBeforeRouteLeave((to) => {
 
 .addPollBar {
   position: absolute;
-  width: 100%;
-  padding-right: 0.5rem;
+  right: 1rem;
   display: flex;
   justify-content: right;
 }
 
 .container {
   padding: 1rem;
-}
-
-.topMenu {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .editorPadding {

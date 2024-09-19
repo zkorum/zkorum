@@ -20,6 +20,7 @@ defineOptions({
 <style lang="scss">
 body {
   font-size: 1rem;
+  background-color: white;
   color: rgb(24, 28, 31);
 }
 </style>

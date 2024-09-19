@@ -1,109 +1,144 @@
 import { RouteRecordRaw } from "vue-router";
 import MainLayout from "layouts/MainLayout.vue";
-import { MainLayoutProps } from "src/utils/model/props";
+import DefaultMenuBar from "src/components/navigation/DefaultMenuBar.vue";
+import { MainLayoutProps, DefaultMenuBarProps } from "src/utils/model/props";
 
 const routes: RouteRecordRaw[] = [
   {
-    path: "/post",
-    component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: false, enableFooter: false, reducedWidth: false } as MainLayoutProps,
-    children: [
-      {
-        path: "create",
-        component: () => import("pages/post/create/index.vue"),
-        name: "create-post"
-      }
-    ]
-  },
-  {
     path: "/",
     component: MainLayout,
-    props: { headerHasGoBackButton: false, headerHasSettingsButton: true, addBottomPadding: false, enableHeader: true, enableFooter: true, reducedWidth: false } as MainLayoutProps,
+    props: {
+        addBottomPadding: false, enableHeader: true, enableFooter: false, reducedWidth: false
+      } as MainLayoutProps,
     children: [
       {
-        path: "/notifications",
-        component: () => import("pages/notifications/index.vue"),
-        name: "notifications"
+        path: "/",
+        components: {
+          default: () => import("pages/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
+        name: "default-home-feed"
       },
       {
-        path: "/user-profile",
-        children: [
-          {
-            path: ":userId",
-            component: () => import("pages/user-profile/index.vue"),
-            name: "user-profile"
-          }
-        ]
+        path: "/user-profile:userId",
+        components: {
+          default: () => import("pages/user-profile/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
+        name: "user-profile"
       },
       {
         path: "/settings",
-        component: () => import("pages/settings/index.vue"),
+        components: {
+          default: () => import("pages/settings/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
         name: "settings-page"
       },
       {
         path: "/help",
-        component: () => import("pages/help/index.vue"),
+        components: {
+          default: () => import("pages/help/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
         name: "help-page"
-      },
-      {
-        path: "/",
-        component: () => import("pages/index.vue"),
-        name: "default-home-feed"
       }
     ]
   },
   {
-    path: "/",
+    path: "/post",
+    component: MainLayout,
+    props: {
+      addBottomPadding: false, enableHeader: false, enableFooter: false, reducedWidth: false
+    } as MainLayoutProps,
     children: [
       {
-        path: "/",
-        component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: true, addBottomPadding: true, enableHeader: true, enableFooter: false, reducedWidth: false } as MainLayoutProps,
-        children: [
-          {
-            path: "post/:postSlugId",
-            component: () => import("pages/post/[postSlugId].vue"),
-            name: "single-post",
-            props: true
-          }
-        ]
+        path: "create",
+        components: {
+          default: () => import("pages/post/create/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
+        name: "create-post"
+      },
+    ]
+  },
+  {
+    path: "/post",
+    component: MainLayout,
+    props: { addBottomPadding: true, enableHeader: true, enableFooter: false, reducedWidth: false } as MainLayoutProps,
+    children: [
+      {
+        path: ":postSlugId",
+        components: {
+          default: () => import("pages/post/[postSlugId].vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          default: true,
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: true, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
+        name: "single-post"
       }
-    ],
+    ]
   },
   {
     path: "/onboarding",
+    components: {
+      default: () => import("pages/onboarding/index.vue")
+    },
+    name: "welcome"
+  },
+  {
+    path: "/onboarding",
+    component: MainLayout,
+    props: {
+      addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false, reducedWidth: true
+    } as MainLayoutProps,
     children: [
       {
-        path: "/",
-        component: () => import("pages/onboarding/index.vue"),
-        name: "welcome"
+        path: "login",
+        components: {
+          default: () => import("pages/onboarding/login/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "login"
       },
       {
-        path: "",
-        component: MainLayout,
-        props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false, reducedWidth: true } as MainLayoutProps,
-        children: [
-          {
-            path: "login",
-            children: [
-              {
-                path: "",
-                component: () => import("pages/onboarding/login/index.vue"),
-                name: "login"
-              }
-            ]
-          },
-          {
-            path: "passphrase",
-            children: [
-              {
-                path: ":emailAddressEncoded",
-                component: () => import("pages/onboarding/passphrase/index.vue"),
-                name: "passphrase"
-              }
-            ]
-          },
-        ]
+        path: "passphrase/:emailAddressEncoded",
+        components: {
+          default: () => import("pages/onboarding/passphrase/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "passphrase"
       },
     ]
   },
