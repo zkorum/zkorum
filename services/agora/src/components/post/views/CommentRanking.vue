@@ -14,7 +14,7 @@
             </div>
 
             <div>
-              <swiper-container ref="el" slides-per-view="1" initial-slide="1">
+              <swiper-container ref="swipingElementRef" slides-per-view="1" initial-slide="1">
                 <swiper-slide>
                   <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
                     <q-icon name="mdi-chevron-double-up" flat color="secondary" size="3rem" />
@@ -89,8 +89,8 @@
               </div>
 
               <div class="finishedActionButtons">
-                <ZKButton v-if="postItem.payload.comments.length != postItem.userInteraction.commentRanking.rankedCommentList.size" outline text-color="secondary" label="Vote More"
-                  icon="mdi-vote" @click="clickedRankMoreButton()" />
+                <ZKButton v-if="postItem.payload.comments.length != postItem.userInteraction.commentRanking.rankedCommentList.size"
+                  outline text-color="secondary" label="Vote More" icon="mdi-vote" @click="clickedRankMoreButton()" />
 
                 <ZKButton outline text-color="secondary" label="See Results" icon="mdi-chart-bar"
                   @click="clickedSeeResultsButton()" />
@@ -111,7 +111,7 @@
 import { DummyCommentFormat, DummyPostDataFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import { onMounted, ref, watch } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { SwiperContainer } from "swiper/element";
 import { useElementSize } from "@vueuse/core";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
@@ -128,8 +128,8 @@ const { showCommentRankingReportSelector } = useBottomSheet();
 
 const cardElement = ref();
 
-const el = ref(null);
-const elementSize = useElementSize(el);
+const swipingElementRef = ref<SwiperContainer| null>(null);
+const elementSize = useElementSize(swipingElementRef);
 
 const unrankedCommentList = ref<DummyCommentFormat[]>([]);
 
@@ -154,28 +154,26 @@ let displayCommentItem = ref<DummyCommentFormat>(emptyCommentItem);
 const progress = ref(0);
 const topPadding = ref(0);
 
-let swiperEl: SwiperContainer | null = null;
-
 const selectedCommentReportId = ref("");
 
-onMounted(() => {
+const swiperChangeFunction = () => {
+  if (swipingElementRef.value?.swiper.activeIndex == 2) {
+    rankComment("dislike", true);
+  } else if (swipingElementRef.value?.swiper.activeIndex == 0) {
+    rankComment("like", true);
+  } else {
+    return;
+  }
+};
 
+onMounted(() => {
   initializeData();
 
   updatePaddingSize();
+});
 
-  swiperEl = document.querySelector("swiper-container");
-  if (swiperEl != null) {
-    swiperEl.addEventListener("swiperslidechange", () => {
-      if (swiperEl?.swiper.activeIndex == 2) {
-        rankComment("dislike", true);
-      } else if (swiperEl?.swiper.activeIndex == 0) {
-        rankComment("like", true);
-      } else {
-        return;
-      }
-    });
-  }
+onUnmounted(() => {
+  unmountSwiper();
 });
 
 watch(elementSize.height, () => {
@@ -189,6 +187,18 @@ watch(selectedCommentReportId, () => {
     selectedCommentReportId.value = "";
   }
 });
+
+function unmountSwiper() {
+  swipingElementRef.value?.removeEventListener("swiperslidechange", swiperChangeFunction);
+}
+
+function mountSwiper() {
+  if (swipingElementRef.value != null) {
+    swipingElementRef.value.addEventListener("swiperslidechange", swiperChangeFunction);
+  } else {
+    console.log("Failed to mount swiper");
+  }
+}
 
 function getUnrankedComments(): DummyCommentFormat[] {
   const assignedRankingItems = postItem.value.userInteraction.commentRanking.assignedRankingItems;
@@ -224,10 +234,13 @@ function getUnrankedComments(): DummyCommentFormat[] {
 }
 
 function initializeData() {
+
+  mountSwiper();
+
   postItem.value = getPostBySlugId(props.postSlugId);
   currentRankIndex.value = 0;
   unrankedCommentList.value = getUnrankedComments();
-  finishedRanking.value = false;
+  // finishedRanking.value = false;
 
   if (unrankedCommentList.value.length > 0) {
     loadNextComment();
@@ -244,8 +257,10 @@ function reportButtonClicked() {
   showCommentRankingReportSelector(selectedCommentReportId);
 }
 
-function clickedRankMoreButton() {
+async function clickedRankMoreButton() {
+  finishedRanking.value = false;
   allocateAllCommentsForRanking(props.postSlugId);
+  await nextTick();
   initializeData();
 }
 
@@ -261,6 +276,7 @@ function updatePaddingSize() {
 function checkFinishedRanking() {
   if (unrankedCommentList.value.length == currentRankIndex.value) {
     finishedRanking.value = true;
+    unmountSwiper();
     return true;
   } else {
     return false;
@@ -286,7 +302,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
       const isDone = checkFinishedRanking();
       if (!isDone) {
         loadNextComment();
-        swiperEl?.swiper.slideTo(1, 500);
+        swipingElementRef.value?.swiper.slideTo(1, 500);
       }
     }, 500);
   } else {
