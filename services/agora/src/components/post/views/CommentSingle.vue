@@ -14,17 +14,17 @@
             <ZKButton flat text-color="color-text-weak" icon="mdi-dots-horizontal" size="0.8rem"
               @click="optionButtonClicked()" />
 
-            <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
-              @click="toggleVote(commentItem.index, 'like')">
-              <div v-if="getCommentItemRankStatus(commentItem.index) != null" class="voteCountLabel">
-                {{ commentItem.numUpvotes }}
-              </div>
-            </ZKButton>
-
             <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(commentItem.index, false)" size="0.8rem"
               @click="toggleVote(commentItem.index, 'dislike')">
               <div v-if="getCommentItemRankStatus(commentItem.index) != null" class="voteCountLabel">
                 {{ commentItem.numDownvotes }}
+              </div>
+            </ZKButton>
+
+            <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(commentItem.index, true)" size="0.8rem"
+              @click="toggleVote(commentItem.index, 'like')">
+              <div v-if="getCommentItemRankStatus(commentItem.index) != null" class="voteCountLabel">
+                {{ commentItem.numUpvotes }}
               </div>
             </ZKButton>
           </div>
@@ -66,15 +66,15 @@ function getButtonIcon(commentIndex: number, isUpvoteButton: boolean): string {
   const commentAction = getCommentItemRankStatus(commentIndex);
   if (isUpvoteButton) {
     if (commentAction == "like") {
-      return "mdi-arrow-up-bold";
+      return "mdi-thumb-up";
     } else {
-      return "mdi-arrow-up-bold-outline";
+      return "mdi-thumb-up-outline";
     }
   } else {
     if (commentAction == "dislike") {
-      return "mdi-arrow-down-bold";
+      return "mdi-thumb-down";
     } else {
-      return "mdi-arrow-down-bold-outline";
+      return "mdi-thumb-down-outline";
     }
   }
 }
