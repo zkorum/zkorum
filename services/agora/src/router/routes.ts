@@ -8,7 +8,7 @@ const routes: RouteRecordRaw[] = [
     path: "/",
     component: MainLayout,
     props: {
-        addBottomPadding: false, enableHeader: true, enableFooter: false, reducedWidth: false
+        addBottomPadding: false, enableHeader: true, enableFooter: true, reducedWidth: false
       } as MainLayoutProps,
     children: [
       {
