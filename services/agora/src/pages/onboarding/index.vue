@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <q-img src="/images/onboarding/brand.webp" class="welcomeImage" />
+    <img src="/images/onboarding/brand.webp" class="welcomeImage" />
     <div class="buttonFlex">
       <ZKButton :label="t('welcome.login')" :to="{ name: 'login' }" color="primary" />
       <ZKButton color="black" label="Skip Authentication" @click="skipAuthentication()" />

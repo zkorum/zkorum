@@ -71,36 +71,40 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: "/welcome",
-    component: () => import("pages/welcome/index.vue"),
-    name: "welcome"
-  },
-  {
     path: "/onboarding",
-    component: MainLayout,
-    props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
     children: [
       {
-        path: "login",
-        children: [
-          {
-            path: "",
-            component: () => import("pages/onboarding/login/index.vue"),
-            name: "login"
-          }
-        ]
+        path: "/",
+        component: () => import("pages/onboarding/index.vue"),
+        name: "welcome"
       },
       {
-        path: "passphrase",
+        path: "",
+        component: MainLayout,
+        props: { headerHasGoBackButton: true, headerHasSettingsButton: false, addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false } as MainLayoutProps,
         children: [
           {
-            path: ":emailAddressEncoded",
-            component: () => import("pages/onboarding/passphrase/index.vue"),
-            name: "passphrase"
-          }
+            path: "login",
+            children: [
+              {
+                path: "",
+                component: () => import("pages/onboarding/login/index.vue"),
+                name: "login"
+              }
+            ]
+          },
+          {
+            path: "passphrase",
+            children: [
+              {
+                path: ":emailAddressEncoded",
+                component: () => import("pages/onboarding/passphrase/index.vue"),
+                name: "passphrase"
+              }
+            ]
+          },
         ]
       },
-
     ]
   },
 
