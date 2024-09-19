@@ -15,8 +15,8 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding-top: 5rem;
+  gap: 1.5rem;
+  padding-top: 4rem;
 }
 
 .title {

@@ -11,15 +11,11 @@
         <template #body>
 
           <div>
-            We will send you a 6-digit confirmation code to verify your email
+            We will send you a 6-digit confirmation code to verify your email.
           </div>
 
           <div>
             <InputText v-model="emailInput" type="email" placeholder="Email" required :style="{width: '100%'}"/>
-          </div>
-
-          <div class="acceptanceDiv">
-            <q-checkbox v-model="stayLoggedIn" label="This is not a shared device. Stay logged in." />
           </div>
 
           <ZKButton color="primary" label="Send Verification Code" type="submit" />
@@ -51,8 +47,6 @@ import InputText from "primevue/inputtext";
 
 const emailInput = ref("");
 
-const stayLoggedIn = ref(false);
-
 const router = useRouter();
 
 function sendVerificationCode() {
@@ -63,13 +57,7 @@ function sendVerificationCode() {
 </script>
 
 <style scoped>
-.acceptanceDiv {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
 .agreementSection {
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 </style>
