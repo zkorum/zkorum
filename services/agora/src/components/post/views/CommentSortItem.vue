@@ -47,5 +47,6 @@ defineProps<{
   border-style: solid;
   border-width: 1px;
   border-color: $color-text-weak;
+  background-color: $button-background-color;
 }
 </style>

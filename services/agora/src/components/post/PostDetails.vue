@@ -27,12 +27,12 @@
 
           <div class="leftButtonCluster">
             <ZKButton :color="focusCommentElement ? 'color-text-weak' : 'button-background-color'"
-              :text-color="focusCommentElement ? 'white' : 'color-text-weak'"
+              :text-color="focusCommentElement ? 'white' : 'black'"
               :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment-outline"
               @click.stop.prevent="clickedCommentButton()" />
 
             <q-btn-toggle v-if="!props.compactMode" v-model="viewMode" no-caps rounded unelevated
-              toggle-color="color-text-weak" color="button-background-color" text-color="color-text-weak" :options="[
+              toggle-color="color-text-weak" color="button-background-color" text-color="black" :options="[
                 { label: 'Voting', value: 'ranking' },
                 { label: 'Results', value: 'comments' }
               ]" />
@@ -40,7 +40,7 @@
           </div>
 
           <div>
-            <ZKButton color="button-background-color" text-color="color-text-weak" icon="mdi-export-variant"
+            <ZKButton color="button-background-color" text-color="black" icon="mdi-export-variant"
               @click.stop.prevent="shareClicked()" />
           </div>
 
@@ -48,7 +48,7 @@
       </div>
 
       <CommentRanking v-if="showRankingMode && !compactMode" :post-slug-id="extendedPostData.metadata.slugId"
-        @clicked-comment-button="clickedCommentButton()" @clicked-see-result-button="clickedSeeResultButton()"/>
+        @clicked-comment-button="clickedCommentButton()" @clicked-see-result-button="clickedSeeResultButton()" />
 
       <div v-if="!compactMode && !showRankingMode">
         <div v-if="commentList.length > 0">
