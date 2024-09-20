@@ -103,42 +103,66 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
-    path: "/onboarding",
+    path: "/authentication",
     components: {
-      default: () => import("pages/onboarding/index.vue")
+      default: () => import("pages/authentication/index.vue")
     },
     name: "welcome"
   },
   {
-    path: "/onboarding",
+    path: "/authentication",
     component: MainLayout,
     props: {
       addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false, reducedWidth: true
     } as MainLayoutProps,
     children: [
       {
-        path: "login",
+        path: "/login/email",
         components: {
-          default: () => import("pages/onboarding/login/index.vue"), topmenubar: DefaultMenuBar
+          default: () => import("src/pages/authentication/login/email/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
             hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
-        name: "login"
+        name: "login-email"
       },
       {
-        path: "passphrase/:emailAddressEncoded",
+        path: "/login/passphrase/:emailAddressEncoded",
         components: {
-          default: () => import("pages/onboarding/passphrase/index.vue"), topmenubar: DefaultMenuBar
+          default: () => import("src/pages/authentication/login/passphrase/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
             hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
-        name: "passphrase"
+        name: "login-passphrase"
+      },
+      {
+        path: "/verification/instructions",
+        components: {
+          default: () => import("src/pages/authentication/verification/instructions/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "verification-instructions"
+      },
+      {
+        path: "/verification/welcome",
+        components: {
+          default: () => import("src/pages/authentication/verification/welcome/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "verification-welcome"
       },
     ]
   },

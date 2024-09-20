@@ -56,7 +56,7 @@ let verificationTimeLeftSeconds = ref(0);
 
 function submitCode(verificationCode: string) {
   console.log(verificationCode);
-  router.push({ name: "default-home-feed" });
+  router.push({ name: "verification-welcome" });
 }
 
 function resendCode() {

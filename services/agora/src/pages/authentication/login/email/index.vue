@@ -27,7 +27,7 @@
           </div>
 
           <ZKButton label="Skip Email Page" color="black"
-            @click="router.push({ name: 'passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
+            @click="router.push({ name: 'login-passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
         </template>
 
       </OnboardContent>
@@ -51,7 +51,7 @@ const router = useRouter();
 
 function sendVerificationCode() {
   console.log("Submit hit");
-  router.push({ name: "passphrase", params: { emailAddressEncoded: urlEncode(emailInput.value) } });
+  router.push({ name: "login-passphrase", params: { emailAddressEncoded: urlEncode(emailInput.value) } });
 }
 
 </script>
