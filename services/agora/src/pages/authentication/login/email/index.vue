@@ -15,15 +15,15 @@
           </div>
 
           <div>
-            <InputText v-model="emailInput" type="email" placeholder="Email" required :style="{width: '100%'}"/>
+            <InputText v-model="emailInput" type="email" placeholder="Email" required :style="{width: '100%'}" />
           </div>
 
           <ZKButton color="primary" label="Send Verification Code" type="submit" />
 
           <div class="agreementSection">
             By continuing, you are confirming that you have read and agree to our
-            <a href="https://zkorum.com/" target="_blank">User Agreement</a> and
-            <a href="https://zkorum.com/" target="_blank">Privacy Policy</a>.
+            <a href="https://zkorum.com/" target="_blank" class="highlightUrl">User Agreement</a> and
+            <a href="https://zkorum.com/" target="_blank" class="highlightUrl">Privacy Policy</a>.
           </div>
 
           <ZKButton label="Skip Email Page" color="black"
@@ -60,4 +60,9 @@ function sendVerificationCode() {
 .agreementSection {
   font-size: 1rem;
 }
+
+.highlightUrl {
+  text-decoration: underline;
+}
+
 </style>
