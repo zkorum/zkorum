@@ -1,6 +1,6 @@
 <template>
   <div>
-    <OnboardContent>
+    <AuthContentWrapper>
 
       <template #title>
         Enter the code
@@ -25,9 +25,9 @@
           {{ resendCodeCooldownMessage }}
         </div>
 
-        <ZKButton label="Skip Verification Page" color="black" @click="submitBypass()" />
+        <ZKButton label="Skip Passphrase Page" color="black" @click="submitBypass()" />
       </template>
-    </OnboardContent>
+    </AuthContentWrapper>
   </div>
 </template>
 
@@ -36,7 +36,7 @@ import { urlDecode } from "src/shared/common/base64";
 import { useRouteParams } from "@vueuse/router";
 import { ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import OnboardContent from "src/components/onboarding/OnboardContent.vue";
+import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import { useRouter } from "vue-router";
 import InputOtp from "primevue/inputotp";
 
@@ -80,7 +80,7 @@ function decrementTimer() {
 
 
 function submitBypass() {
-  router.push({ name: "default-home-feed" });
+  router.push({ name: "verification-welcome" });
 }
 
 </script>

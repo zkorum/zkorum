@@ -2,7 +2,7 @@
   <div>
     <form @submit.prevent="sendVerificationCode()">
 
-      <OnboardContent>
+      <AuthContentWrapper>
 
         <template #title>
           Enter your email
@@ -30,7 +30,7 @@
             @click="router.push({ name: 'login-passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
         </template>
 
-      </OnboardContent>
+      </AuthContentWrapper>
 
     </form>
   </div>
@@ -42,7 +42,7 @@ import { ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useRouter } from "vue-router";
 import { urlEncode } from "src/shared/common/base64";
-import OnboardContent from "src/components/onboarding/OnboardContent.vue";
+import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import InputText from "primevue/inputtext";
 
 const emailInput = ref("");

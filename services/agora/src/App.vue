@@ -23,4 +23,10 @@ body {
   background-color: white;
   color: rgb(24, 28, 31);
 }
+
+a {
+  color: rgb(24, 28, 31);
+  text-decoration: none;
+}
+
 </style>
