@@ -24,7 +24,7 @@
               </div>
             </ZKCard>
           </RouterLink>
-          <ZKButton label="Skip for later" color="secondary" @click="verifyIdentity()" />
+          <ZKButton label="Skip for later" color="secondary" @click="skipButton()" />
         </div>
 
       </template>
@@ -41,8 +41,8 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 
 const router = useRouter();
 
-function verifyIdentity() {
-  router.push({ name: "verification-instructions" });
+function skipButton() {
+  router.push({ name: "default-home-feed" });
 }
 
 </script>
