@@ -29,7 +29,9 @@
             </div>
           </ZKCard>
 
-          <ZKButton label="Go to RariMe" color="primary" />
+          <a href="https://rarime.com/" target="_blank">
+            <ZKButton label="Go to RariMe" color="primary" :style="{ width: '100%' }" />
+          </a>
 
           <ZKButton label="Skip for later" color="secondary" @click="skipButton()" />
         </div>
