@@ -24,7 +24,7 @@
               </div>
             </ZKCard>
           </RouterLink>
-          <ZKButton label="Skip for later" color="secondary" @click="skipButton()" />
+          <SkipForLaterButton @click="skipButton()" />
         </div>
 
       </template>
@@ -35,9 +35,9 @@
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
+import SkipForLaterButton from "src/components/authentication/SkipForLaterButton.vue";
 
 const router = useRouter();
 
