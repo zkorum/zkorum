@@ -29,8 +29,8 @@
             </div>
           </ZKCard>
 
-          <a href="https://rarime.com/" target="_blank">
-            <ZKButton label="Go to RariMe" color="primary" :style="{ width: '100%' }" />
+          <a href="https://rarime.com/" target="_blank" rel="noopener noreferrer">
+            <ZKButton label="Go to RariMe" color="primary" :style="{ width: '100%' }" @click="completeVerification()" />
           </a>
 
           <SkipForLaterButton @click="skipButton()" />
@@ -52,6 +52,10 @@ const router = useRouter();
 
 function skipButton() {
   router.push({ name: "default-home-feed" });
+}
+
+function completeVerification() {
+  router.push({ name: "verification-successful" });
 }
 
 </script>

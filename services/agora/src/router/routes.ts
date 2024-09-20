@@ -164,6 +164,18 @@ const routes: RouteRecordRaw[] = [
         },
         name: "verification-welcome"
       },
+      {
+        path: "/verification/successful",
+        components: {
+          default: () => import("src/pages/authentication/verification/successful/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "verification-successful"
+      },
     ]
   },
 
