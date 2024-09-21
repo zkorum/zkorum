@@ -1,0 +1,1 @@
+ALTER TABLE "pseudonym" DROP CONSTRAINT "pseudonym_persona_id_unique";

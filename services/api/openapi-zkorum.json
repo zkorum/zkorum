@@ -1,0 +1,2116 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Afterwork by ZKorum",
+        "description": "Aftework by ZKorum API",
+        "version": "1.0.0"
+    },
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        },
+        "schemas": {}
+    },
+    "paths": {
+        "/api/v1/auth/authenticate": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 254,
+                                        "minLength": 1,
+                                        "description": "Email address"
+                                    },
+                                    "isRequestingNewCode": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "isRequestingNewCode"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "codeExpiry": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "nextCodeSoonestTime": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "codeExpiry",
+                                        "nextCodeSoonestTime"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
+                                        },
+                                        "userId": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "minLength": 1
+                                        },
+                                        "sessionExpiry": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "reason",
+                                        "userId",
+                                        "sessionExpiry"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/verifyOtp": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 999999
+                                    }
+                                },
+                                "required": [
+                                    "code"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        true
+                                                    ]
+                                                },
+                                                "userId": {
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "minLength": 1
+                                                },
+                                                "sessionExpiry": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "userId",
+                                                "sessionExpiry"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        false
+                                                    ]
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "expired_code",
+                                                        "wrong_guess",
+                                                        "too_many_wrong_guess"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "reason"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
+                                        },
+                                        "userId": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "minLength": 1
+                                        },
+                                        "sessionExpiry": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "reason",
+                                        "userId",
+                                        "sessionExpiry"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/recover": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "encryptedSymmKey": {
+                                        "type": "string"
+                                    },
+                                    "timeboundSecretCredentialRequest": {
+                                        "type": "object",
+                                        "properties": {
+                                            "blindedRequest": {
+                                                "type": "object",
+                                                "additionalProperties": {}
+                                            },
+                                            "encryptedEncodedBlindedSubject": {
+                                                "type": "string"
+                                            },
+                                            "encryptedEncodedBlinding": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "blindedRequest",
+                                            "encryptedEncodedBlindedSubject",
+                                            "encryptedEncodedBlinding"
+                                        ],
+                                        "additionalProperties": false
+                                    },
+                                    "unboundSecretCredentialRequest": {
+                                        "type": "object",
+                                        "properties": {
+                                            "blindedRequest": {
+                                                "type": "object",
+                                                "additionalProperties": {}
+                                            },
+                                            "encryptedEncodedBlindedSubject": {
+                                                "type": "string"
+                                            },
+                                            "encryptedEncodedBlinding": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "blindedRequest",
+                                            "encryptedEncodedBlindedSubject",
+                                            "encryptedEncodedBlinding"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                },
+                                "required": [
+                                    "encryptedSymmKey",
+                                    "timeboundSecretCredentialRequest",
+                                    "unboundSecretCredentialRequest"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "userId": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "minLength": 1
+                                        },
+                                        "sessionExpiry": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "emailCredentialsPerEmail": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "active": {
+                                                        "type": "string"
+                                                    },
+                                                    "revoked": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "revoked"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "secretCredentialsPerType": {
+                                            "type": "object",
+                                            "required": [
+                                                "unbound",
+                                                "timebound"
+                                            ],
+                                            "properties": {
+                                                "unbound": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "blindedCredential": {
+                                                                    "type": "string"
+                                                                },
+                                                                "encryptedBlinding": {
+                                                                    "type": "string"
+                                                                },
+                                                                "encryptedBlindedSubject": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "blindedCredential",
+                                                                "encryptedBlinding",
+                                                                "encryptedBlindedSubject"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        },
+                                                        "revoked": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "blindedCredential": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "encryptedBlinding": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "encryptedBlindedSubject": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "blindedCredential",
+                                                                    "encryptedBlinding",
+                                                                    "encryptedBlindedSubject"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "revoked"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                "timebound": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "blindedCredential": {
+                                                                    "type": "string"
+                                                                },
+                                                                "encryptedBlinding": {
+                                                                    "type": "string"
+                                                                },
+                                                                "encryptedBlindedSubject": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "blindedCredential",
+                                                                "encryptedBlinding",
+                                                                "encryptedBlindedSubject"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        },
+                                                        "revoked": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "blindedCredential": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "encryptedBlinding": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "encryptedBlindedSubject": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "blindedCredential",
+                                                                    "encryptedBlinding",
+                                                                    "encryptedBlindedSubject"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "revoked"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [
+                                        "userId",
+                                        "sessionExpiry",
+                                        "emailCredentialsPerEmail",
+                                        "secretCredentialsPerType"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/credential/get": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "emailCredentialsPerEmail": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "active": {
+                                                        "type": "string"
+                                                    },
+                                                    "revoked": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "revoked"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "secretCredentialsPerType": {
+                                            "type": "object",
+                                            "required": [
+                                                "unbound",
+                                                "timebound"
+                                            ],
+                                            "properties": {
+                                                "unbound": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "blindedCredential": {
+                                                                    "type": "string"
+                                                                },
+                                                                "encryptedBlinding": {
+                                                                    "type": "string"
+                                                                },
+                                                                "encryptedBlindedSubject": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "blindedCredential",
+                                                                "encryptedBlinding",
+                                                                "encryptedBlindedSubject"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        },
+                                                        "revoked": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "blindedCredential": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "encryptedBlinding": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "encryptedBlindedSubject": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "blindedCredential",
+                                                                    "encryptedBlinding",
+                                                                    "encryptedBlindedSubject"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "revoked"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                "timebound": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "blindedCredential": {
+                                                                    "type": "string"
+                                                                },
+                                                                "encryptedBlinding": {
+                                                                    "type": "string"
+                                                                },
+                                                                "encryptedBlindedSubject": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "blindedCredential",
+                                                                "encryptedBlinding",
+                                                                "encryptedBlindedSubject"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        },
+                                                        "revoked": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "blindedCredential": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "encryptedBlinding": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "encryptedBlindedSubject": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "blindedCredential",
+                                                                    "encryptedBlinding",
+                                                                    "encryptedBlindedSubject"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "revoked"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [
+                                        "emailCredentialsPerEmail",
+                                        "secretCredentialsPerType"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/credential/email/renew": {
+            "post": {
+                "description": "Renew an active email credential - fails if already exists. Used when rotating issuer public key or modifying schema.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 254,
+                                        "minLength": 1,
+                                        "description": "Email address"
+                                    }
+                                },
+                                "required": [
+                                    "email"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "emailCredential": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "emailCredential"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/credential/secret/renew": {
+            "post": {
+                "description": "Renew an active secret credential - fails if already exists. Used when rotating issuer public key.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "secretCredentialRequest": {
+                                        "type": "object",
+                                        "properties": {
+                                            "blindedRequest": {
+                                                "type": "object",
+                                                "additionalProperties": {}
+                                            },
+                                            "encryptedEncodedBlindedSubject": {
+                                                "type": "string"
+                                            },
+                                            "encryptedEncodedBlinding": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "blindedRequest",
+                                            "encryptedEncodedBlindedSubject",
+                                            "encryptedEncodedBlinding"
+                                        ],
+                                        "additionalProperties": false
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "unbound",
+                                            "timebound"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "secretCredentialRequest",
+                                    "type"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "signedBlindedCredential": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "signedBlindedCredential"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/post/create": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "post": {
+                                        "type": "object",
+                                        "properties": {
+                                            "data": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "title": {
+                                                        "type": "string",
+                                                        "maxLength": 200,
+                                                        "minLength": 1
+                                                    },
+                                                    "body": {
+                                                        "type": "string",
+                                                        "maxLength": 6000,
+                                                        "minLength": 1
+                                                    },
+                                                    "poll": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "option1": {
+                                                                "type": "string",
+                                                                "maxLength": 30,
+                                                                "minLength": 1
+                                                            },
+                                                            "option2": {
+                                                                "type": "string",
+                                                                "maxLength": 30,
+                                                                "minLength": 1
+                                                            },
+                                                            "option3": {
+                                                                "type": "string",
+                                                                "maxLength": 30,
+                                                                "minLength": 1
+                                                            },
+                                                            "option4": {
+                                                                "type": "string",
+                                                                "maxLength": 30,
+                                                                "minLength": 1
+                                                            },
+                                                            "option5": {
+                                                                "type": "string",
+                                                                "maxLength": 30,
+                                                                "minLength": 1
+                                                            },
+                                                            "option6": {
+                                                                "type": "string",
+                                                                "maxLength": 30,
+                                                                "minLength": 1
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "option1",
+                                                            "option2"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "required": [
+                                                    "title"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "required": [
+                                            "data"
+                                        ],
+                                        "additionalProperties": false
+                                    },
+                                    "pres": {}
+                                },
+                                "required": [
+                                    "post"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
+        "/api/v1/poll/respond": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "responseToPoll": {
+                                        "type": "object",
+                                        "properties": {
+                                            "postUid": {
+                                                "type": "string"
+                                            },
+                                            "optionChosen": {
+                                                "type": "integer",
+                                                "exclusiveMinimum": true,
+                                                "minimum": 0
+                                            }
+                                        },
+                                        "required": [
+                                            "postUid",
+                                            "optionChosen"
+                                        ],
+                                        "additionalProperties": false
+                                    },
+                                    "pres": {}
+                                },
+                                "required": [
+                                    "responseToPoll"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "metadata": {
+                                            "type": "object",
+                                            "properties": {
+                                                "uid": {
+                                                    "type": "string"
+                                                },
+                                                "slugId": {
+                                                    "type": "string",
+                                                    "maxLength": 10
+                                                },
+                                                "isHidden": {
+                                                    "type": "boolean"
+                                                },
+                                                "updatedAt": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "lastReactedAt": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "commentCount": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "uid",
+                                                "slugId",
+                                                "updatedAt",
+                                                "lastReactedAt",
+                                                "commentCount"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "payload": {
+                                            "type": "object",
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string",
+                                                    "maxLength": 200,
+                                                    "minLength": 1
+                                                },
+                                                "body": {
+                                                    "type": "string",
+                                                    "maxLength": 6000,
+                                                    "minLength": 1
+                                                },
+                                                "poll": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "options": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "option1": {
+                                                                    "type": "string",
+                                                                    "maxLength": 30,
+                                                                    "minLength": 1
+                                                                },
+                                                                "option2": {
+                                                                    "type": "string",
+                                                                    "maxLength": 30,
+                                                                    "minLength": 1
+                                                                },
+                                                                "option3": {
+                                                                    "type": "string",
+                                                                    "maxLength": 30,
+                                                                    "minLength": 1
+                                                                },
+                                                                "option4": {
+                                                                    "type": "string",
+                                                                    "maxLength": 30,
+                                                                    "minLength": 1
+                                                                },
+                                                                "option5": {
+                                                                    "type": "string",
+                                                                    "maxLength": 30,
+                                                                    "minLength": 1
+                                                                },
+                                                                "option6": {
+                                                                    "type": "string",
+                                                                    "maxLength": 30,
+                                                                    "minLength": 1
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "option1",
+                                                                "option2"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        },
+                                                        "result": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "option1Response": {
+                                                                    "type": "number",
+                                                                    "minimum": 0
+                                                                },
+                                                                "option2Response": {
+                                                                    "type": "number",
+                                                                    "minimum": 0
+                                                                },
+                                                                "option3Response": {
+                                                                    "type": "number",
+                                                                    "minimum": 0
+                                                                },
+                                                                "option4Response": {
+                                                                    "type": "number",
+                                                                    "minimum": 0
+                                                                },
+                                                                "option5Response": {
+                                                                    "type": "number",
+                                                                    "minimum": 0
+                                                                },
+                                                                "option6Response": {
+                                                                    "type": "number",
+                                                                    "minimum": 0
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "option1Response",
+                                                                "option2Response"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "options",
+                                                        "result"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "required": [
+                                                "title"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "author": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pseudonym": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                },
+                                                "domain": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "pseudonym",
+                                                "domain"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [
+                                        "metadata",
+                                        "payload",
+                                        "author"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/feed/fetchMore": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "showHidden": {
+                                        "type": "boolean"
+                                    },
+                                    "lastReactedAt": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "showHidden"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "metadata": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "uid": {
+                                                        "type": "string"
+                                                    },
+                                                    "slugId": {
+                                                        "type": "string",
+                                                        "maxLength": 10
+                                                    },
+                                                    "isHidden": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "lastReactedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "commentCount": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    }
+                                                },
+                                                "required": [
+                                                    "uid",
+                                                    "slugId",
+                                                    "updatedAt",
+                                                    "lastReactedAt",
+                                                    "commentCount"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "payload": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "title": {
+                                                        "type": "string",
+                                                        "maxLength": 200,
+                                                        "minLength": 1
+                                                    },
+                                                    "body": {
+                                                        "type": "string",
+                                                        "maxLength": 6000,
+                                                        "minLength": 1
+                                                    },
+                                                    "poll": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "options": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "option1": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option2": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option3": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option4": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option5": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option6": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "option1",
+                                                                    "option2"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            },
+                                                            "result": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "option1Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option2Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option3Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option4Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option5Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option6Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "option1Response",
+                                                                    "option2Response"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "options",
+                                                            "result"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "required": [
+                                                    "title"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "author": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "pseudonym": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    },
+                                                    "domain": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "pseudonym",
+                                                    "domain"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "required": [
+                                            "metadata",
+                                            "payload",
+                                            "author"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/feed/fetchRecent": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "showHidden": {
+                                        "type": "boolean"
+                                    },
+                                    "lastReactedAt": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "showHidden"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "metadata": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "uid": {
+                                                        "type": "string"
+                                                    },
+                                                    "slugId": {
+                                                        "type": "string",
+                                                        "maxLength": 10
+                                                    },
+                                                    "isHidden": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "lastReactedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "commentCount": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    }
+                                                },
+                                                "required": [
+                                                    "uid",
+                                                    "slugId",
+                                                    "updatedAt",
+                                                    "lastReactedAt",
+                                                    "commentCount"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "payload": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "title": {
+                                                        "type": "string",
+                                                        "maxLength": 200,
+                                                        "minLength": 1
+                                                    },
+                                                    "body": {
+                                                        "type": "string",
+                                                        "maxLength": 6000,
+                                                        "minLength": 1
+                                                    },
+                                                    "poll": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "options": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "option1": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option2": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option3": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option4": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option5": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "option6": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "option1",
+                                                                    "option2"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            },
+                                                            "result": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "option1Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option2Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option3Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option4Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option5Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option6Response": {
+                                                                        "type": "number",
+                                                                        "minimum": 0
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "option1Response",
+                                                                    "option2Response"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "options",
+                                                            "result"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "required": [
+                                                    "title"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "author": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "pseudonym": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    },
+                                                    "domain": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "pseudonym",
+                                                    "domain"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "required": [
+                                            "metadata",
+                                            "payload",
+                                            "author"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/moderation/hidePost": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "pollUid": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "pollUid"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
+        "/api/v1/moderation/unhidePost": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "pollUid": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "pollUid"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
+        "/api/v1/moderation/hideComment": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "commentSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    }
+                                },
+                                "required": [
+                                    "commentSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
+        "/api/v1/moderation/unhideComment": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "commentSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    }
+                                },
+                                "required": [
+                                    "commentSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
+        "/api/v1/comment/create": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "pres": {},
+                                    "payload": {
+                                        "type": "object",
+                                        "properties": {
+                                            "postUid": {
+                                                "type": "string"
+                                            },
+                                            "content": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 1250
+                                            }
+                                        },
+                                        "required": [
+                                            "postUid",
+                                            "content"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                },
+                                "required": [
+                                    "payload"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
+        "/api/v1/post/fetch": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "post": {
+                                            "type": "object",
+                                            "properties": {
+                                                "metadata": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "uid": {
+                                                            "type": "string"
+                                                        },
+                                                        "slugId": {
+                                                            "type": "string",
+                                                            "maxLength": 10
+                                                        },
+                                                        "isHidden": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "updatedAt": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "lastReactedAt": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "commentCount": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "uid",
+                                                        "slugId",
+                                                        "updatedAt",
+                                                        "lastReactedAt",
+                                                        "commentCount"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                "payload": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string",
+                                                            "maxLength": 200,
+                                                            "minLength": 1
+                                                        },
+                                                        "body": {
+                                                            "type": "string",
+                                                            "maxLength": 6000,
+                                                            "minLength": 1
+                                                        },
+                                                        "poll": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "options": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "option1": {
+                                                                            "type": "string",
+                                                                            "maxLength": 30,
+                                                                            "minLength": 1
+                                                                        },
+                                                                        "option2": {
+                                                                            "type": "string",
+                                                                            "maxLength": 30,
+                                                                            "minLength": 1
+                                                                        },
+                                                                        "option3": {
+                                                                            "type": "string",
+                                                                            "maxLength": 30,
+                                                                            "minLength": 1
+                                                                        },
+                                                                        "option4": {
+                                                                            "type": "string",
+                                                                            "maxLength": 30,
+                                                                            "minLength": 1
+                                                                        },
+                                                                        "option5": {
+                                                                            "type": "string",
+                                                                            "maxLength": 30,
+                                                                            "minLength": 1
+                                                                        },
+                                                                        "option6": {
+                                                                            "type": "string",
+                                                                            "maxLength": 30,
+                                                                            "minLength": 1
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "option1",
+                                                                        "option2"
+                                                                    ],
+                                                                    "additionalProperties": false
+                                                                },
+                                                                "result": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "option1Response": {
+                                                                            "type": "number",
+                                                                            "minimum": 0
+                                                                        },
+                                                                        "option2Response": {
+                                                                            "type": "number",
+                                                                            "minimum": 0
+                                                                        },
+                                                                        "option3Response": {
+                                                                            "type": "number",
+                                                                            "minimum": 0
+                                                                        },
+                                                                        "option4Response": {
+                                                                            "type": "number",
+                                                                            "minimum": 0
+                                                                        },
+                                                                        "option5Response": {
+                                                                            "type": "number",
+                                                                            "minimum": 0
+                                                                        },
+                                                                        "option6Response": {
+                                                                            "type": "number",
+                                                                            "minimum": 0
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "option1Response",
+                                                                        "option2Response"
+                                                                    ],
+                                                                    "additionalProperties": false
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "options",
+                                                                "result"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "title"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                "author": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "pseudonym": {
+                                                            "type": "string",
+                                                            "minLength": 1
+                                                        },
+                                                        "domain": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "pseudonym",
+                                                        "domain"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "required": [
+                                                "metadata",
+                                                "payload",
+                                                "author"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "comments": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "metadata": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "uid": {
+                                                                "type": "string"
+                                                            },
+                                                            "slugId": {
+                                                                "type": "string",
+                                                                "maxLength": 10
+                                                            },
+                                                            "isHidden": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "updatedAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "uid",
+                                                            "slugId",
+                                                            "updatedAt"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 1250
+                                                    },
+                                                    "author": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "pseudonym": {
+                                                                "type": "string",
+                                                                "minLength": 1
+                                                            },
+                                                            "domain": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "pseudonym",
+                                                            "domain"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "required": [
+                                                    "metadata",
+                                                    "content",
+                                                    "author"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "post",
+                                        "comments"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/comment/fetchMore": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    },
+                                    "updatedAt": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "comments": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "metadata": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "uid": {
+                                                                "type": "string"
+                                                            },
+                                                            "slugId": {
+                                                                "type": "string",
+                                                                "maxLength": 10
+                                                            },
+                                                            "isHidden": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "updatedAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "uid",
+                                                            "slugId",
+                                                            "updatedAt"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 1250
+                                                    },
+                                                    "author": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "pseudonym": {
+                                                                "type": "string",
+                                                                "minLength": 1
+                                                            },
+                                                            "domain": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "pseudonym",
+                                                            "domain"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "required": [
+                                                    "metadata",
+                                                    "content",
+                                                    "author"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "comments"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/comment/fetchRecent": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    },
+                                    "updatedAt": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "comments": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "metadata": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "uid": {
+                                                                "type": "string"
+                                                            },
+                                                            "slugId": {
+                                                                "type": "string",
+                                                                "maxLength": 10
+                                                            },
+                                                            "isHidden": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "updatedAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "uid",
+                                                            "slugId",
+                                                            "updatedAt"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 1250
+                                                    },
+                                                    "author": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "pseudonym": {
+                                                                "type": "string",
+                                                                "minLength": 1
+                                                            },
+                                                            "domain": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "pseudonym",
+                                                            "domain"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "required": [
+                                                    "metadata",
+                                                    "content",
+                                                    "author"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "comments"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "servers": [],
+    "security": [
+        {
+            "BearerAuth": []
+        }
+    ]
+}

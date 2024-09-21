@@ -1,0 +1,1 @@
+ALTER TABLE "poll" ADD COLUMN "last_reacted_at" timestamp (0) DEFAULT now() NOT NULL;
