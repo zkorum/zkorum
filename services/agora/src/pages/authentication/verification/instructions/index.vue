@@ -16,22 +16,28 @@
             <div class="stepContainer">
               <div class="stepFlex">
                 <q-icon name="mdi-numeric-1" size="2rem" class="numberCircle" />
-                Click on the button to download or open RariMe app
+                Use the following to download or open RariMe app
               </div>
+
+              <div class="innerInstructions">
+                <img v-if="!quasar.platform.is.mobile" :src="qrcode" alt="QR Code" class="qrCode"/>
+
+                <a :href="rarimeLink" target="_blank" rel="noopener noreferrer">
+                  <ZKButton label="Open RariMe" color="primary" :style="{ width: '100%' }"
+                    @click="completeVerification()" />
+                </a>
+              </div>
+
               <div class="stepFlex">
                 <q-icon name="mdi-numeric-2" size="2rem" class="numberCircle" />
-                Scan your passport with privacy
+                Scan your passport in the RariMe app with privacy
               </div>
               <div class="stepFlex">
                 <q-icon name="mdi-numeric-3" size="2rem" class="numberCircle" />
-                Get automatically redirected to Agora
+                Get automatically redirected back to Agora
               </div>
             </div>
           </ZKCard>
-
-          <a href="https://rarime.com/" target="_blank" rel="noopener noreferrer">
-            <ZKButton label="Go to RariMe" color="primary" :style="{ width: '100%' }" @click="completeVerification()" />
-          </a>
 
           <SkipForLaterButton @click="skipButton()" />
         </div>
@@ -47,8 +53,24 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import SkipForLaterButton from "src/components/authentication/SkipForLaterButton.vue";
+import { useQRCode } from "@vueuse/integrations/useQRCode";
+import { useQuasar } from "quasar";
+import { ref } from "vue";
+
+const quasar = useQuasar();
+
+const rarimeLink = ref("");
+if (quasar.platform.is.android) {
+  rarimeLink.value = "https://play.google.com/store/apps/details?id=com.rarilabs.rarime";
+} else if (quasar.platform.is.ios) {
+  rarimeLink.value = "https://apps.apple.com/us/app/rarime/id6503300598";
+} else {
+  rarimeLink.value = "https://rarime.com/";
+}
 
 const router = useRouter();
+
+const qrcode = useQRCode(rarimeLink, {version: "10"});
 
 function skipButton() {
   router.push({ name: "default-home-feed" });
@@ -90,6 +112,18 @@ function completeVerification() {
   flex-direction: column;
   gap: 1.5rem;
   justify-content: center;
+}
+
+.qrCode {
+  width: min(100%, 10rem);
+}
+
+.innerInstructions {
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
 }
 
 </style>
