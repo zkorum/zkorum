@@ -83,6 +83,39 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: "/legal",
+    component: MainLayout,
+    props: {
+      addBottomPadding: false, enableHeader: true, enableFooter: false, reducedWidth: false
+    } as MainLayoutProps,
+    children: [
+      {
+        path: "privacy",
+        components: {
+          default: () => import("pages/legal/privacy/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: false, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "privacy"
+      },
+      {
+        path: "terms",
+        components: {
+          default: () => import("pages/legal/terms/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: false, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "terms"
+      },
+    ]
+  },
+  {
     path: "/post",
     component: MainLayout,
     props: { addBottomPadding: true, enableHeader: true, enableFooter: false, reducedWidth: false } as MainLayoutProps,
