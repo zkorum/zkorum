@@ -5,5 +5,7 @@ export const useAuthenticationStore = defineStore("authentication", () => {
 
   const isAuthenticated = ref(false);
 
-  return { isAuthenticated };
+  const verificationEmailAddress = ref("");
+
+  return { isAuthenticated, verificationEmailAddress };
 });

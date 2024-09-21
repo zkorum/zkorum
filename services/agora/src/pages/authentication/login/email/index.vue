@@ -15,7 +15,7 @@
           </div>
 
           <div>
-            <InputText v-model="emailInput" type="email" placeholder="Email" required :style="{width: '100%'}" />
+            <InputText v-model="verificationEmailAddress" type="email" placeholder="Email" required :style="{width: '100%'}" />
           </div>
 
           <ZKButton color="primary" label="Send Verification Code" type="submit" />
@@ -27,7 +27,7 @@
           </div>
 
           <ZKButton label="Skip Email Page" color="black"
-            @click="router.push({ name: 'login-passphrase', params: { emailAddressEncoded: urlEncode('testing-email@gmail.com') } })" />
+            @click="router.push({ name: 'login-verify' })" />
         </template>
 
       </AuthContentWrapper>
@@ -38,20 +38,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useRouter } from "vue-router";
-import { urlEncode } from "src/shared/common/base64";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import InputText from "primevue/inputtext";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { storeToRefs } from "pinia";
 
-const emailInput = ref("");
+const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
+
+verificationEmailAddress.value = "";
 
 const router = useRouter();
 
 function sendVerificationCode() {
   console.log("Submit hit");
-  router.push({ name: "login-passphrase", params: { emailAddressEncoded: urlEncode(emailInput.value) } });
+  router.push({ name: "login-verify" });
 }
 
 </script>

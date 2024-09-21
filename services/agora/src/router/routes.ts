@@ -129,16 +129,16 @@ const routes: RouteRecordRaw[] = [
         name: "login-email"
       },
       {
-        path: "/login/passphrase/:emailAddressEncoded",
+        path: "/login/verify-email",
         components: {
-          default: () => import("src/pages/authentication/login/passphrase/index.vue"), topmenubar: DefaultMenuBar
+          default: () => import("src/pages/authentication/login/verify/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
             hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
-        name: "login-passphrase"
+        name: "login-verify"
       },
       {
         path: "/verification/instructions",

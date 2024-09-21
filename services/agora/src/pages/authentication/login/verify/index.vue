@@ -8,7 +8,7 @@
 
       <template #body>
         <div class="instructions">
-          Please enter the 6-digit code that we sent to {{ emailAddressLoaded }}
+          Please enter the 6-digit code that we sent to {{ verificationEmailAddress }}
         </div>
 
         <div class="codeInput">
@@ -32,27 +32,27 @@
 </template>
 
 <script setup lang="ts">
-import { urlDecode } from "src/shared/common/base64";
-import { useRouteParams } from "@vueuse/router";
-import { ref } from "vue";
+import { onUnmounted, ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import { useRouter } from "vue-router";
 import InputOtp from "primevue/inputotp";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { storeToRefs } from "pinia";
 
 const router = useRouter();
 
-const resendCodeCooldownMessage = ref("");
+const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
 
-const emailAddressLoaded = ref("FAILED TO LOAD EMAIL");
-const emailAddressEncoded = useRouteParams("emailAddressEncoded");
-if (typeof emailAddressEncoded.value == "string") {
-  emailAddressLoaded.value = urlDecode(emailAddressEncoded.value);
-}
+const resendCodeCooldownMessage = ref("");
 
 const verificationCode = ref("");
 
 let verificationTimeLeftSeconds = ref(0);
+
+onUnmounted(() => {
+  verificationEmailAddress.value = "";
+});
 
 function submitCode(verificationCode: string) {
   console.log(verificationCode);
