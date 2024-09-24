@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * Agora by ZKorum
- * Aftework by ZKorum API
+ * Agora by ZKorum API
  *
  * The version of the OpenAPI document: 1.0.0
  * 

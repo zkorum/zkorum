@@ -19,7 +19,7 @@ import fs from "fs";
 import postgres from "postgres";
 import { config, server } from "./app.js";
 import { DrizzleFastifyLogger } from "./logger.js";
-import { Service } from "./service/service.js";
+// import { Service } from "./service/service.js";
 import * as authUtilService from "@/service/authUtil.js";
 import * as authService from "@/service/auth.js";
 import {
@@ -367,20 +367,20 @@ server.after(() => {
         .post(`/api/${apiVersion}/feed/fetchMore`, {
             schema: {
                 body: Dto.fetchFeedRequest,
-                response: {
-                    200: Dto.fetchFeed200,
-                },
+                // response: {
+                //     200: Dto.fetchFeed200,
+                // },
             },
             handler: async (request, _reply) => {
-                return await Service.fetchFeed({
-                    db: db,
-                    order: "more",
-                    showHidden: request.body.showHidden,
-                    lastReactedAt:
-                        request.body.lastReactedAt !== undefined
-                            ? new Date(request.body.lastReactedAt)
-                            : undefined,
-                });
+                // return await Service.fetchFeed({
+                //     db: db,
+                //     order: "more",
+                //     showHidden: request.body.showHidden,
+                //     lastReactedAt:
+                //         request.body.lastReactedAt !== undefined
+                //             ? new Date(request.body.lastReactedAt)
+                //             : undefined,
+                // });
             },
         });
     server
@@ -388,20 +388,20 @@ server.after(() => {
         .post(`/api/${apiVersion}/feed/fetchRecent`, {
             schema: {
                 body: Dto.fetchFeedRequest,
-                response: {
-                    200: Dto.fetchFeed200,
-                },
+                // response: {
+                //     200: Dto.fetchFeed200,
+                // },
             },
             handler: async (request, _reply) => {
-                return await Service.fetchFeed({
-                    db: db,
-                    order: "recent",
-                    showHidden: request.body.showHidden,
-                    lastReactedAt:
-                        request.body.lastReactedAt !== undefined
-                            ? new Date(request.body.lastReactedAt)
-                            : undefined,
-                });
+                // return await Service.fetchFeed({
+                //     db: db,
+                //     order: "recent",
+                //     showHidden: request.body.showHidden,
+                //     lastReactedAt:
+                //         request.body.lastReactedAt !== undefined
+                //             ? new Date(request.body.lastReactedAt)
+                //             : undefined,
+                // });
             },
         });
     server
@@ -422,10 +422,10 @@ server.after(() => {
                         "Only admin can moderate content"
                     );
                 }
-                await Service.hidePost({
-                    db: db,
-                    pollUid: request.body.pollUid,
-                });
+                // await Service.hidePost({
+                //     db: db,
+                //     pollUid: request.body.pollUid,
+                // });
             },
         });
     server
@@ -446,10 +446,10 @@ server.after(() => {
                         "Only admin can moderate content"
                     );
                 }
-                await Service.unhidePost({
-                    db: db,
-                    pollUid: request.body.pollUid,
-                });
+                // await Service.unhidePost({
+                //     db: db,
+                //     pollUid: request.body.pollUid,
+                // });
             },
         });
     server
@@ -470,10 +470,10 @@ server.after(() => {
                 //         "User cannot moderate this post"
                 //     );
                 // }
-                await Service.hideComment({
-                    db: db,
-                    commentSlugId: request.body.commentSlugId,
-                });
+                // await Service.hideComment({
+                //     db: db,
+                //     commentSlugId: request.body.commentSlugId,
+                // });
             },
         });
     server
@@ -494,10 +494,10 @@ server.after(() => {
                 //         "User cannot moderate this post"
                 //     );
                 // }
-                await Service.unhideComment({
-                    db: db,
-                    commentSlugId: request.body.commentSlugId,
-                });
+                // await Service.unhideComment({
+                //     db: db,
+                //     commentSlugId: request.body.commentSlugId,
+                // });
             },
         });
     server
@@ -525,26 +525,26 @@ server.after(() => {
         .post(`/api/${apiVersion}/post/fetch`, {
             schema: {
                 body: Dto.postFetchRequest,
-                response: {
-                    200: Dto.postFetch200,
-                },
+                // response: {
+                //     200: Dto.postFetch200,
+                // },
             },
             handler: async (request, _reply) => {
                 // anonymous request, no auth
-                const { post, postId } = await Service.fetchPostByUidOrSlugId({
-                    db: db,
-                    postUidOrSlugId: request.body.postSlugId,
-                    type: "slugId",
-                    httpErrors: server.httpErrors,
-                });
-                const comments = await Service.fetchCommentsByPostId({
-                    db: db,
-                    postId: postId,
-                    order: "more",
-                    showHidden: true,
-                    updatedAt: undefined,
-                });
-                return { post, comments };
+                // const { post, postId } = await Service.fetchPostByUidOrSlugId({
+                //     db: db,
+                //     postUidOrSlugId: request.body.postSlugId,
+                //     type: "slugId",
+                //     httpErrors: server.httpErrors,
+                // });
+                // const comments = await Service.fetchCommentsByPostId({
+                //     db: db,
+                //     postId: postId,
+                //     order: "more",
+                //     showHidden: true,
+                //     updatedAt: undefined,
+                // });
+                // return { post, comments };
             },
         });
     server
@@ -552,28 +552,28 @@ server.after(() => {
         .post(`/api/${apiVersion}/comment/fetchMore`, {
             schema: {
                 body: Dto.commentFetchFeedRequest,
-                response: {
-                    200: Dto.commentFetchFeed200,
-                },
+                // response: {
+                //     200: Dto.commentFetchFeed200,
+                // },
             },
             handler: async (request, _reply) => {
                 // anonymous request, no auth
-                const postId = await Service.getPostIdFromSlugId({
-                    db,
-                    slugId: request.body.postSlugId,
-                    httpErrors: server.httpErrors,
-                });
-                const comments = await Service.fetchCommentsByPostId({
-                    db: db,
-                    postId: postId,
-                    order: "more",
-                    showHidden: true,
-                    updatedAt:
-                        request.body.updatedAt !== undefined
-                            ? new Date(request.body.updatedAt)
-                            : undefined,
-                });
-                return { comments };
+                // const postId = await Service.getPostIdFromSlugId({
+                //     db,
+                //     slugId: request.body.postSlugId,
+                //     httpErrors: server.httpErrors,
+                // });
+                // const comments = await Service.fetchCommentsByPostId({
+                //     db: db,
+                //     postId: postId,
+                //     order: "more",
+                //     showHidden: true,
+                //     updatedAt:
+                //         request.body.updatedAt !== undefined
+                //             ? new Date(request.body.updatedAt)
+                //             : undefined,
+                // });
+                // return { comments };
             },
         });
     server
@@ -581,28 +581,28 @@ server.after(() => {
         .post(`/api/${apiVersion}/comment/fetchRecent`, {
             schema: {
                 body: Dto.commentFetchFeedRequest,
-                response: {
-                    200: Dto.commentFetchFeed200,
-                },
+                // response: {
+                //     200: Dto.commentFetchFeed200,
+                // },
             },
             handler: async (request, _reply) => {
                 // anonymous request, no auth
-                const postId = await Service.getPostIdFromSlugId({
-                    db,
-                    slugId: request.body.postSlugId,
-                    httpErrors: server.httpErrors,
-                });
-                const comments = await Service.fetchCommentsByPostId({
-                    db: db,
-                    postId: postId,
-                    order: "recent",
-                    showHidden: true,
-                    updatedAt:
-                        request.body.updatedAt !== undefined
-                            ? new Date(request.body.updatedAt)
-                            : undefined,
-                });
-                return { comments };
+                // const postId = await Service.getPostIdFromSlugId({
+                //     db,
+                //     slugId: request.body.postSlugId,
+                //     httpErrors: server.httpErrors,
+                // });
+                // const comments = await Service.fetchCommentsByPostId({
+                //     db: db,
+                //     postId: postId,
+                //     order: "recent",
+                //     showHidden: true,
+                //     updatedAt:
+                //         request.body.updatedAt !== undefined
+                //             ? new Date(request.body.updatedAt)
+                //             : undefined,
+                // });
+                // return { comments };
             },
         });
 });

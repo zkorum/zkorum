@@ -213,7 +213,7 @@ export const zodPollResponsesByPostUid = z.record(
     zodPostUid,
     zodPollOptionChosenAndPseudonym
 );
-export const zodCommentContent = z.string().nonempty().max(1250);
+export const zodCommentContent = z.string().nonempty().max(280);
 export const zodCommentMetadata = z
     .object({
         uid: zodPostUid,

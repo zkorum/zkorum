@@ -9,8 +9,8 @@ gnome-terminal --tab -t "OpenAPI" --working-directory="$BASE_DIR" -- \
 	bash -c "make dev-generate; bash"
 gnome-terminal --tab -t "Shared" --working-directory="$BASE_DIR" -- \
 	bash -c "make dev-sync; bash"
-gnome-terminal --tab -t "Back" --working-directory="$BASE_DIR" -- \
-	bash -c "make dev-back; bash"
+gnome-terminal --tab -t "API" --working-directory="$BASE_DIR" -- \
+	bash -c "make dev-api; bash"
 gnome-terminal --tab -t "Front" --working-directory="$BASE_DIR" -- \
 	bash -c "make dev-front; bash"
 gnome-terminal --tab -t "Git" --working-directory="$BASE_DIR"

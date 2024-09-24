@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * Agora by ZKorum
- * Aftework by ZKorum API
+ * Agora by ZKorum API
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -92,169 +92,6 @@ export interface ApiV1AuthAuthenticatePostRequest {
      * @memberof ApiV1AuthAuthenticatePostRequest
      */
     'isRequestingNewCode': boolean;
-}
-/**
- * 
- * @export
- * @interface ApiV1AuthRecoverPost200Response
- */
-export interface ApiV1AuthRecoverPost200Response {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPost200Response
-     */
-    'userId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPost200Response
-     */
-    'sessionExpiry': string;
-    /**
-     * 
-     * @type {{ [key: string]: ApiV1AuthRecoverPost200ResponseEmailCredentialsPerEmailValue; }}
-     * @memberof ApiV1AuthRecoverPost200Response
-     */
-    'emailCredentialsPerEmail': { [key: string]: ApiV1AuthRecoverPost200ResponseEmailCredentialsPerEmailValue; };
-    /**
-     * 
-     * @type {ApiV1AuthRecoverPost200ResponseSecretCredentialsPerType}
-     * @memberof ApiV1AuthRecoverPost200Response
-     */
-    'secretCredentialsPerType': ApiV1AuthRecoverPost200ResponseSecretCredentialsPerType;
-}
-/**
- * 
- * @export
- * @interface ApiV1AuthRecoverPost200ResponseEmailCredentialsPerEmailValue
- */
-export interface ApiV1AuthRecoverPost200ResponseEmailCredentialsPerEmailValue {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPost200ResponseEmailCredentialsPerEmailValue
-     */
-    'active'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof ApiV1AuthRecoverPost200ResponseEmailCredentialsPerEmailValue
-     */
-    'revoked': Array<string>;
-}
-/**
- * 
- * @export
- * @interface ApiV1AuthRecoverPost200ResponseSecretCredentialsPerType
- */
-export interface ApiV1AuthRecoverPost200ResponseSecretCredentialsPerType {
-    /**
-     * 
-     * @type {ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnbound}
-     * @memberof ApiV1AuthRecoverPost200ResponseSecretCredentialsPerType
-     */
-    'unbound': ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnbound;
-    /**
-     * 
-     * @type {ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnbound}
-     * @memberof ApiV1AuthRecoverPost200ResponseSecretCredentialsPerType
-     */
-    'timebound': ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnbound;
-}
-/**
- * 
- * @export
- * @interface ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnbound
- */
-export interface ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnbound {
-    /**
-     * 
-     * @type {ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive}
-     * @memberof ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnbound
-     */
-    'active'?: ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive;
-    /**
-     * 
-     * @type {Array<ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive>}
-     * @memberof ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnbound
-     */
-    'revoked': Array<ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive>;
-}
-/**
- * 
- * @export
- * @interface ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive
- */
-export interface ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive
-     */
-    'blindedCredential': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive
-     */
-    'encryptedBlinding': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPost200ResponseSecretCredentialsPerTypeUnboundActive
-     */
-    'encryptedBlindedSubject': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1AuthRecoverPostRequest
- */
-export interface ApiV1AuthRecoverPostRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPostRequest
-     */
-    'encryptedSymmKey': string;
-    /**
-     * 
-     * @type {ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest}
-     * @memberof ApiV1AuthRecoverPostRequest
-     */
-    'timeboundSecretCredentialRequest': ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest;
-    /**
-     * 
-     * @type {ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest}
-     * @memberof ApiV1AuthRecoverPostRequest
-     */
-    'unboundSecretCredentialRequest': ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest;
-}
-/**
- * 
- * @export
- * @interface ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest
- */
-export interface ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest {
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest
-     */
-    'blindedRequest': { [key: string]: any; };
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest
-     */
-    'encryptedEncodedBlindedSubject': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest
-     */
-    'encryptedEncodedBlinding': string;
 }
 /**
  * 
@@ -370,48 +207,16 @@ export interface ApiV1AuthVerifyOtpPostRequest {
 export interface ApiV1CommentCreatePostRequest {
     /**
      * 
-     * @type {any}
-     * @memberof ApiV1CommentCreatePostRequest
-     */
-    'pres'?: any;
-    /**
-     * 
-     * @type {ApiV1CommentCreatePostRequestPayload}
-     * @memberof ApiV1CommentCreatePostRequest
-     */
-    'payload': ApiV1CommentCreatePostRequestPayload;
-}
-/**
- * 
- * @export
- * @interface ApiV1CommentCreatePostRequestPayload
- */
-export interface ApiV1CommentCreatePostRequestPayload {
-    /**
-     * 
      * @type {string}
-     * @memberof ApiV1CommentCreatePostRequestPayload
+     * @memberof ApiV1CommentCreatePostRequest
      */
     'postUid': string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1CommentCreatePostRequestPayload
+     * @memberof ApiV1CommentCreatePostRequest
      */
     'content': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1CommentFetchMorePost200Response
- */
-export interface ApiV1CommentFetchMorePost200Response {
-    /**
-     * 
-     * @type {Array<ApiV1PostFetchPost200ResponseCommentsInner>}
-     * @memberof ApiV1CommentFetchMorePost200Response
-     */
-    'comments': Array<ApiV1PostFetchPost200ResponseCommentsInner>;
 }
 /**
  * 
@@ -432,91 +237,6 @@ export interface ApiV1CommentFetchMorePostRequest {
      */
     'updatedAt'?: string;
 }
-/**
- * 
- * @export
- * @interface ApiV1CredentialEmailRenewPost200Response
- */
-export interface ApiV1CredentialEmailRenewPost200Response {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CredentialEmailRenewPost200Response
-     */
-    'emailCredential': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1CredentialEmailRenewPostRequest
- */
-export interface ApiV1CredentialEmailRenewPostRequest {
-    /**
-     * Email address
-     * @type {string}
-     * @memberof ApiV1CredentialEmailRenewPostRequest
-     */
-    'email': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1CredentialGetPost200Response
- */
-export interface ApiV1CredentialGetPost200Response {
-    /**
-     * 
-     * @type {{ [key: string]: ApiV1AuthRecoverPost200ResponseEmailCredentialsPerEmailValue; }}
-     * @memberof ApiV1CredentialGetPost200Response
-     */
-    'emailCredentialsPerEmail': { [key: string]: ApiV1AuthRecoverPost200ResponseEmailCredentialsPerEmailValue; };
-    /**
-     * 
-     * @type {ApiV1AuthRecoverPost200ResponseSecretCredentialsPerType}
-     * @memberof ApiV1CredentialGetPost200Response
-     */
-    'secretCredentialsPerType': ApiV1AuthRecoverPost200ResponseSecretCredentialsPerType;
-}
-/**
- * 
- * @export
- * @interface ApiV1CredentialSecretRenewPost200Response
- */
-export interface ApiV1CredentialSecretRenewPost200Response {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CredentialSecretRenewPost200Response
-     */
-    'signedBlindedCredential': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1CredentialSecretRenewPostRequest
- */
-export interface ApiV1CredentialSecretRenewPostRequest {
-    /**
-     * 
-     * @type {ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest}
-     * @memberof ApiV1CredentialSecretRenewPostRequest
-     */
-    'secretCredentialRequest': ApiV1AuthRecoverPostRequestTimeboundSecretCredentialRequest;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CredentialSecretRenewPostRequest
-     */
-    'type': ApiV1CredentialSecretRenewPostRequestTypeEnum;
-}
-
-export const ApiV1CredentialSecretRenewPostRequestTypeEnum = {
-    Unbound: 'unbound',
-    Timebound: 'timebound'
-} as const;
-
-export type ApiV1CredentialSecretRenewPostRequestTypeEnum = typeof ApiV1CredentialSecretRenewPostRequestTypeEnum[keyof typeof ApiV1CredentialSecretRenewPostRequestTypeEnum];
-
 /**
  * 
  * @export
@@ -548,6 +268,12 @@ export interface ApiV1ModerationHideCommentPostRequest {
      * @memberof ApiV1ModerationHideCommentPostRequest
      */
     'commentSlugId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1ModerationHideCommentPostRequest
+     */
+    'postSlugId': string;
 }
 /**
  * 
@@ -561,180 +287,6 @@ export interface ApiV1ModerationHidePostPostRequest {
      * @memberof ApiV1ModerationHidePostPostRequest
      */
     'pollUid': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollRespondPost200Response
- */
-export interface ApiV1PollRespondPost200Response {
-    /**
-     * 
-     * @type {ApiV1PollRespondPost200ResponseMetadata}
-     * @memberof ApiV1PollRespondPost200Response
-     */
-    'metadata': ApiV1PollRespondPost200ResponseMetadata;
-    /**
-     * 
-     * @type {ApiV1PollRespondPost200ResponsePayload}
-     * @memberof ApiV1PollRespondPost200Response
-     */
-    'payload': ApiV1PollRespondPost200ResponsePayload;
-    /**
-     * 
-     * @type {ApiV1PollRespondPost200ResponseAuthor}
-     * @memberof ApiV1PollRespondPost200Response
-     */
-    'author': ApiV1PollRespondPost200ResponseAuthor;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollRespondPost200ResponseAuthor
- */
-export interface ApiV1PollRespondPost200ResponseAuthor {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPost200ResponseAuthor
-     */
-    'pseudonym': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPost200ResponseAuthor
-     */
-    'domain': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollRespondPost200ResponseMetadata
- */
-export interface ApiV1PollRespondPost200ResponseMetadata {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPost200ResponseMetadata
-     */
-    'uid': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPost200ResponseMetadata
-     */
-    'slugId': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PollRespondPost200ResponseMetadata
-     */
-    'isHidden'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPost200ResponseMetadata
-     */
-    'updatedAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPost200ResponseMetadata
-     */
-    'lastReactedAt': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponseMetadata
-     */
-    'commentCount': number;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollRespondPost200ResponsePayload
- */
-export interface ApiV1PollRespondPost200ResponsePayload {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPost200ResponsePayload
-     */
-    'title': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPost200ResponsePayload
-     */
-    'body'?: string;
-    /**
-     * 
-     * @type {ApiV1PollRespondPost200ResponsePayloadPoll}
-     * @memberof ApiV1PollRespondPost200ResponsePayload
-     */
-    'poll'?: ApiV1PollRespondPost200ResponsePayloadPoll;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollRespondPost200ResponsePayloadPoll
- */
-export interface ApiV1PollRespondPost200ResponsePayloadPoll {
-    /**
-     * 
-     * @type {ApiV1PostCreatePostRequestPostDataPoll}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadPoll
-     */
-    'options': ApiV1PostCreatePostRequestPostDataPoll;
-    /**
-     * 
-     * @type {ApiV1PollRespondPost200ResponsePayloadPollResult}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadPoll
-     */
-    'result': ApiV1PollRespondPost200ResponsePayloadPollResult;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollRespondPost200ResponsePayloadPollResult
- */
-export interface ApiV1PollRespondPost200ResponsePayloadPollResult {
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
-     */
-    'option1Response': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
-     */
-    'option2Response': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
-     */
-    'option3Response'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
-     */
-    'option4Response'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
-     */
-    'option5Response'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollRespondPost200ResponsePayloadPollResult
-     */
-    'option6Response'?: number;
 }
 /**
  * 
@@ -877,81 +429,6 @@ export interface ApiV1PostCreatePostRequestPostDataPoll {
 /**
  * 
  * @export
- * @interface ApiV1PostFetchPost200Response
- */
-export interface ApiV1PostFetchPost200Response {
-    /**
-     * 
-     * @type {ApiV1PollRespondPost200Response}
-     * @memberof ApiV1PostFetchPost200Response
-     */
-    'post': ApiV1PollRespondPost200Response;
-    /**
-     * 
-     * @type {Array<ApiV1PostFetchPost200ResponseCommentsInner>}
-     * @memberof ApiV1PostFetchPost200Response
-     */
-    'comments': Array<ApiV1PostFetchPost200ResponseCommentsInner>;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostFetchPost200ResponseCommentsInner
- */
-export interface ApiV1PostFetchPost200ResponseCommentsInner {
-    /**
-     * 
-     * @type {ApiV1PostFetchPost200ResponseCommentsInnerMetadata}
-     * @memberof ApiV1PostFetchPost200ResponseCommentsInner
-     */
-    'metadata': ApiV1PostFetchPost200ResponseCommentsInnerMetadata;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostFetchPost200ResponseCommentsInner
-     */
-    'content': string;
-    /**
-     * 
-     * @type {ApiV1PollRespondPost200ResponseAuthor}
-     * @memberof ApiV1PostFetchPost200ResponseCommentsInner
-     */
-    'author': ApiV1PollRespondPost200ResponseAuthor;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostFetchPost200ResponseCommentsInnerMetadata
- */
-export interface ApiV1PostFetchPost200ResponseCommentsInnerMetadata {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostFetchPost200ResponseCommentsInnerMetadata
-     */
-    'uid': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostFetchPost200ResponseCommentsInnerMetadata
-     */
-    'slugId': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PostFetchPost200ResponseCommentsInnerMetadata
-     */
-    'isHidden'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostFetchPost200ResponseCommentsInnerMetadata
-     */
-    'updatedAt': string;
-}
-/**
- * 
- * @export
  * @interface ApiV1PostFetchPostRequest
  */
 export interface ApiV1PostFetchPostRequest {
@@ -986,7 +463,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -995,12 +472,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1AuthAuthenticatePostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1022,7 +499,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1031,49 +508,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1AuthRecoverPostRequest} apiV1AuthRecoverPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1AuthRecoverPost: async (apiV1AuthRecoverPostRequest: ApiV1AuthRecoverPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1AuthRecoverPostRequest' is not null or undefined
-            assertParamExists('apiV1AuthRecoverPost', 'apiV1AuthRecoverPostRequest', apiV1AuthRecoverPostRequest)
-            const localVarPath = `/api/v1/auth/recover`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1AuthRecoverPostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1097,7 +535,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1106,12 +544,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1AuthVerifyOtpPostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1136,7 +574,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1145,12 +583,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1CommentCreatePostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1175,7 +613,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1184,12 +622,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1CommentFetchMorePostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1214,7 +652,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1223,124 +661,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1CommentFetchMorePostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Renew an active email credential - fails if already exists. Used when rotating issuer public key or modifying schema.
-         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1CredentialEmailRenewPost: async (apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1CredentialEmailRenewPostRequest' is not null or undefined
-            assertParamExists('apiV1CredentialEmailRenewPost', 'apiV1CredentialEmailRenewPostRequest', apiV1CredentialEmailRenewPostRequest)
-            const localVarPath = `/api/v1/credential/email/renew`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CredentialEmailRenewPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1CredentialGetPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/credential/get`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Renew an active secret credential - fails if already exists. Used when rotating issuer public key.
-         * @param {ApiV1CredentialSecretRenewPostRequest} apiV1CredentialSecretRenewPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1CredentialSecretRenewPost: async (apiV1CredentialSecretRenewPostRequest: ApiV1CredentialSecretRenewPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1CredentialSecretRenewPostRequest' is not null or undefined
-            assertParamExists('apiV1CredentialSecretRenewPost', 'apiV1CredentialSecretRenewPostRequest', apiV1CredentialSecretRenewPostRequest)
-            const localVarPath = `/api/v1/credential/secret/renew`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CredentialSecretRenewPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1364,7 +691,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1373,12 +700,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchMorePostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1403,7 +730,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1412,12 +739,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchMorePostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1442,7 +769,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1451,12 +778,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationHideCommentPostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1481,7 +808,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1490,12 +817,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationHidePostPostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1520,7 +847,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1529,12 +856,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationHideCommentPostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1559,7 +886,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1568,12 +895,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationHidePostPostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1598,7 +925,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1607,12 +934,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1PollRespondPostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1637,7 +964,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1646,12 +973,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1PostCreatePostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1676,7 +1003,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1685,12 +1012,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-
+    
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1PostFetchPostRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1705,7 +1032,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
  * DefaultApi - functional programming interface
  * @export
  */
-export const DefaultApiFp = function (configuration?: Configuration) {
+export const DefaultApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = DefaultApiAxiosParamCreator(configuration)
     return {
         /**
@@ -1729,18 +1056,6 @@ export const DefaultApiFp = function (configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthLogoutPost(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1AuthLogoutPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1AuthRecoverPostRequest} apiV1AuthRecoverPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest: ApiV1AuthRecoverPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1AuthRecoverPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1AuthRecoverPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1773,7 +1088,7 @@ export const DefaultApiFp = function (configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CommentFetchMorePost200Response>> {
+        async apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CommentFetchMorePost']?.[localVarOperationServerIndex]?.url;
@@ -1785,45 +1100,10 @@ export const DefaultApiFp = function (configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CommentFetchMorePost200Response>> {
+        async apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CommentFetchRecentPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Renew an active email credential - fails if already exists. Used when rotating issuer public key or modifying schema.
-         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialEmailRenewPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CredentialEmailRenewPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1CredentialGetPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialGetPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialGetPost(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CredentialGetPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Renew an active secret credential - fails if already exists. Used when rotating issuer public key.
-         * @param {ApiV1CredentialSecretRenewPostRequest} apiV1CredentialSecretRenewPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest: ApiV1CredentialSecretRenewPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CredentialSecretRenewPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CredentialSecretRenewPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1832,7 +1112,7 @@ export const DefaultApiFp = function (configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollRespondPost200Response>>> {
+        async apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchMorePost']?.[localVarOperationServerIndex]?.url;
@@ -1844,7 +1124,7 @@ export const DefaultApiFp = function (configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollRespondPost200Response>>> {
+        async apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchRecentPost']?.[localVarOperationServerIndex]?.url;
@@ -1904,7 +1184,7 @@ export const DefaultApiFp = function (configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1PollRespondPost200Response>> {
+        async apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollRespondPost(apiV1PollRespondPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PollRespondPost']?.[localVarOperationServerIndex]?.url;
@@ -1928,7 +1208,7 @@ export const DefaultApiFp = function (configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1PostFetchPost200Response>> {
+        async apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostFetchPost(apiV1PostFetchPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostFetchPost']?.[localVarOperationServerIndex]?.url;
@@ -1963,15 +1243,6 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {ApiV1AuthRecoverPostRequest} apiV1AuthRecoverPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest: ApiV1AuthRecoverPostRequest, options?: any): AxiosPromise<ApiV1AuthRecoverPost200Response> {
-            return localVarFp.apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @param {ApiV1AuthVerifyOtpPostRequest} apiV1AuthVerifyOtpPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1994,7 +1265,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: any): AxiosPromise<ApiV1CommentFetchMorePost200Response> {
+        apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2003,34 +1274,8 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: any): AxiosPromise<ApiV1CommentFetchMorePost200Response> {
+        apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Renew an active email credential - fails if already exists. Used when rotating issuer public key or modifying schema.
-         * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: any): AxiosPromise<ApiV1CredentialEmailRenewPost200Response> {
-            return localVarFp.apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1CredentialGetPost(options?: any): AxiosPromise<ApiV1CredentialGetPost200Response> {
-            return localVarFp.apiV1CredentialGetPost(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Renew an active secret credential - fails if already exists. Used when rotating issuer public key.
-         * @param {ApiV1CredentialSecretRenewPostRequest} apiV1CredentialSecretRenewPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest: ApiV1CredentialSecretRenewPostRequest, options?: any): AxiosPromise<ApiV1CredentialSecretRenewPost200Response> {
-            return localVarFp.apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2038,7 +1283,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1PollRespondPost200Response>> {
+        apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2047,7 +1292,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1PollRespondPost200Response>> {
+        apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2092,7 +1337,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: any): AxiosPromise<ApiV1PollRespondPost200Response> {
+        apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.apiV1PollRespondPost(apiV1PollRespondPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2110,7 +1355,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: any): AxiosPromise<ApiV1PostFetchPost200Response> {
+        apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.apiV1PostFetchPost(apiV1PostFetchPostRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -2142,17 +1387,6 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1AuthLogoutPost(options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1AuthLogoutPost(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1AuthRecoverPostRequest} apiV1AuthRecoverPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest: ApiV1AuthRecoverPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1AuthRecoverPost(apiV1AuthRecoverPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2197,38 +1431,6 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Renew an active email credential - fails if already exists. Used when rotating issuer public key or modifying schema.
-     * @param {ApiV1CredentialEmailRenewPostRequest} apiV1CredentialEmailRenewPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest: ApiV1CredentialEmailRenewPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1CredentialEmailRenewPost(apiV1CredentialEmailRenewPostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1CredentialGetPost(options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1CredentialGetPost(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Renew an active secret credential - fails if already exists. Used when rotating issuer public key.
-     * @param {ApiV1CredentialSecretRenewPostRequest} apiV1CredentialSecretRenewPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest: ApiV1CredentialSecretRenewPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1CredentialSecretRenewPost(apiV1CredentialSecretRenewPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

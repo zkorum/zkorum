@@ -1,13 +1,10 @@
 /** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/
 import { z } from "zod";
 import {
-    zodCreateCommentPayload,
     zodResponseToPollPayload,
     zodauthorizedEmail,
     zodblindedCredential,
     zodcode,
-    zodDevices,
-    zodDidKey,
     zodemail,
     zodemailCredential,
     zodemailCredentialsPerEmail,
@@ -20,6 +17,7 @@ import {
     zoduserId,
     zodSlugId,
     zodComment,
+    zodCommentContent,
 } from "./zod.js";
 
 export class Dto {
@@ -121,6 +119,7 @@ export class Dto {
     });
     static moderateCommentRequest = z.object({
         commentSlugId: zodSlugId,
+        postSlugId: zodSlugId,
     });
     static renewSecretCredential = z.object({
         secretCredentialRequest: zodsecretCredentialRequest,
@@ -136,8 +135,8 @@ export class Dto {
         emailCredential: zodemailCredential,
     });
     static commentRequest = z.object({
-        pres: z.unknown(), // z.object() does not exist :(
-        payload: zodCreateCommentPayload,
+        postUid: zodPostUid,
+        content: zodCommentContent
     });
     static postFetchRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(

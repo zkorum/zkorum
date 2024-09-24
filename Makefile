@@ -8,9 +8,9 @@ all: dev
 generate:
 	docker run --rm \
   -v ${PWD}:/local openapitools/openapi-generator-cli:latest-release generate \
-  -i /local/services/back/openapi-zkorum.json \
+  -i /local/services/api/openapi-zkorum.json \
   -g typescript-axios \
-  -o /local/services/afterwork/src/api
+  -o /local/services/agora/src/api
 
 sync:
 	cd services/shared && pnpm run sync
@@ -19,11 +19,11 @@ dev-sync:
 	watchman-make -p 'services/shared/src/**/*.ts' -t sync
 
 dev-generate:
-	watchman-make -p 'services/back/openapi-zkorum.json' -t generate
+	watchman-make -p 'services/api/openapi-zkorum.json' -t generate
 
 dev-front:
-	cd services/front && pnpm dev 
+	cd services/agora && pnpm dev 
 
-dev-back:
-	cd services/back && pnpm start:dev 
+dev-api:
+	cd services/api && pnpm start:dev 
 	
