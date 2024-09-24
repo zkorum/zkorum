@@ -1,13 +1,21 @@
 <template>
   <div>
     <q-page>
-      <q-infinite-scroll @load="onLoad" :offset="250" class="column flex-center">
+      <q-infinite-scroll :offset="250" class="column flex-center" @load="onLoad">
         <div class="postListFlex">
-          <div v-for="(postData, index) in compactPostDataList" :key="index">
-            <RouterLink :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId } }">
-              <PostItem :extended-post-data="postData" :compact-mode="true" />
-            </RouterLink>
+          <div v-for="(postData, index) in compactPostDataList" :key="index" class="postPadding">
+            <div>
+              <RouterLink :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId } }">
+                <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
+              </RouterLink>
+            </div>
+
+            <div class="seperator">
+              <q-separator />
+            </div>
+
           </div>
+
         </div>
       </q-infinite-scroll>
     </q-page>
@@ -16,19 +24,41 @@
 
 <script setup lang="ts">
 
-import PostItem from "./PostItem.vue";
+import PostDetails from "../post/PostDetails.vue";
 import { ref } from "vue";
-import { DummyPostDataFormat, usePostStore } from "@/stores/post";
+import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 
-const { generateDummyPostData } = usePostStore();
+const { fetchUnifiedPosts } = usePostStore();
 
+const FETCH_POST_COUNT = 10;
 const compactPostDataList = ref<DummyPostDataFormat[]>([]);
-for (let i = 0; i < 10; i++) {
-  compactPostDataList.value.push(generateDummyPostData());
+let lastSlugId = "";
+
+generateNewPosts();
+
+function generateNewPosts() {
+  const postList = fetchUnifiedPosts(lastSlugId, FETCH_POST_COUNT);
+  for (let i = 0; i < postList.length; i++) {
+    compactPostDataList.value.push(postList[i]);
+  }
+
+  if (postList.length > 0) {
+    lastSlugId = postList[postList.length - 1].metadata.slugId;
+  } else {
+    // Reached the end of the post list
+  }
+
 }
 
-async function onLoad() {
-  console.log("Infinite list to be implemented");
+interface DoneFunction {
+  (): void;
+}
+
+async function onLoad(index: number, done: DoneFunction) {
+
+  generateNewPosts();
+  done();
+
   /*
   // Fetch more data from backend
   if (false) {
@@ -201,18 +231,18 @@ onMounted(async () => {
 .postListFlex {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-}
-
-.worldTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1rem;
 }
 
 a {
   text-decoration: none;
   color: unset
+}
+
+.seperator {
+  margin-top: 1rem;
+}
+
+.postPadding {
+  padding-bottom: 1rem;
 }
 </style>

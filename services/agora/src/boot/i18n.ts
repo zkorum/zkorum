@@ -38,7 +38,7 @@ function loadAndConfigureI18n() {
   return i18n;
 }
 
-export const i18n = loadAndConfigureI18n()
+export const i18n = loadAndConfigureI18n();
 
 export default boot(({ app }) => {
   app.use(i18n);

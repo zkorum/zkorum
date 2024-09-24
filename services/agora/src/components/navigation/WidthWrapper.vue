@@ -1,15 +1,21 @@
 <template>
 
-  <div class="innerStyle">
+  <div class="innerStyle" :style="{ width: 'min(' + width + ', 100%)' }">
     <slot />
   </div>
 
 </template>
 
+<script setup lang="ts">
+
+defineProps<{
+  width: string
+}>();
+
+</script>
 
 <style scoped>
 .innerStyle {
-  width: min(40rem, 100%);
   margin: auto;
 }
 </style>

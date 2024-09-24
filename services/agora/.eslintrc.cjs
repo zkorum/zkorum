@@ -21,7 +21,7 @@ module.exports = {
     // Rules order is important, please avoid shuffling them
     extends: [
         // Base ESLint recommended rules
-        // 'eslint:recommended',
+        "eslint:recommended",
 
         // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin#usage
         // ESLint typescript rules
@@ -30,9 +30,9 @@ module.exports = {
         // Uncomment any of the lines below to choose desired strictness,
         // but leave only one uncommented!
         // See https://eslint.vuejs.org/rules/#available-rules
-        "plugin:vue/vue3-essential", // Priority A: Essential (Error Prevention)
+        // "plugin:vue/vue3-essential", // Priority A: Essential (Error Prevention)
         // 'plugin:vue/vue3-strongly-recommended', // Priority B: Strongly Recommended (Improving Readability)
-        // 'plugin:vue/vue3-recommended', // Priority C: Recommended (Minimizing Arbitrary Choices and Cognitive Overhead)
+        "plugin:vue/vue3-recommended", // Priority C: Recommended (Minimizing Arbitrary Choices and Cognitive Overhead)
 
         // https://github.com/prettier/eslint-config-prettier#installation
         // usage with Prettier, provided by 'eslint-config-prettier'.
@@ -71,6 +71,8 @@ module.exports = {
 
         quotes: ["warn", "double", { avoidEscape: true }],
 
+        semi: 1,
+
         // this rule, if on, would require explicit return type on the `render` function
         "@typescript-eslint/explicit-function-return-type": "off",
 
@@ -85,6 +87,14 @@ module.exports = {
         "@typescript-eslint/no-unused-vars": [
             "error",
             { argsIgnorePattern: "^_" },
+        ],
+
+        "vue/first-attribute-linebreak": [
+            "error",
+            {
+                singleline: "beside",
+                multiline: "beside",
+            },
         ],
 
         // allow debugger during development only

@@ -1,4 +1,4 @@
-import { boot } from "quasar/wrappers"
+import { boot } from "quasar/wrappers";
 import { Buffer } from "buffer";
 import {
   initializeWasm,
@@ -18,5 +18,5 @@ export async function maybeInitWasm() {
 export default boot(async (/* { app, router, ... } */) => {
   // avoid "Buffer is not defined" error
   globalThis.Buffer = Buffer;
-  await maybeInitWasm()
-})
+  await maybeInitWasm();
+});

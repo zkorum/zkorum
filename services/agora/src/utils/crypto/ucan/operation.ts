@@ -1,16 +1,17 @@
-import { publicKeyToDid } from "shared/did/util";
-import { SupportedPlatform } from "@/utils/common";
+/* eslint-disable no-case-declarations */
+import { publicKeyToDid } from "src/shared/did/util";
+import { SupportedPlatform } from "src/utils/common";
 import { SecureSigning } from "@zkorum/capacitor-secure-signing";
-import { base64Decode } from "@/shared/common/base64";
+import { base64Decode } from "src/shared/common/base64";
 import { getWebCryptoStore } from "../store";
 import * as DID from "./did/index";
-import { useSessionStore } from "@/stores/session";
+import { useSessionStore } from "src/stores/session";
 import * as ucans from "@ucans/ucans";
-import { httpMethodToAbility, httpPathnameToResourcePointer } from "@/shared/ucan/ucan";
-import { base64 } from "@/shared/common"
+import { httpMethodToAbility, httpPathnameToResourcePointer } from "src/shared/ucan/ucan";
+import { base64 } from "src/shared/common";
 
 function getPrefixedKeyByEmail(email: string) {
-  return `com.zkorum.agora/v1/${email}/sign`
+  return `com.zkorum.agora/v1/${email}/sign`;
 }
 
 interface CreateDidReturn {
@@ -22,7 +23,7 @@ interface CreateDidReturn {
 //
 //TODO: move the web target's code to the Capacitor plugin
 export async function createDidIfDoesNotExist(email: string, platform: SupportedPlatform): Promise<CreateDidReturn> {
-  const sessionStore = useSessionStore()
+  const sessionStore = useSessionStore();
   const prefixedKey = getPrefixedKeyByEmail(email);
   switch (platform) {
   case "mobile":
@@ -78,7 +79,7 @@ async function buildMobileUcan({ did, prefixedKey, pathname, method }: CreateUca
       did: () => did,
       jwtAlg: "ES256",
       sign: async (msg: Uint8Array) => {
-        const { signature } = await SecureSigning.sign({ prefixedKey: prefixedKey, data: base64.base64Encode(msg) })
+        const { signature } = await SecureSigning.sign({ prefixedKey: prefixedKey, data: base64.base64Encode(msg) });
         return base64.base64Decode(signature);
       }
     })
@@ -98,14 +99,14 @@ async function buildMobileUcan({ did, prefixedKey, pathname, method }: CreateUca
 export async function buildUcan(props: CreateUcanProps): Promise<string> {
   switch (props.platform) {
   case "web":
-    return buildWebUcan(props)
+    return buildWebUcan(props);
   case "mobile":
-    return buildMobileUcan(props)
+    return buildMobileUcan(props);
   }
 }
 
 export function buildAuthorizationHeader(encodedUcan: string) {
   return {
     Authorization: `Bearer ${encodedUcan}`
-  }
+  };
 }

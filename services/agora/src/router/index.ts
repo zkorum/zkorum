@@ -7,8 +7,6 @@ import {
 } from "vue-router";
 
 import routes from "./routes";
-// import { useAuthenticationStore } from "@/stores/authentication";
-
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -26,12 +24,14 @@ export default route(function (/* { store, ssrContext } */) {
       : createWebHashHistory;
 
   const Router = createRouter({
-    scrollBehavior: (to, from, savedPosition) => {
-      if (to.name == "default-home-feed") {
+    scrollBehavior: () => { // to, from, savedPosition
+      /*
+      if (to.name == "post-single") {
         if (savedPosition != null) {
           return { left: savedPosition.left, top: savedPosition.top };
         }
       }
+      */
       return { left: 0, top: 0 };
     },
     routes,
@@ -45,9 +45,9 @@ export default route(function (/* { store, ssrContext } */) {
   // @see https://github.com/vitejs/vite/issues/11804#issuecomment-1406182566
   Router.onError((error, to) => {
     if (error.message.includes("Failed to fetch dynamically imported module")) {
-      window.location.href = to.fullPath
+      window.location.href = to.fullPath;
     }
-  })
+  });
 
   /*
   if (!process.env.DEV) {

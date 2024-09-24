@@ -3,18 +3,17 @@ import { createPinia } from "pinia";
 import { Router } from "vue-router";
 import { PluginOptions, createPersistedStatePlugin } from "pinia-plugin-persistedstate-2";
 import localforage from "localforage";
-import { Dialog, Platform } from "quasar"
+import { Dialog, Platform } from "quasar";
 import { StateTree } from "pinia";
 import {
-  DataType,
   KeychainAccess,
   SecureStorage,
   StorageError,
   StorageErrorType,
-} from "@zkorum/capacitor-secure-storage"
-import { i18n } from "src/boot/i18n"
-import { App } from "@capacitor/app"
-import { nativeAuthenticate } from "@/utils/native/auth";
+} from "@zkorum/capacitor-secure-storage";
+import { i18n } from "src/boot/i18n";
+import { App } from "@capacitor/app";
+import { nativeAuthenticate } from "src/utils/native/auth";
 
 /*
  * When adding new properties to stores, you should also
@@ -36,7 +35,7 @@ declare module "pinia" {
  * with the Store instance.
  */
 
-async function mobileGetItem(key: string): Promise<DataType | null> {
+async function mobileGetItem(key: string) {
   try {
     return SecureStorage.get(key, true, true);
   } catch (error) {
@@ -47,7 +46,7 @@ async function mobileGetItem(key: string): Promise<DataType | null> {
           await nativeAuthenticate();
           return mobileGetItem(key);
         } catch (error) {
-          console.error("Fatal error while trying to authenticate user on mobile", error)
+          console.error("Fatal error while trying to authenticate user on mobile", error);
           Dialog.create({
             title: i18n.global.t("capacitorStorage.fatalError.title"),
             message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -56,10 +55,11 @@ async function mobileGetItem(key: string): Promise<DataType | null> {
             App.exitApp();
           });
         }
+        break;
       }
       case "secureLockScreenDisabled":
         //TODO: redirectToCreateSecureLockScreen()
-        console.error("Secure Lock Screen Error while trying to access secure storage", error)
+        console.error("Secure Lock Screen Error while trying to access secure storage", error);
         Dialog.create({
           title: i18n.global.t("capacitorStorage.secureLockScreenError.title"),
           message: i18n.global.t("capacitorStorage.secureLockScreenError.message"),
@@ -69,7 +69,7 @@ async function mobileGetItem(key: string): Promise<DataType | null> {
         });
         throw error;
       default:
-        console.error("Fatal error while trying to access secure storage", error)
+        console.error("Fatal error while trying to access secure storage", error);
         Dialog.create({
           title: i18n.global.t("capacitorStorage.fatalError.title"),
           message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -96,7 +96,7 @@ async function mobileRemoveItem(key: string): Promise<void> {
           await nativeAuthenticate();
           return mobileRemoveItem(key);
         } catch (error) {
-          console.error("Fatal error while trying to authenticate user on mobile", error)
+          console.error("Fatal error while trying to authenticate user on mobile", error);
           Dialog.create({
             title: i18n.global.t("capacitorStorage.fatalError.title"),
             message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -105,10 +105,11 @@ async function mobileRemoveItem(key: string): Promise<void> {
             App.exitApp();
           });
         }
+        break;
       }
       case "secureLockScreenDisabled":
         //TODO: redirectToCreateSecureLockScreen()
-        console.error("Secure Lock Screen Error while trying to access secure storage", error)
+        console.error("Secure Lock Screen Error while trying to access secure storage", error);
         Dialog.create({
           title: i18n.global.t("capacitorStorage.secureLockScreenError.title"),
           message: i18n.global.t("capacitorStorage.secureLockScreenError.message"),
@@ -116,8 +117,9 @@ async function mobileRemoveItem(key: string): Promise<void> {
         }).onOk(() => {
           App.exitApp();
         });
+        break;
       default:
-        console.error("Fatal error while trying to access secure storage", error)
+        console.error("Fatal error while trying to access secure storage", error);
         Dialog.create({
           title: i18n.global.t("capacitorStorage.fatalError.title"),
           message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -140,7 +142,7 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
       true,
       true,
       KeychainAccess.whenUnlocked // TODO: change this to 'afterFirstUnlock' for states that need to be accessed in the background
-    )
+    );
   } catch (error) {
     if (error instanceof StorageError) {
       switch (StorageErrorType[error.code]) {
@@ -149,7 +151,7 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
           await nativeAuthenticate();
           return mobileSetItem(key, value);
         } catch (error) {
-          console.error("Fatal error while trying to authenticate user on mobile", error)
+          console.error("Fatal error while trying to authenticate user on mobile", error);
           Dialog.create({
             title: i18n.global.t("capacitorStorage.fatalError.title"),
             message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -158,10 +160,11 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
             App.exitApp();
           });
         }
+        break;
       }
       case "secureLockScreenDisabled":
         //TODO: redirectToCreateSecureLockScreen()
-        console.error("Secure Lock Screen Error while trying to access secure storage", error)
+        console.error("Secure Lock Screen Error while trying to access secure storage", error);
         Dialog.create({
           title: i18n.global.t("capacitorStorage.secureLockScreenError.title"),
           message: i18n.global.t("capacitorStorage.secureLockScreenError.message"),
@@ -171,7 +174,7 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
         });
         throw error;
       default:
-        console.error("Fatal error while trying to access secure storage", error)
+        console.error("Fatal error while trying to access secure storage", error);
         Dialog.create({
           title: i18n.global.t("capacitorStorage.fatalError.title"),
           message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -179,7 +182,7 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
         }).onOk(() => {
           App.exitApp();
         });
-        throw error
+        throw error;
       }
     } else {
       throw error;
@@ -207,13 +210,13 @@ function persistedStatePluginParamForPlatform<S extends StateTree = StateTree>()
   return {
     storage: {
       getItem: async (key) => {
-        return localforage.getItem(key)
+        return localforage.getItem(key);
       },
       setItem: async (key, value) => {
-        return localforage.setItem(key, value)
+        return localforage.setItem(key, value);
       },
       removeItem: async (key) => {
-        return localforage.removeItem(key)
+        return localforage.removeItem(key);
       },
     },
   };
@@ -223,8 +226,8 @@ function persistedStatePluginParamForPlatform<S extends StateTree = StateTree>()
 
 export default store((/* { ssrContext } */) => {
   const pinia = createPinia();
-  const installPersistedStatePlugin = createPersistedStatePlugin(persistedStatePluginParamForPlatform())
-  pinia.use((context) => installPersistedStatePlugin(context))
+  const installPersistedStatePlugin = createPersistedStatePlugin(persistedStatePluginParamForPlatform());
+  pinia.use((context) => installPersistedStatePlugin(context));
 
   return pinia;
 });

@@ -5,7 +5,7 @@
 
 import { configure } from "quasar/wrappers";
 import { fileURLToPath } from "node:url";
-import "dotenv/config"
+import "dotenv/config";
 
 export default configure((ctx) => {
   return {
@@ -15,7 +15,7 @@ export default configure((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ctx.modeName === "capacitor" ? ["i18n", "axios", "crypto", "capgo", "capacitor-storage"] : ["i18n", "axios", "crypto"],
+    boot: ctx.modeName === "capacitor" ? ["i18n", "axios", "crypto", "capgo", "capacitor-storage", "primevue"] : ["i18n", "axios", "crypto", "primevue"],
 
     bin: {
       linuxAndroidStudio: "/home/nicobao/.local/bin/studio.sh",
@@ -125,7 +125,7 @@ export default configure((ctx) => {
               tsconfigPath: "tsconfig.vue-tsc.json",
             },
             eslint: {
-              lintCommand: 'eslint "./**/*.{js,ts,mjs,cjs,vue}"',
+              lintCommand: 'eslint "./**/*.{js,ts,mjs,cjs,vue}"'
             },
           },
           { server: false },
@@ -158,7 +158,7 @@ export default configure((ctx) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: ["BottomSheet"],
+      plugins: ["BottomSheet", "Dialog"],
     },
 
     // animations: 'all', // --- includes all animations
