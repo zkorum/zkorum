@@ -25,6 +25,7 @@ interface CreateDidReturn {
 export async function createDidIfDoesNotExist(email: string, platform: SupportedPlatform): Promise<CreateDidReturn> {
   const sessionStore = useSessionStore();
   const prefixedKey = getPrefixedKeyByEmail(email);
+  console.log(1.1);
   switch (platform) {
   case "mobile":
     const { publicKey } = await SecureSigning.createKeyPairIfDoesNotExist({ prefixedKey: prefixedKey });
@@ -34,11 +35,16 @@ export async function createDidIfDoesNotExist(email: string, platform: Supported
     const flowIdMobile = sessionStore.getOrSetFlowId(email);
     return { did: didMobile, flowId: flowIdMobile, prefixedKey }; // TODO: also return flowId!
   case "web":
+    console.log(1.2);
     const cryptoStore = await getWebCryptoStore();
+    console.log(1.3);
     await cryptoStore.keystore.createIfDoesNotExists(prefixedKey);
+    console.log(1.4);
     const didWeb = await DID.write(cryptoStore, email);
+    console.log(1.5);
     sessionStore.setPrefixedKey(email, prefixedKey);
     const flowIdWeb = sessionStore.getOrSetFlowId(email);
+    console.log(1.6);
     return { did: didWeb, flowId: flowIdWeb, prefixedKey };
   }
 }
