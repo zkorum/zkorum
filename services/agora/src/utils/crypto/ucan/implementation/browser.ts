@@ -283,9 +283,16 @@ export async function ksCreateIfDoesNotExist(
   ks: RSAKeyStore,
   emailOrUserId: string
 ): Promise<RSAKeyStore> {
+  console.log(1.31);
+  const test1 = ksWriteIdentifier(ks, emailOrUserId);
+  console.log(1.32);
+  const test2 = ksExchangeIdentifier(ks, emailOrUserId);
+  console.log(1.33);
+  console.log(test1);
+  console.log(test2);
   return await ks.createIfDoesNotExist(
-    ksWriteIdentifier(ks, emailOrUserId),
-    ksExchangeIdentifier(ks, emailOrUserId)
+    test1,
+    test2
   );
 }
 
