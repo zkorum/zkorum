@@ -10,8 +10,7 @@ import { HashAlg, SymmAlg, SymmKeyLength } from "@zkorum/keystore-idb/types.js";
 import { RSAKeyStore } from "@zkorum/keystore-idb/rsa/index.js";
 import rsaOperations from "@zkorum/keystore-idb/rsa/index.js";
 
-// @ts-expect-error TODO: Fix type error
-import * as typeChecks from "utils/type-checks.js";
+import * as typeChecks from "src/utils/type-checks.js";
 import {
   type Implementation,
   type ImplementationOptions,
@@ -53,17 +52,14 @@ export async function aesDecrypt(
 ): Promise<Uint8Array> {
   const cryptoKey = typeChecks.isCryptoKey(key)
     ? key
-    // @ts-expect-error TODO: Fix type error
     : await importAesKey(key, alg);
   const decrypted = iv
     ? await webcrypto.subtle.decrypt(
       { name: alg, iv },
-      // @ts-expect-error TODO: Fix type error
       cryptoKey,
       encrypted
     )
     : // the keystore version prefixes the `iv` into the cipher text
-    // @ts-expect-error TODO: Fix type error
     await keystoreAES.decryptBytes(encrypted, cryptoKey, { alg });
 
   return new Uint8Array(decrypted);
@@ -77,14 +73,11 @@ export async function aesEncrypt(
 ): Promise<Uint8Array> {
   const cryptoKey = typeChecks.isCryptoKey(key)
     ? key
-    // @ts-expect-error TODO: Fix type error
     : await importAesKey(key, alg);
 
   // the keystore version prefixes the `iv` into the cipher text
   const encrypted = iv
-    // @ts-expect-error TODO: Fix type error
     ? await webcrypto.subtle.encrypt({ name: alg, iv }, cryptoKey, data)
-    // @ts-expect-error TODO: Fix type error
     : await keystoreAES.encryptBytes(data, cryptoKey, { alg });
 
   return new Uint8Array(encrypted);
@@ -358,10 +351,8 @@ export async function rsaDecrypt(
     {
       name: RSA_ALGORITHM,
     },
-    // @ts-expect-error TODO: Fix type error
     typeChecks.isCryptoKey(privateKey)
       ? privateKey
-      // @ts-expect-error TODO: Fix type error
       : await importRsaKey(privateKey, ["decrypt"]),
     data
   );
@@ -375,14 +366,12 @@ export async function rsaEncrypt(
 ): Promise<Uint8Array> {
   const key = typeChecks.isCryptoKey(publicKey)
     ? publicKey
-    // @ts-expect-error TODO: Fix type error
     : await importRsaKey(publicKey, ["encrypt"]);
 
   const arrayBuffer = await webcrypto.subtle.encrypt(
     {
       name: RSA_ALGORITHM,
     },
-    // @ts-expect-error TODO: Fix type error
     key,
     message
   );
