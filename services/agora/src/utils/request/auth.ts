@@ -18,7 +18,7 @@ export async function authenticate(
   | AuthenticateReturn
   | "already_logged_in"
   | "throttled"
-> {
+  > {
   const { did, flowId, prefixedKey } = await ucanOperation.createDidIfDoesNotExist(email, platform);
   // TODO: get DID if exist, else create it
   // then create UCAN, then inject it below
