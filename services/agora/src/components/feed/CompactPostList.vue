@@ -11,7 +11,7 @@
             </div>
 
             <div class="seperator">
-              <q-separator />
+              <q-separator :inset="true" />
             </div>
 
           </div>
