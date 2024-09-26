@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
         name: "default-home-feed"
       },
       {
-        path: "/user-profile:userId",
+        path: "/user-profile",
         components: {
           default: () => import("pages/user-profile/index.vue"), topmenubar: DefaultMenuBar
         },
