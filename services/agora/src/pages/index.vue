@@ -11,12 +11,12 @@
 <script setup lang="ts">
 import CompactPostList from "src/components/feed/CompactPostList.vue";
 import NewPostButtonWrapper from "src/components/post/NewPostButtonWrapper.vue";
-import { useSigning } from "src/utils/auth/signing";
+// import { useSigning } from "src/utils/auth/signing";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-useSigning();
+// useSigning();
 
 function createNewPost() {
   router.push({ name: "create-post" });
