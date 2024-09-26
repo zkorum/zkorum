@@ -34,11 +34,11 @@
                     </div>
 
                     <div class="rankingButtonCluster">
-                      <ZKButton flat text-color="color-text-strong" icon="mdi-thumb-down" size="1.3rem"
+                      <ZKButton flat text-color="color-text-strong" icon="mdi-thumb-down-outline" size="1.3rem"
                         @click="rankComment('dislike', false)" />
                       <ZKButton flat text-color="color-text-strong" label="Pass" size="1rem"
                         @click="rankComment('pass', false)" />
-                      <ZKButton flat text-color="color-text-strong" icon="mdi-thumb-up" size="1.3rem"
+                      <ZKButton flat text-color="color-text-strong" icon="mdi-thumb-up-outline" size="1.3rem"
                         @click="rankComment('like', false)" />
                     </div>
 
