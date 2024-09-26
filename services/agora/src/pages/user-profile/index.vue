@@ -37,7 +37,6 @@ import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import TabPanel from "primevue/tabpanel";
 import CompactCommentList from "src/components/profile/CompactCommentList.vue";
-
 </script>
 
 <style scoped lang="scss">
