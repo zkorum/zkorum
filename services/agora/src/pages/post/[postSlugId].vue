@@ -19,4 +19,5 @@ postData = postStore.getPostBySlugId(props.postSlugId);
 
 </script>
 
-<style scoped></style>
+<style scoped lang="scss">
+</style>
