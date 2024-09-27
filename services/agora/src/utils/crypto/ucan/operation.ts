@@ -40,7 +40,7 @@ export async function createDidIfDoesNotExist(email: string, platform: Supported
     console.log(1.3);
     await cryptoStore.keystore.createIfDoesNotExists(prefixedKey);
     console.log(1.4);
-    const didWeb = await DID.write(cryptoStore, email);
+    const didWeb = await DID.write(cryptoStore, prefixedKey);
     console.log(1.5);
     sessionStore.setPrefixedKey(email, prefixedKey);
     const flowIdWeb = sessionStore.getOrSetFlowId(email);
