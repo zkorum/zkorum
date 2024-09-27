@@ -1,26 +1,26 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
-    <div v-for="comment in commentList" :key="comment.postSlugId">
+    <div v-for="commentItem in commentList" :key="commentItem.postSlugId">
       <ZKHoverEffect :enable-hover="true">
-        <RouterLink :to="{ name: 'single-post', params: { postSlugId: comment.postSlugId }, query: { commentMode: 'true', commentSlugId: 'comment-slug-id-0'} }">
+        <RouterLink :to="{ name: 'single-post', params: { postSlugId: commentItem.postSlugId }, query: { commentMode: 'true', commentSlugId: 'comment-slug-id-0'} }">
           <div class="container">
 
             <div class="postTitle">
-              {{ comment.title }}
+              {{ commentItem.title }}
             </div>
 
             <div class="commentMetadata">
-              Commented {{ getTimeFromNow(comment.createdAt) }} ago •
-              <q-icon name="mdi-thumb-down-outline" color="color-text-weak" />
-              {{ comment.numDownvotes }}
-              •
-              <q-icon name="mdi-thumb-up-outline" color="color-text-weak" />
-              {{ comment.numUpvotes }}
+              Commented {{ getTimeFromNow(commentItem.createdAt) }} ago
             </div>
 
             <div class="commentBody">
-              {{ comment.userComment }}
+              <span v-html="commentItem.commentItem.comment"></span>
             </div>
+
+            <CommentActionBar :comment-item="commentItem.commentItem" :is-ranked="commentItem.isRanked"
+              :post-slug-id="commentItem.postSlugId" :ranked-action="commentItem.rankedAction" />
+
           </div>
         </RouterLink>
       </ZKHoverEffect>
@@ -36,6 +36,7 @@ import { useProfileStore } from "src/stores/profile";
 import Divider from "primevue/divider";
 import { getTimeFromNow } from "src/utils/common";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
+import CommentActionBar from "../post/views/CommentActionBar.vue";
 
 const { commentList } = useProfileStore();
 
@@ -65,10 +66,7 @@ const { commentList } = useProfileStore();
 }
 
 .commentBody {
-  text-overflow: ellipsis;
-  white-space: wrap;
-  overflow: hidden;
-  height: 3rem;
+  padding-top: 1rem;
 }
 
 </style>
