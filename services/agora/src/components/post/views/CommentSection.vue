@@ -18,7 +18,7 @@
 
       <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
         class="commentListFlex">
-        <div v-for="(commentItem, index) in commentList" :key="index">
+        <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :comment-ranking="commentRanking" />
         </div>
       </div>
@@ -62,6 +62,9 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 import CommentSortItem from "./CommentSortItem.vue";
 import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
 import { onMounted, ref, watch } from "vue";
+import { useRouteQuery } from "@vueuse/router";
+
+const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 
 defineProps<{
   commentList: DummyCommentFormat[],
@@ -82,6 +85,12 @@ const initialSlide = ref(0);
 const description = ref("");
 
 onMounted(() => {
+
+  setTimeout(
+    function () {
+      scrollToComment();
+    }, 1000);
+
   if (commentSortPreference.value == "more") {
     commentSortPreference.value = "popular";
   }
@@ -98,6 +107,24 @@ watch(width, () => {
 watch(commentSortPreference, () => {
   updateDescription(commentSortPreference.value);
 });
+
+function scrollToComment() {
+  if (commentSlugId.value != "") {
+    console.log("scroll");
+    const targetElement = document.getElementById(commentSlugId.value);
+
+    if (targetElement != null) {
+      targetElement.scrollIntoView(
+        {
+          behavior: "smooth",
+          block: "start"
+        });
+    } else {
+      console.log("Failed to locate ID: " + commentSlugId.value);
+    }
+
+  }
+}
 
 function initializeSlideCount() {
   if (width.value < 300) {
