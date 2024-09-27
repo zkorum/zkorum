@@ -69,22 +69,6 @@
         @post-clicked="postedCommentFromComposor()" @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
 
-    <q-dialog v-model="showFallbackShareDialog">
-      <q-card class="shareDialog">
-        <q-card-section>
-          <div class="text-h6">Share Link</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          {{ sharePostUrl }}
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn v-close-popup flat label="OK" color="primary" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
   </div>
 </template>
 
@@ -121,10 +105,6 @@ const router = useRouter();
 const route = useRoute();
 
 const webShare = useWebShare();
-
-const showFallbackShareDialog = ref(false);
-
-const sharePostUrl = window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
 
 const focusCommentElement = ref(false);
 
@@ -174,11 +154,8 @@ function clickedCommentButton() {
 }
 
 function shareClicked() {
-  if (webShare.isSupportedSharePlatform()) {
-    webShare.share("Agora - " + props.extendedPostData.payload.title, sharePostUrl);
-  } else {
-    showFallbackShareDialog.value = true;
-  }
+  const sharePostUrl = window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
+  webShare.share("Agora - " + props.extendedPostData.payload.title, sharePostUrl);
 }
 
 </script>
@@ -223,10 +200,6 @@ function shareClicked() {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-}
-
-.shareDialog {
-  min-width: 20rem;
 }
 
 .postPadding {
