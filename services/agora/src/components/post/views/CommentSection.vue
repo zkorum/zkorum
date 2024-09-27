@@ -18,7 +18,8 @@
 
       </ZKCard>
 
-      <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
+      <div
+        v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
         class="commentListFlex">
         <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
@@ -113,7 +114,7 @@ watch(commentSortPreference, () => {
   updateDescription(commentSortPreference.value);
 });
 
-function getCommentItemRankStatus(commentIndex: number): PossibleCommentRankingActions  {
+function getCommentItemRankStatus(commentIndex: number): PossibleCommentRankingActions {
   const action = props.commentRanking.rankedCommentList.get(commentIndex);
   if (action == null) {
     return "pass";
@@ -190,14 +191,14 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 }
 
 .specialMessage {
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2rem;
 }
 
 .commentListFlex {
-  display:flex;
+  display: flex;
   flex-direction: column;
 }
 
@@ -219,6 +220,4 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   background-color: #f0f9ff;
   border-radius: 15px;
 }
-
-
 </style>
