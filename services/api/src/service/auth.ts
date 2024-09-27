@@ -1,7 +1,6 @@
 import { codeToString, generateOneTimeCode, generateRandomHex, generateUUID } from "@/crypto.js";
-import { authAttemptTable, deviceTable, emailTable, userTable } from "@/schema.js";
+import { authAttemptTable, citizenTable, deviceTable, emailTable, userTable } from "@/schema.js";
 import { nowZeroMs } from "@/shared/common/util.js";
-import { domainFromEmail } from "@/shared/shared.js";
 import type { AuthenticateRequestBody, GetDeviceStatusResp, VerifyOtp200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { eq } from "drizzle-orm";
@@ -302,11 +301,12 @@ export async function register({
                 updatedAt: now,
             })
             .where(eq(authAttemptTable.didWrite, didWrite));
-        const domain = domainFromEmail(authAttemptResult[0].email);
         await tx.insert(userTable).values({
-            uid: uid,
             id: authAttemptResult[0].userId,
-            isAdmin: domain === "zkorum.com",
+        });
+        //TODO: citizen or postCreator...?
+        await tx.insert(citizenTable).values({
+            userId: authAttemptResult[0].userId,
         });
         await tx.insert(deviceTable).values({
             userId: authAttemptResult[0].userId,

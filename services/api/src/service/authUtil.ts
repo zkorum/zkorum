@@ -7,26 +7,8 @@ import { nowZeroMs } from "@/shared/common/util.js";
 
 interface InfoDevice {
     userAgent: string;
-    uid: string;
     userId: string;
     sessionExpiry: Date;
-}
-
-export async function isAdmin(
-    db: PostgresDatabase,
-    didWrite: string
-): Promise<boolean | undefined> {
-    const result = await db
-        .select({ isAdmin: userTable.isAdmin })
-        .from(userTable)
-        .leftJoin(deviceTable, eq(deviceTable.userId, userTable.id))
-        .where(eq(deviceTable.didWrite, didWrite));
-    if (result.length === 0) {
-        // user does not exist
-        return undefined;
-    } else {
-        return result[0].isAdmin;
-    }
 }
 
 export async function isLoggedIn(
@@ -92,7 +74,6 @@ export async function getInfoFromDevice(
     const results = await db
         .select({
             userId: userTable.id,
-            uid: userTable.uid,
             userAgent: deviceTable.userAgent,
             sessionExpiry: deviceTable.sessionExpiry,
         })
@@ -104,27 +85,10 @@ export async function getInfoFromDevice(
     }
     return {
         userId: results[0].userId,
-        uid: results[0].uid,
         userAgent: results[0].userAgent,
         sessionExpiry: results[0].sessionExpiry,
     };
 }
-
-export async function getUidFromDevice(
-    db: PostgresDatabase,
-    didWrite: string
-): Promise<string> {
-    const results = await db
-        .select({ uid: userTable.uid })
-        .from(userTable)
-        .leftJoin(deviceTable, eq(deviceTable.userId, userTable.id))
-        .where(eq(deviceTable.didWrite, didWrite));
-    if (results.length === 0) {
-        throw new Error("This didWrite is not registered to any user");
-    }
-    return results[0].uid;
-}
-
 
 export async function isEmailAssociatedWithDevice(
     db: PostgresDatabase,

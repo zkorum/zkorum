@@ -416,12 +416,12 @@ server.after(() => {
                         isLoggedIn: true,
                     },
                 });
-                const isAdmin = await authUtilService.isAdmin(db, didWrite);
-                if (isAdmin !== true) {
-                    throw server.httpErrors.forbidden(
-                        "Only admin can moderate content"
-                    );
-                }
+                // const isAdmin = await authUtilService.isAdmin(db, didWrite);
+                // if (isAdmin !== true) {
+                //     throw server.httpErrors.forbidden(
+                //         "Only admin can moderate content"
+                //     );
+                // }
                 // await Service.hidePost({
                 //     db: db,
                 //     pollUid: request.body.pollUid,
@@ -440,12 +440,12 @@ server.after(() => {
                         isLoggedIn: true,
                     },
                 });
-                const isAdmin = await authUtilService.isAdmin(db, didWrite);
-                if (isAdmin !== true) {
-                    throw server.httpErrors.forbidden(
-                        "Only admin can moderate content"
-                    );
-                }
+                // const isAdmin = await authUtilService.isAdmin(db, didWrite);
+                // if (isAdmin !== true) {
+                //     throw server.httpErrors.forbidden(
+                //         "Only admin can moderate content"
+                //     );
+                // }
                 // await Service.unhidePost({
                 //     db: db,
                 //     pollUid: request.body.pollUid,
