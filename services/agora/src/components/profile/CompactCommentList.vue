@@ -3,8 +3,7 @@
   <div>
     <div v-for="commentItem in commentList" :key="commentItem.postSlugId">
       <ZKHoverEffect :enable-hover="true">
-        <RouterLink
-          :to="{ name: 'single-post', params: { postSlugId: commentItem.postSlugId }, query: { showComments: 'true', commentSlugId: 'comment-slug-id-1' } }">
+        <RouterLink :to="{ name: 'single-post', params: { postSlugId: commentItem.postSlugId }, query: { showComments: 'true', commentSlugId: 'comment-slug-id-1' } }">
           <div class="container">
 
             <div class="postTitle">

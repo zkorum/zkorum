@@ -18,8 +18,7 @@
 
       </ZKCard>
 
-      <div
-        v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
+      <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
         class="commentListFlex">
         <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
@@ -220,4 +219,5 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   background-color: #f0f9ff;
   border-radius: 15px;
 }
+
 </style>
