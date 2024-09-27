@@ -3,7 +3,11 @@
   <div>
     <div v-for="commentItem in commentList" :key="commentItem.postSlugId">
       <ZKHoverEffect :enable-hover="true">
+<<<<<<< HEAD
         <RouterLink :to="{ name: 'single-post', params: { postSlugId: commentItem.postSlugId }, query: { showComments: 'true', commentSlugId: 'comment-slug-id-1'} }">
+=======
+        <RouterLink :to="{ name: 'single-post', params: { postSlugId: commentItem.postSlugId }, query: { commentMode: 'true', commentSlugId: 'comment-slug-id-0'} }">
+>>>>>>> 95d049e (Unify comment section between the profile page and post page)
           <div class="container">
 
             <div class="postTitle">
