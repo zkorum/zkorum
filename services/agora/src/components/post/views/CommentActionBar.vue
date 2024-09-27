@@ -1,9 +1,11 @@
 <template>
   <div>
-
     <div class="actionButtonCluster">
       <ZKButton flat text-color="color-text-weak" icon="mdi-dots-horizontal" size="0.8rem"
         @click.stop.prevent="optionButtonClicked()" />
+
+      <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
+        @click.stop.prevent="shareButtonClicked()" />
 
       <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(false)" size="0.8rem"
         @click.stop.prevent="toggleVote(commentItem.index, 'dislike')">
@@ -27,6 +29,7 @@
 import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
+import { useWebShare } from "src/utils/share/WebShare";
 
 const props = defineProps<{
   commentItem: DummyCommentFormat,
@@ -38,6 +41,13 @@ const props = defineProps<{
 const { updateCommentRanking } = usePostStore();
 
 const bottomSheet = useBottomSheet();
+
+const webShare = useWebShare();
+
+function shareButtonClicked() {
+  const sharePostUrl = window.location.origin + "/post/" + props.postSlugId + "?showComments=true&commentSlugId=" + props.commentItem.slugId;
+  webShare.share("Agora Comment", sharePostUrl);
+}
 
 function optionButtonClicked() {
   bottomSheet.showCommentOptionSelector();

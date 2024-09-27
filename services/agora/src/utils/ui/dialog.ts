@@ -18,5 +18,12 @@ export const useDialog = () => {
     });
   }
 
-  return { showReportDialog, showContactUsSuccessfulDialog };
+  function showMessage(title: string, body: string) {
+    quasar.dialog({
+      title: title,
+      message: body,
+    });
+  }
+
+  return { showReportDialog, showContactUsSuccessfulDialog, showMessage };
 };
