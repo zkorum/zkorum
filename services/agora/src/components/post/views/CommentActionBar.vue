@@ -6,7 +6,6 @@
 
       <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
         @click.stop.prevent="shareButtonClicked()" />
-
       <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(false)" size="0.8rem"
         @click.stop.prevent="toggleVote(commentItem.index, 'dislike')">
         <div v-if="isRanked" class="voteCountLabel">
