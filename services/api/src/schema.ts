@@ -282,7 +282,7 @@ export const postProofTable = pgTable("post_proof", {
         .references(() => postTable.id),
     postContentId: integer("post_content_id").unique()
         .references((): AnyPgColumn => postContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    authorDid: varchar("author_did", { length: 1000 }).primaryKey() // TODO: make sure of length
+    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
     proof: text("proof").notNull(), // base64 encoded proof
@@ -395,7 +395,7 @@ export const pollResponseProofTable = pgTable("poll_response_proof", {
     pollResponseId: integer("poll_response_id") //
         .notNull()
         .references(() => pollResponseTable.id),
-    authorDid: varchar("author_did", { length: 1000 }).primaryKey() // TODO: make sure of length
+    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
     pollResponseContentId: integer("poll_response_content_id").unique()
@@ -518,7 +518,7 @@ export const commentProofTable = pgTable("comment_proof", {
         .references(() => commentTable.id),
     commentContentId: integer("comment_content_id") // "postAs"
         .references((): AnyPgColumn => commentContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    authorDid: varchar("author_did", { length: 1000 }).primaryKey() // TODO: make sure of length
+    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
     postProofId: integer("post_proof_id").references(() => postProofTable.id).notNull(), // exact post proof (post state) to which this comment proof responded to.
@@ -596,7 +596,7 @@ export const voteProofTable = pgTable("vote_proof", {
         .references(() => voteTable.id),
     voteContentId: integer("vote_content_id")
         .references((): AnyPgColumn => voteContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    authorDid: varchar("author_did", { length: 1000 }).primaryKey() // TODO: make sure of length
+    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
     commentProofId: integer("comment_proof_id").references(() => commentProofTable.id).notNull(), // exact comment proof (comment state) to which this vote proof responded to.
