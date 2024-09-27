@@ -160,7 +160,8 @@ const emptyCommentItem: DummyCommentFormat = {
   createdAt: new Date(),
   comment: "",
   numUpvotes: 0,
-  numDownvotes: 0
+  numDownvotes: 0,
+  slugId: ""
 };
 
 let displayCommentItem = ref<DummyCommentFormat>(emptyCommentItem);
