@@ -110,7 +110,6 @@ watch(commentSortPreference, () => {
 
 function scrollToComment() {
   if (commentSlugId.value != "") {
-    console.log("scroll");
     const targetElement = document.getElementById(commentSlugId.value);
 
     if (targetElement != null) {
