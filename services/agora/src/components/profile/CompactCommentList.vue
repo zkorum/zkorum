@@ -3,7 +3,8 @@
   <div>
     <div v-for="commentItem in commentList" :key="commentItem.postSlugId">
       <ZKHoverEffect :enable-hover="true">
-        <RouterLink :to="{ name: 'single-post', params: { postSlugId: commentItem.postSlugId }, query: { showComments: 'true', commentSlugId: 'comment-slug-id-1'} }">
+        <RouterLink
+          :to="{ name: 'single-post', params: { postSlugId: commentItem.postSlugId }, query: { showComments: 'true', commentSlugId: 'comment-slug-id-1' } }">
           <div class="container">
 
             <div class="postTitle">
@@ -51,7 +52,7 @@ const { commentList } = useProfileStore();
 }
 
 .container {
-  display:flex;
+  display: flex;
   flex-direction: column;
   gap: 0.2rem;
   padding-top: 1rem;
@@ -68,6 +69,4 @@ const { commentList } = useProfileStore();
 .commentBody {
   padding-top: 1rem;
 }
-
 </style>
-
