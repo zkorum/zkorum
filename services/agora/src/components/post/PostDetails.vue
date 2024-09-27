@@ -108,10 +108,10 @@ const props = defineProps<{
   compactMode: boolean,
 }>();
 
-const showComments = useRouteQuery("showComments", "false", { transform: Boolean });
+const showComments = useRouteQuery("showComments");
 
-const showRankingMode = ref<boolean>(!showComments.value);
-const viewMode = ref(showComments ? "comments": "ranking");
+const showRankingMode = ref<boolean>(showComments.value != "true");
+const viewMode = ref(showComments.value == "true" ? "comments": "ranking");
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
