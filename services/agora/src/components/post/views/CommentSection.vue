@@ -23,7 +23,8 @@
         <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
             :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
-            :ranked-action="getCommentItemRankStatus(index)" />
+            :ranked-action="getCommentItemRankStatus(index)"
+            :class="{ highlightComment: commentSlugId == commentItem.slugId }" />
         </div>
       </div>
 
@@ -213,5 +214,11 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   text-align: center;
   width: min(15rem, 100%);
 }
+
+.highlightComment {
+  background-color: #f0f9ff;
+  border-radius: 15px;
+}
+
 
 </style>
