@@ -10,13 +10,14 @@ export interface DummyPollOptionFormat {
 }
 
 export interface DummyCommentFormat {
-    index: number;
-    userCommunityId: string;
-    userCommunityImage: string;
-    createdAt: Date;
-    comment: string;
-    numUpvotes: number;
-    numDownvotes: number;
+  index: number;
+  userCommunityId: string;
+  userCommunityImage: string;
+  createdAt: Date;
+  comment: string;
+  numUpvotes: number;
+  numDownvotes: number;
+  slugId: string
 }
 
 export interface DummyPostMetadataFormat {
@@ -331,7 +332,7 @@ export const usePostStore = defineStore("post", () => {
         }
     }
 
-    function fetchUnifiedPosts(afterSlugId: string, fetchCount: number) {
+    function fetchCuratedPosts(afterSlugId: string, fetchCount: number) {
         const dataList: DummyPostDataFormat[] = [];
         let locatedId = false;
         if (afterSlugId == "") {
@@ -396,13 +397,14 @@ export const usePostStore = defineStore("post", () => {
         const communityItem = generateRandomCommunityItem();
 
         const newComment: DummyCommentFormat = {
-            index: index,
-            userCommunityId: communityItem.id,
-            userCommunityImage: getCommunityImageFromId(communityItem.id),
-            createdAt: generateRandomDate(postCreatedAtDate, 5),
-            comment: commentText,
-            numUpvotes: getRandomInt(0, 100),
-            numDownvotes: getRandomInt(0, 100)
+          index: index,
+          userCommunityId: communityItem.id,
+          userCommunityImage: getCommunityImageFromId(communityItem.id),
+          createdAt: generateRandomDate(postCreatedAtDate, 5),
+          comment: commentText,
+          numUpvotes: getRandomInt(0, 100),
+          numDownvotes: getRandomInt(0, 100),
+          slugId: "comment-slug-id-" + index.toString()
         };
         return newComment;
     }
@@ -533,7 +535,7 @@ export const usePostStore = defineStore("post", () => {
     return {
       getPostBySlugId,
       composeDummyCommentItem,
-      fetchUnifiedPosts,
+      fetchCuratedPosts,
       updateCommentRanking,
       getCommunityImageFromId,
       submitNewPost,

@@ -28,7 +28,7 @@ import PostDetails from "../post/PostDetails.vue";
 import { ref } from "vue";
 import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 
-const { fetchUnifiedPosts } = usePostStore();
+const { fetchCuratedPosts } = usePostStore();
 
 const FETCH_POST_COUNT = 10;
 const compactPostDataList = ref<DummyPostDataFormat[]>([]);
@@ -37,7 +37,7 @@ let lastSlugId = "";
 generateNewPosts();
 
 function generateNewPosts() {
-  const postList = fetchUnifiedPosts(lastSlugId, FETCH_POST_COUNT);
+  const postList = fetchCuratedPosts(lastSlugId, FETCH_POST_COUNT);
   for (let i = 0; i < postList.length; i++) {
     compactPostDataList.value.push(postList[i]);
   }
