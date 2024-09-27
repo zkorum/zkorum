@@ -23,12 +23,8 @@
         <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
             :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
-<<<<<<< HEAD
             :ranked-action="getCommentItemRankStatus(index)"
             :class="{ highlightComment: commentSlugId == commentItem.slugId }" />
-=======
-            :ranked-action="getCommentItemRankStatus(index)" />
->>>>>>> 95d049e (Unify comment section between the profile page and post page)
         </div>
       </div>
 
