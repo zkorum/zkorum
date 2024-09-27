@@ -155,8 +155,6 @@ const finishedRanking = ref(false);
 
 const emptyCommentItem: DummyCommentFormat = {
   index: 0,
-  userCommunityId: "",
-  userCommunityImage: "",
   createdAt: new Date(),
   comment: "",
   numUpvotes: 0,

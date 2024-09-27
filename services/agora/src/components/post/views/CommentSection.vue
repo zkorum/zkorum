@@ -1,29 +1,33 @@
 <template>
   <div>
     <div class="container">
-      <div class="swiperCluster">
-        <swiper-container :slides-per-view="slidesPerView" :initial-slide="initialSlide">
-          <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value">
-            <div>
-              <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem"
-                @click="commentSortPreference = sortOptionItem.value" />
-            </div>
-          </swiper-slide>
-        </swiper-container>
-      </div>
+      <ZKCard padding="1rem">
+        <div class="swiperCluster">
+          <swiper-container :slides-per-view="slidesPerView" :initial-slide="initialSlide">
+            <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value">
+              <div>
+                <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value"
+                  :sort-item="sortOptionItem" @click="commentSortPreference = sortOptionItem.value" />
+              </div>
+            </swiper-slide>
+          </swiper-container>
+        </div>
+        <div class="descriptionLabel">
+          {{ description }}
+        </div>
 
-      <div class="descriptionLabel">
-        {{ description }}
-      </div>
+      </ZKCard>
 
       <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
         class="commentListFlex">
         <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
-          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :comment-ranking="commentRanking" />
+          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
+            :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
+            :ranked-action="getCommentItemRankStatus(index)" />
         </div>
       </div>
 
-      <div v-if="commentSortPreference == 'surprising'" :style="{paddingTop: '1rem'}">
+      <div v-if="commentSortPreference == 'surprising'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <q-icon name="mdi-wrench" size="4rem" />
@@ -49,12 +53,12 @@
         <ResearcherContactUsForm />
       </div>
 
-      </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, DummyCommentRankingFormat } from "src/stores/post";
+import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions } from "src/stores/post";
 import { useStorage, useWindowSize } from "@vueuse/core";
 import { CommentSortingItemInterface, useCommentOptions } from "src/utils/component/comments";
 import CommentSingle from "./CommentSingle.vue";
@@ -66,7 +70,7 @@ import { useRouteQuery } from "@vueuse/router";
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 
-defineProps<{
+const props = defineProps<{
   commentList: DummyCommentFormat[],
   postSlugId: string,
   commentRanking: DummyCommentRankingFormat
@@ -107,6 +111,15 @@ watch(width, () => {
 watch(commentSortPreference, () => {
   updateDescription(commentSortPreference.value);
 });
+
+function getCommentItemRankStatus(commentIndex: number): PossibleCommentRankingActions  {
+  const action = props.commentRanking.rankedCommentList.get(commentIndex);
+  if (action == null) {
+    return "pass";
+  } else {
+    return action;
+  }
+}
 
 function scrollToComment() {
   if (commentSlugId.value != "") {
@@ -185,7 +198,6 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 .commentListFlex {
   display:flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
 .swiperCluster {

@@ -11,8 +11,6 @@ export interface DummyPollOptionFormat {
 
 export interface DummyCommentFormat {
   index: number;
-  userCommunityId: string;
-  userCommunityImage: string;
   createdAt: Date;
   comment: string;
   numUpvotes: number;
@@ -394,12 +392,12 @@ export const usePostStore = defineStore("post", () => {
     }
 
     function composeDummyCommentItem(commentText: string, index: number, postCreatedAtDate: Date) {
-        const communityItem = generateRandomCommunityItem();
+        //const communityItem = generateRandomCommunityItem();
 
         const newComment: DummyCommentFormat = {
           index: index,
-          userCommunityId: communityItem.id,
-          userCommunityImage: getCommunityImageFromId(communityItem.id),
+          //userCommunityId: communityItem.id,
+          //userCommunityImage: getCommunityImageFromId(communityItem.id),
           createdAt: generateRandomDate(postCreatedAtDate, 5),
           comment: commentText,
           numUpvotes: getRandomInt(0, 100),
