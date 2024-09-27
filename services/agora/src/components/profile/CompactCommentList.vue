@@ -10,7 +10,7 @@
             </div>
 
             <div class="commentMetadata">
-              {{ comment.authorName }} • {{ getTimeFromNow(comment.createdAt) }} •
+              Commented {{ getTimeFromNow(comment.createdAt) }} ago •
               <q-icon name="mdi-thumb-down-outline" color="color-text-weak" />
               {{ comment.numDownvotes }}
               •
