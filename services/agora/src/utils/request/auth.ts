@@ -19,9 +19,7 @@ export async function authenticate(
   | "already_logged_in"
   | "throttled"
   > {
-  console.log(1);
   const { did, flowId, prefixedKey } = await ucanOperation.createDidIfDoesNotExist(email, platform);
-  console.log(2);
   // TODO: get DID if exist, else create it
   // then create UCAN, then inject it below
   // if we create it, create a unique cryptographic random ID that is linked to the email address
