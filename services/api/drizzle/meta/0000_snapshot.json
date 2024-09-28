@@ -1,5 +1,5 @@
 {
-  "id": "adddf8b9-b425-4afa-8c0a-d216bb373326",
+  "id": "324b7176-3cad-4750-b64f-6b7fdc3dbb76",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -473,7 +473,7 @@
         },
         "author_id": {
           "name": "author_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -822,7 +822,7 @@
         },
         "moderator_id": {
           "name": "moderator_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1167,7 +1167,7 @@
         },
         "author_id": {
           "name": "author_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -1743,7 +1743,7 @@
         },
         "author_id": {
           "name": "author_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -1849,7 +1849,7 @@
         },
         "reporter_id": {
           "name": "reporter_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -2278,7 +2278,7 @@
         },
         "author_id": {
           "name": "author_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },

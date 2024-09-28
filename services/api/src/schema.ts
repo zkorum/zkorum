@@ -331,7 +331,7 @@ export const postContentTable = pgTable("post_content", {
 export const postTable = pgTable("post", {
     id: serial("id").primaryKey(),
     slugId: varchar("slug_id", { length: 10 }).notNull(), // used for permanent URL
-    authorId: integer("author_id") // "postAs"
+    authorId: uuid("author_id") // "postAs"
         .notNull()
         .references(() => userTable.id), // the author of the poll
     currentContentId: integer("current_content_id").references((): AnyPgColumn => postContentTable.id).unique(), // null if post was deleted
@@ -360,7 +360,7 @@ export const postTable = pgTable("post", {
 
 export const pollResponseTable = pgTable("poll_response", {
     id: serial("id").primaryKey(),
-    authorId: integer("author_id")
+    authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
     postId: integer("post_id") // poll is bound to the post
@@ -444,7 +444,7 @@ export const pollResponseContentTable = pgTable("poll_response_content", {
 export const commentTable = pgTable("comment", {
     id: serial("id").primaryKey(),
     slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL
-    authorId: integer("author_id")
+    authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
     postId: integer("post_id")
@@ -541,7 +541,7 @@ export const commentProofTable = pgTable("comment_proof", {
 // like or dislike on comments for each user
 export const voteTable = pgTable("vote", {
     id: serial("id").primaryKey(),
-    authorId: integer("author_id")
+    authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
     commentId: integer("comment_id")
@@ -632,7 +632,7 @@ export const reportTable = pgTable("report_table", {
         .references(() => postTable.id), // at least one or the other should be not null - add a check
     commentId: integer("post_id") //
         .references(() => postTable.id), // at least one or the other should be not null - add a check
-    reporterId: integer("reporter_id").references(() => userTable.id), // null if reported by AI
+    reporterId: uuid("reporter_id").references(() => userTable.id), // null if reported by AI
     reportReason: reportReasonEnum("reporter_reason").notNull(),
     reportExplanation: varchar("report_explanation", { length: MAX_LENGTH_BODY }),
     moderationId: integer("moderation_id").references(() => moderationTable.id),
@@ -654,7 +654,7 @@ export const reportTable = pgTable("report_table", {
 export const moderationTable = pgTable("moderation_table", {
     id: serial("id").primaryKey(),
     reportId: integer("report_id").notNull().references((): AnyPgColumn => reportTable.id),
-    moderatorId: integer("moderator_id").references(() => userTable.id),
+    moderatorId: uuid("moderator_id").references(() => userTable.id),
     moderationAction: moderationAction("moderation_action").notNull(), // add check
     moderationReason: moderationReasonEnum("moderation_reason").notNull(), // add check: if not nothing above, must not be nothing here
     moderationExplanation: varchar("moderation_explanation", { length: MAX_LENGTH_BODY }),

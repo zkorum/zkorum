@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS "comment_proof" (
 CREATE TABLE IF NOT EXISTS "comment" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"slug_id" varchar(10) NOT NULL,
-	"author_id" integer NOT NULL,
+	"author_id" uuid NOT NULL,
 	"post_id" integer NOT NULL,
 	"current_content_id" integer,
 	"likes" integer DEFAULT 0 NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS "id_proof" (
 CREATE TABLE IF NOT EXISTS "moderation_table" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"report_id" integer NOT NULL,
-	"moderator_id" integer,
+	"moderator_id" uuid,
 	"moderation_action" "moderation_action" NOT NULL,
 	"moderation_reason" "moderation_reason_enum" NOT NULL,
 	"moderation_explanation" varchar(140),
@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS "poll_response_proof" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "poll_response" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"author_id" integer NOT NULL,
+	"author_id" uuid NOT NULL,
 	"post_id" integer NOT NULL,
 	"current_content_id" integer,
 	"option1_response" integer DEFAULT 0 NOT NULL,
@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS "post_proof" (
 CREATE TABLE IF NOT EXISTS "post" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"slug_id" varchar(10) NOT NULL,
-	"author_id" integer NOT NULL,
+	"author_id" uuid NOT NULL,
 	"current_content_id" integer,
 	"is_hidden" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
@@ -280,7 +280,7 @@ CREATE TABLE IF NOT EXISTS "post" (
 CREATE TABLE IF NOT EXISTS "report_table" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"post_id" integer,
-	"reporter_id" integer,
+	"reporter_id" uuid,
 	"reporter_reason" "report_reason_enum" NOT NULL,
 	"report_explanation" varchar(140),
 	"moderation_id" integer,
@@ -324,7 +324,7 @@ CREATE TABLE IF NOT EXISTS "vote_proof" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "vote" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"author_id" integer NOT NULL,
+	"author_id" uuid NOT NULL,
 	"comment_id" integer NOT NULL,
 	"current_content_id" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
