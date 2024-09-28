@@ -6,6 +6,7 @@
 import { configure } from "quasar/wrappers";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 
 export default configure((ctx) => {
   return {
@@ -134,12 +135,14 @@ export default configure((ctx) => {
         ["vite-tsconfig-paths", {
           // projects: ['./tsconfig.json', '../../tsconfig.json'] // if you have multiple tsconfig files (e.g. in a monorepo)
         }],
+        basicSsl()
       ],
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
     devServer: {
-      // https: true
+      https: {
+      },
       open: true, // opens browser window automatically
     },
 
