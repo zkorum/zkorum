@@ -8,6 +8,7 @@ import {
 } from "../shared.js";
 
 // Alpha only for ESSEC
+/*
 function isAuthorizedEmail(email: Email) {
     const preprocessedEmail = email.trim();
     const [_, fqdn] = preprocessedEmail.split("@");
@@ -17,6 +18,7 @@ function isAuthorizedEmail(email: Email) {
         return false;
     }
 }
+*/
 
 export const zodemail = z
     .string()
@@ -30,10 +32,7 @@ export const zodauthorizedEmail = z
     .max(254)
     .nonempty()
     .describe("Email address")
-    .toLowerCase()
-    .refine((email: string) => {
-        return isAuthorizedEmail(email);
-    });
+    .toLowerCase();
 export const zodDidKey = z
     .string()
     .describe("Decentralized Identifier with did:key method")
@@ -235,7 +234,7 @@ export const zodCreateCommentPayload = z.object({
 });
 export const zodPostId = z.number().positive().int();
 
-type Email = z.infer<typeof zodemail>;
+// type Email = z.infer<typeof zodemail>;
 export type SecretCredentialType = z.infer<typeof zodsecretCredentialType>;
 export type UnblindedSecretCredential = z.infer<
     typeof zodunblindedSecretCredential

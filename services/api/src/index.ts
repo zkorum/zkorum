@@ -33,8 +33,8 @@ server.register(fastifyCors, {
     // put your options here
     origin: (origin, cb) => {
         if (origin !== undefined) {
-            const hostname = new URL(origin).hostname
-            if (hostname === "localhost" || hostname === config.CORS_HOSTNAME) {
+            const hostname = new URL(origin).origin;
+            if (config.CORS_HOSTNAME_LIST.includes(hostname)) {
                 //  Request from localhost will pass
                 cb(null, true)
                 return
@@ -263,6 +263,7 @@ server.after(() => {
                     request.headers["user-agent"] === undefined
                         ? "Unknown device"
                         : request.headers["user-agent"];
+
                 return await authService.authenticateAttempt({
                     db,
                     type,

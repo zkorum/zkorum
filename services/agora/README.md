@@ -13,6 +13,7 @@ npm install
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 
 Remember to first load the environment files in `.env` file by running `. ./.env`.
+There is an example file `env.example` which can be used as the reference.
 
 ```bash
 quasar dev

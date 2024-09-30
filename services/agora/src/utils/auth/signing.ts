@@ -1,31 +1,28 @@
-import { useQuasar } from "quasar";
-import { onBeforeUnmount, onMounted, ref } from "vue";
-import { authenticate } from "../request/auth";
+import { onMounted } from "vue";
 import { getPlatform } from "../common";
-import { SecureSigning } from "@zkorum/capacitor-secure-signing";
-import { publicKeyToDid } from "src/shared/did/util";
-import * as ucans from "@ucans/ucans";
-import { httpMethodToAbility, httpUrlToResourcePointer } from "src/shared/ucan/ucan";
-import { api } from "src/boot/axios";
-import { DefaultApiFactory } from "src/api/api";
-import { KeychainAccess, SecureStorage } from "@zkorum/capacitor-secure-storage";
-import { generateRandomPassphrase } from "src/shared/passphrase/generate";
+import { authenticate } from "../request/auth";
+import { useQuasar } from "quasar";
 
 export function useSigning() {
 
   const $q = useQuasar();
 
+  /*
   const verified = ref<boolean | string>("nothing");
-  let interval: NodeJS.Timeout | undefined = undefined;
-
   const passphrase = ref("nothing");
+  */
 
+  /*
+  const interval: NodeJS.Timeout | undefined = undefined;
   onBeforeUnmount(() => {
     clearInterval(interval);
   });
+  */
 
   onMounted(async () => {
-    await authenticate("test@email.com", false, getPlatform($q.platform));
+    const email = "test@gmail.com"; // b2@essec.edu
+    await authenticate(email, true, getPlatform($q.platform));
+    /*
     if ($q.platform.is.mobile) {
       try {
         const prefixedKey = "com.zkorum.agora/v1_userid/sign";
@@ -59,7 +56,7 @@ export function useSigning() {
         undefined,
         api
       ).apiV1AuthAuthenticatePost({
-        email: "test@gmail.com",
+        email: email,
         isRequestingNewCode: false
       });
       } catch (e: unknown) {
@@ -92,8 +89,11 @@ export function useSigning() {
           console.error("An error occured", e);
         }
       }, 1000);
-   }
 
+   }
+   */
+
+    /*
   // Convert a Base64 string to a Uint8Array
   function decodeFromBase64(base64: string): Uint8Array {
     return new Uint8Array(Buffer.from(base64, "base64"));
@@ -102,5 +102,6 @@ export function useSigning() {
   function encodeToBase64(uint8Array: Uint8Array): string {
     return Buffer.from(uint8Array).toString("base64");
   }
+  */
 });
 }
