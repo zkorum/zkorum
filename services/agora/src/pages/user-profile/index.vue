@@ -61,7 +61,7 @@ const router = useRouter();
 function logoutRequested() {
   backendAuth.logout("test@gmail.com", getPlatform(quasar.platform));
   isAuthenticated.value = false;
-  router.push("welcome");
+  router.push({ name: "welcome" });
 }
 
 </script>

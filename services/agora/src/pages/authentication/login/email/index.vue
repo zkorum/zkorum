@@ -48,7 +48,7 @@ import { useQuasar } from "quasar";
 import { getPlatform } from "src/utils/common";
 import { useDialog } from "src/utils/ui/dialog";
 
-const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
+const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const { emailLogin } = useBackendAuthApi();
 
@@ -71,7 +71,9 @@ async function sendVerificationCode(email: string) {
     router.push({ name: "login-verify" });
   } else {
     if (response.error == "already_logged_in") {
+      isAuthenticated.value = true;
       diaglog.showMessage("Authentication", "User is already logged in");
+      router.push({ name: "default-home-feed" });
     } else if (response.error == "throttled") {
       diaglog.showMessage("Authentication", "Too many attempts. Please wait before attempting to login again");
     }

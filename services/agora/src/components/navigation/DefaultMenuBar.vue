@@ -10,8 +10,8 @@
     </div>
 
     <div class="menuButtons">
-      <RouterLink v-if="hasLoginButton && !isAuthenticated" :to="{ name: 'welcome' }">
-        <ZKButton label="Login" text-color="white" color="warning" />
+      <RouterLink v-if="hasLoginButton && !isAuthenticated" :to="{ name: 'login-email' }">
+        <ZKButton label="Log in" text-color="white" color="warning" />
       </RouterLink>
 
       <HelpButton />
