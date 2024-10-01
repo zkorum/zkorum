@@ -1,8 +1,10 @@
 import { useQuasar } from "quasar";
+import { useRouter } from "vue-router";
 
 export const useDialog = () => {
 
   const quasar = useQuasar();
+  const router = useRouter();
 
   function showReportDialog(itemName: "post" | "comment") {
     quasar.dialog({
@@ -25,5 +27,21 @@ export const useDialog = () => {
     });
   }
 
-  return { showReportDialog, showContactUsSuccessfulDialog, showMessage };
+
+  function showLoginConfirmationDialog() {
+    quasar.dialog({
+      title: "Log in to Agora",
+      message: "Sign in to participate the discussions",
+      cancel: true,
+      persistent: false
+    }).onOk(() => {
+      router.push({ name: "login-email" });
+    }).onCancel(() => {
+      // console.log('>>>> Cancel')
+    }).onDismiss(() => {
+      // console.log('I am triggered on both OK and Cancel')
+    });
+  }
+
+  return { showReportDialog, showContactUsSuccessfulDialog, showMessage, showLoginConfirmationDialog };
 };

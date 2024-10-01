@@ -53,15 +53,15 @@ import { useRouter } from "vue-router";
 
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
-const $q = useQuasar();
+const quasar = useQuasar();
 
 const backendAuth = useBackendAuthApi();
 const router = useRouter();
 
 function logoutRequested() {
-  backendAuth.logout("test@gmail.com", getPlatform($q.platform));
+  backendAuth.logout("test@gmail.com", getPlatform(quasar.platform));
   isAuthenticated.value = false;
-  router.push("default-home-feed");
+  router.push("welcome");
 }
 
 </script>

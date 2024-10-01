@@ -11,27 +11,32 @@
 
     </RouterLink>
 
-    <RouterLink v-if="authenticationStore.isAuthenticated" :to="{ name: 'user-profile' }">
-      <div class="iconStyle">
-        <q-icon name="mdi-account-circle" size="1.6rem"
-          :color="route.name === 'user-profile' ? 'color-highlight' : 'color-text-weak'" />
-        <div :class="'text-' + (route.name === 'user-profile' ? 'color-highlight' : 'color-text-weak')">
-          Profile
-        </div>
+    <div class="iconStyle" @click="accessProfile()">
+      <q-icon name="mdi-account-circle" size="1.6rem"
+        :color="route.name === 'user-profile' ? 'color-highlight' : 'color-text-weak'" />
+      <div :class="'text-' + (route.name === 'user-profile' ? 'color-highlight' : 'color-text-weak')">
+        Profile
       </div>
-    </RouterLink>
+    </div>
 
   </div>
 </template>
 
 <script setup lang="ts">
 import { useAuthenticationStore } from "src/stores/authentication";
+import { useDialog } from "src/utils/ui/dialog";
 import { useRoute } from "vue-router";
 
-
 const authenticationStore = useAuthenticationStore();
+const dialog = useDialog();
 
 const route = useRoute();
+
+function accessProfile() {
+  if (!authenticationStore.isAuthenticated) {
+    dialog.showLoginConfirmationDialog();
+  }
+}
 
 </script>
 
