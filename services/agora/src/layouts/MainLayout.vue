@@ -9,13 +9,27 @@
           <router-view />
         </q-page-container>
 
-        <q-footer v-if="enableFooter" bordered class="coloredFooter">
-          <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
-            <q-route-tab :to="{ name: 'default-home-feed' }"
-              :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
-            <q-route-tab v-if="authenticationStore.isAuthenticated" :to="{ name: 'user-profile' }"
-              :icon="currentRouteName === 'user-profile' ? 'mdi-account-circle' : 'mdi-account-circle'" />
-          </q-tabs>
+        <q-footer v-if="enableFooter" bordered class="coloredFooter flexIcons">
+          <RouterLink :to="{ name: 'default-home-feed'}">
+            <div class="iconStyle">
+              <q-icon name="mdi-home" size="2rem" :color="route.name === 'default-home-feed' ? 'primary' : 'black'" />
+              <div :class="'text-' + (route.name === 'default-home-feed' ? 'primary' : 'black')">
+                Home
+              </div>
+            </div>
+
+          </RouterLink>
+
+          <RouterLink v-if="authenticationStore.isAuthenticated" :to="{ name: 'user-profile' }">
+            <div class="iconStyle">
+              <q-icon name="mdi-account-circle" size="2rem"
+                :color="route.name === 'user-profile' ? 'primary' : 'black'" />
+              <div :class="'text-' + (route.name === 'user-profile' ? 'primary' : 'black')">
+                Profile
+              </div>
+            </div>
+          </RouterLink>
+
         </q-footer>
       </q-layout>
     </WidthWrapper>
@@ -34,8 +48,6 @@ defineProps<MainLayoutProps>();
 
 const route = useRoute();
 
-const currentRouteName = route.name;
-
 </script>
 
 <style scoped lang="scss">
@@ -49,6 +61,23 @@ const currentRouteName = route.name;
 
 .bottomPagePadding {
   padding-bottom: 10rem;
+}
+
+.flexIcons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.iconStyle {
+  padding: 0.3rem;
+  cursor: pointer;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: bold;
 }
 
 </style>
