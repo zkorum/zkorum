@@ -61,7 +61,7 @@ const quasar = useQuasar();
 
 async function sendVerificationCode(email: string) {
 
-  if (process.env.USE_DUMMY_AUTH == "true") {
+  if (process.env.USE_DUMMY_ACCESS == "true") {
     email = "test@gmail.com";
     verificationEmailAddress.value = email;
   }

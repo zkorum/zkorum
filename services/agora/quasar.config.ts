@@ -57,7 +57,7 @@ export default configure((ctx) => {
       // publicPath: "/feed",
       // analyze: true,
       env: {
-        DUMMY_AUTH: process.env.FRONTEND_DUMMY_AUTH,
+        USE_DUMMY_ACCESS: process.env.FRONTEND_USE_DUMMY_ACCESS,
         API_BASE_URL: process.env.FRONTEND_API_BASE_URL,
         BACK_PUBLIC_KEY:
           ctx.dev ?
