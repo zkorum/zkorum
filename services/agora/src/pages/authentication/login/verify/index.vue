@@ -25,7 +25,7 @@
           {{ resendCodeCooldownMessage }}
         </div>
 
-        <ZKButton label="Skip Passphrase Page" color="black" @click="submitCode(0)" />
+        <ZKButton label="Dummy Passphrase (USE THIS)" color="black" @click="submitCode(0)" />
       </template>
     </AuthContentWrapper>
   </div>

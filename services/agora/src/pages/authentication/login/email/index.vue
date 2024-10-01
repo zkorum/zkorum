@@ -27,7 +27,7 @@
             <RouterLink :to="{name: 'privacy'}" class="highlightUrl">Privacy Policy</RouterLink>.
           </div>
 
-          <ZKButton label="Skip Email Page" color="black" @click="skipPage()" />
+          <ZKButton label="Dummy Email (USE THIS)" color="black" @click="skipPage()" />
         </template>
 
       </AuthContentWrapper>
