@@ -8,7 +8,9 @@ export type Environment = "development" | "production" | "staging1";
 const defaultPort = 8080;
 
 const configSchema = z.object({
-    CORS_HOSTNAME_LIST: z.string().transform(value => value.split(',').map(String))
+    CORS_ORIGIN_LIST: z.string().transform(value => value.split(",").map((item) => {
+        return item.trim();
+    }))
         .pipe(z.string().array()),
     CONNECTION_STRING: z.string(),
     PORT: z.coerce.number().int().nonnegative().default(defaultPort),
