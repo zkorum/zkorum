@@ -16,7 +16,7 @@
         </div>
 
         <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6"
-          @click="submitCode(verificationCode)" />
+          @click="submitCode(Number(verificationCode))" />
 
         <ZKButton label="Resend Code" color="secondary" :disabled="verificationTimeLeftSeconds > 0"
           @click="resendCode()" />
@@ -25,38 +25,53 @@
           {{ resendCodeCooldownMessage }}
         </div>
 
-        <ZKButton label="Skip Passphrase Page" color="black" @click="submitBypass()" />
+        <ZKButton label="Skip Passphrase Page" color="black" @click="submitCode(0)" />
       </template>
     </AuthContentWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import { useRouter } from "vue-router";
 import InputOtp from "primevue/inputotp";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
+import { useBackendAuthApi } from "src/utils/api/auth";
+import { useQuasar } from "quasar";
+import { getPlatform } from "src/utils/common";
 
 const router = useRouter();
 
 const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
 
+const { emailCode } = useBackendAuthApi();
+
 const resendCodeCooldownMessage = ref("");
 
 const verificationCode = ref("");
 
+const $q = useQuasar();
+
 let verificationTimeLeftSeconds = ref(0);
 
+/*
 onUnmounted(() => {
   verificationEmailAddress.value = "";
 });
+*/
 
-function submitCode(verificationCode: string) {
-  console.log(verificationCode);
-  router.push({ name: "verification-welcome" });
+async function submitCode(code: number) {
+  console.log(code);
+  const response = await emailCode(verificationEmailAddress.value, code, getPlatform($q.platform));
+  console.log(response.data);
+  if (response.data.success) {
+    router.push({ name: "verification-welcome" });
+  } else {
+    console.log("Failed");
+  }
 }
 
 function resendCode() {
@@ -76,11 +91,6 @@ function decrementTimer() {
   } else {
     resendCodeCooldownMessage.value = "";
   }
-}
-
-
-function submitBypass() {
-  router.push({ name: "verification-welcome" });
 }
 
 </script>
