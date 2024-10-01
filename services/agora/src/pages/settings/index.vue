@@ -18,18 +18,11 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { useQuasar } from "quasar";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ZKTitleBodyWrapper from "src/components/ui-library/ZKTitleBodyWrapper.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useBackendAuthApi } from "src/utils/api/auth";
-import { getPlatform } from "src/utils/common";
 
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
-
-const $q = useQuasar();
-
-const backendAuth = useBackendAuthApi();
 
 interface SettingsInterface {
   icon: string;
@@ -39,16 +32,11 @@ interface SettingsInterface {
 
 const settingsItemList: SettingsInterface[] = [
   {
-    icon: "mdi-logout",
-    label: "Logout",
-    action: logoutRequested
+    icon: "mdi-ab-testing",
+    label: "Test",
+    action: () => { }
   }
 ];
-
-function logoutRequested() {
-  backendAuth.logout("test@gmail.com", getPlatform($q.platform));
-  isAuthenticated.value = false;
-}
 
 </script>
 
