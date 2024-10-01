@@ -25,7 +25,6 @@
           {{ resendCodeCooldownMessage }}
         </div>
 
-        <ZKButton label="Dummy Passphrase (USE THIS)" color="black" @click="submitCode(0)" />
       </template>
     </AuthContentWrapper>
   </div>
@@ -64,7 +63,11 @@ onUnmounted(() => {
 */
 
 async function submitCode(code: number) {
-  console.log(code);
+
+  if (process.env.DEV) {
+    code = 0;
+  }
+
   const response = await emailCode(verificationEmailAddress.value, code, getPlatform($q.platform));
   console.log(response.data);
   if (response.data.success) {

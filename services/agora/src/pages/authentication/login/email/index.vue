@@ -27,7 +27,6 @@
             <RouterLink :to="{name: 'privacy'}" class="highlightUrl">Privacy Policy</RouterLink>.
           </div>
 
-          <ZKButton label="Dummy Email (USE THIS)" color="black" @click="skipPage()" />
         </template>
 
       </AuthContentWrapper>
@@ -58,11 +57,16 @@ verificationEmailAddress.value = "";
 const router = useRouter();
 const diaglog = useDialog();
 
-const $q = useQuasar();
+const quasar = useQuasar();
 
 async function sendVerificationCode(email: string) {
-  console.log("Submit hit");
-  const response = await emailLogin(email, false, getPlatform($q.platform));
+
+  if (process.env.DEV) {
+    email = "test@gmail.com";
+    verificationEmailAddress.value = email;
+  }
+
+  const response = await emailLogin(email, false, getPlatform(quasar.platform));
   if (response.isSuccessful) {
     router.push({ name: "login-verify" });
   } else {
@@ -72,12 +76,6 @@ async function sendVerificationCode(email: string) {
       diaglog.showMessage("Authentication", "Too many attempts. Please wait before attempting to login again");
     }
   }
-}
-
-function skipPage() {
-  const email = "test@gmail.com";
-  verificationEmailAddress.value = email;
-  sendVerificationCode(email);
 }
 
 </script>
