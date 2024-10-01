@@ -84,6 +84,7 @@ function getButtonIcon(isUpvoteButton: boolean): string {
 <style scoped lang="scss">
 .actionButtonCluster {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: right;
   gap: 0.5rem;
