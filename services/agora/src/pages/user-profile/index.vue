@@ -2,22 +2,23 @@
   <div>
 
     <div class="topBar">
-      <ZKButton icon="mdi-logout" label="Log out" text-color="color-text-strong" color="button-background-color"
-        @click="logoutRequested()" />
-    </div>
+      <div class="profileDetails">
+        <div>
+          100 comments <span class="dotPadding">•</span>
+        </div>
+        <div>
+          1000 votes <span class="dotPadding">•</span>
+        </div>
+        <div>
+          Jan 1, 2024
+        </div>
+      </div>
 
-    <div class="profileDetails">
-      <div>
-        100 comments <span class="dotPadding">•</span>
-      </div>
-      <div>
-        1000 votes <span class="dotPadding">•</span>
-      </div>
-      <div>
-        Jan 1, 2024
+      <div :style="{whiteSpace: 'nowrap'}">
+        <ZKButton label="Log out" text-color="color-text-strong" color="button-background-color"
+          @click="logoutRequested()" />
       </div>
     </div>
-
 
     <Tabs value="0">
       <TabList>
@@ -72,8 +73,6 @@ function logoutRequested() {
   flex-wrap: wrap;
   color: $color-text-strong;
   font-size: 0.9rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
 }
 
 .dotPadding {
@@ -83,7 +82,8 @@ function logoutRequested() {
 
 .topBar {
   display: flex;
-  justify-content: right;
+  align-items: center;
+  justify-content: space-between;
   padding-top: 0.5rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
