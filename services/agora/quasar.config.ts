@@ -57,9 +57,8 @@ export default configure((ctx) => {
       // publicPath: "/feed",
       // analyze: true,
       env: {
-        BASE_URL: ctx.modeName === "capacitor"
-          ? process.env.FRONTEND_BASE_URL_CAPACITOR
-            : process.env.FRONTEND_BASE_URL_WEB,
+        DUMMY_AUTH: process.env.FRONTEND_DUMMY_AUTH,
+        API_BASE_URL: process.env.FRONTEND_API_BASE_URL,
         BACK_PUBLIC_KEY:
           ctx.dev ?
             "a33d87ba094e5fb522459da31ef501eedff2ef6b672ed6668555a90e5d099f2f8ac9b428c6b05479aebd9febe64011d707e3e331a01fd32e7bcca2e90405132014d395dade3aa95f72420567c6d4e75a5c70478691d36aa54030f31d326f9414"

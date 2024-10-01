@@ -64,7 +64,7 @@ onUnmounted(() => {
 
 async function submitCode(code: number) {
 
-  if (process.env.DEV) {
+  if (process.env.USE_DUMMY_AUTH == "true") {
     code = 0;
   }
 
