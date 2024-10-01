@@ -13,7 +13,7 @@
           <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
             <q-route-tab :to="{ name: 'default-home-feed' }"
               :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
-            <q-route-tab :to="{ name: 'user-profile' }"
+            <q-route-tab v-if="authenticationStore.isAuthenticated" :to="{ name: 'user-profile' }"
               :icon="currentRouteName === 'user-profile' ? 'mdi-account-circle' : 'mdi-account-circle'" />
           </q-tabs>
         </q-footer>
@@ -24,8 +24,11 @@
 
 <script setup lang="ts">
 import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
+import { useAuthenticationStore } from "src/stores/authentication";
 import { MainLayoutProps } from "src/utils/model/props";
 import { useRoute } from "vue-router";
+
+const authenticationStore = useAuthenticationStore();
 
 defineProps<MainLayoutProps>();
 

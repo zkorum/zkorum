@@ -45,7 +45,7 @@ import { getPlatform } from "src/utils/common";
 
 const router = useRouter();
 
-const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
+const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const { emailCode } = useBackendAuthApi();
 
@@ -68,6 +68,7 @@ async function submitCode(code: number) {
   const response = await emailCode(verificationEmailAddress.value, code, getPlatform($q.platform));
   console.log(response.data);
   if (response.data.success) {
+    isAuthenticated.value = true;
     router.push({ name: "verification-welcome" });
   } else {
     console.log("Failed");

@@ -93,7 +93,28 @@ export function useBackendAuthApi() {
 
   }
 
-  return { emailLogin, emailCode };
+
+  async function logout(
+    email: string,
+    platform: SupportedPlatform
+  ) {
+    const { did, prefixedKey } = await ucanOperation.createDidIfDoesNotExist(email, platform);
+    const { url, options } = await DefaultApiAxiosParamCreator().apiV1AuthLogoutPost();
+    const encodedUcan = await ucanOperation.buildUcan({ did, prefixedKey, pathname: url, method: options.method, platform });
+    const otpDetails = await DefaultApiFactory(
+      undefined,
+      undefined,
+      api
+    ).apiV1AuthLogoutPost({
+      headers: {
+        ...buildAuthorizationHeader(encodedUcan)
+      }
+    });
+    return { data: otpDetails.data };
+
+  }
+
+  return { emailLogin, emailCode, logout };
 }
 
 
