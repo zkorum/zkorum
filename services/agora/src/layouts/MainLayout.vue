@@ -12,7 +12,7 @@
         <q-footer v-if="enableFooter" bordered class="coloredFooter flexIcons">
           <RouterLink :to="{ name: 'default-home-feed'}">
             <div class="iconStyle">
-              <q-icon name="mdi-home" size="2rem" :color="route.name === 'default-home-feed' ? 'primary' : 'black'" />
+              <q-icon name="mdi-home" size="1.6rem" :color="route.name === 'default-home-feed' ? 'primary' : 'black'" />
               <div :class="'text-' + (route.name === 'default-home-feed' ? 'primary' : 'black')">
                 Home
               </div>
@@ -22,7 +22,7 @@
 
           <RouterLink v-if="authenticationStore.isAuthenticated" :to="{ name: 'user-profile' }">
             <div class="iconStyle">
-              <q-icon name="mdi-account-circle" size="2rem"
+              <q-icon name="mdi-account-circle" size="1.6rem"
                 :color="route.name === 'user-profile' ? 'primary' : 'black'" />
               <div :class="'text-' + (route.name === 'user-profile' ? 'primary' : 'black')">
                 Profile

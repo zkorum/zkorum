@@ -2,7 +2,8 @@
   <div>
 
     <div class="topBar">
-      <ZKButton icon="mdi-logout" label="Logout" @click="logoutRequested()" />
+      <ZKButton icon="mdi-logout" label="Logout" text-color="color-text-strong" color="button-background-color"
+        @click="logoutRequested()" />
     </div>
 
     <div class="profileDetails">
