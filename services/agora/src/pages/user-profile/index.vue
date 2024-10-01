@@ -72,6 +72,8 @@ function logoutRequested() {
   flex-wrap: wrap;
   color: $color-text-strong;
   font-size: 0.9rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 .dotPadding {
@@ -83,6 +85,8 @@ function logoutRequested() {
   display: flex;
   justify-content: right;
   padding-top: 0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 </style>
