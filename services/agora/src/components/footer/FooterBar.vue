@@ -25,16 +25,19 @@
 <script setup lang="ts">
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useDialog } from "src/utils/ui/dialog";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const authenticationStore = useAuthenticationStore();
 const dialog = useDialog();
 
 const route = useRoute();
+const router = useRouter();
 
 function accessProfile() {
   if (!authenticationStore.isAuthenticated) {
     dialog.showLoginConfirmationDialog();
+  } else {
+    router.push({ name: "user-profile"});
   }
 }
 
