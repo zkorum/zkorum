@@ -21,8 +21,8 @@
         <ZKButton label="Resend Code" color="secondary" :disabled="verificationTimeLeftSeconds > 0"
           @click="resendCode()" />
 
-        <div>
-          {{ resendCodeCooldownMessage }}
+        <div v-if="showCountdownMessage">
+          A new code had been sent to your email. You may retry in {{ verificationTimeLeftSeconds }} seconds.
         </div>
 
       </template>
@@ -48,9 +48,8 @@ const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticat
 
 const { emailCode } = useBackendAuthApi();
 
-const resendCodeCooldownMessage = ref("");
-
 const verificationCode = ref("");
+const showCountdownMessage = ref(false);
 
 const $q = useQuasar();
 
@@ -80,12 +79,12 @@ async function submitCode(code: number) {
 
 function resendCode() {
   verificationTimeLeftSeconds.value = 10;
+  showCountdownMessage.value = true;
   decrementTimer();
 }
 
 function decrementTimer() {
   verificationTimeLeftSeconds.value -= 1;
-  resendCodeCooldownMessage.value = "The new code had been sent. You may retry in " + verificationTimeLeftSeconds.value + " seconds.";
 
   if (verificationTimeLeftSeconds.value != 0) {
     setTimeout(
@@ -93,7 +92,7 @@ function decrementTimer() {
         decrementTimer();
       }, 1000);
   } else {
-    resendCodeCooldownMessage.value = "";
+    showCountdownMessage.value = false;
   }
 }
 
