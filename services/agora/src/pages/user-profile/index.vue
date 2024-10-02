@@ -26,12 +26,12 @@
         <Tab value="1">Votes</Tab>
       </TabList>
       <TabPanel value="0">
-        <div :style="{paddingTop: '1rem'}">
+        <div class="tabPanelPadding">
           <CompactCommentList />
         </div>
       </TabPanel>
       <TabPanel value="1">
-        <div :style="{ paddingTop: '1rem' }">
+        <div class="tabPanelPadding">
         </div>
       </TabPanel>
     </Tabs>
@@ -87,6 +87,10 @@ function logoutRequested() {
   padding-top: 0.5rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
+}
+
+.tabPanelPadding {
+  padding-top: 0.5rem;
 }
 
 </style>

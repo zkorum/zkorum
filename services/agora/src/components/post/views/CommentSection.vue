@@ -25,7 +25,10 @@
             :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
             :ranked-action="getCommentItemRankStatus(index)"
             :class="{ highlightComment: commentSlugId == commentItem.slugId }" />
+
+          <Divider :style="{ width: '100%' }" />
         </div>
+
       </div>
 
       <div v-if="commentSortPreference == 'surprising'" :style="{ paddingTop: '1rem' }">
@@ -68,6 +71,7 @@ import CommentSortItem from "./CommentSortItem.vue";
 import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
 import { onMounted, ref, watch } from "vue";
 import { useRouteQuery } from "@vueuse/router";
+import Divider from "primevue/divider";
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 
@@ -199,6 +203,7 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 .commentListFlex {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
 .swiperCluster {

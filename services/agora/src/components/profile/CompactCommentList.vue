@@ -48,14 +48,15 @@ const { commentList } = useProfileStore();
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+  font-size: 1.1rem;
 }
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.3rem;
   padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
@@ -66,6 +67,6 @@ const { commentList } = useProfileStore();
 }
 
 .commentBody {
-  padding-top: 1rem;
+  padding-top: 0.5rem;
 }
 </style>

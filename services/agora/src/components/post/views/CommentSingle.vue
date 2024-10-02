@@ -15,9 +15,6 @@
         </div>
       </div>
     </div>
-
-    <Divider />
-
   </div>
 </template>
 
@@ -25,7 +22,6 @@
 import { DummyCommentFormat, PossibleCommentRankingActions } from "src/stores/post";
 import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
-import Divider from "primevue/divider";
 
 defineProps<{
   commentItem: DummyCommentFormat,
@@ -42,8 +38,6 @@ defineProps<{
   flex-direction: column;
   justify-content: left;
   gap: 1rem;
-  padding-left: 0.8rem;
-  padding-right: 0.8rem;
 }
 
 .metadata {
