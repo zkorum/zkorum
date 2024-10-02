@@ -191,6 +191,8 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 .descriptionLabel {
   text-align: center;
   color: $color-text-weak;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .specialMessage {
@@ -203,7 +205,7 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 .commentListFlex {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .swiperCluster {
