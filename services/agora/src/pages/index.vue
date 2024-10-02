@@ -11,12 +11,21 @@
 <script setup lang="ts">
 import CompactPostList from "src/components/feed/CompactPostList.vue";
 import NewPostButtonWrapper from "src/components/post/NewPostButtonWrapper.vue";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { useDialog } from "src/utils/ui/dialog";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
+const dialog = useDialog();
+
+const authenticationStore = useAuthenticationStore();
 
 function createNewPost() {
-  router.push({ name: "create-post" });
+  if (authenticationStore.isAuthenticated) {
+    router.push({ name: "create-post" });
+  } else {
+    dialog.showLoginConfirmationDialog();
+  }
 }
 
 </script>
