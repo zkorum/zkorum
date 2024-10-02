@@ -16,57 +16,75 @@
         </div>
 
         <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6"
-          @click="submitCode(verificationCode)" />
+          @click="submitCode(Number(verificationCode))" />
 
         <ZKButton label="Resend Code" color="secondary" :disabled="verificationTimeLeftSeconds > 0"
           @click="resendCode()" />
 
-        <div>
-          {{ resendCodeCooldownMessage }}
+        <div v-if="showCountdownMessage">
+          A new code had been sent to your email. You may retry in {{ verificationTimeLeftSeconds }} seconds.
         </div>
 
-        <ZKButton label="Skip Passphrase Page" color="black" @click="submitBypass()" />
       </template>
     </AuthContentWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import { useRouter } from "vue-router";
 import InputOtp from "primevue/inputotp";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
+import { useBackendAuthApi } from "src/utils/api/auth";
+import { useQuasar } from "quasar";
+import { getPlatform } from "src/utils/common";
 
 const router = useRouter();
 
-const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
+const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticationStore());
 
-const resendCodeCooldownMessage = ref("");
+const { emailCode } = useBackendAuthApi();
 
 const verificationCode = ref("");
+const showCountdownMessage = ref(false);
+
+const $q = useQuasar();
 
 let verificationTimeLeftSeconds = ref(0);
 
+/*
 onUnmounted(() => {
   verificationEmailAddress.value = "";
 });
+*/
 
-function submitCode(verificationCode: string) {
-  console.log(verificationCode);
-  router.push({ name: "verification-welcome" });
+async function submitCode(code: number) {
+
+  if (process.env.USE_DUMMY_ACCESS == "true") {
+    code = 0;
+  }
+
+  const response = await emailCode(verificationEmailAddress.value, code, getPlatform($q.platform));
+  console.log(response.data);
+  if (response.data.success) {
+    isAuthenticated.value = true;
+    router.push({ name: "verification-welcome" });
+  } else {
+    console.log("Failed");
+  }
 }
 
 function resendCode() {
   verificationTimeLeftSeconds.value = 10;
+  showCountdownMessage.value = true;
   decrementTimer();
 }
 
 function decrementTimer() {
   verificationTimeLeftSeconds.value -= 1;
-  resendCodeCooldownMessage.value = "The new code had been sent. You may retry in " + verificationTimeLeftSeconds.value + " seconds.";
 
   if (verificationTimeLeftSeconds.value != 0) {
     setTimeout(
@@ -74,13 +92,8 @@ function decrementTimer() {
         decrementTimer();
       }, 1000);
   } else {
-    resendCodeCooldownMessage.value = "";
+    showCountdownMessage.value = false;
   }
-}
-
-
-function submitBypass() {
-  router.push({ name: "verification-welcome" });
 }
 
 </script>

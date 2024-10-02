@@ -1,29 +1,37 @@
 <template>
   <div>
     <div class="container">
-      <div class="swiperCluster">
-        <swiper-container :slides-per-view="slidesPerView" :initial-slide="initialSlide">
-          <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value">
-            <div>
-              <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem"
-                @click="commentSortPreference = sortOptionItem.value" />
-            </div>
-          </swiper-slide>
-        </swiper-container>
-      </div>
+      <ZKCard padding="1rem">
+        <div class="swiperCluster">
+          <swiper-container :slides-per-view="slidesPerView" :initial-slide="initialSlide">
+            <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value">
+              <div>
+                <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value"
+                  :sort-item="sortOptionItem" @click="commentSortPreference = sortOptionItem.value" />
+              </div>
+            </swiper-slide>
+          </swiper-container>
+        </div>
+        <div class="descriptionLabel">
+          {{ description }}
+        </div>
 
-      <div class="descriptionLabel">
-        {{ description }}
-      </div>
+      </ZKCard>
 
       <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
         class="commentListFlex">
-        <div v-for="(commentItem, index) in commentList" :key="index">
-          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :comment-ranking="commentRanking" />
+        <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
+          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
+            :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
+            :ranked-action="getCommentItemRankStatus(index)"
+            :class="{ highlightComment: initialCommentSlugId == commentItem.slugId }" />
+
+          <Divider :style="{ width: '100%' }" />
         </div>
+
       </div>
 
-      <div v-if="commentSortPreference == 'surprising'" :style="{paddingTop: '1rem'}">
+      <div v-if="commentSortPreference == 'surprising'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <q-icon name="mdi-wrench" size="4rem" />
@@ -49,12 +57,12 @@
         <ResearcherContactUsForm />
       </div>
 
-      </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, DummyCommentRankingFormat } from "src/stores/post";
+import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions } from "src/stores/post";
 import { useStorage, useWindowSize } from "@vueuse/core";
 import { CommentSortingItemInterface, useCommentOptions } from "src/utils/component/comments";
 import CommentSingle from "./CommentSingle.vue";
@@ -62,11 +70,13 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 import CommentSortItem from "./CommentSortItem.vue";
 import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
 import { onMounted, ref, watch } from "vue";
+import Divider from "primevue/divider";
 
-defineProps<{
+const props = defineProps<{
   commentList: DummyCommentFormat[],
   postSlugId: string,
-  commentRanking: DummyCommentRankingFormat
+  commentRanking: DummyCommentRankingFormat,
+  initialCommentSlugId: string
 }>();
 
 const slidesPerView = ref(4.5);
@@ -82,6 +92,12 @@ const initialSlide = ref(0);
 const description = ref("");
 
 onMounted(() => {
+
+  setTimeout(
+    function () {
+      scrollToComment();
+    }, 1000);
+
   if (commentSortPreference.value == "more") {
     commentSortPreference.value = "popular";
   }
@@ -98,6 +114,32 @@ watch(width, () => {
 watch(commentSortPreference, () => {
   updateDescription(commentSortPreference.value);
 });
+
+function getCommentItemRankStatus(commentIndex: number): PossibleCommentRankingActions {
+  const action = props.commentRanking.rankedCommentList.get(commentIndex);
+  if (action == null) {
+    return "pass";
+  } else {
+    return action;
+  }
+}
+
+function scrollToComment() {
+  if (props.initialCommentSlugId != "") {
+    const targetElement = document.getElementById(props.initialCommentSlugId);
+
+    if (targetElement != null) {
+      targetElement.scrollIntoView(
+        {
+          behavior: "smooth",
+          block: "center"
+        });
+    } else {
+      console.log("Failed to locate ID: " + props.initialCommentSlugId);
+    }
+
+  }
+}
 
 function initializeSlideCount() {
   if (width.value < 300) {
@@ -147,19 +189,21 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 .descriptionLabel {
   text-align: center;
   color: $color-text-weak;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .specialMessage {
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2rem;
 }
 
 .commentListFlex {
-  display:flex;
+  display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .swiperCluster {
@@ -174,6 +218,11 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 .specialText {
   text-align: center;
   width: min(15rem, 100%);
+}
+
+.highlightComment {
+  background-color: #f0f9ff;
+  border-radius: 15px;
 }
 
 </style>

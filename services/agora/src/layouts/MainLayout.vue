@@ -10,12 +10,7 @@
         </q-page-container>
 
         <q-footer v-if="enableFooter" bordered class="coloredFooter">
-          <q-tabs no-caps align="center" outside-arrows mobile-arrows active-color="brand" class="text-black">
-            <q-route-tab :to="{ name: 'default-home-feed' }"
-              :icon="currentRouteName === 'default-home-feed' ? 'mdi-newspaper' : 'mdi-newspaper'" />
-            <q-route-tab :to="{ name: 'user-profile', params: { userId: 'TEST_USER_ID' } }"
-              :icon="currentRouteName === 'user-profile' ? 'mdi-account-circle' : 'mdi-account-circle'" />
-          </q-tabs>
+          <FooterBar />
         </q-footer>
       </q-layout>
     </WidthWrapper>
@@ -23,15 +18,11 @@
 </template>
 
 <script setup lang="ts">
+import FooterBar from "src/components/footer/FooterBar.vue";
 import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
 import { MainLayoutProps } from "src/utils/model/props";
-import { useRoute } from "vue-router";
 
 defineProps<MainLayoutProps>();
-
-const route = useRoute();
-
-const currentRouteName = route.name;
 
 </script>
 

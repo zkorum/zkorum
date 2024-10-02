@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PostDetails :extended-post-data="postData" :compact-mode="false" />
+    <PostDetails :extended-post-data="postData" :compact-mode="false"/>
   </div>
 </template>
 
@@ -19,4 +19,5 @@ postData = postStore.getPostBySlugId(props.postSlugId);
 
 </script>
 
-<style scoped></style>
+<style scoped lang="scss">
+</style>

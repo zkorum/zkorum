@@ -34,17 +34,17 @@
                     </div>
 
                     <div class="rankingButtonCluster">
-                      <ZKButton flat text-color="secondary" icon="mdi-thumb-down" size="1.3rem"
+                      <ZKButton flat text-color="color-text-strong" icon="mdi-thumb-down-outline" size="1.3rem"
                         @click="rankComment('dislike', false)" />
-                      <ZKButton flat text-color="secondary" label="Pass" size="1rem"
+                      <ZKButton flat text-color="color-text-strong" label="Pass" size="1rem"
                         @click="rankComment('pass', false)" />
-                      <ZKButton flat text-color="secondary" icon="mdi-thumb-up" size="1.3rem"
+                      <ZKButton flat text-color="color-text-strong" icon="mdi-thumb-up-outline" size="1.3rem"
                         @click="rankComment('like', false)" />
                     </div>
 
                     <div class="reportButton">
-                      <ZKButton outline text-color="secondary" label="Report" icon="mdi-alert-outline" size="0.8rem"
-                        @click="reportButtonClicked()" />
+                      <ZKButton outline text-color="color-text-strong" label="Report" icon="mdi-alert-outline"
+                        size="0.8rem" @click="reportButtonClicked()" />
                     </div>
                   </div>
                 </swiper-slide>
@@ -90,10 +90,24 @@
 
               <div class="finishedActionButtons">
                 <ZKButton v-if="postItem.payload.comments.length != postItem.userInteraction.commentRanking.rankedCommentList.size"
-                  outline text-color="secondary" label="Vote More" icon="mdi-vote" @click="clickedRankMoreButton()" />
+                  outline text-color="color-text-strong" @click="clickedRankMoreButton()">
+                  <div class="iconStyle">
+                    <q-icon name="mdi-vote" color="color-text-strong" />
+                    <div>
+                      Vote More
+                    </div>
+                  </div>
+                </ZKButton>
 
-                <ZKButton outline text-color="secondary" label="See Results" icon="mdi-chart-bar"
-                  @click="clickedSeeResultsButton()" />
+                <ZKButton outline text-color="color-text-strong" @click="clickedSeeResultsButton()">
+                  <div class="iconStyle">
+                    <q-icon name="mdi-chart-bar" color="color-text-strong" />
+                    <div>
+                      See Results
+                    </div>
+                  </div>
+
+                </ZKButton>
               </div>
             </div>
           </div>
@@ -141,12 +155,11 @@ const finishedRanking = ref(false);
 
 const emptyCommentItem: DummyCommentFormat = {
   index: 0,
-  userCommunityId: "",
-  userCommunityImage: "",
   createdAt: new Date(),
   comment: "",
   numUpvotes: 0,
-  numDownvotes: 0
+  numDownvotes: 0,
+  slugId: ""
 };
 
 let displayCommentItem = ref<DummyCommentFormat>(emptyCommentItem);
@@ -394,11 +407,22 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 
 .finishedActionButtons {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: 2rem;
 }
 
 .unselectable {
   user-select: none;
+}
+
+.iconStyle {
+  display:flex;
+  align-items: center;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem;
 }
 
 </style>

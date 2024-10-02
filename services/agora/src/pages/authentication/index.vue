@@ -11,7 +11,6 @@
 
 <script setup lang="ts">
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import { useAuthenticationStore } from "src/stores/authentication";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 const { t } = useI18n();
@@ -19,7 +18,6 @@ const { t } = useI18n();
 const router = useRouter();
 
 function skipAuthentication() {
-  useAuthenticationStore().isAuthenticated = true;
   router.push({ name: "default-home-feed" });
 }
 

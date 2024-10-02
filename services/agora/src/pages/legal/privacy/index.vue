@@ -1,14 +1,13 @@
 <template>
   <div>
-    <LegalWrapper title="Privacy Policy">
+    <ZKTitleBodyWrapper title="Privacy Policy">
       To be added
-    </LegalWrapper>
+    </ZKTitleBodyWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
-import LegalWrapper from "src/components/legal/LegalWrapper.vue";
-
+import ZKTitleBodyWrapper from "src/components/ui-library/ZKTitleBodyWrapper.vue";
 </script>
 
 <style scoped lang="scss">
