@@ -44,7 +44,7 @@ const bottomSheet = useBottomSheet();
 const webShare = useWebShare();
 
 function shareButtonClicked() {
-  const sharePostUrl = window.location.origin + "/post/" + props.postSlugId + "?showComments=true&commentSlugId=" + props.commentItem.slugId;
+  const sharePostUrl = window.location.origin + "/post/" + props.postSlugId + "?commentSlugId=" + props.commentItem.slugId;
   webShare.share("Agora Comment", sharePostUrl);
 }
 

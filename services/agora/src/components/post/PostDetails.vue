@@ -54,7 +54,7 @@
         <div v-if="!compactMode && !showRankingMode">
           <div v-if="commentList.length > 0">
             <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
-              :comment-ranking="extendedPostData.userInteraction.commentRanking" />
+              :comment-ranking="extendedPostData.userInteraction.commentRanking" :initial-comment-slug-id="commentSlugId" />
           </div>
 
           <div v-if="commentList.length == 0" class="noCommentMessage">
@@ -81,7 +81,7 @@ import CommentRanking from "./views/CommentRanking.vue";
 import FloatingBottomContainer from "../navigation/FloatingBottomContainer.vue";
 import CommentComposer from "./views/CommentComposer.vue";
 import { DummyPostDataFormat } from "src/stores/post";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useRoute, useRouter } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
@@ -92,10 +92,15 @@ const props = defineProps<{
   compactMode: boolean,
 }>();
 
-const showComments = useRouteQuery("showComments");
+const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
+const hasCommentSlugId = commentSlugId.value.length > 0;
 
-const showRankingMode = ref<boolean>(showComments.value != "true");
-const viewMode = ref(showComments.value == "true" ? "comments": "ranking");
+const showRankingMode = ref<boolean>(hasCommentSlugId);
+const viewMode = ref("ranking");
+
+if (hasCommentSlugId) {
+  viewMode.value = "comments";
+}
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
@@ -113,14 +118,22 @@ if (action.value == "comment") {
   focusCommentElement.value = true;
 }
 
+onMounted(() => {
+  updateViewMode();
+});
+
 watch(viewMode, () => {
+  updateViewMode();
+});
+
+function updateViewMode() {
   if (viewMode.value == "ranking") {
     showRankingMode.value = true;
   } else {
     showRankingMode.value = false;
   }
   window.scrollTo(0, 0);
-});
+}
 
 function switchToCommentView() {
   showRankingMode.value = false;

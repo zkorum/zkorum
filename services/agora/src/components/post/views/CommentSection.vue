@@ -24,7 +24,7 @@
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
             :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
             :ranked-action="getCommentItemRankStatus(index)"
-            :class="{ highlightComment: commentSlugId == commentItem.slugId }" />
+            :class="{ highlightComment: initialCommentSlugId == commentItem.slugId }" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
@@ -70,15 +70,13 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 import CommentSortItem from "./CommentSortItem.vue";
 import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
 import { onMounted, ref, watch } from "vue";
-import { useRouteQuery } from "@vueuse/router";
 import Divider from "primevue/divider";
-
-const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 
 const props = defineProps<{
   commentList: DummyCommentFormat[],
   postSlugId: string,
-  commentRanking: DummyCommentRankingFormat
+  commentRanking: DummyCommentRankingFormat,
+  initialCommentSlugId: string
 }>();
 
 const slidesPerView = ref(4.5);
@@ -127,17 +125,17 @@ function getCommentItemRankStatus(commentIndex: number): PossibleCommentRankingA
 }
 
 function scrollToComment() {
-  if (commentSlugId.value != "") {
-    const targetElement = document.getElementById(commentSlugId.value);
+  if (props.initialCommentSlugId != "") {
+    const targetElement = document.getElementById(props.initialCommentSlugId);
 
     if (targetElement != null) {
       targetElement.scrollIntoView(
         {
           behavior: "smooth",
-          block: "start"
+          block: "center"
         });
     } else {
-      console.log("Failed to locate ID: " + commentSlugId.value);
+      console.log("Failed to locate ID: " + props.initialCommentSlugId);
     }
 
   }
