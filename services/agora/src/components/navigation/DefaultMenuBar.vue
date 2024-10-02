@@ -10,7 +10,7 @@
     </div>
 
     <div class="menuButtons">
-      <RouterLink v-if="hasLoginButton && !isAuthenticated" :to="{ name: 'login-email' }">
+      <RouterLink v-if="hasLoginButton && !isAuthenticated && showAuthButton" :to="{ name: 'login-email' }">
         <ZKButton label="Log in" text-color="white" color="warning" />
       </RouterLink>
 
@@ -30,10 +30,20 @@ import { DefaultMenuBarProps } from "src/utils/model/props";
 import TopMenuWrapper from "./TopMenuWrapper.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
+import { onMounted, ref } from "vue";
 
 defineProps<DefaultMenuBarProps>();
 
 const { isAuthenticated } =  storeToRefs(useAuthenticationStore());
+
+const showAuthButton = ref(false);
+
+onMounted(() => {
+  setTimeout(
+    function () {
+      showAuthButton.value = true;
+    }, 50);
+});
 
 </script>
 
