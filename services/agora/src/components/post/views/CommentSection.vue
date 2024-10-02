@@ -24,7 +24,7 @@
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
             :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
             :ranked-action="getCommentItemRankStatus(index)"
-            :class="{ highlightComment: initialCommentSlugId == commentItem.slugId }" />
+            :highlight="initialCommentSlugId == commentItem.slugId" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
@@ -218,11 +218,6 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
 .specialText {
   text-align: center;
   width: min(15rem, 100%);
-}
-
-.highlightComment {
-  background-color: #f0f9ff;
-  border-radius: 15px;
 }
 
 </style>

@@ -7,7 +7,9 @@
       </div>
 
       <div>
-        <span v-html="commentItem.comment"></span>
+        <div :class="{ highlightComment: highlight }">
+          <span v-html="commentItem.comment"></span>
+        </div>
 
         <div class="actionBarPaddings">
           <CommentActionBar :comment-item="commentItem" :post-slug-id="postSlugId" :is-ranked="isRanked"
@@ -27,7 +29,8 @@ defineProps<{
   commentItem: DummyCommentFormat,
   postSlugId: string,
   isRanked: boolean,
-  rankedAction: PossibleCommentRankingActions
+  rankedAction: PossibleCommentRankingActions,
+  highlight: boolean
 }>();
 
 </script>
@@ -52,5 +55,10 @@ defineProps<{
   padding-top: 0.5rem;
 }
 
+.highlightComment {
+  background-color: #ccfbf1;
+  border-radius: 15px;
+  padding: 0.5rem;
+}
 </style>
 
