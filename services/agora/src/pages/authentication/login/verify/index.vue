@@ -12,7 +12,7 @@
         </div>
 
         <div class="codeInput">
-          <InputOtp v-model="verificationCode" :length="6" />
+          <InputOtp v-model="verificationCode" :length="6" integer-only />
         </div>
 
         <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6"
