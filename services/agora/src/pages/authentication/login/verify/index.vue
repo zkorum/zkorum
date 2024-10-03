@@ -7,30 +7,34 @@
       </template>
 
       <template #body>
-        <div class="instructions">
-          Please enter the 6-digit code that we sent to {{ verificationEmailAddress }}
-        </div>
-
-        <div class="otpDiv">
-          <div class="codeInput">
-            <InputOtp v-model="verificationCode" :length="6" integer-only />
+        <form class="formStyle" @submit.prevent="">
+          <div class="instructions">
+            Please enter the 6-digit code that we sent to {{ verificationEmailAddress }}
           </div>
 
-          <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
-            Expires in {{ verificationCodeExpirySeconds }} seconds
+          <div class="otpDiv">
+            <div class="codeInput">
+              <InputOtp v-model="verificationCode" :length="6" integer-only />
+            </div>
+
+            <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
+              Expires in {{ verificationCodeExpirySeconds }} seconds
+            </div>
+
+            <div v-if="verificationCodeExpirySeconds == 0" class="weakColor codeExpiry">
+              Code expired
+            </div>
           </div>
 
-          <div v-if="verificationCodeExpirySeconds == 0" class="weakColor codeExpiry">
-            Code expired
-          </div>
-        </div>
+          <ZKButton class="buttonStyle" label="Next" color="primary"
+            :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0" type="submit"
+            @click="submitCode(Number(verificationCode))" />
 
-        <ZKButton label="Next" color="primary"
-          :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0"
-          @click="submitCode(Number(verificationCode))" />
+          <ZKButton class="buttonStyle"
+            :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds : 'Resend Code'"
+            color="secondary" :disabled="verificationNextCodeSeconds > 0" @click="requestCode(true)" />
+        </form>
 
-        <ZKButton :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds : 'Resend Code'" color="secondary"
-          :disabled="verificationNextCodeSeconds > 0" @click="requestCode(true)" />
       </template>
     </AuthContentWrapper>
   </div>
@@ -96,7 +100,6 @@ async function requestCode(isRequestingNewCode: boolean) {
   } else {
     if (response.error == "already_logged_in") {
       isAuthenticated.value = true;
-      dialog.showMessage("Authentication", "User is already logged in");
       router.push({ name: "default-home-feed" });
     } else if (response.error == "throttled") {
       processRequestCodeResponse(response.data);
@@ -193,6 +196,16 @@ function decrementNextCodeTimer() {
   gap: 1rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
+}
+
+.buttonStyle {
+  width: 100%;
+}
+
+.formStyle {
+  display:flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 </style>
