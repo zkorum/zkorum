@@ -25,8 +25,6 @@
             </template>
             <template #option="slotProps">
               <div class="flex items-center">
-                <img :alt="slotProps.option.label"
-                  :src="'/images/communities/flags/' + slotProps.option.country + '.svg'" class="flagImg" />
                 <div>{{ slotProps.option.name }}</div>
               </div>
             </template>

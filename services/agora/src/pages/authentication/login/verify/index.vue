@@ -9,7 +9,7 @@
       <template #body>
         <form class="formStyle" @submit.prevent="">
           <div class="instructions">
-            Please enter the 6-digit code that we sent to {{ verificationEmailAddress }}
+            Please enter the 6-digit code that was sent to <span class="emailAddress">{{ verificationEmailAddress }}</span>.
           </div>
 
           <div class="otpDiv">
@@ -18,7 +18,7 @@
             </div>
 
             <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
-              Expires in {{ verificationCodeExpirySeconds }} seconds
+              Expires in {{ verificationCodeExpirySeconds }}s
             </div>
 
             <div v-if="verificationCodeExpirySeconds == 0" class="weakColor codeExpiry">
@@ -31,7 +31,7 @@
             @click="submitCode(Number(verificationCode))" />
 
           <ZKButton class="buttonStyle"
-            :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds : 'Resend Code'"
+            :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds + 's' : 'Resend Code'"
             color="secondary" :disabled="verificationNextCodeSeconds > 0" @click="requestCode(true)" />
         </form>
 
@@ -206,6 +206,12 @@ function decrementNextCodeTimer() {
   display:flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.emailAddress {
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 0.2rem;
 }
 
 </style>
