@@ -36,6 +36,7 @@
         "axios": "^1.6.8",
         "buffer": "^6.0.3",
         "cborg": "^4.2.0",
+        "libphonenumber-js": "^1.11.10",
         "localforage": "^1.10.0",
         "pinia": "^2.1.7",
         "pinia-plugin-persistedstate-2": "^2.0.20",
