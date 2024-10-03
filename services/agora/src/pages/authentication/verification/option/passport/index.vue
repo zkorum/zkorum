@@ -39,7 +39,6 @@
             </div>
           </ZKCard>
 
-          <SkipForLaterButton @click="skipButton()" />
         </div>
 
       </template>
@@ -52,7 +51,6 @@ import { useRouter } from "vue-router";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import SkipForLaterButton from "src/components/authentication/SkipForLaterButton.vue";
 import { useQRCode } from "@vueuse/integrations/useQRCode";
 import { useQuasar } from "quasar";
 import { ref } from "vue";
@@ -71,10 +69,6 @@ if (quasar.platform.is.android) {
 const router = useRouter();
 
 const qrcode = useQRCode(rarimeLink, {version: "10"});
-
-function skipButton() {
-  router.push({ name: "default-home-feed" });
-}
 
 function completeVerification() {
   router.push({ name: "verification-successful" });

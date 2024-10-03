@@ -36,7 +36,6 @@
 
           <ZKButton label="Next" color="primary" text-color="white" @click="validateNumber()" />
 
-          <SkipForLaterButton @click="skipButton()" />
         </div>
 
       </template>
@@ -45,8 +44,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
-import SkipForLaterButton from "src/components/authentication/SkipForLaterButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import InputText from "primevue/inputtext";
 import { ref } from "vue";
@@ -55,7 +52,6 @@ import { parsePhoneNumber, getCountries, getCountryCallingCode } from "libphonen
 import { useDialog } from "src/utils/ui/dialog";
 import Select from "primevue/select";
 
-const router = useRouter();
 const dialog = useDialog();
 
 const inputNumber = ref("");
@@ -95,10 +91,6 @@ function validateNumber() {
     dialog.showMessage("Phone Number", "Parsing error");
   }
 
-}
-
-function skipButton() {
-  router.push({ name: "default-home-feed" });
 }
 
 </script>
