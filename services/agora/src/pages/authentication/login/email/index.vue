@@ -51,12 +51,7 @@ verificationEmailAddress.value = "";
 const router = useRouter();
 
 async function sendVerificationCode(email: string) {
-
-  if (process.env.USE_DUMMY_ACCESS == "true") {
-    email = "test@gmail.com";
-    verificationEmailAddress.value = email;
-  }
-
+  verificationEmailAddress.value = email;
   router.push({ name: "login-verify" });
 }
 

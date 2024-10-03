@@ -29,7 +29,7 @@
           :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0"
           @click="submitCode(Number(verificationCode))" />
 
-        <ZKButton :label="'Resend Code in ' + verificationNextCodeSeconds" color="secondary"
+        <ZKButton :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds : 'Resend Code'" color="secondary"
           :disabled="verificationNextCodeSeconds > 0" @click="requestCode(true)" />
       </template>
     </AuthContentWrapper>
@@ -66,6 +66,10 @@ const verificationNextCodeSeconds = ref(0);
 const verificationCodeExpirySeconds = ref(0);
 
 onMounted(() => {
+  if (process.env.USE_DUMMY_ACCESS == "true") {
+    verificationEmailAddress.value = "test@gmail.com";
+  }
+
   requestCode(false);
 });
 
