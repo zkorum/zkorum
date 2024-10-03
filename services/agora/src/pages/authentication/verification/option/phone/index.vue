@@ -12,11 +12,13 @@
             A one-time password will be sent to your phone number.
           </div>
 
-          <Select v-model="selectedCountryCode" :options="countries" option-label="name" placeholder="Country Code">
+          <Select v-model="selectedCountryCode"
+            :virtual-scroller-options="{ lazy: true, itemSize: 40, numToleratedItems: 10 }" :options="countries"
+            option-label="name" placeholder="Country Code">
             <template #value="slotProps">
-              <div v-if="slotProps.value" class="flex items-center">
-                <img :alt="slotProps.value.label"
-                  :src="'/images/communities/flags/' + slotProps.value.country + '.svg'" class="flagImg" />
+              <div v-if="slotProps.value.code != ''" class="flex items-center">
+                <img :alt="slotProps.value.label" :src="'/images/communities/flags/' + slotProps.value.country + '.svg'"
+                  class="flagImg" />
                 <div>+ {{ slotProps.value.code }}</div>
               </div>
               <span v-else>
@@ -24,7 +26,9 @@
               </span>
             </template>
             <template #option="slotProps">
-              <div class="flex items-center">
+              <div class="test">
+                <img :src="'/images/communities/flags/' + slotProps.option.country + '.svg'" class="flagImg"
+                  loading="lazy" />
                 <div>{{ slotProps.option.name }}</div>
               </div>
             </template>
@@ -32,7 +36,8 @@
 
           <InputText v-model="inputNumber" placeholder="Phone number" />
 
-          <ZKButton label="Next" color="primary" text-color="white" @click="validateNumber()" />
+          <ZKButton label="Next" color="primary" text-color="white" :disabled="selectedCountryCode.code.length == 0 || inputNumber.length == 0"
+            @click="validateNumber()" />
 
         </div>
 
@@ -54,7 +59,7 @@ const dialog = useDialog();
 
 const inputNumber = ref("");
 
-const selectedCountryCode = ref();
+const selectedCountryCode = ref<SelectItem>({name: "", country: "", code: ""});
 interface SelectItem {
   name: string;
   country: string;
@@ -75,7 +80,6 @@ for (let i = 0; i < countryList.length; i++) {
 
 function validateNumber() {
   try {
-    console.log(selectedCountryCode.value);
     const fullNumber = "+1 " + selectedCountryCode.value.code + inputNumber.value;
     console.log(fullNumber);
     const phoneNumber = parsePhoneNumber(fullNumber);
@@ -105,8 +109,13 @@ function validateNumber() {
 }
 
 .flagImg {
-  width: 2rem;
+  width: 3rem;
   padding-right: 1rem;
+}
+
+.test {
+  display:flex;
+  gap: 0rem;
 }
 
 </style>
