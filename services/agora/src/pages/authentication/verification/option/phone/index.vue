@@ -6,40 +6,42 @@
       </template>
       <template #body>
 
-        <div class="container">
+        <form @submit.prevent="validateNumber()">
+          <div class="container">
+            <div>
+              A one-time password will be sent to your phone number.
+            </div>
 
-          <div>
-            A one-time password will be sent to your phone number.
+            <Select v-model="selectedCountryCode"
+              :virtual-scroller-options="{ lazy: true, itemSize: 40, numToleratedItems: 10 }" :options="countries"
+              option-label="name" placeholder="Country Code">
+              <template #value="slotProps">
+                <div v-if="slotProps.value.code != ''" class="flex items-center">
+                  <img :alt="slotProps.value.label"
+                    :src="'/images/communities/flags/' + slotProps.value.country + '.svg'" class="flagImg" />
+                  <div>+ {{ slotProps.value.code }}</div>
+                </div>
+                <span v-else>
+                  {{ slotProps.placeholder }}
+                </span>
+              </template>
+              <template #option="slotProps">
+                <div class="test">
+                  <img :src="'/images/communities/flags/' + slotProps.option.country + '.svg'" class="flagImg"
+                    loading="lazy" />
+                  <div>{{ slotProps.option.name }}</div>
+                </div>
+              </template>
+            </Select>
+
+            <InputText v-model="inputNumber" placeholder="Phone number" />
+
+            <ZKButton label="Next" color="primary" text-color="white"
+              :disabled="selectedCountryCode.code.length == 0 || inputNumber.length == 0" type="submit" />
+
           </div>
+        </form>
 
-          <Select v-model="selectedCountryCode"
-            :virtual-scroller-options="{ lazy: true, itemSize: 40, numToleratedItems: 10 }" :options="countries"
-            option-label="name" placeholder="Country Code">
-            <template #value="slotProps">
-              <div v-if="slotProps.value.code != ''" class="flex items-center">
-                <img :alt="slotProps.value.label" :src="'/images/communities/flags/' + slotProps.value.country + '.svg'"
-                  class="flagImg" />
-                <div>+ {{ slotProps.value.code }}</div>
-              </div>
-              <span v-else>
-                {{ slotProps.placeholder }}
-              </span>
-            </template>
-            <template #option="slotProps">
-              <div class="test">
-                <img :src="'/images/communities/flags/' + slotProps.option.country + '.svg'" class="flagImg"
-                  loading="lazy" />
-                <div>{{ slotProps.option.name }}</div>
-              </div>
-            </template>
-          </Select>
-
-          <InputText v-model="inputNumber" placeholder="Phone number" />
-
-          <ZKButton label="Next" color="primary" text-color="white" :disabled="selectedCountryCode.code.length == 0 || inputNumber.length == 0"
-            @click="validateNumber()" />
-
-        </div>
 
       </template>
     </AuthContentWrapper>
