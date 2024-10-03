@@ -2,13 +2,13 @@
   <div>
     <AuthContentWrapper>
       <template #title>
-        Instructions
+        Passport Verification
       </template>
       <template #body>
 
         <div class="container">
           <div>
-            With RariMe, you can prove your identity anonymously!
+            With RariMe, you can prove your identity anonymously.
             This step is essential to protect your privacy and security on Agora.
           </div>
 
