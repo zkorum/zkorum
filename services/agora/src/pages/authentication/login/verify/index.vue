@@ -25,15 +25,12 @@
           </div>
         </div>
 
-        <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0"
+        <ZKButton label="Next" color="primary"
+          :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0"
           @click="submitCode(Number(verificationCode))" />
 
-        <ZKButton label="Resend Code" color="secondary" :disabled="verificationNextCodeSeconds > 0"
-          @click="requestCode(true)" />
-
-        <div v-if="verificationNextCodeSeconds > 0" class="weakColor">
-          You can request a new code in {{ verificationNextCodeSeconds }} seconds.
-        </div>
+        <ZKButton :label="'Resend Code in ' + verificationNextCodeSeconds" color="secondary"
+          :disabled="verificationNextCodeSeconds > 0" @click="requestCode(true)" />
       </template>
     </AuthContentWrapper>
   </div>
