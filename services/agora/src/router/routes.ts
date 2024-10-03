@@ -204,7 +204,7 @@ const routes: RouteRecordRaw[] = [
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "verification-welcome"

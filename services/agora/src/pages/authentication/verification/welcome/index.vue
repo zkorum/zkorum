@@ -2,11 +2,17 @@
   <div>
     <AuthContentWrapper>
       <template #title>
-        Welcome to Agora
+        Account Verification
       </template>
       <template #body>
 
         <div class="container">
+
+          <div>
+            A verified account is required to participate in the
+            community.
+          </div>
+
           <VerificationOption title="Passport" description="More private way to verify your identity"
             icon="mdi-card-account-details" route-name="verification-option-passport" />
 
