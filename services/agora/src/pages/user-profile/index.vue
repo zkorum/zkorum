@@ -45,14 +45,13 @@ import TabList from "primevue/tablist";
 import TabPanel from "primevue/tabpanel";
 import CompactCommentList from "src/components/profile/CompactCommentList.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import { storeToRefs } from "pinia";
 import { useQuasar } from "quasar";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { getPlatform } from "src/utils/common";
 import { useRouter } from "vue-router";
 
-const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+const { userLogout } = useAuthenticationStore();
 
 const quasar = useQuasar();
 
@@ -61,7 +60,7 @@ const router = useRouter();
 
 function logoutRequested() {
   backendAuth.logout("test@gmail.com", getPlatform(quasar.platform));
-  isAuthenticated.value = false;
+  userLogout();
   router.push({ name: "welcome" });
 }
 
