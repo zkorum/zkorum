@@ -11,27 +11,36 @@
           Please enter the 6-digit code that we sent to {{ verificationEmailAddress }}
         </div>
 
-        <div class="codeInput">
-          <InputOtp v-model="verificationCode" :length="6" integer-only />
+        <div class="otpDiv">
+          <div class="codeInput">
+            <InputOtp v-model="verificationCode" :length="6" integer-only />
+          </div>
+
+          <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
+            Expires in {{ verificationCodeExpirySeconds }} seconds
+          </div>
+
+          <div v-if="verificationCodeExpirySeconds == 0" class="weakColor codeExpiry">
+            Code expired
+          </div>
         </div>
 
-        <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6"
+        <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0"
           @click="submitCode(Number(verificationCode))" />
 
-        <ZKButton label="Resend Code" color="secondary" :disabled="verificationTimeLeftSeconds > 0"
-          @click="resendCode()" />
+        <ZKButton label="Resend Code" color="secondary" :disabled="verificationNextCodeSeconds > 0"
+          @click="requestCode(true)" />
 
-        <div v-if="showCountdownMessage">
-          A new code had been sent to your email. You may retry in {{ verificationTimeLeftSeconds }} seconds.
+        <div v-if="verificationNextCodeSeconds > 0" class="weakColor">
+          You may request a new code in {{ verificationNextCodeSeconds }} seconds.
         </div>
-
       </template>
     </AuthContentWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import { useRouter } from "vue-router";
@@ -41,25 +50,26 @@ import { storeToRefs } from "pinia";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { useQuasar } from "quasar";
 import { getPlatform } from "src/utils/common";
+import { useDialog } from "src/utils/ui/dialog";
 
 const router = useRouter();
 
 const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticationStore());
 
-const { emailCode } = useBackendAuthApi();
+const { emailCode, sendEmailCode } = useBackendAuthApi();
 
 const verificationCode = ref("");
-const showCountdownMessage = ref(false);
+
+const dialog = useDialog();
 
 const $q = useQuasar();
 
-let verificationTimeLeftSeconds = ref(0);
+const verificationNextCodeSeconds = ref(0);
+const verificationCodeExpirySeconds = ref(0);
 
-/*
-onUnmounted(() => {
-  verificationEmailAddress.value = "";
+onMounted(() => {
+  requestCode(false);
 });
-*/
 
 async function submitCode(code: number) {
 
@@ -77,22 +87,69 @@ async function submitCode(code: number) {
   }
 }
 
-function resendCode() {
-  verificationTimeLeftSeconds.value = 10;
-  showCountdownMessage.value = true;
-  decrementTimer();
+async function requestCode(isRequestingNewCode: boolean) {
+
+  const response = await sendEmailCode(verificationEmailAddress.value, isRequestingNewCode, getPlatform($q.platform));
+  if (response.isSuccessful) {
+    const data = response.data;
+    if (data) {
+      {
+        const nextCodeSoonestTime = new Date(data.nextCodeSoonestTime);
+        const now = new Date();
+
+        const diff = nextCodeSoonestTime.getTime() - now.getTime();
+        const nextCodeSecondsWait = Math.round(diff / 1000);
+
+        verificationNextCodeSeconds.value = nextCodeSecondsWait;
+        decrementNextCodeTimer();
+      }
+
+      {
+        const codeExpiryTime = new Date(data.codeExpiry);
+        const now = new Date();
+
+        const diff = codeExpiryTime.getTime() - now.getTime();
+        const codeExpirySeconds = Math.round(diff / 1000);
+
+        verificationCodeExpirySeconds.value = codeExpirySeconds;
+        decrementCodeExpiryTimer();
+      }
+
+    } else {
+      console.log("Missing data object");
+    }
+  } else {
+    if (response.error == "already_logged_in") {
+      isAuthenticated.value = true;
+      dialog.showMessage("Authentication", "User is already logged in");
+      router.push({ name: "default-home-feed" });
+    } else if (response.error == "throttled") {
+      dialog.showMessage("Authentication", "Too many attempts. Please wait before requesting a new code");
+    } else {
+      // no nothing
+    }
+  }
 }
 
-function decrementTimer() {
-  verificationTimeLeftSeconds.value -= 1;
+function decrementCodeExpiryTimer() {
+  verificationCodeExpirySeconds.value -= 1;
 
-  if (verificationTimeLeftSeconds.value != 0) {
+  if (verificationCodeExpirySeconds.value != 0) {
     setTimeout(
       function () {
-        decrementTimer();
+        decrementCodeExpiryTimer();
       }, 1000);
-  } else {
-    showCountdownMessage.value = false;
+  }
+}
+
+function decrementNextCodeTimer() {
+  verificationNextCodeSeconds.value -= 1;
+
+  if (verificationNextCodeSeconds.value != 0) {
+    setTimeout(
+      function () {
+        decrementNextCodeTimer();
+      }, 1000);
   }
 }
 
@@ -106,7 +163,7 @@ function decrementTimer() {
 }
 </style>
 
-<style scoped>
+<style scoped lang="scss">
 .instructions {
   font-size: 1.1rem;
 }
@@ -114,7 +171,22 @@ function decrementTimer() {
 .codeInput {
   display: flex;
   justify-content: center;
-  padding: 1rem;
+}
+
+.weakColor {
+  color: $color-text-weak;
+}
+
+.codeExpiry {
+  text-align: center;
+}
+
+.otpDiv {
+  display:flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 </style>

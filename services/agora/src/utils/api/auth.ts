@@ -13,7 +13,7 @@ interface AuthenticateReturn {
 
 export function useBackendAuthApi() {
 
-  async function emailLogin(
+  async function sendEmailCode(
     email: string,
     isRequestingNewCode: boolean,
     platform: SupportedPlatform
@@ -114,7 +114,7 @@ export function useBackendAuthApi() {
 
   }
 
-  return { emailLogin, emailCode, logout };
+  return { sendEmailCode, emailCode, logout };
 }
 
 
