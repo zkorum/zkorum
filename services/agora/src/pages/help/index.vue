@@ -60,6 +60,8 @@ function submitForm() {
   flex-direction: column;
   gap: 1.5rem;
   padding-top: 2rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .textAreaStyle {
