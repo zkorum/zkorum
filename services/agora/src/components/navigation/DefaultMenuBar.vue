@@ -3,10 +3,7 @@
     <div class="menuButtons">
       <BackButton v-if="hasBackButton" />
 
-      <RouterLink :to="{ name: 'default-home-feed' }">
-        <ZKButton v-if="hasCloseButton" icon="mdi-close" text-color="color-text-strong" flat />
-      </RouterLink>
-
+      <CloseButton v-if="hasCloseButton" />
     </div>
 
     <div class="menuButtons">
@@ -31,6 +28,7 @@ import TopMenuWrapper from "./TopMenuWrapper.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
 import { onMounted, ref } from "vue";
+import CloseButton from "./buttons/CloseButton.vue";
 
 defineProps<DefaultMenuBarProps>();
 

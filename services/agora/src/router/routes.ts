@@ -36,18 +36,6 @@ const routes: RouteRecordRaw[] = [
         name: "user-profile"
       },
       {
-        path: "/settings",
-        components: {
-          default: () => import("pages/settings/index.vue"), topmenubar: DefaultMenuBar
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
-          } as DefaultMenuBarProps
-        },
-        name: "settings-page"
-      },
-      {
         path: "/help",
         components: {
           default: () => import("pages/help/index.vue"), topmenubar: DefaultMenuBar
@@ -83,32 +71,45 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
-    path: "/legal",
+    path: "/",
     component: MainLayout,
     props: {
       addBottomPadding: false, enableHeader: true, enableFooter: false, reducedWidth: false
     } as MainLayoutProps,
     children: [
       {
-        path: "privacy",
+        path: "/settings",
+        components: {
+          default: () => import("pages/settings/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: true, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
+        name: "settings-page"
+      },
+      {
+
+        path: "/legal/privacy",
         components: {
           default: () => import("pages/legal/privacy/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: false, hasCloseButton: false, hasLoginButton: false
+            hasBackButton: true, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "privacy"
       },
       {
-        path: "terms",
+        path: "/legal/terms",
         components: {
           default: () => import("pages/legal/terms/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: false, hasCloseButton: false, hasLoginButton: false
+            hasBackButton: true, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "terms"

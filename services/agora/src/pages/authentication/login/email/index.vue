@@ -23,8 +23,8 @@
 
           <div class="agreementSection">
             By continuing, you are confirming that you have read and agree to our
-            <RouterLink :to="{name: 'terms'}" class="highlightUrl" target="_blank">Terms of Use</RouterLink> and
-            <RouterLink :to="{name: 'privacy'}" class="highlightUrl" target="_blank">Privacy Policy</RouterLink>.
+            <RouterLink :to="{name: 'terms'}" class="highlightUrl">Terms of Use</RouterLink> and
+            <RouterLink :to="{name: 'privacy'}" class="highlightUrl">Privacy Policy</RouterLink>.
           </div>
 
         </template>

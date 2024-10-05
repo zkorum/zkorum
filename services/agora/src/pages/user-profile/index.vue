@@ -13,11 +13,6 @@
           Jan 1, 2024
         </div>
       </div>
-
-      <div :style="{whiteSpace: 'nowrap'}">
-        <ZKButton label="Log out" text-color="color-text-strong" color="button-background-color"
-          @click="logoutRequested()" />
-      </div>
     </div>
 
     <Tabs value="0">
@@ -44,25 +39,6 @@ import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import TabPanel from "primevue/tabpanel";
 import CompactCommentList from "src/components/profile/CompactCommentList.vue";
-import ZKButton from "src/components/ui-library/ZKButton.vue";
-import { useQuasar } from "quasar";
-import { useAuthenticationStore } from "src/stores/authentication";
-import { useBackendAuthApi } from "src/utils/api/auth";
-import { getPlatform } from "src/utils/common";
-import { useRouter } from "vue-router";
-
-const { userLogout } = useAuthenticationStore();
-
-const quasar = useQuasar();
-
-const backendAuth = useBackendAuthApi();
-const router = useRouter();
-
-function logoutRequested() {
-  backendAuth.logout("test@gmail.com", getPlatform(quasar.platform));
-  userLogout();
-  router.push({ name: "welcome" });
-}
 
 </script>
 

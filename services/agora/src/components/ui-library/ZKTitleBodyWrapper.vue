@@ -19,7 +19,7 @@ defineProps<{
 <style scoped lang="scss">
 .title {
   padding-top: 1.5rem;
-  padding-bottom: 3rem;
+  padding-bottom: 2rem;
   font-size: 1.8rem;
 }
 </style>
