@@ -34,18 +34,6 @@ const routes: RouteRecordRaw[] = [
           } as DefaultMenuBarProps
         },
         name: "user-profile"
-      },
-      {
-        path: "/help",
-        components: {
-          default: () => import("pages/help/index.vue"), topmenubar: DefaultMenuBar
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
-          } as DefaultMenuBarProps
-        },
-        name: "help-page"
       }
     ]
   },
@@ -77,6 +65,18 @@ const routes: RouteRecordRaw[] = [
       addBottomPadding: false, enableHeader: true, enableFooter: false, reducedWidth: false
     } as MainLayoutProps,
     children: [
+      {
+        path: "/help",
+        components: {
+          default: () => import("pages/help/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: true, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
+        name: "help-page"
+      },
       {
         path: "/settings",
         components: {
