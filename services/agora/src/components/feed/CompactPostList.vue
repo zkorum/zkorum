@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-page>
-      <q-infinite-scroll :offset="250" class="column flex-center" @load="onLoad">
+      <q-infinite-scroll :offset="250" @load="onLoad">
         <div class="postListFlex">
           <div v-for="(postData, index) in compactPostDataList" :key="index" class="postPadding">
             <div>
@@ -55,7 +55,6 @@ interface DoneFunction {
 }
 
 async function onLoad(index: number, done: DoneFunction) {
-
   generateNewPosts();
   done();
 }
