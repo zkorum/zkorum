@@ -186,16 +186,28 @@ const routes: RouteRecordRaw[] = [
         name: "verification-option-passport"
       },
       {
-        path: "/verification/option/phone",
+        path: "/verification/option/phone/number",
         components: {
-          default: () => import("src/pages/authentication/verification/option/phone/index.vue"), topmenubar: DefaultMenuBar
+          default: () => import("src/pages/authentication/verification/option/phone/number/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
             hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
-        name: "verification-option-phone"
+        name: "verification-option-phone-number"
+      },
+      {
+        path: "/verification/option/phone/code",
+        components: {
+          default: () => import("src/pages/authentication/verification/option/phone/code/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "verification-option-phone-code"
       },
       {
         path: "/verification/welcome",

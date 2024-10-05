@@ -17,7 +17,7 @@
             icon="mdi-card-account-details" route-name="verification-option-passport" />
 
           <VerificationOption title="Phone Number" description="More convenient way to verify your identity"
-            icon="mdi-phone" route-name="verification-option-phone" />
+            icon="mdi-phone" route-name="verification-option-phone-number" />
 
           <SkipForLaterButton @click="skipButton()" />
         </div>

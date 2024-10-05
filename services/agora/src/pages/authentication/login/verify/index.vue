@@ -210,8 +210,6 @@ function decrementNextCodeTimer() {
 
 .emailAddress {
   font-weight: bold;
-  border-radius: 10px;
-  padding: 0.2rem;
 }
 
 </style>
