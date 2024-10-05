@@ -65,7 +65,7 @@ const supportSettings: SettingsInterface[] = [
 .container {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-  padding-top: 3rem;
+  padding-top: 2rem;
 }
 
 </style>
