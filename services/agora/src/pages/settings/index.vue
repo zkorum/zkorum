@@ -5,7 +5,11 @@
         <SettingsSection :settings-item-list="accountSettings" title="Account" />
       </div>
 
-      <SettingsSection :settings-item-list="supportSettings" title="Support" />
+      <SettingsSection :settings-item-list="aboutSettings" title="About" />
+
+      <div v-if="isAuthenticated">
+        <SettingsSection :settings-item-list="supportSettings" title="Support" />
+      </div>
     </div>
   </div>
 </template>
@@ -47,6 +51,21 @@ const accountSettings: SettingsInterface[] = [
     label: "Log out",
     action: logoutRequested,
     routeName: "welcome"
+  }
+];
+
+const aboutSettings: SettingsInterface[] = [
+  {
+    icon: "mdi-key",
+    label: "Privacy policy",
+    action: () => { },
+    routeName: "privacy"
+  },
+  {
+    icon: "mdi-file-document",
+    label: "Terms of service",
+    action: () => { },
+    routeName: "terms"
   }
 ];
 
