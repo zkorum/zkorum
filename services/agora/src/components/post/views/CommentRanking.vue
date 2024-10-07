@@ -43,7 +43,7 @@
                     </div>
 
                     <div class="reportButton">
-                      <ZKButton outline text-color="color-text-strong" label="Report" icon="mdi-alert-outline"
+                      <ZKButton text-color="color-text-weak" icon="mdi-alert-outline"
                         size="0.8rem" @click="reportButtonClicked()" />
                     </div>
                   </div>
@@ -403,6 +403,7 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 .reportButton {
   display: flex;
   justify-content: right;
+  padding-top: 1rem;
 }
 
 .finishedActionButtons {

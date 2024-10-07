@@ -1,30 +1,15 @@
 <template>
   <div>
     <div class="container">
-      <ZKCard padding="1rem">
-        <div class="swiperCluster">
-          <swiper-container :slides-per-view="slidesPerView" :initial-slide="initialSlide">
-            <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value">
-              <div>
-                <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value"
-                  :sort-item="sortOptionItem" @click="commentSortPreference = sortOptionItem.value" />
-              </div>
-            </swiper-slide>
-          </swiper-container>
-        </div>
-        <div class="descriptionLabel">
-          {{ description }}
-        </div>
 
-      </ZKCard>
+      <CommentSortSelector @changed-algorithm="(value) => commentSortPreference = value" />
 
       <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
         class="commentListFlex">
         <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
             :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
-            :ranked-action="getCommentItemRankStatus(index)"
-            :highlight="initialCommentSlugId == commentItem.slugId" />
+            :ranked-action="getCommentItemRankStatus(index)" :highlight="initialCommentSlugId == commentItem.slugId" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
@@ -63,14 +48,12 @@
 
 <script setup lang="ts">
 import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions } from "src/stores/post";
-import { useStorage, useWindowSize } from "@vueuse/core";
-import { CommentSortingItemInterface, useCommentOptions } from "src/utils/component/comments";
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import CommentSortItem from "./CommentSortItem.vue";
 import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import Divider from "primevue/divider";
+import CommentSortSelector from "./CommentSortSelector.vue";
 
 const props = defineProps<{
   commentList: DummyCommentFormat[],
@@ -79,17 +62,7 @@ const props = defineProps<{
   initialCommentSlugId: string
 }>();
 
-const slidesPerView = ref(4.5);
-
-const { width } = useWindowSize();
-
-const { getCommentSortOptions } = useCommentOptions();
-
-const commentSortPreference = useStorage("comment-sort-preference-id", "popular");
-
-const initialSlide = ref(0);
-
-const description = ref("");
+const commentSortPreference = ref("");
 
 onMounted(() => {
 
@@ -98,21 +71,6 @@ onMounted(() => {
       scrollToComment();
     }, 1000);
 
-  if (commentSortPreference.value == "more") {
-    commentSortPreference.value = "popular";
-  }
-
-  updateDescription(commentSortPreference.value);
-
-  initializeSlideCount();
-});
-
-watch(width, () => {
-  initializeSlideCount();
-});
-
-watch(commentSortPreference, () => {
-  updateDescription(commentSortPreference.value);
 });
 
 function getCommentItemRankStatus(commentIndex: number): PossibleCommentRankingActions {
@@ -141,42 +99,6 @@ function scrollToComment() {
   }
 }
 
-function initializeSlideCount() {
-  if (width.value < 300) {
-    slidesPerView.value = 2;
-  } else if (width.value < 400) {
-    slidesPerView.value = 2.5;
-  } else if (width.value < 500) {
-    slidesPerView.value = 3.5;
-  } else {
-    slidesPerView.value = 4.5;
-  }
-}
-
-function updateDescription(sortId: string) {
-  const sortItem = getSortItem(sortId);
-  description.value = sortItem.description;
-  initialSlide.value = sortItem.index;
-}
-
-function getSortItem(sortId: string): CommentSortingItemInterface {
-  const sortOptionList = getCommentSortOptions();
-  for (let i = 0; i < sortOptionList.length; i++) {
-    const sortItem = sortOptionList[i];
-    if (sortItem.value == sortId) {
-      return sortItem;
-    }
-  }
-
-  return {
-    label: "",
-    icon: "",
-    value: "",
-    description: "",
-    index: 0
-  };
-}
-
 </script>
 
 <style scoped lang="scss">
@@ -184,13 +106,6 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.descriptionLabel {
-  text-align: center;
-  color: $color-text-weak;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
 }
 
 .specialMessage {
@@ -204,10 +119,6 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.swiperCluster {
-  cursor: pointer;
 }
 
 .polisExampleImg {
