@@ -129,7 +129,7 @@ const routes: RouteRecordRaw[] = [
         props: {
           default: true,
           topmenubar: {
-            hasBackButton: false, hasSettingsButton: true, hasCloseButton: true, hasLoginButton: true
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
           } as DefaultMenuBarProps
         },
         name: "single-post"
