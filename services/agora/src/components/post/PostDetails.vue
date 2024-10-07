@@ -52,12 +52,12 @@
           @clicked-comment-button="clickedCommentButton()" @clicked-see-result-button="clickedSeeResultButton()" />
 
         <div v-if="!compactMode && !showRankingMode">
-          <div v-if="commentList.length > 0">
+          <div v-if="extendedPostData.metadata.commentCount > 0">
             <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
               :comment-ranking="extendedPostData.userInteraction.commentRanking" :initial-comment-slug-id="commentSlugId" />
           </div>
 
-          <div v-if="commentList.length == 0" class="noCommentMessage">
+          <div v-if="extendedPostData.metadata.commentCount == 0" class="noCommentMessage">
             There are no comments in this post.
           </div>
         </div>
@@ -96,11 +96,13 @@ const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 const hasCommentSlugId = commentSlugId.value.length > 0;
 
 const showRankingMode = ref<boolean>(hasCommentSlugId);
-const viewMode = ref("ranking");
-
+let initialViewMode = "";
 if (hasCommentSlugId) {
-  viewMode.value = "comments";
+  initialViewMode = "comments";
+} else {
+  initialViewMode = "ranking";
 }
+const viewMode = ref(initialViewMode);
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
@@ -124,6 +126,7 @@ onMounted(() => {
 
 watch(viewMode, () => {
   updateViewMode();
+  window.scrollTo(0, 0);
 });
 
 function updateViewMode() {
@@ -132,7 +135,6 @@ function updateViewMode() {
   } else {
     showRankingMode.value = false;
   }
-  window.scrollTo(0, 0);
 }
 
 function switchToCommentView() {

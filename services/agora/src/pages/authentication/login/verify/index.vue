@@ -7,23 +7,33 @@
       </template>
 
       <template #body>
-        <div class="instructions">
-          Please enter the 6-digit code that we sent to {{ verificationEmailAddress }}
-        </div>
+        <form class="formStyle" @submit.prevent="">
+          <div class="instructions">
+            Please enter the 6-digit code that was sent to <span class="emailAddress">{{ verificationEmailAddress }}</span>.
+          </div>
 
-        <div class="codeInput">
-          <InputOtp v-model="verificationCode" :length="6" />
-        </div>
+          <div class="otpDiv">
+            <div class="codeInput">
+              <InputOtp v-model="verificationCode" :length="6" integer-only />
+            </div>
 
-        <ZKButton label="Next" color="primary" :disabled="verificationCode.length != 6"
-          @click="submitCode(Number(verificationCode))" />
+            <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
+              Expires in {{ verificationCodeExpirySeconds }}s
+            </div>
 
-        <ZKButton label="Resend Code" color="secondary" :disabled="verificationTimeLeftSeconds > 0"
-          @click="resendCode()" />
+            <div v-if="verificationCodeExpirySeconds == 0" class="weakColor codeExpiry">
+              Code expired
+            </div>
+          </div>
 
-        <div v-if="showCountdownMessage">
-          A new code had been sent to your email. You may retry in {{ verificationTimeLeftSeconds }} seconds.
-        </div>
+          <ZKButton class="buttonStyle" label="Next" color="primary"
+            :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0" type="submit"
+            @click="submitCode(Number(verificationCode))" />
+
+          <ZKButton class="buttonStyle"
+            :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds + 's' : 'Resend Code'"
+            color="secondary" :disabled="verificationNextCodeSeconds > 0" @click="requestCode(true)" />
+        </form>
 
       </template>
     </AuthContentWrapper>
@@ -31,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import { useRouter } from "vue-router";
@@ -41,25 +51,31 @@ import { storeToRefs } from "pinia";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { useQuasar } from "quasar";
 import { getPlatform } from "src/utils/common";
+import { useDialog } from "src/utils/ui/dialog";
+import { ApiV1AuthAuthenticatePost200Response } from "src/api";
 
 const router = useRouter();
 
 const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticationStore());
 
-const { emailCode } = useBackendAuthApi();
+const { emailCode, sendEmailCode } = useBackendAuthApi();
 
 const verificationCode = ref("");
-const showCountdownMessage = ref(false);
+
+const dialog = useDialog();
 
 const $q = useQuasar();
 
-let verificationTimeLeftSeconds = ref(0);
+const verificationNextCodeSeconds = ref(0);
+const verificationCodeExpirySeconds = ref(0);
 
-/*
-onUnmounted(() => {
-  verificationEmailAddress.value = "";
+onMounted(() => {
+  if (process.env.USE_DUMMY_ACCESS == "true") {
+    verificationEmailAddress.value = "test@gmail.com";
+  }
+
+  requestCode(false);
 });
-*/
 
 async function submitCode(code: number) {
 
@@ -68,7 +84,6 @@ async function submitCode(code: number) {
   }
 
   const response = await emailCode(verificationEmailAddress.value, code, getPlatform($q.platform));
-  console.log(response.data);
   if (response.data.success) {
     isAuthenticated.value = true;
     router.push({ name: "verification-welcome" });
@@ -77,22 +92,73 @@ async function submitCode(code: number) {
   }
 }
 
-function resendCode() {
-  verificationTimeLeftSeconds.value = 10;
-  showCountdownMessage.value = true;
-  decrementTimer();
+async function requestCode(isRequestingNewCode: boolean) {
+
+  const response = await sendEmailCode(verificationEmailAddress.value, isRequestingNewCode, getPlatform($q.platform));
+  if (response.isSuccessful) {
+    processRequestCodeResponse(response.data);
+  } else {
+    if (response.error == "already_logged_in") {
+      isAuthenticated.value = true;
+      router.push({ name: "default-home-feed" });
+    } else if (response.error == "throttled") {
+      processRequestCodeResponse(response.data);
+      dialog.showMessage("Authentication", "Too many attempts. Please wait before requesting a new code");
+    } else {
+      // no nothing
+    }
+  }
 }
 
-function decrementTimer() {
-  verificationTimeLeftSeconds.value -= 1;
+function processRequestCodeResponse(data: ApiV1AuthAuthenticatePost200Response | null) {
 
-  if (verificationTimeLeftSeconds.value != 0) {
+  if (data == null) {
+    console.log("Null data from request code response");
+    return;
+  }
+
+  {
+    const nextCodeSoonestTime = new Date(data.nextCodeSoonestTime);
+    const now = new Date();
+
+    const diff = nextCodeSoonestTime.getTime() - now.getTime();
+    const nextCodeSecondsWait = Math.round(diff / 1000);
+
+    verificationNextCodeSeconds.value = nextCodeSecondsWait;
+    decrementNextCodeTimer();
+  }
+
+  {
+    const codeExpiryTime = new Date(data.codeExpiry);
+    const now = new Date();
+
+    const diff = codeExpiryTime.getTime() - now.getTime();
+    const codeExpirySeconds = Math.round(diff / 1000);
+
+    verificationCodeExpirySeconds.value = codeExpirySeconds;
+    decrementCodeExpiryTimer();
+  }
+}
+
+function decrementCodeExpiryTimer() {
+  verificationCodeExpirySeconds.value -= 1;
+
+  if (verificationCodeExpirySeconds.value != 0) {
     setTimeout(
       function () {
-        decrementTimer();
+        decrementCodeExpiryTimer();
       }, 1000);
-  } else {
-    showCountdownMessage.value = false;
+  }
+}
+
+function decrementNextCodeTimer() {
+  verificationNextCodeSeconds.value -= 1;
+
+  if (verificationNextCodeSeconds.value != 0) {
+    setTimeout(
+      function () {
+        decrementNextCodeTimer();
+      }, 1000);
   }
 }
 
@@ -106,7 +172,7 @@ function decrementTimer() {
 }
 </style>
 
-<style scoped>
+<style scoped lang="scss">
 .instructions {
   font-size: 1.1rem;
 }
@@ -114,7 +180,36 @@ function decrementTimer() {
 .codeInput {
   display: flex;
   justify-content: center;
-  padding: 1rem;
+}
+
+.weakColor {
+  color: $color-text-weak;
+}
+
+.codeExpiry {
+  text-align: center;
+}
+
+.otpDiv {
+  display:flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.buttonStyle {
+  width: 100%;
+}
+
+.formStyle {
+  display:flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.emailAddress {
+  font-weight: bold;
 }
 
 </style>

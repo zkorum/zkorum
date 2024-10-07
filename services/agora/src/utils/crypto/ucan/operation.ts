@@ -16,7 +16,6 @@ function getPrefixedKeyByEmail(email: string) {
 
 interface CreateDidReturn {
   did: string;
-  flowId: string;
   prefixedKey: string;
 }
 
@@ -26,23 +25,19 @@ export async function createDidIfDoesNotExist(email: string, platform: Supported
   const sessionStore = useSessionStore();
   const prefixedKey = getPrefixedKeyByEmail(email);
 
-  console.log("Prefix key: " + prefixedKey);
-
   switch (platform) {
   case "mobile":
     const { publicKey } = await SecureSigning.createKeyPairIfDoesNotExist({ prefixedKey: prefixedKey });
     const decodedPublicKey = base64Decode(publicKey);
     const didMobile = publicKeyToDid(decodedPublicKey);
     sessionStore.setPrefixedKey(email, prefixedKey);
-    const flowIdMobile = sessionStore.getOrSetFlowId(email);
-    return { did: didMobile, flowId: flowIdMobile, prefixedKey }; // TODO: also return flowId!
+    return { did: didMobile, prefixedKey };
   case "web":
     const cryptoStore = await getWebCryptoStore();
     await cryptoStore.keystore.createIfDoesNotExists(prefixedKey);
     const didWeb = await DID.write(cryptoStore, prefixedKey);
     sessionStore.setPrefixedKey(email, prefixedKey);
-    const flowIdWeb = sessionStore.getOrSetFlowId(email);
-    return { did: didWeb, flowId: flowIdWeb, prefixedKey };
+    return { did: didWeb, prefixedKey };
   }
 }
 

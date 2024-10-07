@@ -34,30 +34,6 @@ const routes: RouteRecordRaw[] = [
           } as DefaultMenuBarProps
         },
         name: "user-profile"
-      },
-      {
-        path: "/settings",
-        components: {
-          default: () => import("pages/settings/index.vue"), topmenubar: DefaultMenuBar
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
-          } as DefaultMenuBarProps
-        },
-        name: "settings-page"
-      },
-      {
-        path: "/help",
-        components: {
-          default: () => import("pages/help/index.vue"), topmenubar: DefaultMenuBar
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
-          } as DefaultMenuBarProps
-        },
-        name: "help-page"
       }
     ]
   },
@@ -83,32 +59,57 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
-    path: "/legal",
+    path: "/",
     component: MainLayout,
     props: {
       addBottomPadding: false, enableHeader: true, enableFooter: false, reducedWidth: false
     } as MainLayoutProps,
     children: [
       {
-        path: "privacy",
+        path: "/help",
+        components: {
+          default: () => import("pages/help/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: true, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
+        name: "help-page"
+      },
+      {
+        path: "/settings",
+        components: {
+          default: () => import("pages/settings/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: true, hasLoginButton: true
+          } as DefaultMenuBarProps
+        },
+        name: "settings-page"
+      },
+      {
+
+        path: "/legal/privacy",
         components: {
           default: () => import("pages/legal/privacy/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: false, hasCloseButton: false, hasLoginButton: false
+            hasBackButton: true, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "privacy"
       },
       {
-        path: "terms",
+        path: "/legal/terms",
         components: {
           default: () => import("pages/legal/terms/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: false, hasCloseButton: false, hasLoginButton: false
+            hasBackButton: true, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "terms"
@@ -128,7 +129,7 @@ const routes: RouteRecordRaw[] = [
         props: {
           default: true,
           topmenubar: {
-            hasBackButton: false, hasSettingsButton: true, hasCloseButton: true, hasLoginButton: true
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: true
           } as DefaultMenuBarProps
         },
         name: "single-post"
@@ -174,16 +175,40 @@ const routes: RouteRecordRaw[] = [
         name: "login-verify"
       },
       {
-        path: "/verification/instructions",
+        path: "/verification/option/passport",
         components: {
-          default: () => import("src/pages/authentication/verification/instructions/index.vue"), topmenubar: DefaultMenuBar
+          default: () => import("src/pages/authentication/verification/option/passport/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
             hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
-        name: "verification-instructions"
+        name: "verification-option-passport"
+      },
+      {
+        path: "/verification/option/phone/number",
+        components: {
+          default: () => import("src/pages/authentication/verification/option/phone/number/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "verification-option-phone-number"
+      },
+      {
+        path: "/verification/option/phone/code",
+        components: {
+          default: () => import("src/pages/authentication/verification/option/phone/code/index.vue"), topmenubar: DefaultMenuBar
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+          } as DefaultMenuBarProps
+        },
+        name: "verification-option-phone-code"
       },
       {
         path: "/verification/welcome",
@@ -192,7 +217,7 @@ const routes: RouteRecordRaw[] = [
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "verification-welcome"

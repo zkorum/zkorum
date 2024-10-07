@@ -7,6 +7,7 @@ import {
 } from "vue-router";
 
 import routes from "./routes";
+import { useStorage } from "@vueuse/core";
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -17,6 +18,9 @@ import routes from "./routes";
  */
 
 export default route(function (/* { store, ssrContext } */) {
+
+  const lastNavigatedRouteName = useStorage("last-navigated-route-name", "");
+
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === "history"
@@ -24,7 +28,7 @@ export default route(function (/* { store, ssrContext } */) {
       : createWebHashHistory;
 
   const Router = createRouter({
-    scrollBehavior: () => { // to, from, savedPosition
+    scrollBehavior: (from) => { // to, from, savedPosition
       /*
       if (to.name == "post-single") {
         if (savedPosition != null) {
@@ -32,6 +36,9 @@ export default route(function (/* { store, ssrContext } */) {
         }
       }
       */
+      lastNavigatedRouteName.value = from.name?.toString();
+      // console.log(lastNavigatedRouteName.value);
+
       return { left: 0, top: 0 };
     },
     routes,

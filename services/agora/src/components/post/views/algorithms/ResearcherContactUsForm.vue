@@ -20,13 +20,13 @@
 
         <div>
           <FloatLabel>
-            <InputText id="email" v-model="email" required :style="{ width: '100%' }" />
+            <InputText id="email" v-model="email" type="email" required :style="{ width: '100%' }" />
             <label for="email">Email</label>
           </FloatLabel>
         </div>
 
         <div>
-          <Textarea v-model="message" placeholder="Message (optional)" :style="{width: '100%'}" />
+          <Textarea v-model="message" placeholder="Message" :style="{width: '100%'}" required />
         </div>
 
         <ZKButton color="primary" label="Submit" type="submit" />

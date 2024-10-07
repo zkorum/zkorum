@@ -1,33 +1,28 @@
 import { useStorage } from "@vueuse/core";
-import { onMounted } from "vue";
-import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 
 export function useGoBackButtonHandler() {
   const router = useRouter();
-  const route = useRoute();
 
   const lastNavigatedRouteName = useStorage("last-navigated-route-name", "");
 
-  onMounted(() => {
-    lastNavigatedRouteName.value = "";
-  });
-
-  onBeforeRouteLeave(() => {
-    const routeName = route.name;
-    if (routeName == null || routeName == undefined) {
-      console.log("Failed to get route name");
-    } else {
-      lastNavigatedRouteName.value = routeName.toString();
-    }
-  });
+  const pullUpRouteNameList = ["settings-page", "help-page", "create-post"];
 
   function goBack() {
     if (lastNavigatedRouteName.value == "") {
       router.push({ name: "default-home-feed" });
     } else {
-      router.back();
+      if (pullUpRouteNameList.includes(lastNavigatedRouteName.value)) {
+        router.push({ name: "default-home-feed" });
+      } else {
+        router.back();
+      }
     }
   }
 
-  return { goBack, lastNavigatedRouteName };
+  function pushNewRoute(fromName: string) {
+    lastNavigatedRouteName.value = fromName;
+  }
+
+  return { goBack, pushNewRoute };
 }

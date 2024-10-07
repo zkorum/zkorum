@@ -9,8 +9,11 @@
 
 <script setup lang="ts">
 import { register } from "swiper/element/bundle";
+import { useGoBackButtonHandler } from "./utils/nav/goBackButton";
 
 register();
+
+useGoBackButtonHandler();
 
 defineOptions({
   name: "App",

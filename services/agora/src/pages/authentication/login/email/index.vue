@@ -43,41 +43,16 @@ import AuthContentWrapper from "src/components/authentication/AuthContentWrapper
 import InputText from "primevue/inputtext";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
-import { useBackendAuthApi } from "src/utils/api/auth";
-import { useQuasar } from "quasar";
-import { getPlatform } from "src/utils/common";
-import { useDialog } from "src/utils/ui/dialog";
 
-const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticationStore());
-
-const { emailLogin } = useBackendAuthApi();
+const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
 
 verificationEmailAddress.value = "";
 
 const router = useRouter();
-const diaglog = useDialog();
-
-const quasar = useQuasar();
 
 async function sendVerificationCode(email: string) {
-
-  if (process.env.USE_DUMMY_ACCESS == "true") {
-    email = "test@gmail.com";
-    verificationEmailAddress.value = email;
-  }
-
-  const response = await emailLogin(email, false, getPlatform(quasar.platform));
-  if (response.isSuccessful) {
-    router.push({ name: "login-verify" });
-  } else {
-    if (response.error == "already_logged_in") {
-      isAuthenticated.value = true;
-      diaglog.showMessage("Authentication", "User is already logged in");
-      router.push({ name: "default-home-feed" });
-    } else if (response.error == "throttled") {
-      diaglog.showMessage("Authentication", "Too many attempts. Please wait before attempting to login again");
-    }
-  }
+  verificationEmailAddress.value = email;
+  router.push({ name: "login-verify" });
 }
 
 </script>

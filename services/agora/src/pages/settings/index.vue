@@ -1,52 +1,90 @@
 <template>
   <div>
-    <ZKTitleBodyWrapper title="Settings">
+    <div class="container">
+      <div v-if="isAuthenticated">
+        <SettingsSection :settings-item-list="accountSettings" title="Account" />
+      </div>
 
-      <ZKCard v-if="isAuthenticated" padding="1rem">
-        <div v-for="item in settingsItemList" :key="item.icon" class="menuItem" @click="item.action">
-          <div>
-            <q-icon :name="item.icon" size="1.5rem" />
-          </div>
-          <div>
-            {{ item.label }}
-          </div>
-        </div>
-      </ZKCard>
-    </ZKTitleBodyWrapper>
+      <SettingsSection :settings-item-list="aboutSettings" title="About" />
+
+      <div v-if="isAuthenticated">
+        <SettingsSection :settings-item-list="supportSettings" title="Support" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import ZKCard from "src/components/ui-library/ZKCard.vue";
-import ZKTitleBodyWrapper from "src/components/ui-library/ZKTitleBodyWrapper.vue";
+import { useQuasar } from "quasar";
+import SettingsSection from "src/components/settings/SettingsSection.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
+import { useBackendAuthApi } from "src/utils/api/auth";
+import { getPlatform } from "src/utils/common";
+import { SettingsInterface } from "src/utils/component/settings/settings";
+import { useRouter } from "vue-router";
 
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
-interface SettingsInterface {
-  icon: string;
-  label: string;
-  action: () => void;
+const { userLogout } = useAuthenticationStore();
+
+const quasar = useQuasar();
+
+const backendAuth = useBackendAuthApi();
+const router = useRouter();
+
+function logoutRequested() {
+  backendAuth.logout("test@gmail.com", getPlatform(quasar.platform));
+  userLogout();
+  router.push({ name: "welcome" });
 }
 
-const settingsItemList: SettingsInterface[] = [
+const accountSettings: SettingsInterface[] = [
   {
-    icon: "mdi-ab-testing",
-    label: "Test",
-    action: () => { }
+    icon: "mdi-passport",
+    label: "Account verification",
+    action: () => { },
+    routeName: "verification-welcome"
+  },
+  {
+    icon: "mdi-logout",
+    label: "Log out",
+    action: logoutRequested,
+    routeName: "welcome"
+  }
+];
+
+const aboutSettings: SettingsInterface[] = [
+  {
+    icon: "mdi-key",
+    label: "Privacy policy",
+    action: () => { },
+    routeName: "privacy"
+  },
+  {
+    icon: "mdi-file-document",
+    label: "Terms of service",
+    action: () => { },
+    routeName: "terms"
+  }
+];
+
+const supportSettings: SettingsInterface[] = [
+  {
+    icon: "mdi-delete",
+    label: "Delete Account",
+    action: () => { },
+    routeName: ""
   }
 ];
 
 </script>
 
 <style scoped lang="scss">
-.menuItem {
-  display:flex;
-  gap: 2rem;
-  align-items: center;
-  font-size: 1rem;
-  cursor: pointer;
+.container {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 2rem;
 }
 
 </style>
