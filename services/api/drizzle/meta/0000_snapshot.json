@@ -1,5 +1,5 @@
 {
-  "id": "324b7176-3cad-4750-b64f-6b7fdc3dbb76",
+  "id": "67aa5364-e4f1-4f3d-83b8-79f79a2027b2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -82,83 +82,6 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
-    },
-    "citizen": {
-      "name": "citizen",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "citizenships": {
-          "name": "citizenships",
-          "type": "country_code[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "age_group": {
-          "name": "age_group",
-          "type": "age_group",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sex": {
-          "name": "sex",
-          "type": "sex",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (0)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (0)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "citizen_user_id_user_id_fk": {
-          "name": "citizen_user_id_user_id_fk",
-          "tableFrom": "citizen",
-          "tableTo": "user",
-          "schemaTo": "public",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "citizen_user_id_unique": {
-          "name": "citizen_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
-        }
-      }
     },
     "commentContent": {
       "name": "commentContent",
@@ -489,15 +412,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "likes": {
-          "name": "likes",
+        "num_likes": {
+          "name": "num_likes",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
         },
-        "dislikes": {
-          "name": "dislikes",
+        "num_dislikes": {
+          "name": "num_dislikes",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -745,9 +668,9 @@
           "primaryKey": true,
           "notNull": true
         },
-        "citizen_id": {
-          "name": "citizen_id",
-          "type": "integer",
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -786,13 +709,13 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "id_proof_citizen_id_citizen_id_fk": {
-          "name": "id_proof_citizen_id_citizen_id_fk",
+        "id_proof_user_id_user_id_fk": {
+          "name": "id_proof_user_id_user_id_fk",
           "tableFrom": "id_proof",
-          "tableTo": "citizen",
+          "tableTo": "user",
           "schemaTo": "public",
           "columnsFrom": [
-            "citizen_id"
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -882,6 +805,204 @@
           "schemaTo": "public",
           "columnsFrom": [
             "moderator_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "organisation": {
+      "name": "organisation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(65)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website_url": {
+          "name": "website_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(280)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "passport": {
+      "name": "passport",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "citizenship": {
+          "name": "citizenship",
+          "type": "country_code",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "age_group": {
+          "name": "age_group",
+          "type": "age_group",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sex": {
+          "name": "sex",
+          "type": "sex",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "passport_user_id_user_id_fk": {
+          "name": "passport_user_id_user_id_fk",
+          "tableFrom": "passport",
+          "tableTo": "user",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "phone": {
+      "name": "phone",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_two_digits": {
+          "name": "last_two_digits",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "country_code": {
+          "name": "country_code",
+          "type": "country_code",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hashed_phone": {
+          "name": "hashed_phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "salt": {
+          "name": "salt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "phone_user_id_user_id_fk": {
+          "name": "phone_user_id_user_id_fk",
+          "tableFrom": "phone",
+          "tableTo": "user",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -1183,44 +1304,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "option1_response": {
-          "name": "option1_response",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "option2_response": {
-          "name": "option2_response",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "option3_response": {
-          "name": "option3_response",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "option4_response": {
-          "name": "option4_response",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "option5_response": {
-          "name": "option5_response",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "option6_response": {
-          "name": "option6_response",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp (0)",
@@ -1348,6 +1431,44 @@
         "option6": {
           "name": "option6",
           "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "option1_response": {
+          "name": "option1_response",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "option2_response": {
+          "name": "option2_response",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "option3_response": {
+          "name": "option3_response",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "option4_response": {
+          "name": "option4_response",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "option5_response": {
+          "name": "option5_response",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "option6_response": {
+          "name": "option6_response",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -1521,89 +1642,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "post_proof_id"
-          ]
-        }
-      }
-    },
-    "post_creator": {
-      "name": "post_creator",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(65)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "picture_url": {
-          "name": "picture_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "website_url": {
-          "name": "website_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "varchar(280)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (0)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (0)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "post_creator_user_id_user_id_fk": {
-          "name": "post_creator_user_id_user_id_fk",
-          "tableFrom": "post_creator",
-          "tableTo": "user",
-          "schemaTo": "public",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "post_creator_user_id_unique": {
-          "name": "post_creator_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
           ]
         }
       }
@@ -1944,14 +1982,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "citizen_id": {
-          "name": "citizen_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "post_creator_id": {
-          "name": "post_creator_id",
+        "organisation_id": {
+          "name": "organisation_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -1973,27 +2005,13 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "user_citizen_id_citizen_id_fk": {
-          "name": "user_citizen_id_citizen_id_fk",
+        "user_organisation_id_organisation_id_fk": {
+          "name": "user_organisation_id_organisation_id_fk",
           "tableFrom": "user",
-          "tableTo": "citizen",
+          "tableTo": "organisation",
           "schemaTo": "public",
           "columnsFrom": [
-            "citizen_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "user_post_creator_id_post_creator_id_fk": {
-          "name": "user_post_creator_id_post_creator_id_fk",
-          "tableFrom": "user",
-          "tableTo": "post_creator",
-          "schemaTo": "public",
-          "columnsFrom": [
-            "post_creator_id"
+            "organisation_id"
           ],
           "columnsTo": [
             "id"
@@ -2003,22 +2021,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "user_citizen_id_unique": {
-          "name": "user_citizen_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "citizen_id"
-          ]
-        },
-        "user_post_creator_id_unique": {
-          "name": "user_post_creator_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "post_creator_id"
-          ]
-        }
-      }
+      "uniqueConstraints": {}
     },
     "vote_content": {
       "name": "vote_content",
@@ -2659,6 +2662,247 @@
         "a": "a",
         "m": "m",
         "nothing": "nothing"
+      }
+    },
+    "phone_country_code": {
+      "name": "phone_country_code",
+      "values": {
+        "1": "1",
+        "7": "7",
+        "20": "20",
+        "27": "27",
+        "30": "30",
+        "31": "31",
+        "32": "32",
+        "33": "33",
+        "34": "34",
+        "36": "36",
+        "39": "39",
+        "40": "40",
+        "41": "41",
+        "43": "43",
+        "44": "44",
+        "45": "45",
+        "46": "46",
+        "47": "47",
+        "48": "48",
+        "49": "49",
+        "51": "51",
+        "52": "52",
+        "53": "53",
+        "54": "54",
+        "55": "55",
+        "56": "56",
+        "57": "57",
+        "58": "58",
+        "60": "60",
+        "61": "61",
+        "62": "62",
+        "63": "63",
+        "64": "64",
+        "65": "65",
+        "66": "66",
+        "76": "76",
+        "77": "77",
+        "81": "81",
+        "82": "82",
+        "84": "84",
+        "86": "86",
+        "90": "90",
+        "91": "91",
+        "92": "92",
+        "93": "93",
+        "94": "94",
+        "95": "95",
+        "98": "98",
+        "211": "211",
+        "212": "212",
+        "213": "213",
+        "216": "216",
+        "218": "218",
+        "220": "220",
+        "221": "221",
+        "222": "222",
+        "223": "223",
+        "224": "224",
+        "225": "225",
+        "226": "226",
+        "227": "227",
+        "228": "228",
+        "229": "229",
+        "230": "230",
+        "231": "231",
+        "232": "232",
+        "233": "233",
+        "234": "234",
+        "235": "235",
+        "236": "236",
+        "237": "237",
+        "238": "238",
+        "239": "239",
+        "240": "240",
+        "241": "241",
+        "242": "242",
+        "243": "243",
+        "244": "244",
+        "245": "245",
+        "246": "246",
+        "248": "248",
+        "249": "249",
+        "250": "250",
+        "251": "251",
+        "252": "252",
+        "253": "253",
+        "254": "254",
+        "255": "255",
+        "256": "256",
+        "257": "257",
+        "258": "258",
+        "260": "260",
+        "261": "261",
+        "262": "262",
+        "263": "263",
+        "264": "264",
+        "265": "265",
+        "266": "266",
+        "267": "267",
+        "268": "268",
+        "269": "269",
+        "290": "290",
+        "291": "291",
+        "297": "297",
+        "298": "298",
+        "299": "299",
+        "350": "350",
+        "351": "351",
+        "352": "352",
+        "353": "353",
+        "354": "354",
+        "355": "355",
+        "356": "356",
+        "357": "357",
+        "358": "358",
+        "359": "359",
+        "370": "370",
+        "371": "371",
+        "372": "372",
+        "373": "373",
+        "374": "374",
+        "375": "375",
+        "376": "376",
+        "377": "377",
+        "378": "378",
+        "379": "379",
+        "380": "380",
+        "381": "381",
+        "382": "382",
+        "383": "383",
+        "385": "385",
+        "386": "386",
+        "387": "387",
+        "389": "389",
+        "420": "420",
+        "421": "421",
+        "423": "423",
+        "500": "500",
+        "501": "501",
+        "502": "502",
+        "503": "503",
+        "504": "504",
+        "505": "505",
+        "506": "506",
+        "507": "507",
+        "508": "508",
+        "509": "509",
+        "590": "590",
+        "591": "591",
+        "592": "592",
+        "593": "593",
+        "594": "594",
+        "595": "595",
+        "596": "596",
+        "597": "597",
+        "598": "598",
+        "670": "670",
+        "672": "672",
+        "673": "673",
+        "674": "674",
+        "675": "675",
+        "676": "676",
+        "677": "677",
+        "678": "678",
+        "679": "679",
+        "680": "680",
+        "681": "681",
+        "682": "682",
+        "683": "683",
+        "685": "685",
+        "686": "686",
+        "687": "687",
+        "688": "688",
+        "689": "689",
+        "690": "690",
+        "691": "691",
+        "692": "692",
+        "850": "850",
+        "852": "852",
+        "853": "853",
+        "855": "855",
+        "856": "856",
+        "880": "880",
+        "886": "886",
+        "960": "960",
+        "961": "961",
+        "962": "962",
+        "963": "963",
+        "964": "964",
+        "965": "965",
+        "966": "966",
+        "967": "967",
+        "968": "968",
+        "970": "970",
+        "971": "971",
+        "972": "972",
+        "973": "973",
+        "974": "974",
+        "975": "975",
+        "976": "976",
+        "977": "977",
+        "992": "992",
+        "993": "993",
+        "994": "994",
+        "995": "995",
+        "996": "996",
+        "998": "998",
+        "1242": "1242",
+        "1246": "1246",
+        "1264": "1264",
+        "1268": "1268",
+        "1284": "1284",
+        "1340": "1340",
+        "1345": "1345",
+        "1441": "1441",
+        "1473": "1473",
+        "1649": "1649",
+        "1664": "1664",
+        "1670": "1670",
+        "1671": "1671",
+        "1684": "1684",
+        "1721": "1721",
+        "1758": "1758",
+        "1767": "1767",
+        "1784": "1784",
+        "1787": "1787",
+        "1809": "1809",
+        "1829": "1829",
+        "1849": "1849",
+        "1868": "1868",
+        "1869": "1869",
+        "1876": "1876",
+        "1939": "1939",
+        "4779": "4779",
+        "5997": "5997",
+        "5999": "5999"
       }
     },
     "proof_type": {

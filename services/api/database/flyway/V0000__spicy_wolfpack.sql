@@ -35,6 +35,12 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ CREATE TYPE "phone_country_code" AS ENUM('1', '7', '20', '27', '30', '31', '32', '33', '34', '36', '39', '40', '41', '43', '44', '45', '46', '47', '48', '49', '51', '52', '53', '54', '55', '56', '57', '58', '60', '61', '62', '63', '64', '65', '66', '76', '77', '81', '82', '84', '86', '90', '91', '92', '93', '94', '95', '98', '211', '212', '213', '216', '218', '220', '221', '222', '223', '224', '225', '226', '227', '228', '229', '230', '231', '232', '233', '234', '235', '236', '237', '238', '239', '240', '241', '242', '243', '244', '245', '246', '248', '249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '260', '261', '262', '263', '264', '265', '266', '267', '268', '269', '290', '291', '297', '298', '299', '350', '351', '352', '353', '354', '355', '356', '357', '358', '359', '370', '371', '372', '373', '374', '375', '376', '377', '378', '379', '380', '381', '382', '383', '385', '386', '387', '389', '420', '421', '423', '500', '501', '502', '503', '504', '505', '506', '507', '508', '509', '590', '591', '592', '593', '594', '595', '596', '597', '598', '670', '672', '673', '674', '675', '676', '677', '678', '679', '680', '681', '682', '683', '685', '686', '687', '688', '689', '690', '691', '692', '850', '852', '853', '855', '856', '880', '886', '960', '961', '962', '963', '964', '965', '966', '967', '968', '970', '971', '972', '973', '974', '975', '976', '977', '992', '993', '994', '995', '996', '998', '1242', '1246', '1264', '1268', '1284', '1340', '1345', '1441', '1473', '1649', '1664', '1670', '1671', '1684', '1721', '1758', '1767', '1784', '1787', '1809', '1829', '1849', '1868', '1869', '1876', '1939', '4779', '5997', '5999');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  CREATE TYPE "proof_type" AS ENUM('creation', 'edit', 'deletion');
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -70,17 +76,6 @@ CREATE TABLE IF NOT EXISTS "auth_attempt" (
 	"last_email_sent_at" timestamp NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "citizen" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"user_id" uuid NOT NULL,
-	"citizenships" country_code[],
-	"age_group" "age_group",
-	"sex" "sex",
-	"created_at" timestamp (0) DEFAULT now() NOT NULL,
-	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
-	CONSTRAINT "citizen_user_id_unique" UNIQUE("user_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "commentContent" (
@@ -120,8 +115,8 @@ CREATE TABLE IF NOT EXISTS "comment" (
 	"author_id" uuid NOT NULL,
 	"post_id" integer NOT NULL,
 	"current_content_id" integer,
-	"likes" integer DEFAULT 0 NOT NULL,
-	"dislikes" integer DEFAULT 0 NOT NULL,
+	"num_likes" integer DEFAULT 0 NOT NULL,
+	"num_dislikes" integer DEFAULT 0 NOT NULL,
 	"is_hidden" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
@@ -150,7 +145,7 @@ CREATE TABLE IF NOT EXISTS "email" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "id_proof" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"citizen_id" integer NOT NULL,
+	"user_id" uuid NOT NULL,
 	"proof_type" "proof_type" NOT NULL,
 	"proof" text NOT NULL,
 	"proof_version" integer NOT NULL,
@@ -165,6 +160,37 @@ CREATE TABLE IF NOT EXISTS "moderation_table" (
 	"moderation_action" "moderation_action" NOT NULL,
 	"moderation_reason" "moderation_reason_enum" NOT NULL,
 	"moderation_explanation" varchar(140),
+	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "organisation" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" varchar(65) NOT NULL,
+	"image_url" text,
+	"website_url" text,
+	"description" varchar(280),
+	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "passport" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" uuid NOT NULL,
+	"citizenship" "country_code" NOT NULL,
+	"age_group" "age_group",
+	"sex" "sex",
+	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "phone" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" uuid NOT NULL,
+	"last_two_digits" varchar(2) NOT NULL,
+	"country_code" "country_code" NOT NULL,
+	"hashed_phone" text NOT NULL,
+	"salt" text NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL
 );
@@ -200,12 +226,6 @@ CREATE TABLE IF NOT EXISTS "poll_response" (
 	"author_id" uuid NOT NULL,
 	"post_id" integer NOT NULL,
 	"current_content_id" integer,
-	"option1_response" integer DEFAULT 0 NOT NULL,
-	"option2_response" integer DEFAULT 0 NOT NULL,
-	"option3_response" integer,
-	"option4_response" integer,
-	"option5_response" integer,
-	"option6_response" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
 	CONSTRAINT "poll_response_post_id_unique" UNIQUE("post_id"),
@@ -221,6 +241,12 @@ CREATE TABLE IF NOT EXISTS "poll" (
 	"option4" varchar(30),
 	"option5" varchar(30),
 	"option6" varchar(30),
+	"option1_response" integer DEFAULT 0 NOT NULL,
+	"option2_response" integer DEFAULT 0 NOT NULL,
+	"option3_response" integer,
+	"option4_response" integer,
+	"option5_response" integer,
+	"option6_response" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
 	CONSTRAINT "poll_post_content_id_unique" UNIQUE("post_content_id")
@@ -237,18 +263,6 @@ CREATE TABLE IF NOT EXISTS "post_content" (
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
 	CONSTRAINT "post_content_post_proof_id_unique" UNIQUE("post_proof_id")
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "post_creator" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"user_id" uuid NOT NULL,
-	"name" varchar(65) NOT NULL,
-	"picture_url" text,
-	"website_url" text,
-	"description" varchar(280),
-	"created_at" timestamp (0) DEFAULT now() NOT NULL,
-	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
-	CONSTRAINT "post_creator_user_id_unique" UNIQUE("user_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "post_proof" (
@@ -290,12 +304,9 @@ CREATE TABLE IF NOT EXISTS "report_table" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"citizen_id" integer,
-	"post_creator_id" integer,
+	"organisation_id" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
-	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
-	CONSTRAINT "user_citizen_id_unique" UNIQUE("citizen_id"),
-	CONSTRAINT "user_post_creator_id_unique" UNIQUE("post_creator_id")
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "vote_content" (
@@ -330,12 +341,6 @@ CREATE TABLE IF NOT EXISTS "vote" (
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL
 );
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "citizen" ADD CONSTRAINT "citizen_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "commentContent" ADD CONSTRAINT "commentContent_comment_id_comment_id_fk" FOREIGN KEY ("comment_id") REFERENCES "public"."comment"("id") ON DELETE no action ON UPDATE no action;
@@ -422,7 +427,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "id_proof" ADD CONSTRAINT "id_proof_citizen_id_citizen_id_fk" FOREIGN KEY ("citizen_id") REFERENCES "public"."citizen"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "id_proof" ADD CONSTRAINT "id_proof_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -435,6 +440,18 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "moderation_table" ADD CONSTRAINT "moderation_table_moderator_id_user_id_fk" FOREIGN KEY ("moderator_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "passport" ADD CONSTRAINT "passport_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "phone" ADD CONSTRAINT "phone_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -536,12 +553,6 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "post_creator" ADD CONSTRAINT "post_creator_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
  ALTER TABLE "post_proof" ADD CONSTRAINT "post_proof_post_id_post_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."post"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -590,13 +601,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "user" ADD CONSTRAINT "user_citizen_id_citizen_id_fk" FOREIGN KEY ("citizen_id") REFERENCES "public"."citizen"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "user" ADD CONSTRAINT "user_post_creator_id_post_creator_id_fk" FOREIGN KEY ("post_creator_id") REFERENCES "public"."post_creator"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "user" ADD CONSTRAINT "user_organisation_id_organisation_id_fk" FOREIGN KEY ("organisation_id") REFERENCES "public"."organisation"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
