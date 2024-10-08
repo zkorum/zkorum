@@ -260,7 +260,21 @@ export interface ApiV1CommentFetchMorePost200ResponseCommentsInner {
      * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
      */
     'numDislikes': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
+     */
+    'optionChosen'?: ApiV1CommentFetchMorePost200ResponseCommentsInnerOptionChosenEnum;
 }
+
+export const ApiV1CommentFetchMorePost200ResponseCommentsInnerOptionChosenEnum = {
+    Like: 'like',
+    Dislike: 'dislike'
+} as const;
+
+export type ApiV1CommentFetchMorePost200ResponseCommentsInnerOptionChosenEnum = typeof ApiV1CommentFetchMorePost200ResponseCommentsInnerOptionChosenEnum[keyof typeof ApiV1CommentFetchMorePost200ResponseCommentsInnerOptionChosenEnum];
+
 /**
  * 
  * @export
@@ -288,10 +302,10 @@ export interface ApiV1CommentFetchMorePostRequest {
 export interface ApiV1CommentFetchToVoteOnPost200Response {
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<ApiV1CommentFetchMorePost200ResponseCommentsInner>}
      * @memberof ApiV1CommentFetchToVoteOnPost200Response
      */
-    'assignedCommentSlugIds': Array<string>;
+    'assignedComments': Array<ApiV1CommentFetchMorePost200ResponseCommentsInner>;
 }
 /**
  * 
@@ -305,12 +319,6 @@ export interface ApiV1CommentFetchToVoteOnPostRequest {
      * @memberof ApiV1CommentFetchToVoteOnPostRequest
      */
     'postSlugId': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CommentFetchToVoteOnPostRequest
-     */
-    'showHidden'?: boolean;
     /**
      * 
      * @type {number}

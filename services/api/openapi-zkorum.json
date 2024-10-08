@@ -576,6 +576,13 @@
                                                     "numDislikes": {
                                                         "type": "integer",
                                                         "minimum": 0
+                                                    },
+                                                    "optionChosen": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "like",
+                                                            "dislike"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -667,6 +674,13 @@
                                                     "numDislikes": {
                                                         "type": "integer",
                                                         "minimum": 0
+                                                    },
+                                                    "optionChosen": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "like",
+                                                            "dislike"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -704,9 +718,6 @@
                                         "type": "string",
                                         "maxLength": 10
                                     },
-                                    "showHidden": {
-                                        "type": "boolean"
-                                    },
                                     "numberOfCommentsToFetch": {
                                         "type": "integer",
                                         "exclusiveMinimum": true,
@@ -731,16 +742,61 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "assignedCommentSlugIds": {
+                                        "assignedComments": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string",
-                                                "maxLength": 10
+                                                "type": "object",
+                                                "properties": {
+                                                    "commentSlugId": {
+                                                        "type": "string",
+                                                        "maxLength": 10
+                                                    },
+                                                    "isHidden": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "comment": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 280
+                                                    },
+                                                    "numLikes": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    },
+                                                    "numDislikes": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    },
+                                                    "optionChosen": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "like",
+                                                            "dislike"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "commentSlugId",
+                                                    "createdAt",
+                                                    "updatedAt",
+                                                    "comment",
+                                                    "numLikes",
+                                                    "numDislikes"
+                                                ],
+                                                "additionalProperties": false
                                             }
                                         }
                                     },
                                     "required": [
-                                        "assignedCommentSlugIds"
+                                        "assignedComments"
                                     ],
                                     "additionalProperties": false
                                 }
