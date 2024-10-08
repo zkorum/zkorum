@@ -19,9 +19,10 @@ import fs from "fs";
 import postgres from "postgres";
 import { config, server } from "./app.js";
 import { DrizzleFastifyLogger } from "./logger.js";
-// import { Service } from "./service/service.js";
-import * as authUtilService from "@/service/authUtil.js";
 import * as authService from "@/service/auth.js";
+import * as authUtilService from "@/service/authUtil.js";
+import * as feedService from "@/service/feed.js";
+import * as postService from "@/service/post.js";
 import {
     httpMethodToAbility,
     httpUrlToResourcePointer,
@@ -330,57 +331,23 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/post/create`, {
-            schema: {
-                body: Dto.createPostRequest,
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                    },
-                });
-                // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
-                // TODO
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/poll/respond`, {
-            schema: {
-                body: Dto.respondPollRequest,
-                // response: {
-                //     200: Dto.pollRespond200,
-                // },
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                    },
-                });
-                //TODO
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
         .post(`/api/${apiVersion}/feed/fetchMore`, {
             schema: {
                 body: Dto.fetchFeedRequest,
-                // response: {
-                //     200: Dto.fetchFeed200,
-                // },
+                response: {
+                    200: Dto.fetchFeed200,
+                },
             },
             handler: async (request, _reply) => {
-                // return await Service.fetchFeed({
-                //     db: db,
-                //     order: "more",
-                //     showHidden: request.body.showHidden,
-                //     lastReactedAt:
-                //         request.body.lastReactedAt !== undefined
-                //             ? new Date(request.body.lastReactedAt)
-                //             : undefined,
-                // });
+                return await feedService.fetchFeed({
+                    db: db,
+                    order: "more",
+                    showHidden: request.body.showHidden,
+                    lastReactedAt:
+                        request.body.lastReactedAt !== undefined
+                            ? new Date(request.body.lastReactedAt)
+                            : undefined,
+                });
             },
         });
     server
@@ -388,163 +355,20 @@ server.after(() => {
         .post(`/api/${apiVersion}/feed/fetchRecent`, {
             schema: {
                 body: Dto.fetchFeedRequest,
-                // response: {
-                //     200: Dto.fetchFeed200,
-                // },
+                response: {
+                    200: Dto.fetchFeed200,
+                },
             },
             handler: async (request, _reply) => {
-                // return await Service.fetchFeed({
-                //     db: db,
-                //     order: "recent",
-                //     showHidden: request.body.showHidden,
-                //     lastReactedAt:
-                //         request.body.lastReactedAt !== undefined
-                //             ? new Date(request.body.lastReactedAt)
-                //             : undefined,
-                // });
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/moderation/hidePost`, {
-            schema: {
-                body: Dto.moderatePostRequest,
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                    },
+                return await feedService.fetchFeed({
+                    db: db,
+                    order: "recent",
+                    showHidden: request.body.showHidden,
+                    lastReactedAt:
+                        request.body.lastReactedAt !== undefined
+                            ? new Date(request.body.lastReactedAt)
+                            : undefined,
                 });
-                // const isAdmin = await authUtilService.isAdmin(db, didWrite);
-                // if (isAdmin !== true) {
-                //     throw server.httpErrors.forbidden(
-                //         "Only admin can moderate content"
-                //     );
-                // }
-                // await Service.hidePost({
-                //     db: db,
-                //     pollUid: request.body.pollUid,
-                // });
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/moderation/unhidePost`, {
-            schema: {
-                body: Dto.moderatePostRequest,
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                    },
-                });
-                // const isAdmin = await authUtilService.isAdmin(db, didWrite);
-                // if (isAdmin !== true) {
-                //     throw server.httpErrors.forbidden(
-                //         "Only admin can moderate content"
-                //     );
-                // }
-                // await Service.unhidePost({
-                //     db: db,
-                //     pollUid: request.body.pollUid,
-                // });
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/moderation/hideComment`, {
-            schema: {
-                body: Dto.moderateCommentRequest,
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                    },
-                });
-                // const canModeratePost = await authUtilService.canModeratePost(db, didWrite, request.body.postSlugId);
-                // if (canModeratePost !== true) {
-                //     throw server.httpErrors.forbidden(
-                //         "User cannot moderate this post"
-                //     );
-                // }
-                // await Service.hideComment({
-                //     db: db,
-                //     commentSlugId: request.body.commentSlugId,
-                // });
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/moderation/unhideComment`, {
-            schema: {
-                body: Dto.moderateCommentRequest,
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                    },
-                });
-                // const canModeratePost = await authUtilService.canModeratePost(db, didWrite, request.body.postSlugId);
-                // if (canModeratePost !== true) {
-                //     throw server.httpErrors.forbidden(
-                //         "User cannot moderate this post"
-                //     );
-                // }
-                // await Service.unhideComment({
-                //     db: db,
-                //     commentSlugId: request.body.commentSlugId,
-                // });
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/comment/create`, {
-            schema: {
-                body: Dto.commentRequest,
-            },
-            handler: async (request, _reply) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                    },
-                });
-                // await Service.createComment({
-                //     db: db,
-                //     payload: request.body.payload,
-                //     httpErrors: server.httpErrors,
-                //     nlpBaseUrl: config.NLP_BASE_URL,
-                // });
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/post/fetch`, {
-            schema: {
-                body: Dto.postFetchRequest,
-                // response: {
-                //     200: Dto.postFetch200,
-                // },
-            },
-            handler: async (request, _reply) => {
-                // anonymous request, no auth
-                // const { post, postId } = await Service.fetchPostByUidOrSlugId({
-                //     db: db,
-                //     postUidOrSlugId: request.body.postSlugId,
-                //     type: "slugId",
-                //     httpErrors: server.httpErrors,
-                // });
-                // const comments = await Service.fetchCommentsByPostId({
-                //     db: db,
-                //     postId: postId,
-                //     order: "more",
-                //     showHidden: true,
-                //     updatedAt: undefined,
-                // });
-                // return { post, comments };
             },
         });
     server
@@ -552,28 +376,23 @@ server.after(() => {
         .post(`/api/${apiVersion}/comment/fetchMore`, {
             schema: {
                 body: Dto.commentFetchFeedRequest,
-                // response: {
-                //     200: Dto.commentFetchFeed200,
-                // },
+                response: {
+                    200: Dto.commentFetchFeed200,
+                },
             },
             handler: async (request, _reply) => {
                 // anonymous request, no auth
-                // const postId = await Service.getPostIdFromSlugId({
-                //     db,
-                //     slugId: request.body.postSlugId,
-                //     httpErrors: server.httpErrors,
-                // });
-                // const comments = await Service.fetchCommentsByPostId({
-                //     db: db,
-                //     postId: postId,
-                //     order: "more",
-                //     showHidden: true,
-                //     updatedAt:
-                //         request.body.updatedAt !== undefined
-                //             ? new Date(request.body.updatedAt)
-                //             : undefined,
-                // });
-                // return { comments };
+                const comments = await postService.fetchCommentsByPostSlugId({
+                    db: db,
+                    postSlugId: request.body.postSlugId,
+                    order: "more",
+                    showHidden: true,
+                    createdAt:
+                        request.body.createdAt !== undefined
+                            ? new Date(request.body.createdAt)
+                            : undefined,
+                });
+                return { comments };
             },
         });
     server
@@ -581,30 +400,234 @@ server.after(() => {
         .post(`/api/${apiVersion}/comment/fetchRecent`, {
             schema: {
                 body: Dto.commentFetchFeedRequest,
-                // response: {
-                //     200: Dto.commentFetchFeed200,
-                // },
+                response: {
+                    200: Dto.commentFetchFeed200,
+                },
             },
             handler: async (request, _reply) => {
                 // anonymous request, no auth
-                // const postId = await Service.getPostIdFromSlugId({
-                //     db,
-                //     slugId: request.body.postSlugId,
-                //     httpErrors: server.httpErrors,
-                // });
-                // const comments = await Service.fetchCommentsByPostId({
-                //     db: db,
-                //     postId: postId,
-                //     order: "recent",
-                //     showHidden: true,
-                //     updatedAt:
-                //         request.body.updatedAt !== undefined
-                //             ? new Date(request.body.updatedAt)
-                //             : undefined,
-                // });
-                // return { comments };
+                const comments = await postService.fetchCommentsByPostSlugId({
+                    db: db,
+                    postSlugId: request.body.postSlugId,
+                    order: "recent",
+                    showHidden: true,
+                    createdAt:
+                        request.body.createdAt !== undefined
+                            ? new Date(request.body.createdAt)
+                            : undefined,
+                });
+                return { comments };
             },
         });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/comment/fetchToVoteOn`, {
+            schema: {
+                body: Dto.commentFetchToVoteOnRequest,
+                response: {
+                    200: Dto.commentFetchToVoteOn200,
+                },
+            },
+            handler: async (request, _reply) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: undefined,
+                    },
+                });
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const { userId } = status
+                    const comments = await postService.fetchNextCommentsToVoteOn({
+                        db: db,
+                        userId: userId,
+                        postSlugId: request.body.postSlugId,
+                        showHidden: false,
+                        numberOfCommentsToFetch: request.body.numberOfCommentsToFetch !== undefined ? request.body.numberOfCommentsToFetch : 3,
+                        httpErrors: server.httpErrors
+                    });
+                    return comments;
+                }
+            },
+        });
+    // server
+    //     .withTypeProvider<ZodTypeProvider>()
+    //     .post(`/api/${apiVersion}/post/create`, {
+    //         schema: {
+    //             body: Dto.createPostRequest,
+    //         },
+    //         handler: async (request, _reply) => {
+    //             const didWrite = await verifyUCAN(db, request, {
+    //                 expectedDeviceStatus: {
+    //                     isLoggedIn: true,
+    //                 },
+    //             });
+    //             // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
+    //             // TODO
+    //         },
+    //     });
+    // server
+    //     .withTypeProvider<ZodTypeProvider>()
+    //     .post(`/api/${apiVersion}/poll/respond`, {
+    //         schema: {
+    //             body: Dto.respondPollRequest,
+    //             // response: {
+    //             //     200: Dto.pollRespond200,
+    //             // },
+    //         },
+    //         handler: async (request, _reply) => {
+    //             const didWrite = await verifyUCAN(db, request, {
+    //                 expectedDeviceStatus: {
+    //                     isLoggedIn: true,
+    //                 },
+    //             });
+    //             //TODO
+    //         },
+    //     });
+    // server
+    //     .withTypeProvider<ZodTypeProvider>()
+    //     .post(`/api/${apiVersion}/moderation/hidePost`, {
+    //         schema: {
+    //             body: Dto.moderatePostRequest,
+    //         },
+    //         handler: async (request, _reply) => {
+    //             const didWrite = await verifyUCAN(db, request, {
+    //                 expectedDeviceStatus: {
+    //                     isLoggedIn: true,
+    //                 },
+    //             });
+    //             // const isAdmin = await authUtilService.isAdmin(db, didWrite);
+    //             // if (isAdmin !== true) {
+    //             //     throw server.httpErrors.forbidden(
+    //             //         "Only admin can moderate content"
+    //             //     );
+    //             // }
+    //             // await Service.hidePost({
+    //             //     db: db,
+    //             //     pollUid: request.body.pollUid,
+    //             // });
+    //         },
+    //     });
+    // server
+    //     .withTypeProvider<ZodTypeProvider>()
+    //     .post(`/api/${apiVersion}/moderation/unhidePost`, {
+    //         schema: {
+    //             body: Dto.moderatePostRequest,
+    //         },
+    //         handler: async (request, _reply) => {
+    //             const didWrite = await verifyUCAN(db, request, {
+    //                 expectedDeviceStatus: {
+    //                     isLoggedIn: true,
+    //                 },
+    //             });
+    //             // const isAdmin = await authUtilService.isAdmin(db, didWrite);
+    //             // if (isAdmin !== true) {
+    //             //     throw server.httpErrors.forbidden(
+    //             //         "Only admin can moderate content"
+    //             //     );
+    //             // }
+    //             // await Service.unhidePost({
+    //             //     db: db,
+    //             //     pollUid: request.body.pollUid,
+    //             // });
+    //         },
+    //     });
+    // server
+    //     .withTypeProvider<ZodTypeProvider>()
+    //     .post(`/api/${apiVersion}/moderation/hideComment`, {
+    //         schema: {
+    //             body: Dto.moderateCommentRequest,
+    //         },
+    //         handler: async (request, _reply) => {
+    //             const didWrite = await verifyUCAN(db, request, {
+    //                 expectedDeviceStatus: {
+    //                     isLoggedIn: true,
+    //                 },
+    //             });
+    //             // const canModeratePost = await authUtilService.canModeratePost(db, didWrite, request.body.postSlugId);
+    //             // if (canModeratePost !== true) {
+    //             //     throw server.httpErrors.forbidden(
+    //             //         "User cannot moderate this post"
+    //             //     );
+    //             // }
+    //             // await Service.hideComment({
+    //             //     db: db,
+    //             //     commentSlugId: request.body.commentSlugId,
+    //             // });
+    //         },
+    //     });
+    // server
+    //     .withTypeProvider<ZodTypeProvider>()
+    //     .post(`/api/${apiVersion}/moderation/unhideComment`, {
+    //         schema: {
+    //             body: Dto.moderateCommentRequest,
+    //         },
+    //         handler: async (request, _reply) => {
+    //             const didWrite = await verifyUCAN(db, request, {
+    //                 expectedDeviceStatus: {
+    //                     isLoggedIn: true,
+    //                 },
+    //             });
+    //             // const canModeratePost = await authUtilService.canModeratePost(db, didWrite, request.body.postSlugId);
+    //             // if (canModeratePost !== true) {
+    //             //     throw server.httpErrors.forbidden(
+    //             //         "User cannot moderate this post"
+    //             //     );
+    //             // }
+    //             // await Service.unhideComment({
+    //             //     db: db,
+    //             //     commentSlugId: request.body.commentSlugId,
+    //             // });
+    //         },
+    //     });
+    // server
+    //     .withTypeProvider<ZodTypeProvider>()
+    //     .post(`/api/${apiVersion}/comment/create`, {
+    //         schema: {
+    //             body: Dto.commentRequest,
+    //         },
+    //         handler: async (request, _reply) => {
+    //             const didWrite = await verifyUCAN(db, request, {
+    //                 expectedDeviceStatus: {
+    //                     isLoggedIn: true,
+    //                 },
+    //             });
+    //             // await Service.createComment({
+    //             //     db: db,
+    //             //     payload: request.body.payload,
+    //             //     httpErrors: server.httpErrors,
+    //             //     nlpBaseUrl: config.NLP_BASE_URL,
+    //             // });
+    //         },
+    //     });
+    // server
+    //     .withTypeProvider<ZodTypeProvider>()
+    //     .post(`/api/${apiVersion}/post/fetch`, {
+    //         schema: {
+    //             body: Dto.postFetchRequest,
+    //             // response: {
+    //             //     200: Dto.postFetch200,
+    //             // },
+    //         },
+    //         handler: async (request, _reply) => {
+    //             // anonymous request, no auth
+    //             // const { post, postId } = await Service.fetchPostByUidOrSlugId({
+    //             //     db: db,
+    //             //     postUidOrSlugId: request.body.postSlugId,
+    //             //     type: "slugId",
+    //             //     httpErrors: server.httpErrors,
+    //             // });
+    //             // const comments = await Service.fetchCommentsByPostId({
+    //             //     db: db,
+    //             //     postId: postId,
+    //             //     order: "more",
+    //             //     showHidden: true,
+    //             //     updatedAt: undefined,
+    //             // });
+    //             // return { post, comments };
+    //         },
+    //     });
 });
 
 server.ready((e) => {

@@ -1,5 +1,5 @@
 import { codeToString, generateOneTimeCode, generateRandomHex, generateUUID } from "@/crypto.js";
-import { authAttemptTable, citizenTable, deviceTable, emailTable, userTable } from "@/schema.js";
+import { authAttemptTable, deviceTable, emailTable, userTable } from "@/schema.js";
 import { nowZeroMs } from "@/shared/common/util.js";
 import type { AuthenticateRequestBody, GetDeviceStatusResp, VerifyOtp200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
@@ -303,10 +303,6 @@ export async function register({
             .where(eq(authAttemptTable.didWrite, didWrite));
         await tx.insert(userTable).values({
             id: authAttemptResult[0].userId,
-        });
-        //TODO: citizen or postCreator...?
-        await tx.insert(citizenTable).values({
-            userId: authAttemptResult[0].userId,
         });
         await tx.insert(deviceTable).values({
             userId: authAttemptResult[0].userId,

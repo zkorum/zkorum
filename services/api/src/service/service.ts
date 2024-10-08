@@ -134,15 +134,6 @@
 //     db: PostgresDatabase | PgTransaction<TQueryResult, TFullSchema, TSchema>;
 // }
 //
-// interface FetchCommentsByPostIdProps {
-//     db: PostgresDatabase;
-//     postId: PostId;
-//     updatedAt: Date | undefined;
-//     order: "more" | "recent";
-//     limit?: number;
-//     showHidden?: boolean;
-// }
-//
 // interface GetPostIdFromSlugIdProps {
 //     db: PostgresDatabase;
 //     slugId: PostSlugId;
@@ -849,73 +840,6 @@
 //                 .where(eq(postTable.id, result.pollId));
 //         });
 //         return timestampedPresentationCID;
-//     }
-//
-//     static async fetchCommentsByPostId({
-//         db,
-//         postId,
-//         order,
-//         showHidden,
-//         updatedAt,
-//         limit,
-//     }: FetchCommentsByPostIdProps): Promise<PostComment[]> {
-//         const actualLimit = limit === undefined ? 30 : limit;
-//         const whereUpdatedAt =
-//             updatedAt === undefined
-//                 ? eq(commentTable.postId, postId)
-//                 : order === "more"
-//                     ? and(
-//                         eq(commentTable.postId, postId),
-//                         gt(commentTable.updatedAt, updatedAt)
-//                     )
-//                     : and(
-//                         eq(commentTable.postId, postId),
-//                         lt(commentTable.updatedAt, updatedAt)
-//                     );
-//         const results = await db
-//             .selectDistinctOn([commentTable.updatedAt, commentTable.id], {
-//                 // comment payload
-//                 content: commentTable.content,
-//                 // post as
-//                 pseudonym: pseudonymTable.pseudonym,
-//                 domain: personaTable.domain,
-//                 // metadata
-//                 commentUid: commentTable.timestampedPresentationCID,
-//                 slugId: commentTable.slugId,
-//                 isHidden: commentTable.isHidden,
-//                 updatedAt: commentTable.updatedAt,
-//             })
-//             .from(commentTable)
-//             .innerJoin(
-//                 pseudonymTable,
-//                 eq(pseudonymTable.id, commentTable.authorId)
-//             )
-//             .innerJoin(
-//                 personaTable,
-//                 eq(personaTable.id, pseudonymTable.personaId)
-//             )
-//             .orderBy(asc(commentTable.updatedAt), desc(commentTable.id))
-//             .limit(actualLimit)
-//             .where(
-//                 showHidden === true
-//                     ? whereUpdatedAt
-//                     : and(whereUpdatedAt, eq(commentTable.isHidden, false))
-//             );
-//         return results.map((result) => {
-//             return {
-//                 metadata: {
-//                     uid: result.commentUid,
-//                     slugId: result.slugId,
-//                     isHidden: result.isHidden,
-//                     updatedAt: result.updatedAt,
-//                 },
-//                 content: result.content,
-//                 author: {
-//                     pseudonym: result.pseudonym,
-//                     domain: result.domain,
-//                 },
-//             };
-//         });
 //     }
 //
 //     static async getPostIdFromSlugId({

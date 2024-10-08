@@ -42,6 +42,24 @@ export const countryCodeEnum = pgEnum("country_code", ["AND", "ARE", "AFG", "ATG
 export const ageGroupEnum = pgEnum("age_group", ["8-15", "16-24", "25-34", "35-44", "45-54", "55-64", "65+"]);
 export const sexEnum = pgEnum("sex", ["F", "M", "X"]);
 
+export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
+    "376", "971", "93", "1268", "1264", "355", "374", "244", "672", "54", "1684", "43", "61", "297", "358", "994", "387", "1246",
+    "880", "32", "226", "359", "973", "257", "229", "590", "1441", "673", "591", "5997", "55", "1242", "975", "47", "267", "375",
+    "501", "1", "61", "243", "236", "242", "41", "225", "682", "56", "237", "86", "57", "506", "53", "238", "5999", "61", "357",
+    "420", "49", "253", "45", "1767", "1809", "1829", "1849", "213", "593", "372", "20", "212", "291", "34", "251", "358", "679",
+    "500", "691", "298", "33", "241", "44", "1473", "995", "594", "44", "233", "350", "299", "220", "224", "590", "240", "30",
+    "500", "502", "1671", "245", "592", "852", "61", "504", "385", "509", "36", "62", "353", "972", "44", "91", "246", "964",
+    "98", "354", "39", "44", "1876", "962", "81", "254", "996", "855", "686", "269", "1869", "850", "82", "965", "1345", "76",
+    "77", "856", "961", "1758", "423", "94", "231", "266", "370", "352", "371", "218", "212", "377", "373", "382", "590", "261",
+    "692", "389", "223", "95", "976", "853", "1670", "596", "222", "1664", "356", "230", "960", "265", "52", "60", "258", "264",
+    "687", "227", "672", "234", "505", "31", "47", "977", "674", "683", "64", "968", "507", "51", "689", "675", "63", "92",
+    "48", "508", "64", "1787", "1939", "970", "351", "680", "595", "974", "262", "40", "381", "7", "250", "966", "677", "248",
+    "249", "46", "65", "290", "386", "4779", "421", "232", "378", "221", "252", "597", "211", "239", "503", "1721", "963",
+    "268", "1649", "235", "262", "228", "66", "992", "690", "670", "993", "216", "676", "90", "1868", "688", "886", "255",
+    "380", "256", "1", "1", "598", "998", "379", "1784", "58", "1284", "1340", "84", "678", "681", "685", "377", "381", "383",
+    "386", "967", "262", "27", "260", "263"
+]);
+
 
 // One user == one account.
 // Inserting a record in that table means that the user has been successfully registered.
@@ -52,8 +70,7 @@ export const sexEnum = pgEnum("sex", ["F", "M", "X"]);
 // The "at least one" conditon is not enforced directly in the SQL model yet. It is done in the application code.
 export const userTable = pgTable("user", {
     id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
-    citizenId: integer("citizen_id").references(() => citizenTable.id).unique(), // strictly one of them is null => add check
-    postCreatorId: integer("post_creator_id").references(() => postCreatorTable.id).unique(),
+    organisationId: integer("organisation_id").references(() => organisationTable.id), // for now a user can belong to at most 1 organisation
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -68,17 +85,10 @@ export const userTable = pgTable("user", {
         .notNull(),
 });
 
-// post creators can initiate consultations
-// they are known public individuals or organizations
-// they cannot comment, respond to polls or vote
-// they are not expected to verify ID with Rarimo
-// currently post creator are invited by email address. They are personally known to us.
-// they cannot be citizens at the same time
-export const postCreatorTable = pgTable("post_creator", {
+export const organisationTable = pgTable("organisation", {
     id: serial("id").primaryKey(),
-    userId: uuid("user_id").references((): AnyPgColumn => userTable.id).unique().notNull(),
     name: varchar("name", { length: MAX_LENGTH_NAME_CREATOR }).notNull(),
-    pictureUrl: text("picture_url"),
+    imageUrl: text("image_url"),
     websiteUrl: text("website_url"),
     description: varchar("description", { length: MAX_LENGTH_DESCRIPTION_CREATOR }),
     createdAt: timestamp("created_at", {
@@ -95,17 +105,37 @@ export const postCreatorTable = pgTable("post_creator", {
         .notNull(),
 });
 
-// citizens are anonymous
-// they can comment, respond to polls and vote
-// they cannot initiate consultations
-// they cannot be post creators at the same time
-// after verifying ID => citizen demographic attributes are set
-export const citizenTable = pgTable("citizen", {
+export const passportTable = pgTable("passport", {
     id: serial("id").primaryKey(),
-    userId: uuid("user_id").references((): AnyPgColumn => userTable.id).unique().notNull(),
-    citizenships: countryCodeEnum("citizenships").array(), // holds TCountryCode
+    userId: uuid("user_id")
+        .references(() => userTable.id)
+        .notNull(),
+    citizenship: countryCodeEnum("citizenship").notNull(), // holds TCountryCode
     ageGroup: ageGroupEnum("age_group"),
     sex: sexEnum("sex"),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+    updatedAt: timestamp("updated_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+});
+
+export const phoneTable = pgTable("phone", {
+    id: serial("id").primaryKey(),
+    userId: uuid("user_id")
+        .references(() => userTable.id)
+        .notNull(),
+    lastTwoDigits: varchar("last_two_digits", { length: 2 }).notNull(), // add check for it to be numbers?
+    countryCode: countryCodeEnum("country_code").notNull(),
+    hashedPhone: text("hashed_phone").notNull(), // base64 encoded hash of phone + salt
+    salt: text("salt").notNull(), // base64 encoded salt, might change the type
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -188,8 +218,8 @@ export const proofType = pgEnum("proof_type", [
 // each proof corresponds to at least one device
 export const idProofTable = pgTable("id_proof", {
     id: serial("id").primaryKey(),
-    citizenId: integer("citizen_id")
-        .references(() => citizenTable.id)
+    userId: uuid("user_id")
+        .references(() => userTable.id)
         .notNull(),
     proofType: proofType("proof_type").notNull(),
     proof: text("proof").notNull(), // base64 encoded proof - rarimo proof if root, else delegation proof
@@ -257,6 +287,13 @@ export const pollTable = pgTable("poll", {
     option4: varchar("option4", { length: MAX_LENGTH_OPTION }),
     option5: varchar("option5", { length: MAX_LENGTH_OPTION }),
     option6: varchar("option6", { length: MAX_LENGTH_OPTION }),
+    // only there for read-speed
+    option1Response: integer("option1_response").default(0).notNull(),
+    option2Response: integer("option2_response").default(0).notNull(),
+    option3Response: integer("option3_response"),
+    option4Response: integer("option4_response"),
+    option5Response: integer("option5_response"),
+    option6Response: integer("option6_response"),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -367,14 +404,7 @@ export const pollResponseTable = pgTable("poll_response", {
         .notNull()
         .unique()
         .references(() => postTable.id),
-    currentContent: integer("current_content_id").references((): AnyPgColumn => pollResponseContentTable.id).unique(), // not null if not deleted, else null
-    // only there for read-speed
-    option1Response: integer("option1_response").default(0).notNull(),
-    option2Response: integer("option2_response").default(0).notNull(),
-    option3Response: integer("option3_response"),
-    option4Response: integer("option4_response"),
-    option5Response: integer("option5_response"),
-    option6Response: integer("option6_response"),
+    currentContentId: integer("current_content_id").references((): AnyPgColumn => pollResponseContentTable.id).unique(), // not null if not deleted, else null
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -452,8 +482,8 @@ export const commentTable = pgTable("comment", {
         .unique()
         .notNull(),
     currentContentId: integer("current_content_id").references((): AnyPgColumn => commentContentTable.id), // null if comment was deleted
-    likes: integer("likes").notNull().default(0),
-    dislikes: integer("dislikes").notNull().default(0),
+    numLikes: integer("num_likes").notNull().default(0),
+    numDislikes: integer("num_dislikes").notNull().default(0),
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -547,7 +577,7 @@ export const voteTable = pgTable("vote", {
     commentId: integer("comment_id")
         .notNull()
         .references(() => commentTable.id),
-    currentContent: integer("current_content_id").references((): AnyPgColumn => voteContentTable.id), // not null if not deleted, else null
+    currentContentId: integer("current_content_id").references((): AnyPgColumn => voteContentTable.id), // not null if not deleted, else null
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,

@@ -32,9 +32,6 @@ importers:
       cborg:
         specifier: ^4.0.5
         version: 4.0.5
-      countries-list:
-        specifier: ^3.0.5
-        version: 3.0.5
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
@@ -1552,9 +1549,6 @@ packages:
   copy-anything@3.0.5:
     resolution: {integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==}
     engines: {node: '>=12.13'}
-
-  countries-list@3.0.5:
-    resolution: {integrity: sha512-JwaAU/wpoUoZk+6WSaGJL1WDoNCJ2vrQCkHOg/t3qoYIPH6kZ+SGAX3YZukMsKXbX1xkxU34pJOE+xr55O+Sww==}
 
   create-jest@29.7.0:
     resolution: {integrity: sha512-Adz2bdH0Vq3F53KEMJOoftQFutWCukm6J24wbPWRO4k1kMY7gS7ds/uoJkNuV8wDCtWWnuwGcJwpWcih+zEW1Q==}
@@ -5114,8 +5108,6 @@ snapshots:
   copy-anything@3.0.5:
     dependencies:
       is-what: 4.1.16
-
-  countries-list@3.0.5: {}
 
   create-jest@29.7.0(@types/node@20.8.0):
     dependencies:

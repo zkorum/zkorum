@@ -1,4 +1,3 @@
-// @ts-nocheck
 /** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";

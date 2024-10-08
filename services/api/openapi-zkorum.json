@@ -236,144 +236,6 @@
                 }
             }
         },
-        "/api/v1/post/create": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "post": {
-                                        "type": "object",
-                                        "properties": {
-                                            "data": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "title": {
-                                                        "type": "string",
-                                                        "maxLength": 65,
-                                                        "minLength": 1
-                                                    },
-                                                    "body": {
-                                                        "type": "string",
-                                                        "maxLength": 140,
-                                                        "minLength": 1
-                                                    },
-                                                    "poll": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "option1": {
-                                                                "type": "string",
-                                                                "maxLength": 30,
-                                                                "minLength": 1
-                                                            },
-                                                            "option2": {
-                                                                "type": "string",
-                                                                "maxLength": 30,
-                                                                "minLength": 1
-                                                            },
-                                                            "option3": {
-                                                                "type": "string",
-                                                                "maxLength": 30,
-                                                                "minLength": 1
-                                                            },
-                                                            "option4": {
-                                                                "type": "string",
-                                                                "maxLength": 30,
-                                                                "minLength": 1
-                                                            },
-                                                            "option5": {
-                                                                "type": "string",
-                                                                "maxLength": 30,
-                                                                "minLength": 1
-                                                            },
-                                                            "option6": {
-                                                                "type": "string",
-                                                                "maxLength": 30,
-                                                                "minLength": 1
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "option1",
-                                                            "option2"
-                                                        ],
-                                                        "additionalProperties": false
-                                                    }
-                                                },
-                                                "required": [
-                                                    "title"
-                                                ],
-                                                "additionalProperties": false
-                                            }
-                                        },
-                                        "required": [
-                                            "data"
-                                        ],
-                                        "additionalProperties": false
-                                    },
-                                    "pres": {}
-                                },
-                                "required": [
-                                    "post"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response"
-                    }
-                }
-            }
-        },
-        "/api/v1/poll/respond": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "responseToPoll": {
-                                        "type": "object",
-                                        "properties": {
-                                            "postUid": {
-                                                "type": "string"
-                                            },
-                                            "optionChosen": {
-                                                "type": "integer",
-                                                "exclusiveMinimum": true,
-                                                "minimum": 0
-                                            }
-                                        },
-                                        "required": [
-                                            "postUid",
-                                            "optionChosen"
-                                        ],
-                                        "additionalProperties": false
-                                    },
-                                    "pres": {}
-                                },
-                                "required": [
-                                    "responseToPoll"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response"
-                    }
-                }
-            }
-        },
         "/api/v1/feed/fetchMore": {
             "post": {
                 "requestBody": {
@@ -401,7 +263,112 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Default Response"
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "metadata": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "postSlugId": {
+                                                        "type": "string",
+                                                        "maxLength": 10
+                                                    },
+                                                    "isHidden": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "lastReactedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "commentCount": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    },
+                                                    "authorName": {
+                                                        "type": "string"
+                                                    },
+                                                    "authorImagePath": {
+                                                        "type": "string",
+                                                        "format": "uri"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "postSlugId",
+                                                    "updatedAt",
+                                                    "lastReactedAt",
+                                                    "commentCount"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "payload": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "title": {
+                                                        "type": "string",
+                                                        "maxLength": 65,
+                                                        "minLength": 1
+                                                    },
+                                                    "body": {
+                                                        "type": "string",
+                                                        "maxLength": 140,
+                                                        "minLength": 1
+                                                    },
+                                                    "poll": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "index": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "option": {
+                                                                    "type": "string",
+                                                                    "maxLength": 30,
+                                                                    "minLength": 1
+                                                                },
+                                                                "numResponses": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "isChosen": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "index",
+                                                                "option",
+                                                                "numResponses",
+                                                                "isChosen"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "title"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "required": [
+                                            "metadata",
+                                            "payload"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -433,194 +400,112 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Default Response"
-                    }
-                }
-            }
-        },
-        "/api/v1/moderation/hidePost": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "pollUid": {
-                                        "type": "string"
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "metadata": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "postSlugId": {
+                                                        "type": "string",
+                                                        "maxLength": 10
+                                                    },
+                                                    "isHidden": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "lastReactedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "commentCount": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    },
+                                                    "authorName": {
+                                                        "type": "string"
+                                                    },
+                                                    "authorImagePath": {
+                                                        "type": "string",
+                                                        "format": "uri"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "postSlugId",
+                                                    "updatedAt",
+                                                    "lastReactedAt",
+                                                    "commentCount"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "payload": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "title": {
+                                                        "type": "string",
+                                                        "maxLength": 65,
+                                                        "minLength": 1
+                                                    },
+                                                    "body": {
+                                                        "type": "string",
+                                                        "maxLength": 140,
+                                                        "minLength": 1
+                                                    },
+                                                    "poll": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "index": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "option": {
+                                                                    "type": "string",
+                                                                    "maxLength": 30,
+                                                                    "minLength": 1
+                                                                },
+                                                                "numResponses": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "isChosen": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "index",
+                                                                "option",
+                                                                "numResponses",
+                                                                "isChosen"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "title"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "required": [
+                                            "metadata",
+                                            "payload"
+                                        ],
+                                        "additionalProperties": false
                                     }
-                                },
-                                "required": [
-                                    "pollUid"
-                                ],
-                                "additionalProperties": false
+                                }
                             }
                         }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response"
-                    }
-                }
-            }
-        },
-        "/api/v1/moderation/unhidePost": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "pollUid": {
-                                        "type": "string"
-                                    }
-                                },
-                                "required": [
-                                    "pollUid"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response"
-                    }
-                }
-            }
-        },
-        "/api/v1/moderation/hideComment": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "commentSlugId": {
-                                        "type": "string",
-                                        "maxLength": 10
-                                    },
-                                    "postSlugId": {
-                                        "type": "string",
-                                        "maxLength": 10
-                                    }
-                                },
-                                "required": [
-                                    "commentSlugId",
-                                    "postSlugId"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response"
-                    }
-                }
-            }
-        },
-        "/api/v1/moderation/unhideComment": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "commentSlugId": {
-                                        "type": "string",
-                                        "maxLength": 10
-                                    },
-                                    "postSlugId": {
-                                        "type": "string",
-                                        "maxLength": 10
-                                    }
-                                },
-                                "required": [
-                                    "commentSlugId",
-                                    "postSlugId"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response"
-                    }
-                }
-            }
-        },
-        "/api/v1/comment/create": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "postUid": {
-                                        "type": "string"
-                                    },
-                                    "content": {
-                                        "type": "string",
-                                        "minLength": 1,
-                                        "maxLength": 280
-                                    }
-                                },
-                                "required": [
-                                    "postUid",
-                                    "content"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response"
-                    }
-                }
-            }
-        },
-        "/api/v1/post/fetch": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "postSlugId": {
-                                        "type": "string",
-                                        "maxLength": 10
-                                    }
-                                },
-                                "required": [
-                                    "postSlugId"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response"
                     }
                 }
             }
@@ -637,7 +522,7 @@
                                         "type": "string",
                                         "maxLength": 10
                                     },
-                                    "updatedAt": {
+                                    "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
                                     }
@@ -653,7 +538,65 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Default Response"
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "comments": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "commentSlugId": {
+                                                        "type": "string",
+                                                        "maxLength": 10
+                                                    },
+                                                    "isHidden": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "comment": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 280
+                                                    },
+                                                    "numLikes": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    },
+                                                    "numDislikes": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    }
+                                                },
+                                                "required": [
+                                                    "commentSlugId",
+                                                    "createdAt",
+                                                    "updatedAt",
+                                                    "comment",
+                                                    "numLikes",
+                                                    "numDislikes"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "comments"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -670,7 +613,7 @@
                                         "type": "string",
                                         "maxLength": 10
                                     },
-                                    "updatedAt": {
+                                    "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
                                     }
@@ -686,7 +629,123 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Default Response"
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "comments": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "commentSlugId": {
+                                                        "type": "string",
+                                                        "maxLength": 10
+                                                    },
+                                                    "isHidden": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "comment": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 280
+                                                    },
+                                                    "numLikes": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    },
+                                                    "numDislikes": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    }
+                                                },
+                                                "required": [
+                                                    "commentSlugId",
+                                                    "createdAt",
+                                                    "updatedAt",
+                                                    "comment",
+                                                    "numLikes",
+                                                    "numDislikes"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "comments"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/comment/fetchToVoteOn": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    },
+                                    "showHidden": {
+                                        "type": "boolean"
+                                    },
+                                    "numberOfCommentsToFetch": {
+                                        "type": "integer",
+                                        "exclusiveMinimum": true,
+                                        "minimum": 0
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId",
+                                    "numberOfCommentsToFetch"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "assignedCommentSlugIds": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "maxLength": 10
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "assignedCommentSlugIds"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
                     }
                 }
             }

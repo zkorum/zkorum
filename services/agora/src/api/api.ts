@@ -202,21 +202,64 @@ export interface ApiV1AuthVerifyOtpPostRequest {
 /**
  * 
  * @export
- * @interface ApiV1CommentCreatePostRequest
+ * @interface ApiV1CommentFetchMorePost200Response
  */
-export interface ApiV1CommentCreatePostRequest {
+export interface ApiV1CommentFetchMorePost200Response {
+    /**
+     * 
+     * @type {Array<ApiV1CommentFetchMorePost200ResponseCommentsInner>}
+     * @memberof ApiV1CommentFetchMorePost200Response
+     */
+    'comments': Array<ApiV1CommentFetchMorePost200ResponseCommentsInner>;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1CommentFetchMorePost200ResponseCommentsInner
+ */
+export interface ApiV1CommentFetchMorePost200ResponseCommentsInner {
     /**
      * 
      * @type {string}
-     * @memberof ApiV1CommentCreatePostRequest
+     * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
      */
-    'postUid': string;
+    'commentSlugId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
+     */
+    'isHidden'?: boolean;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1CommentCreatePostRequest
+     * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
      */
-    'content': string;
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
+     */
+    'comment': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
+     */
+    'numLikes': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CommentFetchMorePost200ResponseCommentsInner
+     */
+    'numDislikes': number;
 }
 /**
  * 
@@ -235,7 +278,169 @@ export interface ApiV1CommentFetchMorePostRequest {
      * @type {string}
      * @memberof ApiV1CommentFetchMorePostRequest
      */
-    'updatedAt'?: string;
+    'createdAt'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1CommentFetchToVoteOnPost200Response
+ */
+export interface ApiV1CommentFetchToVoteOnPost200Response {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ApiV1CommentFetchToVoteOnPost200Response
+     */
+    'assignedCommentSlugIds': Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1CommentFetchToVoteOnPostRequest
+ */
+export interface ApiV1CommentFetchToVoteOnPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1CommentFetchToVoteOnPostRequest
+     */
+    'postSlugId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1CommentFetchToVoteOnPostRequest
+     */
+    'showHidden'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1CommentFetchToVoteOnPostRequest
+     */
+    'numberOfCommentsToFetch': number;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1FeedFetchMorePost200ResponseInner
+ */
+export interface ApiV1FeedFetchMorePost200ResponseInner {
+    /**
+     * 
+     * @type {ApiV1FeedFetchMorePost200ResponseInnerMetadata}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInner
+     */
+    'metadata': ApiV1FeedFetchMorePost200ResponseInnerMetadata;
+    /**
+     * 
+     * @type {ApiV1FeedFetchMorePost200ResponseInnerPayload}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInner
+     */
+    'payload': ApiV1FeedFetchMorePost200ResponseInnerPayload;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1FeedFetchMorePost200ResponseInnerMetadata
+ */
+export interface ApiV1FeedFetchMorePost200ResponseInnerMetadata {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'postSlugId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'isHidden'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'lastReactedAt': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'commentCount': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'authorName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     */
+    'authorImagePath'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1FeedFetchMorePost200ResponseInnerPayload
+ */
+export interface ApiV1FeedFetchMorePost200ResponseInnerPayload {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayload
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayload
+     */
+    'body'?: string;
+    /**
+     * 
+     * @type {Array<ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner>}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayload
+     */
+    'poll'?: Array<ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner>;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+ */
+export interface ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner {
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+     */
+    'index': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+     */
+    'option': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+     */
+    'numResponses': number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+     */
+    'isChosen': boolean;
 }
 /**
  * 
@@ -255,189 +460,6 @@ export interface ApiV1FeedFetchMorePostRequest {
      * @memberof ApiV1FeedFetchMorePostRequest
      */
     'lastReactedAt'?: string;
-}
-/**
- * 
- * @export
- * @interface ApiV1ModerationHideCommentPostRequest
- */
-export interface ApiV1ModerationHideCommentPostRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1ModerationHideCommentPostRequest
-     */
-    'commentSlugId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1ModerationHideCommentPostRequest
-     */
-    'postSlugId': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1ModerationHidePostPostRequest
- */
-export interface ApiV1ModerationHidePostPostRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1ModerationHidePostPostRequest
-     */
-    'pollUid': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollRespondPostRequest
- */
-export interface ApiV1PollRespondPostRequest {
-    /**
-     * 
-     * @type {ApiV1PollRespondPostRequestResponseToPoll}
-     * @memberof ApiV1PollRespondPostRequest
-     */
-    'responseToPoll': ApiV1PollRespondPostRequestResponseToPoll;
-    /**
-     * 
-     * @type {any}
-     * @memberof ApiV1PollRespondPostRequest
-     */
-    'pres'?: any;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollRespondPostRequestResponseToPoll
- */
-export interface ApiV1PollRespondPostRequestResponseToPoll {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollRespondPostRequestResponseToPoll
-     */
-    'postUid': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollRespondPostRequestResponseToPoll
-     */
-    'optionChosen': number;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostCreatePostRequest
- */
-export interface ApiV1PostCreatePostRequest {
-    /**
-     * 
-     * @type {ApiV1PostCreatePostRequestPost}
-     * @memberof ApiV1PostCreatePostRequest
-     */
-    'post': ApiV1PostCreatePostRequestPost;
-    /**
-     * 
-     * @type {any}
-     * @memberof ApiV1PostCreatePostRequest
-     */
-    'pres'?: any;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostCreatePostRequestPost
- */
-export interface ApiV1PostCreatePostRequestPost {
-    /**
-     * 
-     * @type {ApiV1PostCreatePostRequestPostData}
-     * @memberof ApiV1PostCreatePostRequestPost
-     */
-    'data': ApiV1PostCreatePostRequestPostData;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostCreatePostRequestPostData
- */
-export interface ApiV1PostCreatePostRequestPostData {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePostRequestPostData
-     */
-    'title': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePostRequestPostData
-     */
-    'body'?: string;
-    /**
-     * 
-     * @type {ApiV1PostCreatePostRequestPostDataPoll}
-     * @memberof ApiV1PostCreatePostRequestPostData
-     */
-    'poll'?: ApiV1PostCreatePostRequestPostDataPoll;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostCreatePostRequestPostDataPoll
- */
-export interface ApiV1PostCreatePostRequestPostDataPoll {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePostRequestPostDataPoll
-     */
-    'option1': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePostRequestPostDataPoll
-     */
-    'option2': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePostRequestPostDataPoll
-     */
-    'option3'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePostRequestPostDataPoll
-     */
-    'option4'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePostRequestPostDataPoll
-     */
-    'option5'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePostRequestPostDataPoll
-     */
-    'option6'?: string;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostFetchPostRequest
- */
-export interface ApiV1PostFetchPostRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostFetchPostRequest
-     */
-    'postSlugId': string;
 }
 
 /**
@@ -559,45 +581,6 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {ApiV1CommentCreatePostRequest} apiV1CommentCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1CommentCreatePost: async (apiV1CommentCreatePostRequest: ApiV1CommentCreatePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1CommentCreatePostRequest' is not null or undefined
-            assertParamExists('apiV1CommentCreatePost', 'apiV1CommentCreatePostRequest', apiV1CommentCreatePostRequest)
-            const localVarPath = `/api/v1/comment/create`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CommentCreatePostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
          * @param {ApiV1CommentFetchMorePostRequest} apiV1CommentFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -668,6 +651,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1CommentFetchMorePostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiV1CommentFetchToVoteOnPostRequest} apiV1CommentFetchToVoteOnPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CommentFetchToVoteOnPost: async (apiV1CommentFetchToVoteOnPostRequest: ApiV1CommentFetchToVoteOnPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1CommentFetchToVoteOnPostRequest' is not null or undefined
+            assertParamExists('apiV1CommentFetchToVoteOnPost', 'apiV1CommentFetchToVoteOnPostRequest', apiV1CommentFetchToVoteOnPostRequest)
+            const localVarPath = `/api/v1/comment/fetchToVoteOn`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1CommentFetchToVoteOnPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -752,279 +774,6 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
-        /**
-         * 
-         * @param {ApiV1ModerationHideCommentPostRequest} apiV1ModerationHideCommentPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ModerationHideCommentPost: async (apiV1ModerationHideCommentPostRequest: ApiV1ModerationHideCommentPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1ModerationHideCommentPostRequest' is not null or undefined
-            assertParamExists('apiV1ModerationHideCommentPost', 'apiV1ModerationHideCommentPostRequest', apiV1ModerationHideCommentPostRequest)
-            const localVarPath = `/api/v1/moderation/hideComment`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationHideCommentPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHidePostPostRequest} apiV1ModerationHidePostPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ModerationHidePostPost: async (apiV1ModerationHidePostPostRequest: ApiV1ModerationHidePostPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1ModerationHidePostPostRequest' is not null or undefined
-            assertParamExists('apiV1ModerationHidePostPost', 'apiV1ModerationHidePostPostRequest', apiV1ModerationHidePostPostRequest)
-            const localVarPath = `/api/v1/moderation/hidePost`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationHidePostPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHideCommentPostRequest} apiV1ModerationHideCommentPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ModerationUnhideCommentPost: async (apiV1ModerationHideCommentPostRequest: ApiV1ModerationHideCommentPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1ModerationHideCommentPostRequest' is not null or undefined
-            assertParamExists('apiV1ModerationUnhideCommentPost', 'apiV1ModerationHideCommentPostRequest', apiV1ModerationHideCommentPostRequest)
-            const localVarPath = `/api/v1/moderation/unhideComment`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationHideCommentPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHidePostPostRequest} apiV1ModerationHidePostPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ModerationUnhidePostPost: async (apiV1ModerationHidePostPostRequest: ApiV1ModerationHidePostPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1ModerationHidePostPostRequest' is not null or undefined
-            assertParamExists('apiV1ModerationUnhidePostPost', 'apiV1ModerationHidePostPostRequest', apiV1ModerationHidePostPostRequest)
-            const localVarPath = `/api/v1/moderation/unhidePost`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationHidePostPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1PollRespondPost: async (apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1PollRespondPostRequest' is not null or undefined
-            assertParamExists('apiV1PollRespondPost', 'apiV1PollRespondPostRequest', apiV1PollRespondPostRequest)
-            const localVarPath = `/api/v1/poll/respond`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PollRespondPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1PostCreatePost: async (apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1PostCreatePostRequest' is not null or undefined
-            assertParamExists('apiV1PostCreatePost', 'apiV1PostCreatePostRequest', apiV1PostCreatePostRequest)
-            const localVarPath = `/api/v1/post/create`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PostCreatePostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1PostFetchPostRequest} apiV1PostFetchPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1PostFetchPost: async (apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1PostFetchPostRequest' is not null or undefined
-            assertParamExists('apiV1PostFetchPost', 'apiV1PostFetchPostRequest', apiV1PostFetchPostRequest)
-            const localVarPath = `/api/v1/post/fetch`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PostFetchPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
     }
 };
 
@@ -1072,23 +821,11 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {ApiV1CommentCreatePostRequest} apiV1CommentCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1CommentCreatePost(apiV1CommentCreatePostRequest: ApiV1CommentCreatePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CommentCreatePost(apiV1CommentCreatePostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CommentCreatePost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
          * @param {ApiV1CommentFetchMorePostRequest} apiV1CommentFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CommentFetchMorePost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CommentFetchMorePost']?.[localVarOperationServerIndex]?.url;
@@ -1100,10 +837,22 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CommentFetchMorePost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CommentFetchRecentPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ApiV1CommentFetchToVoteOnPostRequest} apiV1CommentFetchToVoteOnPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest: ApiV1CommentFetchToVoteOnPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1CommentFetchToVoteOnPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CommentFetchToVoteOnPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1112,7 +861,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1FeedFetchMorePost200ResponseInner>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchMorePost']?.[localVarOperationServerIndex]?.url;
@@ -1124,94 +873,10 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1FeedFetchMorePost200ResponseInner>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchRecentPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHideCommentPostRequest} apiV1ModerationHideCommentPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1ModerationHideCommentPost(apiV1ModerationHideCommentPostRequest: ApiV1ModerationHideCommentPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ModerationHideCommentPost(apiV1ModerationHideCommentPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1ModerationHideCommentPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHidePostPostRequest} apiV1ModerationHidePostPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1ModerationHidePostPost(apiV1ModerationHidePostPostRequest: ApiV1ModerationHidePostPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ModerationHidePostPost(apiV1ModerationHidePostPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1ModerationHidePostPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHideCommentPostRequest} apiV1ModerationHideCommentPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1ModerationUnhideCommentPost(apiV1ModerationHideCommentPostRequest: ApiV1ModerationHideCommentPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ModerationUnhideCommentPost(apiV1ModerationHideCommentPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1ModerationUnhideCommentPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHidePostPostRequest} apiV1ModerationHidePostPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1ModerationUnhidePostPost(apiV1ModerationHidePostPostRequest: ApiV1ModerationHidePostPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ModerationUnhidePostPost(apiV1ModerationHidePostPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1ModerationUnhidePostPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollRespondPost(apiV1PollRespondPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PollRespondPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostCreatePost(apiV1PostCreatePostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostCreatePost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1PostFetchPostRequest} apiV1PostFetchPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostFetchPost(apiV1PostFetchPostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostFetchPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -1252,20 +917,11 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {ApiV1CommentCreatePostRequest} apiV1CommentCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1CommentCreatePost(apiV1CommentCreatePostRequest: ApiV1CommentCreatePostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1CommentCreatePost(apiV1CommentCreatePostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @param {ApiV1CommentFetchMorePostRequest} apiV1CommentFetchMorePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: any): AxiosPromise<void> {
+        apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: any): AxiosPromise<ApiV1CommentFetchMorePost200Response> {
             return localVarFp.apiV1CommentFetchMorePost(apiV1CommentFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1274,8 +930,17 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: any): AxiosPromise<void> {
+        apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest: ApiV1CommentFetchMorePostRequest, options?: any): AxiosPromise<ApiV1CommentFetchMorePost200Response> {
             return localVarFp.apiV1CommentFetchRecentPost(apiV1CommentFetchMorePostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1CommentFetchToVoteOnPostRequest} apiV1CommentFetchToVoteOnPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest: ApiV1CommentFetchToVoteOnPostRequest, options?: any): AxiosPromise<ApiV1CommentFetchToVoteOnPost200Response> {
+            return localVarFp.apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1283,7 +948,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<void> {
+        apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1FeedFetchMorePost200ResponseInner>> {
             return localVarFp.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1292,71 +957,8 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<void> {
+        apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1FeedFetchMorePost200ResponseInner>> {
             return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHideCommentPostRequest} apiV1ModerationHideCommentPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ModerationHideCommentPost(apiV1ModerationHideCommentPostRequest: ApiV1ModerationHideCommentPostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1ModerationHideCommentPost(apiV1ModerationHideCommentPostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHidePostPostRequest} apiV1ModerationHidePostPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ModerationHidePostPost(apiV1ModerationHidePostPostRequest: ApiV1ModerationHidePostPostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1ModerationHidePostPost(apiV1ModerationHidePostPostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHideCommentPostRequest} apiV1ModerationHideCommentPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ModerationUnhideCommentPost(apiV1ModerationHideCommentPostRequest: ApiV1ModerationHideCommentPostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1ModerationUnhideCommentPost(apiV1ModerationHideCommentPostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1ModerationHidePostPostRequest} apiV1ModerationHidePostPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ModerationUnhidePostPost(apiV1ModerationHidePostPostRequest: ApiV1ModerationHidePostPostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1ModerationUnhidePostPost(apiV1ModerationHidePostPostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1PollRespondPost(apiV1PollRespondPostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1PostFetchPostRequest} apiV1PostFetchPostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: any): AxiosPromise<void> {
-            return localVarFp.apiV1PostFetchPost(apiV1PostFetchPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1402,17 +1004,6 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {ApiV1CommentCreatePostRequest} apiV1CommentCreatePostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1CommentCreatePost(apiV1CommentCreatePostRequest: ApiV1CommentCreatePostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1CommentCreatePost(apiV1CommentCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
      * @param {ApiV1CommentFetchMorePostRequest} apiV1CommentFetchMorePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1435,6 +1026,17 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
+     * @param {ApiV1CommentFetchToVoteOnPostRequest} apiV1CommentFetchToVoteOnPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest: ApiV1CommentFetchToVoteOnPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1453,83 +1055,6 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1ModerationHideCommentPostRequest} apiV1ModerationHideCommentPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1ModerationHideCommentPost(apiV1ModerationHideCommentPostRequest: ApiV1ModerationHideCommentPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1ModerationHideCommentPost(apiV1ModerationHideCommentPostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1ModerationHidePostPostRequest} apiV1ModerationHidePostPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1ModerationHidePostPost(apiV1ModerationHidePostPostRequest: ApiV1ModerationHidePostPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1ModerationHidePostPost(apiV1ModerationHidePostPostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1ModerationHideCommentPostRequest} apiV1ModerationHideCommentPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1ModerationUnhideCommentPost(apiV1ModerationHideCommentPostRequest: ApiV1ModerationHideCommentPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1ModerationUnhideCommentPost(apiV1ModerationHideCommentPostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1ModerationHidePostPostRequest} apiV1ModerationHidePostPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1ModerationUnhidePostPost(apiV1ModerationHidePostPostRequest: ApiV1ModerationHidePostPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1ModerationUnhidePostPost(apiV1ModerationHidePostPostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1PollRespondPostRequest} apiV1PollRespondPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1PollRespondPost(apiV1PollRespondPostRequest: ApiV1PollRespondPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1PollRespondPost(apiV1PollRespondPostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1PostFetchPostRequest} apiV1PostFetchPostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1PostFetchPost(apiV1PostFetchPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
