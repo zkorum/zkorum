@@ -85,10 +85,9 @@ export class Dto {
     static commentFetchFeed200 = z.object({ comments: z.array(zodComment) });
     static commentFetchToVoteOnRequest = z.object({
         postSlugId: zodSlugId,
-        showHidden: z.boolean().optional(),
         numberOfCommentsToFetch: z.number().int().positive()
     });
-    static commentFetchToVoteOn200 = z.object({ assignedCommentSlugIds: z.array(zodSlugId) });
+    static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodComment) });
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody

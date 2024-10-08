@@ -86,19 +86,8 @@ export const zodComment = z.object({
     comment: zodCommentContent,
     numLikes: z.number().int().nonnegative(),
     numDislikes: z.number().int().nonnegative(),
+    optionChosen: z.enum(["like", "dislike"]).optional()
 }).strict();
-export const zodPostUserInteraction = z.discriminatedUnion("isAvailable", [
-    z.object({
-        isAvailable: z.literal(false)
-    }).strict(),
-    z.object({
-        isAvailable: z.literal(true),
-        pollResponse: z.object({
-            hasVoted: z.boolean(),
-            voteIndex: z.number().int().nonnegative()
-        }).strict(),
-    })
-]);
 export const zodExtendedPostData = z
     .object({
         metadata: zodPostMetadata,
@@ -113,7 +102,6 @@ export type ExtendedPost = z.infer<typeof zodExtendedPostData>;
 export type PostMetadata = z.infer<typeof zodPostMetadata>;
 export type ExtendedPostPayload = z.infer<typeof zodPostDataWithResult>
 export type PollOptionWithResult = z.infer<typeof zodPollOptionWithResult>
-export type ExtendedPostUserInteraction = z.infer<typeof zodPostUserInteraction>
 export type PostComment = z.infer<typeof zodComment>;
 export type CommentContent = z.infer<typeof zodCommentContent>;
 export type SlugId = z.infer<typeof zodSlugId>;

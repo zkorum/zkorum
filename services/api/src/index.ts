@@ -381,18 +381,46 @@ server.after(() => {
                 },
             },
             handler: async (request, _reply) => {
-                // anonymous request, no auth
-                const comments = await postService.fetchCommentsByPostSlugId({
-                    db: db,
-                    postSlugId: request.body.postSlugId,
-                    order: "more",
-                    showHidden: true,
-                    createdAt:
-                        request.body.createdAt !== undefined
-                            ? new Date(request.body.createdAt)
-                            : undefined,
-                });
-                return { comments };
+                const authHeader = request.headers.authorization;
+                if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
+                    // unauthorized user
+                    const comments = await postService.fetchCommentsByPostSlugId({
+                        db: db,
+                        postSlugId: request.body.postSlugId,
+                        order: "more",
+                        showHidden: true,
+                        createdAt:
+                            request.body.createdAt !== undefined
+                                ? new Date(request.body.createdAt)
+                                : undefined,
+                    });
+                    return { comments };
+                } else {
+                    const didWrite = await verifyUCAN(db, request, {
+                        expectedDeviceStatus: {
+                            isLoggedIn: undefined,
+                        },
+                    });
+                    const status = await authUtilService.isLoggedIn(db, didWrite);
+                    if (!status.isLoggedIn) {
+                        throw server.httpErrors.unauthorized("Device is not logged in");
+                    } else {
+                        // logged-in user request
+                        const { userId } = status
+                        const comments = await postService.fetchCommentsByPostSlugId({
+                            db: db,
+                            postSlugId: request.body.postSlugId,
+                            userId: userId,
+                            order: "more",
+                            showHidden: true,
+                            createdAt:
+                                request.body.createdAt !== undefined
+                                    ? new Date(request.body.createdAt)
+                                    : undefined,
+                        });
+                        return { comments };
+                    }
+                }
             },
         });
     server
@@ -405,18 +433,46 @@ server.after(() => {
                 },
             },
             handler: async (request, _reply) => {
-                // anonymous request, no auth
-                const comments = await postService.fetchCommentsByPostSlugId({
-                    db: db,
-                    postSlugId: request.body.postSlugId,
-                    order: "recent",
-                    showHidden: true,
-                    createdAt:
-                        request.body.createdAt !== undefined
-                            ? new Date(request.body.createdAt)
-                            : undefined,
-                });
-                return { comments };
+                const authHeader = request.headers.authorization;
+                if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
+                    // unauthorized user
+                    const comments = await postService.fetchCommentsByPostSlugId({
+                        db: db,
+                        postSlugId: request.body.postSlugId,
+                        order: "recent",
+                        showHidden: true,
+                        createdAt:
+                            request.body.createdAt !== undefined
+                                ? new Date(request.body.createdAt)
+                                : undefined,
+                    });
+                    return { comments };
+                } else {
+                    const didWrite = await verifyUCAN(db, request, {
+                        expectedDeviceStatus: {
+                            isLoggedIn: undefined,
+                        },
+                    });
+                    const status = await authUtilService.isLoggedIn(db, didWrite);
+                    if (!status.isLoggedIn) {
+                        throw server.httpErrors.unauthorized("Device is not logged in");
+                    } else {
+                        // logged-in user request
+                        const { userId } = status
+                        const comments = await postService.fetchCommentsByPostSlugId({
+                            db: db,
+                            postSlugId: request.body.postSlugId,
+                            userId: userId,
+                            order: "recent",
+                            showHidden: true,
+                            createdAt:
+                                request.body.createdAt !== undefined
+                                    ? new Date(request.body.createdAt)
+                                    : undefined,
+                        });
+                        return { comments };
+                    }
+                }
             },
         });
     server
@@ -443,7 +499,6 @@ server.after(() => {
                         db: db,
                         userId: userId,
                         postSlugId: request.body.postSlugId,
-                        showHidden: false,
                         numberOfCommentsToFetch: request.body.numberOfCommentsToFetch !== undefined ? request.body.numberOfCommentsToFetch : 3,
                         httpErrors: server.httpErrors
                     });
