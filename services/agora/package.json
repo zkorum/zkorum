@@ -22,7 +22,6 @@
     "dependencies": {
         "@aparajita/capacitor-biometric-auth": "^8.0.0",
         "@capgo/capacitor-updater": "^5.9.4",
-        "@docknetwork/crypto-wasm-ts": "^0.59.0",
         "@primevue/themes": "^4.0.7",
         "@quasar/extras": "^1.16.12",
         "@ucans/ucans": "^0.12.0",

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">ZKorum</string>
-    <string name="title_activity_main">ZKorum</string>
-    <string name="package_name">com.zkorum.feed</string>
-    <string name="custom_url_scheme">com.zkorum.feed</string>
+    <string name="app_name">Agora</string>
+    <string name="title_activity_main">Agora</string>
+    <string name="package_name">com.zkorum.agora</string>
+    <string name="custom_url_scheme">com.zkorum.agora</string>
 </resources>
