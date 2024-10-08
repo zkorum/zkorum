@@ -18,6 +18,7 @@ export default configure((ctx) => {
     boot: ctx.modeName === "capacitor" ? ["i18n", "axios", "crypto", "capgo", "capacitor-storage", "primevue"] : ["i18n", "axios", "crypto", "primevue"],
 
     bin: {
+      windowsAndroidStudio: "C:\\Program Files\\Android\\Android Studio\\bin\\studio64.exe",
       linuxAndroidStudio: "/home/nicobao/.local/bin/studio.sh",
     },
 
