@@ -10,10 +10,9 @@ import {
   SecureStorage,
   StorageError,
   StorageErrorType,
-} from "@zkorum/capacitor-secure-storage";
+} from "@aparajita/capacitor-secure-storage";
 import { i18n } from "src/boot/i18n";
 import { App } from "@capacitor/app";
-import { nativeAuthenticate } from "src/utils/native/auth";
 
 /*
  * When adding new properties to stores, you should also
@@ -41,6 +40,7 @@ async function mobileGetItem(key: string) {
   } catch (error) {
     if (error instanceof StorageError) {
       switch (StorageErrorType[error.code]) {
+      /*
       case "userNotAuthenticated": {
         try {
           await nativeAuthenticate();
@@ -68,6 +68,7 @@ async function mobileGetItem(key: string) {
           App.exitApp();
         });
         throw error;
+      */
       default:
         console.error("Fatal error while trying to access secure storage", error);
         Dialog.create({
@@ -91,6 +92,7 @@ async function mobileRemoveItem(key: string): Promise<void> {
   } catch (error) {
     if (error instanceof StorageError) {
       switch (StorageErrorType[error.code]) {
+      /*
       case "userNotAuthenticated": {
         try {
           await nativeAuthenticate();
@@ -118,6 +120,7 @@ async function mobileRemoveItem(key: string): Promise<void> {
           App.exitApp();
         });
         break;
+      */
       default:
         console.error("Fatal error while trying to access secure storage", error);
         Dialog.create({
@@ -146,6 +149,7 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
   } catch (error) {
     if (error instanceof StorageError) {
       switch (StorageErrorType[error.code]) {
+      /*
       case "userNotAuthenticated": {
         try {
           await nativeAuthenticate();
@@ -173,6 +177,7 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
           App.exitApp();
         });
         throw error;
+      */
       default:
         console.error("Fatal error while trying to access secure storage", error);
         Dialog.create({
