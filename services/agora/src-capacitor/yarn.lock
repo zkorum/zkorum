@@ -69,9 +69,9 @@
   integrity sha512-HaeW68KisBd/7TmavzPDlL2bpoDK5AjR2ZYrqU4TlGwM88GtQfvduBCAlSCj20X0w/4+rWMkseD9dAAkacjiyQ==
 
 "@capgo/capacitor-updater@^6.0.33":
-  version "6.2.8"
-  resolved "https://registry.yarnpkg.com/@capgo/capacitor-updater/-/capacitor-updater-6.2.8.tgz#876559923f57da7df0ebdf061eba65a327a94094"
-  integrity sha512-OGvRNFg8Gz+JeKx+ucJEhnZPzrzgSQ6/Jwnnv5uJzr7kgMl+p+hJV1fMmO5dgGgIE6N3vcamS750VXnNIBLmwA==
+  version "6.2.9"
+  resolved "https://registry.yarnpkg.com/@capgo/capacitor-updater/-/capacitor-updater-6.2.9.tgz#0ad121a6d9b7f7adc3adffb612c459aa9db17202"
+  integrity sha512-jJ/tDyvWWc203NXQNkROIipaJniYgKbWkYMNctLunXlEZalSx8o7fdyEyT5kTiEolV/Yarfw1KDt0rq9C6bUYA==
 
 "@ionic/cli-framework-output@^2.2.5":
   version "2.2.8"
@@ -215,9 +215,9 @@
     "@types/node" "*"
 
 "@types/node@*":
-  version "22.7.4"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.7.4.tgz#e35d6f48dca3255ce44256ddc05dee1c23353fcc"
-  integrity sha512-y+NPi1rFzDs1NdQHHToqeiX2TIS79SWEAw9GYhkkx8bD0ChpfqC+n2j5OXOCpzfojBEBt6DnEnnG9MY0zk1XLg==
+  version "22.7.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.7.5.tgz#cfde981727a7ab3611a481510b473ae54442b92b"
+  integrity sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==
   dependencies:
     undici-types "~6.19.2"
 
