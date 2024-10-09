@@ -7,6 +7,7 @@ export const useNotify = () => {
   function showNotifyMessage(message: string) {
     quasar.notify({
       message: message,
+      position: "bottom-right"
     });
   }
 
