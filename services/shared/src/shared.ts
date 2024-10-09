@@ -2,12 +2,6 @@
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
 import localforage from "localforage";
-import type {
-    CreateCommentPayload,
-    Post,
-    ResponseToPoll,
-    ResponseToPollPayload,
-} from "./types/zod.js";
 import { toEncodedCID } from "./common/cid.js";
 
 /**
@@ -80,37 +74,6 @@ export const BASE_SCOPE = "base";
 
 export async function buildContext(content: string): Promise<string> {
     return await toEncodedCID(content);
-}
-
-export function buildCreatePostContextFromPayload(payload: Post) {
-    return {
-        metadata: {
-            action: "create",
-        },
-        payload: payload,
-    };
-}
-
-export function buildResponseToPollFromPayload(
-    payload: ResponseToPollPayload
-): ResponseToPoll {
-    return {
-        metadata: {
-            action: "respondToPoll",
-        },
-        payload: payload,
-    };
-}
-
-export function buildCreateCommentContextFromPayload(
-    payload: CreateCommentPayload
-) {
-    return {
-        metadata: {
-            action: "createComment",
-        },
-        payload: payload,
-    };
 }
 
 export interface ToxicityClassification {

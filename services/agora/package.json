@@ -37,6 +37,7 @@
         "cborg": "^4.2.0",
         "libphonenumber-js": "^1.11.10",
         "localforage": "^1.10.0",
+        "multiformats": "^13.3.0",
         "pinia": "^2.1.7",
         "pinia-plugin-persistedstate-2": "^2.0.20",
         "primevue": "^4.0.7",
