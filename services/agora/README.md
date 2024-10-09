@@ -16,7 +16,22 @@ Remember to first load the environment files in `.env` file by running `. ./.env
 There is an example file `env.example` which can be used as the reference.
 
 ```bash
+. ./.env
 quasar dev
+```
+
+### Logos
+
+Currently we are not bundling company logos in the source code due to copyright.
+Please add them manually to the following folder:
+
+```public/development/logos```
+
+### Capacitor Build
+
+```
+quasar dev -m capacitor -T android
+quasar dev -m capacitor -T ios
 ```
 
 ### Lint the files
