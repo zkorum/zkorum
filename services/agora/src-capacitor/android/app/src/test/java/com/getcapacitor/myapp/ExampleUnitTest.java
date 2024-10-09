@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+package com.zkorum.agora;
 
 import static org.junit.Assert.*;
 
