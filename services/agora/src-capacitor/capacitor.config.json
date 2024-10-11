@@ -3,8 +3,6 @@
   "appName": "Agora",
   "webDir": "www",
   "server": {
-    "androidScheme": "https",
-    "url": "https://192.168.1.106:9501",
-    "cleartext": true
+    "androidScheme": "https"
   }
 }

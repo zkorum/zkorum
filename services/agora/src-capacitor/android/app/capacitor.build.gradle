@@ -13,7 +13,6 @@ dependencies {
     implementation project(':aparajita-capacitor-secure-storage')
     implementation project(':capacitor-app')
     implementation project(':capgo-capacitor-updater')
-    implementation project(':jcesarmobile-ssl-skip')
     implementation project(':zkorum-capacitor-secure-signing')
 
 }

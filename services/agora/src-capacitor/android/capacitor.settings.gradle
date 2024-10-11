@@ -14,8 +14,5 @@ project(':capacitor-app').projectDir = new File('../node_modules/@capacitor/app/
 include ':capgo-capacitor-updater'
 project(':capgo-capacitor-updater').projectDir = new File('../node_modules/@capgo/capacitor-updater/android')
 
-include ':jcesarmobile-ssl-skip'
-project(':jcesarmobile-ssl-skip').projectDir = new File('../node_modules/@jcesarmobile/ssl-skip/android')
-
 include ':zkorum-capacitor-secure-signing'
 project(':zkorum-capacitor-secure-signing').projectDir = new File('../node_modules/@zkorum/capacitor-secure-signing/android')
