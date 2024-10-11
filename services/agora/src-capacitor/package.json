@@ -13,7 +13,6 @@
     "@capacitor/core": "^6.1.0",
     "@capacitor/ios": "^6.1.0",
     "@capgo/capacitor-updater": "^6.0.33",
-    "@jcesarmobile/ssl-skip": "^0.4.0",
     "@zkorum/capacitor-secure-signing": "^1.3.0"
   }
 }
