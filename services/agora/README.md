@@ -16,7 +16,27 @@ Remember to first load the environment files in `.env` file by running `. ./.env
 There is an example file `env.example` which can be used as the reference.
 
 ```bash
+. ./.env
 quasar dev
+```
+
+### Logos
+
+Currently we are not bundling company logos in the source code due to copyright.
+Please add them manually to the following folder:
+
+```public/development/logos```
+
+### Capacitor Build
+
+New builds have the following requirements:
+
+- Version number to be updated in the ```build.gradle``` file for the app module
+- The signed bundle needs to be a release build instead of a debug build
+
+```
+quasar dev -m capacitor -T android
+quasar dev -m capacitor -T ios
 ```
 
 ### Lint the files

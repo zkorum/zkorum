@@ -1,30 +1,14 @@
 apply plugin: 'com.android.application'
-// See https://github.com/ionic-team/capacitor/issues/3943
-// Link package.json's version with android's version
-def appVersion = ""
-def packageJSONFilename = System.getProperty("user.dir") + '/../package.json'
-Integer appCode  = 1
-try {
-    def versionJSONFile = file(packageJSONFilename)
-    appVersion = new groovy.json.JsonSlurper().parseText(versionJSONFile.text).version
-    def (_,major) = (appVersion =~/^(\d+).*/ )[0]
-    // appCode =  major as Integer
-    appCode =  8
-    println  " Building App Version: ${appVersion} with Code: ${appCode}"
-} catch(Exception e) {
-    logger.warn("could not read version of ${packageJSONFilename}")
-    logger.warn("  -> ${e}")
-}
 
 android {
     namespace "com.zkorum.agora"
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.zkorum.agora"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode appCode
-        versionName appVersion
+        versionCode 2
+        versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
