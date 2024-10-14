@@ -12,6 +12,7 @@
     "@capacitor/cli": "^6.1.0",
     "@capacitor/core": "^6.1.0",
     "@capacitor/ios": "^6.1.0",
-    "@capgo/capacitor-updater": "^6.0.33"
+    "@capgo/capacitor-updater": "^6.0.33",
+    "@zkorum/capacitor-secure-signing": "^1.3.0"
   }
 }
