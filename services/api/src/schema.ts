@@ -479,7 +479,6 @@ export const commentTable = pgTable("comment", {
         .references(() => userTable.id),
     postId: integer("post_id")
         .references(() => postTable.id)
-        .unique()
         .notNull(),
     currentContentId: integer("current_content_id").references((): AnyPgColumn => commentContentTable.id), // null if comment was deleted
     numLikes: integer("num_likes").notNull().default(0),
