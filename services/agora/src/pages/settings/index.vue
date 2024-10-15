@@ -40,12 +40,14 @@ function logoutRequested() {
 }
 
 const accountSettings: SettingsInterface[] = [
+  /*
   {
     icon: "mdi-passport",
     label: "Account verification",
     action: () => { },
-    routeName: "verification-welcome"
+    routeName: "verification-options"
   },
+  */
   {
     icon: "mdi-logout",
     label: "Log out",

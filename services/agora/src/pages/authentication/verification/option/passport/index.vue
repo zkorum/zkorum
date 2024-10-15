@@ -41,6 +41,8 @@
 
         </div>
 
+        <TempSkipButton />
+
       </template>
     </AuthContentWrapper>
   </div>
@@ -54,6 +56,7 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { useQRCode } from "@vueuse/integrations/useQRCode";
 import { useQuasar } from "quasar";
 import { ref } from "vue";
+import TempSkipButton from "src/components/authentication/TempSkipButton.vue";
 
 const quasar = useQuasar();
 

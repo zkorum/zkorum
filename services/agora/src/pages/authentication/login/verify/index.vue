@@ -28,11 +28,11 @@
 
           <ZKButton class="buttonStyle" label="Next" color="primary"
             :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0" type="submit"
-            @click="submitCode(Number(verificationCode))" />
+            @click="emailVerification.submitCode(Number(verificationCode), verificationEmailAddress)" />
 
           <ZKButton class="buttonStyle"
             :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds + 's' : 'Resend Code'"
-            color="secondary" :disabled="verificationNextCodeSeconds > 0" @click="requestCode(true)" />
+            color="secondary" :disabled="verificationNextCodeSeconds > 0" @click="requestCodeClicked(true)" />
         </form>
 
       </template>
@@ -44,57 +44,33 @@
 import { onMounted, ref } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
-import { useRouter } from "vue-router";
 import InputOtp from "primevue/inputotp";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
-import { useBackendAuthApi } from "src/utils/api/auth";
-import { useQuasar } from "quasar";
-import { getPlatform } from "src/utils/common";
-import { useDialog } from "src/utils/ui/dialog";
 import { ApiV1AuthAuthenticatePost200Response } from "src/api";
-
-const router = useRouter();
+import { useRouter } from "vue-router";
+import { useDialog } from "src/utils/ui/dialog";
+import { useEmailVerification } from "src/utils/auth/email/verification";
 
 const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticationStore());
 
-const { emailCode, sendEmailCode } = useBackendAuthApi();
-
 const verificationCode = ref("");
-
-const dialog = useDialog();
-
-const $q = useQuasar();
 
 const verificationNextCodeSeconds = ref(0);
 const verificationCodeExpirySeconds = ref(0);
 
-onMounted(() => {
-  if (process.env.USE_DUMMY_ACCESS == "true") {
-    verificationEmailAddress.value = "test@gmail.com";
-  }
+const router = useRouter();
+const dialog = useDialog();
 
-  requestCode(false);
+const emailVerification = useEmailVerification();
+
+onMounted(() => {
+  requestCodeClicked(false);
 });
 
-async function submitCode(code: number) {
+async function requestCodeClicked(isRequestingNewCode: boolean) {
+  const response = await emailVerification.requestCode(isRequestingNewCode, verificationEmailAddress.value);
 
-  if (process.env.USE_DUMMY_ACCESS == "true") {
-    code = 0;
-  }
-
-  const response = await emailCode(verificationEmailAddress.value, code, getPlatform($q.platform));
-  if (response.data.success) {
-    isAuthenticated.value = true;
-    router.push({ name: "verification-welcome" });
-  } else {
-    console.log("Failed");
-  }
-}
-
-async function requestCode(isRequestingNewCode: boolean) {
-
-  const response = await sendEmailCode(verificationEmailAddress.value, isRequestingNewCode, getPlatform($q.platform));
   if (response.isSuccessful) {
     processRequestCodeResponse(response.data);
   } else {

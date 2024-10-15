@@ -21,11 +21,12 @@
               Expires in {{ verificationCodeExpirySeconds }}s
             </div>
 
-            <div v-if="verificationCodeExpirySeconds == 0" class="weakColor codeExpiry">
+            <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
               Code expired
             </div>
           </div>
 
+          <!--
           <ZKButton class="buttonStyle" label="Next" color="primary"
             :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0" type="submit"
              />
@@ -33,6 +34,9 @@
           <ZKButton class="buttonStyle"
             :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds + 's' : 'Resend Code'"
             color="secondary" :disabled="verificationNextCodeSeconds > 0"/>
+          -->
+
+          <TempSkipButton />
 
         </form>
 
@@ -46,14 +50,14 @@ import { storeToRefs } from "pinia";
 import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
 import { phoneVerificationStore } from "src/stores/verification/phone";
 import { ref } from "vue";
-import ZKButton from "src/components/ui-library/ZKButton.vue";
 import InputOtp from "primevue/inputotp";
+import TempSkipButton from "src/components/authentication/TempSkipButton.vue";
 
 const { verificationNumber } = storeToRefs(phoneVerificationStore());
 
 const verificationCode = ref("");
 
-const verificationNextCodeSeconds = ref(0);
+// const verificationNextCodeSeconds = ref(0);
 const verificationCodeExpirySeconds = ref(0);
 
 </script>

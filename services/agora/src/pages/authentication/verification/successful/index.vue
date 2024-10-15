@@ -4,11 +4,11 @@
       <q-icon name="mdi-check-circle" size="5rem" color="secondary" />
 
       <div class="title">
-        Passport Verified
+        Account Verified
       </div>
 
       <div class="description">
-        ZK Passport is successfully connected to your Agora account.
+        You can now start participating in the discussions anonymously.
       </div>
 
       <ZKButton label="Start Exploring" color="primary" @click="goToHomePage()" />
