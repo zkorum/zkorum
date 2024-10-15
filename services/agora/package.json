@@ -45,7 +45,7 @@
         "swiper": "^11.1.9",
         "tweetnacl": "^1.0.3",
         "uint8arrays": "^5.1.0",
-        "vue": "^3.5.1",
+        "vue": "^3.5.12",
         "vue-i18n": "^9.2.2",
         "vue-router": "^4.0.12",
         "zod": "^3.23.0"
@@ -53,19 +53,19 @@
     "devDependencies": {
         "@quasar/app-vite": "^2.0.0-beta.21",
         "@types/node": "^20.5.9",
-        "@typescript-eslint/eslint-plugin": "^6.6.0",
-        "@typescript-eslint/parser": "^6.6.0",
+        "@typescript-eslint/eslint-plugin": "^7.16.0",
+        "@typescript-eslint/parser": "^7.16.0",
         "@vitejs/plugin-basic-ssl": "^1.1.0",
         "autoprefixer": "^10.4.2",
         "dotenv": "^16.4.5",
-        "eslint": "^8.11.0",
+        "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.0.0",
         "eslint-plugin-vue": "^9.0.0",
         "prettier": "^3.0.3",
-        "typescript": "~5.3.0",
-        "vite-plugin-checker": "^0.6.4",
+        "typescript": "~5.5.3",
+        "vite-plugin-checker": "^0.8.0",
         "vite-tsconfig-paths": "^4.3.2",
-        "vue-tsc": "^1.8.22"
+        "vue-tsc": "^2.0.29"
     },
     "engines": {
         "node": "^24 || ^22 || ^20 || ^18",
