@@ -29,7 +29,7 @@ export async function fetchFeed({
     TablesRelationalConfig
 >): Promise<ExtendedPost[]> {
     const defaultLimit = 30;
-    const actualLimit = limit === undefined ? defaultLimit : limit;
+    const actualLimit = limit ?? defaultLimit;
     const whereUpdatedAt =
         lastReactedAt === undefined
             ? undefined
@@ -109,7 +109,7 @@ export async function fetchFeed({
 
         let payload: ExtendedPostPayload;
         if (result.option1 !== null && result.option2 !== null && result.option1Response !== null && result.option2Response !== null) { // hasPoll
-            let poll: PollOptionWithResult[] = [{
+            const poll: PollOptionWithResult[] = [{
                 index: 1,
                 option: result.option1,
                 numResponses: result.option1Response,
@@ -125,7 +125,7 @@ export async function fetchFeed({
                 poll.push({
                     index: 3,
                     option: result.option3,
-                    numResponses: result.option3Response !== null ? result.option3Response : 0,
+                    numResponses: result.option3Response ?? 0,
                     isChosen: result.optionChosen === 3
                 })
             }
@@ -133,7 +133,7 @@ export async function fetchFeed({
                 poll.push({
                     index: 4,
                     option: result.option4,
-                    numResponses: result.option4Response !== null ? result.option4Response : 0,
+                    numResponses: result.option4Response ?? 0,
                     isChosen: result.optionChosen === 4
 
                 })
@@ -142,7 +142,7 @@ export async function fetchFeed({
                 poll.push({
                     index: 5,
                     option: result.option5,
-                    numResponses: result.option5Response !== null ? result.option5Response : 0,
+                    numResponses: result.option5Response ?? 0,
                     isChosen: result.optionChosen === 5
                 })
             }
@@ -150,7 +150,7 @@ export async function fetchFeed({
                 poll.push({
                     index: 6,
                     option: result.option6,
-                    numResponses: result.option6Response !== null ? result.option6Response : 0,
+                    numResponses: result.option6Response ?? 0,
                     isChosen: result.optionChosen === 6
                 })
             }

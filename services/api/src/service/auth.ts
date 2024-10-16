@@ -1,4 +1,4 @@
-import { codeToString, generateOneTimeCode, generateRandomHex, generateUUID } from "@/crypto.js";
+import { codeToString, generateOneTimeCode, generateUUID } from "@/crypto.js";
 import { authAttemptTable, deviceTable, emailTable, userTable } from "@/schema.js";
 import { nowZeroMs } from "@/shared/common/util.js";
 import type { AuthenticateRequestBody, GetDeviceStatusResp, VerifyOtp200 } from "@/shared/types/dto.js";
@@ -279,7 +279,6 @@ export async function register({
     now,
     sessionExpiry,
 }: RegisterProps): Promise<void> {
-    const uid = generateRandomHex();
     await db.transaction(async (tx) => {
         const authAttemptResult = await tx
             .select({

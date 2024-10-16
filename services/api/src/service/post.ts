@@ -1,7 +1,7 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { PostComment, SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, deviceTable, postTable, userTable, voteContentTable, voteTable } from "@/schema.js";
+import { commentContentTable, commentTable, postTable, voteContentTable, voteTable } from "@/schema.js";
 import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
 import type { FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
@@ -34,7 +34,7 @@ export async function fetchCommentsByPostSlugId({
     createdAt,
     limit,
 }: FetchCommentsByPostIdProps): Promise<PostComment[]> {
-    const actualLimit = limit === undefined ? 30 : limit;
+    const actualLimit = limit ?? 30;
     const whereCreatedAt =
         createdAt === undefined
             ? eq(postTable.slugId, postSlugId)
