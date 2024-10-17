@@ -74,9 +74,7 @@ export function useBackendAuthApi() {
       undefined,
       undefined,
       api
-    ).apiV1AuthVerifyOtpPost({
-      code: code,
-    }, {
+    ).apiV1AuthVerifyOtpPost(params, {
       headers: {
         ...buildAuthorizationHeader(encodedUcan)
       }

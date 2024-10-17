@@ -1,69 +1,13 @@
-DO $$ BEGIN
- CREATE TYPE "age_group" AS ENUM('8-15', '16-24', '25-34', '35-44', '45-54', '55-64', '65+');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "auth_type" AS ENUM('register', 'login_known_device', 'login_new_device');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "country_code" AS ENUM('AND', 'ARE', 'AFG', 'ATG', 'AIA', 'ALB', 'ARM', 'AGO', 'ATA', 'ARG', 'ASM', 'AUT', 'AUS', 'ABW', 'ALA', 'AZE', 'BIH', 'BRB', 'BGD', 'BEL', 'BFA', 'BGR', 'BHR', 'BDI', 'BEN', 'BLM', 'BMU', 'BRN', 'BOL', 'BES', 'BRA', 'BHS', 'BTN', 'BVT', 'BWA', 'BLR', 'BLZ', 'CAN', 'CCK', 'COD', 'CAF', 'COG', 'CHE', 'CIV', 'COK', 'CHL', 'CMR', 'CHN', 'COL', 'CRI', 'CUB', 'CPV', 'CUW', 'CXR', 'CYP', 'CZE', 'DEU', 'DJI', 'DNK', 'DMA', 'DOM', 'DZA', 'ECU', 'EST', 'EGY', 'ESH', 'ERI', 'ESP', 'ETH', 'FIN', 'FJI', 'FLK', 'FSM', 'FRO', 'FRA', 'GAB', 'GBR', 'GRD', 'GEO', 'GUF', 'GGY', 'GHA', 'GIB', 'GRL', 'GMB', 'GIN', 'GLP', 'GNQ', 'GRC', 'SGS', 'GTM', 'GUM', 'GNB', 'GUY', 'HKG', 'HMD', 'HND', 'HRV', 'HTI', 'HUN', 'IDN', 'IRL', 'ISR', 'IMN', 'IND', 'IOT', 'IRQ', 'IRN', 'ISL', 'ITA', 'JEY', 'JAM', 'JOR', 'JPN', 'KEN', 'KGZ', 'KHM', 'KIR', 'COM', 'KNA', 'PRK', 'KOR', 'KWT', 'CYM', 'KAZ', 'LAO', 'LBN', 'LCA', 'LIE', 'LKA', 'LBR', 'LSO', 'LTU', 'LUX', 'LVA', 'LBY', 'MAR', 'MCO', 'MDA', 'MNE', 'MAF', 'MDG', 'MHL', 'MKD', 'MLI', 'MMR', 'MNG', 'MAC', 'MNP', 'MTQ', 'MRT', 'MSR', 'MLT', 'MUS', 'MDV', 'MWI', 'MEX', 'MYS', 'MOZ', 'NAM', 'NCL', 'NER', 'NFK', 'NGA', 'NIC', 'NLD', 'NOR', 'NPL', 'NRU', 'NIU', 'NZL', 'OMN', 'PAN', 'PER', 'PYF', 'PNG', 'PHL', 'PAK', 'POL', 'SPM', 'PCN', 'PRI', 'PSE', 'PRT', 'PLW', 'PRY', 'QAT', 'REU', 'ROU', 'SRB', 'RUS', 'RWA', 'SAU', 'SLB', 'SYC', 'SDN', 'SWE', 'SGP', 'SHN', 'SVN', 'SJM', 'SVK', 'SLE', 'SMR', 'SEN', 'SOM', 'SUR', 'SSD', 'STP', 'SLV', 'SXM', 'SYR', 'SWZ', 'TCA', 'TCD', 'ATF', 'TGO', 'THA', 'TJK', 'TKL', 'TLS', 'TKM', 'TUN', 'TON', 'TUR', 'TTO', 'TUV', 'TWN', 'TZA', 'UKR', 'UGA', 'UMI', 'USA', 'URY', 'UZB', 'VAT', 'VCT', 'VEN', 'VGB', 'VIR', 'VNM', 'VUT', 'WLF', 'WSM', 'XKX', 'YEM', 'MYT', 'ZAF', 'ZMB', 'ZWE');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "email_type" AS ENUM('primary', 'backup', 'secondary', 'other');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "moderation_action" AS ENUM('hide', 'nothing');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "moderation_reason_enum" AS ENUM('irrelevant', 's', 'p', 'a', 'm', 'nothing');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "phone_country_code" AS ENUM('1', '7', '20', '27', '30', '31', '32', '33', '34', '36', '39', '40', '41', '43', '44', '45', '46', '47', '48', '49', '51', '52', '53', '54', '55', '56', '57', '58', '60', '61', '62', '63', '64', '65', '66', '76', '77', '81', '82', '84', '86', '90', '91', '92', '93', '94', '95', '98', '211', '212', '213', '216', '218', '220', '221', '222', '223', '224', '225', '226', '227', '228', '229', '230', '231', '232', '233', '234', '235', '236', '237', '238', '239', '240', '241', '242', '243', '244', '245', '246', '248', '249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '260', '261', '262', '263', '264', '265', '266', '267', '268', '269', '290', '291', '297', '298', '299', '350', '351', '352', '353', '354', '355', '356', '357', '358', '359', '370', '371', '372', '373', '374', '375', '376', '377', '378', '379', '380', '381', '382', '383', '385', '386', '387', '389', '420', '421', '423', '500', '501', '502', '503', '504', '505', '506', '507', '508', '509', '590', '591', '592', '593', '594', '595', '596', '597', '598', '670', '672', '673', '674', '675', '676', '677', '678', '679', '680', '681', '682', '683', '685', '686', '687', '688', '689', '690', '691', '692', '850', '852', '853', '855', '856', '880', '886', '960', '961', '962', '963', '964', '965', '966', '967', '968', '970', '971', '972', '973', '974', '975', '976', '977', '992', '993', '994', '995', '996', '998', '1242', '1246', '1264', '1268', '1284', '1340', '1345', '1441', '1473', '1649', '1664', '1670', '1671', '1684', '1721', '1758', '1767', '1784', '1787', '1809', '1829', '1849', '1868', '1869', '1876', '1939', '4779', '5997', '5999');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "proof_type" AS ENUM('creation', 'edit', 'deletion');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "report_reason_enum" AS ENUM('irrelevant', 's', 'p', 'a', 'm');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "sex" AS ENUM('F', 'M', 'X');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "vote_enum" AS ENUM('like', 'dislike');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
+CREATE TYPE "public"."age_group" AS ENUM('8-15', '16-24', '25-34', '35-44', '45-54', '55-64', '65+');--> statement-breakpoint
+CREATE TYPE "public"."auth_type" AS ENUM('register', 'login_known_device', 'login_new_device');--> statement-breakpoint
+CREATE TYPE "public"."country_code" AS ENUM('AND', 'ARE', 'AFG', 'ATG', 'AIA', 'ALB', 'ARM', 'AGO', 'ATA', 'ARG', 'ASM', 'AUT', 'AUS', 'ABW', 'ALA', 'AZE', 'BIH', 'BRB', 'BGD', 'BEL', 'BFA', 'BGR', 'BHR', 'BDI', 'BEN', 'BLM', 'BMU', 'BRN', 'BOL', 'BES', 'BRA', 'BHS', 'BTN', 'BVT', 'BWA', 'BLR', 'BLZ', 'CAN', 'CCK', 'COD', 'CAF', 'COG', 'CHE', 'CIV', 'COK', 'CHL', 'CMR', 'CHN', 'COL', 'CRI', 'CUB', 'CPV', 'CUW', 'CXR', 'CYP', 'CZE', 'DEU', 'DJI', 'DNK', 'DMA', 'DOM', 'DZA', 'ECU', 'EST', 'EGY', 'ESH', 'ERI', 'ESP', 'ETH', 'FIN', 'FJI', 'FLK', 'FSM', 'FRO', 'FRA', 'GAB', 'GBR', 'GRD', 'GEO', 'GUF', 'GGY', 'GHA', 'GIB', 'GRL', 'GMB', 'GIN', 'GLP', 'GNQ', 'GRC', 'SGS', 'GTM', 'GUM', 'GNB', 'GUY', 'HKG', 'HMD', 'HND', 'HRV', 'HTI', 'HUN', 'IDN', 'IRL', 'ISR', 'IMN', 'IND', 'IOT', 'IRQ', 'IRN', 'ISL', 'ITA', 'JEY', 'JAM', 'JOR', 'JPN', 'KEN', 'KGZ', 'KHM', 'KIR', 'COM', 'KNA', 'PRK', 'KOR', 'KWT', 'CYM', 'KAZ', 'LAO', 'LBN', 'LCA', 'LIE', 'LKA', 'LBR', 'LSO', 'LTU', 'LUX', 'LVA', 'LBY', 'MAR', 'MCO', 'MDA', 'MNE', 'MAF', 'MDG', 'MHL', 'MKD', 'MLI', 'MMR', 'MNG', 'MAC', 'MNP', 'MTQ', 'MRT', 'MSR', 'MLT', 'MUS', 'MDV', 'MWI', 'MEX', 'MYS', 'MOZ', 'NAM', 'NCL', 'NER', 'NFK', 'NGA', 'NIC', 'NLD', 'NOR', 'NPL', 'NRU', 'NIU', 'NZL', 'OMN', 'PAN', 'PER', 'PYF', 'PNG', 'PHL', 'PAK', 'POL', 'SPM', 'PCN', 'PRI', 'PSE', 'PRT', 'PLW', 'PRY', 'QAT', 'REU', 'ROU', 'SRB', 'RUS', 'RWA', 'SAU', 'SLB', 'SYC', 'SDN', 'SWE', 'SGP', 'SHN', 'SVN', 'SJM', 'SVK', 'SLE', 'SMR', 'SEN', 'SOM', 'SUR', 'SSD', 'STP', 'SLV', 'SXM', 'SYR', 'SWZ', 'TCA', 'TCD', 'ATF', 'TGO', 'THA', 'TJK', 'TKL', 'TLS', 'TKM', 'TUN', 'TON', 'TUR', 'TTO', 'TUV', 'TWN', 'TZA', 'UKR', 'UGA', 'UMI', 'USA', 'URY', 'UZB', 'VAT', 'VCT', 'VEN', 'VGB', 'VIR', 'VNM', 'VUT', 'WLF', 'WSM', 'XKX', 'YEM', 'MYT', 'ZAF', 'ZMB', 'ZWE');--> statement-breakpoint
+CREATE TYPE "public"."email_type" AS ENUM('primary', 'backup', 'secondary', 'other');--> statement-breakpoint
+CREATE TYPE "public"."moderation_action" AS ENUM('hide', 'nothing');--> statement-breakpoint
+CREATE TYPE "public"."moderation_reason_enum" AS ENUM('irrelevant', 's', 'p', 'a', 'm', 'nothing');--> statement-breakpoint
+CREATE TYPE "public"."proof_type" AS ENUM('creation', 'edit', 'deletion');--> statement-breakpoint
+CREATE TYPE "public"."report_reason_enum" AS ENUM('irrelevant', 's', 'p', 'a', 'm');--> statement-breakpoint
+CREATE TYPE "public"."sex" AS ENUM('F', 'M', 'X');--> statement-breakpoint
+CREATE TYPE "public"."vote_enum" AS ENUM('like', 'dislike');--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "auth_attempt" (
 	"did_write" varchar(1000) PRIMARY KEY NOT NULL,
 	"type" "auth_type" NOT NULL,
@@ -79,7 +23,7 @@ CREATE TABLE IF NOT EXISTS "auth_attempt" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "commentContent" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "commentContent_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"comment_id" integer NOT NULL,
 	"comment_proof_id" integer NOT NULL,
 	"post_content_id" integer,
@@ -97,7 +41,7 @@ CREATE TABLE IF NOT EXISTS "commentContent" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "comment_proof" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "comment_proof_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"proof_type" "proof_type" NOT NULL,
 	"comment_id" integer NOT NULL,
 	"comment_content_id" integer,
@@ -110,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "comment_proof" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "comment" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "comment_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"slug_id" varchar(10) NOT NULL,
 	"author_id" uuid NOT NULL,
 	"post_id" integer NOT NULL,
@@ -121,8 +65,7 @@ CREATE TABLE IF NOT EXISTS "comment" (
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
 	"last_reacted_at" timestamp (0) DEFAULT now() NOT NULL,
-	CONSTRAINT "comment_slug_id_unique" UNIQUE("slug_id"),
-	CONSTRAINT "comment_post_id_unique" UNIQUE("post_id")
+	CONSTRAINT "comment_slug_id_unique" UNIQUE("slug_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "device" (
@@ -144,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "email" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "id_proof" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "id_proof_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"user_id" uuid NOT NULL,
 	"proof_type" "proof_type" NOT NULL,
 	"proof" text NOT NULL,
@@ -154,7 +97,7 @@ CREATE TABLE IF NOT EXISTS "id_proof" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "moderation_table" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "moderation_table_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"report_id" integer NOT NULL,
 	"moderator_id" uuid,
 	"moderation_action" "moderation_action" NOT NULL,
@@ -165,7 +108,7 @@ CREATE TABLE IF NOT EXISTS "moderation_table" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "organisation" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "organisation_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" varchar(65) NOT NULL,
 	"image_url" text,
 	"website_url" text,
@@ -175,7 +118,7 @@ CREATE TABLE IF NOT EXISTS "organisation" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "passport" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "passport_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"user_id" uuid NOT NULL,
 	"citizenship" "country_code" NOT NULL,
 	"age_group" "age_group",
@@ -185,7 +128,7 @@ CREATE TABLE IF NOT EXISTS "passport" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "phone" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "phone_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"user_id" uuid NOT NULL,
 	"last_two_digits" varchar(2) NOT NULL,
 	"country_code" "country_code" NOT NULL,
@@ -196,7 +139,7 @@ CREATE TABLE IF NOT EXISTS "phone" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "poll_response_content" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "poll_response_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"poll_response_id" integer NOT NULL,
 	"poll_response_proof_id" integer NOT NULL,
 	"post_content_id" integer,
@@ -208,7 +151,7 @@ CREATE TABLE IF NOT EXISTS "poll_response_content" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "poll_response_proof" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "poll_response_proof_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"proof_type" "proof_type" NOT NULL,
 	"poll_response_id" integer NOT NULL,
 	"author_did" varchar(1000) NOT NULL,
@@ -222,7 +165,7 @@ CREATE TABLE IF NOT EXISTS "poll_response_proof" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "poll_response" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "poll_response_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"author_id" uuid NOT NULL,
 	"post_id" integer NOT NULL,
 	"current_content_id" integer,
@@ -233,7 +176,7 @@ CREATE TABLE IF NOT EXISTS "poll_response" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "poll" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "poll_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"post_content_id" integer NOT NULL,
 	"option1" varchar(30) NOT NULL,
 	"option2" varchar(30) NOT NULL,
@@ -253,7 +196,7 @@ CREATE TABLE IF NOT EXISTS "poll" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "post_content" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "post_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"post_id" integer NOT NULL,
 	"post_proof_id" integer NOT NULL,
 	"parent_id" integer,
@@ -266,7 +209,7 @@ CREATE TABLE IF NOT EXISTS "post_content" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "post_proof" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "post_proof_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"proof_type" "proof_type" NOT NULL,
 	"post_id" integer NOT NULL,
 	"post_content_id" integer,
@@ -279,7 +222,7 @@ CREATE TABLE IF NOT EXISTS "post_proof" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "post" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "post_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"slug_id" varchar(10) NOT NULL,
 	"author_id" uuid NOT NULL,
 	"current_content_id" integer,
@@ -292,7 +235,7 @@ CREATE TABLE IF NOT EXISTS "post" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "report_table" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "report_table_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"post_id" integer,
 	"reporter_id" uuid,
 	"reporter_reason" "report_reason_enum" NOT NULL,
@@ -310,7 +253,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "vote_content" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "vote_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"vote_id" integer NOT NULL,
 	"vote_proof_id" integer NOT NULL,
 	"comment_content_id" integer,
@@ -321,7 +264,7 @@ CREATE TABLE IF NOT EXISTS "vote_content" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "vote_proof" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "vote_proof_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"proof_type" "proof_type" NOT NULL,
 	"vote_id" integer NOT NULL,
 	"vote_content_id" integer,
@@ -334,7 +277,7 @@ CREATE TABLE IF NOT EXISTS "vote_proof" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "vote" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "vote_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"author_id" uuid NOT NULL,
 	"comment_id" integer NOT NULL,
 	"current_content_id" integer,

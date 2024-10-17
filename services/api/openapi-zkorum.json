@@ -813,11 +813,22 @@
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "properties": {},
+                                "properties": {
+                                    "postTitle": {
+                                        "type": "string"
+                                    },
+                                    "postBody": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "postTitle"
+                                ],
                                 "additionalProperties": false
                             }
                         }
-                    }
+                    },
+                    "required": true
                 },
                 "responses": {
                     "200": {

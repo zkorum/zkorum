@@ -469,6 +469,25 @@ export interface ApiV1FeedFetchMorePostRequest {
      */
     'lastReactedAt'?: string;
 }
+/**
+ * 
+ * @export
+ * @interface ApiV1PostCreatePostRequest
+ */
+export interface ApiV1PostCreatePostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequest
+     */
+    'postTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePostRequest
+     */
+    'postBody'?: string;
+}
 
 /**
  * DefaultApi - axios parameter creator
@@ -784,11 +803,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {object} [body] 
+         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PostCreatePost: async (body?: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1PostCreatePost: async (apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1PostCreatePostRequest' is not null or undefined
+            assertParamExists('apiV1PostCreatePost', 'apiV1PostCreatePostRequest', apiV1PostCreatePostRequest)
             const localVarPath = `/api/v1/post/create`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -812,7 +833,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PostCreatePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -926,12 +947,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {object} [body] 
+         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PostCreatePost(body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostCreatePost(body, options);
+        async apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostCreatePost(apiV1PostCreatePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostCreatePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1019,12 +1040,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {object} [body] 
+         * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PostCreatePost(body?: object, options?: any): AxiosPromise<object> {
-            return localVarFp.apiV1PostCreatePost(body, options).then((request) => request(axios, basePath));
+        apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: any): AxiosPromise<object> {
+            return localVarFp.apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1125,13 +1146,13 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {object} [body] 
+     * @param {ApiV1PostCreatePostRequest} apiV1PostCreatePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1PostCreatePost(body?: object, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1PostCreatePost(body, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

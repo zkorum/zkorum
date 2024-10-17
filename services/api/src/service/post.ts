@@ -1,7 +1,7 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { PostComment, SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, postTable, voteContentTable, voteTable } from "@/schema.js";
+import { commentContentTable, commentTable, postContentTable, postProofTable, postTable, voteContentTable, voteTable } from "@/schema.js";
 import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
 import type { CreateNewPostResponse, FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
@@ -29,6 +29,8 @@ interface FetchNextCommentsToVoteOn {
 interface CreateNewPost {
     db: PostgresDatabase;
     authorId: string;
+    postTitle: string;
+    postBody: string | null;
 }
 
 export async function fetchCommentsByPostSlugId({
@@ -172,12 +174,14 @@ export async function fetchNextCommentsToVoteOn({
 
 export async function createNewPost({
     db,
+    postTitle,
+    postBody,
     authorId
 }: CreateNewPost): Promise<CreateNewPostResponse> {
 
     await db.transaction(async (tx) => {
 
-        const postResponse = await tx.insert(postTable).values({
+        const postInsertResponse = await tx.insert(postTable).values({
             authorId: authorId,
             slugId: "",
             commentCount: 0,
@@ -188,23 +192,40 @@ export async function createNewPost({
             lastReactedAt: new Date()
         }).returning({ postId : postTable.id});
 
-        console.log(postResponse);
+        
+        const postId = postInsertResponse[0].postId;
+        console.log(postId);
 
         /*
-        const postTableResponse = await tx.insert(postContentTable).values({
-            postId: postResponse.,
-            postProofId: "",
-            parentId: "",
-            title: "TESET TITLE",
-            body: "TEST BODY",
-            pollId: "",
-            createdAt: "",
-            updatedAt: ""
-        }).returning();
-        console.log(postTableResponse);
-        */
+        const postContentTableResponse = await tx.insert(postContentTable).values({
+            postId: postId,
+            postProofId: 0,
+            parentId: null,
+            title: postTitle,
+            body: postBody,
+            pollId: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        }).returning({ postContentTableId: postContentTable.id });
 
-        
+        const postProofTableResponse = await tx.insert(postProofTable).values({
+            type: "creation",
+            postId: postId,
+            postContentId: 0,
+            parentId: null,
+            title: postTitle,
+            body: postBody,
+            pollId: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        }).returning({ postContentTableId: postContentTable.id });
+
+        await tx.update(postTable)
+            .set({
+                currentContentId: postContentTableResponse[0].postContentTableId
+            })
+            .where(eq(postTable.id, postId));
+        */
     });
 
     return {

@@ -1,12 +1,12 @@
 {
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1728345748511,
-      "tag": "0000_spicy_wolfpack",
+      "version": "7",
+      "when": 1729187788210,
+      "tag": "0000_simple_zzzax",
       "breakpoints": true
     }
   ]

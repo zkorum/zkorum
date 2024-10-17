@@ -2,11 +2,11 @@ import { organisationTable, pollResponseContentTable, pollResponseTable, pollTab
 import { toUnionUndefined } from "@/shared/shared.js";
 import type { ExtendedPost, ExtendedPostPayload, PollOptionWithResult, PostMetadata } from "@/shared/types/zod.js";
 import { and, desc, eq, gt, lt, type TablesRelationalConfig } from "drizzle-orm";
-import type { PgTransaction, QueryResultHKT } from "drizzle-orm/pg-core";
+import type { PgTransaction, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 
 interface FetchFeedProps<
-    TQueryResult extends QueryResultHKT,
+    TQueryResult extends PgQueryResultHKT,
     TFullSchema extends Record<string, unknown>,
     TSchema extends TablesRelationalConfig,
 > {
@@ -24,7 +24,7 @@ export async function fetchFeed({
     limit,
     showHidden,
 }: FetchFeedProps<
-    QueryResultHKT,
+    PgQueryResultHKT,
     Record<string, unknown>,
     TablesRelationalConfig
 >): Promise<ExtendedPost[]> {

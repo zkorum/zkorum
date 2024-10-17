@@ -6,7 +6,6 @@ import {
     varchar,
     integer,
     boolean,
-    serial,
     customType,
     text,
     real,
@@ -42,6 +41,7 @@ export const countryCodeEnum = pgEnum("country_code", ["AND", "ARE", "AFG", "ATG
 export const ageGroupEnum = pgEnum("age_group", ["8-15", "16-24", "25-34", "35-44", "45-54", "55-64", "65+"]);
 export const sexEnum = pgEnum("sex", ["F", "M", "X"]);
 
+/*
 export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
     "376", "971", "93", "1268", "1264", "355", "374", "244", "672", "54", "1684", "43", "61", "297", "358", "994", "387", "1246",
     "880", "32", "226", "359", "973", "257", "229", "590", "1441", "673", "591", "5997", "55", "1242", "975", "47", "267", "375",
@@ -59,7 +59,7 @@ export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
     "380", "256", "1", "1", "598", "998", "379", "1784", "58", "1284", "1340", "84", "678", "681", "685", "377", "381", "383",
     "386", "967", "262", "27", "260", "263"
 ]);
-
+*/
 
 // One user == one account.
 // Inserting a record in that table means that the user has been successfully registered.
@@ -86,7 +86,7 @@ export const userTable = pgTable("user", {
 });
 
 export const organisationTable = pgTable("organisation", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     name: varchar("name", { length: MAX_LENGTH_NAME_CREATOR }).notNull(),
     imageUrl: text("image_url"),
     websiteUrl: text("website_url"),
@@ -106,7 +106,7 @@ export const organisationTable = pgTable("organisation", {
 });
 
 export const passportTable = pgTable("passport", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
@@ -128,7 +128,7 @@ export const passportTable = pgTable("passport", {
 });
 
 export const phoneTable = pgTable("phone", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
@@ -217,7 +217,7 @@ export const proofType = pgEnum("proof_type", [
 
 // each proof corresponds to at least one device
 export const idProofTable = pgTable("id_proof", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
@@ -276,7 +276,7 @@ export const authAttemptTable = pgTable("auth_attempt", {
 
 // conceptually, it is a "pollContentTable"
 export const pollTable = pgTable("poll", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     postContentId: integer("post_content_id")
         .notNull()
         .unique()
@@ -312,7 +312,7 @@ export const proofTypeEnum = pgEnum("proof_type", ["creation", "edit", "deletion
 
 // these proofs are kept even after edit/deletion
 export const postProofTable = pgTable("post_proof", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
     postId: integer("post_id") // "postAs"
         .notNull()
@@ -339,7 +339,7 @@ export const postProofTable = pgTable("post_proof", {
 });
 
 export const postContentTable = pgTable("post_content", {
-    id: integer("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     postId: integer("post_id") // "postAs"
         .notNull()
         .references((): AnyPgColumn => postTable.id), // the author of the poll
@@ -366,7 +366,7 @@ export const postContentTable = pgTable("post_content", {
 });
 
 export const postTable = pgTable("post", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     slugId: varchar("slug_id", { length: 10 }).notNull(), // used for permanent URL
     authorId: uuid("author_id") // "postAs"
         .notNull()
@@ -396,7 +396,7 @@ export const postTable = pgTable("post", {
 });
 
 export const pollResponseTable = pgTable("poll_response", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
@@ -420,7 +420,7 @@ export const pollResponseTable = pgTable("poll_response", {
 });
 
 export const pollResponseProofTable = pgTable("poll_response_proof", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
     pollResponseId: integer("poll_response_id") //
         .notNull()
@@ -448,7 +448,7 @@ export const pollResponseProofTable = pgTable("poll_response_proof", {
 });
 
 export const pollResponseContentTable = pgTable("poll_response_content", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     pollResponseId: integer("poll_response_id") //
         .notNull()
         .references(() => pollResponseTable.id),
@@ -472,7 +472,7 @@ export const pollResponseContentTable = pgTable("poll_response_content", {
 });
 
 export const commentTable = pgTable("comment", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL
     authorId: uuid("author_id")
         .notNull()
@@ -506,7 +506,7 @@ export const commentTable = pgTable("comment", {
 });
 
 export const commentContentTable = pgTable("commentContent", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     commentId: integer("comment_id") // "postAs"
         .notNull()
         .references((): AnyPgColumn => commentTable.id), // the author of the poll
@@ -540,7 +540,7 @@ export const commentContentTable = pgTable("commentContent", {
 
 // these proofs are kept even after edit/deletion
 export const commentProofTable = pgTable("comment_proof", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
     commentId: integer("comment_id") // "postAs"
         .notNull()
@@ -569,7 +569,7 @@ export const commentProofTable = pgTable("comment_proof", {
 
 // like or dislike on comments for each user
 export const voteTable = pgTable("vote", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
@@ -594,7 +594,7 @@ export const voteTable = pgTable("vote", {
 export const voteEnum = pgEnum("vote_enum", ["like", "dislike"]);
 
 export const voteContentTable = pgTable("vote_content", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     voteId: integer("vote_id") //
         .notNull()
         .references(() => voteTable.id),
@@ -618,7 +618,7 @@ export const voteContentTable = pgTable("vote_content", {
 });
 
 export const voteProofTable = pgTable("vote_proof", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
     voteId: integer("vote_id") //
         .notNull()
@@ -656,7 +656,7 @@ export const moderationReasonEnum = pgEnum("moderation_reason_enum", [firstReaso
 export const moderationAction = pgEnum("moderation_action", ["hide", "nothing"]);
 
 export const reportTable = pgTable("report_table", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     postId: integer("post_id") //
         .references(() => postTable.id), // at least one or the other should be not null - add a check
     commentId: integer("post_id") //
@@ -681,7 +681,7 @@ export const reportTable = pgTable("report_table", {
 });
 
 export const moderationTable = pgTable("moderation_table", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     reportId: integer("report_id").notNull().references((): AnyPgColumn => reportTable.id),
     moderatorId: uuid("moderator_id").references(() => userTable.id),
     moderationAction: moderationAction("moderation_action").notNull(), // add check

@@ -1,5 +1,5 @@
 import "dotenv/config"; // this loads .env values in process.env
-import type { Config } from "drizzle-kit";
+import { defineConfig } from "drizzle-kit";
 import { z } from "zod";
 
 const drizzleConfigSchema = z.object({
@@ -8,11 +8,13 @@ const drizzleConfigSchema = z.object({
 
 const config = drizzleConfigSchema.parse(process.env);
 
-export default {
-    schema: "./src/schema.ts",
+export default defineConfig({
     out: "./drizzle",
-    driver: "pg",
+    dialect: "postgresql",
+    schema: "./src/schema.ts",
+    
+    driver: "pglite",
     dbCredentials: {
-        connectionString: config.CONNECTION_STRING,
+        url: config.CONNECTION_STRING
     },
-} satisfies Config;
+});

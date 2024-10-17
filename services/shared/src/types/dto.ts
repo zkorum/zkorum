@@ -88,6 +88,8 @@ export class Dto {
     });
     static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodComment) });
     static createNewPostRequest = z.object({
+        postTitle: z.string(),
+        postBody: z.string().optional()
     });
     static createNewPostResponse = z.object({
     });

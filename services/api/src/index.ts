@@ -530,7 +530,9 @@ server.after(() => {
                     const { userId } = status
                     await postService.createNewPost({
                         db: db,
-                        authorId: userId
+                        authorId: userId,
+                        postTitle: request.body.postTitle,
+                        postBody: request.body.postBody ?? null
                     });
                 }
             },
