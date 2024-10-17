@@ -16,11 +16,9 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { useQuasar } from "quasar";
 import SettingsSection from "src/components/settings/SettingsSection.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendAuthApi } from "src/utils/api/auth";
-import { getPlatform } from "src/utils/common";
 import { SettingsInterface } from "src/utils/component/settings/settings";
 import { useRouter } from "vue-router";
 
@@ -28,13 +26,11 @@ const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const { userLogout } = useAuthenticationStore();
 
-const quasar = useQuasar();
-
 const backendAuth = useBackendAuthApi();
 const router = useRouter();
 
 function logoutRequested() {
-  backendAuth.logout("test@gmail.com", getPlatform(quasar.platform));
+  backendAuth.logout();
   userLogout();
   router.push({ name: "welcome" });
 }

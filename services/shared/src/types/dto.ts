@@ -87,6 +87,10 @@ export class Dto {
         numberOfCommentsToFetch: z.number().int().positive()
     });
     static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodComment) });
+    static createNewPostRequest = z.object({
+    });
+    static createNewPostResponse = z.object({
+    });
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
@@ -98,3 +102,4 @@ export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;
 export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
 export type FetchCommentsToVoteOn200 = z.infer<typeof Dto.commentFetchToVoteOn200>;
+export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;

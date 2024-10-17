@@ -805,6 +805,35 @@
                     }
                 }
             }
+        },
+        "/api/v1/post/create": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {},
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {},
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "servers": [],

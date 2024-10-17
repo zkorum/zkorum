@@ -28,7 +28,7 @@
 
           <ZKButton class="buttonStyle" label="Next" color="primary"
             :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0" type="submit"
-            @click="emailVerification.submitCode(Number(verificationCode), verificationEmailAddress)" />
+            @click="emailVerification.submitCode(Number(verificationCode))" />
 
           <ZKButton class="buttonStyle"
             :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds + 's' : 'Resend Code'"

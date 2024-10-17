@@ -13,5 +13,10 @@
     "vue"
   ],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "files.eol": "\n"
+  "files.eol": "\n",
+  "files.watcherExclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/.DS_Store": true,
+  }
 }

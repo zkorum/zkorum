@@ -506,22 +506,35 @@ server.after(() => {
                 }
             },
         });
-    // server
-    //     .withTypeProvider<ZodTypeProvider>()
-    //     .post(`/api/${apiVersion}/post/create`, {
-    //         schema: {
-    //             body: Dto.createPostRequest,
-    //         },
-    //         handler: async (request, _reply) => {
-    //             const didWrite = await verifyUCAN(db, request, {
-    //                 expectedDeviceStatus: {
-    //                     isLoggedIn: true,
-    //                 },
-    //             });
-    //             // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
-    //             // TODO
-    //         },
-    //     });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/post/create`, {
+            schema: {
+                body: Dto.createNewPostRequest,
+                response: {
+                    200: Dto.createNewPostResponse
+                }
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true,
+                    },
+                });
+                // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
+                
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const { userId } = status
+                    await postService.createNewPost({
+                        db: db,
+                        authorId: userId
+                    });
+                }
+            },
+        });
     // server
     //     .withTypeProvider<ZodTypeProvider>()
     //     .post(`/api/${apiVersion}/poll/respond`, {

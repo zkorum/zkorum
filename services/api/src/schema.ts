@@ -339,7 +339,7 @@ export const postProofTable = pgTable("post_proof", {
 });
 
 export const postContentTable = pgTable("post_content", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     postId: integer("post_id") // "postAs"
         .notNull()
         .references((): AnyPgColumn => postTable.id), // the author of the poll

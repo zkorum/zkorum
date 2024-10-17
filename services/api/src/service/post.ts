@@ -3,7 +3,7 @@ import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgre
 import type { PostComment, SlugId } from "@/shared/types/zod.js";
 import { commentContentTable, commentTable, postTable, voteContentTable, voteTable } from "@/schema.js";
 import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
-import type { FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
+import type { CreateNewPostResponse, FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { toUnionUndefined } from "@/shared/shared.js";
 
@@ -23,6 +23,12 @@ interface FetchNextCommentsToVoteOn {
     postSlugId: SlugId;
     numberOfCommentsToFetch: number;
     httpErrors: HttpErrors;
+}
+
+
+interface CreateNewPost {
+    db: PostgresDatabase;
+    authorId: string;
 }
 
 export async function fetchCommentsByPostSlugId({
@@ -161,5 +167,47 @@ export async function fetchNextCommentsToVoteOn({
         );
     return {
         assignedComments: results
+    }
+}
+
+export async function createNewPost({
+    db,
+    authorId
+}: CreateNewPost): Promise<CreateNewPostResponse> {
+
+    await db.transaction(async (tx) => {
+
+        const postResponse = await tx.insert(postTable).values({
+            authorId: authorId,
+            slugId: "",
+            commentCount: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            currentContentId: null,
+            isHidden: false,
+            lastReactedAt: new Date()
+        }).returning({ postId : postTable.id});
+
+        console.log(postResponse);
+
+        /*
+        const postTableResponse = await tx.insert(postContentTable).values({
+            postId: postResponse.,
+            postProofId: "",
+            parentId: "",
+            title: "TESET TITLE",
+            body: "TEST BODY",
+            pollId: "",
+            createdAt: "",
+            updatedAt: ""
+        }).returning();
+        console.log(postTableResponse);
+        */
+
+        
+    });
+
+    return {
+        isSuccessful: true
     }
 }
