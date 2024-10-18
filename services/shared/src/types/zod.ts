@@ -7,6 +7,8 @@ import {
     MAX_LENGTH_COMMENT,
 } from "../shared.js";
 
+import { moderationReasonEnum } from "./moderation.ts";
+
 export const zodEmail = z
     .string()
     .email()
@@ -93,6 +95,17 @@ export const zodExtendedPostData = z
         payload: zodPostDataWithResult,
     })
     .strict();
+
+    export const zodHidePostRequest = z.object({
+        postId: z.number().int().positive(),
+        moderationReason: moderationReasonEnum,
+        moderationExplanation: z.string().max(MAX_LENGTH_BODY).optional(),
+      }).strict();
+      
+      export const zodHidePostResponse = z.object({
+        success: z.boolean(),
+        message: z.string().optional(),
+      }).strict();
 
 export type Email = z.infer<typeof zodEmail>;
 export type Device = z.infer<typeof zodDevice>;

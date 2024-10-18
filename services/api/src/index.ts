@@ -683,6 +683,58 @@ server.after(() => {
     //             // return { post, comments };
     //         },
     //     });
+
+
+    server.post(`/api/v1/post/hide`, {
+        schema: {
+          body: Dto.hidePostRequest,
+          response: { 200: Dto.hidePostResponse },
+        },
+        handler: async (request, _reply) => {
+          server.log.info(`Hide post request received for postId: ${request.body.postId}`);
+      
+          try {
+            // Step 1: Verify UCAN
+            const didWrite = await verifyUCAN(db, request, {
+              expectedDeviceStatus: {
+                sessionNotExpired: true,
+              },
+            });
+      
+            // Step 2: Authorization
+            const userId = await authUtilService.canHidePost(db, didWrite, request.body.postId);
+            if (!userId) {
+              server.log.warn(`Unauthorized hide post attempt by DID: ${didWrite}`);
+              throw server.httpErrors.forbidden("You are not authorized to hide this post");
+            }
+      
+            // Step 3: Hide the post
+            await postService.hidePost({
+              db,
+              postId: request.body.postId,
+              moderatorId: userId,
+              moderationReason: request.body.moderationReason,
+              moderationExplanation: request.body.moderationExplanation,
+            });
+            server.log.info(`Post with ID ${request.body.postId} has been hidden by User ID: ${userId}`);
+      
+            // Step 4: Respond
+            return { success: true };
+          } catch (error) {
+            server.log.error(`Error hiding post: ${error.message}`);
+            throw error; // Let the global error handler manage it
+          }
+        },
+      });
+
+
+
+
+
+
+
+
+
 });
 
 server.ready((e) => {

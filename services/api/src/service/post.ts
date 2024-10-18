@@ -1,11 +1,25 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { PostComment, SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, deviceTable, postTable, userTable, voteContentTable, voteTable } from "@/schema.js";
+import { commentContentTable, commentTable, deviceTable, postTable, userTable, voteContentTable, voteTable,moderationTable} from "@/schema.js";
 import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
 import type { FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { toUnionUndefined } from "@/shared/shared.js";
+// we have to define those
+import { moderationActionEnum } from "@/shared/types/moderation.ts";
+import { leftJoin, isNull } from "drizzle-orm";
+
+
+
+interface HidePostParams {
+    db: PostgresDatabase;
+    postId: number;
+    moderatorId: string;
+    moderationReason: ModerationReason;
+    moderationExplanation?: string;
+  }
+
 
 interface FetchCommentsByPostIdProps {
     db: PostgresDatabase;
@@ -121,6 +135,10 @@ export async function fetchCommentsByPostSlugId({
     }
 }
 
+
+
+
+
 export async function fetchNextCommentsToVoteOn({
     db,
     userId,
@@ -163,3 +181,50 @@ export async function fetchNextCommentsToVoteOn({
         assignedComments: results
     }
 }
+
+
+
+
+/**
+ * Hides a post by inserting a record into the moderationTable.
+ * @param params - The parameters for hiding a post.
+ */
+export async function hidePost(params: HidePostParams): Promise<void> {
+    const { db, postId, moderatorId, moderationReason, moderationExplanation } = params;
+  
+    await db
+      .insert(moderationTable)
+      .values({
+        reportId: postId,
+        moderatorId: moderatorId,
+        moderationAction: 'hide',
+        moderationReason: moderationReason,
+        moderationExplanation: moderationExplanation,
+      })
+      .execute();
+  }
+
+
+
+
+
+
+  /**
+ * Retrieves a post by its ID.
+ * @param db - The database instance.
+ * @param postId - The ID of the post.
+ * @returns The post if found, otherwise null.
+ */
+export async function getPostById(
+    db: PostgresDatabase,
+    postId: number
+  ): Promise<Post | null> {
+    const result = await db
+      .select()
+      .from(postTable)
+      .where(eq(postTable.id, postId))
+      .limit(1)
+      .execute();
+  
+    return result.length > 0 ? result[0] : null;
+  }

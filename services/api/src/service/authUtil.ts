@@ -4,6 +4,7 @@ import { and, eq, gt } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { IsLoggedInResponse } from "@/shared/types/dto.js";
 import { nowZeroMs } from "@/shared/common/util.js";
+import { getPostById } from "./post.ts";
 
 interface InfoDevice {
     userAgent: string;
@@ -128,3 +129,56 @@ export async function getUserIdFromDevice(
     }
     return results[0].userId;
 }
+
+
+
+
+/**
+ * Determines if a user can hide a specific post.
+ * @param db - The database instance.
+ * @param didWrite - The DID of the device making the request.
+ * @param postId - The ID of the post to hide.
+ * @returns The moderator's user ID if authorized, otherwise null.
+ */
+export async function canHidePost(
+    db: PostgresDatabase,
+    didWrite: string,
+    postId: number
+  ): Promise<string | null> {
+    const deviceInfo = await getInfoFromDevice(db, didWrite);
+  
+    if (!deviceInfo) {
+      return null;
+    }
+  
+    const userId = deviceInfo.userId;
+  
+    // Fetch the user's role
+    const userResult = await db
+      .select({ role: userTable.role })
+      .from(userTable)
+      .where(eq(userTable.id, userId))
+      .execute();
+  
+    if (userResult.length === 0) {
+      return null;
+    }
+  
+    const userRole = userResult[0].role;
+  
+    // Check if the user is an admin or moderator
+    if (userRole === 'admin' || userRole === 'moderator') {
+      return userId;
+    }
+  
+    // Check if the user is the author of the post
+    const post = await getPostById(db, postId);
+    if (post && post.authorId === userId) {
+      return userId;
+    }
+  
+    // User is neither admin, moderator, nor author
+    return null;
+  }
+
+

@@ -6,6 +6,8 @@ import {
     zodUserId,
     zodSlugId,
     zodComment,
+    zodHidePostRequest,
+    zodHidePostResponse,
 } from "./zod.js";
 
 export class Dto {
@@ -87,6 +89,9 @@ export class Dto {
         numberOfCommentsToFetch: z.number().int().positive()
     });
     static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodComment) });
+    // adding the new DTOs to the DTO Class
+    static hidePostRequest = zodHidePostRequest;
+    static hidePostResponse = zodHidePostResponse;
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
@@ -98,3 +103,5 @@ export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;
 export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
 export type FetchCommentsToVoteOn200 = z.infer<typeof Dto.commentFetchToVoteOn200>;
+export type HidePostRequest = z.infer<typeof Dto.hidePostRequest>;
+export type HidePostResponse = z.infer<typeof Dto.hidePostResponse>;
