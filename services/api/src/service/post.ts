@@ -186,11 +186,13 @@ export async function createNewPost({
 }: CreateNewPost): Promise<CreateNewPostResponse> {
 
     try {
+        const postSlugId = generateRandomSlugId(7); // Use 7 for 10 bytes output
+
         await db.transaction(async (tx) => {
 
             const postInsertResponse = await tx.insert(postTable).values({
                 authorId: authorId,
-                slugId: generateRandomSlugId(7), // Use 7 for 10 bytes output
+                slugId: postSlugId, 
                 commentCount: 0,
                 currentContentId: null,
                 isHidden: false,
@@ -219,16 +221,15 @@ export async function createNewPost({
         });
 
         return {
-            isSuccessful: true
+            isSuccessful: true,
+            postSlugId: postSlugId
         }
 
     } catch (err: unknown) {
         server.log.error(err);
         return {
-            isSuccessful: false
+            isSuccessful: false,
+            postSlugId: ""
         }
     }
-  
-
-
 }

@@ -97,11 +97,11 @@ server.setErrorHandler((error, _request, reply) => {
         const genericError = server.httpErrors.internalServerError();
         genericError.cause = error;
         reply.send(genericError);
-    } else if (error.statusCode !== undefined && error.statusCode === 401) {
+    } else if (error.statusCode === 401) {
         const genericError = server.httpErrors.unauthorized();
         genericError.cause = error;
         reply.send(genericError);
-    } else if (error.statusCode !== undefined && error.statusCode === 403) {
+    } else if (error.statusCode === 403) {
         const genericError = server.httpErrors.forbidden();
         genericError.cause = error;
         reply.send(genericError);

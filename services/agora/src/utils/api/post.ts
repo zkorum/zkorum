@@ -1,23 +1,23 @@
 import { api } from "src/boot/axios";
 import axios from "axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
-import { ApiV1PostCreatePostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
+import { ApiV1PostCreatePost200Response, ApiV1PostCreatePostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
 import { useCommonApi } from "./common";
 
 export function useBackendPostApi() {
 
   const { buildEncodedUcan } = useCommonApi();
 
-  async function createNewPost(
-  ): Promise<void> {
+  async function createNewPost(postTitle: string, postBody: string
+  ): Promise<ApiV1PostCreatePost200Response> {
     try {
       const params: ApiV1PostCreatePostRequest = {
-        postTitle: "TEST TITLE",
-        postBody: "TEST BODY"
+        postTitle: postTitle,
+        postBody: postBody
       };
       const { url, options } = await DefaultApiAxiosParamCreator().apiV1PostCreatePost(params);
       const encodedUcan = await buildEncodedUcan(url, options);
-      await DefaultApiFactory(
+      const response = await DefaultApiFactory(
         undefined,
         undefined,
         api
@@ -26,7 +26,7 @@ export function useBackendPostApi() {
           ...buildAuthorizationHeader(encodedUcan)
         }
       });
-      return;
+      return response.data;
     } catch (e) {
       if (axios.isAxiosError(e)) {
         throw e;

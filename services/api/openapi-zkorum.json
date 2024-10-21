@@ -837,7 +837,18 @@
                             "application/json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {},
+                                    "properties": {
+                                        "isSuccessful": {
+                                            "type": "boolean"
+                                        },
+                                        "postSlugId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "isSuccessful",
+                                        "postSlugId"
+                                    ],
                                     "additionalProperties": false
                                 }
                             }

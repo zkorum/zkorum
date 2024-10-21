@@ -105,8 +105,9 @@ import HelpButton from "src/components/navigation/buttons/HelpButton.vue";
 import ZKEditor from "src/components/ui-library/ZKEditor.vue";
 import { useNewPostDraftsStore } from "src/stores/newPostDrafts";
 import { useViewPorts } from "src/utils/html/viewPort";
-import { usePostStore } from "src/stores/post";
 import { getCharacterCount } from "src/utils/component/editor";
+import { useBackendPostApi } from "src/utils/api/post";
+import { useDialog } from "src/utils/ui/dialog";
 
 const POST_BODY_LENGTH_MAX = 260;
 const POST_TITLE_LENGTH_MAX = 130;
@@ -127,7 +128,9 @@ const { postDraft, isPostEdited } = useNewPostDraftsStore();
 
 let grantedRouteLeave = false;
 
-const { submitNewPost } = usePostStore();
+const { createNewPost } = useBackendPostApi();
+
+const { showMessage } = useDialog();
 
 let savedToRoute: RouteLocationNormalized = {
   matched: [],
@@ -184,11 +187,15 @@ function removePollOption(index: number) {
   postDraft.value.pollingOptionList.splice(index, 1);
 }
 
-function onSubmit() {
+async function onSubmit() {
   grantedRouteLeave = true;
 
-  const slugId = submitNewPost(postDraft.value.postTitle, postDraft.value.postBody);
-  router.push({ name: "single-post", params: { postSlugId: slugId } });
+  const response = await createNewPost(postDraft.value.postTitle, postDraft.value.postBody);
+  if (response.isSuccessful) {
+    router.push({ name: "single-post", params: { postSlugId: response.postSlugId } });
+  } else {
+    showMessage("An error had occured", "The server had failed to create the post.");
+  }
 }
 
 function leaveRoute() {

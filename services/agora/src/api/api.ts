@@ -472,6 +472,25 @@ export interface ApiV1FeedFetchMorePostRequest {
 /**
  * 
  * @export
+ * @interface ApiV1PostCreatePost200Response
+ */
+export interface ApiV1PostCreatePost200Response {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostCreatePost200Response
+     */
+    'isSuccessful': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePost200Response
+     */
+    'postSlugId': string;
+}
+/**
+ * 
+ * @export
  * @interface ApiV1PostCreatePostRequest
  */
 export interface ApiV1PostCreatePostRequest {
@@ -951,7 +970,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+        async apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1PostCreatePost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostCreatePost(apiV1PostCreatePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostCreatePost']?.[localVarOperationServerIndex]?.url;
@@ -1044,7 +1063,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: any): AxiosPromise<object> {
+        apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: any): AxiosPromise<ApiV1PostCreatePost200Response> {
             return localVarFp.apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(axios, basePath));
         },
     };
