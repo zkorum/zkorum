@@ -93,6 +93,7 @@ export class Dto {
         postBody: z.string().optional()
     });
     static createNewPostResponse = z.object({
+        isSuccessful: z.boolean()
     });
 }
 export type AuthenticateRequestBody = z.infer<

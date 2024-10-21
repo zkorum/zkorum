@@ -1,11 +1,13 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { PostComment, SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, postTable, voteContentTable, voteTable } from "@/schema.js";
+import { commentContentTable, commentTable, masterProofTable, postContentTable, postTable, voteContentTable, voteTable } from "@/schema.js";
 import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
 import type { CreateNewPostResponse, FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { toUnionUndefined } from "@/shared/shared.js";
+import { generateRandomSlugId } from "@/crypto.js";
+import { server } from "@/app.js";
 
 interface FetchCommentsByPostIdProps {
     db: PostgresDatabase;
@@ -31,6 +33,8 @@ interface CreateNewPost {
     authorId: string;
     postTitle: string;
     postBody: string | null;
+    didWrite: string;
+    authHeader: string;
 }
 
 export async function fetchCommentsByPostSlugId({
@@ -176,59 +180,55 @@ export async function createNewPost({
     db,
     postTitle,
     postBody,
-    authorId
+    authorId,
+    didWrite,
+    authHeader
 }: CreateNewPost): Promise<CreateNewPostResponse> {
 
-    await db.transaction(async (tx) => {
+    try {
+        await db.transaction(async (tx) => {
 
-        const postInsertResponse = await tx.insert(postTable).values({
-            authorId: authorId,
-            slugId: "",
-            commentCount: 0,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            currentContentId: null,
-            isHidden: false,
-            lastReactedAt: new Date()
-        }).returning({ postId : postTable.id});
+            const postInsertResponse = await tx.insert(postTable).values({
+                authorId: authorId,
+                slugId: generateRandomSlugId(7), // Use 7 for 10 bytes output
+                commentCount: 0,
+                currentContentId: null,
+                isHidden: false,
+                lastReactedAt: new Date()
+            }).returning({ postId: postTable.id });
 
-        
-        const postId = postInsertResponse[0].postId;
-        console.log(postId);
+            const postId = postInsertResponse[0].postId;
 
-        /*
-        const postContentTableResponse = await tx.insert(postContentTable).values({
-            postId: postId,
-            postProofId: 0,
-            parentId: null,
-            title: postTitle,
-            body: postBody,
-            pollId: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        }).returning({ postContentTableId: postContentTable.id });
+            const masterProofTableResponse = await tx.insert(masterProofTable).values({
+                type: "creation",
+                authorDid: didWrite,
+                proof: authHeader,
+                proofVersion: 0
+            }).returning({ proofId: masterProofTable.id });
 
-        const postProofTableResponse = await tx.insert(postProofTable).values({
-            type: "creation",
-            postId: postId,
-            postContentId: 0,
-            parentId: null,
-            title: postTitle,
-            body: postBody,
-            pollId: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        }).returning({ postContentTableId: postContentTable.id });
+            const proofId = masterProofTableResponse[0].proofId;
 
-        await tx.update(postTable)
-            .set({
-                currentContentId: postContentTableResponse[0].postContentTableId
-            })
-            .where(eq(postTable.id, postId));
-        */
-    });
+            await tx.insert(postContentTable).values({
+                postId: postId,
+                postProofId: proofId,
+                parentId: null,
+                title: postTitle,
+                body: postBody,
+                pollId: null
+            });
+        });
 
-    return {
-        isSuccessful: true
+        return {
+            isSuccessful: true
+        }
+
+    } catch (err: unknown) {
+        server.log.error(err);
+        return {
+            isSuccessful: false
+        }
     }
+  
+
+
 }
