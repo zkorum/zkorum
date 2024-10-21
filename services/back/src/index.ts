@@ -268,7 +268,7 @@ interface VerifyPresentationProps {
 }
 
 function bases(): string[] {
-    let scope = "base";
+    const scope = "base";
     const basesForAttributes = PseudonymBases.generateBasesForAttributes(
         2, // communityId ( == email here) + secret value = 2 attributes
         stringToBytes(scope)

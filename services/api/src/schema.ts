@@ -310,27 +310,15 @@ export const pollTable = pgTable("poll", {
 
 export const proofTypeEnum = pgEnum("proof_type", ["creation", "edit", "deletion"]);
 
-// these proofs are kept even after edit/deletion
-export const postProofTable = pgTable("post_proof", {
+export const masterProofTable = pgTable("master_proof", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
-    postId: integer("post_id") // "postAs"
-        .notNull()
-        .references(() => postTable.id),
-    postContentId: integer("post_content_id").unique()
-        .references((): AnyPgColumn => postContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
     authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
     proof: text("proof").notNull(), // base64 encoded proof
     proofVersion: integer("proof_version").notNull(),
     createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
         mode: "date",
         precision: 0,
     })
@@ -346,7 +334,7 @@ export const postContentTable = pgTable("post_content", {
     postProofId: integer("post_proof_id")
         .notNull()
         .unique()
-        .references(() => postProofTable.id), // cannot point to deletion proof
+        .references(() => masterProofTable.id), // cannot point to deletion proof
     parentId: integer("parent_id").references((): AnyPgColumn => postContentTable.id), // not null if edit
     title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
     body: varchar("body", { length: MAX_LENGTH_BODY }),
@@ -356,13 +344,7 @@ export const postContentTable = pgTable("post_content", {
         precision: 0,
     })
         .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
+        .notNull()
 });
 
 export const postTable = pgTable("post", {
@@ -419,40 +401,12 @@ export const pollResponseTable = pgTable("poll_response", {
         .notNull(),
 });
 
-export const pollResponseProofTable = pgTable("poll_response_proof", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    type: proofTypeEnum("proof_type").notNull(),
-    pollResponseId: integer("poll_response_id") //
-        .notNull()
-        .references(() => pollResponseTable.id),
-    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
-        .notNull()
-        .references(() => deviceTable.didWrite),
-    pollResponseContentId: integer("poll_response_content_id").unique()
-        .references((): AnyPgColumn => pollResponseContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    postProofId: integer("post_proof_id").references(() => postProofTable.id).notNull(), // exact post proof (post state which contains poll) to which this response proof corresponds.
-    proof: text("proof").notNull(), // base64 encoded proof
-    proofVersion: integer("proof_version").notNull(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
 export const pollResponseContentTable = pgTable("poll_response_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     pollResponseId: integer("poll_response_id") //
         .notNull()
         .references(() => pollResponseTable.id),
-    pollResponseProofId: integer("poll_response_proof_id").notNull().unique().references((): AnyPgColumn => pollResponseProofTable.id),
+    pollResponseProofId: integer("poll_response_proof_id").notNull().unique().references((): AnyPgColumn => masterProofTable.id),
     postContentId: integer("post_content_id").references(() => postContentTable.id), // exact post content and associated poll that existed when this poll was responded.  Null if post was deleted.
     parentId: integer("parent_id").references((): AnyPgColumn => pollResponseContentTable.id), // not null if edit
     optionChosen: integer("option_chosen").notNull(),
@@ -461,14 +415,7 @@ export const pollResponseContentTable = pgTable("poll_response_content", {
         precision: 0,
     })
         .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-
+        .notNull()
 });
 
 export const commentTable = pgTable("comment", {
@@ -505,14 +452,14 @@ export const commentTable = pgTable("comment", {
         .notNull(),
 });
 
-export const commentContentTable = pgTable("commentContent", {
+export const commentContentTable = pgTable("comment_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     commentId: integer("comment_id") // "postAs"
         .notNull()
         .references((): AnyPgColumn => commentTable.id), // the author of the poll
     commentProofId: integer("comment_proof_id")
         .notNull()
-        .references(() => commentProofTable.id), // cannot point to deletion proof
+        .references(() => masterProofTable.id), // cannot point to deletion proof
     postContentId: integer("post_content_id").references(() => postContentTable.id), // exact post content that existed when this comment was created.  Null if post was deleted.
     parentId: integer("parent_id").references((): AnyPgColumn => commentContentTable.id), // not null if edit
     content: varchar("content", { length: MAX_LENGTH_COMMENT }).notNull(),
@@ -536,35 +483,6 @@ export const commentContentTable = pgTable("commentContent", {
         .defaultNow()
         .notNull(),
 
-});
-
-// these proofs are kept even after edit/deletion
-export const commentProofTable = pgTable("comment_proof", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    type: proofTypeEnum("proof_type").notNull(),
-    commentId: integer("comment_id") // "postAs"
-        .notNull()
-        .references(() => commentTable.id),
-    commentContentId: integer("comment_content_id") // "postAs"
-        .references((): AnyPgColumn => commentContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
-        .notNull()
-        .references(() => deviceTable.didWrite),
-    postProofId: integer("post_proof_id").references(() => postProofTable.id).notNull(), // exact post proof (post state) to which this comment proof responded to.
-    proof: text("proof").notNull(), // base64 encoded proof
-    proofVersion: integer("proof_version").notNull(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
 });
 
 // like or dislike on comments for each user
@@ -598,7 +516,7 @@ export const voteContentTable = pgTable("vote_content", {
     voteId: integer("vote_id") //
         .notNull()
         .references(() => voteTable.id),
-    voteProofId: integer("vote_proof_id").notNull().references((): AnyPgColumn => voteProofTable.id),
+    voteProofId: integer("vote_proof_id").notNull().references((): AnyPgColumn => masterProofTable.id),
     commentContentId: integer("comment_content_id").references(() => commentContentTable.id), // exact comment content that existed when this vote was cast.  Null if comment was deleted.
     parentId: integer("parent_id").references((): AnyPgColumn => voteContentTable.id), // not null if edit
     optionChosen: voteEnum("option_chosen").notNull(),
@@ -607,42 +525,7 @@ export const voteContentTable = pgTable("vote_content", {
         precision: 0,
     })
         .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-
-});
-
-export const voteProofTable = pgTable("vote_proof", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    type: proofTypeEnum("proof_type").notNull(),
-    voteId: integer("vote_id") //
         .notNull()
-        .references(() => voteTable.id),
-    voteContentId: integer("vote_content_id")
-        .references((): AnyPgColumn => voteContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
-        .notNull()
-        .references(() => deviceTable.didWrite),
-    commentProofId: integer("comment_proof_id").references(() => commentProofTable.id).notNull(), // exact comment proof (comment state) to which this vote proof responded to.
-    proof: text("proof").notNull(), // base64 encoded proof
-    proofVersion: integer("proof_version").notNull(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
 });
 
 // anti-social = hate + harassment + trolling + intelorance
@@ -677,7 +560,6 @@ export const reportTable = pgTable("report_table", {
     })
         .defaultNow()
         .notNull(),
-
 });
 
 export const moderationTable = pgTable("moderation_table", {

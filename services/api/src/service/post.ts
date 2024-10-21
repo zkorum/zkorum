@@ -1,7 +1,7 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { PostComment, SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, postContentTable, postProofTable, postTable, voteContentTable, voteTable } from "@/schema.js";
+import { commentContentTable, commentTable, postTable, voteContentTable, voteTable } from "@/schema.js";
 import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
 import type { CreateNewPostResponse, FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
