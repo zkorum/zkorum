@@ -131,7 +131,7 @@ export const phoneTable = pgTable("phone", {
         .references(() => userTable.id)
         .notNull(),
     lastTwoDigits: varchar("last_two_digits", { length: 2 }).notNull(), // add check for it to be numbers?
-    countryCode: countryCodeEnum("country_code").notNull(),
+    phoneCountryCode: phoneCountryCodeEnum("phone_country_code").notNull(),
     hashedPhone: text("hashed_phone").notNull(), // base64 encoded hash of phone + salt
     salt: text("salt").notNull(), // base64 encoded salt, might change the type
     createdAt: timestamp("created_at", {
