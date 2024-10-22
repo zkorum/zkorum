@@ -36,8 +36,26 @@ export async function fetchFeed({
             : order === "more"
                 ? lt(postTable.lastReactedAt, lastReactedAt)
                 : gt(postTable.lastReactedAt, lastReactedAt);
+    
+    /*
+    const result2 = await db.select({
+        slugId: postTable.slugId,
+        title: postContentTable.title,
+        body: postContentTable.body,
+    }).from(postTable)
+        .leftJoin(
+            postContentTable,
+            eq(postContentTable.id, postTable.currentContentId)
+        )
+        .where(undefined)
+        .orderBy(desc(postTable.lastReactedAt), desc(postTable.id));
+    
+    console.log("new query:");
+    console.log(result2);
+    */
+    
     const results = await db
-        .selectDistinctOn([postTable.lastReactedAt, postTable.id], {
+        .select({
             title: postContentTable.title,
             body: postContentTable.body,
             option1: pollTable.option1,
@@ -61,14 +79,13 @@ export async function fetchFeed({
             commentCount: postTable.commentCount,
             authorName: organisationTable.name,
             authorImagePath: organisationTable.imageUrl,
-
         })
         .from(postTable)
-        .innerJoin(
+        .leftJoin(
             postContentTable,
             eq(postContentTable.id, postTable.currentContentId)
         )
-        .innerJoin(
+        .leftJoin(
             userTable,
             eq(userTable.id, postTable.authorId)
         )
@@ -155,13 +172,13 @@ export async function fetchFeed({
                 })
             }
             payload = {
-                title: result.title,
+                title: result.title ?? "", // Typescript inference limitation
                 body: toUnionUndefined(result.body),
                 poll: poll,
             }
         } else {
             payload = {
-                title: result.title,
+                title: result.title ?? "",
                 body: toUnionUndefined(result.body),
             }
         }
@@ -170,5 +187,8 @@ export async function fetchFeed({
             payload: payload,
         };
     });
+
+    console.log(posts);
+
     return posts;
 }

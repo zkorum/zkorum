@@ -3,7 +3,7 @@
     <q-page>
       <q-infinite-scroll :offset="250" @load="onLoad">
         <div class="postListFlex">
-          <div v-for="(postData, index) in compactPostDataList" :key="index" class="postPadding">
+          <div v-for="(postData, index) in postList" :key="index" class="postPadding">
             <div>
               <RouterLink :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId } }">
                 <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
@@ -25,17 +25,19 @@
 <script setup lang="ts">
 
 import PostDetails from "../post/PostDetails.vue";
-import { ref } from "vue";
-import { DummyPostDataFormat, usePostStore } from "src/stores/post";
+import { DummyPostDataFormat } from "src/stores/post";
 
-const { fetchCuratedPosts } = usePostStore();
+defineProps<{
+  postList: DummyPostDataFormat[]
+}>();
 
-const FETCH_POST_COUNT = 10;
-const compactPostDataList = ref<DummyPostDataFormat[]>([]);
-let lastSlugId = "";
+// const FETCH_POST_COUNT = 10;
+// const compactPostDataList = ref<DummyPostDataFormat[]>([]);
+// let lastSlugId = "";
 
-generateNewPosts();
+// generateNewPosts();
 
+/*
 function generateNewPosts() {
   const postList = fetchCuratedPosts(lastSlugId, FETCH_POST_COUNT);
   for (let i = 0; i < postList.length; i++) {
@@ -47,15 +49,15 @@ function generateNewPosts() {
   } else {
     // Reached the end of the post list
   }
-
 }
+*/
 
 interface DoneFunction {
   (): void;
 }
 
 async function onLoad(index: number, done: DoneFunction) {
-  generateNewPosts();
+  // generateNewPosts();
   done();
 }
 

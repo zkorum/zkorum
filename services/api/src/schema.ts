@@ -326,9 +326,6 @@ export const masterProofTable = pgTable("master_proof", {
 
 export const postContentTable = pgTable("post_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    postId: integer("post_id") // "postAs"
-        .notNull()
-        .references((): AnyPgColumn => postTable.id), // the author of the poll
     postProofId: integer("post_proof_id")
         .notNull()
         .unique()
@@ -351,7 +348,7 @@ export const postTable = pgTable("post", {
     authorId: uuid("author_id") // "postAs"
         .notNull()
         .references(() => userTable.id), // the author of the poll
-    currentContentId: integer("current_content_id").references((): AnyPgColumn => postContentTable.id).unique(), // null if post was deleted
+    currentContentId: integer("current_content_id").references((): AnyPgColumn => postContentTable.id).unique().notNull(), // null if post was deleted
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {
         mode: "date",

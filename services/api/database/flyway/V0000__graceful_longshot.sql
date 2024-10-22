@@ -179,7 +179,6 @@ CREATE TABLE IF NOT EXISTS "poll" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "post_content" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "post_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"post_id" integer NOT NULL,
 	"post_proof_id" integer NOT NULL,
 	"parent_id" integer,
 	"title" varchar(65) NOT NULL,
@@ -193,7 +192,7 @@ CREATE TABLE IF NOT EXISTS "post" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "post_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"slug_id" varchar(6) NOT NULL,
 	"author_id" uuid NOT NULL,
-	"current_content_id" integer,
+	"current_content_id" integer NOT NULL,
 	"is_hidden" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
@@ -379,12 +378,6 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "poll" ADD CONSTRAINT "poll_post_content_id_post_content_id_fk" FOREIGN KEY ("post_content_id") REFERENCES "public"."post_content"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "post_content" ADD CONSTRAINT "post_content_post_id_post_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."post"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

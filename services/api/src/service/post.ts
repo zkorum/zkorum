@@ -190,17 +190,6 @@ export async function createNewPost({
 
         await db.transaction(async (tx) => {
 
-            const postInsertResponse = await tx.insert(postTable).values({
-                authorId: authorId,
-                slugId: postSlugId, 
-                commentCount: 0,
-                currentContentId: null,
-                isHidden: false,
-                lastReactedAt: new Date()
-            }).returning({ postId: postTable.id });
-
-            const postId = postInsertResponse[0].postId;
-
             const masterProofTableResponse = await tx.insert(masterProofTable).values({
                 type: "creation",
                 authorDid: didWrite,
@@ -210,13 +199,23 @@ export async function createNewPost({
 
             const proofId = masterProofTableResponse[0].proofId;
 
-            await tx.insert(postContentTable).values({
-                postId: postId,
+            const postContentTableResponse = await tx.insert(postContentTable).values({
                 postProofId: proofId,
                 parentId: null,
                 title: postTitle,
                 body: postBody,
                 pollId: null
+            }).returning({ postContentId: postContentTable.id });
+
+            const postContentId = postContentTableResponse[0].postContentId;
+
+            await tx.insert(postTable).values({
+                authorId: authorId,
+                slugId: postSlugId, 
+                commentCount: 0,
+                currentContentId: postContentId,
+                isHidden: false,
+                lastReactedAt: new Date()
             });
         });
 

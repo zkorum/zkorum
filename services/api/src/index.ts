@@ -364,7 +364,7 @@ server.after(() => {
                     200: Dto.fetchFeed200,
                 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
                 return await feedService.fetchFeed({
                     db: db,
                     order: "recent",
