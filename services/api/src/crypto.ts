@@ -19,9 +19,8 @@ export function generateRandomHex(): string {
 }
 
 // Used to generate cryptographically random, url-safe and short identifier for post/comment and presenting it in a url
-// Ouptut string size: 4 * numBytes / 3
-export function generateRandomSlugId(numBytes: number): string {
-    const randomBytes = new Uint8Array(numBytes); // this accounts to pow(2, 8 * numBytes) = ? Billions possibilities
+export function generateRandomSlugId(): string {
+    const randomBytes = new Uint8Array(4); // this accounts to pow(2, 8*4) = 429 Billions possibilities
     crypto.webcrypto.getRandomValues(randomBytes);
     return base64.encode(randomBytes); // generates a 6 char-long slug
 }

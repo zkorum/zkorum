@@ -347,7 +347,7 @@ export const postContentTable = pgTable("post_content", {
 
 export const postTable = pgTable("post", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    slugId: varchar("slug_id", { length: 10 }).notNull(), // used for permanent URL
+    slugId: varchar("slug_id", { length: 6 }).notNull(), // used for permanent URL
     authorId: uuid("author_id") // "postAs"
         .notNull()
         .references(() => userTable.id), // the author of the poll
@@ -418,7 +418,7 @@ export const pollResponseContentTable = pgTable("poll_response_content", {
 
 export const commentTable = pgTable("comment", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL
+    slugId: varchar("slug_id", { length: 6 }).notNull().unique(), // used for permanent URL
     authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),

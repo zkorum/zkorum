@@ -186,7 +186,7 @@ export async function createNewPost({
 }: CreateNewPost): Promise<CreateNewPostResponse> {
 
     try {
-        const postSlugId = generateRandomSlugId(7); // Use 7 for 10 bytes output
+        const postSlugId = generateRandomSlugId();
 
         await db.transaction(async (tx) => {
 
@@ -228,8 +228,7 @@ export async function createNewPost({
     } catch (err: unknown) {
         server.log.error(err);
         return {
-            isSuccessful: false,
-            postSlugId: ""
+            isSuccessful: false
         }
     }
 }

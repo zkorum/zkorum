@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS "comment_content" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "comment" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "comment_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"slug_id" varchar(10) NOT NULL,
+	"slug_id" varchar(6) NOT NULL,
 	"author_id" uuid NOT NULL,
 	"post_id" integer NOT NULL,
 	"current_content_id" integer,
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS "post_content" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "post" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "post_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"slug_id" varchar(10) NOT NULL,
+	"slug_id" varchar(6) NOT NULL,
 	"author_id" uuid NOT NULL,
 	"current_content_id" integer,
 	"is_hidden" boolean DEFAULT false NOT NULL,
