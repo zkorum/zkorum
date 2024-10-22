@@ -521,22 +521,17 @@ server.after(() => {
                 }
             },
             handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: true,
-                    },
-                });
+                const didWrite = await verifyUCAN(db, request, undefined);
                 // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
                 
                 const status = await authUtilService.isLoggedIn(db, didWrite);
                 if (!status.isLoggedIn) {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
-                    const { userId } = status
                     const authHeader = getAuthHeader(request);
                     return await postService.createNewPost({
                         db: db,
-                        authorId: userId,
+                        authorId: status.userId,
                         postTitle: request.body.postTitle,
                         postBody: request.body.postBody ?? null,
                         didWrite: didWrite,
