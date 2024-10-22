@@ -92,10 +92,10 @@ export class Dto {
         postTitle: z.string(),
         postBody: z.string().optional()
     });
-    static createNewPostResponse = z.object({
-        isSuccessful: z.boolean(),
-        postSlugId: z.string()
-    });
+    static createNewPostResponse = z.discriminatedUnion("isSuccessful", [
+        z.object({ isSuccessful: z.literal(true), postSlugId: z.string() }).strict(),
+        z.object({ isSuccessful: z.literal(false) }).strict(),
+    ]);
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
