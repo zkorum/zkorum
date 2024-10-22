@@ -28,7 +28,7 @@ export default route(function (/* { store, ssrContext } */) {
       : createWebHashHistory;
 
   const Router = createRouter({
-    scrollBehavior: (from) => { // to, from, savedPosition
+    scrollBehavior: (to, from) => { // to, from, savedPosition
       /*
       if (to.name == "post-single") {
         if (savedPosition != null) {
@@ -36,8 +36,12 @@ export default route(function (/* { store, ssrContext } */) {
         }
       }
       */
-      lastNavigatedRouteName.value = from.name?.toString();
-      // console.log(lastNavigatedRouteName.value);
+
+      const fromRouteName = from.name?.toString() ?? "";
+      const pullUpRouteNameList = ["settings-page", "help-page", "create-post"];
+      if (fromRouteName != "" && !pullUpRouteNameList.includes(fromRouteName)) {
+        lastNavigatedRouteName.value = fromRouteName;
+      }
 
       return { left: 0, top: 0 };
     },

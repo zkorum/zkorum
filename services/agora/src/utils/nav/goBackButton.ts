@@ -6,23 +6,24 @@ export function useGoBackButtonHandler() {
 
   const lastNavigatedRouteName = useStorage("last-navigated-route-name", "");
 
-  // const pullUpRouteNameList = ["settings-page", "help-page", "create-post"];
-
   function goBack() {
     if (lastNavigatedRouteName.value == "") {
       router.push({ name: "default-home-feed" });
     } else {
+      router.push({ name: lastNavigatedRouteName.value });
       // if (pullUpRouteNameList.includes(lastNavigatedRouteName.value)) {
       //  router.push({ name: "default-home-feed" });
       // } else {
-      router.back();
+      // router.back();
       // }
     }
   }
 
+  /*
   function pushNewRoute(fromName: string) {
     lastNavigatedRouteName.value = fromName;
   }
+  */
 
-  return { goBack, pushNewRoute };
+  return { goBack };
 }
