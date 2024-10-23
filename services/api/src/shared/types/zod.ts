@@ -70,6 +70,7 @@ export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,
         isHidden: z.boolean().optional(),
+        createdAt: z.date(),
         updatedAt: z.date(),
         lastReactedAt: z.date(),
         commentCount: zodCommentCount,

@@ -281,6 +281,10 @@
                                                     "isHidden": {
                                                         "type": "boolean"
                                                     },
+                                                    "createdAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
                                                     "updatedAt": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -303,6 +307,7 @@
                                                 },
                                                 "required": [
                                                     "postSlugId",
+                                                    "createdAt",
                                                     "updatedAt",
                                                     "lastReactedAt",
                                                     "commentCount"
@@ -418,6 +423,10 @@
                                                     "isHidden": {
                                                         "type": "boolean"
                                                     },
+                                                    "createdAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
                                                     "updatedAt": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -440,6 +449,7 @@
                                                 },
                                                 "required": [
                                                     "postSlugId",
+                                                    "createdAt",
                                                     "updatedAt",
                                                     "lastReactedAt",
                                                     "commentCount"
@@ -836,20 +846,42 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "isSuccessful": {
-                                            "type": "boolean"
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        true
+                                                    ]
+                                                },
+                                                "postSlugId": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful",
+                                                "postSlugId"
+                                            ],
+                                            "additionalProperties": false
                                         },
-                                        "postSlugId": {
-                                            "type": "string"
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        false
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful"
+                                            ],
+                                            "additionalProperties": false
                                         }
-                                    },
-                                    "required": [
-                                        "isSuccessful",
-                                        "postSlugId"
-                                    ],
-                                    "additionalProperties": false
+                                    ]
                                 }
                             }
                         }

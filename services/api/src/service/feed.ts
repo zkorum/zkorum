@@ -74,6 +74,7 @@ export async function fetchFeed({
             // metadata
             slugId: postTable.slugId,
             isHidden: postTable.isHidden,
+            createdAt: postTable.createdAt,
             updatedAt: postTable.updatedAt,
             lastReactedAt: postTable.lastReactedAt,
             commentCount: postTable.commentCount,
@@ -109,6 +110,7 @@ export async function fetchFeed({
                 ? {
                     postSlugId: result.slugId,
                     isHidden: result.isHidden,
+                    createdAt: result.createdAt,
                     updatedAt: result.updatedAt,
                     lastReactedAt: result.lastReactedAt,
                     commentCount: result.commentCount,
@@ -117,6 +119,7 @@ export async function fetchFeed({
                 }
                 : {
                     postSlugId: result.slugId,
+                    createdAt: result.createdAt,
                     updatedAt: result.updatedAt,
                     lastReactedAt: result.lastReactedAt,
                     commentCount: result.commentCount,

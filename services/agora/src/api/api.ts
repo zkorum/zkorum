@@ -368,6 +368,12 @@ export interface ApiV1FeedFetchMorePost200ResponseInnerMetadata {
      * @type {string}
      * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
      */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     */
     'updatedAt': string;
     /**
      * 
@@ -487,6 +493,38 @@ export interface ApiV1PostCreatePost200Response {
      * @memberof ApiV1PostCreatePost200Response
      */
     'postSlugId': string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostCreatePost200ResponseAnyOf
+ */
+export interface ApiV1PostCreatePost200ResponseAnyOf {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostCreatePost200ResponseAnyOf
+     */
+    'isSuccessful': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostCreatePost200ResponseAnyOf
+     */
+    'postSlugId': string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostCreatePost200ResponseAnyOf1
+ */
+export interface ApiV1PostCreatePost200ResponseAnyOf1 {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostCreatePost200ResponseAnyOf1
+     */
+    'isSuccessful': boolean;
 }
 /**
  * 
