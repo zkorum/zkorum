@@ -1,10 +1,10 @@
 import { deviceTable } from "@/schema.js";
 import { and, eq, ne, type TablesRelationalConfig } from "drizzle-orm";
-import type { PgTransaction, QueryResultHKT } from "drizzle-orm/pg-core";
+import type { PgTransaction, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 
 interface LogoutAllDevicesButOneProps<
-    TQueryResult extends QueryResultHKT,
+    TQueryResult extends PgQueryResultHKT,
     TFullSchema extends Record<string, unknown>,
     TSchema extends TablesRelationalConfig,
 > {
@@ -23,7 +23,7 @@ export async function logoutAllDevicesButOne({
     now,
     sessionExpiry,
 }: LogoutAllDevicesButOneProps<
-    QueryResultHKT,
+    PgQueryResultHKT,
     Record<string, unknown>,
     TablesRelationalConfig
 >): Promise<void> {

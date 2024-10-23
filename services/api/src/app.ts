@@ -20,13 +20,13 @@ const configSchema = z.object({
     MODE: z
         .enum(["web", "capacitor"])
         .default("web"),
-    SERVER_URL_DEV: z.string().url().default(`http://localhost:${defaultPort}`),
+    SERVER_URL_DEV: z.string().url().default(`http://localhost:${defaultPort.toString()}`),
     SERVER_URL_STAGING1: z
         .string()
         .url()
         .default(`https://staging1.zkorum.com`),
     SERVER_URL_PROD: z.string().url().default(`https://zkorum.com`),
-    SERVER_DID_DEV: zodDidWeb.default(`did:web:localhost%3A${defaultPort}`),
+    SERVER_DID_DEV: zodDidWeb.default(`did:web:localhost%3A${defaultPort.toString() }`),
     SERVER_DID_STAGING1: zodDidWeb.default(`did:web:staging1.zkorum.com`),
     SERVER_DID_PROD: zodDidWeb.default(`did:web:zkorum.com`),
     EMAIL_OTP_MAX_ATTEMPT_AMOUNT: z.number().int().min(1).max(5).default(3),

@@ -805,6 +805,57 @@
                     }
                 }
             }
+        },
+        "/api/v1/post/create": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postTitle": {
+                                        "type": "string"
+                                    },
+                                    "postBody": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "postTitle"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "isSuccessful": {
+                                            "type": "boolean"
+                                        },
+                                        "postSlugId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "isSuccessful",
+                                        "postSlugId"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "servers": [],

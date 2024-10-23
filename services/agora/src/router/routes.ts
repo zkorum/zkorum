@@ -150,6 +150,7 @@ const routes: RouteRecordRaw[] = [
       addBottomPadding: true, enableHeader: true, enableFooter: false, useStylelessFooter: false, reducedWidth: true
     } as MainLayoutProps,
     children: [
+    /*
       {
         path: "/login/email",
         components: {
@@ -174,6 +175,7 @@ const routes: RouteRecordRaw[] = [
         },
         name: "login-verify"
       },
+    */
       {
         path: "/verification/option/passport",
         components: {
@@ -211,16 +213,16 @@ const routes: RouteRecordRaw[] = [
         name: "verification-option-phone-code"
       },
       {
-        path: "/verification/welcome",
+        path: "/verification/options",
         components: {
-          default: () => import("src/pages/authentication/verification/welcome/index.vue"), topmenubar: DefaultMenuBar
+          default: () => import("src/pages/authentication/verification/options/index.vue"), topmenubar: DefaultMenuBar
         },
         props: {
           topmenubar: {
             hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
-        name: "verification-welcome"
+        name: "verification-options"
       },
       {
         path: "/verification/successful",
@@ -229,7 +231,7 @@ const routes: RouteRecordRaw[] = [
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
+            hasBackButton: false, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "verification-successful"

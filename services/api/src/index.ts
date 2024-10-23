@@ -97,11 +97,11 @@ server.setErrorHandler((error, _request, reply) => {
         const genericError = server.httpErrors.internalServerError();
         genericError.cause = error;
         reply.send(genericError);
-    } else if (error.statusCode !== undefined && error.statusCode === 401) {
+    } else if (error.statusCode === 401) {
         const genericError = server.httpErrors.unauthorized();
         genericError.cause = error;
         reply.send(genericError);
-    } else if (error.statusCode !== undefined && error.statusCode === 403) {
+    } else if (error.statusCode === 403) {
         const genericError = server.httpErrors.forbidden();
         genericError.cause = error;
         reply.send(genericError);
@@ -140,6 +140,15 @@ const SERVER_DID =
             ? config.SERVER_DID_STAGING1
             : config.SERVER_DID_DEV;
 
+function getAuthHeader(request: FastifyRequest) {
+    const authHeader = request.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+        throw server.httpErrors.unauthorized("No UCAN in Bearer token");
+    } else {
+        return authHeader;
+    }
+}
+
 // auth for account profile interaction
 // TODO: store UCAN in ucan table at the end and check whether UCAN has already been seen in the ucan table on the first place - if yes, throw unauthorized error and log the potential replay attack attempt.
 // ! WARNING: will not work if there are queryParams. We only use POST requests and JSON body requests (JSON-RPC style).
@@ -152,79 +161,75 @@ async function verifyUCAN(
         },
     }
 ): Promise<string> {
-    const authHeader = request.headers.authorization;
-    if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
-        throw server.httpErrors.unauthorized("No UCAN in Bearer token");
-    } else {
-        const { scheme, hierPart } = httpUrlToResourcePointer(
-            new URL(request.originalUrl, SERVER_URL)
-        );
-        const encodedUcan = authHeader.substring(7, authHeader.length);
-        server.log.info(`Received UCAN: ${encodedUcan}`);
-        const rootIssuerDid = ucans.parse(encodedUcan).payload.iss;
-        const result = await ucans.verify(encodedUcan, {
-            audience: SERVER_DID,
-            isRevoked: async (_ucan) => false, // users' generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
-            requiredCapabilities: [
-                {
-                    capability: {
-                        with: { scheme, hierPart },
-                        can: httpMethodToAbility(request.method),
-                    },
-                    rootIssuer: rootIssuerDid,
+    const authHeader = getAuthHeader(request);
+    const { scheme, hierPart } = httpUrlToResourcePointer(
+        new URL(request.originalUrl, SERVER_URL)
+    );
+    const encodedUcan = authHeader.substring(7, authHeader.length);
+    server.log.info(`Received UCAN: ${encodedUcan}`);
+    const rootIssuerDid = ucans.parse(encodedUcan).payload.iss;
+    const result = await ucans.verify(encodedUcan, {
+        audience: SERVER_DID,
+        isRevoked: () => new Promise((resolve) =>  { resolve(false); }), // users' generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
+        requiredCapabilities: [
+            {
+                capability: {
+                    with: { scheme, hierPart },
+                    can: httpMethodToAbility(request.method),
                 },
-            ],
-        });
-        if (!result.ok) {
-            for (const err of result.error) {
-                if (err instanceof Error) {
-                    server.log.error(`Error verifying UCAN - ${err.name}: ${err.message} - ${err.cause} - ${err.stack}`);
-                } else {
-                    server.log.error(`Unknown Error verifying UCAN: ${err}`);
-                }
-            }
-            throw server.httpErrors.createError(
-                401,
-                "UCAN validation failed",
-                new AggregateError(result.error)
-            );
-        }
-        if (options.expectedDeviceStatus !== undefined) {
-            const deviceStatus = await authService.getDeviceStatus(
-                db,
-                rootIssuerDid
-            );
-            if (deviceStatus === undefined) {
-                if (options.expectedDeviceStatus.isLoggedIn !== undefined) {
-                    throw server.httpErrors.unauthorized(
-                        `[${rootIssuerDid}] has not been registered but is expected to have a log in status`
-                    );
-                } else if (options.expectedDeviceStatus.userId !== undefined) {
-                    throw server.httpErrors.forbidden(
-                        `[${rootIssuerDid}] has not been registered but is expected to have a specific userId`
-                    );
-                }
+                rootIssuer: rootIssuerDid,
+            },
+        ],
+    });
+    if (!result.ok) {
+        for (const err of result.error) {
+            if (err instanceof Error) {
+                server.log.error(`Error verifying UCAN - ${err.name}: ${err.message} - ${err.cause} - ${err.stack}`);
             } else {
-                const { userId, isLoggedIn } = deviceStatus;
-                if (
-                    options.expectedDeviceStatus.isLoggedIn !== undefined &&
-                    options.expectedDeviceStatus.isLoggedIn !== isLoggedIn
-                ) {
-                    throw server.httpErrors.unauthorized(
-                        `[${rootIssuerDid}] is expected to have 'isLoggedIn=${options.expectedDeviceStatus.isLoggedIn}' but has 'isLoggedIn=${isLoggedIn}'`
-                    );
-                } else if (
-                    options.expectedDeviceStatus.userId !== undefined &&
-                    options.expectedDeviceStatus.userId !== userId
-                ) {
-                    throw server.httpErrors.forbidden(
-                        `[${rootIssuerDid}] is expected to have 'userId=${options.expectedDeviceStatus.userId}' but has 'userId=${userId}'`
-                    );
-                }
+                server.log.error(`Unknown Error verifying UCAN: ${err}`);
             }
         }
-        return rootIssuerDid;
+        throw server.httpErrors.createError(
+            401,
+            "UCAN validation failed",
+            new AggregateError(result.error)
+        );
     }
+    if (options.expectedDeviceStatus !== undefined) {
+        const deviceStatus = await authService.getDeviceStatus(
+            db,
+            rootIssuerDid
+        );
+        if (deviceStatus === undefined) {
+            if (options.expectedDeviceStatus.isLoggedIn !== undefined) {
+                throw server.httpErrors.unauthorized(
+                    `[${rootIssuerDid}] has not been registered but is expected to have a log in status`
+                );
+            } else if (options.expectedDeviceStatus.userId !== undefined) {
+                throw server.httpErrors.forbidden(
+                    `[${rootIssuerDid}] has not been registered but is expected to have a specific userId`
+                );
+            }
+        } else {
+            const { userId, isLoggedIn } = deviceStatus;
+            if (
+                options.expectedDeviceStatus.isLoggedIn !== undefined &&
+                options.expectedDeviceStatus.isLoggedIn !== isLoggedIn
+            ) {
+                throw server.httpErrors.unauthorized(
+                    `[${rootIssuerDid}] is expected to have 'isLoggedIn=${options.expectedDeviceStatus.isLoggedIn}' but has 'isLoggedIn=${isLoggedIn}'`
+                );
+            } else if (
+                options.expectedDeviceStatus.userId !== undefined &&
+                options.expectedDeviceStatus.userId !== userId
+            ) {
+                throw server.httpErrors.forbidden(
+                    `[${rootIssuerDid}] is expected to have 'userId=${options.expectedDeviceStatus.userId}' but has 'userId=${userId}'`
+                );
+            }
+        }
+    }
+    return rootIssuerDid;
 }
 
 const apiVersion = "v1";
@@ -506,22 +511,35 @@ server.after(() => {
                 }
             },
         });
-    // server
-    //     .withTypeProvider<ZodTypeProvider>()
-    //     .post(`/api/${apiVersion}/post/create`, {
-    //         schema: {
-    //             body: Dto.createPostRequest,
-    //         },
-    //         handler: async (request, _reply) => {
-    //             const didWrite = await verifyUCAN(db, request, {
-    //                 expectedDeviceStatus: {
-    //                     isLoggedIn: true,
-    //                 },
-    //             });
-    //             // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
-    //             // TODO
-    //         },
-    //     });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .post(`/api/${apiVersion}/post/create`, {
+            schema: {
+                body: Dto.createNewPostRequest,
+                response: {
+                    200: Dto.createNewPostResponse
+                }
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, undefined);
+                // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
+                
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const authHeader = getAuthHeader(request);
+                    return await postService.createNewPost({
+                        db: db,
+                        authorId: status.userId,
+                        postTitle: request.body.postTitle,
+                        postBody: request.body.postBody ?? null,
+                        didWrite: didWrite,
+                        authHeader: authHeader
+                    });
+                }
+            },
+        });
     // server
     //     .withTypeProvider<ZodTypeProvider>()
     //     .post(`/api/${apiVersion}/poll/respond`, {

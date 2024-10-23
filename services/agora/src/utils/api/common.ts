@@ -1,0 +1,39 @@
+import { RawAxiosRequestConfig } from "axios";
+import { useQuasar } from "quasar";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { getPlatform } from "src/utils/common";
+import { onMounted } from "vue";
+import { buildUcan, createDidIfDoesNotExist } from "../crypto/ucan/operation";
+import { storeToRefs } from "pinia";
+
+export function useCommonApi() {
+
+  const $q = useQuasar();
+  const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
+
+  let platform: "mobile" | "web" = "web";
+
+  onMounted(() => {
+    platform = getPlatform($q.platform);
+  });
+
+  async function buildEncodedUcan(url: string, options: RawAxiosRequestConfig) {
+    console.log("Build UCAN for email: " + verificationEmailAddress.value);
+
+    const { did, prefixedKey } = await createDidIfDoesNotExist(verificationEmailAddress.value, platform);
+    // TODO: get DID if exist, else create it
+    // then create UCAN, then inject it below
+    // if we create it, create a unique cryptographic random ID that is linked to the email address
+    // return this so we can go to /onboarding/verify/email/{id}
+    // store in Pinia and in secure storage:
+    // - email => prefixedKey
+    // - flowId => email
+    // later after verification, will store UUID => prefixedKey
+
+    const encodedUcan = await buildUcan({ did, prefixedKey, pathname: url, method: options.method, platform });
+    return encodedUcan;
+  }
+
+  return { buildEncodedUcan };
+
+}

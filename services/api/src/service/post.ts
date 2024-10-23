@@ -1,11 +1,13 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { PostComment, SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, deviceTable, postTable, userTable, voteContentTable, voteTable } from "@/schema.js";
+import { commentContentTable, commentTable, masterProofTable, postContentTable, postTable, voteContentTable, voteTable } from "@/schema.js";
 import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
-import type { FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
+import type { CreateNewPostResponse, FetchCommentsToVoteOn200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { toUnionUndefined } from "@/shared/shared.js";
+import { generateRandomSlugId } from "@/crypto.js";
+import { server } from "@/app.js";
 
 interface FetchCommentsByPostIdProps {
     db: PostgresDatabase;
@@ -25,6 +27,16 @@ interface FetchNextCommentsToVoteOn {
     httpErrors: HttpErrors;
 }
 
+
+interface CreateNewPost {
+    db: PostgresDatabase;
+    authorId: string;
+    postTitle: string;
+    postBody: string | null;
+    didWrite: string;
+    authHeader: string;
+}
+
 export async function fetchCommentsByPostSlugId({
     db,
     postSlugId,
@@ -34,7 +46,7 @@ export async function fetchCommentsByPostSlugId({
     createdAt,
     limit,
 }: FetchCommentsByPostIdProps): Promise<PostComment[]> {
-    const actualLimit = limit === undefined ? 30 : limit;
+    const actualLimit = limit ?? 30;
     const whereCreatedAt =
         createdAt === undefined
             ? eq(postTable.slugId, postSlugId)
@@ -161,5 +173,62 @@ export async function fetchNextCommentsToVoteOn({
         );
     return {
         assignedComments: results
+    }
+}
+
+export async function createNewPost({
+    db,
+    postTitle,
+    postBody,
+    authorId,
+    didWrite,
+    authHeader
+}: CreateNewPost): Promise<CreateNewPostResponse> {
+
+    try {
+        const postSlugId = generateRandomSlugId();
+
+        await db.transaction(async (tx) => {
+
+            const postInsertResponse = await tx.insert(postTable).values({
+                authorId: authorId,
+                slugId: postSlugId, 
+                commentCount: 0,
+                currentContentId: null,
+                isHidden: false,
+                lastReactedAt: new Date()
+            }).returning({ postId: postTable.id });
+
+            const postId = postInsertResponse[0].postId;
+
+            const masterProofTableResponse = await tx.insert(masterProofTable).values({
+                type: "creation",
+                authorDid: didWrite,
+                proof: authHeader,
+                proofVersion: 0
+            }).returning({ proofId: masterProofTable.id });
+
+            const proofId = masterProofTableResponse[0].proofId;
+
+            await tx.insert(postContentTable).values({
+                postId: postId,
+                postProofId: proofId,
+                parentId: null,
+                title: postTitle,
+                body: postBody,
+                pollId: null
+            });
+        });
+
+        return {
+            isSuccessful: true,
+            postSlugId: postSlugId
+        }
+
+    } catch (err: unknown) {
+        server.log.error(err);
+        return {
+            isSuccessful: false
+        }
     }
 }

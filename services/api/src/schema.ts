@@ -6,7 +6,6 @@ import {
     varchar,
     integer,
     boolean,
-    serial,
     customType,
     text,
     real,
@@ -43,23 +42,22 @@ export const ageGroupEnum = pgEnum("age_group", ["8-15", "16-24", "25-34", "35-4
 export const sexEnum = pgEnum("sex", ["F", "M", "X"]);
 
 export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
-    "376", "971", "93", "1268", "1264", "355", "374", "244", "672", "54", "1684", "43", "61", "297", "358", "994", "387", "1246",
+    "376", "971", "93", "1268", "1264", "355", "374", "244", "672", "54", "1684", "43", "297", "358", "994", "387", "1246",
     "880", "32", "226", "359", "973", "257", "229", "590", "1441", "673", "591", "5997", "55", "1242", "975", "47", "267", "375",
-    "501", "1", "61", "243", "236", "242", "41", "225", "682", "56", "237", "86", "57", "506", "53", "238", "5999", "61", "357",
-    "420", "49", "253", "45", "1767", "1809", "1829", "1849", "213", "593", "372", "20", "212", "291", "34", "251", "358", "679",
-    "500", "691", "298", "33", "241", "44", "1473", "995", "594", "44", "233", "350", "299", "220", "224", "590", "240", "30",
-    "500", "502", "1671", "245", "592", "852", "61", "504", "385", "509", "36", "62", "353", "972", "44", "91", "246", "964",
+    "501", "1", "243", "236", "242", "41", "225", "682", "56", "237", "86", "57", "506", "53", "238", "5999", "61", "357",
+    "420", "49", "253", "45", "1767", "1809", "1829", "1849", "213", "593", "372", "20", "212", "291", "34", "251", "679",
+    "500", "691", "298", "33", "241", "1473", "995", "594", "233", "350", "299", "220", "224", "240", "30",
+    "502", "1671", "245", "592", "852", "504", "385", "509", "36", "62", "353", "972", "91", "246", "964",
     "98", "354", "39", "44", "1876", "962", "81", "254", "996", "855", "686", "269", "1869", "850", "82", "965", "1345", "76",
-    "77", "856", "961", "1758", "423", "94", "231", "266", "370", "352", "371", "218", "212", "377", "373", "382", "590", "261",
+    "77", "856", "961", "1758", "423", "94", "231", "266", "370", "352", "371", "218", "377", "373", "382", "261",
     "692", "389", "223", "95", "976", "853", "1670", "596", "222", "1664", "356", "230", "960", "265", "52", "60", "258", "264",
-    "687", "227", "672", "234", "505", "31", "47", "977", "674", "683", "64", "968", "507", "51", "689", "675", "63", "92",
-    "48", "508", "64", "1787", "1939", "970", "351", "680", "595", "974", "262", "40", "381", "7", "250", "966", "677", "248",
+    "687", "227", "234", "505", "31", "977", "674", "683", "64", "968", "507", "51", "689", "675", "63", "92",
+    "48", "508", "1787", "1939", "970", "351", "680", "595", "974", "262", "40", "381", "7", "250", "966", "677", "248",
     "249", "46", "65", "290", "386", "4779", "421", "232", "378", "221", "252", "597", "211", "239", "503", "1721", "963",
-    "268", "1649", "235", "262", "228", "66", "992", "690", "670", "993", "216", "676", "90", "1868", "688", "886", "255",
-    "380", "256", "1", "1", "598", "998", "379", "1784", "58", "1284", "1340", "84", "678", "681", "685", "377", "381", "383",
-    "386", "967", "262", "27", "260", "263"
+    "268", "1649", "235", "228", "66", "992", "690", "670", "993", "216", "676", "90", "1868", "688", "886", "255",
+    "380", "256", "598", "998", "379", "1784", "58", "1284", "1340", "84", "678", "681", "685", "383",
+    "967", "27", "260", "263"
 ]);
-
 
 // One user == one account.
 // Inserting a record in that table means that the user has been successfully registered.
@@ -86,7 +84,7 @@ export const userTable = pgTable("user", {
 });
 
 export const organisationTable = pgTable("organisation", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     name: varchar("name", { length: MAX_LENGTH_NAME_CREATOR }).notNull(),
     imageUrl: text("image_url"),
     websiteUrl: text("website_url"),
@@ -106,7 +104,7 @@ export const organisationTable = pgTable("organisation", {
 });
 
 export const passportTable = pgTable("passport", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
@@ -128,12 +126,12 @@ export const passportTable = pgTable("passport", {
 });
 
 export const phoneTable = pgTable("phone", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
     lastTwoDigits: varchar("last_two_digits", { length: 2 }).notNull(), // add check for it to be numbers?
-    countryCode: countryCodeEnum("country_code").notNull(),
+    phoneCountryCode: phoneCountryCodeEnum("phone_country_code").notNull(),
     hashedPhone: text("hashed_phone").notNull(), // base64 encoded hash of phone + salt
     salt: text("salt").notNull(), // base64 encoded salt, might change the type
     createdAt: timestamp("created_at", {
@@ -217,7 +215,7 @@ export const proofType = pgEnum("proof_type", [
 
 // each proof corresponds to at least one device
 export const idProofTable = pgTable("id_proof", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     userId: uuid("user_id")
         .references(() => userTable.id)
         .notNull(),
@@ -276,7 +274,7 @@ export const authAttemptTable = pgTable("auth_attempt", {
 
 // conceptually, it is a "pollContentTable"
 export const pollTable = pgTable("poll", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     postContentId: integer("post_content_id")
         .notNull()
         .unique()
@@ -310,15 +308,9 @@ export const pollTable = pgTable("poll", {
 
 export const proofTypeEnum = pgEnum("proof_type", ["creation", "edit", "deletion"]);
 
-// these proofs are kept even after edit/deletion
-export const postProofTable = pgTable("post_proof", {
-    id: serial("id").primaryKey(),
+export const masterProofTable = pgTable("master_proof", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
-    postId: integer("post_id") // "postAs"
-        .notNull()
-        .references(() => postTable.id),
-    postContentId: integer("post_content_id").unique()
-        .references((): AnyPgColumn => postContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
     authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
@@ -330,23 +322,17 @@ export const postProofTable = pgTable("post_proof", {
     })
         .defaultNow()
         .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
 });
 
 export const postContentTable = pgTable("post_content", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     postId: integer("post_id") // "postAs"
         .notNull()
         .references((): AnyPgColumn => postTable.id), // the author of the poll
     postProofId: integer("post_proof_id")
         .notNull()
         .unique()
-        .references(() => postProofTable.id), // cannot point to deletion proof
+        .references(() => masterProofTable.id), // cannot point to deletion proof
     parentId: integer("parent_id").references((): AnyPgColumn => postContentTable.id), // not null if edit
     title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
     body: varchar("body", { length: MAX_LENGTH_BODY }),
@@ -356,18 +342,12 @@ export const postContentTable = pgTable("post_content", {
         precision: 0,
     })
         .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
+        .notNull()
 });
 
 export const postTable = pgTable("post", {
-    id: serial("id").primaryKey(),
-    slugId: varchar("slug_id", { length: 10 }).notNull(), // used for permanent URL
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    slugId: varchar("slug_id", { length: 6 }).notNull(), // used for permanent URL
     authorId: uuid("author_id") // "postAs"
         .notNull()
         .references(() => userTable.id), // the author of the poll
@@ -396,7 +376,7 @@ export const postTable = pgTable("post", {
 });
 
 export const pollResponseTable = pgTable("poll_response", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
@@ -419,40 +399,12 @@ export const pollResponseTable = pgTable("poll_response", {
         .notNull(),
 });
 
-export const pollResponseProofTable = pgTable("poll_response_proof", {
-    id: serial("id").primaryKey(),
-    type: proofTypeEnum("proof_type").notNull(),
-    pollResponseId: integer("poll_response_id") //
-        .notNull()
-        .references(() => pollResponseTable.id),
-    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
-        .notNull()
-        .references(() => deviceTable.didWrite),
-    pollResponseContentId: integer("poll_response_content_id").unique()
-        .references((): AnyPgColumn => pollResponseContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    postProofId: integer("post_proof_id").references(() => postProofTable.id).notNull(), // exact post proof (post state which contains poll) to which this response proof corresponds.
-    proof: text("proof").notNull(), // base64 encoded proof
-    proofVersion: integer("proof_version").notNull(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
 export const pollResponseContentTable = pgTable("poll_response_content", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     pollResponseId: integer("poll_response_id") //
         .notNull()
         .references(() => pollResponseTable.id),
-    pollResponseProofId: integer("poll_response_proof_id").notNull().unique().references((): AnyPgColumn => pollResponseProofTable.id),
+    pollResponseProofId: integer("poll_response_proof_id").notNull().unique().references((): AnyPgColumn => masterProofTable.id),
     postContentId: integer("post_content_id").references(() => postContentTable.id), // exact post content and associated poll that existed when this poll was responded.  Null if post was deleted.
     parentId: integer("parent_id").references((): AnyPgColumn => pollResponseContentTable.id), // not null if edit
     optionChosen: integer("option_chosen").notNull(),
@@ -461,19 +413,12 @@ export const pollResponseContentTable = pgTable("poll_response_content", {
         precision: 0,
     })
         .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-
+        .notNull()
 });
 
 export const commentTable = pgTable("comment", {
-    id: serial("id").primaryKey(),
-    slugId: varchar("slug_id", { length: 10 }).notNull().unique(), // used for permanent URL
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    slugId: varchar("slug_id", { length: 6 }).notNull().unique(), // used for permanent URL
     authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
@@ -505,14 +450,14 @@ export const commentTable = pgTable("comment", {
         .notNull(),
 });
 
-export const commentContentTable = pgTable("commentContent", {
-    id: serial("id").primaryKey(),
+export const commentContentTable = pgTable("comment_content", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     commentId: integer("comment_id") // "postAs"
         .notNull()
         .references((): AnyPgColumn => commentTable.id), // the author of the poll
     commentProofId: integer("comment_proof_id")
         .notNull()
-        .references(() => commentProofTable.id), // cannot point to deletion proof
+        .references(() => masterProofTable.id), // cannot point to deletion proof
     postContentId: integer("post_content_id").references(() => postContentTable.id), // exact post content that existed when this comment was created.  Null if post was deleted.
     parentId: integer("parent_id").references((): AnyPgColumn => commentContentTable.id), // not null if edit
     content: varchar("content", { length: MAX_LENGTH_COMMENT }).notNull(),
@@ -538,38 +483,9 @@ export const commentContentTable = pgTable("commentContent", {
 
 });
 
-// these proofs are kept even after edit/deletion
-export const commentProofTable = pgTable("comment_proof", {
-    id: serial("id").primaryKey(),
-    type: proofTypeEnum("proof_type").notNull(),
-    commentId: integer("comment_id") // "postAs"
-        .notNull()
-        .references(() => commentTable.id),
-    commentContentId: integer("comment_content_id") // "postAs"
-        .references((): AnyPgColumn => commentContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
-        .notNull()
-        .references(() => deviceTable.didWrite),
-    postProofId: integer("post_proof_id").references(() => postProofTable.id).notNull(), // exact post proof (post state) to which this comment proof responded to.
-    proof: text("proof").notNull(), // base64 encoded proof
-    proofVersion: integer("proof_version").notNull(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-});
-
 // like or dislike on comments for each user
 export const voteTable = pgTable("vote", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
@@ -594,11 +510,11 @@ export const voteTable = pgTable("vote", {
 export const voteEnum = pgEnum("vote_enum", ["like", "dislike"]);
 
 export const voteContentTable = pgTable("vote_content", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     voteId: integer("vote_id") //
         .notNull()
         .references(() => voteTable.id),
-    voteProofId: integer("vote_proof_id").notNull().references((): AnyPgColumn => voteProofTable.id),
+    voteProofId: integer("vote_proof_id").notNull().references((): AnyPgColumn => masterProofTable.id),
     commentContentId: integer("comment_content_id").references(() => commentContentTable.id), // exact comment content that existed when this vote was cast.  Null if comment was deleted.
     parentId: integer("parent_id").references((): AnyPgColumn => voteContentTable.id), // not null if edit
     optionChosen: voteEnum("option_chosen").notNull(),
@@ -607,42 +523,7 @@ export const voteContentTable = pgTable("vote_content", {
         precision: 0,
     })
         .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-
-});
-
-export const voteProofTable = pgTable("vote_proof", {
-    id: serial("id").primaryKey(),
-    type: proofTypeEnum("proof_type").notNull(),
-    voteId: integer("vote_id") //
         .notNull()
-        .references(() => voteTable.id),
-    voteContentId: integer("vote_content_id")
-        .references((): AnyPgColumn => voteContentTable.id), // null if deletion proof and for creation and edit proofs if posts were deleted
-    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
-        .notNull()
-        .references(() => deviceTable.didWrite),
-    commentProofId: integer("comment_proof_id").references(() => commentProofTable.id).notNull(), // exact comment proof (comment state) to which this vote proof responded to.
-    proof: text("proof").notNull(), // base64 encoded proof
-    proofVersion: integer("proof_version").notNull(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
 });
 
 // anti-social = hate + harassment + trolling + intelorance
@@ -656,7 +537,7 @@ export const moderationReasonEnum = pgEnum("moderation_reason_enum", [firstReaso
 export const moderationAction = pgEnum("moderation_action", ["hide", "nothing"]);
 
 export const reportTable = pgTable("report_table", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     postId: integer("post_id") //
         .references(() => postTable.id), // at least one or the other should be not null - add a check
     commentId: integer("post_id") //
@@ -677,11 +558,10 @@ export const reportTable = pgTable("report_table", {
     })
         .defaultNow()
         .notNull(),
-
 });
 
 export const moderationTable = pgTable("moderation_table", {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     reportId: integer("report_id").notNull().references((): AnyPgColumn => reportTable.id),
     moderatorId: uuid("moderator_id").references(() => userTable.id),
     moderationAction: moderationAction("moderation_action").notNull(), // add check

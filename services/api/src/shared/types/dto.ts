@@ -88,6 +88,14 @@ export class Dto {
         numberOfCommentsToFetch: z.number().int().positive()
     });
     static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodComment) });
+    static createNewPostRequest = z.object({
+        postTitle: z.string(),
+        postBody: z.string().optional()
+    });
+    static createNewPostResponse = z.discriminatedUnion("isSuccessful", [
+        z.object({ isSuccessful: z.literal(true), postSlugId: z.string() }).strict(),
+        z.object({ isSuccessful: z.literal(false) }).strict(),
+    ]);
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
@@ -99,3 +107,4 @@ export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;
 export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
 export type FetchCommentsToVoteOn200 = z.infer<typeof Dto.commentFetchToVoteOn200>;
+export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;

@@ -1,9 +1,8 @@
 import { ApiV1AuthAuthenticatePost200Response, ApiV1AuthAuthenticatePost409Response, ApiV1AuthAuthenticatePostRequest, ApiV1AuthVerifyOtpPostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
 import { api } from "src/boot/axios";
 import axios from "axios";
-import { SupportedPlatform } from "src/utils/common";
-import * as ucanOperation from "../crypto/ucan/operation";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
+import { useCommonApi } from "./common";
 
 interface AuthenticateReturn {
   isSuccessful: boolean;
@@ -13,20 +12,16 @@ interface AuthenticateReturn {
 
 export function useBackendAuthApi() {
 
+  const { buildEncodedUcan } = useCommonApi();
+
   async function sendEmailCode(
     email: string,
-    isRequestingNewCode: boolean,
-    platform: SupportedPlatform
+    isRequestingNewCode: boolean
   ): Promise<AuthenticateReturn> {
-    const { did, prefixedKey } = await ucanOperation.createDidIfDoesNotExist(email, platform);
-    // TODO: get DID if exist, else create it
-    // then create UCAN, then inject it below
-    // if we create it, create a unique cryptographic random ID that is linked to the email address
-    // return this so we can go to /onboarding/verify/email/{id}
-    // store in Pinia and in secure storage:
-    // - email => prefixedKey
-    // - flowId => email
-    // later after verification, will store UUID => prefixedKey
+
+    if (process.env.USE_DUMMY_ACCESS == "true") {
+      email = "test@gmail.com";
+    }
 
     const params: ApiV1AuthAuthenticatePostRequest = {
       email: email,
@@ -34,7 +29,7 @@ export function useBackendAuthApi() {
     };
     try {
       const { url, options } = await DefaultApiAxiosParamCreator().apiV1AuthAuthenticatePost(params);
-      const encodedUcan = await ucanOperation.buildUcan({ did, prefixedKey, pathname: url, method: options.method, platform });
+      const encodedUcan = await buildEncodedUcan(url, options);
       const otpDetails = await DefaultApiFactory(
         undefined,
         undefined,
@@ -67,24 +62,19 @@ export function useBackendAuthApi() {
   }
 
   async function emailCode(
-    email: string,
-    code: number,
-    platform: SupportedPlatform
+    code: number
   ) {
-    const { did, prefixedKey } = await ucanOperation.createDidIfDoesNotExist(email, platform);
     const params: ApiV1AuthVerifyOtpPostRequest = {
       code: code
     };
 
     const { url, options } = await DefaultApiAxiosParamCreator().apiV1AuthVerifyOtpPost(params);
-    const encodedUcan = await ucanOperation.buildUcan({ did, prefixedKey, pathname: url, method: options.method, platform });
+    const encodedUcan = await buildEncodedUcan(url, options);
     const otpDetails = await DefaultApiFactory(
       undefined,
       undefined,
       api
-    ).apiV1AuthVerifyOtpPost({
-      code: code,
-    }, {
+    ).apiV1AuthVerifyOtpPost(params, {
       headers: {
         ...buildAuthorizationHeader(encodedUcan)
       }
@@ -95,12 +85,9 @@ export function useBackendAuthApi() {
 
 
   async function logout(
-    email: string,
-    platform: SupportedPlatform
   ) {
-    const { did, prefixedKey } = await ucanOperation.createDidIfDoesNotExist(email, platform);
     const { url, options } = await DefaultApiAxiosParamCreator().apiV1AuthLogoutPost();
-    const encodedUcan = await ucanOperation.buildUcan({ did, prefixedKey, pathname: url, method: options.method, platform });
+    const encodedUcan = await buildEncodedUcan(url, options);
     const otpDetails = await DefaultApiFactory(
       undefined,
       undefined,
