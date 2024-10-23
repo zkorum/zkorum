@@ -1,6 +1,6 @@
 import "dotenv/config"; // this loads .env values in process.env
 import { z } from "zod";
-import fastify from "fastify";
+import Fastify from "fastify";
 import { zodDidWeb } from "./shared/types/zod.js";
 
 export type Environment = "development" | "production" | "staging1";
@@ -69,7 +69,7 @@ function envToLogger(env: Environment) {
     }
 }
 
-export const server = fastify({
+export const server = Fastify({
     logger: envToLogger(config.NODE_ENV),
 });
 

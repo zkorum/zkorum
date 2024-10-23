@@ -242,7 +242,9 @@ const awsMailConf = {
 server.after(() => {
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/auth/authenticate`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/auth/authenticate`,
             schema: {
                 body: Dto.authenticateRequestBody,
                 response: { 200: Dto.authenticateResponse, 409: Dto.auth409 },
@@ -301,7 +303,9 @@ server.after(() => {
     // TODO: for now there is no way to communicate "isTrusted", it's set to true automatically - but it will change
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/auth/verifyOtp`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/auth/verifyOtp`,
             schema: {
                 body: Dto.verifyOtpReqBody,
                 response: {
@@ -324,7 +328,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/auth/logout`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/auth/logout`,
             handler: async (request, _reply) => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
@@ -336,7 +342,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/feed/fetchMore`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/feed/fetchMore`,
             schema: {
                 body: Dto.fetchFeedRequest,
                 response: {
@@ -357,7 +365,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/feed/fetchRecent`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/feed/fetchRecent`,
             schema: {
                 body: Dto.fetchFeedRequest,
                 response: {
@@ -378,7 +388,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/comment/fetchMore`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/comment/fetchMore`,
             schema: {
                 body: Dto.commentFetchFeedRequest,
                 response: {
@@ -430,7 +442,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/comment/fetchRecent`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/comment/fetchRecent`,
             schema: {
                 body: Dto.commentFetchFeedRequest,
                 response: {
@@ -482,7 +496,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/comment/fetchToVoteOn`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/comment/fetchToVoteOn`,
             schema: {
                 body: Dto.commentFetchToVoteOnRequest,
                 response: {
@@ -513,7 +529,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/post/create`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/post/create`,
             schema: {
                 body: Dto.createNewPostRequest,
                 response: {
