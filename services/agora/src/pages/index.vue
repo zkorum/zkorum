@@ -34,7 +34,7 @@ onMounted(async () => {
       metadata: {
         commentCount: postElement.metadata.commentCount,
         communityId: "",
-        createdAt: new Date(),
+        createdAt: new Date(postElement.metadata.updatedAt),
         isHidden: false,
         posterImagePath: "/development/logos/european-pirate-party.png",
         posterName: "COMPANY NAME",
