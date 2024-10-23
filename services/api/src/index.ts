@@ -547,14 +547,14 @@ server.after(() => {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
                     const authHeader = getAuthHeader(request);
-                    return await postService.createNewPost({
-                        db: db,
-                        authorId: status.userId,
-                        postTitle: request.body.postTitle,
-                        postBody: request.body.postBody ?? null,
-                        didWrite: didWrite,
-                        authHeader: authHeader
-                    });
+                    return await postService.createNewPost(
+                        db,
+                        request.body.postTitle,
+                        request.body.postBody ?? null,
+                        status.userId,
+                        didWrite,
+                        authHeader
+                    );
                 }
             },
         });
@@ -692,33 +692,41 @@ server.after(() => {
     //             // });
     //         },
     //     });
-    // server
-    //     .withTypeProvider<ZodTypeProvider>()
-    //     .post(`/api/${apiVersion}/post/fetch`, {
-    //         schema: {
-    //             body: Dto.postFetchRequest,
-    //             // response: {
-    //             //     200: Dto.postFetch200,
-    //             // },
-    //         },
-    //         handler: async (request, _reply) => {
-    //             // anonymous request, no auth
-    //             // const { post, postId } = await Service.fetchPostByUidOrSlugId({
-    //             //     db: db,
-    //             //     postUidOrSlugId: request.body.postSlugId,
-    //             //     type: "slugId",
-    //             //     httpErrors: server.httpErrors,
-    //             // });
-    //             // const comments = await Service.fetchCommentsByPostId({
-    //             //     db: db,
-    //             //     postId: postId,
-    //             //     order: "more",
-    //             //     showHidden: true,
-    //             //     updatedAt: undefined,
-    //             // });
-    //             // return { post, comments };
-    //         },
-    //     });
+     server
+         .withTypeProvider<ZodTypeProvider>()
+         .route({
+             method: "POST",
+             url: `/api/${apiVersion}/post/fetch`,
+             schema: {
+                 body: Dto.fetchPostBySlugIdRequest,
+                  response: {
+                      200: Dto.fetchPostBySlugIdResponse,
+                  },
+             },
+             handler: async (request, _reply) => {
+                return await postService.fetchPostBySlugId(
+                    db, request.body.postSlugId
+                );
+                
+                /*
+                  // anonymous request, no auth
+                  const { post, postId } = await Service.fetchPostByUidOrSlugId({
+                      db: db,
+                      postUidOrSlugId: request.body.postSlugId,
+                      type: "slugId",
+                      httpErrors: server.httpErrors,
+                  });
+                  const comments = await Service.fetchCommentsByPostId({
+                      db: db,
+                      postId: postId,
+                      order: "more",
+                      showHidden: true,
+                      updatedAt: undefined,
+                  });
+                  return { post, comments };
+                */
+             },
+         });
 });
 
 server.ready((e) => {

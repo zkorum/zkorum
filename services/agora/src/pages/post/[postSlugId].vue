@@ -5,17 +5,22 @@
 </template>
 
 <script setup lang="ts">
-import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 import PostDetails from "src/components/post/PostDetails.vue";
+import { DummyPostDataFormat, usePostStore } from "src/stores/post";
+import { useBackendPostApi } from "src/utils/api/post";
+import { onMounted, ref } from "vue";
 
 const props = defineProps<{
   postSlugId: string
 }>();
 
-const postStore = usePostStore();
+const { fetchPostBySlugId } = useBackendPostApi();
+const { emptyPost } = usePostStore();
+const postData = ref<DummyPostDataFormat>(emptyPost);
 
-let postData: DummyPostDataFormat = postStore.emptyPost;
-postData = postStore.getPostBySlugId(props.postSlugId);
+onMounted(async () => {
+  postData.value = await fetchPostBySlugId(props.postSlugId);
+});
 
 </script>
 

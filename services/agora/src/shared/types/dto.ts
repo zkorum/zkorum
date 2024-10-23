@@ -96,6 +96,13 @@ export class Dto {
         z.object({ isSuccessful: z.literal(true), postSlugId: z.string() }).strict(),
         z.object({ isSuccessful: z.literal(false) }).strict(),
     ]);
+    static fetchPostBySlugIdRequest = z.object({
+        postSlugId: zodSlugId, // z.object() does not exist :(
+    });
+    static fetchPostBySlugIdResponse = z.discriminatedUnion("isSuccessful", [
+        z.object({ isSuccessful: z.literal(true), postData: zodExtendedPostData }).strict(),
+        z.object({ isSuccessful: z.literal(false) }).strict(),
+    ]);
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
@@ -108,3 +115,5 @@ export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
 export type FetchCommentsToVoteOn200 = z.infer<typeof Dto.commentFetchToVoteOn200>;
 export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
+export type FetchPostBySlugIdRequest = z.infer<typeof Dto.fetchPostBySlugIdRequest>;
+export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;

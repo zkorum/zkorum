@@ -545,6 +545,57 @@ export interface ApiV1PostCreatePostRequest {
      */
     'postBody'?: string;
 }
+/**
+ * 
+ * @export
+ * @interface ApiV1PostFetchPost200Response
+ */
+export interface ApiV1PostFetchPost200Response {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostFetchPost200Response
+     */
+    'isSuccessful': boolean;
+    /**
+     * 
+     * @type {ApiV1FeedFetchMorePost200ResponseInner}
+     * @memberof ApiV1PostFetchPost200Response
+     */
+    'postData': ApiV1FeedFetchMorePost200ResponseInner;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostFetchPost200ResponseAnyOf
+ */
+export interface ApiV1PostFetchPost200ResponseAnyOf {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostFetchPost200ResponseAnyOf
+     */
+    'isSuccessful': boolean;
+    /**
+     * 
+     * @type {ApiV1FeedFetchMorePost200ResponseInner}
+     * @memberof ApiV1PostFetchPost200ResponseAnyOf
+     */
+    'postData': ApiV1FeedFetchMorePost200ResponseInner;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostFetchPostRequest
+ */
+export interface ApiV1PostFetchPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostFetchPostRequest
+     */
+    'postSlugId': string;
+}
 
 /**
  * DefaultApi - axios parameter creator
@@ -897,6 +948,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {ApiV1PostFetchPostRequest} apiV1PostFetchPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PostFetchPost: async (apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1PostFetchPostRequest' is not null or undefined
+            assertParamExists('apiV1PostFetchPost', 'apiV1PostFetchPostRequest', apiV1PostFetchPostRequest)
+            const localVarPath = `/api/v1/post/fetch`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PostFetchPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -1014,6 +1104,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostCreatePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * 
+         * @param {ApiV1PostFetchPostRequest} apiV1PostFetchPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1PostFetchPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostFetchPost(apiV1PostFetchPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostFetchPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -1103,6 +1205,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: any): AxiosPromise<ApiV1PostCreatePost200Response> {
             return localVarFp.apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1PostFetchPostRequest} apiV1PostFetchPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: any): AxiosPromise<ApiV1PostFetchPost200Response> {
+            return localVarFp.apiV1PostFetchPost(apiV1PostFetchPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1210,6 +1321,17 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1PostFetchPostRequest} apiV1PostFetchPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1PostFetchPost(apiV1PostFetchPostRequest: ApiV1PostFetchPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1PostFetchPost(apiV1PostFetchPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
