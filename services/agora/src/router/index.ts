@@ -7,7 +7,7 @@ import {
 } from "vue-router";
 
 import routes from "./routes";
-import { useStorage } from "@vueuse/core";
+import { useLastNavigatedRouteName } from "src/utils/nav/lastNavigatedRouteName";
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -19,7 +19,7 @@ import { useStorage } from "@vueuse/core";
 
 export default route(function (/* { store, ssrContext } */) {
 
-  const lastNavigatedRouteName = useStorage("last-navigated-route-name", "");
+  const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
   const createHistory = process.env.SERVER
     ? createMemoryHistory

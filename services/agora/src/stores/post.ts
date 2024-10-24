@@ -122,6 +122,8 @@ export const usePostStore = defineStore("post", () => {
   }
   */
 
+  const lastSavedHomeFeedPosition = useStorage("last-saved-home-feed-position", 0);
+
   function generateRealisticPosts() {
     const postList: DummyPostDataFormat[] = [];
 
@@ -538,6 +540,7 @@ export const usePostStore = defineStore("post", () => {
     getCommunityImageFromId,
     submitNewPost,
     allocateAllCommentsForRanking,
-    emptyPost
+    emptyPost,
+    lastSavedHomeFeedPosition
   };
 });

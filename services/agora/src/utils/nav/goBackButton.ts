@@ -1,10 +1,10 @@
-import { useStorage } from "@vueuse/core";
 import { useRouter } from "vue-router";
+import { useLastNavigatedRouteName } from "./lastNavigatedRouteName";
 
 export function useGoBackButtonHandler() {
   const router = useRouter();
 
-  const lastNavigatedRouteName = useStorage("last-navigated-route-name", "");
+  const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
   function goBack() {
     if (lastNavigatedRouteName.value == "") {
