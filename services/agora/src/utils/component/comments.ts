@@ -59,7 +59,7 @@ export function useCommentOptions() {
   }
 
   return {
-     getCommentSortOptions
+    getCommentSortOptions
   };
 
 }

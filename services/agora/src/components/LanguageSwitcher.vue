@@ -20,20 +20,20 @@ import { onMounted } from "vue";
 const { locale } = useI18n({ useScope: "global" });
 let actualLocale = ref(locale.value);
 onMounted(() => {
-    if (actualLocale.value.includes("fr")) {
-        actualLocale.value = "fr";
-    } else if (locale.value.includes("en")) {
-        actualLocale.value = "en-US";
-    } else {
-        actualLocale.value = "en-US";
-    }
+  if (actualLocale.value.includes("fr")) {
+    actualLocale.value = "fr";
+  } else if (locale.value.includes("en")) {
+    actualLocale.value = "en-US";
+  } else {
+    actualLocale.value = "en-US";
+  }
 });
 const localeOptions = [
-    { value: "en-US", label: "En" },
-    { value: "fr", label: "Fr" },
+  { value: "en-US", label: "En" },
+  { value: "fr", label: "Fr" },
 ];
 watch(actualLocale, (newValue) => {
-    // Update vue-i18n locale when actualLocale changes
-    locale.value = newValue;
+  // Update vue-i18n locale when actualLocale changes
+  locale.value = newValue;
 });
 </script>
