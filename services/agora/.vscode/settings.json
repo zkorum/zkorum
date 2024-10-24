@@ -12,6 +12,12 @@
     "typescript",
     "vue"
   ],
+  "eslint.codeActionsOnSave.rules": [
+    "quotes",
+    "semi",
+    "indent",
+    "@typescript-eslint/no-extra-parens"
+  ],
   "typescript.tsdk": "node_modules/typescript/lib",
   "files.eol": "\n",
   "files.watcherExclude": {

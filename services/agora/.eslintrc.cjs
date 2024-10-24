@@ -67,37 +67,41 @@ module.exports = {
 
     // add your custom rules here
     rules: {
-        "prefer-promise-reject-errors": "off",
+      "prefer-promise-reject-errors": "off",
 
-        quotes: ["warn", "double", { avoidEscape: true }],
+      "linebreak-style": ["error", "unix"],
 
-        semi: 1,
+      "indent": ["error", 2],
 
-        // this rule, if on, would require explicit return type on the `render` function
-        "@typescript-eslint/explicit-function-return-type": "off",
+      "quotes": ["error", "double", { avoidEscape: true }],
 
-        // in plain CommonJS modules, you can't use `import foo = require('foo')` to pass this rule, so it has to be disabled
-        "@typescript-eslint/no-var-requires": "off",
+      "semi": ["error", "always"],
 
-        "vue/multi-word-component-names": 0,
+      // this rule, if on, would require explicit return type on the `render` function
+      "@typescript-eslint/explicit-function-return-type": "off",
 
-        // The core 'no-unused-vars' rules (in the eslint:recommended ruleset)
-        // does not work with type definitions
-        "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": [
-            "error",
-            { argsIgnorePattern: "^_" },
-        ],
+      // in plain CommonJS modules, you can't use `import foo = require('foo')` to pass this rule, so it has to be disabled
+      "@typescript-eslint/no-var-requires": "off",
 
-        "vue/first-attribute-linebreak": [
-            "error",
-            {
-                singleline: "beside",
-                multiline: "beside",
-            },
-        ],
+      "vue/multi-word-component-names": 0,
 
-        // allow debugger during development only
-        "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off",
+      // The core 'no-unused-vars' rules (in the eslint:recommended ruleset)
+      // does not work with type definitions
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+          "error",
+          { argsIgnorePattern: "^_" },
+      ],
+
+      "vue/first-attribute-linebreak": [
+          "error",
+          {
+              singleline: "beside",
+              multiline: "beside",
+          },
+      ],
+
+      // allow debugger during development only
+      "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off",
     },
 };
