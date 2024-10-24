@@ -16,7 +16,7 @@ export function useBackendPostApi() {
         communityId: "",
         createdAt: new Date(postElement.metadata.createdAt),
         isHidden: false,
-        posterImagePath: "/development/logos/european-pirate-party.png",
+        posterImagePath: "/icons/favicon-128x128.png",
         posterName: "COMPANY NAME",
         slugId: postElement.metadata.postSlugId,
         uid: ""
