@@ -267,9 +267,7 @@ server.after(() => {
                     server.httpErrors
                 );
                 const userAgent =
-                    request.headers["user-agent"] === undefined
-                        ? "Unknown device"
-                        : request.headers["user-agent"];
+                    request.headers["user-agent"] ?? "Unknown device";
 
                 return await authService.authenticateAttempt({
                     db,

@@ -2,7 +2,7 @@
   <div>
     <NewPostButtonWrapper @on-click="createNewPost()">
       <div class="container">
-        <CompactPostList :post-list="postList" />
+        <CompactPostList :post-list="postList" :data-ready="dataReady" />
       </div>
     </NewPostButtonWrapper>
   </div>
@@ -27,6 +27,8 @@ const authenticationStore = useAuthenticationStore();
 
 const postStore = useBackendPostApi();
 
+const dataReady = ref(false);
+
 const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
@@ -34,6 +36,7 @@ const postList = ref<DummyPostDataFormat[]>([]);
 
 onMounted(async () => {
   postList.value = await postStore.fetchRecentPost();
+  dataReady.value = true;
 
   if (lastNavigatedRouteName.value == "single-post") {
     setTimeout(
