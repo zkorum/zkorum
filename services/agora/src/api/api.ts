@@ -45,38 +45,6 @@ export interface ApiV1AuthAuthenticatePost200Response {
 /**
  * 
  * @export
- * @interface ApiV1AuthAuthenticatePost409Response
- */
-export interface ApiV1AuthAuthenticatePost409Response {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthAuthenticatePost409Response
-     */
-    'reason': ApiV1AuthAuthenticatePost409ResponseReasonEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthAuthenticatePost409Response
-     */
-    'userId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1AuthAuthenticatePost409Response
-     */
-    'sessionExpiry': string;
-}
-
-export const ApiV1AuthAuthenticatePost409ResponseReasonEnum = {
-    AlreadyLoggedIn: 'already_logged_in'
-} as const;
-
-export type ApiV1AuthAuthenticatePost409ResponseReasonEnum = typeof ApiV1AuthAuthenticatePost409ResponseReasonEnum[keyof typeof ApiV1AuthAuthenticatePost409ResponseReasonEnum];
-
-/**
- * 
- * @export
  * @interface ApiV1AuthAuthenticatePostRequest
  */
 export interface ApiV1AuthAuthenticatePostRequest {
@@ -93,6 +61,38 @@ export interface ApiV1AuthAuthenticatePostRequest {
      */
     'isRequestingNewCode': boolean;
 }
+/**
+ * 
+ * @export
+ * @interface ApiV1AuthCheckLoginStatusPost409Response
+ */
+export interface ApiV1AuthCheckLoginStatusPost409Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthCheckLoginStatusPost409Response
+     */
+    'reason': ApiV1AuthCheckLoginStatusPost409ResponseReasonEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthCheckLoginStatusPost409Response
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthCheckLoginStatusPost409Response
+     */
+    'sessionExpiry': string;
+}
+
+export const ApiV1AuthCheckLoginStatusPost409ResponseReasonEnum = {
+    AlreadyLoggedIn: 'already_logged_in'
+} as const;
+
+export type ApiV1AuthCheckLoginStatusPost409ResponseReasonEnum = typeof ApiV1AuthCheckLoginStatusPost409ResponseReasonEnum[keyof typeof ApiV1AuthCheckLoginStatusPost409ResponseReasonEnum];
+
 /**
  * 
  * @export
@@ -647,6 +647,39 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        apiV1AuthCheckLoginStatusPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/auth/check-login-status`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         apiV1AuthLogoutPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/v1/auth/logout`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -1014,6 +1047,17 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        async apiV1AuthCheckLoginStatusPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthCheckLoginStatusPost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1AuthCheckLoginStatusPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         async apiV1AuthLogoutPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthLogoutPost(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
@@ -1140,6 +1184,14 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        apiV1AuthCheckLoginStatusPost(options?: any): AxiosPromise<object> {
+            return localVarFp.apiV1AuthCheckLoginStatusPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         apiV1AuthLogoutPost(options?: any): AxiosPromise<void> {
             return localVarFp.apiV1AuthLogoutPost(options).then((request) => request(axios, basePath));
         },
@@ -1234,6 +1286,16 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest: ApiV1AuthAuthenticatePostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1AuthCheckLoginStatusPost(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AuthCheckLoginStatusPost(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

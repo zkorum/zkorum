@@ -15,6 +15,57 @@
         "schemas": {}
     },
     "paths": {
+        "/api/v1/auth/check-login-status": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {},
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
+                                        },
+                                        "userId": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "minLength": 1
+                                        },
+                                        "sessionExpiry": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "reason",
+                                        "userId",
+                                        "sessionExpiry"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/authenticate": {
             "post": {
                 "requestBody": {
@@ -323,8 +374,7 @@
                                                         "minLength": 1
                                                     },
                                                     "body": {
-                                                        "type": "string",
-                                                        "maxLength": 140
+                                                        "type": "string"
                                                     },
                                                     "poll": {
                                                         "type": "array",
@@ -464,8 +514,7 @@
                                                         "minLength": 1
                                                     },
                                                     "body": {
-                                                        "type": "string",
-                                                        "maxLength": 140
+                                                        "type": "string"
                                                     },
                                                     "poll": {
                                                         "type": "array",
@@ -980,8 +1029,7 @@
                                                                     "minLength": 1
                                                                 },
                                                                 "body": {
-                                                                    "type": "string",
-                                                                    "maxLength": 140
+                                                                    "type": "string"
                                                                 },
                                                                 "poll": {
                                                                     "type": "array",

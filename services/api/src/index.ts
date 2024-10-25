@@ -240,6 +240,25 @@ const awsMailConf = {
 };
 
 server.after(() => {
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/auth/check-login-status`,
+            schema: {
+                response: { 200: Dto.authenticateCheckLoginStatus, 409: Dto.auth409 },
+            },
+            handler: async (request) => {
+                await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true
+                    },
+                });
+                return;
+            },
+        });
+
     server
         .withTypeProvider<ZodTypeProvider>()
         .route({

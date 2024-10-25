@@ -9,6 +9,10 @@ import {
 } from "./zod.js";
 
 export class Dto {
+    static authenticateCheckLoginStatus = z
+        .object({
+        })
+        .strict();
     static authenticateRequestBody = z
         .object({
             email: zodEmail,

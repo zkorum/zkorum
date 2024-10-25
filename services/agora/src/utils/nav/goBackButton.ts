@@ -19,11 +19,5 @@ export function useGoBackButtonHandler() {
     }
   }
 
-  /*
-  function pushNewRoute(fromName: string) {
-    lastNavigatedRouteName.value = fromName;
-  }
-  */
-
   return { goBack };
 }

@@ -8,16 +8,14 @@
 </template>
 
 <script setup lang="ts">
-import { register } from "swiper/element/bundle";
-import { useGoBackButtonHandler } from "./utils/nav/goBackButton";
+import * as swiperElement from "swiper/element/bundle";
+import { useAuthenticationStore } from "./stores/authentication";
 
-register();
+swiperElement.register();
 
-useGoBackButtonHandler();
+const authenticationStore = useAuthenticationStore();
+authenticationStore.initializeAuthState();
 
-defineOptions({
-  name: "App",
-});
 </script>
 
 <style lang="scss">
