@@ -1,8 +1,12 @@
 {
-  "eslint.validate": ["javascript", "javascriptreact", "typescript"],
+  "editor.tabSize": 4,
+  "[typescript]": {
+    "editor.formatOnSave": false
+  },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always"
   },
+  "eslint.validate": ["javascript", "typescript"],
   "eslint.codeActionsOnSave.rules": [
     "quotes",
     "semi",

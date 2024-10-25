@@ -36,11 +36,11 @@ server.register(fastifyCors, {
         if (origin !== undefined) {
             if (config.CORS_ORIGIN_LIST.includes(origin)) {
                 //  Request from localhost will pass
-                cb(null, true)
-                return
+                cb(null, true);
+                return;
             }
             // Generate an error on other origins, disabling access
-            cb(new Error("Not allowed"), false)
+            cb(new Error("Not allowed"), false);
         }
     }
 });
@@ -423,7 +423,7 @@ server.after(() => {
                         throw server.httpErrors.unauthorized("Device is not logged in");
                     } else {
                         // logged-in user request
-                        const { userId } = status
+                        const { userId } = status;
                         const comments = await postService.fetchCommentsByPostSlugId({
                             db: db,
                             postSlugId: request.body.postSlugId,
@@ -477,7 +477,7 @@ server.after(() => {
                         throw server.httpErrors.unauthorized("Device is not logged in");
                     } else {
                         // logged-in user request
-                        const { userId } = status
+                        const { userId } = status;
                         const comments = await postService.fetchCommentsByPostSlugId({
                             db: db,
                             postSlugId: request.body.postSlugId,
@@ -515,7 +515,7 @@ server.after(() => {
                 if (!status.isLoggedIn) {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
-                    const { userId } = status
+                    const { userId } = status;
                     const comments = await postService.fetchNextCommentsToVoteOn({
                         db: db,
                         userId: userId,
@@ -692,18 +692,18 @@ server.after(() => {
     //             // });
     //         },
     //     });
-     server
-         .withTypeProvider<ZodTypeProvider>()
-         .route({
-             method: "POST",
-             url: `/api/${apiVersion}/post/fetch`,
-             schema: {
-                 body: Dto.fetchPostBySlugIdRequest,
-                  response: {
-                      200: Dto.fetchPostBySlugIdResponse,
-                  },
-             },
-             handler: async (request, _reply) => {
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/post/fetch`,
+            schema: {
+                body: Dto.fetchPostBySlugIdRequest,
+                response: {
+                    200: Dto.fetchPostBySlugIdResponse,
+                },
+            },
+            handler: async (request, _reply) => {
                 return await postService.fetchPostBySlugId(
                     db, request.body.postSlugId
                 );
@@ -725,8 +725,8 @@ server.after(() => {
                   });
                   return { post, comments };
                 */
-             },
-         });
+            },
+        });
 });
 
 server.ready((e) => {

@@ -525,9 +525,9 @@ export const voteContentTable = pgTable("vote_content", {
 
 // anti-social = hate + harassment + trolling + intelorance
 // illegal = glaring violation of law (scam, terrorism, threat, etc)
-const [firstReason, restReason] = ["irrelevant", "spam", "misinformation", "privacy", "sexual", "anti-social", "illegal", "other"]
+const [firstReason, restReason] = ["irrelevant", "spam", "misinformation", "privacy", "sexual", "anti-social", "illegal", "other"];
 export const reportReasonEnum = pgEnum("report_reason_enum", [firstReason, ...restReason]);
-const restModeration = [...restReason, "nothing"]
+const restModeration = [...restReason, "nothing"];
 export const moderationReasonEnum = pgEnum("moderation_reason_enum", [firstReason, ...restModeration]);
 
 // todo: add suspend and ban
