@@ -3,6 +3,7 @@ import { toUnionUndefined } from "@/shared/shared.js";
 import type { PostMetadata, ExtendedPostPayload, PollOptionWithResult, ExtendedPost } from "@/shared/types/zod.js";
 import { eq, and, desc, SQL } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import sanitizeHtml from "sanitize-html";
 
 export function useCommonPost() {
 
@@ -10,7 +11,8 @@ export function useCommonPost() {
         db: PostgresJsDatabase,
         showHidden: boolean,
         limit: number,
-        where: SQL | undefined) {
+        where: SQL | undefined,
+        enableCompactBody: boolean) {
 
         const postItems = await db
             .select({
@@ -60,6 +62,18 @@ export function useCommonPost() {
             .where(where);
 
         const posts: ExtendedPost[] = postItems.map((postItem) => {
+
+            if (enableCompactBody && postItem.body != null) {
+                postItem.body = sanitizeHtml(postItem.body, {
+                    allowedTags: ["b", "i", "strike", "u"],
+                    allowedAttributes: {},
+                    textFilter: function (text, tagName) {
+                        console.log(tagName);
+                        console.log(text);
+                        return text + " ";
+                    }
+                });
+            }
 
             const metadata: PostMetadata = showHidden
                 ? {

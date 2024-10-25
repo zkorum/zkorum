@@ -14,7 +14,7 @@
             </div>
 
             <div v-if="extendedPostData.payload.body.length > 0" class="bodyDiv">
-              <span v-html="extendedPostData.payload.body"></span>
+              <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
             </div>
 
           </div>
@@ -228,4 +228,14 @@ function shareClicked() {
   justify-content: center;
   padding-top: 4rem;
 }
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 8;
+  line-clamp: 8;
+  -webkit-box-orient: vertical;
+}
+
 </style>

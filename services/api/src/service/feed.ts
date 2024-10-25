@@ -30,9 +30,13 @@ export async function fetchFeed({
 
     const { fetchPostItems } = useCommonPost();
 
-    const posts: ExtendedPost[] = await fetchPostItems(db, showHidden ?? false, actualLimit, showHidden === true
-        ? whereUpdatedAt
-        : and(whereUpdatedAt, eq(postTable.isHidden, false)));
+    const posts: ExtendedPost[] = await fetchPostItems(
+        db,
+        showHidden ?? false,
+        actualLimit, showHidden === true
+            ? whereUpdatedAt
+            : and(whereUpdatedAt, eq(postTable.isHidden, false)),
+        true);
 
     return posts;
 }
