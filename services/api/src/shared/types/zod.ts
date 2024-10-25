@@ -4,7 +4,6 @@ import { validateDidKey, validateDidWeb } from "../did/util.js";
 import {
     MAX_LENGTH_TITLE,
     MAX_LENGTH_OPTION,
-    MAX_LENGTH_BODY,
     MAX_LENGTH_COMMENT,
 } from "../shared.js";
 
@@ -49,7 +48,7 @@ export const zodDevice = z
     .strict();
 export const zodDevices = z.array(zodDevice); // list of didWrite of all the devices belonging to a user
 export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).nonempty();
-export const zodPostBody = z.string().max(MAX_LENGTH_BODY);
+export const zodPostBody = z.string(); // Cannot specify length due to HTML tags
 export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).nonempty();
 export const zodPollOptionWithResult = z.object({
     index: z.number().int().nonnegative(),
