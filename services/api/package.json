@@ -60,6 +60,7 @@
         "pg": "^8.11.3",
         "postgres": "^3.3.5",
         "python-shell": "^5.0.0",
+        "sanitize-html": "^2.13.1",
         "tweetnacl": "^1.0.3",
         "uint8arrays": "^4.0.6",
         "zod": "^3.23.8"
@@ -73,6 +74,7 @@
         "@types/node": "^20.8.0",
         "@types/nodemailer": "^6.4.14",
         "@types/pg": "^8.10.3",
+        "@types/sanitize-html": "^2.13.0",
         "@typescript-eslint/eslint-plugin": "^8.9.0",
         "@typescript-eslint/parser": "^8.9.0",
         "drizzle-kit": "^0.26.2",

@@ -9,6 +9,7 @@ import { toUnionUndefined } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
+import sanitizeHtml from "sanitize-html";
 
 interface FetchCommentsByPostIdProps {
     db: PostgresDatabase;
@@ -177,6 +178,13 @@ export async function createNewPost(
 
     try {
         const postSlugId = generateRandomSlugId();
+
+        if (postBody != null) {
+            const options: sanitizeHtml.IOptions = {
+                allowedTags: ["b", "br", "i", "strike", "u", "div"]
+            };
+            postBody = sanitizeHtml(postBody, options);
+        }
 
         await db.transaction(async (tx) => {
 
