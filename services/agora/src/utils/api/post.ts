@@ -103,8 +103,6 @@ export function useBackendPostApi() {
         postBody: postBody
       };
 
-      console.log(postBody);
-
       const { url, options } = await DefaultApiAxiosParamCreator().apiV1PostCreatePost(params);
       const encodedUcan = await buildEncodedUcan(url, options);
       const response = await DefaultApiFactory(
