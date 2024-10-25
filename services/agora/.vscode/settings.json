@@ -15,8 +15,7 @@
   "eslint.codeActionsOnSave.rules": [
     "quotes",
     "semi",
-    "indent",
-    "@typescript-eslint/no-extra-parens"
+    "indent"
   ],
   "typescript.tsdk": "node_modules/typescript/lib",
   "files.eol": "\n",

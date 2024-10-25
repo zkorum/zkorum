@@ -1,8 +1,17 @@
 {
-  "editor.formatOnSave": false,
+  "eslint.validate": ["javascript", "javascriptreact", "typescript"],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "eslint.codeActionsOnSave.rules": [
+    "quotes",
+    "semi",
+    "indent"
+  ],
+  "files.eol": "\n",
   "files.watcherExclude": {
     "**/.git": true,
     "**/node_modules": true,
-    "**/.DS_Store": true,
+    "**/.DS_Store": true
   }
 }
