@@ -5,7 +5,7 @@ import { commentContentTable, commentTable, masterProofTable, postContentTable, 
 import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
 import type { CreateNewPostResponse, FetchCommentsToVoteOn200, FetchPostBySlugIdResponse } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
-import { toUnionUndefined } from "@/shared/shared.js";
+import { MAX_LENGTH_BODY, toUnionUndefined } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
@@ -180,10 +180,28 @@ export async function createNewPost(
         const postSlugId = generateRandomSlugId();
 
         if (postBody != null) {
-            const options: sanitizeHtml.IOptions = {
-                allowedTags: ["b", "br", "i", "strike", "u", "div"]
-            };
-            postBody = sanitizeHtml(postBody, options);
+            {
+                const options: sanitizeHtml.IOptions = {
+                    allowedTags: ["b", "br", "i", "strike", "u", "div"],
+                };
+                postBody = sanitizeHtml(postBody, options);
+            }
+
+            {
+                const options: sanitizeHtml.IOptions = {
+                    allowedTags: [],
+                    allowedAttributes: {}
+                };
+                const rawTextWithoutTags = sanitizeHtml(postBody, options);
+                if (rawTextWithoutTags.length > MAX_LENGTH_BODY) {
+                    server.log.error("Incoming post's body had exceeded the max both length: " + rawTextWithoutTags.length.toString());
+                    server.log.error("Max allowed: " + MAX_LENGTH_BODY.toString());
+                    return {
+                        isSuccessful: false
+                    };
+                }
+            }
+
         }
 
         await db.transaction(async (tx) => {

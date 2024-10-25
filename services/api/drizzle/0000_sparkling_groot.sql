@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS "post_content" (
 	"post_proof_id" integer NOT NULL,
 	"parent_id" integer,
 	"title" varchar(65) NOT NULL,
-	"body" varchar(140),
+	"body" varchar,
 	"poll_id" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	CONSTRAINT "post_content_post_proof_id_unique" UNIQUE("post_proof_id")

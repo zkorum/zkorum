@@ -1,7 +1,10 @@
 <template>
   <div>
     <q-page>
-      <q-infinite-scroll :offset="250" @load="onLoad">
+      <div v-if="postList.length == 0" class="emptyMessage">
+        Whoops there are no posts here yet...
+      </div>
+      <q-infinite-scroll v-if="postList.length > 0" :offset="250" @load="onLoad">
         <div class="postListFlex">
           <div v-for="(postData, index) in postList" :key="index" class="postPadding">
             <div>
@@ -81,4 +84,11 @@ a {
 .postPadding {
   padding-bottom: 1rem;
 }
+
+.emptyMessage {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
 </style>

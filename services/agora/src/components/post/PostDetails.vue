@@ -202,7 +202,6 @@ function shareClicked() {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
-  padding-top: 1rem;
 }
 
 .container {

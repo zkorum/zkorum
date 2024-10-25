@@ -60,7 +60,7 @@ export function domainFromEmail(email: string): string | undefined {
 // IF YOU CHANGE THESE VALUES ALSO CHANGE THEM IN SCHEMA.TS
 export const MAX_LENGTH_OPTION = 30;
 export const MAX_LENGTH_TITLE = 65; // 140 is LinkedIn question limit
-export const MAX_LENGTH_BODY = 140; // old tweet length
+export const MAX_LENGTH_BODY = 260; // old tweet length
 export const MAX_LENGTH_COMMENT = 280; // tweet and community notes max length
 
 export function toUnionUndefined<T>(value: T | null): T | undefined {
