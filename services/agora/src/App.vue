@@ -9,12 +9,16 @@
 
 <script setup lang="ts">
 import * as swiperElement from "swiper/element/bundle";
-import { useAuthenticationStore } from "./stores/authentication";
+import { onMounted } from "vue";
+import { useBackendAuthApi } from "./utils/api/auth";
 
 swiperElement.register();
 
-const authenticationStore = useAuthenticationStore();
-authenticationStore.initializeAuthState();
+const authenticationStore = useBackendAuthApi();
+
+onMounted(() => {
+  authenticationStore.initializeAuthState();
+});
 
 </script>
 

@@ -74,7 +74,6 @@ export interface DummyUserPostDataFormat {
 
 export const usePostStore = defineStore("post", () => {
 
-  const forceAddPolls = useStorage("force-add-polls", false);
   const communityStore = useCommunityStore();
 
   let largestPostIndex = 0;
@@ -448,7 +447,7 @@ export const usePostStore = defineStore("post", () => {
 
     const numCommentsInPost = getRandomInt(0, 20);
     const selectedRandomCommunityItem = generateRandomCommunityItem();
-    const hasPoll = forceAddPolls.value ? true : getRandomInt(0, 100) < 20;
+    const hasPoll = getRandomInt(0, 100) < 20;
 
     const numPollOptions = getRandomInt(2, 6);
     const pollOptionList: DummyPollOptionFormat[] = [];

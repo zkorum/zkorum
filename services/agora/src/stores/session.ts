@@ -8,13 +8,6 @@ export const useSessionStore = defineStore("session", {
     }
   }),
 
-  getters: {
-    doubleCount(state) {
-      console.log(state);
-      // return state.session * 2;
-    }
-  },
-
   actions: {
     setPrefixedKey(email: string, prefixedKey: string) {
       this.sign.emailToPrefixedKey[email] = prefixedKey;

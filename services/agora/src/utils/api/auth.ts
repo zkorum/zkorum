@@ -3,6 +3,9 @@ import { api } from "src/boot/axios";
 import axios from "axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useCommonApi } from "./common";
+import { useRouter } from "vue-router";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { storeToRefs } from "pinia";
 
 interface AuthenticateReturn {
   isSuccessful: boolean;
@@ -13,6 +16,10 @@ interface AuthenticateReturn {
 export function useBackendAuthApi() {
 
   const { buildEncodedUcan } = useCommonApi();
+  const { userLogout } = useAuthenticationStore();
+  const { verificationEmailAddress, isAuthenticated  } = storeToRefs(useAuthenticationStore());
+
+  const router = useRouter();
 
   async function sendEmailCode(
     email: string,
@@ -110,9 +117,20 @@ export function useBackendAuthApi() {
           ...buildAuthorizationHeader(encodedUcan)
         }
       });
-      return true;
+      return { isSuccessful: true, error: "" };
     } catch (e) {
-      return false;
+      if (axios.isAxiosError(e)) {
+        if (e.response?.status === 409) {
+          return { isSuccessful: false, error: "already_logged_in" };
+        }
+        else if (e.response?.status === 429) {
+          return { isSuccessful: false, error: "throttled" };
+        } else {
+          throw e;
+        }
+      } else {
+        throw e;
+      }
     }
   }
 
@@ -133,5 +151,30 @@ export function useBackendAuthApi() {
 
   }
 
-  return { sendEmailCode, emailCode, logout, deviceIsLoggedOn };
+
+  function initializeAuthState() {
+
+    setTimeout(
+      async () => {
+        console.log(verificationEmailAddress.value);
+        if (!verificationEmailAddress.value) {
+          router.push({ name: "welcome" });
+        } else if (isAuthenticated.value) {
+          const status = await deviceIsLoggedOn();
+          if (!status.isSuccessful) {
+            if (status.error == "already_logged_in") {
+              // ignore
+              console.log("already logged in");
+            } else if (status.error == "throttled") {
+              // ignore
+            } else {
+              userLogout();
+              router.push({ name: "welcome" });
+            }
+          }
+        }
+      }, 1000);
+  }
+
+  return { sendEmailCode, emailCode, logout, deviceIsLoggedOn, initializeAuthState };
 }
