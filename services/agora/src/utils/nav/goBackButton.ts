@@ -4,18 +4,20 @@ import { useLastNavigatedRouteName } from "./lastNavigatedRouteName";
 export function useGoBackButtonHandler() {
   const router = useRouter();
 
-  const { lastNavigatedRouteName } = useLastNavigatedRouteName();
+  const { lastNavigatedRouteFullPath, lastNavigatedRouteName } = useLastNavigatedRouteName();
+
+  function clearVariables() {
+    lastNavigatedRouteFullPath.value = "";
+    lastNavigatedRouteName.value = "";
+  }
 
   function goBack() {
     if (lastNavigatedRouteName.value == "") {
       router.push({ name: "default-home-feed" });
+      clearVariables();
     } else {
-      router.push({ name: lastNavigatedRouteName.value });
-      // if (pullUpRouteNameList.includes(lastNavigatedRouteName.value)) {
-      //  router.push({ name: "default-home-feed" });
-      // } else {
-      // router.back();
-      // }
+      router.push({ path: lastNavigatedRouteFullPath.value });
+      clearVariables();
     }
   }
 

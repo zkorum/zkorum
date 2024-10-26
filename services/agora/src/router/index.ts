@@ -19,7 +19,7 @@ import { useLastNavigatedRouteName } from "src/utils/nav/lastNavigatedRouteName"
 
 export default route(function (/* { store, ssrContext } */) {
 
-  const { lastNavigatedRouteName } = useLastNavigatedRouteName();
+  const { lastNavigatedRouteFullPath, lastNavigatedRouteName } = useLastNavigatedRouteName();
 
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -40,6 +40,7 @@ export default route(function (/* { store, ssrContext } */) {
       const fromRouteName = from.name?.toString() ?? "";
       const pullUpRouteNameList = ["settings-page", "help-page", "create-post"];
       if (fromRouteName != "" && !pullUpRouteNameList.includes(fromRouteName)) {
+        lastNavigatedRouteFullPath.value = from.fullPath;
         lastNavigatedRouteName.value = fromRouteName;
       }
 
