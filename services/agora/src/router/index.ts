@@ -29,17 +29,8 @@ export default route(function (/* { store, ssrContext } */) {
 
   const Router = createRouter({
     scrollBehavior: (to, from) => { // to, from, savedPosition
-      /*
-      if (to.name == "post-single") {
-        if (savedPosition != null) {
-          return { left: savedPosition.left, top: savedPosition.top };
-        }
-      }
-      */
-
       const fromRouteName = from.name?.toString() ?? "";
-      const pullUpRouteNameList = ["settings-page", "help-page", "create-post"];
-      if (fromRouteName != "" && !pullUpRouteNameList.includes(fromRouteName)) {
+      if (fromRouteName != "") {
         lastNavigatedRouteFullPath.value = from.fullPath;
         lastNavigatedRouteName.value = fromRouteName;
       }

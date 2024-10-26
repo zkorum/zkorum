@@ -97,7 +97,7 @@ const routes: RouteRecordRaw[] = [
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: false
+            hasBackButton: false, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "privacy"
@@ -109,7 +109,7 @@ const routes: RouteRecordRaw[] = [
         },
         props: {
           topmenubar: {
-            hasBackButton: true, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: false
+            hasBackButton: false, hasSettingsButton: false, hasCloseButton: true, hasLoginButton: false
           } as DefaultMenuBarProps
         },
         name: "terms"

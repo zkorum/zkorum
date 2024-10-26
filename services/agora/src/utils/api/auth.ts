@@ -17,7 +17,7 @@ export function useBackendAuthApi() {
 
   const { buildEncodedUcan } = useCommonApi();
   const { userLogout } = useAuthenticationStore();
-  const { verificationEmailAddress, isAuthenticated  } = storeToRefs(useAuthenticationStore());
+  const { isAuthenticated  } = storeToRefs(useAuthenticationStore());
 
   const router = useRouter();
 
@@ -158,9 +158,7 @@ export function useBackendAuthApi() {
 
     setTimeout(
       async () => {
-        if (!verificationEmailAddress.value) {
-          router.push({ name: "welcome" });
-        } else if (isAuthenticated.value) {
+        if (isAuthenticated.value) {
           const status = await deviceIsLoggedOn();
           if (!status.isSuccessful) {
             if (status.error == "already_logged_in") {
