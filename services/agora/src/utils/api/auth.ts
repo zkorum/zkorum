@@ -125,11 +125,13 @@ export function useBackendAuthApi() {
         }
         else if (e.response?.status === 429) {
           return { isSuccessful: false, error: "throttled" };
+        } else if (e.response?.status === 401) {
+          return { isSuccessful: false, error: "unauthorized" };
         } else {
           throw e;
         }
       } else {
-        throw e;
+        return { isSuccessful: false, error: "unknown" };
       }
     }
   }
@@ -156,7 +158,6 @@ export function useBackendAuthApi() {
 
     setTimeout(
       async () => {
-        console.log(verificationEmailAddress.value);
         if (!verificationEmailAddress.value) {
           router.push({ name: "welcome" });
         } else if (isAuthenticated.value) {
@@ -168,6 +169,7 @@ export function useBackendAuthApi() {
             } else if (status.error == "throttled") {
               // ignore
             } else {
+              // unauthorized
               userLogout();
               router.push({ name: "welcome" });
             }
