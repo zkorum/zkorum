@@ -4,6 +4,12 @@
 
       <CommentSortSelector @changed-algorithm="(value) => commentSortPreference = value" />
 
+      <div class="commentListFlex">
+        <div v-for="(item, index) in commentItems" :key="item.commentSlugId">
+          Comment: {{ index + ' ' + item.comment }}
+        </div>
+      </div>
+
       <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
         class="commentListFlex">
         <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
@@ -54,6 +60,8 @@ import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
 import { onMounted, ref } from "vue";
 import Divider from "primevue/divider";
 import CommentSortSelector from "./CommentSortSelector.vue";
+import { useBackendCommentApi } from "src/utils/api/comment";
+import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
 
 const props = defineProps<{
   commentList: DummyCommentFormat[],
@@ -64,7 +72,13 @@ const props = defineProps<{
 
 const commentSortPreference = ref("");
 
-onMounted(() => {
+const backendCommentApi = useBackendCommentApi();
+
+const commentItems = ref<ApiV1CommentFetchPost200ResponseInner[]>([]);
+
+onMounted(async () => {
+
+  commentItems.value = await backendCommentApi.fetchCommentsForPost(props.postSlugId);
 
   setTimeout(
     function () {

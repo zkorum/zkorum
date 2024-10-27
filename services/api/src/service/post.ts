@@ -1,25 +1,15 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import type { PostComment, SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, masterProofTable, postContentTable, postTable, voteContentTable, voteTable } from "@/schema.js";
-import { and, asc, desc, eq, gt, lt, isNull, sql } from "drizzle-orm";
+import type { SlugId } from "@/shared/types/zod.js";
+import { commentContentTable, commentTable, masterProofTable, postContentTable, postTable, voteTable } from "@/schema.js";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import type { CreateNewPostResponse, FetchCommentsToVoteOn200, FetchPostBySlugIdResponse } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
-import { MAX_LENGTH_BODY, toUnionUndefined } from "@/shared/shared.js";
+import { MAX_LENGTH_BODY } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
 import sanitizeHtml from "sanitize-html";
-
-interface FetchCommentsByPostIdProps {
-    db: PostgresDatabase;
-    postSlugId: SlugId;
-    userId?: string;
-    createdAt: Date | undefined;
-    order: "more" | "recent";
-    limit?: number;
-    showHidden?: boolean;
-}
 
 interface FetchNextCommentsToVoteOn {
     db: PostgresDatabase;
@@ -27,102 +17,6 @@ interface FetchNextCommentsToVoteOn {
     postSlugId: SlugId;
     numberOfCommentsToFetch: number;
     httpErrors: HttpErrors;
-}
-
-export async function fetchCommentsByPostSlugId({
-    db,
-    postSlugId,
-    userId,
-    order,
-    showHidden,
-    createdAt,
-    limit,
-}: FetchCommentsByPostIdProps): Promise<PostComment[]> {
-    const actualLimit = limit ?? 30;
-    const whereCreatedAt =
-        createdAt === undefined
-            ? eq(postTable.slugId, postSlugId)
-            : order === "more"
-                ? and(
-                    eq(postTable.slugId, postSlugId),
-                    gt(commentTable.createdAt, createdAt)
-                )
-                : and(
-                    eq(postTable.slugId, postSlugId),
-                    lt(commentTable.createdAt, createdAt)
-                );
-    if (userId === undefined) {
-        const results = await db
-            .selectDistinctOn([commentTable.createdAt, commentTable.id], {
-                // comment payload
-                commentSlugId: commentTable.slugId,
-                isHidden: commentTable.isHidden,
-                createdAt: commentTable.createdAt,
-                updatedAt: commentTable.updatedAt,
-                comment: commentContentTable.content,
-                numLikes: commentTable.numLikes,
-                numDislikes: commentTable.numDislikes,
-            })
-            .from(commentTable)
-            .innerJoin(
-                postTable,
-                eq(postTable.id, commentTable.postId)
-            )
-            .innerJoin(
-                commentContentTable,
-                eq(commentContentTable.id, commentTable.currentContentId)
-            )
-            .orderBy(asc(commentTable.createdAt), desc(commentTable.id))
-            .limit(actualLimit)
-            .where(
-                showHidden === true
-                    ? whereCreatedAt
-                    : and(whereCreatedAt, eq(commentTable.isHidden, false))
-            );
-        return results;
-    } else {
-        const results = await db
-            .selectDistinctOn([commentTable.createdAt, commentTable.id], {
-                commentSlugId: commentTable.slugId,
-                isHidden: commentTable.isHidden,
-                createdAt: commentTable.createdAt,
-                updatedAt: commentTable.updatedAt,
-                comment: commentContentTable.content,
-                numLikes: commentTable.numLikes,
-                numDislikes: commentTable.numDislikes,
-                optionChosen: voteContentTable.optionChosen,
-            })
-            .from(commentTable)
-            .innerJoin(
-                postTable,
-                eq(postTable.id, commentTable.postId)
-            )
-            .innerJoin(
-                commentContentTable,
-                eq(commentContentTable.id, commentTable.currentContentId)
-            )
-            .leftJoin(voteTable, and(eq(voteTable.authorId, userId), eq(voteTable.commentId, commentTable.id)))
-            .leftJoin(voteContentTable, eq(voteContentTable.id, voteTable.currentContentId))
-            .orderBy(asc(commentTable.createdAt), desc(commentTable.id))
-            .limit(actualLimit)
-            .where(
-                showHidden === true
-                    ? whereCreatedAt
-                    : and(whereCreatedAt, eq(commentTable.isHidden, false))
-            );
-        return results.map((result) => {
-            return {
-                commentSlugId: result.commentSlugId,
-                isHidden: result.isHidden,
-                createdAt: result.createdAt,
-                updatedAt: result.updatedAt,
-                comment: result.comment,
-                numLikes: result.numLikes,
-                numDislikes: result.numDislikes,
-                optionChosen: toUnionUndefined(result.optionChosen),
-            };
-        });
-    }
 }
 
 export async function fetchNextCommentsToVoteOn({

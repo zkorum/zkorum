@@ -567,104 +567,6 @@
                 }
             }
         },
-        "/api/v1/comment/fetchMore": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "postSlugId": {
-                                        "type": "string",
-                                        "maxLength": 10
-                                    },
-                                    "createdAt": {
-                                        "type": "string",
-                                        "format": "date-time"
-                                    }
-                                },
-                                "required": [
-                                    "postSlugId"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "comments": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "commentSlugId": {
-                                                        "type": "string",
-                                                        "maxLength": 10
-                                                    },
-                                                    "isHidden": {
-                                                        "type": "boolean"
-                                                    },
-                                                    "createdAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "updatedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "comment": {
-                                                        "type": "string",
-                                                        "minLength": 1,
-                                                        "maxLength": 280
-                                                    },
-                                                    "numLikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "numDislikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "optionChosen": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "like",
-                                                            "dislike"
-                                                        ]
-                                                    }
-                                                },
-                                                "required": [
-                                                    "commentSlugId",
-                                                    "createdAt",
-                                                    "updatedAt",
-                                                    "comment",
-                                                    "numLikes",
-                                                    "numDislikes"
-                                                ],
-                                                "additionalProperties": false
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "comments"
-                                    ],
-                                    "additionalProperties": false
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/comment/create": {
             "post": {
                 "requestBody": {
@@ -739,7 +641,7 @@
                 }
             }
         },
-        "/api/v1/comment/fetchRecent": {
+        "/api/v1/comment/fetch": {
             "post": {
                 "requestBody": {
                     "content": {
@@ -771,65 +673,49 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "comments": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "commentSlugId": {
-                                                        "type": "string",
-                                                        "maxLength": 10
-                                                    },
-                                                    "isHidden": {
-                                                        "type": "boolean"
-                                                    },
-                                                    "createdAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "updatedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "comment": {
-                                                        "type": "string",
-                                                        "minLength": 1,
-                                                        "maxLength": 280
-                                                    },
-                                                    "numLikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "numDislikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "optionChosen": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "like",
-                                                            "dislike"
-                                                        ]
-                                                    }
-                                                },
-                                                "required": [
-                                                    "commentSlugId",
-                                                    "createdAt",
-                                                    "updatedAt",
-                                                    "comment",
-                                                    "numLikes",
-                                                    "numDislikes"
-                                                ],
-                                                "additionalProperties": false
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "commentSlugId": {
+                                                "type": "string",
+                                                "maxLength": 10
+                                            },
+                                            "isHidden": {
+                                                "type": "boolean"
+                                            },
+                                            "createdAt": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updatedAt": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "comment": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 280
+                                            },
+                                            "numLikes": {
+                                                "type": "integer",
+                                                "minimum": 0
+                                            },
+                                            "numDislikes": {
+                                                "type": "integer",
+                                                "minimum": 0
                                             }
-                                        }
-                                    },
-                                    "required": [
-                                        "comments"
-                                    ],
-                                    "additionalProperties": false
+                                        },
+                                        "required": [
+                                            "commentSlugId",
+                                            "createdAt",
+                                            "updatedAt",
+                                            "comment",
+                                            "numLikes",
+                                            "numDislikes"
+                                        ],
+                                        "additionalProperties": false
+                                    }
                                 }
                             }
                         }

@@ -27,7 +27,7 @@ import {
     httpMethodToAbility,
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan.js";
-import { postNewComment } from "./service/comment.js";
+import { fetchCommentsByPostSlugId, postNewComment } from "./service/comment.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -404,60 +404,6 @@ server.after(() => {
                 });
             },
         });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/comment/fetchMore`,
-            schema: {
-                body: Dto.commentFetchFeedRequest,
-                response: {
-                    200: Dto.commentFetchFeed200,
-                },
-            },
-            handler: async (request, _reply) => {
-                const authHeader = request.headers.authorization;
-                if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
-                    // unauthorized user
-                    const comments = await postService.fetchCommentsByPostSlugId({
-                        db: db,
-                        postSlugId: request.body.postSlugId,
-                        order: "more",
-                        showHidden: true,
-                        createdAt:
-                            request.body.createdAt !== undefined
-                                ? new Date(request.body.createdAt)
-                                : undefined,
-                    });
-                    return { comments };
-                } else {
-                    const didWrite = await verifyUCAN(db, request, {
-                        expectedDeviceStatus: {
-                            isLoggedIn: undefined,
-                        },
-                    });
-                    const status = await authUtilService.isLoggedIn(db, didWrite);
-                    if (!status.isLoggedIn) {
-                        throw server.httpErrors.unauthorized("Device is not logged in");
-                    } else {
-                        // logged-in user request
-                        const { userId } = status;
-                        const comments = await postService.fetchCommentsByPostSlugId({
-                            db: db,
-                            postSlugId: request.body.postSlugId,
-                            userId: userId,
-                            order: "more",
-                            showHidden: true,
-                            createdAt:
-                                request.body.createdAt !== undefined
-                                    ? new Date(request.body.createdAt)
-                                    : undefined,
-                        });
-                        return { comments };
-                    }
-                }
-            },
-        });
     
     server
         .withTypeProvider<ZodTypeProvider>()
@@ -495,16 +441,21 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
-            url: `/api/${apiVersion}/comment/fetchRecent`,
+            url: `/api/${apiVersion}/comment/fetch`,
             schema: {
                 body: Dto.commentFetchFeedRequest,
                 response: {
-                    200: Dto.commentFetchFeed200,
+                    200: Dto.fetchCommentFeedResponse,
                 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
+                return await fetchCommentsByPostSlugId(
+                    db,
+                    request.body.postSlugId);
+                
+                /*
                 const authHeader = request.headers.authorization;
-                if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
+                if (!authHeader?.startsWith("Bearer ")) {
                     // unauthorized user
                     const comments = await postService.fetchCommentsByPostSlugId({
                         db: db,
@@ -543,6 +494,7 @@ server.after(() => {
                         return { comments };
                     }
                 }
+                */
             },
         });
     server

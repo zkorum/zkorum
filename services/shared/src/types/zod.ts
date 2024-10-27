@@ -87,6 +87,15 @@ export const zodComment = z.object({
     numDislikes: z.number().int().nonnegative(),
     optionChosen: z.enum(["like", "dislike"]).optional()
 }).strict();
+export const zodComment2 = z.object({
+    commentSlugId: zodSlugId,
+    isHidden: z.boolean().optional(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+    comment: zodCommentContent,
+    numLikes: z.number().int().nonnegative(),
+    numDislikes: z.number().int().nonnegative()
+}).strict();
 export const zodExtendedPostData = z
     .object({
         metadata: zodPostMetadata,
@@ -102,5 +111,7 @@ export type PostMetadata = z.infer<typeof zodPostMetadata>;
 export type ExtendedPostPayload = z.infer<typeof zodPostDataWithResult>
 export type PollOptionWithResult = z.infer<typeof zodPollOptionWithResult>
 export type PostComment = z.infer<typeof zodComment>;
+export type PostComment2 = z.infer<typeof zodComment>;
 export type CommentContent = z.infer<typeof zodCommentContent>;
 export type SlugId = z.infer<typeof zodSlugId>;
+export type CommentItem = z.infer<typeof zodComment2>;

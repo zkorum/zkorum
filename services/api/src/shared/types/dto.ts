@@ -7,6 +7,7 @@ import {
     zodUserId,
     zodSlugId,
     zodComment,
+    zodComment2,
 } from "./zod.js";
 
 export class Dto {
@@ -87,6 +88,7 @@ export class Dto {
         createdAt: z.string().datetime().optional(),
     });
     static commentFetchFeed200 = z.object({ comments: z.array(zodComment) });
+    static fetchCommentFeedResponse = z.array(zodComment2);
     static commentFetchToVoteOnRequest = z.object({
         postSlugId: zodSlugId,
         numberOfCommentsToFetch: z.number().int().positive()
