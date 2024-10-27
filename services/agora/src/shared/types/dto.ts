@@ -107,6 +107,14 @@ export class Dto {
         z.object({ isSuccessful: z.literal(true), postData: zodExtendedPostData }).strict(),
         z.object({ isSuccessful: z.literal(false) }).strict(),
     ]);
+    static createCommentRequest = z.object({
+        postSlugId: z.string(),
+        commentBody: z.string()
+    });
+    static createCommentResponse = z.discriminatedUnion("isSuccessful", [
+        z.object({ isSuccessful: z.literal(true), commentSlugId: z.string() }).strict(),
+        z.object({ isSuccessful: z.literal(false) }).strict(),
+    ]);
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
@@ -121,3 +129,4 @@ export type FetchCommentsToVoteOn200 = z.infer<typeof Dto.commentFetchToVoteOn20
 export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
 export type FetchPostBySlugIdRequest = z.infer<typeof Dto.fetchPostBySlugIdRequest>;
 export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;
+export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;

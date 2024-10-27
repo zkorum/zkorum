@@ -27,6 +27,7 @@ import {
     httpMethodToAbility,
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan.js";
+import { postNewComment } from "./service/comment.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -457,6 +458,39 @@ server.after(() => {
                 }
             },
         });
+    
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/comment/create`,
+            schema: {
+                body: Dto.createCommentRequest,
+                response: {
+                    200: Dto.createCommentResponse,
+                },
+            },
+            handler: async (request) => {
+
+                const didWrite = await verifyUCAN(db, request, undefined);
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const authHeader = getAuthHeader(request);
+                    await postNewComment(
+                        db,
+                        request.body.commentBody,
+                        request.body.postSlugId,
+                        status.userId,
+                        didWrite,
+                        authHeader
+                    );
+                }
+            },
+        });
+    
     server
         .withTypeProvider<ZodTypeProvider>()
         .route({

@@ -1,20 +1,36 @@
 import { server } from "@/app.js";
 import { generateRandomSlugId } from "@/crypto.js";
-import { masterProofTable, postContentTable, postTable } from "@/schema.js";
-import type { CreateNewPostResponse } from "@/shared/types/dto.js";
+import { commentContentTable, commentTable, masterProofTable, postTable } from "@/schema.js";
+import type { CreateCommentResponse } from "@/shared/types/dto.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { eq, sql } from "drizzle-orm";
 
 export async function postNewComment(
     db: PostgresJsDatabase,
-    postTitle: string,
-    postBody: string | null,
-    authorId: string,
+    commentBody: string,
+    postSlugId: string,
+    userId: string,
     didWrite: string,
-    authHeader: string): Promise<CreateNewPostResponse> {
+    authHeader: string): Promise<CreateCommentResponse> {
 
     try {
-        const postSlugId = generateRandomSlugId();
+        const commentSlugId = generateRandomSlugId();
 
+        const postTableResponse = await db
+            .select({
+                id: postTable.id,
+            })
+            .from(postTable)
+            .where(eq(postTable.slugId, postSlugId));
+
+        if (postTableResponse.length != 1) {
+            return {
+                isSuccessful: false
+            };
+        }
+
+        const postId = postTableResponse[0].id;
+        
         await db.transaction(async (tx) => {
 
             const masterProofTableResponse = await tx.insert(masterProofTable).values({
@@ -26,29 +42,35 @@ export async function postNewComment(
 
             const proofId = masterProofTableResponse[0].proofId;
 
-            const postContentTableResponse = await tx.insert(postContentTable).values({
-                postProofId: proofId,
+            const commentContentTableResponse = await tx.insert(commentContentTable).values({
+                commentProofId: proofId,
                 parentId: null,
-                title: postTitle,
-                body: postBody,
-                pollId: null
-            }).returning({ postContentId: postContentTable.id });
+                content: commentBody
+            }).returning({ commentContentTableId: commentContentTable.id });
 
-            const postContentId = postContentTableResponse[0].postContentId;
+            const commentContentTableId = commentContentTableResponse[0].commentContentTableId;
 
-            await tx.insert(postTable).values({
-                authorId: authorId,
-                slugId: postSlugId,
-                commentCount: 0,
-                currentContentId: postContentId,
+            await tx.insert(commentTable).values({
+                slugId: commentSlugId,
+                authorId: userId,
+                currentContentId: commentContentTableId,
                 isHidden: false,
-                lastReactedAt: new Date()
+                postId: postId,
             });
+
+            // Update comment count
+            await db
+                .update(postTable)
+                .set({
+                    commentCount: sql`${postTable.commentCount} + 1`
+                })
+                .where(eq(postTable.slugId, postSlugId));
+
         });
 
         return {
             isSuccessful: true,
-            postSlugId: postSlugId
+            commentSlugId: ""
         };
 
     } catch (err: unknown) {

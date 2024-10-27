@@ -25,25 +25,15 @@ CREATE TABLE IF NOT EXISTS "auth_attempt" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "comment_content" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "comment_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"comment_id" integer NOT NULL,
 	"comment_proof_id" integer NOT NULL,
-	"post_content_id" integer,
 	"parent_id" integer,
-	"content" varchar(280) NOT NULL,
-	"toxicity" real DEFAULT 0 NOT NULL,
-	"severe_toxicity" real DEFAULT 0 NOT NULL,
-	"obscene" real DEFAULT 0 NOT NULL,
-	"identity_attack" real DEFAULT 0 NOT NULL,
-	"insult" real DEFAULT 0 NOT NULL,
-	"threat" real DEFAULT 0 NOT NULL,
-	"sexual_explicit" real DEFAULT 0 NOT NULL,
-	"created_at" timestamp (0) DEFAULT now() NOT NULL,
-	"updated_at" timestamp (0) DEFAULT now() NOT NULL
+	"content" varchar NOT NULL,
+	"created_at" timestamp (0) DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "comment" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "comment_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"slug_id" varchar(6) NOT NULL,
+	"slug_id" varchar(8) NOT NULL,
 	"author_id" uuid NOT NULL,
 	"post_id" integer NOT NULL,
 	"current_content_id" integer,
@@ -99,7 +89,7 @@ CREATE TABLE IF NOT EXISTS "moderation_table" (
 	"moderator_id" uuid,
 	"moderation_action" "moderation_action" NOT NULL,
 	"moderation_reason" "moderation_reason_enum" NOT NULL,
-	"moderation_explanation" varchar(140),
+	"moderation_explanation" varchar(260),
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL
 );
@@ -190,7 +180,7 @@ CREATE TABLE IF NOT EXISTS "post_content" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "post" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "post_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"slug_id" varchar(6) NOT NULL,
+	"slug_id" varchar(8) NOT NULL,
 	"author_id" uuid NOT NULL,
 	"current_content_id" integer NOT NULL,
 	"is_hidden" boolean DEFAULT false NOT NULL,
@@ -198,6 +188,7 @@ CREATE TABLE IF NOT EXISTS "post" (
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
 	"last_reacted_at" timestamp (0) DEFAULT now() NOT NULL,
 	"comment_count" integer DEFAULT 0 NOT NULL,
+	CONSTRAINT "post_slug_id_unique" UNIQUE("slug_id"),
 	CONSTRAINT "post_current_content_id_unique" UNIQUE("current_content_id")
 );
 --> statement-breakpoint
@@ -206,7 +197,7 @@ CREATE TABLE IF NOT EXISTS "report_table" (
 	"post_id" integer,
 	"reporter_id" uuid,
 	"reporter_reason" "report_reason_enum" NOT NULL,
-	"report_explanation" varchar(140),
+	"report_explanation" varchar(260),
 	"moderation_id" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL
@@ -239,19 +230,7 @@ CREATE TABLE IF NOT EXISTS "vote" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "comment_content" ADD CONSTRAINT "comment_content_comment_id_comment_id_fk" FOREIGN KEY ("comment_id") REFERENCES "public"."comment"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
  ALTER TABLE "comment_content" ADD CONSTRAINT "comment_content_comment_proof_id_master_proof_id_fk" FOREIGN KEY ("comment_proof_id") REFERENCES "public"."master_proof"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "comment_content" ADD CONSTRAINT "comment_content_post_content_id_post_content_id_fk" FOREIGN KEY ("post_content_id") REFERENCES "public"."post_content"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

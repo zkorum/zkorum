@@ -65,7 +65,7 @@
     </ZKHoverEffect>
 
     <FloatingBottomContainer v-if="!compactMode">
-      <CommentComposer :show-controls="focusCommentElement" @cancel-clicked="cancelledCommentComposor()"
+      <CommentComposer :show-controls="focusCommentElement" :post-slug-id="extendedPostData.metadata.slugId" @cancel-clicked="cancelledCommentComposor()"
         @post-clicked="postedCommentFromComposor()" @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
 

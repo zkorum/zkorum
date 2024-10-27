@@ -665,6 +665,80 @@
                 }
             }
         },
+        "/api/v1/comment/create": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string"
+                                    },
+                                    "commentBody": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId",
+                                    "commentBody"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        true
+                                                    ]
+                                                },
+                                                "commentSlugId": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful",
+                                                "commentSlugId"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        false
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/comment/fetchRecent": {
             "post": {
                 "requestBody": {
