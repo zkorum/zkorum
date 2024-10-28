@@ -1,8 +1,19 @@
 <template>
   <div>
     <q-page>
-      <div v-if="postList.length == 0 && dataReady" class="emptyMessage">
-        Whoops there are no posts here yet...
+      <div v-if="postList.length == 0 && dataReady" class="emptyDivPadding">
+        <ZKCard padding="2rem">
+          <div class="emptyMessage">
+            <div>
+              Whoops there is nothing here yet...
+            </div>
+
+            <RouterLink :to="{ name: 'create-post'}">
+              <ZKButton label="Create Post" color="primary" />
+            </RouterLink>
+          </div>
+
+        </ZKCard>
       </div>
       <q-infinite-scroll v-if="postList.length > 0" :offset="250" @load="onLoad">
         <div class="postListFlex">
@@ -29,6 +40,8 @@
 
 import PostDetails from "../post/PostDetails.vue";
 import { DummyPostDataFormat } from "src/stores/post";
+import ZKCard from "../ui-library/ZKCard.vue";
+import ZKButton from "../ui-library/ZKButton.vue";
 
 defineProps<{
   postList: DummyPostDataFormat[];
@@ -66,9 +79,15 @@ a {
 }
 
 .emptyMessage {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyDivPadding {
+  padding-top: 5rem;
 }
 
 </style>
