@@ -13,7 +13,7 @@ import {
 // import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_COMMENT, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 // WARNING - change this in shared.ts as well
 const MAX_LENGTH_OPTION = 30;
-const MAX_LENGTH_TITLE = 65;
+const MAX_LENGTH_TITLE = 130;
 const MAX_LENGTH_BODY = 260;
 const MAX_LENGTH_NAME_CREATOR = 65;
 const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
