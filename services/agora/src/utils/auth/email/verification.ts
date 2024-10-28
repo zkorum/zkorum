@@ -24,7 +24,7 @@ export function useEmailVerification() {
     } else {
       console.log(response.error);
       if (response.error == "already_logged_in") {
-        console.log("???");
+        console.log("User is already logged in");
       } else {
         console.log("Failed to submit email verification code");
       }
