@@ -18,9 +18,10 @@
               <span v-html="commentItem.commentItem.comment"></span>
             </div>
 
+            <!--
             <CommentActionBar :comment-item="commentItem.commentItem" :is-ranked="commentItem.isRanked"
               :post-slug-id="commentItem.postSlugId" :ranked-action="commentItem.rankedAction" />
-
+            -->
           </div>
         </RouterLink>
       </ZKHoverEffect>
@@ -36,7 +37,6 @@ import { useProfileStore } from "src/stores/profile";
 import Divider from "primevue/divider";
 import { getTimeFromNow } from "src/utils/common";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
-import CommentActionBar from "../post/views/CommentActionBar.vue";
 
 const { commentList } = useProfileStore();
 

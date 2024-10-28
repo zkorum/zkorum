@@ -5,12 +5,19 @@
       <CommentSortSelector @changed-algorithm="(value) => commentSortPreference = value" />
 
       <div class="commentListFlex">
-        <div v-for="(item, index) in commentItems" :key="item.commentSlugId">
-          Comment: {{ index + ' ' + item.comment }}
+        <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
+          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
+            :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
+            :ranked-action="getCommentItemRankStatus(index)" :highlight="initialCommentSlugId == commentItem.commentSlugId" />
+
+          <Divider :style="{ width: '100%' }" />
+
         </div>
       </div>
 
-      <div v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
+      <!--
+      <div
+        v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
         class="commentListFlex">
         <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
@@ -21,6 +28,7 @@
         </div>
 
       </div>
+      -->
 
       <div v-if="commentSortPreference == 'surprising'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
