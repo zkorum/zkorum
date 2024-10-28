@@ -34,7 +34,6 @@
         "axios": "^1.6.8",
         "buffer": "^6.0.3",
         "cborg": "^4.2.0",
-        "idb-keyval": "^6",
         "libphonenumber-js": "^1.11.10",
         "localforage": "^1.10.0",
         "multiformats": "^13.3.0",
@@ -47,7 +46,7 @@
         "tweetnacl": "^1.0.3",
         "uint8arrays": "^5.1.0",
         "vue": "^3.5.12",
-        "vue-i18n": "^9.2.2",
+        "vue-i18n": "^10.0.4",
         "vue-router": "^4.0.12",
         "zod": "^3.23.0"
     },
