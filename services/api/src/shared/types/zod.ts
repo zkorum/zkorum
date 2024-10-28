@@ -78,7 +78,7 @@ export const zodPostMetadata = z
     })
     .strict();
 export const zodCommentContent = z.string().nonempty().max(MAX_LENGTH_COMMENT);
-export const zodCommentitem = z.object({
+export const zodCommentItem = z.object({
     commentSlugId: zodSlugId,
     isHidden: z.boolean().optional(),
     createdAt: z.date(),
@@ -103,4 +103,4 @@ export type ExtendedPostPayload = z.infer<typeof zodPostDataWithResult>
 export type PollOptionWithResult = z.infer<typeof zodPollOptionWithResult>
 export type CommentContent = z.infer<typeof zodCommentContent>;
 export type SlugId = z.infer<typeof zodSlugId>;
-export type CommentItem = z.infer<typeof zodCommentitem>;
+export type CommentItem = z.infer<typeof zodCommentItem>;

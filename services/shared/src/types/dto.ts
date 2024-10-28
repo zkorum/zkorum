@@ -5,7 +5,7 @@ import {
     zodCode,
     zodUserId,
     zodSlugId,
-    zodCommentitem,
+    zodCommentItem,
 } from "./zod.js";
 
 export class Dto {
@@ -79,18 +79,18 @@ export class Dto {
     });
     static postFetch200 = z.object({
         post: zodExtendedPostData, // z.object() does not exist :(
-        comments: z.array(zodCommentitem),
+        comments: z.array(zodCommentItem),
     });
     static fetchCommentFeedRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(
         createdAt: z.string().datetime().optional(),
     });
-    static fetchCommentFeedResponse = z.array(zodCommentitem);
+    static fetchCommentFeedResponse = z.array(zodCommentItem);
     static commentFetchToVoteOnRequest = z.object({
         postSlugId: zodSlugId,
         numberOfCommentsToFetch: z.number().int().positive()
     });
-    static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodCommentitem) });
+    static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodCommentItem) });
     static createNewPostRequest = z.object({
         postTitle: z.string(),
         postBody: z.string().optional()
