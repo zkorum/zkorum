@@ -221,7 +221,7 @@ export async function postNewComment(
 
         return {
             isSuccessful: true,
-            commentSlugId: ""
+            commentSlugId: commentSlugId
         };
 
     } catch (err: unknown) {

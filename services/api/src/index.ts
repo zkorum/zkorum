@@ -425,7 +425,7 @@ server.after(() => {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
                     const authHeader = getAuthHeader(request);
-                    await postNewComment(
+                    return await postNewComment(
                         db,
                         request.body.commentBody,
                         request.body.postSlugId,
