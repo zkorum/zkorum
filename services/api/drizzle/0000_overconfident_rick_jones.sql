@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS "post_content" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "post_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"post_proof_id" integer NOT NULL,
 	"parent_id" integer,
-	"title" varchar(65) NOT NULL,
+	"title" varchar(130) NOT NULL,
 	"body" varchar,
 	"poll_id" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
