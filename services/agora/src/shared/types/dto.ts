@@ -82,11 +82,10 @@ export class Dto {
         post: zodExtendedPostData, // z.object() does not exist :(
         comments: z.array(zodCommentitem),
     });
-    static commentFetchFeedRequest = z.object({
+    static fetchCommentFeedRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(
         createdAt: z.string().datetime().optional(),
     });
-    static commentFetchFeed200 = z.object({ comments: z.array(zodCommentitem) });
     static fetchCommentFeedResponse = z.array(zodCommentitem);
     static commentFetchToVoteOnRequest = z.object({
         postSlugId: zodSlugId,

@@ -443,7 +443,7 @@ server.after(() => {
             method: "POST",
             url: `/api/${apiVersion}/comment/fetch`,
             schema: {
-                body: Dto.commentFetchFeedRequest,
+                body: Dto.fetchCommentFeedRequest,
                 response: {
                     200: Dto.fetchCommentFeedResponse,
                 },
