@@ -9,8 +9,8 @@ export default boot(({ app }) => {
       preset: Aura,
       options: {
         darkModeSelector: "light",
-        cssLayer: false
-      }
-    }
+        cssLayer: false,
+      },
+    },
   });
 });

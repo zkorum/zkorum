@@ -2,7 +2,6 @@ import { onMounted } from "vue";
 // import { useQuasar } from "quasar";
 
 export function useBackendApi() {
-
   // const $q = useQuasar();
 
   /*
@@ -108,5 +107,4 @@ export function useBackendApi() {
   */
 
   return { test };
-
 }

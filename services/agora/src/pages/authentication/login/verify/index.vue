@@ -1,15 +1,14 @@
 <template>
   <div>
     <AuthContentWrapper>
-
-      <template #title>
-        Enter the code
-      </template>
+      <template #title> Enter the code </template>
 
       <template #body>
         <form class="formStyle" @submit.prevent="">
           <div class="instructions">
-            Please enter the 6-digit code that was sent to <span class="emailAddress">{{ verificationEmailAddress }}</span>.
+            Please enter the 6-digit code that was sent to
+            <span class="emailAddress">{{ verificationEmailAddress }}</span
+            >.
           </div>
 
           <div class="otpDiv">
@@ -17,24 +16,40 @@
               <InputOtp v-model="verificationCode" :length="6" integer-only />
             </div>
 
-            <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
+            <div v-if="verificationCodeExpirySeconds != 0"
+              class="weakColor codeExpiry"
+            >
               Expires in {{ verificationCodeExpirySeconds }}s
             </div>
 
-            <div v-if="verificationCodeExpirySeconds == 0" class="weakColor codeExpiry">
+            <div v-if="verificationCodeExpirySeconds == 0"
+              class="weakColor codeExpiry"
+            >
               Code expired
             </div>
           </div>
 
-          <ZKButton class="buttonStyle" label="Next" color="primary"
-            :disabled="verificationCode.length != 6 || verificationCodeExpirySeconds == 0" type="submit"
-            @click="emailVerification.submitCode(Number(verificationCode))" />
+          <ZKButton class="buttonStyle"
+            label="Next"
+            color="primary"
+            :disabled="
+              verificationCode.length != 6 || verificationCodeExpirySeconds == 0
+            "
+            type="submit"
+            @click="emailVerification.submitCode(Number(verificationCode))"
+          />
 
           <ZKButton class="buttonStyle"
-            :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds + 's' : 'Resend Code'"
-            color="secondary" :disabled="verificationNextCodeSeconds > 0" @click="requestCodeClicked(true)" />
+            :label="
+              verificationNextCodeSeconds > 0
+                ? 'Resend Code in ' + verificationNextCodeSeconds + 's'
+                : 'Resend Code'
+            "
+            color="secondary"
+            :disabled="verificationNextCodeSeconds > 0"
+            @click="requestCodeClicked(true)"
+          />
         </form>
-
       </template>
     </AuthContentWrapper>
   </div>
@@ -52,7 +67,9 @@ import { useRouter } from "vue-router";
 import { useDialog } from "src/utils/ui/dialog";
 import { useEmailVerification } from "src/utils/auth/email/verification";
 
-const { verificationEmailAddress, isAuthenticated } = storeToRefs(useAuthenticationStore());
+const { verificationEmailAddress, isAuthenticated } = storeToRefs(
+  useAuthenticationStore()
+);
 
 const verificationCode = ref("");
 
@@ -69,7 +86,10 @@ onMounted(() => {
 });
 
 async function requestCodeClicked(isRequestingNewCode: boolean) {
-  const response = await emailVerification.requestCode(isRequestingNewCode, verificationEmailAddress.value);
+  const response = await emailVerification.requestCode(
+    isRequestingNewCode,
+    verificationEmailAddress.value
+  );
 
   if (response.isSuccessful) {
     processRequestCodeResponse(response.data);
@@ -79,15 +99,19 @@ async function requestCodeClicked(isRequestingNewCode: boolean) {
       router.push({ name: "default-home-feed" });
     } else if (response.error == "throttled") {
       processRequestCodeResponse(response.data);
-      dialog.showMessage("Authentication", "Too many attempts. Please wait before requesting a new code");
+      dialog.showMessage(
+        "Authentication",
+        "Too many attempts. Please wait before requesting a new code"
+      );
     } else {
       // no nothing
     }
   }
 }
 
-function processRequestCodeResponse(data: ApiV1AuthAuthenticatePost200Response | null) {
-
+function processRequestCodeResponse(
+  data: ApiV1AuthAuthenticatePost200Response | null
+) {
   if (data == null) {
     console.log("Null data from request code response");
     return;
@@ -120,10 +144,9 @@ function decrementCodeExpiryTimer() {
   verificationCodeExpirySeconds.value -= 1;
 
   if (verificationCodeExpirySeconds.value != 0) {
-    setTimeout(
-      function () {
-        decrementCodeExpiryTimer();
-      }, 1000);
+    setTimeout(function () {
+      decrementCodeExpiryTimer();
+    }, 1000);
   }
 }
 
@@ -131,13 +154,11 @@ function decrementNextCodeTimer() {
   verificationNextCodeSeconds.value -= 1;
 
   if (verificationNextCodeSeconds.value != 0) {
-    setTimeout(
-      function () {
-        decrementNextCodeTimer();
-      }, 1000);
+    setTimeout(function () {
+      decrementNextCodeTimer();
+    }, 1000);
   }
 }
-
 </script>
 
 <style scoped>
@@ -167,7 +188,7 @@ function decrementNextCodeTimer() {
 }
 
 .otpDiv {
-  display:flex;
+  display: flex;
   flex-direction: column;
   gap: 1rem;
   padding-top: 1rem;
@@ -179,7 +200,7 @@ function decrementNextCodeTimer() {
 }
 
 .formStyle {
-  display:flex;
+  display: flex;
   flex-direction: column;
   gap: 1rem;
 }
@@ -187,5 +208,4 @@ function decrementNextCodeTimer() {
 .emailAddress {
   font-weight: bold;
 }
-
 </style>

@@ -15,9 +15,7 @@
           </div>
 
           <q-icon name="mdi-arrow-right" color="color-text-strong" size="2rem" />
-
         </div>
-
       </ZKCard>
     </RouterLink>
   </div>
@@ -32,7 +30,6 @@ defineProps<{
   icon: string;
   routeName: string;
 }>();
-
 </script>
 
 <style scoped lang="scss">

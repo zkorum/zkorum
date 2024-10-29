@@ -3,16 +3,16 @@
     <div class="container">
       <q-icon name="mdi-check-circle" size="5rem" color="secondary" />
 
-      <div class="title">
-        Account Verified
-      </div>
+      <div class="title">Account Verified</div>
 
       <div class="description">
         You can now start participating in the discussions anonymously.
       </div>
 
-      <ZKButton label="Start Exploring" color="primary" @click="goToHomePage()" />
-
+      <ZKButton label="Start Exploring"
+        color="primary"
+        @click="goToHomePage()"
+      />
     </div>
   </div>
 </template>
@@ -26,7 +26,6 @@ const router = useRouter();
 function goToHomePage() {
   router.push({ name: "default-home-feed" });
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -48,5 +47,4 @@ function goToHomePage() {
   text-align: center;
   width: min(100%, 20rem);
 }
-
 </style>

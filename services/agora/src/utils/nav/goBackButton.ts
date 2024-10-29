@@ -8,7 +8,6 @@ export function useGoBackButtonHandler() {
   const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
   function goBack() {
-
     // const pullUpRouteNameList = ["settings-page", "help-page", "create-post"];
 
     if (route.name == "single-post") {
@@ -20,7 +19,6 @@ export function useGoBackButtonHandler() {
         router.go(-1);
       }
     }
-
   }
 
   return { goBack };

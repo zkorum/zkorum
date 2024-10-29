@@ -7,13 +7,19 @@
     </div>
 
     <div class="menuButtons">
-      <RouterLink v-if="hasLoginButton && !isAuthenticated && showAuthButton" :to="{ name: 'verification-options' }">
+      <RouterLink v-if="hasLoginButton && !isAuthenticated && showAuthButton"
+        :to="{ name: 'verification-options' }"
+      >
         <ZKButton label="Log in" text-color="white" color="warning" />
       </RouterLink>
 
       <HelpButton />
       <RouterLink :to="{ name: 'settings-page' }">
-        <ZKButton v-if="hasSettingsButton" icon="mdi-cog" text-color="color-text-strong" flat />
+        <ZKButton v-if="hasSettingsButton"
+          icon="mdi-cog"
+          text-color="color-text-strong"
+          flat
+        />
       </RouterLink>
     </div>
   </TopMenuWrapper>
@@ -32,17 +38,15 @@ import CloseButton from "./buttons/CloseButton.vue";
 
 defineProps<DefaultMenuBarProps>();
 
-const { isAuthenticated } =  storeToRefs(useAuthenticationStore());
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const showAuthButton = ref(false);
 
 onMounted(() => {
-  setTimeout(
-    function () {
-      showAuthButton.value = true;
-    }, 50);
+  setTimeout(function () {
+    showAuthButton.value = true;
+  }, 50);
 });
-
 </script>
 
 <style scoped style="scss">
@@ -50,5 +54,4 @@ onMounted(() => {
   display: flex;
   gap: 0.8rem;
 }
-
 </style>

@@ -25,13 +25,13 @@ quasar dev
 Currently we are not bundling company logos in the source code due to copyright.
 Please add them manually to the following folder:
 
-```public/development/logos```
+`public/development/logos`
 
 ### Capacitor Build
 
 New builds have the following requirements:
 
-- Version number to be updated in the ```build.gradle``` file for the app module
+- Version number to be updated in the `build.gradle` file for the app module
 - The signed bundle needs to be a release build instead of a debug build
 
 ```

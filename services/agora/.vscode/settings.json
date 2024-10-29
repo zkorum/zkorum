@@ -1,27 +1,19 @@
 {
+  "editor.tabSize": 2,
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
-  "editor.formatOnSave": false,
-  "editor.defaultFormatter": "Vue.volar",
-  "editor.codeActionsOnSave": [
-    "source.fixAll.eslint"
-  ],
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "vue"
-  ],
-  "eslint.codeActionsOnSave.rules": [
-    "quotes",
-    "semi",
-    "indent"
-  ],
-  "typescript.tsdk": "node_modules/typescript/lib",
+
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "vue"],
   "files.eol": "\n",
   "files.watcherExclude": {
     "**/.git": true,
     "**/node_modules": true,
     "**/.DS_Store": true,
-  }
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

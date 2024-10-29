@@ -4,22 +4,24 @@
       <div v-if="postList.length == 0 && dataReady" class="emptyDivPadding">
         <ZKCard padding="2rem">
           <div class="emptyMessage">
-            <div>
-              Whoops there is nothing here yet...
-            </div>
+            <div>Whoops there is nothing here yet...</div>
 
-            <RouterLink :to="{ name: 'create-post'}">
+            <RouterLink :to="{ name: 'create-post' }">
               <ZKButton label="Create Post" color="primary" />
             </RouterLink>
           </div>
-
         </ZKCard>
       </div>
       <q-infinite-scroll v-if="postList.length > 0" :offset="250" @load="onLoad">
         <div class="postListFlex">
           <div v-for="(postData, index) in postList" :key="index" class="postPadding">
             <div>
-              <RouterLink :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId } }">
+              <RouterLink :to="{
+                name: 'single-post',
+                params: {
+                  postSlugId: postData.metadata.slugId,
+                },
+              }">
                 <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
               </RouterLink>
             </div>
@@ -27,9 +29,7 @@
             <div class="seperator">
               <q-separator :inset="true" />
             </div>
-
           </div>
-
         </div>
       </q-infinite-scroll>
     </q-page>
@@ -37,7 +37,6 @@
 </template>
 
 <script setup lang="ts">
-
 import PostDetails from "../post/PostDetails.vue";
 import { DummyPostDataFormat } from "src/stores/post";
 import ZKCard from "../ui-library/ZKCard.vue";
@@ -56,7 +55,6 @@ async function onLoad(index: number, done: DoneFunction) {
   // generateNewPosts();
   done();
 }
-
 </script>
 
 <style scoped>
@@ -67,7 +65,7 @@ async function onLoad(index: number, done: DoneFunction) {
 
 a {
   text-decoration: none;
-  color: unset
+  color: unset;
 }
 
 .seperator {
@@ -89,5 +87,4 @@ a {
 .emptyDivPadding {
   padding-top: 5rem;
 }
-
 </style>

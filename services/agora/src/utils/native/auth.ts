@@ -1,4 +1,9 @@
-import { AndroidBiometryStrength, BiometricAuth, BiometryError, BiometryErrorType } from "@aparajita/capacitor-biometric-auth";
+import {
+  AndroidBiometryStrength,
+  BiometricAuth,
+  BiometryError,
+  BiometryErrorType,
+} from "@aparajita/capacitor-biometric-auth";
 import { Dialog } from "quasar";
 import { i18n } from "src/boot/i18n";
 import { App } from "@capacitor/app";
@@ -23,10 +28,15 @@ export async function nativeAuthenticate() {
         if (error.code === BiometryErrorType.userCancel) {
           await nativeAuthenticate();
         } else {
-          console.error("Biometrics error occured authenticate, fatal error", error);
+          console.error(
+            "Biometrics error occured authenticate, fatal error",
+            error
+          );
           Dialog.create({
             title: i18n.global.t("Fatal error"),
-            message: i18n.global.t(`Biometrics authentication failed: ${error.code} - ${error.message}`),
+            message: i18n.global.t(
+              `Biometrics authentication failed: ${error.code} - ${error.message}`
+            ),
             ok: i18n.global.t("Exit app"),
           }).onOk(() => {
             App.exitApp();
@@ -37,6 +47,8 @@ export async function nativeAuthenticate() {
       }
     }
   } else {
-    throw new Error("Secure storage is not available, so user cannot be authenticated");
+    throw new Error(
+      "Secure storage is not available, so user cannot be authenticated"
+    );
   }
 }

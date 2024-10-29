@@ -2,9 +2,9 @@
   <div>
     <WidthWrapper width="35rem">
       <div class="container">
-        <ZKEditor :key="resetKey" v-model="commentText" placeholder="Add a comment"
-          min-height="2rem" :focus-editor="showControls" :show-toolbar="innerFocus || showControls"
-          @update:model-value="checkWordCount()" @manually-focused="editorFocused()" />
+        <ZKEditor :key="resetKey" v-model="commentText" placeholder="Add a comment" min-height="2rem"
+          :focus-editor="showControls" :show-toolbar="innerFocus || showControls" @update:model-value="checkWordCount()"
+          @manually-focused="editorFocused()" />
         <div v-if="innerFocus || showControls" class="actionButtonCluster">
           <div v-if="characterProgress > 100">
             {{ MAX_COMMENT_CHARACTERS - characterCount }}
@@ -42,22 +42,29 @@ const innerFocus = ref(false);
 const MAX_COMMENT_CHARACTERS = 280;
 
 const characterProgress = computed(() => {
-  return characterCount.value / MAX_COMMENT_CHARACTERS * 100;
+  return (characterCount.value / MAX_COMMENT_CHARACTERS) * 100;
 });
 
 const commentText = ref("");
 const characterCount = ref(0);
 const resetKey = ref(0);
 
-const emit = defineEmits(["cancelClicked", "submittedComment", "editorFocused"]);
+const emit = defineEmits([
+  "cancelClicked",
+  "submittedComment",
+  "editorFocused",
+]);
 
-watch(() => props.showControls, () => {
-  if (props.showControls == false) {
-    innerFocus.value = false;
-  } else {
-    innerFocus.value = true;
+watch(
+  () => props.showControls,
+  () => {
+    if (props.showControls == false) {
+      innerFocus.value = false;
+    } else {
+      innerFocus.value = true;
+    }
   }
-});
+);
 
 function editorFocused() {
   innerFocus.value = true;
@@ -84,7 +91,6 @@ async function postClicked() {
   resetKey.value = resetKey.value + 1;
   characterCount.value = 0;
 }
-
 </script>
 
 <style scoped lang="scss">

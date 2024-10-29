@@ -33,7 +33,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <slot />
     </div>
   </div>
-
 </template>
 
 <style lang="scss" scoped>
@@ -46,13 +45,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 .background {
   width: 100vw;
   height: 100vh;
-  background: #3E1E68;
+  background: #3e1e68;
 }
 
 $particleSize: 20vmin;
 $animationDuration: 120s;
 $amount: 20;
-
 
 .background span {
   width: $particleSize;
@@ -65,9 +63,9 @@ $amount: 20;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   $colors: (
-    #583C87,
-    #E45A84,
-    #FFACAC
+    #583c87,
+    #e45a84,
+    #ffacac
   );
 
 @for $i from 1 through $amount {

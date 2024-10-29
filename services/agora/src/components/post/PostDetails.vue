@@ -16,7 +16,6 @@
             <div v-if="extendedPostData.payload.body.length > 0" class="bodyDiv">
               <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
             </div>
-
           </div>
 
           <div v-if="extendedPostData.payload.poll.hasPoll" class="innerContainer">
@@ -25,26 +24,26 @@
           </div>
 
           <div class="bottomButtons">
-
             <div class="leftButtonCluster">
-              <ZKButton :color="focusCommentElement ? 'color-text-weak' : 'button-background-color'"
-                :text-color="focusCommentElement ? 'white' : 'black'"
-                :label="(extendedPostData.metadata.commentCount + commentCountOffset).toString()"
-                icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
+              <ZKButton :color="focusCommentElement
+                ? 'color-text-weak'
+                : 'button-background-color'
+                " :text-color="focusCommentElement ? 'white' : 'black'" :label="(
+                  extendedPostData.metadata.commentCount + commentCountOffset
+                ).toString()
+                  " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
 
               <q-btn-toggle v-if="!props.compactMode" v-model="viewMode" no-caps rounded unelevated
                 toggle-color="color-text-weak" color="button-background-color" text-color="black" :options="[
-                { label: 'Voting', value: 'ranking' },
-                { label: 'Results', value: 'comments' }
-              ]" />
-
+                  { label: 'Voting', value: 'ranking' },
+                  { label: 'Results', value: 'comments' },
+                ]" />
             </div>
 
             <div>
               <ZKButton color="button-background-color" text-color="black" icon="mdi-export-variant"
                 @click.stop.prevent="shareClicked()" />
             </div>
-
           </div>
         </div>
 
@@ -70,7 +69,6 @@
         @cancel-clicked="cancelledCommentComposor()" @submitted-comment="submittedComment()"
         @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
-
   </div>
 </template>
 
@@ -90,8 +88,8 @@ import { useRouteQuery } from "@vueuse/router";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 
 const props = defineProps<{
-  extendedPostData: DummyPostDataFormat,
-  compactMode: boolean,
+  extendedPostData: DummyPostDataFormat;
+  compactMode: boolean;
 }>();
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
@@ -166,7 +164,7 @@ function clickedCommentButton() {
     router.push({
       name: "single-post",
       params: { postSlugId: props.extendedPostData.metadata.slugId },
-      query: { action: "comment" }
+      query: { action: "comment" },
     });
   } else {
     focusCommentElement.value = !focusCommentElement.value;
@@ -174,10 +172,13 @@ function clickedCommentButton() {
 }
 
 function shareClicked() {
-  const sharePostUrl = window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
-  webShare.share("Agora - " + props.extendedPostData.payload.title, sharePostUrl);
+  const sharePostUrl =
+    window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
+  webShare.share(
+    "Agora - " + props.extendedPostData.payload.title,
+    sharePostUrl
+  );
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -242,5 +243,4 @@ function shareClicked() {
   line-clamp: 5;
   -webkit-box-orient: vertical;
 }
-
 </style>

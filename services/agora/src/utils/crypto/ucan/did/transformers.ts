@@ -47,13 +47,11 @@ export function didToPublicKey(
   crypto: Crypto.Implementation,
   did: string
 ): {
-    publicKey: Uint8Array;
-    type: string;
+  publicKey: Uint8Array;
+  type: string;
 } {
   if (!did.startsWith(BASE58_DID_PREFIX)) {
-    throw new Error(
-      "Please use a base58-encoded DID formatted `did:key:z...`"
-    );
+    throw new Error("Please use a base58-encoded DID formatted `did:key:z...`");
   }
 
   const didWithoutPrefix = did.substr(BASE58_DID_PREFIX.length);

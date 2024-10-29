@@ -7,11 +7,9 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps<{
-  reveal: boolean
+  reveal: boolean;
 }>();
-
 </script>
 
 <style scoped lang="scss">

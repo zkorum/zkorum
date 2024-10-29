@@ -2,13 +2,11 @@
   <div>
     <ZKCard padding="2rem">
       <form class="container" @submit.prevent="submitClicked()">
-
-        <div class="title">
-          Contact Us
-        </div>
+        <div class="title">Contact Us</div>
 
         <div>
-          Please reach out if you would like to join us at developing the next generation algorithm!
+          Please reach out if you would like to join us at developing the next
+          generation algorithm!
         </div>
 
         <div>
@@ -26,11 +24,10 @@
         </div>
 
         <div>
-          <Textarea v-model="message" placeholder="Message" :style="{width: '100%'}" required />
+          <Textarea v-model="message" placeholder="Message" :style="{ width: '100%' }" required />
         </div>
 
         <ZKButton color="primary" label="Submit" type="submit" />
-
       </form>
     </ZKCard>
   </div>
@@ -62,13 +59,11 @@ function clearForm() {
   email.value = "";
   message.value = "";
 }
-
-
 </script>
 
 <style scoped lang="scss">
 .container {
-  display:flex;
+  display: flex;
   flex-direction: column;
   gap: 2rem;
 }
@@ -76,5 +71,4 @@ function clearForm() {
 .title {
   font-size: 1.6rem;
 }
-
 </style>

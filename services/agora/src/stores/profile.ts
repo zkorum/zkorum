@@ -1,5 +1,9 @@
 import { defineStore } from "pinia";
-import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "./post";
+import {
+  DummyCommentFormat,
+  PossibleCommentRankingActions,
+  usePostStore,
+} from "./post";
 
 export interface UserCommentHistoryitem {
   commentItem: DummyCommentFormat;
@@ -12,8 +16,7 @@ export interface UserCommentHistoryitem {
 }
 
 export const useProfileStore = defineStore("profile", () => {
-
-  const {fetchCuratedPosts } = usePostStore();
+  const { fetchCuratedPosts } = usePostStore();
   const commentList: UserCommentHistoryitem[] = [];
 
   const curatedPosts = fetchCuratedPosts("", 10);
@@ -25,7 +28,10 @@ export const useProfileStore = defineStore("profile", () => {
       commentItem: {
         index: 0,
         createdAt: new Date(),
-        comment: "Dummy user comment " + i + ". At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.",
+        comment:
+          "Dummy user comment " +
+          i +
+          ". At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.",
         numUpvotes: 20,
         numDownvotes: 10,
         slugId: "comment-slug-id-" + i,
@@ -35,12 +41,11 @@ export const useProfileStore = defineStore("profile", () => {
       authorName: curatedItem.metadata.posterName,
       createdAt: curatedItem.metadata.createdAt,
       isRanked: false,
-      rankedAction: "pass"
+      rankedAction: "pass",
     };
 
     commentList.push(commentItem);
   }
 
   return { commentList };
-
 });

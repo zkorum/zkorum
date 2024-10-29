@@ -16,21 +16,20 @@
       </div>
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
-  option: string
+  option: string;
   optionPercentage: number;
   optionResponded: boolean;
 }>();
 
-const percentageStyle = props.optionPercentage <= 50
-  ? `linear-gradient(90deg, #a5f3fc ${props.optionPercentage}%, #FFFFFF 0)`
-  : `linear-gradient(to right, #a5f3fc ${props.optionPercentage}%, #FFFFFF ${100 - props.optionPercentage
-  }%)`;
-
+const percentageStyle =
+  props.optionPercentage <= 50
+    ? `linear-gradient(90deg, #a5f3fc ${props.optionPercentage}%, #FFFFFF 0)`
+    : `linear-gradient(to right, #a5f3fc ${props.optionPercentage}%, #FFFFFF ${100 - props.optionPercentage
+    }%)`;
 </script>
 
 <style scoped>

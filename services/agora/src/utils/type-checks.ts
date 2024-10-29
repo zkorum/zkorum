@@ -29,8 +29,8 @@ export const isBool = (val: unknown): val is boolean => {
 export function isCryptoKey(val: unknown): val is CryptoKey {
   return (
     hasProp(val, "algorithm") &&
-        hasProp(val, "extractable") &&
-        hasProp(val, "type")
+    hasProp(val, "extractable") &&
+    hasProp(val, "type")
   );
 }
 
@@ -49,7 +49,6 @@ export const isObject = <T>(val: unknown): val is Record<string, T> => {
 export const isBlob = (val: unknown): val is Blob => {
   if (typeof Blob === "undefined") return false;
   return (
-    val instanceof Blob ||
-        (isObject(val) && val?.constructor?.name === "Blob")
+    val instanceof Blob || (isObject(val) && val?.constructor?.name === "Blob")
   );
 };

@@ -12,8 +12,11 @@
         </div>
 
         <div class="actionBarPaddings">
-          <CommentActionBar :comment-item="commentItem" :post-slug-id="postSlugId" :is-ranked="isRanked"
-            :ranked-action="rankedAction" />
+          <CommentActionBar :comment-item="commentItem"
+            :post-slug-id="postSlugId"
+            :is-ranked="isRanked"
+            :ranked-action="rankedAction"
+          />
         </div>
       </div>
     </div>
@@ -27,13 +30,12 @@ import CommentActionBar from "./CommentActionBar.vue";
 import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
 
 defineProps<{
-  commentItem: ApiV1CommentFetchPost200ResponseInner,
-  postSlugId: string,
-  isRanked: boolean,
-  rankedAction: PossibleCommentRankingActions,
-  highlight: boolean
+  commentItem: ApiV1CommentFetchPost200ResponseInner;
+  postSlugId: string;
+  isRanked: boolean;
+  rankedAction: PossibleCommentRankingActions;
+  highlight: boolean;
 }>();
-
 </script>
 
 <style scoped lang="scss">
@@ -62,4 +64,3 @@ defineProps<{
   padding: 0.5rem;
 }
 </style>
-

@@ -4,7 +4,6 @@
   <router-view v-slot="{ Component }">
     <component :is="Component" />
   </router-view>
-
 </template>
 
 <script setup lang="ts">
@@ -19,7 +18,6 @@ const authenticationStore = useBackendAuthApi();
 onMounted(() => {
   authenticationStore.initializeAuthState();
 });
-
 </script>
 
 <style lang="scss">
@@ -33,5 +31,4 @@ a {
   color: rgb(24, 28, 31);
   text-decoration: none;
 }
-
 </style>

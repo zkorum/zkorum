@@ -1,7 +1,6 @@
 import { onMounted, ref } from "vue";
 
 export function useViewPorts() {
-
   const visualViewPortHeight = ref(0);
 
   onMounted(() => {
@@ -18,5 +17,4 @@ export function useViewPorts() {
   }
 
   return { visualViewPortHeight };
-
 }

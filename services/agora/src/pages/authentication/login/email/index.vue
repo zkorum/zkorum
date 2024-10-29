@@ -1,39 +1,43 @@
 <template>
   <div>
     <form @submit.prevent="sendVerificationCode(verificationEmailAddress)">
-
       <AuthContentWrapper>
-
-        <template #title>
-          Enter your email
-        </template>
+        <template #title> Enter your email </template>
 
         <template #body>
-
           <div>
             We will send you a 6-digit confirmation code to verify your email.
           </div>
 
           <div>
-            <InputText v-model="verificationEmailAddress" type="email" placeholder="Email" required
-              :style="{width: '100%'}" />
+            <InputText v-model="verificationEmailAddress"
+              type="email"
+              placeholder="Email"
+              required
+              :style="{ width: '100%' }"
+            />
           </div>
 
-          <ZKButton color="primary" label="Send Verification Code" type="submit" />
+          <ZKButton color="primary"
+            label="Send Verification Code"
+            type="submit"
+          />
 
           <div class="agreementSection">
-            By continuing, you are confirming that you have read and agree to our
-            <RouterLink :to="{name: 'terms'}" class="highlightUrl">Terms of Use</RouterLink> and
-            <RouterLink :to="{name: 'privacy'}" class="highlightUrl">Privacy Policy</RouterLink>.
+            By continuing, you are confirming that you have read and agree to
+            our
+            <RouterLink :to="{ name: 'terms' }" class="highlightUrl"
+              >Terms of Use</RouterLink
+            >
+            and
+            <RouterLink :to="{ name: 'privacy' }" class="highlightUrl"
+              >Privacy Policy</RouterLink
+            >.
           </div>
-
         </template>
-
       </AuthContentWrapper>
-
     </form>
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -54,7 +58,6 @@ async function sendVerificationCode(email: string) {
   verificationEmailAddress.value = email;
   router.push({ name: "login-verify" });
 }
-
 </script>
 
 <style scoped>
@@ -65,5 +68,4 @@ async function sendVerificationCode(email: string) {
 .highlightUrl {
   text-decoration: underline;
 }
-
 </style>

@@ -2,29 +2,31 @@
   <div>
     <form @submit.prevent="submitForm()">
       <div class="container">
-
-        <div class="title">
-          Report an issue
-        </div>
+        <div class="title">Report an issue</div>
 
         <div>
-          User reports are fully anonymous and they will not
-          be associated to your account.
-          Please make sure you do not include any personal
+          User reports are fully anonymous and they will not be associated to
+          your account. Please make sure you do not include any personal
           information in the report.
         </div>
 
-        <Select v-model="selectedProblem" :options="problemList" option-label="name"
-          placeholder="Select a problem to report" />
+        <Select v-model="selectedProblem"
+          :options="problemList"
+          option-label="name"
+          placeholder="Select a problem to report"
+        />
 
-        <Textarea v-model="description" class="textAreaStyle" placeholder="Describe the problem" />
+        <Textarea v-model="description"
+          class="textAreaStyle"
+          placeholder="Describe the problem"
+        />
 
-        <Button label="Submit" type="submit" :disabled="selectedProblem == '' || description.length == 0" />
+        <Button label="Submit"
+          type="submit"
+          :disabled="selectedProblem == '' || description.length == 0"
+        />
       </div>
     </form>
-
-
-
   </div>
 </template>
 
@@ -51,7 +53,6 @@ const problemList = ref([
 function submitForm() {
   dialog.showMessage("Report Submitted", "Thank you for your feedback!");
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -72,5 +73,4 @@ function submitForm() {
 .title {
   font-size: 1.5rem;
 }
-
 </style>

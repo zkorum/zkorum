@@ -1,17 +1,10 @@
 <template>
   <div>
-
     <div class="topBar">
       <div class="profileDetails">
-        <div>
-          100 comments <span class="dotPadding">•</span>
-        </div>
-        <div>
-          1000 votes <span class="dotPadding">•</span>
-        </div>
-        <div>
-          Jan 1, 2024
-        </div>
+        <div>100 comments <span class="dotPadding">•</span></div>
+        <div>1000 votes <span class="dotPadding">•</span></div>
+        <div>Jan 1, 2024</div>
       </div>
     </div>
 
@@ -26,8 +19,7 @@
         </div>
       </TabPanel>
       <TabPanel value="1">
-        <div class="tabPanelPadding">
-        </div>
+        <div class="tabPanelPadding"></div>
       </TabPanel>
     </Tabs>
   </div>
@@ -39,12 +31,11 @@ import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import TabPanel from "primevue/tabpanel";
 import CompactCommentList from "src/components/profile/CompactCommentList.vue";
-
 </script>
 
 <style scoped lang="scss">
 .profileDetails {
-  display:flex;
+  display: flex;
   flex-wrap: wrap;
   color: $color-text-strong;
   font-size: 0.9rem;
@@ -67,5 +58,4 @@ import CompactCommentList from "src/components/profile/CompactCommentList.vue";
 .tabPanelPadding {
   padding-top: 0.5rem;
 }
-
 </style>
