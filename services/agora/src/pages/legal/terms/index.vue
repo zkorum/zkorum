@@ -1,8 +1,6 @@
 <template>
   <div>
-    <ZKTitleBodyWrapper title="Terms of use">
-      To be added
-    </ZKTitleBodyWrapper>
+    <ZKTitleBodyWrapper title="Terms of use"> To be added </ZKTitleBodyWrapper>
   </div>
 </template>
 

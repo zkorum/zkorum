@@ -7,7 +7,7 @@
         </div>
         <swiper-container ref="swipingElementRef" :slides-per-view="slidesPerView" :initial-slide="currentSlide"
           :scrollbar="true">
-          <swiper-slide v-for="(sortOptionItem) in getCommentSortOptions()" :key="sortOptionItem.value"
+          <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value"
             class="scrollPadding">
             <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem"
               @click="commentSortPreference = sortOptionItem.value" />
@@ -22,7 +22,10 @@
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import CommentSortItem from "./CommentSortItem.vue";
 import { onMounted, ref, watch } from "vue";
-import { useCommentOptions, CommentSortingItemInterface } from "src/utils/component/comments";
+import {
+  useCommentOptions,
+  CommentSortingItemInterface,
+} from "src/utils/component/comments";
 import { useStorage, useWindowSize } from "@vueuse/core";
 import { SwiperContainer } from "swiper/element";
 
@@ -38,13 +41,14 @@ const description = ref("");
 
 const { width } = useWindowSize();
 
-const commentSortPreference = useStorage("comment-sort-preference-id", "popular");
+const commentSortPreference = useStorage(
+  "comment-sort-preference-id",
+  "popular"
+);
 
 const swipingElementRef = ref<SwiperContainer | null>(null);
 
-
 onMounted(() => {
-
   if (commentSortPreference.value == "more") {
     commentSortPreference.value = "popular";
   }
@@ -72,7 +76,6 @@ function updateSlide(sortId: string) {
   swipingElementRef.value?.swiper.slideTo(currentSlide.value);
 }
 
-
 function getSortItem(sortId: string): CommentSortingItemInterface {
   const sortOptionList = getCommentSortOptions();
   for (let i = 0; i < sortOptionList.length; i++) {
@@ -87,7 +90,7 @@ function getSortItem(sortId: string): CommentSortingItemInterface {
     icon: "",
     value: "",
     description: "",
-    index: 0
+    index: 0,
   };
 }
 
@@ -119,5 +122,4 @@ function initializeSlideCount() {
 .scrollPadding {
   padding-bottom: 1.5rem;
 }
-
 </style>

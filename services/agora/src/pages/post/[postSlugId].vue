@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PostDetails :extended-post-data="postData" :compact-mode="false"/>
+    <PostDetails :extended-post-data="postData" :compact-mode="false" />
   </div>
 </template>
 
@@ -11,7 +11,7 @@ import { useBackendPostApi } from "src/utils/api/post";
 import { onMounted, ref } from "vue";
 
 const props = defineProps<{
-  postSlugId: string
+  postSlugId: string;
 }>();
 
 const { fetchPostBySlugId } = useBackendPostApi();
@@ -21,8 +21,6 @@ const postData = ref<DummyPostDataFormat>(emptyPost);
 onMounted(async () => {
   postData.value = await fetchPostBySlugId(props.postSlugId);
 });
-
 </script>
 
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>

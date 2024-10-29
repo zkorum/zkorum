@@ -11,7 +11,7 @@ export const zodEmail = z
     .string()
     .email()
     .max(254)
-    .nonempty()
+    .min(1)
     .describe("Email address");
 export const zodDidKey = z
     .string()
@@ -39,7 +39,7 @@ export const zodDidWeb = z
     );
 export const zodCode = z.coerce.number().min(0).max(999999);
 export const zodDigit = z.coerce.number().int().nonnegative().lte(9);
-export const zodUserId = z.string().uuid().nonempty();
+export const zodUserId = z.string().uuid().min(1);
 export const zodDevice = z
     .object({
         didWrite: zodDidKey,
@@ -47,9 +47,9 @@ export const zodDevice = z
     })
     .strict();
 export const zodDevices = z.array(zodDevice); // list of didWrite of all the devices belonging to a user
-export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).nonempty();
+export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).min(1);
 export const zodPostBody = z.string(); // Cannot specify length due to HTML tags
-export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).nonempty();
+export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).min(1);
 export const zodPollOptionWithResult = z.object({
     index: z.number().int().nonnegative(),
     option: zodPollOptionTitle,
@@ -77,7 +77,7 @@ export const zodPostMetadata = z
         authorImagePath: z.string().url({ message: "Invalid url" }).optional() // TODO: check if it accepts path segments for local dev
     })
     .strict();
-export const zodCommentContent = z.string().nonempty().max(MAX_LENGTH_COMMENT);
+export const zodCommentContent = z.string().min(1).max(MAX_LENGTH_COMMENT);
 export const zodCommentItem = z.object({
     commentSlugId: zodSlugId,
     isHidden: z.boolean().optional(),

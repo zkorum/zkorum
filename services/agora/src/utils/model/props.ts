@@ -6,8 +6,8 @@ export interface MainLayoutProps {
 }
 
 export interface DefaultMenuBarProps {
-  hasLoginButton: boolean
-  hasBackButton: boolean
-  hasCloseButton: boolean
-  hasSettingsButton: boolean
+  hasLoginButton: boolean;
+  hasBackButton: boolean;
+  hasCloseButton: boolean;
+  hasSettingsButton: boolean;
 }

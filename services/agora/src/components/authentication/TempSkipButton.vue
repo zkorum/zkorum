@@ -10,13 +10,18 @@ import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
 
 const router = useRouter();
-const { isAuthenticated, verificationEmailAddress } = storeToRefs(useAuthenticationStore());
+const { isAuthenticated, verificationEmailAddress } = storeToRefs(
+  useAuthenticationStore()
+);
 const emailVerificaton = useEmailVerification();
 
 async function skipButton() {
   verificationEmailAddress.value = "test@gmail.com";
 
-  const requestCodeResponse = await emailVerificaton.requestCode(false, verificationEmailAddress.value);
+  const requestCodeResponse = await emailVerificaton.requestCode(
+    false,
+    verificationEmailAddress.value
+  );
   if (requestCodeResponse.isSuccessful) {
     await emailVerificaton.submitCode(0);
     isAuthenticated.value = true;
@@ -30,8 +35,5 @@ async function skipButton() {
       console.log("Throttled please try again later");
     }
   }
-
 }
-
 </script>
-

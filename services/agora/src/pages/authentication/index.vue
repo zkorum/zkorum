@@ -2,11 +2,16 @@
   <div class="container">
     <img src="/images/onboarding/brand.webp" class="welcomeImage" />
     <div class="buttonFlex">
-      <ZKButton :label="t('welcome.login')" :to="{ name: 'verification-options' }" color="primary" />
-      <ZKButton color="black" label="Skip Authentication" @click="skipAuthentication()" />
+      <ZKButton :label="t('welcome.login')"
+        :to="{ name: 'verification-options' }"
+        color="primary"
+      />
+      <ZKButton color="black"
+        label="Skip Authentication"
+        @click="skipAuthentication()"
+      />
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -30,7 +35,6 @@ function isDevMode() {
   }
 }
   */
-
 </script>
 
 <style scoped>
@@ -51,7 +55,7 @@ function isDevMode() {
   justify-content: center;
   gap: 3rem;
   height: 100vh;
-  background-image: url('/images/onboarding/background.webp');
+  background-image: url("/images/onboarding/background.webp");
   background-size: cover;
 }
 </style>

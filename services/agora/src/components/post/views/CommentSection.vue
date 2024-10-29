@@ -1,17 +1,23 @@
 <template>
   <div>
     <div class="container">
-
-      <CommentSortSelector @changed-algorithm="(value) => commentSortPreference = value" />
+      <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)"
+      />
 
       <div class="commentListFlex">
-        <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
-          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
-            :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
-            :ranked-action="getCommentItemRankStatus(index)" :highlight="initialCommentSlugId == commentItem.commentSlugId" />
+        <div v-for="(commentItem, index) in commentItems"
+          :key="commentItem.commentSlugId"
+        >
+          <CommentSingle :comment-item="commentItem"
+            :post-slug-id="postSlugId"
+            :is-ranked="
+              props.commentRanking.rankedCommentList.get(index) != null
+            "
+            :ranked-action="getCommentItemRankStatus(index)"
+            :highlight="initialCommentSlugId == commentItem.commentSlugId"
+          />
 
           <Divider :style="{ width: '100%' }" />
-
         </div>
       </div>
 
@@ -30,7 +36,9 @@
       </div>
       -->
 
-      <div v-if="commentSortPreference == 'surprising'" :style="{ paddingTop: '1rem' }">
+      <div v-if="commentSortPreference == 'surprising'"
+        :style="{ paddingTop: '1rem' }"
+      >
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <q-icon name="mdi-wrench" size="4rem" />
@@ -41,7 +49,9 @@
         </ZKCard>
       </div>
 
-      <div v-if="commentSortPreference == 'clusters'" :style="{ paddingTop: '1rem' }">
+      <div v-if="commentSortPreference == 'clusters'"
+        :style="{ paddingTop: '1rem' }"
+      >
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <img src="/development/polis/example.png" class="polisExampleImg" />
@@ -52,16 +62,21 @@
         </ZKCard>
       </div>
 
-      <div v-if="commentSortPreference == 'more'" :style="{ paddingTop: '1rem' }">
+      <div v-if="commentSortPreference == 'more'"
+        :style="{ paddingTop: '1rem' }"
+      >
         <ResearcherContactUsForm />
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, DummyCommentRankingFormat, PossibleCommentRankingActions } from "src/stores/post";
+import {
+  DummyCommentFormat,
+  DummyCommentRankingFormat,
+  PossibleCommentRankingActions,
+} from "src/stores/post";
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
@@ -72,10 +87,10 @@ import { useBackendCommentApi } from "src/utils/api/comment";
 import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
 
 const props = defineProps<{
-  commentList: DummyCommentFormat[],
-  postSlugId: string,
-  commentRanking: DummyCommentRankingFormat,
-  initialCommentSlugId: string
+  commentList: DummyCommentFormat[];
+  postSlugId: string;
+  commentRanking: DummyCommentRankingFormat;
+  initialCommentSlugId: string;
 }>();
 
 const commentSortPreference = ref("");
@@ -85,17 +100,18 @@ const backendCommentApi = useBackendCommentApi();
 const commentItems = ref<ApiV1CommentFetchPost200ResponseInner[]>([]);
 
 onMounted(async () => {
+  commentItems.value = await backendCommentApi.fetchCommentsForPost(
+    props.postSlugId
+  );
 
-  commentItems.value = await backendCommentApi.fetchCommentsForPost(props.postSlugId);
-
-  setTimeout(
-    function () {
-      scrollToComment();
-    }, 1000);
-
+  setTimeout(function () {
+    scrollToComment();
+  }, 1000);
 });
 
-function getCommentItemRankStatus(commentIndex: number): PossibleCommentRankingActions {
+function getCommentItemRankStatus(
+  commentIndex: number
+): PossibleCommentRankingActions {
   const action = props.commentRanking.rankedCommentList.get(commentIndex);
   if (action == null) {
     return "pass";
@@ -109,18 +125,15 @@ function scrollToComment() {
     const targetElement = document.getElementById(props.initialCommentSlugId);
 
     if (targetElement != null) {
-      targetElement.scrollIntoView(
-        {
-          behavior: "smooth",
-          block: "center"
-        });
+      targetElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     } else {
       console.log("Failed to locate ID: " + props.initialCommentSlugId);
     }
-
   }
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -152,5 +165,4 @@ function scrollToComment() {
   text-align: center;
   width: min(15rem, 100%);
 }
-
 </style>

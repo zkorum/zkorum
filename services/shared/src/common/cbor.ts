@@ -1,13 +1,14 @@
 import { encode, decode } from "cborg";
 import { base64 } from "./index.js";
 
-export function encodeCbor(obj: any): string {
-    let data = encode(obj);
+export function encodeCbor(obj: unknown): string {
+    const data = encode(obj);
     return base64.encode(data);
 }
 
 export function decodeCbor(encodedData: string): unknown {
     const base64UrlDecoded = base64.decode(encodedData);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const decodedCbor = decode(base64UrlDecoded);
     return decodedCbor;
 }

@@ -5,7 +5,6 @@ import { useDialog } from "../ui/dialog";
 import { useNotify } from "../ui/notify";
 
 export function useWebShare() {
-
   const webShare = useShare();
   const clipBoard = useClipboard();
   const dialog = useDialog();
@@ -26,7 +25,7 @@ export function useWebShare() {
       webShare.share({
         title: title,
         text: url,
-        url: url
+        url: url,
       });
     } else {
       if (clipBoard.isSupported) {

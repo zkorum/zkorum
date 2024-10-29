@@ -39,10 +39,9 @@ onMounted(async () => {
   dataReady.value = true;
 
   if (lastNavigatedRouteName.value == "single-post") {
-    setTimeout(
-      function () {
-        window.scrollTo(0, lastSavedHomeFeedPosition.value);
-      }, 200);
+    setTimeout(function () {
+      window.scrollTo(0, lastSavedHomeFeedPosition.value);
+    }, 200);
   }
 });
 
@@ -57,7 +56,6 @@ function createNewPost() {
     dialog.showLoginConfirmationDialog();
   }
 }
-
 </script>
 
 <style scoped>

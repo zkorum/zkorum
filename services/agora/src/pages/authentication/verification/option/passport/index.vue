@@ -1,15 +1,12 @@
 <template>
   <div>
     <AuthContentWrapper>
-      <template #title>
-        Passport Verification
-      </template>
+      <template #title> Passport Verification </template>
       <template #body>
-
         <div class="container">
           <div>
-            With RariMe, you can prove your identity anonymously.
-            This step is essential to protect your privacy and security on Agora.
+            With RariMe, you can prove your identity anonymously. This step is
+            essential to protect your privacy and security on Agora.
           </div>
 
           <ZKCard padding="1rem">
@@ -20,11 +17,18 @@
               </div>
 
               <div class="innerInstructions">
-                <img v-if="!quasar.platform.is.mobile" :src="qrcode" alt="QR Code" class="qrCode"/>
+                <img v-if="!quasar.platform.is.mobile"
+                  :src="qrcode"
+                  alt="QR Code"
+                  class="qrCode"
+                />
 
                 <a :href="rarimeLink" target="_blank" rel="noopener noreferrer">
-                  <ZKButton label="Open RariMe" color="primary" :style="{ width: '100%' }"
-                    @click="completeVerification()" />
+                  <ZKButton label="Open RariMe"
+                    color="primary"
+                    :style="{ width: '100%' }"
+                    @click="completeVerification()"
+                  />
                 </a>
               </div>
 
@@ -38,11 +42,9 @@
               </div>
             </div>
           </ZKCard>
-
         </div>
 
         <TempSkipButton />
-
       </template>
     </AuthContentWrapper>
   </div>
@@ -62,7 +64,8 @@ const quasar = useQuasar();
 
 const rarimeLink = ref("");
 if (quasar.platform.is.android) {
-  rarimeLink.value = "https://play.google.com/store/apps/details?id=com.rarilabs.rarime";
+  rarimeLink.value =
+    "https://play.google.com/store/apps/details?id=com.rarilabs.rarime";
 } else if (quasar.platform.is.ios) {
   rarimeLink.value = "https://apps.apple.com/us/app/rarime/id6503300598";
 } else {
@@ -71,16 +74,14 @@ if (quasar.platform.is.android) {
 
 const router = useRouter();
 
-const qrcode = useQRCode(rarimeLink, {version: "10"});
+const qrcode = useQRCode(rarimeLink, { version: "10" });
 
 function completeVerification() {
   router.push({ name: "verification-successful" });
 }
-
 </script>
 
 <style scoped lang="scss">
-
 .container {
   display: flex;
   flex-direction: column;
@@ -105,7 +106,7 @@ function completeVerification() {
 }
 
 .stepContainer {
-  display:flex;
+  display: flex;
   flex-direction: column;
   gap: 1.5rem;
   justify-content: center;
@@ -116,11 +117,10 @@ function completeVerification() {
 }
 
 .innerInstructions {
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1rem;
 }
-
 </style>

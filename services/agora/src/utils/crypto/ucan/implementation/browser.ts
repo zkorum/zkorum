@@ -54,11 +54,7 @@ export async function aesDecrypt(
     ? key
     : await importAesKey(key, alg);
   const decrypted = iv
-    ? await webcrypto.subtle.decrypt(
-      { name: alg, iv },
-      cryptoKey,
-      encrypted
-    )
+    ? await webcrypto.subtle.decrypt({ name: alg, iv }, cryptoKey, encrypted)
     : // the keystore version prefixes the `iv` into the cipher text
     await keystoreAES.decryptBytes(encrypted, cryptoKey, { alg });
 
@@ -211,10 +207,7 @@ export function ksImportSymmKey(
   userId: string
 ): Promise<void> {
   const symmKeyName = ksSymmIdentifier(ks, userId);
-  return ks.importSymmKey(
-    uint8arrays.toString(key, "base64pad"),
-    symmKeyName
-  );
+  return ks.importSymmKey(uint8arrays.toString(key, "base64pad"), symmKeyName);
 }
 
 export function ksSymmKeyExists(
@@ -245,9 +238,7 @@ export async function ksPublicExchangeKey(
   ks: RSAKeyStore,
   emailOrUserId: string
 ): Promise<Uint8Array> {
-  const keypair = await ks.exchangeKey(
-    ksExchangeIdentifier(ks, emailOrUserId)
-  );
+  const keypair = await ks.exchangeKey(ksExchangeIdentifier(ks, emailOrUserId));
   const spki = await webcrypto.subtle.exportKey("spki", keypair.publicKey);
 
   return new Uint8Array(spki);
@@ -428,8 +419,7 @@ export async function implementation({
       publicExchangeKey: (...args) => ksPublicExchangeKey(ks, ...args),
       publicWriteKey: (...args) => ksPublicWriteKey(ks, ...args),
       sign: (...args) => ksSign(ks, ...args),
-      createIfDoesNotExists: (...args) =>
-        ksCreateIfDoesNotExist(ks, ...args),
+      createIfDoesNotExists: (...args) => ksCreateIfDoesNotExist(ks, ...args),
       copyKeypairs: (...args) => ksCopyKeypairs(ks, ...args),
     },
   };

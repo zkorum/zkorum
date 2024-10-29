@@ -11,9 +11,9 @@
 import { onMounted, ref, watch } from "vue";
 
 defineProps<{
-  showToolbar: boolean
-  placeholder: string
-  minHeight: string
+  showToolbar: boolean;
+  placeholder: string;
+  minHeight: string;
   focusEditor: boolean;
 }>();
 
@@ -27,7 +27,7 @@ const modelText = defineModel<string>();
 
 const toolbarButtons = [
   ["bold", "italic", "strike", "underline"],
-  ["undo", "redo"]
+  ["undo", "redo"],
 ];
 
 onMounted(() => {
@@ -71,16 +71,14 @@ function onPaste(evt: Event) {
     text = evt.originalEvent.clipboardData.getData("text/plain");
     /* @ts-expect-error Element not properly defined */
     editorRef.value?.runCmd("insertText", text);
-  }
-  /* @ts-expect-error Event definition is missing */
-  else if (evt.clipboardData && evt.clipboardData.getData) {
+    // @ts-expect-error Type error
+  } else if (evt.clipboardData && evt.clipboardData.getData) {
     /* @ts-expect-error Event definition is missing */
     text = evt.clipboardData.getData("text/plain");
     /* @ts-expect-error Element not properly defined */
     editorRef.value?.runCmd("insertText", text);
-  }
-  /* @ts-expect-error Definition is missing */
-  else if (window.clipboardData && window.clipboardData.getData) {
+    // @ts-expect-error Type error
+  } else if (window.clipboardData && window.clipboardData.getData) {
     if (!onPasteStripFormattingIEPaste) {
       onPasteStripFormattingIEPaste = true;
       /* @ts-expect-error Element not properly defined */
@@ -89,6 +87,4 @@ function onPaste(evt: Event) {
     onPasteStripFormattingIEPaste = false;
   }
 }
-
-
 </script>

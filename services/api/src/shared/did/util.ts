@@ -72,7 +72,7 @@ function didFromKeyBytes(publicKeyBytes: Uint8Array, prefix: Uint8Array): string
 // Public key compression for NIST P-256
 const compressP256Pubkey = (pubkeyBytes: Uint8Array): Uint8Array => {
     if (pubkeyBytes.length !== 65) {
-        throw new Error(`Expected 65 byte pubkey ${pubkeyBytes.length}`)
+        throw new Error(`Expected 65 byte pubkey ${pubkeyBytes.length.toString()}`)
     } else if (pubkeyBytes[0] !== 0x04) {
         throw new Error("Expected first byte to be 0x04")
     }

@@ -12,7 +12,7 @@ export default defineConfig({
     out: "./drizzle",
     dialect: "postgresql",
     schema: "./src/schema.ts",
-    
+
     driver: "pglite",
     dbCredentials: {
         url: config.CONNECTION_STRING

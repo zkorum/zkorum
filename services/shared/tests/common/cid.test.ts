@@ -1,6 +1,6 @@
 import { describe, test } from "@jest/globals";
-import { cid } from "../../src/common/index";
 import { expect } from "@jest/globals";
+import { cid } from "../../src/common/index.js";
 
 describe("CID length", () => {
     test("generate-dev-keys", async () => {

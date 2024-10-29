@@ -1,44 +1,43 @@
 import { defineStore } from "pinia";
 
 export interface CommunityItem {
-  id: string
-  countryName: string
-  code: string
+  id: string;
+  countryName: string;
+  code: string;
 }
 
 export interface CompanyItem {
-  label: string
-  id: string
-  profilePicture: string
+  label: string;
+  id: string;
+  profilePicture: string;
 }
 
 export const useCommunityStore = defineStore("community", () => {
-
   const companyList: CompanyItem[] = [
     {
       label: "European Pirate Party",
       id: "pirates",
-      profilePicture: "european-pirate-party.png"
+      profilePicture: "european-pirate-party.png",
     },
     {
       label: "Human Rights Watch",
       id: "hrw",
-      profilePicture: "human-rights-watch-logo.png"
+      profilePicture: "human-rights-watch-logo.png",
     },
     {
       label: "Pew Research Center",
       id: "pew",
-      profilePicture: "pew-research-center.png"
+      profilePicture: "pew-research-center.png",
     },
     {
       label: "UNESCO",
       id: "unesco",
-      profilePicture: "UNESCO_logo.png"
+      profilePicture: "UNESCO_logo.png",
     },
     {
       label: "UnHerd",
       id: "unherd",
-      profilePicture: "unherd_limited_logo.jpeg"
+      profilePicture: "unherd_limited_logo.jpeg",
     },
   ];
 
@@ -53,48 +52,47 @@ export const useCommunityStore = defineStore("community", () => {
     return {
       label: "",
       id: "",
-      profilePicture: ""
+      profilePicture: "",
     };
   }
 
   const communityList: CommunityItem[] = [
     {
-      "id": "world",
-      "countryName": "World",
-      "code": "WORLD"
+      id: "world",
+      countryName: "World",
+      code: "WORLD",
     },
     {
-      "id": "france",
-      "countryName": "France",
-      "code": "FR"
+      id: "france",
+      countryName: "France",
+      code: "FR",
     },
     {
-      "id": "united-states",
-      "countryName": "United States",
-      "code": "US"
+      id: "united-states",
+      countryName: "United States",
+      code: "US",
     },
     {
-      "id": "russia",
-      "countryName": "Russia",
-      "code": "RU"
+      id: "russia",
+      countryName: "Russia",
+      code: "RU",
     },
     {
-      "id": "india",
-      "countryName": "India",
-      "code": "IN"
+      id: "india",
+      countryName: "India",
+      code: "IN",
     },
     {
-      "id": "slovakia",
-      "countryName": "Slovakia",
-      "code": "SK"
+      id: "slovakia",
+      countryName: "Slovakia",
+      code: "SK",
     },
     {
-      "id": "venezuela",
-      "countryName": "Venezuela",
-      "code": "VE"
+      id: "venezuela",
+      countryName: "Venezuela",
+      code: "VE",
     },
   ];
 
   return { communityList, companyList, getCompanyItemFromId };
-
 });

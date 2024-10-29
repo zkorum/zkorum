@@ -7,7 +7,10 @@ import { getWebCryptoStore } from "../store";
 import * as DID from "./did/index";
 import { useSessionStore } from "src/stores/session";
 import * as ucans from "@ucans/ucans";
-import { httpMethodToAbility, httpPathnameToResourcePointer } from "src/shared/ucan/ucan";
+import {
+  httpMethodToAbility,
+  httpPathnameToResourcePointer,
+} from "src/shared/ucan/ucan";
 import { base64 } from "src/shared/common";
 
 function getPrefixedKeyByEmail(email: string) {
@@ -21,13 +24,18 @@ interface CreateDidReturn {
 
 //
 //TODO: move the web target's code to the Capacitor plugin
-export async function createDidIfDoesNotExist(email: string, platform: SupportedPlatform): Promise<CreateDidReturn> {
+export async function createDidIfDoesNotExist(
+  email: string,
+  platform: SupportedPlatform
+): Promise<CreateDidReturn> {
   const sessionStore = useSessionStore();
   const prefixedKey = getPrefixedKeyByEmail(email);
 
   switch (platform) {
   case "mobile":
-    const { publicKey } = await SecureSigning.createKeyPairIfDoesNotExist({ prefixedKey: prefixedKey });
+    const { publicKey } = await SecureSigning.createKeyPairIfDoesNotExist({
+      prefixedKey: prefixedKey,
+    });
     const decodedPublicKey = base64Decode(publicKey);
     const didMobile = publicKeyToDid(decodedPublicKey);
     sessionStore.setPrefixedKey(email, prefixedKey);
@@ -46,17 +54,22 @@ interface CreateUcanProps {
   prefixedKey: string;
   pathname: string;
   method: string | undefined;
-  platform: SupportedPlatform
-
+  platform: SupportedPlatform;
 }
 
-async function buildWebUcan({ did, prefixedKey, pathname, method }: CreateUcanProps): Promise<string> {
+async function buildWebUcan({
+  did,
+  prefixedKey,
+  pathname,
+  method,
+}: CreateUcanProps): Promise<string> {
   const webCryptoStore = await getWebCryptoStore();
   const u = await ucans.Builder.create()
     .issuedBy({
       did: () => did,
       jwtAlg: await webCryptoStore.keystore.getUcanAlgorithm(),
-      sign: async (msg: Uint8Array) => webCryptoStore.keystore.sign(msg, prefixedKey)
+      sign: async (msg: Uint8Array) =>
+        webCryptoStore.keystore.sign(msg, prefixedKey),
     })
     .toAudience(process.env.VITE_BACK_DID)
     .withLifetimeInSeconds(30)
@@ -71,15 +84,23 @@ async function buildWebUcan({ did, prefixedKey, pathname, method }: CreateUcanPr
   return encodedUcan;
 }
 
-async function buildMobileUcan({ did, prefixedKey, pathname, method }: CreateUcanProps): Promise<string> {
+async function buildMobileUcan({
+  did,
+  prefixedKey,
+  pathname,
+  method,
+}: CreateUcanProps): Promise<string> {
   const u = await ucans.Builder.create()
     .issuedBy({
       did: () => did,
       jwtAlg: "ES256",
       sign: async (msg: Uint8Array) => {
-        const { signature } = await SecureSigning.sign({ prefixedKey: prefixedKey, data: base64.base64Encode(msg) });
+        const { signature } = await SecureSigning.sign({
+          prefixedKey: prefixedKey,
+          data: base64.base64Encode(msg),
+        });
         return base64.base64Decode(signature);
-      }
+      },
     })
     .toAudience(process.env.VITE_BACK_DID)
     .withLifetimeInSeconds(30)
@@ -105,6 +126,6 @@ export async function buildUcan(props: CreateUcanProps): Promise<string> {
 
 export function buildAuthorizationHeader(encodedUcan: string) {
   return {
-    Authorization: `Bearer ${encodedUcan}`
+    Authorization: `Bearer ${encodedUcan}`,
   };
 }

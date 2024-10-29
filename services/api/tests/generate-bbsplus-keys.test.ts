@@ -1,7 +1,6 @@
 import fs from "fs";
 import { beforeAll, describe, test } from "@jest/globals";
 import {
-    BBS_PLUS_SIGNATURE_PARAMS_LABEL_BYTES as SIGNATURE_PARAMS_LABEL_BYTES,
     initializeWasm,
     BBSPlusSignatureParamsG1 as SignatureParams,
     BBSPlusKeypairG2 as KeyPair,
@@ -13,6 +12,7 @@ try {
     crypto = await import("node:crypto");
 } catch (err) {
     console.error("crypto support is disabled!");
+    console.error(err);
 }
 
 const describeOrSkip =

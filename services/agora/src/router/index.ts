@@ -18,8 +18,8 @@ import { useLastNavigatedRouteName } from "src/utils/nav/lastNavigatedRouteName"
  */
 
 export default route(function (/* { store, ssrContext } */) {
-
-  const { lastNavigatedRouteFullPath, lastNavigatedRouteName } = useLastNavigatedRouteName();
+  const { lastNavigatedRouteFullPath, lastNavigatedRouteName } =
+    useLastNavigatedRouteName();
 
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -28,7 +28,8 @@ export default route(function (/* { store, ssrContext } */) {
       : createWebHashHistory;
 
   const Router = createRouter({
-    scrollBehavior: (to, from) => { // to, from, savedPosition
+    scrollBehavior: (to, from) => {
+      // to, from, savedPosition
       const fromRouteName = from.name?.toString() ?? "";
       if (fromRouteName != "") {
         lastNavigatedRouteFullPath.value = from.fullPath;

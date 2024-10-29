@@ -1,6 +1,6 @@
 import { describe, test } from "@jest/globals";
-import { base64 } from "../../src/common/index";
 import { expect } from "@jest/globals";
+import { base64 } from "multiformats/bases/base64";
 
 describe("not really a test: actually generate bbs plus keys in a file for development purpose - usually skipped", () => {
     test("encode-then-decode-then-encode", () => {

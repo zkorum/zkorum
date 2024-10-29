@@ -2,23 +2,31 @@
   <div class="flexIcons">
     <RouterLink :to="{ name: 'default-home-feed' }">
       <div class="iconStyle">
-        <q-icon name="mdi-home" size="1.6rem"
-          :color="route.name === 'default-home-feed' ? 'color-highlight' : 'color-text-weak'" />
-        <div :class="'text-' + (route.name === 'default-home-feed' ? 'color-highlight' : 'color-text-weak')">
+        <q-icon name="mdi-home" size="1.6rem" :color="route.name === 'default-home-feed'
+          ? 'color-highlight'
+          : 'color-text-weak'
+          " />
+        <div :class="'text-' +
+          (route.name === 'default-home-feed'
+            ? 'color-highlight'
+            : 'color-text-weak')
+          ">
           Home
         </div>
       </div>
-
     </RouterLink>
 
     <div class="iconStyle" @click="accessProfile()">
-      <q-icon name="mdi-account-circle" size="1.6rem"
-        :color="route.name === 'user-profile' ? 'color-highlight' : 'color-text-weak'" />
-      <div :class="'text-' + (route.name === 'user-profile' ? 'color-highlight' : 'color-text-weak')">
+      <q-icon name="mdi-account-circle" size="1.6rem" :color="route.name === 'user-profile' ? 'color-highlight' : 'color-text-weak'
+        " />
+      <div :class="'text-' +
+        (route.name === 'user-profile'
+          ? 'color-highlight'
+          : 'color-text-weak')
+        ">
         Profile
       </div>
     </div>
-
   </div>
 </template>
 
@@ -37,10 +45,9 @@ function accessProfile() {
   if (!authenticationStore.isAuthenticated) {
     dialog.showLoginConfirmationDialog();
   } else {
-    router.push({ name: "user-profile"});
+    router.push({ name: "user-profile" });
   }
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -61,5 +68,3 @@ function accessProfile() {
   font-weight: bold;
 }
 </style>
-
-

@@ -16,9 +16,9 @@ export async function isSupported(): Promise<boolean> {
         ((await (() =>
             new Promise((resolve) => {
                 const db = indexedDB.open("testDatabase");
-                db.onsuccess = () => resolve(true);
-                db.onerror = () => resolve(false);
-            }))()) as boolean)
+                db.onsuccess = () => { resolve(true); };
+                db.onerror = () => { resolve(false); };
+            }))()))
     );
 }
 
@@ -52,6 +52,7 @@ export function domainNameAndExtensionFromEmail(
 export function domainFromEmail(email: string): string | undefined {
     const nameAndDomain = email.split("@");
     if (nameAndDomain.length === 2) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [_username, domain] = [nameAndDomain[0], nameAndDomain[1]];
         return domain;
     }
@@ -62,6 +63,7 @@ export function domainFromEmail(email: string): string | undefined {
 export const MAX_LENGTH_OPTION = 30;
 export const MAX_LENGTH_TITLE = 130; // 140 is LinkedIn question limit
 export const MAX_LENGTH_BODY = 260; // old tweet length
+export const MAX_LENGTH_NAME_CREATOR = 65;
 export const MAX_LENGTH_COMMENT = 280; // tweet and community notes max length
 
 export function toUnionUndefined<T>(value: T | null): T | undefined {

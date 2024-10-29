@@ -8,5 +8,4 @@
 import { QBtnProps } from "quasar";
 
 const props = defineProps<QBtnProps>();
-
 </script>
