@@ -3,15 +3,19 @@
   <div>
     <div v-for="commentItem in commentList" :key="commentItem.postSlugId">
       <ZKHoverEffect :enable-hover="true">
-        <RouterLink :to="{ name: 'single-post', params: { postSlugId: commentItem.postSlugId }, query: { commentSlugId: 'comment-slug-id-1' } }">
+        <RouterLink :to="{
+          name: 'single-post',
+          params: { postSlugId: commentItem.postSlugId },
+          query: { commentSlugId: 'comment-slug-id-1' },
+        }">
           <div class="container">
-
             <div class="postTitle">
               {{ commentItem.title }}
             </div>
 
             <div class="commentMetadata">
-              Commented {{ getTimeFromNow(commentItem.createdAt) }} ago
+              Commented
+              {{ getTimeFromNow(commentItem.createdAt) }} ago
             </div>
 
             <div class="commentBody">
@@ -28,7 +32,6 @@
 
       <Divider />
     </div>
-
   </div>
 </template>
 
@@ -39,7 +42,6 @@ import { getTimeFromNow } from "src/utils/common";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 
 const { commentList } = useProfileStore();
-
 </script>
 
 <style scoped lang="scss">

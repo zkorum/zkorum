@@ -1,7 +1,6 @@
 <template>
   <div>
     <div class="container">
-
       <div class="title">
         <slot name="title"></slot>
       </div>
@@ -25,5 +24,4 @@
   font-size: 1.5rem;
   font-weight: bold;
 }
-
 </style>

@@ -5,11 +5,9 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps<{
-  enableHover: boolean
+  enableHover: boolean;
 }>();
-
 </script>
 
 <style scoped>
@@ -19,5 +17,4 @@ defineProps<{
     border-radius: 15px;
   }
 }
-
 </style>

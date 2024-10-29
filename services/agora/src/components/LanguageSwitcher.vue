@@ -1,15 +1,6 @@
 <template>
-    <q-btn-toggle v-model="actualLocale"
-        size="sm"
-        no-caps
-        rounded
-        unelevated
-        toggle-color="brand-teal"
-        toggle-text-color="brand-dark"
-        color="white"
-        text-color="brand-dark"
-        :options="localeOptions"
-    />
+  <q-btn-toggle v-model="actualLocale" size="sm" no-caps rounded unelevated toggle-color="brand-teal"
+    toggle-text-color="brand-dark" color="white" text-color="brand-dark" :options="localeOptions" />
 </template>
 
 <script setup lang="ts">

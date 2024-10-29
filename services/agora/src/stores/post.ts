@@ -15,7 +15,7 @@ export interface DummyCommentFormat {
   comment: string;
   numUpvotes: number;
   numDownvotes: number;
-  slugId: string
+  slugId: string;
 }
 
 export interface DummyPostMetadataFormat {
@@ -34,7 +34,7 @@ export interface DummyPostUserVote {
   voteIndex: number;
 }
 
-export type PossibleCommentRankingActions = "like" | "dislike" | "pass"
+export type PossibleCommentRankingActions = "like" | "dislike" | "pass";
 
 export interface UserRankedCommentItem {
   index: number;
@@ -47,20 +47,20 @@ export interface DummyCommentRankingFormat {
 }
 
 export interface DummyPostDataFormat {
-  metadata: DummyPostMetadataFormat,
+  metadata: DummyPostMetadataFormat;
   payload: {
     title: string;
     body: string;
     poll: {
       hasPoll: boolean;
-      options: DummyPollOptionFormat[]
+      options: DummyPollOptionFormat[];
     };
-    comments: DummyCommentFormat[]
-  },
+    comments: DummyCommentFormat[];
+  };
   userInteraction: {
-    pollVoting: DummyPostUserVote,
-    commentRanking: DummyCommentRankingFormat,
-  }
+    pollVoting: DummyPostUserVote;
+    commentRanking: DummyCommentRankingFormat;
+  };
 }
 
 export interface DummyUserPostDataFormat {
@@ -68,12 +68,11 @@ export interface DummyUserPostDataFormat {
   poll: {
     castedVote: boolean;
     votedIndex: number;
-  },
-  comment: { ratedIndexList: number[] }
+  };
+  comment: { ratedIndexList: number[] };
 }
 
 export const usePostStore = defineStore("post", () => {
-
   const communityStore = useCommunityStore();
 
   let largestPostIndex = 0;
@@ -87,27 +86,27 @@ export const usePostStore = defineStore("post", () => {
       commentCount: 0,
       communityId: "",
       posterName: "",
-      posterImagePath: ""
+      posterImagePath: "",
     },
     payload: {
       title: "",
       body: "",
       poll: {
         hasPoll: false,
-        options: []
+        options: [],
       },
-      comments: []
+      comments: [],
     },
     userInteraction: {
       pollVoting: {
         hasVoted: false,
-        voteIndex: 0
+        voteIndex: 0,
       },
       commentRanking: {
         rankedCommentList: new Map(),
-        assignedRankingItems: []
-      }
-    }
+        assignedRankingItems: [],
+      },
+    },
   };
 
   const masterPostDataList = ref<DummyPostDataFormat[]>([]);
@@ -121,7 +120,10 @@ export const usePostStore = defineStore("post", () => {
   }
   */
 
-  const lastSavedHomeFeedPosition = useStorage("last-saved-home-feed-position", 0);
+  const lastSavedHomeFeedPosition = useStorage(
+    "last-saved-home-feed-position",
+    0
+  );
 
   function generateRealisticPosts() {
     const postList: DummyPostDataFormat[] = [];
@@ -144,7 +146,7 @@ export const usePostStore = defineStore("post", () => {
           "When all people accept the teaching of Jesus Christ, there can be peaceful coexistence as all the teaching of Jesus Christ is of love, forgiveness and compassion that shows no favoritism for race or gender.",
           "Because of the right and wrong mentality, people always want to be on the right side. “I’m right! We’re right! Anyone that disagrees with us is wrong!” This whole mentality is the root cause of arguments and conflicts.",
           "Sadly no. People have been in conflict with other people since the beginning of Mankind. From Tribal fights over food or land, to religious battles over beliefs, it has always been part of the nature of mankind.",
-          "Depends, conflict will always show up, so it comes down to individuals being able to regulate their feelings & behaviours relative to their desires and expectations."
+          "Depends, conflict will always show up, so it comes down to individuals being able to regulate their feelings & behaviours relative to their desires and expectations.",
         ]
       );
       postList.push(postItem);
@@ -164,7 +166,7 @@ export const usePostStore = defineStore("post", () => {
           "Misinformation is anything that doesn’t correspond to reality. Anything that doesn’t stand up to scrutiny or critical examination.",
           "We can’t stop misinformation with bans alone. Better education and awareness are needed.",
           "In an age of misinformation, critical thinking is our best defense.",
-          "Freedom of speech or harmful misinformation? The line gets blurrier with every debate."
+          "Freedom of speech or harmful misinformation? The line gets blurrier with every debate.",
         ]
       );
       postList.push(postItem);
@@ -182,7 +184,7 @@ export const usePostStore = defineStore("post", () => {
           "Think of Mr. Durov whatever you want, Telegram as a service has value. It allowed revolutionaries to plan protests from Iran to Russia, allowed freedom of speech to occur even under oppressive regimes.",
           "It would be helpful to the global public to understand more details about why he was arrested",
           "While Telegram champions user privacy, ignoring local laws can lead to operational challenges; global platforms must navigate regulatory requirements, even if they conflict with their principles.",
-          "Not blocking child porn isn't a compatibility issue of principles."
+          "Not blocking child porn isn't a compatibility issue of principles.",
         ]
       );
       postList.push(postItem);
@@ -199,7 +201,7 @@ export const usePostStore = defineStore("post", () => {
           "Heartbreaking to see what has happened to Venezuela. So much resource wealth; so much misery.",
           "What Maduro has achieved in Venezuela combines the two worst Latin American extremes. He’s got the historically right-wing style political repression, with the historically leftist economic incompetence.",
           "How long will the international community watch without real action",
-          "Venezuela proves that political division and corruption can destroy even the richest nations."
+          "Venezuela proves that political division and corruption can destroy even the richest nations.",
         ]
       );
       postList.push(postItem);
@@ -219,7 +221,7 @@ export const usePostStore = defineStore("post", () => {
           "Here’s a genuine conundrum: should it be within the legislative ability of a democratic state to ban a political party whose stated aim was to overthrow democracy, should it gain power?",
           "For me, it’s ostrich-like to dismiss political concerns around immigration at the same time as you deplore the rise of a coalition that has emerged as a direct response to your refusal to acknowledge political concerns around immigration.",
           "This shows the need for better dialogue on immigration, not more hate.",
-          "Germany can't allow neo-Nazism to take root again."
+          "Germany can't allow neo-Nazism to take root again.",
         ]
       );
       postList.push(postItem);
@@ -236,11 +238,19 @@ export const usePostStore = defineStore("post", () => {
     }
   }
 
-  function createSingleRealisticPost(companyId: string, title: string, body: string, hasPoll: boolean, pollOptions: string[], commentList: string[]) {
+  function createSingleRealisticPost(
+    companyId: string,
+    title: string,
+    body: string,
+    hasPoll: boolean,
+    pollOptions: string[],
+    commentList: string[]
+  ) {
     const dummyPost = generateDummyPostData();
     const companyItem = communityStore.getCompanyItemFromId(companyId);
     dummyPost.metadata.posterName = companyItem.label;
-    dummyPost.metadata.posterImagePath = "/development/logos/" + companyItem.profilePicture;
+    dummyPost.metadata.posterImagePath =
+      "/development/logos/" + companyItem.profilePicture;
     dummyPost.metadata.commentCount = commentList.length;
     dummyPost.payload.title = title;
     dummyPost.payload.body = body;
@@ -248,12 +258,19 @@ export const usePostStore = defineStore("post", () => {
     dummyPost.payload.poll.options = [];
     dummyPost.userInteraction.commentRanking.rankedCommentList = new Map();
     for (let i = 0; i < pollOptions.length; i++) {
-      const pollOption: DummyPollOptionFormat = generateDummyPollItem(i, pollOptions[i]);
+      const pollOption: DummyPollOptionFormat = generateDummyPollItem(
+        i,
+        pollOptions[i]
+      );
       dummyPost.payload.poll.options.push(pollOption);
     }
     dummyPost.payload.comments = [];
     for (let i = 0; i < commentList.length; i++) {
-      const commentItem = composeDummyCommentItem(commentList[i], i, dummyPost.metadata.createdAt);
+      const commentItem = composeDummyCommentItem(
+        commentList[i],
+        i,
+        dummyPost.metadata.createdAt
+      );
       dummyPost.payload.comments.push(commentItem);
     }
 
@@ -277,9 +294,14 @@ export const usePostStore = defineStore("post", () => {
     return emptyPost;
   }
 
-  function updateCommentRanking(postSlugId: string, commentIndex: number, rankingAction: PossibleCommentRankingActions) {
+  function updateCommentRanking(
+    postSlugId: string,
+    commentIndex: number,
+    rankingAction: PossibleCommentRankingActions
+  ) {
     const post = getPostBySlugId(postSlugId);
-    const rankedCommentMap = post.userInteraction.commentRanking.rankedCommentList;
+    const rankedCommentMap =
+      post.userInteraction.commentRanking.rankedCommentList;
     const currentAction = rankedCommentMap.get(commentIndex);
 
     let upvoteDiff = 0;
@@ -339,7 +361,6 @@ export const usePostStore = defineStore("post", () => {
     }
 
     for (let i = 0; i < masterPostDataList.value.length; i++) {
-
       const postItem = masterPostDataList.value[i];
       if (locatedId) {
         dataList.push(postItem);
@@ -352,7 +373,7 @@ export const usePostStore = defineStore("post", () => {
       if (dataList.length == fetchCount) {
         break;
       }
-    };
+    }
 
     return dataList;
   }
@@ -375,7 +396,8 @@ export const usePostStore = defineStore("post", () => {
 
   function generateRandomCommunityItem(): CommunityItem {
     const communityNameList = communityStore.communityList;
-    const communityItem = communityNameList[Math.floor(Math.random() * communityNameList.length)];
+    const communityItem =
+      communityNameList[Math.floor(Math.random() * communityNameList.length)];
     return communityItem;
   }
 
@@ -392,7 +414,11 @@ export const usePostStore = defineStore("post", () => {
     return "";
   }
 
-  function composeDummyCommentItem(commentText: string, index: number, postCreatedAtDate: Date) {
+  function composeDummyCommentItem(
+    commentText: string,
+    index: number,
+    postCreatedAtDate: Date
+  ) {
     //const communityItem = generateRandomCommunityItem();
 
     const newComment: DummyCommentFormat = {
@@ -403,7 +429,7 @@ export const usePostStore = defineStore("post", () => {
       comment: commentText,
       numUpvotes: getRandomInt(0, 100),
       numDownvotes: getRandomInt(0, 100),
-      slugId: "comment-slug-id-" + index.toString()
+      slugId: "comment-slug-id-" + index.toString(),
     };
     return newComment;
   }
@@ -414,9 +440,8 @@ export const usePostStore = defineStore("post", () => {
 
     return {
       name: companyName,
-      imageName: "/images/companies/company" + nameIndex.toString() + ".jpeg"
+      imageName: "/images/companies/company" + nameIndex.toString() + ".jpeg",
     };
-
   }
 
   function submitNewPost(postTitle: string, postBody: string) {
@@ -433,17 +458,18 @@ export const usePostStore = defineStore("post", () => {
     const pollItem: DummyPollOptionFormat = {
       index: index,
       option: option,
-      numResponses: getRandomInt(0, 100)
+      numResponses: getRandomInt(0, 100),
     };
     return pollItem;
   }
 
   function generateDummyPostData() {
-
     const postIndex = largestPostIndex;
 
     const postCreatedAtDate = new Date();
-    postCreatedAtDate.setDate(postCreatedAtDate.getDate() - getRandomInt(7, 14));
+    postCreatedAtDate.setDate(
+      postCreatedAtDate.getDate() - getRandomInt(7, 14)
+    );
 
     const numCommentsInPost = getRandomInt(0, 20);
     const selectedRandomCommunityItem = generateRandomCommunityItem();
@@ -452,7 +478,10 @@ export const usePostStore = defineStore("post", () => {
     const numPollOptions = getRandomInt(2, 6);
     const pollOptionList: DummyPollOptionFormat[] = [];
     for (let i = 0; i < numPollOptions; i++) {
-      const pollItem: DummyPollOptionFormat = generateDummyPollItem(i, "Dummy Option " + (i + 1));
+      const pollItem: DummyPollOptionFormat = generateDummyPollItem(
+        i,
+        "Dummy Option " + (i + 1)
+      );
       pollOptionList.push(pollItem);
     }
 
@@ -461,19 +490,31 @@ export const usePostStore = defineStore("post", () => {
       pollOptions = pollOptionList;
     }
 
-    const randomText = "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted.";
+    const randomText =
+      "Answer misery adieus add wooded how nay men before though. Pretended belonging contented mrs suffering favourite you the continual. Mrs civil nay least means tried drift. Natural end law whether but and towards certain. Furnished unfeeling his sometimes see day promotion. Quitting informed concerns can men now. Projection to or up conviction uncommonly delightful continuing. In appetite ecstatic opinions hastened by handsome admitted.";
 
     const postComments: DummyCommentFormat[] = [];
     for (let i = 0; i < numCommentsInPost; i++) {
-      const comment = "This is random comment index " + (i) + ". " + randomText.substring(0, 270);
-      const commentItem = composeDummyCommentItem(comment, i, postCreatedAtDate);
+      const comment =
+        "This is random comment index " +
+        i +
+        ". " +
+        randomText.substring(0, 270);
+      const commentItem = composeDummyCommentItem(
+        comment,
+        i,
+        postCreatedAtDate
+      );
       postComments.push(commentItem);
     }
 
     const numRequiredCommentRanking = Math.min(3, numCommentsInPost);
     const assignedRankingItems: number[] = [];
     const rankedCommentList = new Map<number, PossibleCommentRankingActions>();
-    const numRankedComment = getRandomInt(0, numCommentsInPost - numRequiredCommentRanking);
+    const numRankedComment = getRandomInt(
+      0,
+      numCommentsInPost - numRequiredCommentRanking
+    );
 
     let currentRankedCommentIndex = 0;
     for (let i = 0; i < numRequiredCommentRanking; i++) {
@@ -482,9 +523,18 @@ export const usePostStore = defineStore("post", () => {
     }
 
     for (let i = 0; i < numRankedComment; i++) {
-      const possibleCommentActions: PossibleCommentRankingActions[] = ["like", "dislike"];
-      const randomActionIndex = getRandomInt(0, possibleCommentActions.length - 1);
-      rankedCommentList.set(currentRankedCommentIndex, possibleCommentActions[randomActionIndex]);
+      const possibleCommentActions: PossibleCommentRankingActions[] = [
+        "like",
+        "dislike",
+      ];
+      const randomActionIndex = getRandomInt(
+        0,
+        possibleCommentActions.length - 1
+      );
+      rankedCommentList.set(
+        currentRankedCommentIndex,
+        possibleCommentActions[randomActionIndex]
+      );
       currentRankedCommentIndex += 1;
     }
 
@@ -502,33 +552,32 @@ export const usePostStore = defineStore("post", () => {
         commentCount: numCommentsInPost,
         communityId: selectedRandomCommunityItem.id,
         posterName: companyItem.name,
-        posterImagePath: companyItem.imageName
+        posterImagePath: companyItem.imageName,
       },
       payload: {
         title: "TEST POST TITLE INDEX - " + postIndex,
         body: postBody,
         poll: {
           hasPoll: hasPoll,
-          options: pollOptions
+          options: pollOptions,
         },
-        comments: postComments
+        comments: postComments,
       },
       userInteraction: {
         pollVoting: {
           hasVoted: false,
-          voteIndex: 0
+          voteIndex: 0,
         },
         commentRanking: {
           rankedCommentList: rankedCommentList,
-          assignedRankingItems: assignedRankingItems
-        }
-      }
+          assignedRankingItems: assignedRankingItems,
+        },
+      },
     };
 
     largestPostIndex++;
 
     return postDataStatic;
-
   }
 
   return {
@@ -540,6 +589,6 @@ export const usePostStore = defineStore("post", () => {
     submitNewPost,
     allocateAllCommentsForRanking,
     emptyPost,
-    lastSavedHomeFeedPosition
+    lastSavedHomeFeedPosition,
   };
 });

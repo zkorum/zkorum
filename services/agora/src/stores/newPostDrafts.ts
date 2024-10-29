@@ -1,7 +1,6 @@
 import { ref } from "vue";
 
 export const useNewPostDraftsStore = () => {
-
   interface NewPostDraft {
     postTitle: string;
     postBody: string;
@@ -13,7 +12,7 @@ export const useNewPostDraftsStore = () => {
     postTitle: "",
     postBody: "",
     enablePolling: false,
-    pollingOptionList: ["", ""]
+    pollingOptionList: ["", ""],
   };
 
   const postDraft = ref<NewPostDraft>(structuredClone(emptyDraft));
@@ -29,5 +28,4 @@ export const useNewPostDraftsStore = () => {
   }
 
   return { postDraft, isPostEdited };
-
 };

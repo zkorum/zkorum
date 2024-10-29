@@ -7,11 +7,9 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps<{
-  padding: string
+  padding: string;
 }>();
-
 </script>
 
 <style scoped lang="scss">

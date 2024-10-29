@@ -6,21 +6,22 @@
 
       <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
         @click.stop.prevent="shareButtonClicked()" />
-      <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(false)" size="0.8rem"
-        @click.stop.prevent="toggleVote(props.commentItem.commentSlugId, 'dislike')">
+      <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(false)" size="0.8rem" @click.stop.prevent="
+        toggleVote(props.commentItem.commentSlugId, 'dislike')
+        ">
         <div v-if="isRanked" class="voteCountLabel">
           {{ commentItem.numDislikes }}
         </div>
       </ZKButton>
 
-      <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(true)" size="0.8rem"
-        @click.stop.prevent="toggleVote(props.commentItem.commentSlugId, 'like')">
+      <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(true)" size="0.8rem" @click.stop.prevent="
+        toggleVote(props.commentItem.commentSlugId, 'like')
+        ">
         <div v-if="isRanked" class="voteCountLabel">
           {{ commentItem.numLikes }}
         </div>
       </ZKButton>
     </div>
-
   </div>
 </template>
 
@@ -32,10 +33,10 @@ import { useWebShare } from "src/utils/share/WebShare";
 import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
 
 const props = defineProps<{
-  commentItem: ApiV1CommentFetchPost200ResponseInner,
-  postSlugId: string,
-  isRanked: boolean,
-  rankedAction: PossibleCommentRankingActions
+  commentItem: ApiV1CommentFetchPost200ResponseInner;
+  postSlugId: string;
+  isRanked: boolean;
+  rankedAction: PossibleCommentRankingActions;
 }>();
 
 const bottomSheet = useBottomSheet();
@@ -43,7 +44,12 @@ const bottomSheet = useBottomSheet();
 const webShare = useWebShare();
 
 function shareButtonClicked() {
-  const sharePostUrl = window.location.origin + "/post/" + props.postSlugId + "?commentSlugId=" + props.commentItem.commentSlugId;
+  const sharePostUrl =
+    window.location.origin +
+    "/post/" +
+    props.postSlugId +
+    "?commentSlugId=" +
+    props.commentItem.commentSlugId;
   webShare.share("Agora Comment", sharePostUrl);
 }
 
@@ -51,7 +57,10 @@ function optionButtonClicked() {
   bottomSheet.showCommentOptionSelector();
 }
 
-function toggleVote(commentSlugId: string, isUpvoteButton: PossibleCommentRankingActions) {
+function toggleVote(
+  commentSlugId: string,
+  isUpvoteButton: PossibleCommentRankingActions
+) {
   console.log(commentSlugId);
   console.log(isUpvoteButton);
   // updateCommentRanking(props.postSlugId, commentIndex, isUpvoteButton);

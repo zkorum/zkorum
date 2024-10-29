@@ -1,25 +1,28 @@
 import { api } from "src/boot/axios";
 import axios from "axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
-import { ApiV1CommentCreatePostRequest, ApiV1CommentFetchPostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
+import {
+  ApiV1CommentCreatePostRequest,
+  ApiV1CommentFetchPostRequest,
+  DefaultApiAxiosParamCreator,
+  DefaultApiFactory,
+} from "src/api";
 import { useCommonApi } from "./common";
 
 export function useBackendCommentApi() {
-
   const { buildEncodedUcan } = useCommonApi();
 
   async function fetchCommentsForPost(postSlugId: string) {
     try {
       const params: ApiV1CommentFetchPostRequest = {
-        postSlugId: postSlugId
+        postSlugId: postSlugId,
       };
 
       const response = await DefaultApiFactory(
         undefined,
         undefined,
         api
-      ).apiV1CommentFetchPost(params, {
-      });
+      ).apiV1CommentFetchPost(params, {});
 
       return response.data;
     } catch (e) {
@@ -35,10 +38,11 @@ export function useBackendCommentApi() {
     try {
       const params: ApiV1CommentCreatePostRequest = {
         commentBody: commentBody,
-        postSlugId: postSlugId
+        postSlugId: postSlugId,
       };
 
-      const { url, options } = await DefaultApiAxiosParamCreator().apiV1CommentCreatePost(params);
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1CommentCreatePost(params);
       const encodedUcan = await buildEncodedUcan(url, options);
       const response = await DefaultApiFactory(
         undefined,
@@ -46,8 +50,8 @@ export function useBackendCommentApi() {
         api
       ).apiV1CommentCreatePost(params, {
         headers: {
-          ...buildAuthorizationHeader(encodedUcan)
-        }
+          ...buildAuthorizationHeader(encodedUcan),
+        },
       });
 
       return response.data;

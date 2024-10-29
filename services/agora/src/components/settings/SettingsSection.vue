@@ -9,7 +9,6 @@
         <div class="flexStyle">
           <div v-for="(item, index) in settingsItemList" :key="item.icon">
             <RouterLink :to="{ name: item.routeName }">
-
               <div class="menuItem" @click="item.action">
                 <div>
                   <q-icon :name="item.icon" size="1.5rem" />
@@ -19,17 +18,13 @@
                 </div>
               </div>
 
-              <q-separator v-if="index != (settingsItemList.length - 1)" class="separatorStyle" />
-
+              <q-separator v-if="index != settingsItemList.length - 1" class="separatorStyle" />
             </RouterLink>
-
           </div>
         </div>
       </ZKCard>
     </div>
-
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -40,7 +35,6 @@ defineProps<{
   settingsItemList: SettingsInterface[];
   title: string;
 }>();
-
 </script>
 
 <style scoped lang="scss">
@@ -71,6 +65,4 @@ defineProps<{
   margin-top: 0.8rem;
   margin-bottom: 0.8rem;
 }
-
 </style>
-

@@ -1,7 +1,5 @@
 import { boot } from "quasar/wrappers";
-import {
-  SecureStorage,
-} from "@aparajita/capacitor-secure-storage";
+import { SecureStorage } from "@aparajita/capacitor-secure-storage";
 import { Dialog } from "quasar";
 import { i18n } from "src/boot/i18n";
 import { App } from "@capacitor/app";
@@ -13,7 +11,10 @@ export default boot(async (/* { app } */) => {
     await SecureStorage.setKeyPrefix("com.zkorum.agora/v1");
     // await nativeAuthenticate();
   } catch (e) {
-    console.error("Error while setting up secure storage key prefix and authenticating", e);
+    console.error(
+      "Error while setting up secure storage key prefix and authenticating",
+      e
+    );
     Dialog.create({
       title: i18n.global.t("boot.capacitorStorage.title"),
       message: i18n.global.t("boot.capacitorStorage.message"),

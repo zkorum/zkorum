@@ -6,26 +6,40 @@
         <ZKCard padding="1rem">
           <div v-if="!finishedRanking" ref="cardElement">
             <div class="progressBar">
-              <q-linear-progress color="primary" track-color="secondary" :value="progress" />
+              <q-linear-progress color="primary"
+                track-color="secondary"
+                :value="progress"
+              />
             </div>
 
-            <div class="weakColor unselectable" :style="{ paddingBottom: '2rem' }">
-              Vote on other people's statements ({{ currentRankIndex }} of {{ unrankedCommentList.length }})
+            <div class="weakColor unselectable"
+              :style="{ paddingBottom: '2rem' }"
+            >
+              Vote on other people's statements ({{ currentRankIndex }} of
+              {{ unrankedCommentList.length }})
             </div>
 
             <div>
-              <swiper-container ref="swipingElementRef" slides-per-view="1" initial-slide="1">
+              <swiper-container ref="swipingElementRef"
+                slides-per-view="1"
+                initial-slide="1"
+              >
                 <swiper-slide>
-                  <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
-                    <q-icon name="mdi-chevron-double-up" flat color="secondary" size="3rem" />
-                    <div>
-                      Upvoted
-                    </div>
+                  <div class="sidePage"
+                    :style="{
+                      paddingTop: topPadding + 'px',
+                    }"
+                  >
+                    <q-icon name="mdi-chevron-double-up"
+                      flat
+                      color="secondary"
+                      size="3rem"
+                    />
+                    <div>Upvoted</div>
                   </div>
                 </swiper-slide>
 
                 <swiper-slide>
-
                   <div class="rankingDiv">
                     <div class="userComment unselectable">
                       “
@@ -34,27 +48,48 @@
                     </div>
 
                     <div class="rankingButtonCluster">
-                      <ZKButton flat text-color="color-text-strong" icon="mdi-thumb-down-outline" size="1.3rem"
-                        @click="rankComment('dislike', false)" />
-                      <ZKButton flat text-color="color-text-strong" label="Pass" size="1rem"
-                        @click="rankComment('pass', false)" />
-                      <ZKButton flat text-color="color-text-strong" icon="mdi-thumb-up-outline" size="1.3rem"
-                        @click="rankComment('like', false)" />
+                      <ZKButton flat
+                        text-color="color-text-strong"
+                        icon="mdi-thumb-down-outline"
+                        size="1.3rem"
+                        @click="rankComment('dislike', false)"
+                      />
+                      <ZKButton flat
+                        text-color="color-text-strong"
+                        label="Pass"
+                        size="1rem"
+                        @click="rankComment('pass', false)"
+                      />
+                      <ZKButton flat
+                        text-color="color-text-strong"
+                        icon="mdi-thumb-up-outline"
+                        size="1.3rem"
+                        @click="rankComment('like', false)"
+                      />
                     </div>
 
                     <div class="reportButton">
-                      <ZKButton text-color="color-text-weak" icon="mdi-alert-outline"
-                        size="0.8rem" @click="reportButtonClicked()" />
+                      <ZKButton text-color="color-text-weak"
+                        icon="mdi-alert-outline"
+                        size="0.8rem"
+                        @click="reportButtonClicked()"
+                      />
                     </div>
                   </div>
                 </swiper-slide>
 
                 <swiper-slide>
-                  <div class="sidePage" :style="{ paddingTop: topPadding + 'px' }">
-                    <q-icon name="mdi-chevron-double-down" flat color="secondary" size="3rem" />
-                    <div>
-                      Downvoted
-                    </div>
+                  <div class="sidePage"
+                    :style="{
+                      paddingTop: topPadding + 'px',
+                    }"
+                  >
+                    <q-icon name="mdi-chevron-double-down"
+                      flat
+                      color="secondary"
+                      size="3rem"
+                    />
+                    <div>Downvoted</div>
                   </div>
                 </swiper-slide>
               </swiper-container>
@@ -62,67 +97,90 @@
           </div>
 
           <div v-if="finishedRanking">
-
-            <div v-if="postItem.payload.comments.length == 0" class="finishedMessage">
+            <div v-if="postItem.payload.comments.length == 0"
+              class="finishedMessage"
+            >
               <div class="finishedIcon">
                 <q-icon name="mdi-vote" size="3rem" />
               </div>
 
-              <div>
-                There are no comments available to rank yet!
-              </div>
+              <div>There are no comments available to rank yet!</div>
 
               <div>
-                <ZKButton outline text-color="primary" icon="comment" size="1rem" label="Add a comment"
-                  @click="clickedCommentButton()" />
+                <ZKButton outline
+                  text-color="primary"
+                  icon="comment"
+                  size="1rem"
+                  label="Add a comment"
+                  @click="clickedCommentButton()"
+                />
               </div>
             </div>
 
-            <div v-if="postItem.userInteraction.commentRanking.assignedRankingItems.length > 0" class="finishedMessage">
+            <div v-if="
+                postItem.userInteraction.commentRanking.assignedRankingItems
+                  .length > 0
+              "
+              class="finishedMessage"
+            >
               <div class="finishedIcon">
                 <q-icon name="mdi-check" size="3rem" />
               </div>
 
               <div>
-                You have ranked {{ postItem.userInteraction.commentRanking.rankedCommentList.size }}
-                comment<span v-if="postItem.userInteraction.commentRanking.rankedCommentList.size > 1">s</span>!
+                You have ranked
+                {{
+                  postItem.userInteraction.commentRanking.rankedCommentList.size
+                }}
+                comment<span v-if="
+                    postItem.userInteraction.commentRanking.rankedCommentList
+                      .size > 1
+                  "
+                  >s</span
+                >!
               </div>
 
               <div class="finishedActionButtons">
-                <ZKButton v-if="postItem.payload.comments.length != postItem.userInteraction.commentRanking.rankedCommentList.size"
-                  outline text-color="color-text-strong" @click="clickedRankMoreButton()">
+                <ZKButton v-if="
+                    postItem.payload.comments.length !=
+                    postItem.userInteraction.commentRanking.rankedCommentList
+                      .size
+                  "
+                  outline
+                  text-color="color-text-strong"
+                  @click="clickedRankMoreButton()"
+                >
                   <div class="iconStyle">
                     <q-icon name="mdi-vote" color="color-text-strong" />
-                    <div>
-                      Vote More
-                    </div>
+                    <div>Vote More</div>
                   </div>
                 </ZKButton>
 
-                <ZKButton outline text-color="color-text-strong" @click="clickedSeeResultsButton()">
+                <ZKButton outline
+                  text-color="color-text-strong"
+                  @click="clickedSeeResultsButton()"
+                >
                   <div class="iconStyle">
                     <q-icon name="mdi-chart-bar" color="color-text-strong" />
-                    <div>
-                      See Results
-                    </div>
+                    <div>See Results</div>
                   </div>
-
                 </ZKButton>
               </div>
             </div>
           </div>
-
         </ZKCard>
-
       </div>
-
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, DummyPostDataFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
+import {
+  DummyCommentFormat,
+  DummyPostDataFormat,
+  PossibleCommentRankingActions,
+  usePostStore,
+} from "src/stores/post";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
@@ -131,18 +189,23 @@ import { useElementSize } from "@vueuse/core";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 
 const props = defineProps<{
-  postSlugId: string
+  postSlugId: string;
 }>();
 
 const emit = defineEmits(["clickedCommentButton", "clickedSeeResultButton"]);
 
-const { updateCommentRanking, getPostBySlugId, allocateAllCommentsForRanking, emptyPost } = usePostStore();
+const {
+  updateCommentRanking,
+  getPostBySlugId,
+  allocateAllCommentsForRanking,
+  emptyPost,
+} = usePostStore();
 
 const { showCommentRankingReportSelector } = useBottomSheet();
 
 const cardElement = ref();
 
-const swipingElementRef = ref<SwiperContainer| null>(null);
+const swipingElementRef = ref<SwiperContainer | null>(null);
 const elementSize = useElementSize(swipingElementRef);
 
 const unrankedCommentList = ref<DummyCommentFormat[]>([]);
@@ -159,7 +222,7 @@ const emptyCommentItem: DummyCommentFormat = {
   comment: "",
   numUpvotes: 0,
   numDownvotes: 0,
-  slugId: ""
+  slugId: "",
 };
 
 let displayCommentItem = ref<DummyCommentFormat>(emptyCommentItem);
@@ -202,20 +265,28 @@ watch(selectedCommentReportId, () => {
 });
 
 function unmountSwiper() {
-  swipingElementRef.value?.removeEventListener("swiperslidechange", swiperChangeFunction);
+  swipingElementRef.value?.removeEventListener(
+    "swiperslidechange",
+    swiperChangeFunction
+  );
 }
 
 function mountSwiper() {
   if (swipingElementRef.value != null) {
-    swipingElementRef.value.addEventListener("swiperslidechange", swiperChangeFunction);
+    swipingElementRef.value.addEventListener(
+      "swiperslidechange",
+      swiperChangeFunction
+    );
   } else {
     console.log("Failed to mount swiper");
   }
 }
 
 function getUnrankedComments(): DummyCommentFormat[] {
-  const assignedRankingItems = postItem.value.userInteraction.commentRanking.assignedRankingItems;
-  const rankedCommentList = postItem.value.userInteraction.commentRanking.rankedCommentList;
+  const assignedRankingItems =
+    postItem.value.userInteraction.commentRanking.assignedRankingItems;
+  const rankedCommentList =
+    postItem.value.userInteraction.commentRanking.rankedCommentList;
 
   const unrankedCommentIndexes: number[] = [];
 
@@ -233,8 +304,16 @@ function getUnrankedComments(): DummyCommentFormat[] {
   }
 
   const unrankedComments: DummyCommentFormat[] = [];
-  for (let unrankedIndex = 0; unrankedIndex < unrankedCommentIndexes.length; unrankedIndex++) {
-    for (let commentIndex = 0; commentIndex < postItem.value.payload.comments.length; commentIndex++) {
+  for (
+    let unrankedIndex = 0;
+    unrankedIndex < unrankedCommentIndexes.length;
+    unrankedIndex++
+  ) {
+    for (
+      let commentIndex = 0;
+      commentIndex < postItem.value.payload.comments.length;
+      commentIndex++
+    ) {
       const commentItem = postItem.value.payload.comments[commentIndex];
       if (unrankedCommentIndexes[unrankedIndex] == commentItem.index) {
         unrankedComments.push(commentItem);
@@ -247,7 +326,6 @@ function getUnrankedComments(): DummyCommentFormat[] {
 }
 
 function initializeData() {
-
   mountSwiper();
 
   postItem.value = getPostBySlugId(props.postSlugId);
@@ -304,11 +382,18 @@ function updateProgressBar() {
   progress.value = currentRankIndex.value / unrankedCommentList.value.length;
 }
 
-function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boolean) {
+function rankComment(
+  commentAction: PossibleCommentRankingActions,
+  isSwiper: boolean
+) {
   currentRankIndex.value += 1;
   updateProgressBar();
 
-  updateCommentRanking(props.postSlugId, displayCommentItem.value.index, commentAction);
+  updateCommentRanking(
+    props.postSlugId,
+    displayCommentItem.value.index,
+    commentAction
+  );
 
   if (isSwiper) {
     setTimeout(() => {
@@ -325,7 +410,6 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
     }
   }
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -419,11 +503,10 @@ function rankComment(commentAction: PossibleCommentRankingActions, isSwiper: boo
 }
 
 .iconStyle {
-  display:flex;
+  display: flex;
   align-items: center;
   justify-items: center;
   gap: 0.5rem;
   padding: 0.2rem;
 }
-
 </style>

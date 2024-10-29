@@ -16,8 +16,6 @@ const emit = defineEmits(["onClick"]);
 function buttonClick() {
   emit("onClick");
 }
-
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -6,19 +6,20 @@ import { buildUcan, createDidIfDoesNotExist } from "../crypto/ucan/operation";
 import { storeToRefs } from "pinia";
 
 export function useCommonApi() {
-
   const $q = useQuasar();
   const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
 
   async function buildEncodedUcan(url: string, options: RawAxiosRequestConfig) {
-
     let platform: "mobile" | "web" = "web";
 
     platform = getPlatform($q.platform);
 
     console.log("Build UCAN for email: " + verificationEmailAddress.value);
 
-    const { did, prefixedKey } = await createDidIfDoesNotExist(verificationEmailAddress.value, platform);
+    const { did, prefixedKey } = await createDidIfDoesNotExist(
+      verificationEmailAddress.value,
+      platform
+    );
     // TODO: get DID if exist, else create it
     // then create UCAN, then inject it below
     // if we create it, create a unique cryptographic random ID that is linked to the email address
@@ -28,10 +29,15 @@ export function useCommonApi() {
     // - flowId => email
     // later after verification, will store UUID => prefixedKey
 
-    const encodedUcan = await buildUcan({ did, prefixedKey, pathname: url, method: options.method, platform });
+    const encodedUcan = await buildUcan({
+      did,
+      prefixedKey,
+      pathname: url,
+      method: options.method,
+      platform,
+    });
     return encodedUcan;
   }
 
   return { buildEncodedUcan };
-
 }

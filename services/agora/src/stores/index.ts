@@ -1,7 +1,10 @@
 import { store } from "quasar/wrappers";
 import { createPinia } from "pinia";
 import { Router } from "vue-router";
-import { PluginOptions, createPersistedStatePlugin } from "pinia-plugin-persistedstate-2";
+import {
+  PluginOptions,
+  createPersistedStatePlugin,
+} from "pinia-plugin-persistedstate-2";
 import localforage from "localforage";
 import { Dialog, Platform } from "quasar";
 import { StateTree } from "pinia";
@@ -70,7 +73,10 @@ async function mobileGetItem(key: string) {
         throw error;
       */
       default:
-        console.error("Fatal error while trying to access secure storage", error);
+        console.error(
+          "Fatal error while trying to access secure storage",
+          error
+        );
         Dialog.create({
           title: i18n.global.t("capacitorStorage.fatalError.title"),
           message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -88,7 +94,7 @@ async function mobileGetItem(key: string) {
 
 async function mobileRemoveItem(key: string): Promise<void> {
   try {
-    return SecureStorage.remove(key, true).then(() => { });
+    return SecureStorage.remove(key, true).then(() => {});
   } catch (error) {
     if (error instanceof StorageError) {
       switch (StorageErrorType[error.code]) {
@@ -122,7 +128,10 @@ async function mobileRemoveItem(key: string): Promise<void> {
         break;
       */
       default:
-        console.error("Fatal error while trying to access secure storage", error);
+        console.error(
+          "Fatal error while trying to access secure storage",
+          error
+        );
         Dialog.create({
           title: i18n.global.t("capacitorStorage.fatalError.title"),
           message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -179,7 +188,10 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
         throw error;
       */
       default:
-        console.error("Fatal error while trying to access secure storage", error);
+        console.error(
+          "Fatal error while trying to access secure storage",
+          error
+        );
         Dialog.create({
           title: i18n.global.t("capacitorStorage.fatalError.title"),
           message: i18n.global.t("capacitorStorage.fatalError.message"),
@@ -195,7 +207,9 @@ async function mobileSetItem(key: string, value: string): Promise<void> {
   }
 }
 
-function persistedStatePluginParamForPlatform<S extends StateTree = StateTree>(): PluginOptions<S> {
+function persistedStatePluginParamForPlatform<
+  S extends StateTree = StateTree,
+>(): PluginOptions<S> {
   if (Platform.is.nativeMobile) {
     return {
       storage: {
@@ -225,13 +239,13 @@ function persistedStatePluginParamForPlatform<S extends StateTree = StateTree>()
       },
     },
   };
-
 }
-
 
 export default store((/* { ssrContext } */) => {
   const pinia = createPinia();
-  const installPersistedStatePlugin = createPersistedStatePlugin(persistedStatePluginParamForPlatform());
+  const installPersistedStatePlugin = createPersistedStatePlugin(
+    persistedStatePluginParamForPlatform()
+  );
   pinia.use((context) => installPersistedStatePlugin(context));
 
   return pinia;

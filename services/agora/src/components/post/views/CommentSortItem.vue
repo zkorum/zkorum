@@ -7,7 +7,6 @@
       </div>
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -17,7 +16,6 @@ defineProps<{
   sortItem: CommentSortingItemInterface;
   isSelected: boolean;
 }>();
-
 </script>
 
 <style scoped lang="scss">
@@ -26,7 +24,7 @@ defineProps<{
 }
 
 .container {
-  display:flex;
+  display: flex;
   flex-direction: column;
   gap: 0.5rem;
   align-items: center;
@@ -38,7 +36,9 @@ defineProps<{
   .container:hover {
     border-radius: 15px;
     background-color: rgb(0 0 0 / 0.08);
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.1),
+      0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
 }
 

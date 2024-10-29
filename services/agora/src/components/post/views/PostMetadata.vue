@@ -1,7 +1,6 @@
 <template>
   <div>
     <div class="container">
-
       <div class="metadata">
         <img :src="posterImagePath" class="companyIcon" />
 
@@ -9,23 +8,19 @@
           {{ posterName }}
         </div>
 
-        <div>
-          •
-        </div>
+        <div>•</div>
 
         <div>
           {{ getTimeFromNow(createdAt) }}
         </div>
 
-        <div>
-        </div>
+        <div></div>
       </div>
 
       <div>
         <ZKButton flat text-color="color-text-weak" icon="mdi-dots-vertical" @click.stop.prevent="clickedMoreIcon()" />
       </div>
     </div>
-
   </div>
 </template>
 
@@ -35,9 +30,9 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 
 defineProps<{
-  posterName: string
-  posterImagePath: string
-  createdAt: Date
+  posterName: string;
+  posterImagePath: string;
+  createdAt: Date;
 }>();
 
 const { showPostOptionSelector } = useBottomSheet();
@@ -45,7 +40,6 @@ const { showPostOptionSelector } = useBottomSheet();
 function clickedMoreIcon() {
   showPostOptionSelector();
 }
-
 </script>
 
 <style scoped lang="scss">

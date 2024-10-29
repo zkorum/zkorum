@@ -2,11 +2,14 @@
   <div>
     <div>
       <div v-if="showResults" class="pollContainer">
-
         <div class="pollOptionList">
           <option-view v-for="optionItem in localPollOptions" :key="optionItem.index" :option="optionItem.option"
-            :option-responded="localUserVote.voteIndex == optionItem.index && localUserVote.hasVoted"
-            :option-percentage="totalCount === 0 ? 0 : Math.round((optionItem.numResponses * 100) / totalCount)" />
+            :option-responded="localUserVote.voteIndex == optionItem.index &&
+              localUserVote.hasVoted
+              " :option-percentage="totalCount === 0
+                ? 0
+                : Math.round((optionItem.numResponses * 100) / totalCount)
+              " />
         </div>
 
         <div class="voteCounter">
@@ -18,12 +21,9 @@
             @click.stop.prevent="castVoteRequested()" />
         </div>
       </div>
-
-
     </div>
 
     <div v-if="!showResults" class="pollContainer">
-
       <div class="pollOptionList">
         <ZKButton v-for="optionItem in localPollOptions" :key="optionItem.index" outline :label="optionItem.option"
           text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
@@ -33,11 +33,8 @@
         <ZKButton outline text-color="primary" icon="mdi-chart-bar" label="Results"
           @click.stop.prevent="showPollResults()" />
       </div>
-
     </div>
-
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -56,7 +53,7 @@ const localUserVote = structuredClone(toRaw(props.userVote));
 const showResults = ref(localUserVote.hasVoted);
 
 let totalCount = 0;
-props.pollOptions.forEach(option => {
+props.pollOptions.forEach((option) => {
   totalCount += option.numResponses;
 });
 
@@ -75,7 +72,6 @@ function voteCasted(selectedIndex: number) {
   localUserVote.hasVoted = true;
   showResults.value = true;
 }
-
 </script>
 
 <style scoped>

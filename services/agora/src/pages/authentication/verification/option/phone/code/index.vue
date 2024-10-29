@@ -1,15 +1,13 @@
 <template>
   <div>
     <AuthContentWrapper>
-      <template #title>
-        Phone Verification
-      </template>
+      <template #title> Phone Verification </template>
       <template #body>
-
         <form class="formStyle" @submit.prevent="">
           <div class="instructions">
-            Please enter the 6-digit code that was sent to <span class="phoneNumberStyle">{{ verificationNumber
-              }}</span>.
+            Please enter the 6-digit code that was sent to
+            <span class="phoneNumberStyle">{{ verificationNumber }}</span
+            >.
           </div>
 
           <div class="otpDiv">
@@ -17,11 +15,15 @@
               <InputOtp v-model="verificationCode" :length="6" integer-only />
             </div>
 
-            <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
+            <div v-if="verificationCodeExpirySeconds != 0"
+              class="weakColor codeExpiry"
+            >
               Expires in {{ verificationCodeExpirySeconds }}s
             </div>
 
-            <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
+            <div v-if="verificationCodeExpirySeconds != 0"
+              class="weakColor codeExpiry"
+            >
               Code expired
             </div>
           </div>
@@ -37,9 +39,7 @@
           -->
 
           <TempSkipButton />
-
         </form>
-
       </template>
     </AuthContentWrapper>
   </div>
@@ -59,7 +59,6 @@ const verificationCode = ref("");
 
 // const verificationNextCodeSeconds = ref(0);
 const verificationCodeExpirySeconds = ref(0);
-
 </script>
 
 <style scoped lang="scss">
@@ -78,7 +77,7 @@ const verificationCodeExpirySeconds = ref(0);
 }
 
 .otpDiv {
-  display:flex;
+  display: flex;
   flex-direction: column;
   gap: 1rem;
   padding-top: 1rem;
@@ -97,5 +96,4 @@ const verificationCodeExpirySeconds = ref(0);
 .codeExpiry {
   text-align: center;
 }
-
 </style>

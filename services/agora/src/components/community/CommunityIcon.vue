@@ -3,12 +3,10 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps<{
   imagePath: string;
   size: string;
 }>();
-
 </script>
 
 <style scoped>
