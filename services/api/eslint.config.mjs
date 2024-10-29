@@ -24,6 +24,13 @@ export default tseslint.config(
         },
     },
     {
-        ignores: ["**/dist/", "eslint.config.mjs", "jest.config.js", "val.js"],
+        ignores: [
+            "**/dist/",
+            "eslint.config.mjs",
+            "jest.config.js",
+            "val.js",
+            "tests/**/*",
+            "drizzle.config.ts",
+        ],
     },
 );
