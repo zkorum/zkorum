@@ -15,6 +15,57 @@
         "schemas": {}
     },
     "paths": {
+        "/api/v1/auth/check-login-status": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {},
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
+                                        },
+                                        "userId": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "minLength": 1
+                                        },
+                                        "sessionExpiry": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "reason",
+                                        "userId",
+                                        "sessionExpiry"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/authenticate": {
             "post": {
                 "requestBody": {
@@ -281,6 +332,10 @@
                                                     "isHidden": {
                                                         "type": "boolean"
                                                     },
+                                                    "createdAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
                                                     "updatedAt": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -303,6 +358,7 @@
                                                 },
                                                 "required": [
                                                     "postSlugId",
+                                                    "createdAt",
                                                     "updatedAt",
                                                     "lastReactedAt",
                                                     "commentCount"
@@ -318,9 +374,7 @@
                                                         "minLength": 1
                                                     },
                                                     "body": {
-                                                        "type": "string",
-                                                        "maxLength": 140,
-                                                        "minLength": 1
+                                                        "type": "string"
                                                     },
                                                     "poll": {
                                                         "type": "array",
@@ -418,6 +472,10 @@
                                                     "isHidden": {
                                                         "type": "boolean"
                                                     },
+                                                    "createdAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
                                                     "updatedAt": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -440,6 +498,7 @@
                                                 },
                                                 "required": [
                                                     "postSlugId",
+                                                    "createdAt",
                                                     "updatedAt",
                                                     "lastReactedAt",
                                                     "commentCount"
@@ -455,9 +514,7 @@
                                                         "minLength": 1
                                                     },
                                                     "body": {
-                                                        "type": "string",
-                                                        "maxLength": 140,
-                                                        "minLength": 1
+                                                        "type": "string"
                                                     },
                                                     "poll": {
                                                         "type": "array",
@@ -510,7 +567,7 @@
                 }
             }
         },
-        "/api/v1/comment/fetchMore": {
+        "/api/v1/comment/create": {
             "post": {
                 "requestBody": {
                     "content": {
@@ -519,16 +576,15 @@
                                 "type": "object",
                                 "properties": {
                                     "postSlugId": {
-                                        "type": "string",
-                                        "maxLength": 10
+                                        "type": "string"
                                     },
-                                    "createdAt": {
-                                        "type": "string",
-                                        "format": "date-time"
+                                    "commentBody": {
+                                        "type": "string"
                                     }
                                 },
                                 "required": [
-                                    "postSlugId"
+                                    "postSlugId",
+                                    "commentBody"
                                 ],
                                 "additionalProperties": false
                             }
@@ -542,65 +598,42 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "comments": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "commentSlugId": {
-                                                        "type": "string",
-                                                        "maxLength": 10
-                                                    },
-                                                    "isHidden": {
-                                                        "type": "boolean"
-                                                    },
-                                                    "createdAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "updatedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "comment": {
-                                                        "type": "string",
-                                                        "minLength": 1,
-                                                        "maxLength": 280
-                                                    },
-                                                    "numLikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "numDislikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "optionChosen": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "like",
-                                                            "dislike"
-                                                        ]
-                                                    }
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        true
+                                                    ]
                                                 },
-                                                "required": [
-                                                    "commentSlugId",
-                                                    "createdAt",
-                                                    "updatedAt",
-                                                    "comment",
-                                                    "numLikes",
-                                                    "numDislikes"
-                                                ],
-                                                "additionalProperties": false
-                                            }
+                                                "commentSlugId": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful",
+                                                "commentSlugId"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        false
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful"
+                                            ],
+                                            "additionalProperties": false
                                         }
-                                    },
-                                    "required": [
-                                        "comments"
-                                    ],
-                                    "additionalProperties": false
+                                    ]
                                 }
                             }
                         }
@@ -608,7 +641,7 @@
                 }
             }
         },
-        "/api/v1/comment/fetchRecent": {
+        "/api/v1/comment/fetch": {
             "post": {
                 "requestBody": {
                     "content": {
@@ -640,65 +673,49 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "comments": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "commentSlugId": {
-                                                        "type": "string",
-                                                        "maxLength": 10
-                                                    },
-                                                    "isHidden": {
-                                                        "type": "boolean"
-                                                    },
-                                                    "createdAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "updatedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "comment": {
-                                                        "type": "string",
-                                                        "minLength": 1,
-                                                        "maxLength": 280
-                                                    },
-                                                    "numLikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "numDislikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "optionChosen": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "like",
-                                                            "dislike"
-                                                        ]
-                                                    }
-                                                },
-                                                "required": [
-                                                    "commentSlugId",
-                                                    "createdAt",
-                                                    "updatedAt",
-                                                    "comment",
-                                                    "numLikes",
-                                                    "numDislikes"
-                                                ],
-                                                "additionalProperties": false
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "commentSlugId": {
+                                                "type": "string",
+                                                "maxLength": 10
+                                            },
+                                            "isHidden": {
+                                                "type": "boolean"
+                                            },
+                                            "createdAt": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updatedAt": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "comment": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 280
+                                            },
+                                            "numLikes": {
+                                                "type": "integer",
+                                                "minimum": 0
+                                            },
+                                            "numDislikes": {
+                                                "type": "integer",
+                                                "minimum": 0
                                             }
-                                        }
-                                    },
-                                    "required": [
-                                        "comments"
-                                    ],
-                                    "additionalProperties": false
+                                        },
+                                        "required": [
+                                            "commentSlugId",
+                                            "createdAt",
+                                            "updatedAt",
+                                            "comment",
+                                            "numLikes",
+                                            "numDislikes"
+                                        ],
+                                        "additionalProperties": false
+                                    }
                                 }
                             }
                         }
@@ -836,20 +853,211 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "isSuccessful": {
-                                            "type": "boolean"
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        true
+                                                    ]
+                                                },
+                                                "postSlugId": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful",
+                                                "postSlugId"
+                                            ],
+                                            "additionalProperties": false
                                         },
-                                        "postSlugId": {
-                                            "type": "string"
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        false
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful"
+                                            ],
+                                            "additionalProperties": false
                                         }
-                                    },
-                                    "required": [
-                                        "isSuccessful",
-                                        "postSlugId"
-                                    ],
-                                    "additionalProperties": false
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/post/fetch": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        true
+                                                    ]
+                                                },
+                                                "postData": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "metadata": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "postSlugId": {
+                                                                    "type": "string",
+                                                                    "maxLength": 10
+                                                                },
+                                                                "isHidden": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "createdAt": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                },
+                                                                "updatedAt": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                },
+                                                                "lastReactedAt": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                },
+                                                                "commentCount": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "authorName": {
+                                                                    "type": "string"
+                                                                },
+                                                                "authorImagePath": {
+                                                                    "type": "string",
+                                                                    "format": "uri"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "postSlugId",
+                                                                "createdAt",
+                                                                "updatedAt",
+                                                                "lastReactedAt",
+                                                                "commentCount"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        },
+                                                        "payload": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "title": {
+                                                                    "type": "string",
+                                                                    "maxLength": 65,
+                                                                    "minLength": 1
+                                                                },
+                                                                "body": {
+                                                                    "type": "string"
+                                                                },
+                                                                "poll": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "index": {
+                                                                                "type": "integer",
+                                                                                "minimum": 0
+                                                                            },
+                                                                            "option": {
+                                                                                "type": "string",
+                                                                                "maxLength": 30,
+                                                                                "minLength": 1
+                                                                            },
+                                                                            "numResponses": {
+                                                                                "type": "integer",
+                                                                                "minimum": 0
+                                                                            },
+                                                                            "isChosen": {
+                                                                                "type": "boolean"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "index",
+                                                                            "option",
+                                                                            "numResponses",
+                                                                            "isChosen"
+                                                                        ],
+                                                                        "additionalProperties": false
+                                                                    }
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "title"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "metadata",
+                                                        "payload"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful",
+                                                "postData"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSuccessful": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        false
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "isSuccessful"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
                                 }
                             }
                         }

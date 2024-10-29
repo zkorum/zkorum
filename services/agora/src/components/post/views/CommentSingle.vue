@@ -3,7 +3,7 @@
   <div>
     <div class="contentLayout">
       <div class="metadata">
-        {{ getTimeFromNow(commentItem.createdAt) }}
+        {{ getTimeFromNow(new Date(commentItem.createdAt)) }}
       </div>
 
       <div>
@@ -21,12 +21,13 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, PossibleCommentRankingActions } from "src/stores/post";
+import { PossibleCommentRankingActions } from "src/stores/post";
 import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
+import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
 
 defineProps<{
-  commentItem: DummyCommentFormat,
+  commentItem: ApiV1CommentFetchPost200ResponseInner,
   postSlugId: string,
   isRanked: boolean,
   rankedAction: PossibleCommentRankingActions,

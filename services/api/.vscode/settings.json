@@ -1,8 +1,21 @@
 {
-  "editor.formatOnSave": false,
+  "editor.tabSize": 4,
+  "[typescript]": {
+    "editor.formatOnSave": false
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "eslint.validate": ["javascript", "typescript"],
+  "eslint.codeActionsOnSave.rules": [
+    "quotes",
+    "semi",
+    "indent"
+  ],
+  "files.eol": "\n",
   "files.watcherExclude": {
     "**/.git": true,
     "**/node_modules": true,
-    "**/.DS_Store": true,
+    "**/.DS_Store": true
   }
 }

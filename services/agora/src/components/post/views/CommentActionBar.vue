@@ -7,16 +7,16 @@
       <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
         @click.stop.prevent="shareButtonClicked()" />
       <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(false)" size="0.8rem"
-        @click.stop.prevent="toggleVote(commentItem.index, 'dislike')">
+        @click.stop.prevent="toggleVote(props.commentItem.commentSlugId, 'dislike')">
         <div v-if="isRanked" class="voteCountLabel">
-          {{ commentItem.numDownvotes }}
+          {{ commentItem.numDislikes }}
         </div>
       </ZKButton>
 
       <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(true)" size="0.8rem"
-        @click.stop.prevent="toggleVote(commentItem.index, 'like')">
+        @click.stop.prevent="toggleVote(props.commentItem.commentSlugId, 'like')">
         <div v-if="isRanked" class="voteCountLabel">
-          {{ commentItem.numUpvotes }}
+          {{ commentItem.numLikes }}
         </div>
       </ZKButton>
     </div>
@@ -25,26 +25,25 @@
 </template>
 
 <script setup lang="ts">
-import { DummyCommentFormat, PossibleCommentRankingActions, usePostStore } from "src/stores/post";
+import { PossibleCommentRankingActions } from "src/stores/post";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useWebShare } from "src/utils/share/WebShare";
+import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
 
 const props = defineProps<{
-  commentItem: DummyCommentFormat,
+  commentItem: ApiV1CommentFetchPost200ResponseInner,
   postSlugId: string,
   isRanked: boolean,
   rankedAction: PossibleCommentRankingActions
 }>();
-
-const { updateCommentRanking } = usePostStore();
 
 const bottomSheet = useBottomSheet();
 
 const webShare = useWebShare();
 
 function shareButtonClicked() {
-  const sharePostUrl = window.location.origin + "/post/" + props.postSlugId + "?commentSlugId=" + props.commentItem.slugId;
+  const sharePostUrl = window.location.origin + "/post/" + props.postSlugId + "?commentSlugId=" + props.commentItem.commentSlugId;
   webShare.share("Agora Comment", sharePostUrl);
 }
 
@@ -52,8 +51,10 @@ function optionButtonClicked() {
   bottomSheet.showCommentOptionSelector();
 }
 
-function toggleVote(commentIndex: number, isUpvoteButton: PossibleCommentRankingActions) {
-  updateCommentRanking(props.postSlugId, commentIndex, isUpvoteButton);
+function toggleVote(commentSlugId: string, isUpvoteButton: PossibleCommentRankingActions) {
+  console.log(commentSlugId);
+  console.log(isUpvoteButton);
+  // updateCommentRanking(props.postSlugId, commentIndex, isUpvoteButton);
 }
 
 function getButtonIcon(isUpvoteButton: boolean): string {

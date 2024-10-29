@@ -6,10 +6,14 @@ import {
     zodCode,
     zodUserId,
     zodSlugId,
-    zodComment,
+    zodCommentItem,
 } from "./zod.js";
 
 export class Dto {
+    static authenticateCheckLoginStatus = z
+        .object({
+        })
+        .strict();
     static authenticateRequestBody = z
         .object({
             email: zodEmail,
@@ -76,24 +80,39 @@ export class Dto {
     });
     static postFetch200 = z.object({
         post: zodExtendedPostData, // z.object() does not exist :(
-        comments: z.array(zodComment),
+        comments: z.array(zodCommentItem),
     });
-    static commentFetchFeedRequest = z.object({
+    static fetchCommentFeedRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(
         createdAt: z.string().datetime().optional(),
     });
-    static commentFetchFeed200 = z.object({ comments: z.array(zodComment) });
+    static fetchCommentFeedResponse = z.array(zodCommentItem);
     static commentFetchToVoteOnRequest = z.object({
         postSlugId: zodSlugId,
         numberOfCommentsToFetch: z.number().int().positive()
     });
-    static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodComment) });
+    static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodCommentItem) });
     static createNewPostRequest = z.object({
         postTitle: z.string(),
         postBody: z.string().optional()
     });
     static createNewPostResponse = z.discriminatedUnion("isSuccessful", [
         z.object({ isSuccessful: z.literal(true), postSlugId: z.string() }).strict(),
+        z.object({ isSuccessful: z.literal(false) }).strict(),
+    ]);
+    static fetchPostBySlugIdRequest = z.object({
+        postSlugId: zodSlugId, // z.object() does not exist :(
+    });
+    static fetchPostBySlugIdResponse = z.discriminatedUnion("isSuccessful", [
+        z.object({ isSuccessful: z.literal(true), postData: zodExtendedPostData }).strict(),
+        z.object({ isSuccessful: z.literal(false) }).strict(),
+    ]);
+    static createCommentRequest = z.object({
+        postSlugId: z.string(),
+        commentBody: z.string()
+    });
+    static createCommentResponse = z.discriminatedUnion("isSuccessful", [
+        z.object({ isSuccessful: z.literal(true), commentSlugId: z.string() }).strict(),
         z.object({ isSuccessful: z.literal(false) }).strict(),
     ]);
 }
@@ -108,3 +127,6 @@ export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
 export type FetchCommentsToVoteOn200 = z.infer<typeof Dto.commentFetchToVoteOn200>;
 export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
+export type FetchPostBySlugIdRequest = z.infer<typeof Dto.fetchPostBySlugIdRequest>;
+export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;
+export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;

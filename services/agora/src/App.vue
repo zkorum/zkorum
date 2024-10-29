@@ -8,16 +8,18 @@
 </template>
 
 <script setup lang="ts">
-import { register } from "swiper/element/bundle";
-import { useGoBackButtonHandler } from "./utils/nav/goBackButton";
+import * as swiperElement from "swiper/element/bundle";
+import { onMounted } from "vue";
+import { useBackendAuthApi } from "./utils/api/auth";
 
-register();
+swiperElement.register();
 
-useGoBackButtonHandler();
+const authenticationStore = useBackendAuthApi();
 
-defineOptions({
-  name: "App",
+onMounted(() => {
+  authenticationStore.initializeAuthState();
 });
+
 </script>
 
 <style lang="scss">

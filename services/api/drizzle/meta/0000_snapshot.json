@@ -1,5 +1,5 @@
 {
-  "id": "8419e272-b0d5-49b8-beb9-e1ecd1202343",
+  "id": "cc37669f-e750-4882-b196-6bf99d1511c5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -106,23 +106,11 @@
             "cycle": false
           }
         },
-        "comment_id": {
-          "name": "comment_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "comment_proof_id": {
           "name": "comment_proof_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "post_content_id": {
-          "name": "post_content_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         },
         "parent_id": {
           "name": "parent_id",
@@ -132,68 +120,12 @@
         },
         "content": {
           "name": "content",
-          "type": "varchar(280)",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "toxicity": {
-          "name": "toxicity",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "severe_toxicity": {
-          "name": "severe_toxicity",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "obscene": {
-          "name": "obscene",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "identity_attack": {
-          "name": "identity_attack",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "insult": {
-          "name": "insult",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "threat": {
-          "name": "threat",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "sexual_explicit": {
-          "name": "sexual_explicit",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (0)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
           "type": "timestamp (0)",
           "primaryKey": false,
           "notNull": true,
@@ -202,38 +134,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "comment_content_comment_id_comment_id_fk": {
-          "name": "comment_content_comment_id_comment_id_fk",
-          "tableFrom": "comment_content",
-          "tableTo": "comment",
-          "columnsFrom": [
-            "comment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "comment_content_comment_proof_id_master_proof_id_fk": {
           "name": "comment_content_comment_proof_id_master_proof_id_fk",
           "tableFrom": "comment_content",
           "tableTo": "master_proof",
           "columnsFrom": [
             "comment_proof_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "comment_content_post_content_id_post_content_id_fk": {
-          "name": "comment_content_post_content_id_post_content_id_fk",
-          "tableFrom": "comment_content",
-          "tableTo": "post_content",
-          "columnsFrom": [
-            "post_content_id"
           ],
           "columnsTo": [
             "id"
@@ -282,7 +188,7 @@
         },
         "slug_id": {
           "name": "slug_id",
-          "type": "varchar(6)",
+          "type": "varchar(8)",
           "primaryKey": false,
           "notNull": true
         },
@@ -745,7 +651,7 @@
         },
         "moderation_explanation": {
           "name": "moderation_explanation",
-          "type": "varchar(140)",
+          "type": "varchar(260)",
           "primaryKey": false,
           "notNull": false
         },
@@ -1439,12 +1345,6 @@
             "cycle": false
           }
         },
-        "post_id": {
-          "name": "post_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "post_proof_id": {
           "name": "post_proof_id",
           "type": "integer",
@@ -1459,13 +1359,13 @@
         },
         "title": {
           "name": "title",
-          "type": "varchar(65)",
+          "type": "varchar(130)",
           "primaryKey": false,
           "notNull": true
         },
         "body": {
           "name": "body",
-          "type": "varchar(140)",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
@@ -1485,19 +1385,6 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "post_content_post_id_post_id_fk": {
-          "name": "post_content_post_id_post_id_fk",
-          "tableFrom": "post_content",
-          "tableTo": "post",
-          "columnsFrom": [
-            "post_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "post_content_post_proof_id_master_proof_id_fk": {
           "name": "post_content_post_proof_id_master_proof_id_fk",
           "tableFrom": "post_content",
@@ -1573,7 +1460,7 @@
         },
         "slug_id": {
           "name": "slug_id",
-          "type": "varchar(6)",
+          "type": "varchar(8)",
           "primaryKey": false,
           "notNull": true
         },
@@ -1587,7 +1474,7 @@
           "name": "current_content_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_hidden": {
           "name": "is_hidden",
@@ -1656,6 +1543,13 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
+        "post_slug_id_unique": {
+          "name": "post_slug_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug_id"
+          ]
+        },
         "post_current_content_id_unique": {
           "name": "post_current_content_id_unique",
           "nullsNotDistinct": false,
@@ -1708,7 +1602,7 @@
         },
         "report_explanation": {
           "name": "report_explanation",
-          "type": "varchar(140)",
+          "type": "varchar(260)",
           "primaryKey": false,
           "notNull": false
         },

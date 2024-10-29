@@ -18,12 +18,16 @@ export function useEmailVerification() {
     }
 
     const response = await emailCode(code);
-    if (response.data.success) {
+    if (response.data?.success) {
       isAuthenticated.value = true;
       router.push({ name: "verification-options" });
     } else {
-      console.log("Failed to submit email verification code");
-      console.log(response.data.reason);
+      console.log(response.error);
+      if (response.error == "already_logged_in") {
+        console.log("User is already logged in");
+      } else {
+        console.log("Failed to submit email verification code");
+      }
     }
   }
 

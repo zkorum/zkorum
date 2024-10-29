@@ -23,7 +23,12 @@ async function skipButton() {
     router.push({ name: "verification-successful" });
   } else {
     console.log("Failed to request code");
-    console.log(requestCodeResponse.error);
+    if (requestCodeResponse.error == "already_logged_in") {
+      isAuthenticated.value = true;
+      router.push({ name: "verification-successful" });
+    } else if (requestCodeResponse.error == "throttled") {
+      console.log("Throttled please try again later");
+    }
   }
 
 }

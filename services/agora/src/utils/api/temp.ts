@@ -96,7 +96,7 @@ export function useBackendApi() {
     */
     });
   }
-    /*
+  /*
   // Convert a Base64 string to a Uint8Array
   function decodeFromBase64(base64: string): Uint8Array {
     return new Uint8Array(Buffer.from(base64, "base64"));

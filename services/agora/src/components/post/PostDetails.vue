@@ -14,7 +14,7 @@
             </div>
 
             <div v-if="extendedPostData.payload.body.length > 0" class="bodyDiv">
-              <span v-html="extendedPostData.payload.body"></span>
+              <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
             </div>
 
           </div>
@@ -29,8 +29,8 @@
             <div class="leftButtonCluster">
               <ZKButton :color="focusCommentElement ? 'color-text-weak' : 'button-background-color'"
                 :text-color="focusCommentElement ? 'white' : 'black'"
-                :label="extendedPostData.metadata.commentCount.toString()" icon="mdi-comment-outline"
-                @click.stop.prevent="clickedCommentButton()" />
+                :label="(extendedPostData.metadata.commentCount + commentCountOffset).toString()"
+                icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
 
               <q-btn-toggle v-if="!props.compactMode" v-model="viewMode" no-caps rounded unelevated
                 toggle-color="color-text-weak" color="button-background-color" text-color="black" :options="[
@@ -53,8 +53,9 @@
 
         <div v-if="!compactMode && !showRankingMode">
           <div v-if="extendedPostData.metadata.commentCount > 0">
-            <CommentSection :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
-              :comment-ranking="extendedPostData.userInteraction.commentRanking" :initial-comment-slug-id="commentSlugId" />
+            <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.slugId"
+              :comment-list="commentList" :comment-ranking="extendedPostData.userInteraction.commentRanking"
+              :initial-comment-slug-id="commentSlugId" />
           </div>
 
           <div v-if="extendedPostData.metadata.commentCount == 0" class="noCommentMessage">
@@ -65,8 +66,9 @@
     </ZKHoverEffect>
 
     <FloatingBottomContainer v-if="!compactMode">
-      <CommentComposer :show-controls="focusCommentElement" @cancel-clicked="cancelledCommentComposor()"
-        @post-clicked="postedCommentFromComposor()" @editor-focused="focusCommentElement = true" />
+      <CommentComposer :show-controls="focusCommentElement" :post-slug-id="extendedPostData.metadata.slugId"
+        @cancel-clicked="cancelledCommentComposor()" @submitted-comment="submittedComment()"
+        @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
 
   </div>
@@ -94,6 +96,8 @@ const props = defineProps<{
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 const hasCommentSlugId = commentSlugId.value.length > 0;
+
+const commentCountOffset = ref(0);
 
 const showRankingMode = ref<boolean>(hasCommentSlugId);
 let initialViewMode = "";
@@ -143,7 +147,8 @@ function switchToCommentView() {
   window.scrollTo(0, 0);
 }
 
-function postedCommentFromComposor() {
+function submittedComment() {
+  commentCountOffset.value += 1;
   focusCommentElement.value = false;
   switchToCommentView();
 }
@@ -202,7 +207,6 @@ function shareClicked() {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
-  padding-top: 1rem;
 }
 
 .container {
@@ -229,4 +233,14 @@ function shareClicked() {
   justify-content: center;
   padding-top: 4rem;
 }
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  -webkit-box-orient: vertical;
+}
+
 </style>

@@ -3,9 +3,8 @@ import { ref } from "vue";
 
 export const useAuthenticationStore = defineStore("authentication", () => {
 
-  const isAuthenticated = ref(false);
-
   const verificationEmailAddress = ref("");
+  const isAuthenticated = ref(false);
 
   function userLogout() {
     isAuthenticated.value = false;

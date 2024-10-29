@@ -26,12 +26,16 @@
 import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKEditor from "src/components/ui-library/ZKEditor.vue";
+import { useBackendCommentApi } from "src/utils/api/comment";
 import { getCharacterCount } from "src/utils/component/editor";
 import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
-  showControls: boolean
+  showControls: boolean;
+  postSlugId: string;
 }>();
+
+const { createNewComment } = useBackendCommentApi();
 
 const innerFocus = ref(false);
 
@@ -45,7 +49,7 @@ const commentText = ref("");
 const characterCount = ref(0);
 const resetKey = ref(0);
 
-const emit = defineEmits(["cancelClicked", "postClicked", "editorFocused"]);
+const emit = defineEmits(["cancelClicked", "submittedComment", "editorFocused"]);
 
 watch(() => props.showControls, () => {
   if (props.showControls == false) {
@@ -71,8 +75,11 @@ function cancelClicked() {
   characterCount.value = 0;
 }
 
-function postClicked() {
-  emit("postClicked");
+async function postClicked() {
+  const response = await createNewComment(commentText.value, props.postSlugId);
+  console.log(response);
+
+  emit("submittedComment");
   innerFocus.value = false;
   resetKey.value = resetKey.value + 1;
   characterCount.value = 0;

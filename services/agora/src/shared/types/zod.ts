@@ -4,7 +4,6 @@ import { validateDidKey, validateDidWeb } from "../did/util.js";
 import {
     MAX_LENGTH_TITLE,
     MAX_LENGTH_OPTION,
-    MAX_LENGTH_BODY,
     MAX_LENGTH_COMMENT,
 } from "../shared.js";
 
@@ -49,7 +48,7 @@ export const zodDevice = z
     .strict();
 export const zodDevices = z.array(zodDevice); // list of didWrite of all the devices belonging to a user
 export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).nonempty();
-export const zodPostBody = z.string().max(MAX_LENGTH_BODY).nonempty();
+export const zodPostBody = z.string(); // Cannot specify length due to HTML tags
 export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).nonempty();
 export const zodPollOptionWithResult = z.object({
     index: z.number().int().nonnegative(),
@@ -70,6 +69,7 @@ export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,
         isHidden: z.boolean().optional(),
+        createdAt: z.date(),
         updatedAt: z.date(),
         lastReactedAt: z.date(),
         commentCount: zodCommentCount,
@@ -78,15 +78,14 @@ export const zodPostMetadata = z
     })
     .strict();
 export const zodCommentContent = z.string().nonempty().max(MAX_LENGTH_COMMENT);
-export const zodComment = z.object({
+export const zodCommentItem = z.object({
     commentSlugId: zodSlugId,
     isHidden: z.boolean().optional(),
     createdAt: z.date(),
     updatedAt: z.date(),
     comment: zodCommentContent,
     numLikes: z.number().int().nonnegative(),
-    numDislikes: z.number().int().nonnegative(),
-    optionChosen: z.enum(["like", "dislike"]).optional()
+    numDislikes: z.number().int().nonnegative()
 }).strict();
 export const zodExtendedPostData = z
     .object({
@@ -102,6 +101,6 @@ export type ExtendedPost = z.infer<typeof zodExtendedPostData>;
 export type PostMetadata = z.infer<typeof zodPostMetadata>;
 export type ExtendedPostPayload = z.infer<typeof zodPostDataWithResult>
 export type PollOptionWithResult = z.infer<typeof zodPollOptionWithResult>
-export type PostComment = z.infer<typeof zodComment>;
 export type CommentContent = z.infer<typeof zodCommentContent>;
 export type SlugId = z.infer<typeof zodSlugId>;
+export type CommentItem = z.infer<typeof zodCommentItem>;

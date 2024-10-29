@@ -8,15 +8,13 @@ import {
     boolean,
     customType,
     text,
-    real,
     type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 // import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_COMMENT, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 // WARNING - change this in shared.ts as well
 const MAX_LENGTH_OPTION = 30;
-const MAX_LENGTH_TITLE = 65;
-const MAX_LENGTH_BODY = 140;
-const MAX_LENGTH_COMMENT = 280;
+const MAX_LENGTH_TITLE = 130;
+const MAX_LENGTH_BODY = 260;
 const MAX_LENGTH_NAME_CREATOR = 65;
 const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
 
@@ -326,16 +324,13 @@ export const masterProofTable = pgTable("master_proof", {
 
 export const postContentTable = pgTable("post_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    postId: integer("post_id") // "postAs"
-        .notNull()
-        .references((): AnyPgColumn => postTable.id), // the author of the poll
     postProofId: integer("post_proof_id")
         .notNull()
         .unique()
         .references(() => masterProofTable.id), // cannot point to deletion proof
     parentId: integer("parent_id").references((): AnyPgColumn => postContentTable.id), // not null if edit
     title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
-    body: varchar("body", { length: MAX_LENGTH_BODY }),
+    body: varchar("body"),
     pollId: integer("poll_id").references((): AnyPgColumn => pollTable.id), // for now there is only one poll per post at most
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -347,11 +342,11 @@ export const postContentTable = pgTable("post_content", {
 
 export const postTable = pgTable("post", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    slugId: varchar("slug_id", { length: 6 }).notNull(), // used for permanent URL
+    slugId: varchar("slug_id", { length: 8 }).notNull().unique(), // used for permanent URL
     authorId: uuid("author_id") // "postAs"
         .notNull()
         .references(() => userTable.id), // the author of the poll
-    currentContentId: integer("current_content_id").references((): AnyPgColumn => postContentTable.id).unique(), // null if post was deleted
+    currentContentId: integer("current_content_id").references((): AnyPgColumn => postContentTable.id).unique().notNull(), // null if post was deleted
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -418,7 +413,7 @@ export const pollResponseContentTable = pgTable("poll_response_content", {
 
 export const commentTable = pgTable("comment", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    slugId: varchar("slug_id", { length: 6 }).notNull().unique(), // used for permanent URL
+    slugId: varchar("slug_id", { length: 8 }).notNull().unique(), // used for permanent URL
     authorId: uuid("author_id")
         .notNull()
         .references(() => userTable.id),
@@ -442,7 +437,7 @@ export const commentTable = pgTable("comment", {
         .defaultNow()
         .notNull(),
     lastReactedAt: timestamp("last_reacted_at", {
-        // latest response to poll or comment
+        // latest like or dislike
         mode: "date",
         precision: 0,
     })
@@ -452,35 +447,17 @@ export const commentTable = pgTable("comment", {
 
 export const commentContentTable = pgTable("comment_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    commentId: integer("comment_id") // "postAs"
-        .notNull()
-        .references((): AnyPgColumn => commentTable.id), // the author of the poll
     commentProofId: integer("comment_proof_id")
         .notNull()
         .references(() => masterProofTable.id), // cannot point to deletion proof
-    postContentId: integer("post_content_id").references(() => postContentTable.id), // exact post content that existed when this comment was created.  Null if post was deleted.
     parentId: integer("parent_id").references((): AnyPgColumn => commentContentTable.id), // not null if edit
-    content: varchar("content", { length: MAX_LENGTH_COMMENT }).notNull(),
-    toxicity: real("toxicity").notNull().default(0),
-    severeToxicity: real("severe_toxicity").notNull().default(0),
-    obscene: real("obscene").notNull().default(0),
-    identityAttack: real("identity_attack").notNull().default(0),
-    insult: real("insult").notNull().default(0),
-    threat: real("threat").notNull().default(0),
-    sexualExplicit: real("sexual_explicit").notNull().default(0),
+    content: varchar("content").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
     })
         .defaultNow()
         .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-
 });
 
 // like or dislike on comments for each user
@@ -528,9 +505,9 @@ export const voteContentTable = pgTable("vote_content", {
 
 // anti-social = hate + harassment + trolling + intelorance
 // illegal = glaring violation of law (scam, terrorism, threat, etc)
-const [firstReason, restReason] = ["irrelevant", "spam", "misinformation", "privacy", "sexual", "anti-social", "illegal", "other"]
+const [firstReason, restReason] = ["irrelevant", "spam", "misinformation", "privacy", "sexual", "anti-social", "illegal", "other"];
 export const reportReasonEnum = pgEnum("report_reason_enum", [firstReason, ...restReason]);
-const restModeration = [...restReason, "nothing"]
+const restModeration = [...restReason, "nothing"];
 export const moderationReasonEnum = pgEnum("moderation_reason_enum", [firstReason, ...restModeration]);
 
 // todo: add suspend and ban

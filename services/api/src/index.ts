@@ -27,6 +27,7 @@ import {
     httpMethodToAbility,
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan.js";
+import { fetchCommentsByPostSlugId, postNewComment } from "./service/comment.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -36,11 +37,11 @@ server.register(fastifyCors, {
         if (origin !== undefined) {
             if (config.CORS_ORIGIN_LIST.includes(origin)) {
                 //  Request from localhost will pass
-                cb(null, true)
-                return
+                cb(null, true);
+                return;
             }
             // Generate an error on other origins, disabling access
-            cb(new Error("Not allowed"), false)
+            cb(new Error("Not allowed"), false);
         }
     }
 });
@@ -240,9 +241,30 @@ const awsMailConf = {
 };
 
 server.after(() => {
+
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/auth/authenticate`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/auth/check-login-status`,
+            schema: {
+                response: { 200: Dto.authenticateCheckLoginStatus, 409: Dto.auth409 },
+            },
+            handler: async (request) => {
+                await verifyUCAN(db, request, {
+                    expectedDeviceStatus: {
+                        isLoggedIn: true
+                    },
+                });
+                return;
+            },
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/auth/authenticate`,
             schema: {
                 body: Dto.authenticateRequestBody,
                 response: { 200: Dto.authenticateResponse, 409: Dto.auth409 },
@@ -265,9 +287,7 @@ server.after(() => {
                     server.httpErrors
                 );
                 const userAgent =
-                    request.headers["user-agent"] === undefined
-                        ? "Unknown device"
-                        : request.headers["user-agent"];
+                    request.headers["user-agent"] ?? "Unknown device";
 
                 return await authService.authenticateAttempt({
                     db,
@@ -301,7 +321,9 @@ server.after(() => {
     // TODO: for now there is no way to communicate "isTrusted", it's set to true automatically - but it will change
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/auth/verifyOtp`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/auth/verifyOtp`,
             schema: {
                 body: Dto.verifyOtpReqBody,
                 response: {
@@ -324,7 +346,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/auth/logout`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/auth/logout`,
             handler: async (request, _reply) => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
@@ -336,7 +360,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/feed/fetchMore`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/feed/fetchMore`,
             schema: {
                 body: Dto.fetchFeedRequest,
                 response: {
@@ -357,14 +383,16 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/feed/fetchRecent`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/feed/fetchRecent`,
             schema: {
                 body: Dto.fetchFeedRequest,
                 response: {
                     200: Dto.fetchFeed200,
                 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
                 return await feedService.fetchFeed({
                     db: db,
                     order: "recent",
@@ -376,70 +404,58 @@ server.after(() => {
                 });
             },
         });
+    
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/comment/fetchMore`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/comment/create`,
             schema: {
-                body: Dto.commentFetchFeedRequest,
+                body: Dto.createCommentRequest,
                 response: {
-                    200: Dto.commentFetchFeed200,
+                    200: Dto.createCommentResponse,
                 },
             },
-            handler: async (request, _reply) => {
-                const authHeader = request.headers.authorization;
-                if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
-                    // unauthorized user
-                    const comments = await postService.fetchCommentsByPostSlugId({
-                        db: db,
-                        postSlugId: request.body.postSlugId,
-                        order: "more",
-                        showHidden: true,
-                        createdAt:
-                            request.body.createdAt !== undefined
-                                ? new Date(request.body.createdAt)
-                                : undefined,
-                    });
-                    return { comments };
+            handler: async (request) => {
+
+                const didWrite = await verifyUCAN(db, request, undefined);
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
-                    const didWrite = await verifyUCAN(db, request, {
-                        expectedDeviceStatus: {
-                            isLoggedIn: undefined,
-                        },
-                    });
-                    const status = await authUtilService.isLoggedIn(db, didWrite);
-                    if (!status.isLoggedIn) {
-                        throw server.httpErrors.unauthorized("Device is not logged in");
-                    } else {
-                        // logged-in user request
-                        const { userId } = status
-                        const comments = await postService.fetchCommentsByPostSlugId({
-                            db: db,
-                            postSlugId: request.body.postSlugId,
-                            userId: userId,
-                            order: "more",
-                            showHidden: true,
-                            createdAt:
-                                request.body.createdAt !== undefined
-                                    ? new Date(request.body.createdAt)
-                                    : undefined,
-                        });
-                        return { comments };
-                    }
+                    const authHeader = getAuthHeader(request);
+                    return await postNewComment(
+                        db,
+                        request.body.commentBody,
+                        request.body.postSlugId,
+                        status.userId,
+                        didWrite,
+                        authHeader
+                    );
                 }
             },
         });
+    
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/comment/fetchRecent`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/comment/fetch`,
             schema: {
-                body: Dto.commentFetchFeedRequest,
+                body: Dto.fetchCommentFeedRequest,
                 response: {
-                    200: Dto.commentFetchFeed200,
+                    200: Dto.fetchCommentFeedResponse,
                 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
+                return await fetchCommentsByPostSlugId(
+                    db,
+                    request.body.postSlugId);
+                
+                /*
                 const authHeader = request.headers.authorization;
-                if (authHeader === undefined || !authHeader.startsWith("Bearer ")) {
+                if (!authHeader?.startsWith("Bearer ")) {
                     // unauthorized user
                     const comments = await postService.fetchCommentsByPostSlugId({
                         db: db,
@@ -463,7 +479,7 @@ server.after(() => {
                         throw server.httpErrors.unauthorized("Device is not logged in");
                     } else {
                         // logged-in user request
-                        const { userId } = status
+                        const { userId } = status;
                         const comments = await postService.fetchCommentsByPostSlugId({
                             db: db,
                             postSlugId: request.body.postSlugId,
@@ -478,11 +494,14 @@ server.after(() => {
                         return { comments };
                     }
                 }
+                */
             },
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/comment/fetchToVoteOn`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/comment/fetchToVoteOn`,
             schema: {
                 body: Dto.commentFetchToVoteOnRequest,
                 response: {
@@ -499,7 +518,7 @@ server.after(() => {
                 if (!status.isLoggedIn) {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
-                    const { userId } = status
+                    const { userId } = status;
                     const comments = await postService.fetchNextCommentsToVoteOn({
                         db: db,
                         userId: userId,
@@ -513,7 +532,9 @@ server.after(() => {
         });
     server
         .withTypeProvider<ZodTypeProvider>()
-        .post(`/api/${apiVersion}/post/create`, {
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/post/create`,
             schema: {
                 body: Dto.createNewPostRequest,
                 response: {
@@ -529,14 +550,14 @@ server.after(() => {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
                     const authHeader = getAuthHeader(request);
-                    return await postService.createNewPost({
-                        db: db,
-                        authorId: status.userId,
-                        postTitle: request.body.postTitle,
-                        postBody: request.body.postBody ?? null,
-                        didWrite: didWrite,
-                        authHeader: authHeader
-                    });
+                    return await postService.createNewPost(
+                        db,
+                        request.body.postTitle,
+                        request.body.postBody ?? null,
+                        status.userId,
+                        didWrite,
+                        authHeader
+                    );
                 }
             },
         });
@@ -674,33 +695,41 @@ server.after(() => {
     //             // });
     //         },
     //     });
-    // server
-    //     .withTypeProvider<ZodTypeProvider>()
-    //     .post(`/api/${apiVersion}/post/fetch`, {
-    //         schema: {
-    //             body: Dto.postFetchRequest,
-    //             // response: {
-    //             //     200: Dto.postFetch200,
-    //             // },
-    //         },
-    //         handler: async (request, _reply) => {
-    //             // anonymous request, no auth
-    //             // const { post, postId } = await Service.fetchPostByUidOrSlugId({
-    //             //     db: db,
-    //             //     postUidOrSlugId: request.body.postSlugId,
-    //             //     type: "slugId",
-    //             //     httpErrors: server.httpErrors,
-    //             // });
-    //             // const comments = await Service.fetchCommentsByPostId({
-    //             //     db: db,
-    //             //     postId: postId,
-    //             //     order: "more",
-    //             //     showHidden: true,
-    //             //     updatedAt: undefined,
-    //             // });
-    //             // return { post, comments };
-    //         },
-    //     });
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/post/fetch`,
+            schema: {
+                body: Dto.fetchPostBySlugIdRequest,
+                response: {
+                    200: Dto.fetchPostBySlugIdResponse,
+                },
+            },
+            handler: async (request, _reply) => {
+                return await postService.fetchPostBySlugId(
+                    db, request.body.postSlugId
+                );
+                
+                /*
+                  // anonymous request, no auth
+                  const { post, postId } = await Service.fetchPostByUidOrSlugId({
+                      db: db,
+                      postUidOrSlugId: request.body.postSlugId,
+                      type: "slugId",
+                      httpErrors: server.httpErrors,
+                  });
+                  const comments = await Service.fetchCommentsByPostId({
+                      db: db,
+                      postId: postId,
+                      order: "more",
+                      showHidden: true,
+                      updatedAt: undefined,
+                  });
+                  return { post, comments };
+                */
+            },
+        });
 });
 
 server.ready((e) => {

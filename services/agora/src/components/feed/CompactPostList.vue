@@ -1,9 +1,23 @@
 <template>
   <div>
     <q-page>
-      <q-infinite-scroll :offset="250" @load="onLoad">
+      <div v-if="postList.length == 0 && dataReady" class="emptyDivPadding">
+        <ZKCard padding="2rem">
+          <div class="emptyMessage">
+            <div>
+              Whoops there is nothing here yet...
+            </div>
+
+            <RouterLink :to="{ name: 'create-post'}">
+              <ZKButton label="Create Post" color="primary" />
+            </RouterLink>
+          </div>
+
+        </ZKCard>
+      </div>
+      <q-infinite-scroll v-if="postList.length > 0" :offset="250" @load="onLoad">
         <div class="postListFlex">
-          <div v-for="(postData, index) in compactPostDataList" :key="index" class="postPadding">
+          <div v-for="(postData, index) in postList" :key="index" class="postPadding">
             <div>
               <RouterLink :to="{ name: 'single-post', params: { postSlugId: postData.metadata.slugId } }">
                 <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
@@ -25,37 +39,21 @@
 <script setup lang="ts">
 
 import PostDetails from "../post/PostDetails.vue";
-import { ref } from "vue";
-import { DummyPostDataFormat, usePostStore } from "src/stores/post";
+import { DummyPostDataFormat } from "src/stores/post";
+import ZKCard from "../ui-library/ZKCard.vue";
+import ZKButton from "../ui-library/ZKButton.vue";
 
-const { fetchCuratedPosts } = usePostStore();
-
-const FETCH_POST_COUNT = 10;
-const compactPostDataList = ref<DummyPostDataFormat[]>([]);
-let lastSlugId = "";
-
-generateNewPosts();
-
-function generateNewPosts() {
-  const postList = fetchCuratedPosts(lastSlugId, FETCH_POST_COUNT);
-  for (let i = 0; i < postList.length; i++) {
-    compactPostDataList.value.push(postList[i]);
-  }
-
-  if (postList.length > 0) {
-    lastSlugId = postList[postList.length - 1].metadata.slugId;
-  } else {
-    // Reached the end of the post list
-  }
-
-}
+defineProps<{
+  postList: DummyPostDataFormat[];
+  dataReady: boolean;
+}>();
 
 interface DoneFunction {
   (): void;
 }
 
 async function onLoad(index: number, done: DoneFunction) {
-  generateNewPosts();
+  // generateNewPosts();
   done();
 }
 
@@ -79,4 +77,17 @@ a {
 .postPadding {
   padding-bottom: 1rem;
 }
+
+.emptyMessage {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyDivPadding {
+  padding-top: 5rem;
+}
+
 </style>
