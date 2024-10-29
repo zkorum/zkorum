@@ -8,6 +8,7 @@ try {
     crypto = await import("node:crypto");
 } catch (err) {
     log.error("crypto support is disabled!");
+    log.error(err);
 }
 
 // Used to generate cryptographically random user identifier (for VC and voting purpose, to preserve privacy)

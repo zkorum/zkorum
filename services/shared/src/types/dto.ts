@@ -8,6 +8,7 @@ import {
     zodCommentItem,
 } from "./zod.js";
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Dto {
     static authenticateCheckLoginStatus = z
         .object({

@@ -15,11 +15,12 @@ export const equal = (aBuf: ArrayBuffer, bBuf: ArrayBuffer): boolean => {
     return true;
 };
 
-export function anyToUint8Array(data: any): Uint8Array {
+export function anyToUint8Array(data: unknown): Uint8Array {
     return uint8arrays.fromString(JSON.stringify(data));
 }
 
 export function uint8ArrayToJSON(data: Uint8Array): object {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return JSON.parse(uint8arrays.toString(data));
 }
 

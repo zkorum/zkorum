@@ -1,5 +1,5 @@
 {
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "tests/**/*", "drizzle.config.ts"],
     "exclude": ["**/*.spec.ts", "node_modules", "**/node_modules/*"],
     "compilerOptions": {
         /* Visit https://aka.ms/tsconfig to read more about this file */
@@ -15,7 +15,7 @@
         /* Language and Environment */
         "target": "ES2022" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
         "lib": [
-            "ES2022",
+            "ES2023",
             "DOM"
         ] /* Specify a set of bundled library declaration files that describe the target runtime environment. */,
         // "jsx": "preserve",                                /* Specify what JSX code is generated. */
@@ -30,14 +30,12 @@
         // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
 
         /* Modules */
-        "module": "Node16" /* Specify what module code is generated. */,
+        "module": "node16" /* Specify what module code is generated. */,
         // "rootDir": "./",                                  /* Specify the root folder within your source files. */
         "moduleResolution": "Node16" /* Specify how TypeScript looks up a file from a given module specifier. */,
         "baseUrl": "src", // only work in dev mode, doesn't work when running production build, so must be kept in sync with `aliases` in package.json
         "paths": {
-          "@/*": [
-            "*"
-          ]
+            "@/*": ["*"]
         },
         // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
         // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
