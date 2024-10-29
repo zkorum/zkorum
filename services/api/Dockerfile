@@ -10,4 +10,3 @@ RUN pnpm build
 
 EXPOSE 8080
 CMD ["pnpm", "start"]
-# CMD ["sleep", "100000000000"]
