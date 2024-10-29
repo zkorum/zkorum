@@ -15,9 +15,9 @@ export async function isSupported(): Promise<boolean> {
         ((await (() =>
             new Promise((resolve) => {
                 const db = indexedDB.open("testDatabase");
-                db.onsuccess = () => resolve(true);
-                db.onerror = () => resolve(false);
-            }))()) as boolean)
+                db.onsuccess = () => { resolve(true); };
+                db.onerror = () => { resolve(false); };
+            }))()))
     );
 }
 
@@ -51,6 +51,7 @@ export function domainNameAndExtensionFromEmail(
 export function domainFromEmail(email: string): string | undefined {
     const nameAndDomain = email.split("@");
     if (nameAndDomain.length === 2) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [_username, domain] = [nameAndDomain[0], nameAndDomain[1]];
         return domain;
     }

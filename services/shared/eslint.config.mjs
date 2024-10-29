@@ -6,7 +6,6 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
     eslint.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
-    ...tseslint.configs.stylisticTypeChecked,
     {
         languageOptions: {
             parserOptions: {
@@ -17,6 +16,7 @@ export default tseslint.config(
             },
         },
     },
+    ...tseslint.configs.stylisticTypeChecked,
     {
         files: ["src/**"],
         rules: {

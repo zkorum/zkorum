@@ -1,12 +1,13 @@
-export function range(startAt: number, endAt: number): ReadonlyArray<number> {
+export function range(startAt: number, endAt: number): readonly number[] {
     if (endAt < startAt) {
         return [];
     }
     return [...Array(endAt - startAt + 1).keys()].map((i) => endAt - i);
 }
 
-export function removeUndefinedFields(obj: { [key: string]: any }) {
+export function removeUndefinedFields(obj: Record<string, unknown>) {
     Object.keys(obj).forEach((key) =>
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         obj[key] === undefined ? delete obj[key] : {}
     );
 }

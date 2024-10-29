@@ -171,7 +171,7 @@ async function verifyUCAN(
     const rootIssuerDid = ucans.parse(encodedUcan).payload.iss;
     const result = await ucans.verify(encodedUcan, {
         audience: SERVER_DID,
-        isRevoked: () => new Promise((resolve) =>  { resolve(false); }), // users' generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
+        isRevoked: () => new Promise((resolve) => { resolve(false); }), // users' generated UCANs are short-lived action-specific one-time token so the revocation feature is unnecessary
         requiredCapabilities: [
             {
                 capability: {
@@ -185,8 +185,14 @@ async function verifyUCAN(
     if (!result.ok) {
         for (const err of result.error) {
             if (err instanceof Error) {
+
+
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 server.log.error(`Error verifying UCAN - ${err.name}: ${err.message} - ${err.cause} - ${err.stack}`);
             } else {
+
+
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 server.log.error(`Unknown Error verifying UCAN: ${err}`);
             }
         }
@@ -218,7 +224,7 @@ async function verifyUCAN(
                 options.expectedDeviceStatus.isLoggedIn !== isLoggedIn
             ) {
                 throw server.httpErrors.unauthorized(
-                    `[${rootIssuerDid}] is expected to have 'isLoggedIn=${options.expectedDeviceStatus.isLoggedIn}' but has 'isLoggedIn=${isLoggedIn}'`
+                    `[${rootIssuerDid}] is expected to have 'isLoggedIn=${options.expectedDeviceStatus.isLoggedIn.toString()}' but has 'isLoggedIn=${isLoggedIn.toString()}'`
                 );
             } else if (
                 options.expectedDeviceStatus.userId !== undefined &&
@@ -269,7 +275,7 @@ server.after(() => {
                 body: Dto.authenticateRequestBody,
                 response: { 200: Dto.authenticateResponse, 409: Dto.auth409 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
                 // This endpoint is accessible without being logged in
                 // this endpoint could be especially subject to attacks such as DDoS or man-in-the-middle (to associate their own DID instead of the legitimate user's ones for example)
                 // => TODO: restrict this endpoint and the "verifyOtp" endpoint to use same IP Address: the correct IP Address must part of the UCAN
@@ -331,7 +337,7 @@ server.after(() => {
                     409: Dto.auth409, // WARNING when changing auth 409 - also change expected type in frontend manually!
                 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: undefined,
                 });
@@ -349,7 +355,7 @@ server.after(() => {
         .route({
             method: "POST",
             url: `/api/${apiVersion}/auth/logout`,
-            handler: async (request, _reply) => {
+            handler: async (request) => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
                         isLoggedIn: true,
@@ -369,7 +375,7 @@ server.after(() => {
                     200: Dto.fetchFeed200,
                 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
                 return await feedService.fetchFeed({
                     db: db,
                     order: "more",
@@ -404,7 +410,7 @@ server.after(() => {
                 });
             },
         });
-    
+
     server
         .withTypeProvider<ZodTypeProvider>()
         .route({
@@ -436,7 +442,7 @@ server.after(() => {
                 }
             },
         });
-    
+
     server
         .withTypeProvider<ZodTypeProvider>()
         .route({
@@ -452,7 +458,7 @@ server.after(() => {
                 return await fetchCommentsByPostSlugId(
                     db,
                     request.body.postSlugId);
-                
+
                 /*
                 const authHeader = request.headers.authorization;
                 if (!authHeader?.startsWith("Bearer ")) {
@@ -508,7 +514,7 @@ server.after(() => {
                     200: Dto.commentFetchToVoteOn200,
                 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: {
                         isLoggedIn: undefined,
@@ -523,7 +529,7 @@ server.after(() => {
                         db: db,
                         userId: userId,
                         postSlugId: request.body.postSlugId,
-                        numberOfCommentsToFetch: request.body.numberOfCommentsToFetch !== undefined ? request.body.numberOfCommentsToFetch : 3,
+                        numberOfCommentsToFetch: request.body.numberOfCommentsToFetch,
                         httpErrors: server.httpErrors
                     });
                     return comments;
@@ -544,7 +550,7 @@ server.after(() => {
             handler: async (request) => {
                 const didWrite = await verifyUCAN(db, request, undefined);
                 // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
-                
+
                 const status = await authUtilService.isLoggedIn(db, didWrite);
                 if (!status.isLoggedIn) {
                     throw server.httpErrors.unauthorized("Device is not logged in");
@@ -706,11 +712,11 @@ server.after(() => {
                     200: Dto.fetchPostBySlugIdResponse,
                 },
             },
-            handler: async (request, _reply) => {
+            handler: async (request) => {
                 return await postService.fetchPostBySlugId(
                     db, request.body.postSlugId
                 );
-                
+
                 /*
                   // anonymous request, no auth
                   const { post, postId } = await Service.fetchPostByUidOrSlugId({
@@ -739,10 +745,8 @@ server.ready((e) => {
     }
     if (config.NODE_ENV === "development") {
         const swaggerObj = server.swagger({ yaml: false });
-        if (swaggerObj !== undefined) {
-            const swaggerJson = JSON.stringify(swaggerObj, null, 4);
-            fs.writeFileSync("./openapi-zkorum.json", swaggerJson);
-        }
+        const swaggerJson = JSON.stringify(swaggerObj, null, 4);
+        fs.writeFileSync("./openapi-zkorum.json", swaggerJson);
     }
 });
 
