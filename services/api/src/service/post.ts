@@ -10,6 +10,7 @@ import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
 import sanitizeHtml from "sanitize-html";
+import { httpErrors } from "@fastify/sensible";
 
 interface FetchNextCommentsToVoteOn {
     db: PostgresDatabase;
@@ -88,11 +89,10 @@ export async function createNewPost(
                 };
                 const rawTextWithoutTags = sanitizeHtml(postBody, options);
                 if (rawTextWithoutTags.length > MAX_LENGTH_BODY) {
-                    server.log.error("Incoming post's body had exceeded the max both length: " + rawTextWithoutTags.length.toString());
-                    server.log.error("Max allowed: " + MAX_LENGTH_BODY.toString());
-                    return {
-                        isSuccessful: false
-                    };
+                    throw httpErrors.badRequest(
+                        "Incoming post's body had exceeded the max both length: " + rawTextWithoutTags.length.toString() + ". " +
+                        "Max allowed: " + MAX_LENGTH_BODY.toString()
+                    );
                 }
             }
 
@@ -137,15 +137,14 @@ export async function createNewPost(
         });
 
         return {
-            isSuccessful: true,
             postSlugId: postSlugId
         };
 
     } catch (err: unknown) {
-        server.log.error(err);
-        return {
-            isSuccessful: false
-        };
+        console.log(err);
+        throw httpErrors.internalServerError(
+            "Database error while creating the new post"
+        );
     }
 }
 
