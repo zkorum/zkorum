@@ -147,7 +147,7 @@ export async function fetchCommentsByPostSlugId(
 
 async function getPostIdFromPostSlugId(
     db: PostgresJsDatabase,
-    postSlugId: string) {
+    postSlugId: string): Promise<number | null> {
 
     const postTableResponse = await db
         .select({
