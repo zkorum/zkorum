@@ -345,74 +345,11 @@ export interface ApiV1CommentFetchPostRequest {
 export interface ApiV1CommentFetchToVoteOnPost200Response {
     /**
      * 
-     * @type {Array<ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner>}
+     * @type {Array<ApiV1CommentFetchPost200ResponseInner>}
      * @memberof ApiV1CommentFetchToVoteOnPost200Response
      */
-    'assignedComments': Array<ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner>;
+    'assignedComments': Array<ApiV1CommentFetchPost200ResponseInner>;
 }
-/**
- * 
- * @export
- * @interface ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
- */
-export interface ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
-     */
-    'commentSlugId': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
-     */
-    'isHidden'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
-     */
-    'createdAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
-     */
-    'updatedAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
-     */
-    'comment': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
-     */
-    'numLikes': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
-     */
-    'numDislikes': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInner
-     */
-    'optionChosen'?: ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInnerOptionChosenEnum;
-}
-
-export const ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInnerOptionChosenEnum = {
-    Like: 'like',
-    Dislike: 'dislike'
-} as const;
-
-export type ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInnerOptionChosenEnum = typeof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInnerOptionChosenEnum[keyof typeof ApiV1CommentFetchToVoteOnPost200ResponseAssignedCommentsInnerOptionChosenEnum];
-
 /**
  * 
  * @export
@@ -589,33 +526,8 @@ export interface ApiV1FeedFetchMorePostRequest {
 export interface ApiV1PostCreatePost200Response {
     /**
      * 
-     * @type {boolean}
-     * @memberof ApiV1PostCreatePost200Response
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
      * @type {string}
      * @memberof ApiV1PostCreatePost200Response
-     */
-    'postSlugId': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostCreatePost200ResponseAnyOf
- */
-export interface ApiV1PostCreatePost200ResponseAnyOf {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PostCreatePost200ResponseAnyOf
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePost200ResponseAnyOf
      */
     'postSlugId': string;
 }
@@ -646,33 +558,8 @@ export interface ApiV1PostCreatePostRequest {
 export interface ApiV1PostFetchPost200Response {
     /**
      * 
-     * @type {boolean}
-     * @memberof ApiV1PostFetchPost200Response
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
      * @type {ApiV1FeedFetchMorePost200ResponseInner}
      * @memberof ApiV1PostFetchPost200Response
-     */
-    'postData': ApiV1FeedFetchMorePost200ResponseInner;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostFetchPost200ResponseAnyOf
- */
-export interface ApiV1PostFetchPost200ResponseAnyOf {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PostFetchPost200ResponseAnyOf
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
-     * @type {ApiV1FeedFetchMorePost200ResponseInner}
-     * @memberof ApiV1PostFetchPost200ResponseAnyOf
      */
     'postData': ApiV1FeedFetchMorePost200ResponseInner;
 }

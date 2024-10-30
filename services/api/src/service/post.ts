@@ -151,18 +151,17 @@ export async function fetchPostBySlugId(
 
         if (postData.length == 1) {
             return {
-                isSuccessful: true,
                 postData: postData[0]
             };
         } else {
-            return {
-                isSuccessful: false
-            };
+            throw httpErrors.notFound(
+                "Failed to locate post slug ID in the database: " + postSlugId
+            );
         }
     } catch (err: unknown) {
         server.log.error(err);
-        return {
-            isSuccessful: false
-        };
+        throw httpErrors.internalServerError(
+            "Failed to fetch post by slug ID: " + postSlugId
+        );
     }
 }

@@ -35,14 +35,19 @@ const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 const postList = ref<DummyPostDataFormat[]>([]);
 
 onMounted(async () => {
-  postList.value = await postStore.fetchRecentPost();
-  dataReady.value = true;
+  const response = await postStore.fetchRecentPost();
 
-  if (lastNavigatedRouteName.value == "single-post") {
-    setTimeout(function () {
-      window.scrollTo(0, lastSavedHomeFeedPosition.value);
-    }, 200);
+  if (response != null) {
+    postList.value = response;
+    dataReady.value = true;
+
+    if (lastNavigatedRouteName.value == "single-post") {
+      setTimeout(function () {
+        window.scrollTo(0, lastSavedHomeFeedPosition.value);
+      }, 200);
+    }
   }
+
 });
 
 onBeforeUnmount(() => {

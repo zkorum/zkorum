@@ -1,10 +1,8 @@
 import { api } from "src/boot/axios";
-import axios from "axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
   ApiV1FeedFetchMorePost200ResponseInner,
   ApiV1FeedFetchMorePostRequest,
-  ApiV1PostCreatePost200Response,
   ApiV1PostCreatePostRequest,
   ApiV1PostFetchPostRequest,
   DefaultApiAxiosParamCreator,
@@ -15,9 +13,13 @@ import {
   DummyPostDataFormat,
   PossibleCommentRankingActions,
 } from "src/stores/post";
+import { useDialog } from "../ui/dialog";
 
 export function useBackendPostApi() {
+
   const { buildEncodedUcan } = useCommonApi();
+
+  const { showMessage } = useDialog();
 
   function createInternalPostData(
     postElement: ApiV1FeedFetchMorePost200ResponseInner
@@ -69,11 +71,9 @@ export function useBackendPostApi() {
       ).apiV1PostFetchPost(params, {});
       return createInternalPostData(response.data.postData);
     } catch (e) {
-      if (axios.isAxiosError(e)) {
-        throw e;
-      } else {
-        throw e;
-      }
+      console.error(e);
+      showMessage("An error had occured", "Failed to fetch post by slug ID.");
+      return null;
     }
   }
 
@@ -97,18 +97,15 @@ export function useBackendPostApi() {
 
       return dataList;
     } catch (e) {
-      if (axios.isAxiosError(e)) {
-        throw e;
-      } else {
-        throw e;
-      }
+      console.error(e);
+      showMessage("An error had occured", "Failed to fetch recent posts from the server.");
+      return null;
     }
   }
 
   async function createNewPost(
     postTitle: string,
-    postBody: string
-  ): Promise<ApiV1PostCreatePost200Response> {
+    postBody: string) {
     try {
       const params: ApiV1PostCreatePostRequest = {
         postTitle: postTitle,
@@ -129,11 +126,9 @@ export function useBackendPostApi() {
       });
       return response.data;
     } catch (e) {
-      if (axios.isAxiosError(e)) {
-        throw e;
-      } else {
-        throw e;
-      }
+      console.error(e);
+      showMessage("An error had occured", "The server had failed to create the post.");
+      return null;
     }
   }
 
