@@ -19,7 +19,10 @@ const { emptyPost } = usePostStore();
 const postData = ref<DummyPostDataFormat>(emptyPost);
 
 onMounted(async () => {
-  postData.value = await fetchPostBySlugId(props.postSlugId);
+  const response = await fetchPostBySlugId(props.postSlugId);
+  if (response != null) {
+    postData.value = response;
+  }
 });
 </script>
 

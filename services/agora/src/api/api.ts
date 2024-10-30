@@ -526,33 +526,8 @@ export interface ApiV1FeedFetchMorePostRequest {
 export interface ApiV1PostCreatePost200Response {
     /**
      * 
-     * @type {boolean}
-     * @memberof ApiV1PostCreatePost200Response
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
      * @type {string}
      * @memberof ApiV1PostCreatePost200Response
-     */
-    'postSlugId': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostCreatePost200ResponseAnyOf
- */
-export interface ApiV1PostCreatePost200ResponseAnyOf {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PostCreatePost200ResponseAnyOf
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PostCreatePost200ResponseAnyOf
      */
     'postSlugId': string;
 }
@@ -583,33 +558,8 @@ export interface ApiV1PostCreatePostRequest {
 export interface ApiV1PostFetchPost200Response {
     /**
      * 
-     * @type {boolean}
-     * @memberof ApiV1PostFetchPost200Response
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
      * @type {ApiV1FeedFetchMorePost200ResponseInner}
      * @memberof ApiV1PostFetchPost200Response
-     */
-    'postData': ApiV1FeedFetchMorePost200ResponseInner;
-}
-/**
- * 
- * @export
- * @interface ApiV1PostFetchPost200ResponseAnyOf
- */
-export interface ApiV1PostFetchPost200ResponseAnyOf {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1PostFetchPost200ResponseAnyOf
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
-     * @type {ApiV1FeedFetchMorePost200ResponseInner}
-     * @memberof ApiV1PostFetchPost200ResponseAnyOf
      */
     'postData': ApiV1FeedFetchMorePost200ResponseInner;
 }

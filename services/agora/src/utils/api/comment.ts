@@ -1,5 +1,4 @@
 import { api } from "src/boot/axios";
-import axios from "axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
   ApiV1CommentCreatePostRequest,
@@ -8,9 +7,12 @@ import {
   DefaultApiFactory,
 } from "src/api";
 import { useCommonApi } from "./common";
+import { useDialog } from "../ui/dialog";
 
 export function useBackendCommentApi() {
   const { buildEncodedUcan } = useCommonApi();
+
+  const { showMessage } = useDialog();
 
   async function fetchCommentsForPost(postSlugId: string) {
     try {
@@ -26,11 +28,9 @@ export function useBackendCommentApi() {
 
       return response.data;
     } catch (e) {
-      if (axios.isAxiosError(e)) {
-        throw e;
-      } else {
-        throw e;
-      }
+      console.error(e);
+      showMessage("An error had occured", "Failed to fetch comments for post.");
+      return null;
     }
   }
 
@@ -56,11 +56,9 @@ export function useBackendCommentApi() {
 
       return response.data;
     } catch (e) {
-      if (axios.isAxiosError(e)) {
-        throw e;
-      } else {
-        throw e;
-      }
+      console.error(e);
+      showMessage("An error had occured", "Failed to add comment to post.");
+      return null;
     }
   }
 

@@ -39,9 +39,7 @@
                                     "properties": {
                                         "reason": {
                                             "type": "string",
-                                            "enum": [
-                                                "already_logged_in"
-                                            ]
+                                            "enum": ["already_logged_in"]
                                         },
                                         "userId": {
                                             "type": "string",
@@ -85,10 +83,7 @@
                                         "type": "boolean"
                                     }
                                 },
-                                "required": [
-                                    "email",
-                                    "isRequestingNewCode"
-                                ],
+                                "required": ["email", "isRequestingNewCode"],
                                 "additionalProperties": false
                             }
                         }
@@ -130,9 +125,7 @@
                                     "properties": {
                                         "reason": {
                                             "type": "string",
-                                            "enum": [
-                                                "already_logged_in"
-                                            ]
+                                            "enum": ["already_logged_in"]
                                         },
                                         "userId": {
                                             "type": "string",
@@ -171,9 +164,7 @@
                                         "maximum": 999999
                                     }
                                 },
-                                "required": [
-                                    "code"
-                                ],
+                                "required": ["code"],
                                 "additionalProperties": false
                             }
                         }
@@ -192,9 +183,7 @@
                                             "properties": {
                                                 "success": {
                                                     "type": "boolean",
-                                                    "enum": [
-                                                        true
-                                                    ]
+                                                    "enum": [true]
                                                 },
                                                 "userId": {
                                                     "type": "string",
@@ -218,9 +207,7 @@
                                             "properties": {
                                                 "success": {
                                                     "type": "boolean",
-                                                    "enum": [
-                                                        false
-                                                    ]
+                                                    "enum": [false]
                                                 },
                                                 "reason": {
                                                     "type": "string",
@@ -231,10 +218,7 @@
                                                     ]
                                                 }
                                             },
-                                            "required": [
-                                                "success",
-                                                "reason"
-                                            ],
+                                            "required": ["success", "reason"],
                                             "additionalProperties": false
                                         }
                                     ]
@@ -251,9 +235,7 @@
                                     "properties": {
                                         "reason": {
                                             "type": "string",
-                                            "enum": [
-                                                "already_logged_in"
-                                            ]
+                                            "enum": ["already_logged_in"]
                                         },
                                         "userId": {
                                             "type": "string",
@@ -303,9 +285,7 @@
                                         "format": "date-time"
                                     }
                                 },
-                                "required": [
-                                    "showHidden"
-                                ],
+                                "required": ["showHidden"],
                                 "additionalProperties": false
                             }
                         }
@@ -408,16 +388,11 @@
                                                         }
                                                     }
                                                 },
-                                                "required": [
-                                                    "title"
-                                                ],
+                                                "required": ["title"],
                                                 "additionalProperties": false
                                             }
                                         },
-                                        "required": [
-                                            "metadata",
-                                            "payload"
-                                        ],
+                                        "required": ["metadata", "payload"],
                                         "additionalProperties": false
                                     }
                                 }
@@ -443,9 +418,7 @@
                                         "format": "date-time"
                                     }
                                 },
-                                "required": [
-                                    "showHidden"
-                                ],
+                                "required": ["showHidden"],
                                 "additionalProperties": false
                             }
                         }
@@ -548,16 +521,11 @@
                                                         }
                                                     }
                                                 },
-                                                "required": [
-                                                    "title"
-                                                ],
+                                                "required": ["title"],
                                                 "additionalProperties": false
                                             }
                                         },
-                                        "required": [
-                                            "metadata",
-                                            "payload"
-                                        ],
+                                        "required": ["metadata", "payload"],
                                         "additionalProperties": false
                                     }
                                 }
@@ -582,10 +550,7 @@
                                         "type": "string"
                                     }
                                 },
-                                "required": [
-                                    "postSlugId",
-                                    "commentBody"
-                                ],
+                                "required": ["postSlugId", "commentBody"],
                                 "additionalProperties": false
                             }
                         }
@@ -604,9 +569,7 @@
                                             "properties": {
                                                 "isSuccessful": {
                                                     "type": "boolean",
-                                                    "enum": [
-                                                        true
-                                                    ]
+                                                    "enum": [true]
                                                 },
                                                 "commentSlugId": {
                                                     "type": "string"
@@ -623,14 +586,10 @@
                                             "properties": {
                                                 "isSuccessful": {
                                                     "type": "boolean",
-                                                    "enum": [
-                                                        false
-                                                    ]
+                                                    "enum": [false]
                                                 }
                                             },
-                                            "required": [
-                                                "isSuccessful"
-                                            ],
+                                            "required": ["isSuccessful"],
                                             "additionalProperties": false
                                         }
                                     ]
@@ -658,9 +617,7 @@
                                         "format": "date-time"
                                     }
                                 },
-                                "required": [
-                                    "postSlugId"
-                                ],
+                                "required": ["postSlugId"],
                                 "additionalProperties": false
                             }
                         }
@@ -805,9 +762,7 @@
                                             }
                                         }
                                     },
-                                    "required": [
-                                        "assignedComments"
-                                    ],
+                                    "required": ["assignedComments"],
                                     "additionalProperties": false
                                 }
                             }
@@ -831,9 +786,7 @@
                                         "type": "string"
                                     }
                                 },
-                                "required": [
-                                    "postTitle"
-                                ],
+                                "required": ["postTitle"],
                                 "additionalProperties": false
                             }
                         }
@@ -846,42 +799,14 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "isSuccessful": {
-                                                    "type": "boolean",
-                                                    "enum": [
-                                                        true
-                                                    ]
-                                                },
-                                                "postSlugId": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "isSuccessful",
-                                                "postSlugId"
-                                            ],
-                                            "additionalProperties": false
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "isSuccessful": {
-                                                    "type": "boolean",
-                                                    "enum": [
-                                                        false
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "isSuccessful"
-                                            ],
-                                            "additionalProperties": false
+                                    "type": "object",
+                                    "properties": {
+                                        "postSlugId": {
+                                            "type": "string"
                                         }
-                                    ]
+                                    },
+                                    "required": ["postSlugId"],
+                                    "additionalProperties": false
                                 }
                             }
                         }
@@ -902,9 +827,7 @@
                                         "maxLength": 10
                                     }
                                 },
-                                "required": [
-                                    "postSlugId"
-                                ],
+                                "required": ["postSlugId"],
                                 "additionalProperties": false
                             }
                         }
@@ -917,140 +840,107 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
+                                    "type": "object",
+                                    "properties": {
+                                        "postData": {
                                             "type": "object",
                                             "properties": {
-                                                "isSuccessful": {
-                                                    "type": "boolean",
-                                                    "enum": [
-                                                        true
-                                                    ]
-                                                },
-                                                "postData": {
+                                                "metadata": {
                                                     "type": "object",
                                                     "properties": {
-                                                        "metadata": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "postSlugId": {
-                                                                    "type": "string",
-                                                                    "maxLength": 10
-                                                                },
-                                                                "isHidden": {
-                                                                    "type": "boolean"
-                                                                },
-                                                                "createdAt": {
-                                                                    "type": "string",
-                                                                    "format": "date-time"
-                                                                },
-                                                                "updatedAt": {
-                                                                    "type": "string",
-                                                                    "format": "date-time"
-                                                                },
-                                                                "lastReactedAt": {
-                                                                    "type": "string",
-                                                                    "format": "date-time"
-                                                                },
-                                                                "commentCount": {
-                                                                    "type": "integer",
-                                                                    "minimum": 0
-                                                                },
-                                                                "authorName": {
-                                                                    "type": "string"
-                                                                },
-                                                                "authorImagePath": {
-                                                                    "type": "string",
-                                                                    "format": "uri"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "postSlugId",
-                                                                "createdAt",
-                                                                "updatedAt",
-                                                                "lastReactedAt",
-                                                                "commentCount"
-                                                            ],
-                                                            "additionalProperties": false
+                                                        "postSlugId": {
+                                                            "type": "string",
+                                                            "maxLength": 10
                                                         },
-                                                        "payload": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "title": {
-                                                                    "type": "string",
-                                                                    "maxLength": 130,
-                                                                    "minLength": 1
-                                                                },
-                                                                "body": {
-                                                                    "type": "string"
-                                                                },
-                                                                "poll": {
-                                                                    "type": "array",
-                                                                    "items": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "index": {
-                                                                                "type": "integer",
-                                                                                "minimum": 0
-                                                                            },
-                                                                            "option": {
-                                                                                "type": "string",
-                                                                                "maxLength": 30,
-                                                                                "minLength": 1
-                                                                            },
-                                                                            "numResponses": {
-                                                                                "type": "integer",
-                                                                                "minimum": 0
-                                                                            },
-                                                                            "isChosen": {
-                                                                                "type": "boolean"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "index",
-                                                                            "option",
-                                                                            "numResponses",
-                                                                            "isChosen"
-                                                                        ],
-                                                                        "additionalProperties": false
-                                                                    }
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "title"
-                                                            ],
-                                                            "additionalProperties": false
+                                                        "isHidden": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "createdAt": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "updatedAt": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "lastReactedAt": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "commentCount": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "authorName": {
+                                                            "type": "string"
+                                                        },
+                                                        "authorImagePath": {
+                                                            "type": "string",
+                                                            "format": "uri"
                                                         }
                                                     },
                                                     "required": [
-                                                        "metadata",
-                                                        "payload"
+                                                        "postSlugId",
+                                                        "createdAt",
+                                                        "updatedAt",
+                                                        "lastReactedAt",
+                                                        "commentCount"
                                                     ],
+                                                    "additionalProperties": false
+                                                },
+                                                "payload": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string",
+                                                            "maxLength": 130,
+                                                            "minLength": 1
+                                                        },
+                                                        "body": {
+                                                            "type": "string"
+                                                        },
+                                                        "poll": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "index": {
+                                                                        "type": "integer",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "option": {
+                                                                        "type": "string",
+                                                                        "maxLength": 30,
+                                                                        "minLength": 1
+                                                                    },
+                                                                    "numResponses": {
+                                                                        "type": "integer",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "isChosen": {
+                                                                        "type": "boolean"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "index",
+                                                                    "option",
+                                                                    "numResponses",
+                                                                    "isChosen"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": ["title"],
                                                     "additionalProperties": false
                                                 }
                                             },
-                                            "required": [
-                                                "isSuccessful",
-                                                "postData"
-                                            ],
-                                            "additionalProperties": false
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "isSuccessful": {
-                                                    "type": "boolean",
-                                                    "enum": [
-                                                        false
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "isSuccessful"
-                                            ],
+                                            "required": ["metadata", "payload"],
                                             "additionalProperties": false
                                         }
-                                    ]
+                                    },
+                                    "required": ["postData"],
+                                    "additionalProperties": false
                                 }
                             }
                         }
