@@ -39,7 +39,7 @@ export async function fetchCommentsByPostSlugId(
         .where(
             eq(commentTable.postId, postId)
         );
-    
+
     const commentItemList: CommentItem[] = [];
     results.map((commentResponse) => {
         const item: CommentItem = {
@@ -53,7 +53,7 @@ export async function fetchCommentsByPostSlugId(
         };
         commentItemList.push(item);
     });
-    
+
     return commentItemList;
 
     /*
@@ -147,8 +147,8 @@ export async function fetchCommentsByPostSlugId(
 
 async function getPostIdFromPostSlugId(
     db: PostgresJsDatabase,
-    postSlugId: string) {
-    
+    postSlugId: string): Promise<number | null> {
+
     const postTableResponse = await db
         .select({
             id: postTable.id,

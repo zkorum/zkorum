@@ -379,7 +379,7 @@ export const pollResponseTable = pgTable("poll_response", {
         .notNull()
         .unique()
         .references(() => postTable.id),
-    currentContentId: integer("current_content_id").references((): AnyPgColumn => pollResponseContentTable.id).unique(), // not null if not deleted, else null
+    currentContentId: integer("current_content_id").references((): AnyPgColumn => pollResponseContentTable.id).unique(),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,

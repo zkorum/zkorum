@@ -97,10 +97,7 @@ export class Dto {
         postTitle: z.string(),
         postBody: z.string().optional()
     });
-    static createNewPostResponse = z.discriminatedUnion("isSuccessful", [
-        z.object({ isSuccessful: z.literal(true), postSlugId: z.string() }).strict(),
-        z.object({ isSuccessful: z.literal(false) }).strict(),
-    ]);
+    static createNewPostResponse = z.object({ postSlugId: z.string() });
     static fetchPostBySlugIdRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(
     });
