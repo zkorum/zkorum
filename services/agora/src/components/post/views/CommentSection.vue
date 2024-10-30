@@ -1,21 +1,13 @@
 <template>
   <div>
     <div class="container">
-      <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)"
-      />
+      <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)" />
 
       <div class="commentListFlex">
-        <div v-for="(commentItem, index) in commentItems"
-          :key="commentItem.commentSlugId"
-        >
-          <CommentSingle :comment-item="commentItem"
-            :post-slug-id="postSlugId"
-            :is-ranked="
-              props.commentRanking.rankedCommentList.get(index) != null
-            "
-            :ranked-action="getCommentItemRankStatus(index)"
-            :highlight="initialCommentSlugId == commentItem.commentSlugId"
-          />
+        <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
+          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :is-ranked="props.commentRanking.rankedCommentList.get(index) != null
+            " :ranked-action="getCommentItemRankStatus(index)"
+            :highlight="initialCommentSlugId == commentItem.commentSlugId" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
@@ -36,9 +28,7 @@
       </div>
       -->
 
-      <div v-if="commentSortPreference == 'surprising'"
-        :style="{ paddingTop: '1rem' }"
-      >
+      <div v-if="commentSortPreference == 'surprising'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <q-icon name="mdi-wrench" size="4rem" />
@@ -49,9 +39,7 @@
         </ZKCard>
       </div>
 
-      <div v-if="commentSortPreference == 'clusters'"
-        :style="{ paddingTop: '1rem' }"
-      >
+      <div v-if="commentSortPreference == 'clusters'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <img src="/development/polis/example.png" class="polisExampleImg" />
@@ -62,9 +50,7 @@
         </ZKCard>
       </div>
 
-      <div v-if="commentSortPreference == 'more'"
-        :style="{ paddingTop: '1rem' }"
-      >
+      <div v-if="commentSortPreference == 'more'" :style="{ paddingTop: '1rem' }">
         <ResearcherContactUsForm />
       </div>
     </div>
@@ -100,13 +86,17 @@ const backendCommentApi = useBackendCommentApi();
 const commentItems = ref<ApiV1CommentFetchPost200ResponseInner[]>([]);
 
 onMounted(async () => {
-  commentItems.value = await backendCommentApi.fetchCommentsForPost(
+  const response = await backendCommentApi.fetchCommentsForPost(
     props.postSlugId
   );
 
-  setTimeout(function () {
-    scrollToComment();
-  }, 1000);
+  if (response != null) {
+    commentItems.value = response;
+    setTimeout(function () {
+      scrollToComment();
+    }, 1000);
+  }
+
 });
 
 function getCommentItemRankStatus(

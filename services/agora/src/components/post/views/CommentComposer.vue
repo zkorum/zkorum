@@ -84,12 +84,12 @@ function cancelClicked() {
 
 async function postClicked() {
   const response = await createNewComment(commentText.value, props.postSlugId);
-  console.log(response);
-
-  emit("submittedComment");
-  innerFocus.value = false;
-  resetKey.value = resetKey.value + 1;
-  characterCount.value = 0;
+  if (response != null) {
+    emit("submittedComment");
+    innerFocus.value = false;
+    resetKey.value = resetKey.value + 1;
+    characterCount.value = 0;
+  }
 }
 </script>
 

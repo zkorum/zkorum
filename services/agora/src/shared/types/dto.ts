@@ -99,12 +99,11 @@ export class Dto {
     });
     static createNewPostResponse = z.object({ postSlugId: z.string() });
     static fetchPostBySlugIdRequest = z.object({
-        postSlugId: zodSlugId, // z.object() does not exist :(
+        postSlugId: zodSlugId,
     });
-    static fetchPostBySlugIdResponse = z.discriminatedUnion("isSuccessful", [
-        z.object({ isSuccessful: z.literal(true), postData: zodExtendedPostData }).strict(),
-        z.object({ isSuccessful: z.literal(false) }).strict(),
-    ]);
+    static fetchPostBySlugIdResponse = z.object({
+        postData: zodExtendedPostData
+    });
     static createCommentRequest = z.object({
         postSlugId: z.string(),
         commentBody: z.string()
