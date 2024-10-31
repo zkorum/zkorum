@@ -207,48 +207,10 @@ export interface ApiV1AuthVerifyOtpPostRequest {
 export interface ApiV1CommentCreatePost200Response {
     /**
      * 
-     * @type {boolean}
-     * @memberof ApiV1CommentCreatePost200Response
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
      * @type {string}
      * @memberof ApiV1CommentCreatePost200Response
      */
     'commentSlugId': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1CommentCreatePost200ResponseAnyOf
- */
-export interface ApiV1CommentCreatePost200ResponseAnyOf {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CommentCreatePost200ResponseAnyOf
-     */
-    'isSuccessful': boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentCreatePost200ResponseAnyOf
-     */
-    'commentSlugId': string;
-}
-/**
- * 
- * @export
- * @interface ApiV1CommentCreatePost200ResponseAnyOf1
- */
-export interface ApiV1CommentCreatePost200ResponseAnyOf1 {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1CommentCreatePost200ResponseAnyOf1
-     */
-    'isSuccessful': boolean;
 }
 /**
  * 
