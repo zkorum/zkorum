@@ -431,14 +431,15 @@ server.after(() => {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
                     const authHeader = getAuthHeader(request);
-                    return await postNewComment(
-                        db,
-                        request.body.commentBody,
-                        request.body.postSlugId,
-                        status.userId,
-                        didWrite,
-                        authHeader
-                    );
+                    return await postNewComment({
+                        db: db,
+                        commentBody: request.body.commentBody,
+                        postSlugId: request.body.postSlugId,
+                        userId: status.userId,
+                        didWrite: didWrite,
+                        authHeader: authHeader,
+                        httpErrors: server.httpErrors
+                    });
                 }
             },
         });
