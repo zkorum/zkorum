@@ -3,7 +3,11 @@
     <div class="container">
       <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)" />
 
-      <div class="commentListFlex">
+      <div v-if="commentItems.length == 0" class="noCommentMessage">
+        There are no comments in this post.
+      </div>
+
+      <div v-if="commentItems.length > 0" class="commentListFlex">
         <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :is-ranked="props.commentRanking.rankedCommentList.get(index) != null
             " :ranked-action="getCommentItemRankStatus(index)"
@@ -66,7 +70,7 @@ import {
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import Divider from "primevue/divider";
 import CommentSortSelector from "./CommentSortSelector.vue";
 import { useBackendCommentApi } from "src/utils/api/comment";
@@ -85,19 +89,20 @@ const backendCommentApi = useBackendCommentApi();
 
 const commentItems = ref<ApiV1CommentFetchPost200ResponseInner[]>([]);
 
-onMounted(async () => {
-  const response = await backendCommentApi.fetchCommentsForPost(
-    props.postSlugId
-  );
+fetchData();
 
-  if (response != null) {
-    commentItems.value = response;
-    setTimeout(function () {
-      scrollToComment();
-    }, 1000);
+async function fetchData() {
+  if (props.postSlugId.length > 0) {
+    const response = await backendCommentApi.fetchCommentsForPost(props.postSlugId);
+
+    if (response != null) {
+      commentItems.value = response;
+      setTimeout(function () {
+        scrollToComment();
+      }, 1000);
+    }
   }
-
-});
+}
 
 function getCommentItemRankStatus(
   commentIndex: number
@@ -131,6 +136,12 @@ function scrollToComment() {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.noCommentMessage {
+  display: flex;
+  justify-content: center;
+  padding-top: 4rem;
 }
 
 .specialMessage {
