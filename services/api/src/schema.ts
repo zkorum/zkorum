@@ -326,7 +326,7 @@ export const postProofTable = pgTable("post_proof", {
 
 export const postContentTable = pgTable("post_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    postId: integer("id").references(() => postTable.id).notNull(),
+    postId: integer("post_id").references(() => postTable.id).notNull(),
     postProofId: integer("post_proof_id")
         .notNull()
         .unique()

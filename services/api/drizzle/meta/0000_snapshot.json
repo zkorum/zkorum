@@ -1,5 +1,5 @@
 {
-  "id": "f41f9b98-bc95-4a25-8fc7-c01c4381e3bb",
+  "id": "726dc5ef-f908-4429-9b8e-3a78e718bba8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1519,6 +1519,23 @@
         "id": {
           "name": "id",
           "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "post_content_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -1562,12 +1579,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "post_content_id_post_id_fk": {
-          "name": "post_content_id_post_id_fk",
+        "post_content_post_id_post_id_fk": {
+          "name": "post_content_post_id_post_id_fk",
           "tableFrom": "post_content",
           "tableTo": "post",
           "columnsFrom": [
-            "id"
+            "post_id"
           ],
           "columnsTo": [
             "id"
