@@ -2,7 +2,7 @@ import { generateRandomSlugId } from "@/crypto.js";
 import { commentContentTable, commentTable, commentProofTable, postTable } from "@/schema.js";
 import type { CreateCommentResponse } from "@/shared/types/dto.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import type { CommentItem, SlugId } from "@/shared/types/zod.js";
 import type { HttpErrors } from "@fastify/sensible";
 
@@ -35,7 +35,7 @@ export async function fetchCommentsByPostSlugId(
             commentContentTable,
             eq(commentContentTable.id, commentTable.currentContentId)
         )
-        .orderBy(asc(commentTable.createdAt), desc(commentTable.id))
+        .orderBy(desc(commentTable.createdAt))
         .where(
             eq(commentTable.postId, postId)
         );
