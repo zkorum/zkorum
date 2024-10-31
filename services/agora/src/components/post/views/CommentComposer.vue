@@ -49,11 +49,11 @@ const commentText = ref("");
 const characterCount = ref(0);
 const resetKey = ref(0);
 
-const emit = defineEmits([
-  "cancelClicked",
-  "submittedComment",
-  "editorFocused",
-]);
+const emit = defineEmits({
+  cancelClicked: null,
+  submittedComment: null,
+  editorFocused: null
+});
 
 watch(
   () => props.showControls,
@@ -85,7 +85,7 @@ function cancelClicked() {
 async function postClicked() {
   const response = await createNewComment(commentText.value, props.postSlugId);
   if (response != null) {
-    emit("submittedComment");
+    emit("submittedComment", {});
     innerFocus.value = false;
     resetKey.value = resetKey.value + 1;
     characterCount.value = 0;

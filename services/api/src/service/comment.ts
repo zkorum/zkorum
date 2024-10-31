@@ -5,16 +5,13 @@ import type { CreateCommentResponse } from "@/shared/types/dto.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { desc, eq, sql } from "drizzle-orm";
 import type { CommentItem, SlugId } from "@/shared/types/zod.js";
+import { httpErrors } from "@fastify/sensible";
 
 export async function fetchCommentsByPostSlugId(
     db: PostgresJsDatabase,
     postSlugId: SlugId): Promise<CommentItem[]> {
 
     const postId = await getPostIdFromPostSlugId(db, postSlugId);
-    if (postId == null) {
-        return [];
-    }
-
     const results = await db
         .select({
             // comment payload
@@ -53,7 +50,6 @@ export async function fetchCommentsByPostSlugId(
         };
         commentItemList.push(item);
     });
-
     return commentItemList;
 
     /*
@@ -147,7 +143,7 @@ export async function fetchCommentsByPostSlugId(
 
 async function getPostIdFromPostSlugId(
     db: PostgresJsDatabase,
-    postSlugId: string): Promise<number | null> {
+    postSlugId: string): Promise<number> {
 
     const postTableResponse = await db
         .select({
@@ -155,9 +151,10 @@ async function getPostIdFromPostSlugId(
         })
         .from(postTable)
         .where(eq(postTable.slugId, postSlugId));
-
     if (postTableResponse.length != 1) {
-        return null;
+        throw httpErrors.notFound(
+            "Failed to locate post slug ID: " + postSlugId
+        );
     }
 
     const postId = postTableResponse[0].id;
@@ -174,11 +171,6 @@ export async function postNewComment(
 
     try {
         const postId = await getPostIdFromPostSlugId(db, postSlugId);
-        if (postId == null) {
-            return {
-                isSuccessful: false
-            };
-        }
 
         const commentSlugId = generateRandomSlugId();
 
@@ -220,14 +212,13 @@ export async function postNewComment(
         });
 
         return {
-            isSuccessful: true,
             commentSlugId: commentSlugId
         };
 
     } catch (err: unknown) {
         server.log.error(err);
-        return {
-            isSuccessful: false
-        };
+        throw httpErrors.internalServerError(
+            "Database error while creating the new comment"
+        );
     }
 }

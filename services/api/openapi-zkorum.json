@@ -598,42 +598,16 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "isSuccessful": {
-                                                    "type": "boolean",
-                                                    "enum": [
-                                                        true
-                                                    ]
-                                                },
-                                                "commentSlugId": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "isSuccessful",
-                                                "commentSlugId"
-                                            ],
-                                            "additionalProperties": false
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "isSuccessful": {
-                                                    "type": "boolean",
-                                                    "enum": [
-                                                        false
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "isSuccessful"
-                                            ],
-                                            "additionalProperties": false
+                                    "type": "object",
+                                    "properties": {
+                                        "commentSlugId": {
+                                            "type": "string"
                                         }
-                                    ]
+                                    },
+                                    "required": [
+                                        "commentSlugId"
+                                    ],
+                                    "additionalProperties": false
                                 }
                             }
                         }
