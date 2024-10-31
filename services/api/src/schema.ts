@@ -306,9 +306,11 @@ export const pollTable = pgTable("poll", {
 
 export const proofTypeEnum = pgEnum("proof_type", ["creation", "edit", "deletion"]);
 
-export const masterProofTable = pgTable("master_proof", {
+export const postProofTable = pgTable("post_proof", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
+    postId: integer("post_id").notNull().references(() => postTable.id), // the postTable never gets deleted
+    parentId: integer("parent_id").references((): AnyPgColumn => postProofTable.id), // not null if edit or delete, else null
     authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
@@ -324,10 +326,11 @@ export const masterProofTable = pgTable("master_proof", {
 
 export const postContentTable = pgTable("post_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    postId: integer("id").references(() => postTable.id).notNull(),
     postProofId: integer("post_proof_id")
         .notNull()
         .unique()
-        .references(() => masterProofTable.id), // cannot point to deletion proof
+        .references(() => postProofTable.id), // cannot point to deletion proof
     parentId: integer("parent_id").references((): AnyPgColumn => postContentTable.id), // not null if edit
     title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
     body: varchar("body"),
@@ -346,7 +349,7 @@ export const postTable = pgTable("post", {
     authorId: uuid("author_id") // "postAs"
         .notNull()
         .references(() => userTable.id), // the author of the poll
-    currentContentId: integer("current_content_id").references((): AnyPgColumn => postContentTable.id).unique().notNull(), // null if post was deleted
+    currentContentId: integer("current_content_id").references((): AnyPgColumn => postContentTable.id).unique(), // null if post was deleted
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -394,13 +397,31 @@ export const pollResponseTable = pgTable("poll_response", {
         .notNull(),
 });
 
+export const pollResponseProofTable = pgTable("poll_response_proof", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    type: proofTypeEnum("proof_type").notNull(),
+    postId: integer("post_id").notNull().references(() => postTable.id), // the postTable never gets deleted
+    parentId: integer("parent_id").references((): AnyPgColumn => pollResponseProofTable.id), // not null if edit or delete, else null
+    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
+        .notNull()
+        .references(() => deviceTable.didWrite),
+    proof: text("proof").notNull(), // base64 encoded proof
+    proofVersion: integer("proof_version").notNull(),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+});
+
 export const pollResponseContentTable = pgTable("poll_response_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     pollResponseId: integer("poll_response_id") //
         .notNull()
         .references(() => pollResponseTable.id),
-    pollResponseProofId: integer("poll_response_proof_id").notNull().unique().references((): AnyPgColumn => masterProofTable.id),
-    postContentId: integer("post_content_id").references(() => postContentTable.id), // exact post content and associated poll that existed when this poll was responded.  Null if post was deleted.
+    pollResponseProofId: integer("poll_response_proof_id").notNull().unique().references((): AnyPgColumn => pollResponseProofTable.id),
+    postContentId: integer("post_content_id").references(() => postContentTable.id).notNull(), // exact post content and associated poll that existed when this poll was responded.
     parentId: integer("parent_id").references((): AnyPgColumn => pollResponseContentTable.id), // not null if edit
     optionChosen: integer("option_chosen").notNull(),
     createdAt: timestamp("created_at", {
@@ -410,6 +431,25 @@ export const pollResponseContentTable = pgTable("poll_response_content", {
         .defaultNow()
         .notNull()
 });
+
+export const commentProofTable = pgTable("comment_proof", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    type: proofTypeEnum("proof_type").notNull(),
+    commentId: integer("comment_id").notNull().references(() => commentTable.id), // the commentTable never gets deleted
+    parentId: integer("parent_id").references((): AnyPgColumn => commentProofTable.id), // not null if edit or delete, else null
+    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
+        .notNull()
+        .references(() => deviceTable.didWrite),
+    proof: text("proof").notNull(), // base64 encoded proof
+    proofVersion: integer("proof_version").notNull(),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+});
+
 
 export const commentTable = pgTable("comment", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -447,9 +487,11 @@ export const commentTable = pgTable("comment", {
 
 export const commentContentTable = pgTable("comment_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    commentId: integer("comment_id").references(() => commentTable.id).notNull(), // used to delete all commentContent when deleting a comment
+    postContentId: integer("post_content_id").references(() => postContentTable.id).notNull(), // used to cascade delete all commentContent when deleting a post(content)
     commentProofId: integer("comment_proof_id")
         .notNull()
-        .references(() => masterProofTable.id), // cannot point to deletion proof
+        .references(() => commentProofTable.id), // cannot point to deletion proof
     parentId: integer("parent_id").references((): AnyPgColumn => commentContentTable.id), // not null if edit
     content: varchar("content").notNull(),
     createdAt: timestamp("created_at", {
@@ -484,6 +526,24 @@ export const voteTable = pgTable("vote", {
         .notNull(),
 });
 
+export const voteProofTable = pgTable("vote_proof", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    type: proofTypeEnum("proof_type").notNull(),
+    voteId: integer("vote_id").notNull().references(() => voteTable.id), // the postTable never gets deleted
+    parentId: integer("parent_id").references((): AnyPgColumn => voteProofTable.id), // not null if edit or delete, else null
+    authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
+        .notNull()
+        .references(() => deviceTable.didWrite),
+    proof: text("proof").notNull(), // base64 encoded proof
+    proofVersion: integer("proof_version").notNull(),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+});
+
 export const voteEnum = pgEnum("vote_enum", ["like", "dislike"]);
 
 export const voteContentTable = pgTable("vote_content", {
@@ -491,8 +551,8 @@ export const voteContentTable = pgTable("vote_content", {
     voteId: integer("vote_id") //
         .notNull()
         .references(() => voteTable.id),
-    voteProofId: integer("vote_proof_id").notNull().references((): AnyPgColumn => masterProofTable.id),
-    commentContentId: integer("comment_content_id").references(() => commentContentTable.id), // exact comment content that existed when this vote was cast.  Null if comment was deleted.
+    voteProofId: integer("vote_proof_id").notNull().references((): AnyPgColumn => voteProofTable.id),
+    commentContentId: integer("comment_content_id").references(() => commentContentTable.id).notNull(), // exact comment content that existed when this vote was cast. Cascade delete from commentContent if commentContent was deleted.
     parentId: integer("parent_id").references((): AnyPgColumn => voteContentTable.id), // not null if edit
     optionChosen: voteEnum("option_chosen").notNull(),
     createdAt: timestamp("created_at", {
@@ -503,9 +563,8 @@ export const voteContentTable = pgTable("vote_content", {
         .notNull()
 });
 
-// anti-social = hate + harassment + trolling + intelorance
 // illegal = glaring violation of law (scam, terrorism, threat, etc)
-const [firstReason, restReason] = ["irrelevant", "spam", "misinformation", "privacy", "sexual", "anti-social", "illegal", "other"];
+const [firstReason, restReason] = ["off-topic", "spam", "misleading", "privacy", "sexual", "toxic", "illegal"];
 export const reportReasonEnum = pgEnum("report_reason_enum", [firstReason, ...restReason]);
 const restModeration = [...restReason, "nothing"];
 export const moderationReasonEnum = pgEnum("moderation_reason_enum", [firstReason, ...restModeration]);
@@ -539,7 +598,7 @@ export const reportTable = pgTable("report_table", {
 
 export const moderationTable = pgTable("moderation_table", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    reportId: integer("report_id").notNull().references((): AnyPgColumn => reportTable.id),
+    reportId: integer("report_id").references((): AnyPgColumn => reportTable.id).notNull(), // if moderation is not in reaction to a report, then create the report with the moderator userId before inserting data in this table
     moderatorId: uuid("moderator_id").references(() => userTable.id),
     moderationAction: moderationAction("moderation_action").notNull(), // add check
     moderationReason: moderationReasonEnum("moderation_reason").notNull(), // add check: if not nothing above, must not be nothing here

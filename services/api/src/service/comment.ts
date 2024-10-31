@@ -1,10 +1,10 @@
-import { server } from "@/app.js";
 import { generateRandomSlugId } from "@/crypto.js";
-import { commentContentTable, commentTable, masterProofTable, postTable } from "@/schema.js";
+import { commentContentTable, commentTable, commentProofTable, postTable } from "@/schema.js";
 import type { CreateCommentResponse } from "@/shared/types/dto.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import type { CommentItem, SlugId } from "@/shared/types/zod.js";
+import type { HttpErrors } from "@fastify/sensible";
 
 export async function fetchCommentsByPostSlugId(
     db: PostgresJsDatabase,
@@ -39,7 +39,7 @@ export async function fetchCommentsByPostSlugId(
         .where(
             eq(commentTable.postId, postId)
         );
-    
+
     const commentItemList: CommentItem[] = [];
     results.map((commentResponse) => {
         const item: CommentItem = {
@@ -53,7 +53,7 @@ export async function fetchCommentsByPostSlugId(
         };
         commentItemList.push(item);
     });
-    
+
     return commentItemList;
 
     /*
@@ -148,7 +148,7 @@ export async function fetchCommentsByPostSlugId(
 async function getPostIdFromPostSlugId(
     db: PostgresJsDatabase,
     postSlugId: string) {
-    
+
     const postTableResponse = await db
         .select({
             id: postTable.id,
@@ -164,70 +164,110 @@ async function getPostIdFromPostSlugId(
     return postId;
 }
 
-export async function postNewComment(
+interface IdAndContentId {
+    id: number;
+    contentId: number | null;
+}
+
+interface GetPostAndContentIdFromSlugIdProps {
+    db: PostgresJsDatabase;
+    postSlugId: string;
+    httpErrors: HttpErrors;
+}
+
+async function getPostAndContentIdFromSlugId(
+    { db,
+        postSlugId,
+        httpErrors }: GetPostAndContentIdFromSlugIdProps): Promise<IdAndContentId> {
+    const postTableResponse = await db
+        .select({
+            id: postTable.id,
+            currentContentId: postTable.currentContentId,
+        })
+        .from(postTable)
+        .where(eq(postTable.slugId, postSlugId));
+
+    if (postTableResponse.length != 1) {
+        throw httpErrors.notFound("Post slugId does not exist")
+    }
+
+    return { contentId: postTableResponse[0].currentContentId, id: postTableResponse[0].id };
+}
+
+interface PostNewCommentProps {
     db: PostgresJsDatabase,
     commentBody: string,
     postSlugId: string,
     userId: string,
     didWrite: string,
-    authHeader: string): Promise<CreateCommentResponse> {
+    authHeader: string,
+    httpErrors: HttpErrors
+}
 
-    try {
-        const postId = await getPostIdFromPostSlugId(db, postSlugId);
-        if (postId == null) {
-            return {
-                isSuccessful: false
-            };
-        }
+export async function postNewComment({
+    db,
+    commentBody,
+    postSlugId,
+    userId,
+    didWrite,
+    authHeader,
+    httpErrors }: PostNewCommentProps): Promise<CreateCommentResponse> {
 
-        const commentSlugId = generateRandomSlugId();
-
-        await db.transaction(async (tx) => {
-
-            const masterProofTableResponse = await tx.insert(masterProofTable).values({
-                type: "creation",
-                authorDid: didWrite,
-                proof: authHeader,
-                proofVersion: 0
-            }).returning({ proofId: masterProofTable.id });
-
-            const proofId = masterProofTableResponse[0].proofId;
-
-            const commentContentTableResponse = await tx.insert(commentContentTable).values({
-                commentProofId: proofId,
-                parentId: null,
-                content: commentBody
-            }).returning({ commentContentTableId: commentContentTable.id });
-
-            const commentContentTableId = commentContentTableResponse[0].commentContentTableId;
-
-            await tx.insert(commentTable).values({
-                slugId: commentSlugId,
-                authorId: userId,
-                currentContentId: commentContentTableId,
-                isHidden: false,
-                postId: postId
-            });
-
-            // Update comment count
-            await db
-                .update(postTable)
-                .set({
-                    commentCount: sql`${postTable.commentCount} + 1`
-                })
-                .where(eq(postTable.slugId, postSlugId));
-
-        });
-
-        return {
-            isSuccessful: true,
-            commentSlugId: commentSlugId
-        };
-
-    } catch (err: unknown) {
-        server.log.error(err);
-        return {
-            isSuccessful: false
-        };
+    const { id: postId, contentId: postContentId } = await getPostAndContentIdFromSlugId({ db, postSlugId, httpErrors });
+    if (postContentId == null) {
+        throw httpErrors.gone("Cannot comment on a deleted post");
     }
+    const commentSlugId = generateRandomSlugId();
+
+    await db.transaction(async (tx) => {
+
+        const insertCommentResponse = await tx.insert(commentTable).values({
+            slugId: commentSlugId,
+            authorId: userId,
+            currentContentId: null,
+            isHidden: false,
+            postId: postId
+        }).returning({ commentId: commentTable.id });
+
+        const commentId = insertCommentResponse[0].commentId;
+
+        const insertProofResponse = await tx.insert(commentProofTable).values({
+            type: "creation",
+            commentId: commentId,
+            authorDid: didWrite,
+            proof: authHeader,
+            proofVersion: 1
+        }).returning({ proofId: commentProofTable.id });
+
+        const proofId = insertProofResponse[0].proofId;
+
+        const commentContentTableResponse = await tx.insert(commentContentTable).values({
+            commentProofId: proofId,
+            commentId: commentId,
+            postContentId: postContentId,
+            parentId: null,
+            content: commentBody
+        }).returning({ commentContentTableId: commentContentTable.id });
+
+        const commentContentTableId = commentContentTableResponse[0].commentContentTableId;
+
+        await tx.update(commentTable).set({
+            currentContentId: commentContentTableId,
+        }).where(eq(commentTable.id, commentId));
+
+        // Update comment count
+        await db
+            .update(postTable)
+            .set({
+                commentCount: sql`${postTable.commentCount} + 1`
+            })
+            .where(eq(postTable.slugId, postSlugId));
+
+    });
+
+    return {
+        isSuccessful: true,
+        commentSlugId: commentSlugId
+    };
+
 }

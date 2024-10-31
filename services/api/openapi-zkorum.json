@@ -370,7 +370,7 @@
                                                 "properties": {
                                                     "title": {
                                                         "type": "string",
-                                                        "maxLength": 65,
+                                                        "maxLength": 130,
                                                         "minLength": 1
                                                     },
                                                     "body": {
@@ -510,7 +510,7 @@
                                                 "properties": {
                                                     "title": {
                                                         "type": "string",
-                                                        "maxLength": 65,
+                                                        "maxLength": 130,
                                                         "minLength": 1
                                                     },
                                                     "body": {
@@ -791,13 +791,6 @@
                                                     "numDislikes": {
                                                         "type": "integer",
                                                         "minimum": 0
-                                                    },
-                                                    "optionChosen": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "like",
-                                                            "dislike"
-                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -985,7 +978,7 @@
                                                             "properties": {
                                                                 "title": {
                                                                     "type": "string",
-                                                                    "maxLength": 65,
+                                                                    "maxLength": 130,
                                                                     "minLength": 1
                                                                 },
                                                                 "body": {

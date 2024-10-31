@@ -1,7 +1,7 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, masterProofTable, postContentTable, postTable, voteTable } from "@/schema.js";
+import { commentContentTable, commentTable, postContentTable, postProofTable, postTable, voteTable } from "@/schema.js";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import type { CreateNewPostResponse, FetchCommentsToVoteOn200, FetchPostBySlugIdResponse } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
@@ -99,18 +99,30 @@ export async function createNewPost(
         }
 
         await db.transaction(async (tx) => {
+            const insertPostResponse = await tx.insert(postTable).values({
+                authorId: authorId,
+                slugId: postSlugId,
+                commentCount: 0,
+                currentContentId: null,
+                isHidden: false,
+                lastReactedAt: new Date()
+            }).returning({ postId: postTable.id });
 
-            const masterProofTableResponse = await tx.insert(masterProofTable).values({
+            const postId = insertPostResponse[0].postId
+
+            const masterProofTableResponse = await tx.insert(postProofTable).values({
                 type: "creation",
+                postId: postId,
                 authorDid: didWrite,
                 proof: authHeader,
-                proofVersion: 0
-            }).returning({ proofId: masterProofTable.id });
+                proofVersion: 1
+            }).returning({ proofId: postProofTable.id });
 
             const proofId = masterProofTableResponse[0].proofId;
 
             const postContentTableResponse = await tx.insert(postContentTable).values({
                 postProofId: proofId,
+                postId: postId,
                 parentId: null,
                 title: postTitle,
                 body: postBody,
@@ -119,14 +131,9 @@ export async function createNewPost(
 
             const postContentId = postContentTableResponse[0].postContentId;
 
-            await tx.insert(postTable).values({
-                authorId: authorId,
-                slugId: postSlugId, 
-                commentCount: 0,
+            await tx.update(postTable).set({
                 currentContentId: postContentId,
-                isHidden: false,
-                lastReactedAt: new Date()
-            });
+            }).where(eq(postTable.id, postId));
         });
 
         return {
