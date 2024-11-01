@@ -39,7 +39,9 @@
                                     "properties": {
                                         "reason": {
                                             "type": "string",
-                                            "enum": ["already_logged_in"]
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
                                         },
                                         "userId": {
                                             "type": "string",
@@ -83,7 +85,10 @@
                                         "type": "boolean"
                                     }
                                 },
-                                "required": ["email", "isRequestingNewCode"],
+                                "required": [
+                                    "email",
+                                    "isRequestingNewCode"
+                                ],
                                 "additionalProperties": false
                             }
                         }
@@ -125,7 +130,9 @@
                                     "properties": {
                                         "reason": {
                                             "type": "string",
-                                            "enum": ["already_logged_in"]
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
                                         },
                                         "userId": {
                                             "type": "string",
@@ -164,7 +171,9 @@
                                         "maximum": 999999
                                     }
                                 },
-                                "required": ["code"],
+                                "required": [
+                                    "code"
+                                ],
                                 "additionalProperties": false
                             }
                         }
@@ -183,7 +192,9 @@
                                             "properties": {
                                                 "success": {
                                                     "type": "boolean",
-                                                    "enum": [true]
+                                                    "enum": [
+                                                        true
+                                                    ]
                                                 },
                                                 "userId": {
                                                     "type": "string",
@@ -207,7 +218,9 @@
                                             "properties": {
                                                 "success": {
                                                     "type": "boolean",
-                                                    "enum": [false]
+                                                    "enum": [
+                                                        false
+                                                    ]
                                                 },
                                                 "reason": {
                                                     "type": "string",
@@ -218,7 +231,10 @@
                                                     ]
                                                 }
                                             },
-                                            "required": ["success", "reason"],
+                                            "required": [
+                                                "success",
+                                                "reason"
+                                            ],
                                             "additionalProperties": false
                                         }
                                     ]
@@ -235,7 +251,9 @@
                                     "properties": {
                                         "reason": {
                                             "type": "string",
-                                            "enum": ["already_logged_in"]
+                                            "enum": [
+                                                "already_logged_in"
+                                            ]
                                         },
                                         "userId": {
                                             "type": "string",
@@ -285,7 +303,9 @@
                                         "format": "date-time"
                                     }
                                 },
-                                "required": ["showHidden"],
+                                "required": [
+                                    "showHidden"
+                                ],
                                 "additionalProperties": false
                             }
                         }
@@ -388,11 +408,16 @@
                                                         }
                                                     }
                                                 },
-                                                "required": ["title"],
+                                                "required": [
+                                                    "title"
+                                                ],
                                                 "additionalProperties": false
                                             }
                                         },
-                                        "required": ["metadata", "payload"],
+                                        "required": [
+                                            "metadata",
+                                            "payload"
+                                        ],
                                         "additionalProperties": false
                                     }
                                 }
@@ -418,7 +443,9 @@
                                         "format": "date-time"
                                     }
                                 },
-                                "required": ["showHidden"],
+                                "required": [
+                                    "showHidden"
+                                ],
                                 "additionalProperties": false
                             }
                         }
@@ -521,11 +548,16 @@
                                                         }
                                                     }
                                                 },
-                                                "required": ["title"],
+                                                "required": [
+                                                    "title"
+                                                ],
                                                 "additionalProperties": false
                                             }
                                         },
-                                        "required": ["metadata", "payload"],
+                                        "required": [
+                                            "metadata",
+                                            "payload"
+                                        ],
                                         "additionalProperties": false
                                     }
                                 }
@@ -550,7 +582,10 @@
                                         "type": "string"
                                     }
                                 },
-                                "required": ["postSlugId", "commentBody"],
+                                "required": [
+                                    "postSlugId",
+                                    "commentBody"
+                                ],
                                 "additionalProperties": false
                             }
                         }
@@ -569,7 +604,9 @@
                                             "type": "string"
                                         }
                                     },
-                                    "required": ["commentSlugId"],
+                                    "required": [
+                                        "commentSlugId"
+                                    ],
                                     "additionalProperties": false
                                 }
                             }
@@ -595,7 +632,9 @@
                                         "format": "date-time"
                                     }
                                 },
-                                "required": ["postSlugId"],
+                                "required": [
+                                    "postSlugId"
+                                ],
                                 "additionalProperties": false
                             }
                         }
@@ -740,7 +779,9 @@
                                             }
                                         }
                                     },
-                                    "required": ["assignedComments"],
+                                    "required": [
+                                        "assignedComments"
+                                    ],
                                     "additionalProperties": false
                                 }
                             }
@@ -762,9 +803,17 @@
                                     },
                                     "postBody": {
                                         "type": "string"
+                                    },
+                                    "pollingOptionList": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
                                     }
                                 },
-                                "required": ["postTitle"],
+                                "required": [
+                                    "postTitle"
+                                ],
                                 "additionalProperties": false
                             }
                         }
@@ -783,7 +832,9 @@
                                             "type": "string"
                                         }
                                     },
-                                    "required": ["postSlugId"],
+                                    "required": [
+                                        "postSlugId"
+                                    ],
                                     "additionalProperties": false
                                 }
                             }
@@ -805,7 +856,9 @@
                                         "maxLength": 10
                                     }
                                 },
-                                "required": ["postSlugId"],
+                                "required": [
+                                    "postSlugId"
+                                ],
                                 "additionalProperties": false
                             }
                         }
@@ -909,15 +962,22 @@
                                                             }
                                                         }
                                                     },
-                                                    "required": ["title"],
+                                                    "required": [
+                                                        "title"
+                                                    ],
                                                     "additionalProperties": false
                                                 }
                                             },
-                                            "required": ["metadata", "payload"],
+                                            "required": [
+                                                "metadata",
+                                                "payload"
+                                            ],
                                             "additionalProperties": false
                                         }
                                     },
-                                    "required": ["postData"],
+                                    "required": [
+                                        "postData"
+                                    ],
                                     "additionalProperties": false
                                 }
                             }

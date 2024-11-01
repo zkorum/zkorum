@@ -105,11 +105,17 @@ export function useBackendPostApi() {
 
   async function createNewPost(
     postTitle: string,
-    postBody: string) {
+    postBody: string | undefined,
+    pollingOptionList: string[] | undefined
+  ) {
+
+    console.log(pollingOptionList);
+
     try {
       const params: ApiV1PostCreatePostRequest = {
         postTitle: postTitle,
         postBody: postBody,
+        pollingOptionList: pollingOptionList
       };
 
       const { url, options } =

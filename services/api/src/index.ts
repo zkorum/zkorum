@@ -185,13 +185,9 @@ async function verifyUCAN(
     if (!result.ok) {
         for (const err of result.error) {
             if (err instanceof Error) {
-
-
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 server.log.error(`Error verifying UCAN - ${err.name}: ${err.message} - ${err.cause} - ${err.stack}`);
             } else {
-
-
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 server.log.error(`Unknown Error verifying UCAN: ${err}`);
             }
@@ -557,14 +553,15 @@ server.after(() => {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
                     const authHeader = getAuthHeader(request);
-                    return await postService.createNewPost(
-                        db,
-                        request.body.postTitle,
-                        request.body.postBody ?? null,
-                        status.userId,
-                        didWrite,
-                        authHeader
-                    );
+                    return await postService.createNewPost({
+                        db: db,
+                        postTitle: request.body.postTitle,
+                        postBody: request.body.postBody ?? null,
+                        pollingOptionList: request.body.pollingOptionList ?? null,
+                        authorId: status.userId,
+                        didWrite: didWrite,
+                        authHeader: authHeader
+                    });
                 }
             },
         });

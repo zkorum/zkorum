@@ -511,6 +511,12 @@ export interface ApiV1PostCreatePostRequest {
      * @memberof ApiV1PostCreatePostRequest
      */
     'postBody'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ApiV1PostCreatePostRequest
+     */
+    'pollingOptionList'?: Array<string>;
 }
 /**
  * 

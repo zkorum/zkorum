@@ -94,7 +94,8 @@ export class Dto {
     static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodCommentItem) }).strict();
     static createNewPostRequest = z.object({
         postTitle: z.string(),
-        postBody: z.string().optional()
+        postBody: z.string().optional(),
+        pollingOptionList: z.string().array().optional()
     }).strict();
     static createNewPostResponse = z.object({ postSlugId: z.string() }).strict();
     static fetchPostBySlugIdRequest = z.object({
