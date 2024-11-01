@@ -10,6 +10,7 @@ import {
 } from "src/api";
 import { useCommonApi } from "./common";
 import {
+  DummyPollOptionFormat,
   DummyPostDataFormat,
   PossibleCommentRankingActions,
 } from "src/stores/post";
@@ -24,6 +25,17 @@ export function useBackendPostApi() {
   function createInternalPostData(
     postElement: ApiV1FeedFetchMorePost200ResponseInner
   ) {
+
+    const pollOptionList: DummyPollOptionFormat[] = [];
+    postElement.payload.poll?.forEach(pollOption => {
+      const internalItem: DummyPollOptionFormat = {
+        index: pollOption.index,
+        numResponses: pollOption.numResponses,
+        option: pollOption.option
+      };
+      pollOptionList.push(internalItem);
+    });
+
     const newItem: DummyPostDataFormat = {
       metadata: {
         commentCount: postElement.metadata.commentCount,
@@ -39,8 +51,8 @@ export function useBackendPostApi() {
         body: postElement.payload.body || "",
         comments: [],
         poll: {
-          hasPoll: false,
-          options: [],
+          hasPoll: postElement.payload.poll ? true : false,
+          options: pollOptionList,
         },
         title: postElement.payload.title,
       },

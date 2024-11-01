@@ -53,7 +53,6 @@ export const zodPollOptionWithResult = z.object({
     index: z.number().int().nonnegative(),
     option: zodPollOptionTitle,
     numResponses: z.number().int().nonnegative(),
-    isChosen: z.boolean()
 }).strict();
 export const zodPostDataWithResult = z
     .object({

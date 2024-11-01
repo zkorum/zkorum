@@ -7,12 +7,17 @@ import sanitizeHtml from "sanitize-html";
 
 export function useCommonPost() {
 
-    async function fetchPostItems(
-        db: PostgresJsDatabase,
-        showHidden: boolean,
-        limit: number,
-        where: SQL | undefined,
-        enableCompactBody: boolean) {
+    interface FetchPostItemsProps {
+        db: PostgresJsDatabase;
+        showHidden: boolean;
+        limit: number;
+        where: SQL | undefined;
+        enableCompactBody: boolean;
+    }
+
+    async function fetchPostItems({
+        db, showHidden, limit, where, enableCompactBody
+    }: FetchPostItemsProps) {
 
         const postItems = await db
             .select({
@@ -30,7 +35,6 @@ export function useCommonPost() {
                 option5Response: pollTable.option5Response,
                 option6: pollTable.option6,
                 option6Response: pollTable.option6Response,
-                optionChosen: pollResponseContentTable.optionChosen,
                 // metadata
                 slugId: postTable.slugId,
                 isHidden: postTable.isHidden,
@@ -102,20 +106,17 @@ export function useCommonPost() {
                     index: 1,
                     option: postItem.option1,
                     numResponses: postItem.option1Response,
-                    isChosen: postItem.optionChosen === 1
                 },
                 {
                     index: 2,
                     option: postItem.option2,
                     numResponses: postItem.option2Response,
-                    isChosen: postItem.optionChosen === 2
                 }];
                 if (postItem.option3 !== null) {
                     poll.push({
                         index: 3,
                         option: postItem.option3,
                         numResponses: postItem.option3Response ?? 0,
-                        isChosen: postItem.optionChosen === 3
                     });
                 }
                 if (postItem.option4 !== null) {
@@ -123,8 +124,6 @@ export function useCommonPost() {
                         index: 4,
                         option: postItem.option4,
                         numResponses: postItem.option4Response ?? 0,
-                        isChosen: postItem.optionChosen === 4
-
                     });
                 }
                 if (postItem.option5 !== null) {
@@ -132,7 +131,6 @@ export function useCommonPost() {
                         index: 5,
                         option: postItem.option5,
                         numResponses: postItem.option5Response ?? 0,
-                        isChosen: postItem.optionChosen === 5
                     });
                 }
                 if (postItem.option6 !== null) {
@@ -140,7 +138,6 @@ export function useCommonPost() {
                         index: 6,
                         option: postItem.option6,
                         numResponses: postItem.option6Response ?? 0,
-                        isChosen: postItem.optionChosen === 6
                     });
                 }
                 payload = {
@@ -159,9 +156,9 @@ export function useCommonPost() {
                 payload: payload,
             };
         });
- 
+
         return posts;
-      
+
     }
 
     return { fetchPostItems };

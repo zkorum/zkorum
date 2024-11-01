@@ -1,18 +1,20 @@
 <template>
   <div>
-    <div class="container" :style="`background: ${percentageStyle};`">
-      <div class="optionTextStyle">
-        <div>
-          {{ option }}
+    <div class="container">
+      <div class="optionBar" :style="`background: ${percentageStyle};`">
+        <div class="optionTextStyle">
+          <div>
+            {{ option }}
+          </div>
+          <div v-if="optionResponded">
+            <q-chip icon="mdi-check-circle">Your Vote</q-chip>
+          </div>
         </div>
-        <div v-if="optionResponded">
-          <q-icon name="mdi-check-circle" size="1rem" class="iconPadding" />
+        <div class="q-ml-auto">
+          <span>
+            {{ `${optionPercentage}%` }}
+          </span>
         </div>
-      </div>
-      <div class="q-ml-auto">
-        <span>
-          {{ `${optionPercentage}%` }}
-        </span>
       </div>
     </div>
   </div>
@@ -20,6 +22,7 @@
 
 <script setup lang="ts">
 const props = defineProps<{
+  isVoteMode: boolean;
   option: string;
   optionPercentage: number;
   optionResponded: boolean;
@@ -32,18 +35,20 @@ const percentageStyle =
     }%)`;
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.container {
+  border-style: solid;
+  border-width: 1px;
+  border-color: #cbd5e1;
+}
+
 .optionTextStyle {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.iconPadding {
-  padding-bottom: 0.1rem;
-}
-
-.container {
+.optionBar {
   display: flex;
   gap: 1rem;
   font-weight: bold;

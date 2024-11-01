@@ -1,38 +1,32 @@
 <template>
-  <div>
-    <div>
-      <div v-if="showResults" class="pollContainer">
+  <div @click.stop.prevent="">
+    <div v-if="dataLoaded" class="pollContainer">
+
+      <div v-if="pollButtonGroupOptionModel == DisplayModes.Vote">
         <div class="pollOptionList">
-          <option-view v-for="optionItem in localPollOptions" :key="optionItem.index" :option="optionItem.option"
-            :option-responded="localUserVote.voteIndex == optionItem.index &&
-              localUserVote.hasVoted
-              " :option-percentage="totalCount === 0
-                ? 0
-                : Math.round((optionItem.numResponses * 100) / totalCount)
+          <ZKButton v-for="optionItem in localPollOptions" :key="optionItem.index" outline :label="optionItem.option"
+            text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
+        </div>
+
+      </div>
+
+      <div v-if="pollButtonGroupOptionModel == DisplayModes.Results" class="pollOptionList">
+        <option-view v-for="optionItem in localPollOptions" :key="optionItem.index" :option="optionItem.option"
+          :is-vote-mode="isVoteMode" :option-responded="localUserVote.voteIndex == optionItem.index &&
+            localUserVote.hasVoted
+            " :option-percentage="totalCount === 0
+              ? 0
+              : Math.round((optionItem.numResponses * 100) / totalCount)
               " />
-        </div>
-
-        <div class="voteCounter">
-          {{ totalCount }} vote<span v-if="totalCount > 1">s</span>
-        </div>
-
-        <div>
-          <ZKButton v-if="!localUserVote.hasVoted" outline text-color="primary" label="Cast Vote" icon="mdi-vote"
-            @click.stop.prevent="castVoteRequested()" />
-        </div>
-      </div>
-    </div>
-
-    <div v-if="!showResults" class="pollContainer">
-      <div class="pollOptionList">
-        <ZKButton v-for="optionItem in localPollOptions" :key="optionItem.index" outline :label="optionItem.option"
-          text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
       </div>
 
-      <div class="actionButtonCluster">
-        <ZKButton outline text-color="primary" icon="mdi-chart-bar" label="Results"
-          @click.stop.prevent="showPollResults()" />
+      <div class="voteCounter">
+        {{ totalCount }} vote<span v-if="totalCount > 1">s</span>
       </div>
+
+      <q-btn-toggle v-if="!localUserVote.hasVoted && isAuthenticated" v-model="pollButtonGroupOptionModel" unelevated
+        spread no-caps toggle-color="purple" color="white" text-color="black" :options="pollButtonGroupOptions" />
+
     </div>
   </div>
 </template>
@@ -41,28 +35,50 @@
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { DummyPollOptionFormat, DummyPostUserVote } from "src/stores/post";
-import { ref, toRaw } from "vue";
+import { computed, ref, toRaw, watch } from "vue";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { storeToRefs } from "pinia";
 
 const props = defineProps<{
   pollOptions: DummyPollOptionFormat[];
   userVote: DummyPostUserVote;
 }>();
 
+const dataLoaded = ref(false);
+
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+enum DisplayModes {
+  Vote,
+  Results
+}
+const pollButtonGroupOptionModel = ref<DisplayModes>(isAuthenticated.value ? DisplayModes.Vote : DisplayModes.Results);
+
+const pollButtonGroupOptions = [
+  { label: "Vote", value: DisplayModes.Vote },
+  { label: "Results", value: DisplayModes.Results }
+
+];
+
 const localPollOptions = structuredClone(toRaw(props.pollOptions));
 const localUserVote = structuredClone(toRaw(props.userVote));
-const showResults = ref(localUserVote.hasVoted);
 
 let totalCount = 0;
 props.pollOptions.forEach((option) => {
   totalCount += option.numResponses;
 });
 
-function castVoteRequested() {
-  showResults.value = false;
+prepareData();
+
+function prepareData() {
+  dataLoaded.value = true;
 }
 
-function showPollResults() {
-  showResults.value = true;
+function showResultsInterface() {
+  pollButtonGroupOptionModel.value = DisplayModes.Results;
+}
+
+function showVoteInterface() {
+  pollButtonGroupOptionModel.value = DisplayModes.Vote;
 }
 
 function voteCasted(selectedIndex: number) {
@@ -70,19 +86,26 @@ function voteCasted(selectedIndex: number) {
   localUserVote.voteIndex = selectedIndex;
 
   localUserVote.hasVoted = true;
-  showResults.value = true;
+  pollButtonGroupOptionModel.value = DisplayModes.Results;
 }
+
+const isVoteMode = computed(() => {
+  return pollButtonGroupOptionModel.value == DisplayModes.Vote;
+});
+
+watch(pollButtonGroupOptionModel, () => {
+  if (pollButtonGroupOptionModel.value == DisplayModes.Results) {
+    showResultsInterface();
+  } else {
+    showVoteInterface();
+  }
+});
 </script>
 
 <style scoped>
 .pollOptionList {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.actionButtonCluster {
-  display: flex;
   gap: 1rem;
 }
 
@@ -96,6 +119,7 @@ function voteCasted(selectedIndex: number) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  cursor: auto;
 }
 
 .voteCounter {

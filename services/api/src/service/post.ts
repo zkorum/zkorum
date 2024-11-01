@@ -186,7 +186,13 @@ export async function fetchPostBySlugId(
 
     try {
         const { fetchPostItems } = useCommonPost();
-        const postData = await fetchPostItems(db, true, 1, eq(postTable.slugId, postSlugId), false);
+        const postData = await fetchPostItems({
+            db: db,
+            showHidden: true,
+            limit: 1,
+            where: eq(postTable.slugId, postSlugId),
+            enableCompactBody: false
+        });
 
         if (postData.length == 1) {
             return {
