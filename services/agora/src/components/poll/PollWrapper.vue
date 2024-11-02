@@ -87,9 +87,12 @@ function showVoteInterface() {
 }
 
 async function voteCasted(selectedIndex: number) {
-  await backendPollApi.submitPollResponse(selectedIndex, props.postSlugId);
-
-  showMessage("Casted Vote (FIX LATER)", "Refresh page to see result");
+  const response = await backendPollApi.submitPollResponse(selectedIndex, props.postSlugId);
+  if (response == false) {
+    showMessage("Server error", "Failed to cast vote (each poll can only have 1 vote, create a new poll if you need to test)");
+  } else {
+    showMessage("Casted Vote", "Refresh page to see result");
+  }
 }
 
 const isVoteMode = computed(() => {
