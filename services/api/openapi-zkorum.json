@@ -393,16 +393,12 @@
                                                                 "numResponses": {
                                                                     "type": "integer",
                                                                     "minimum": 0
-                                                                },
-                                                                "isChosen": {
-                                                                    "type": "boolean"
                                                                 }
                                                             },
                                                             "required": [
                                                                 "index",
                                                                 "option",
-                                                                "numResponses",
-                                                                "isChosen"
+                                                                "numResponses"
                                                             ],
                                                             "additionalProperties": false
                                                         }
@@ -533,16 +529,12 @@
                                                                 "numResponses": {
                                                                     "type": "integer",
                                                                     "minimum": 0
-                                                                },
-                                                                "isChosen": {
-                                                                    "type": "boolean"
                                                                 }
                                                             },
                                                             "required": [
                                                                 "index",
                                                                 "option",
-                                                                "numResponses",
-                                                                "isChosen"
+                                                                "numResponses"
                                                             ],
                                                             "additionalProperties": false
                                                         }
@@ -565,6 +557,34 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/v1/poll/submitResponse": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "voteIndex": {
+                                        "type": "number"
+                                    },
+                                    "postSlugId": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "voteIndex",
+                                    "postSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {}
             }
         },
         "/api/v1/comment/create": {
@@ -947,16 +967,12 @@
                                                                     "numResponses": {
                                                                         "type": "integer",
                                                                         "minimum": 0
-                                                                    },
-                                                                    "isChosen": {
-                                                                        "type": "boolean"
                                                                     }
                                                                 },
                                                                 "required": [
                                                                     "index",
                                                                     "option",
-                                                                    "numResponses",
-                                                                    "isChosen"
+                                                                    "numResponses"
                                                                 ],
                                                                 "additionalProperties": false
                                                             }

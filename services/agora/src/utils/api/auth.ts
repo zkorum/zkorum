@@ -11,7 +11,6 @@ import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useCommonApi } from "./common";
 import { useRouter } from "vue-router";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { storeToRefs } from "pinia";
 
 interface AuthenticateReturn {
   isSuccessful: boolean;
@@ -22,7 +21,6 @@ interface AuthenticateReturn {
 export function useBackendAuthApi() {
   const { buildEncodedUcan } = useCommonApi();
   const { userLogout } = useAuthenticationStore();
-  const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
   const router = useRouter();
 
@@ -175,19 +173,17 @@ export function useBackendAuthApi() {
 
   function initializeAuthState() {
     setTimeout(async () => {
-      if (isAuthenticated.value) {
-        const status = await deviceIsLoggedOn();
-        if (!status.isSuccessful) {
-          if (status.error == "already_logged_in") {
-            // ignore
-            console.log("already logged in");
-          } else if (status.error == "throttled") {
-            // ignore
-          } else {
-            // unauthorized
-            userLogout();
-            router.push({ name: "welcome" });
-          }
+      const status = await deviceIsLoggedOn();
+      if (!status.isSuccessful) {
+        if (status.error == "already_logged_in") {
+          // ignore
+          console.log("already logged in");
+        } else if (status.error == "throttled") {
+          // ignore
+        } else {
+          // unauthorized
+          userLogout();
+          router.push({ name: "welcome" });
         }
       }
     }, 1000);

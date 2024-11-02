@@ -28,6 +28,7 @@ import {
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan.js";
 import { fetchCommentsByPostSlugId, postNewComment } from "./service/comment.js";
+import { submitPollResponse } from "./service/poll.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -404,6 +405,39 @@ server.after(() => {
                             ? new Date(request.body.lastReactedAt)
                             : undefined,
                 });
+            },
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/poll/submitResponse`,
+            schema: {
+                body: Dto.submitPollResponseRequest,
+                response: {},
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const authHeader = getAuthHeader(request);
+
+                    await submitPollResponse({
+                        db: db,
+                        authHeader: authHeader,
+                        authorId: status.userId,
+                        didWrite: didWrite,
+                        httpErrors: server.httpErrors,
+                        postSlugId: request.body.postSlugId,
+                        voteIndex: request.body.voteIndex
+                    })
+                }
             },
         });
 

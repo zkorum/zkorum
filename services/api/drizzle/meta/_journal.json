@@ -8,6 +8,13 @@
       "when": 1730410820221,
       "tag": "0000_dry_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1730513615567,
+      "tag": "0001_mixed_thanos",
+      "breakpoints": true
     }
   ]
 }

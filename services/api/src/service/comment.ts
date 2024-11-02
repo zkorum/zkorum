@@ -5,6 +5,7 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { desc, eq, sql } from "drizzle-orm";
 import type { CommentItem, SlugId } from "@/shared/types/zod.js";
 import { httpErrors, type HttpErrors } from "@fastify/sensible";
+import { useCommonPost } from "./common.js";
 
 export async function fetchCommentsByPostSlugId(
     db: PostgresJsDatabase,
@@ -160,36 +161,6 @@ async function getPostIdFromPostSlugId(
     return postId;
 }
 
-interface IdAndContentId {
-    id: number;
-    contentId: number | null;
-}
-
-interface GetPostAndContentIdFromSlugIdProps {
-    db: PostgresJsDatabase;
-    postSlugId: string;
-    httpErrors: HttpErrors;
-}
-
-async function getPostAndContentIdFromSlugId(
-    { db,
-        postSlugId,
-        httpErrors }: GetPostAndContentIdFromSlugIdProps): Promise<IdAndContentId> {
-    const postTableResponse = await db
-        .select({
-            id: postTable.id,
-            currentContentId: postTable.currentContentId,
-        })
-        .from(postTable)
-        .where(eq(postTable.slugId, postSlugId));
-
-    if (postTableResponse.length != 1) {
-        throw httpErrors.notFound("Post slugId does not exist")
-    }
-
-    return { contentId: postTableResponse[0].currentContentId, id: postTableResponse[0].id };
-}
-
 interface PostNewCommentProps {
     db: PostgresJsDatabase,
     commentBody: string,
@@ -209,7 +180,11 @@ export async function postNewComment({
     authHeader,
     httpErrors }: PostNewCommentProps): Promise<CreateCommentResponse> {
 
-    const { id: postId, contentId: postContentId } = await getPostAndContentIdFromSlugId({ db, postSlugId, httpErrors });
+    const { id: postId, contentId: postContentId } = await useCommonPost().getPostAndContentIdFromSlugId({
+        db: db,
+        postSlugId: postSlugId,
+        httpErrors: httpErrors
+    });
     if (postContentId == null) {
         throw httpErrors.gone("Cannot comment on a deleted post");
     }

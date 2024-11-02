@@ -109,6 +109,10 @@ export class Dto {
         commentBody: z.string()
     }).strict();
     static createCommentResponse = z.object({ commentSlugId: z.string() }).strict();
+    static submitPollResponseRequest = z.object({
+        voteIndex: z.number(),
+        postSlugId: z.string()
+    }).strict();
 }
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
@@ -124,3 +128,4 @@ export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
 export type FetchPostBySlugIdRequest = z.infer<typeof Dto.fetchPostBySlugIdRequest>;
 export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;
 export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;
+export type SubmitPollResponseRequest = z.infer<typeof Dto.submitPollResponseRequest>;

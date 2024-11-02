@@ -38,14 +38,19 @@ import { DummyPollOptionFormat, DummyPostUserVote } from "src/stores/post";
 import { computed, ref, toRaw, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
+import { useBackendPollApi } from "src/utils/api/poll";
+import { useDialog } from "src/utils/ui/dialog";
 
 const props = defineProps<{
   pollOptions: DummyPollOptionFormat[];
   userVote: DummyPostUserVote;
+  postSlugId: string;
 }>();
 
 const dataLoaded = ref(false);
 
+const backendPollApi = useBackendPollApi();
+const { showMessage } = useDialog();
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 enum DisplayModes {
   Vote,
@@ -81,12 +86,10 @@ function showVoteInterface() {
   pollButtonGroupOptionModel.value = DisplayModes.Vote;
 }
 
-function voteCasted(selectedIndex: number) {
-  localPollOptions[selectedIndex].numResponses += 1;
-  localUserVote.voteIndex = selectedIndex;
+async function voteCasted(selectedIndex: number) {
+  await backendPollApi.submitPollResponse(selectedIndex, props.postSlugId);
 
-  localUserVote.hasVoted = true;
-  pollButtonGroupOptionModel.value = DisplayModes.Results;
+  showMessage("Casted Vote (FIX LATER)", "Refresh page to see result");
 }
 
 const isVoteMode = computed(() => {

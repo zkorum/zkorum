@@ -1,6 +1,7 @@
 import { postContentTable, pollTable, pollResponseContentTable, postTable, organisationTable, userTable, pollResponseTable } from "@/schema.js";
 import { toUnionUndefined } from "@/shared/shared.js";
 import type { PostMetadata, ExtendedPostPayload, PollOptionWithResult, ExtendedPost } from "@/shared/types/zod.js";
+import type { HttpErrors } from "@fastify/sensible";
 import { eq, and, desc, SQL } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import sanitizeHtml from "sanitize-html";
@@ -161,5 +162,35 @@ export function useCommonPost() {
 
     }
 
-    return { fetchPostItems };
+    interface IdAndContentId {
+        id: number;
+        contentId: number | null;
+    }
+
+    interface GetPostAndContentIdFromSlugIdProps {
+        db: PostgresJsDatabase;
+        postSlugId: string;
+        httpErrors: HttpErrors;
+    }
+
+    async function getPostAndContentIdFromSlugId(
+        { db,
+            postSlugId,
+            httpErrors }: GetPostAndContentIdFromSlugIdProps): Promise<IdAndContentId> {
+        const postTableResponse = await db
+            .select({
+                id: postTable.id,
+                currentContentId: postTable.currentContentId,
+            })
+            .from(postTable)
+            .where(eq(postTable.slugId, postSlugId));
+
+        if (postTableResponse.length != 1) {
+            throw httpErrors.notFound("Post slugId does not exist")
+        }
+
+        return { contentId: postTableResponse[0].currentContentId, id: postTableResponse[0].id };
+    }
+
+    return { fetchPostItems, getPostAndContentIdFromSlugId };
 }

@@ -15,12 +15,12 @@
 
         <div class="container">
           <q-input v-model="postDraft.postTitle" borderless no-error-icon type="textarea" label="Title" lazy-rules
-            :rules="[(val) => val && val.length > 0]" class="titleStyle" autogrow :maxlength="POST_TITLE_LENGTH_MAX"
+            :rules="[(val) => val && val.length > 0]" class="titleStyle" autogrow :maxlength="MAX_LENGTH_TITLE"
             clearable required />
 
           <div class="wordCountDiv">
             {{ postDraft.postTitle.length }} /
-            {{ POST_TITLE_LENGTH_MAX }}
+            {{ MAX_LENGTH_TITLE }}
           </div>
 
           <div>
@@ -29,27 +29,26 @@
                 :show-toolbar="true" @update:model-value="checkWordCount()" />
 
               <div class="wordCountDiv">
-                <q-icon v-if="bodyWordCount > POST_BODY_LENGTH_MAX" name="mdi-alert-circle"
-                  class="bodySizeWarningIcon" />
+                <q-icon v-if="bodyWordCount > MAX_LENGTH_BODY" name="mdi-alert-circle" class="bodySizeWarningIcon" />
                 <span :class="{
-                  wordCountWarning: bodyWordCount > POST_BODY_LENGTH_MAX,
+                  wordCountWarning: bodyWordCount > MAX_LENGTH_BODY,
                 }">{{ bodyWordCount }}
                 </span>
-                &nbsp; / {{ POST_BODY_LENGTH_MAX }}
+                &nbsp; / {{ MAX_LENGTH_BODY }}
               </div>
             </div>
 
             <ZKCard v-if="postDraft.enablePolling" padding="1rem" :style="{ marginTop: '1rem' }">
               <div>
                 <div class="pollTopBar">
-                  <div>Poll</div>
+                  <div>Add a Poll</div>
                   <ZKButton flat text-color="black" icon="mdi-close" @click="togglePolling()" />
                 </div>
                 <div ref="pollRef" class="pollingFlexStyle">
                   <div v-for="index in postDraft.pollingOptionList.length" :key="index" class="pollingItem">
                     <q-input v-model="postDraft.pollingOptionList[index - 1]" :rules="[(val) => val && val.length > 0]"
-                      type="text" :label="'Option ' + index" :style="{ width: '100%' }"
-                      :maxlength="POLL_OPTION_LENGTH_MAX" autogrow clearable />
+                      type="text" :label="'Option ' + index" :style="{ width: '100%' }" :maxlength="MAX_LENGTH_OPTION"
+                      autogrow clearable />
                     <div v-if="postDraft.pollingOptionList.length != 2" class="deletePollOptionDiv">
                       <ZKButton flat round icon="mdi-delete" text-color="primary"
                         @click="removePollOption(index - 1)" />
@@ -109,10 +108,8 @@ import { useNewPostDraftsStore } from "src/stores/newPostDrafts";
 import { useViewPorts } from "src/utils/html/viewPort";
 import { getCharacterCount } from "src/utils/component/editor";
 import { useBackendPostApi } from "src/utils/api/post";
+import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_BODY } from "src/shared/shared";
 
-const POST_BODY_LENGTH_MAX = 260;
-const POST_TITLE_LENGTH_MAX = 130;
-const POLL_OPTION_LENGTH_MAX = 100;
 const bodyWordCount = ref(0);
 const exceededBodyWordCount = ref(false);
 
@@ -156,7 +153,7 @@ onUnmounted(() => {
 function checkWordCount() {
   bodyWordCount.value = getCharacterCount(postDraft.value.postBody);
 
-  if (bodyWordCount.value > POST_BODY_LENGTH_MAX) {
+  if (bodyWordCount.value > MAX_LENGTH_BODY) {
     exceededBodyWordCount.value = true;
   } else {
     exceededBodyWordCount.value = false;

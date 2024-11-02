@@ -1,0 +1,2 @@
+ALTER TABLE "poll_response" DROP CONSTRAINT "poll_response_post_id_unique";--> statement-breakpoint
+ALTER TABLE "poll_response" ADD CONSTRAINT "poll_response_author_id_post_id_unique" UNIQUE("author_id","post_id");

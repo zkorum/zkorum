@@ -9,6 +9,7 @@ import {
     customType,
     text,
     type AnyPgColumn,
+    unique,
 } from "drizzle-orm/pg-core";
 // import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_COMMENT, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 // WARNING - change this in shared.ts as well
@@ -380,7 +381,6 @@ export const pollResponseTable = pgTable("poll_response", {
         .references(() => userTable.id),
     postId: integer("post_id") // poll is bound to the post
         .notNull()
-        .unique()
         .references(() => postTable.id),
     currentContentId: integer("current_content_id").references((): AnyPgColumn => pollResponseContentTable.id).unique(),
     createdAt: timestamp("created_at", {
@@ -395,7 +395,9 @@ export const pollResponseTable = pgTable("poll_response", {
     })
         .defaultNow()
         .notNull(),
-});
+}, (t) => ({
+    onePollResponsePerAuthor: unique().on(t.authorId, t.postId),
+}));
 
 export const pollResponseProofTable = pgTable("poll_response_proof", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
