@@ -72,9 +72,7 @@ export function useCommonPost() {
                 postItem.body = sanitizeHtml(postItem.body, {
                     allowedTags: ["b", "i", "strike", "u"],
                     allowedAttributes: {},
-                    textFilter: function (text, tagName) {
-                        console.log(tagName);
-                        console.log(text);
+                    textFilter: function (text) { // , tagName
                         return text + " ";
                     }
                 });

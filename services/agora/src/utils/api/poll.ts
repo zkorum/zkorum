@@ -36,7 +36,7 @@ export function useBackendPollApi() {
       return response.data;
     } catch (e) {
       console.error(e);
-      showMessage("An error had occured", "Failed to add comment to post.");
+      showMessage("An error had occured", "Failed to submit poll response.");
       return null;
     }
   }

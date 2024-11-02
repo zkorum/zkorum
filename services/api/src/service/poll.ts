@@ -3,6 +3,7 @@ import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgre
 import { useCommonPost } from "./common.js";
 import type { HttpErrors } from "@fastify/sensible";
 import { eq, sql } from "drizzle-orm";
+import { server } from "@/app.js";
 
 interface SubmitPollResponseProps {
   db: PostgresDatabase;
@@ -72,6 +73,8 @@ export async function submitPollResponse({
         optionChosen: voteIndex,
       }).returning({ id: pollResponseContentTable.id });
 
+      const pollResponseContentId = pollResponseContentTableResponse[0].id;
+
       const option1CountDiff = voteIndex == 0 ? 1 : 0;
       const option2CountDiff = voteIndex == 1 ? 1 : 0;
       const option3CountDiff = voteIndex == 2 ? 1 : 0;
@@ -80,7 +83,7 @@ export async function submitPollResponse({
       const option6CountDiff = voteIndex == 5 ? 1 : 0;
 
       // Update vote counter
-      await db
+      await tx
         .update(pollTable)
         .set({
           ...voteIndex == 0 && { option1Response: sql`${pollTable.option1Response} + ${option1CountDiff}` },
@@ -92,8 +95,6 @@ export async function submitPollResponse({
         })
         .where(eq(pollTable.postContentId, postContentId));
 
-      const pollResponseContentId = pollResponseContentTableResponse[0].id;
-
       await db
         .update(pollResponseTable)
         .set({
@@ -103,7 +104,7 @@ export async function submitPollResponse({
 
     });
   } catch (error) {
-    console.log(error);
+    server.log.error(error);
     throw httpErrors.internalServerError("Error while creating poll response entry");
   }
 }
