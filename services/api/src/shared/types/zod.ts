@@ -48,7 +48,7 @@ export const zodDevice = z
     .strict();
 export const zodDevices = z.array(zodDevice); // list of didWrite of all the devices belonging to a user
 export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).min(1);
-export const zodPostBody = z.string(); // Cannot specify length due to HTML tags
+export const zodPostBody = z.string().optional(); // Cannot specify length due to HTML tags
 export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).min(1);
 export const zodPollOptionWithResult = z.object({
     index: z.number().int().nonnegative(),
@@ -58,7 +58,7 @@ export const zodPollOptionWithResult = z.object({
 export const zodPostDataWithResult = z
     .object({
         title: zodPostTitle,
-        body: zodPostBody.optional(),
+        body: zodPostBody,
         poll: z.array(zodPollOptionWithResult).optional()
     })
     .strict();

@@ -8,6 +8,8 @@ import {
     zodSlugId,
     zodCommentItem,
     zodPollOptionTitle,
+    zodPostTitle,
+    zodPostBody,
 } from "./zod.js";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -95,8 +97,8 @@ export class Dto {
     }).strict();
     static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodCommentItem) }).strict();
     static createNewPostRequest = z.object({
-        postTitle: z.string(),
-        postBody: z.string().optional(),
+        postTitle: zodPostTitle,
+        postBody: zodPostBody,
         pollingOptionList: zodPollOptionTitle.array().optional()
     }).strict();
     static createNewPostResponse = z.object({ postSlugId: z.string() }).strict();
