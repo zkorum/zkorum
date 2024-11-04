@@ -6,8 +6,8 @@
           <div>
             {{ option }}
           </div>
-          <div v-if="optionResponded">
-            <q-chip icon="mdi-check-circle">Your Vote</q-chip>
+          <div v-if="votedByUser">
+            <q-chip icon="mdi-check-circle" color="white">Your Vote</q-chip>
           </div>
         </div>
         <div class="q-ml-auto">
@@ -25,7 +25,7 @@ const props = defineProps<{
   isVoteMode: boolean;
   option: string;
   optionPercentage: number;
-  optionResponded: boolean;
+  votedByUser: boolean;
 }>();
 
 const percentageStyle =

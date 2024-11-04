@@ -381,11 +381,12 @@
                                                         "items": {
                                                             "type": "object",
                                                             "properties": {
-                                                                "index": {
+                                                                "optionNumber": {
                                                                     "type": "integer",
-                                                                    "minimum": 0
+                                                                    "minimum": 1,
+                                                                    "maximum": 6
                                                                 },
-                                                                "option": {
+                                                                "optionTitle": {
                                                                     "type": "string",
                                                                     "maxLength": 30,
                                                                     "minLength": 1
@@ -396,8 +397,8 @@
                                                                 }
                                                             },
                                                             "required": [
-                                                                "index",
-                                                                "option",
+                                                                "optionNumber",
+                                                                "optionTitle",
                                                                 "numResponses"
                                                             ],
                                                             "additionalProperties": false
@@ -517,11 +518,12 @@
                                                         "items": {
                                                             "type": "object",
                                                             "properties": {
-                                                                "index": {
+                                                                "optionNumber": {
                                                                     "type": "integer",
-                                                                    "minimum": 0
+                                                                    "minimum": 1,
+                                                                    "maximum": 6
                                                                 },
-                                                                "option": {
+                                                                "optionTitle": {
                                                                     "type": "string",
                                                                     "maxLength": 30,
                                                                     "minLength": 1
@@ -532,8 +534,8 @@
                                                                 }
                                                             },
                                                             "required": [
-                                                                "index",
-                                                                "option",
+                                                                "optionNumber",
+                                                                "optionTitle",
                                                                 "numResponses"
                                                             ],
                                                             "additionalProperties": false
@@ -567,7 +569,7 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "voteIndex": {
+                                    "voteOptionChoice": {
                                         "type": "number"
                                     },
                                     "postSlugId": {
@@ -575,7 +577,7 @@
                                     }
                                 },
                                 "required": [
-                                    "voteIndex",
+                                    "voteOptionChoice",
                                     "postSlugId"
                                 ],
                                 "additionalProperties": false
@@ -585,6 +587,47 @@
                     "required": true
                 },
                 "responses": {}
+            }
+        },
+        "/api/v1/poll/get-user-poll-response": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "selectedPollOption": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/v1/comment/create": {
@@ -688,8 +731,7 @@
                                             },
                                             "comment": {
                                                 "type": "string",
-                                                "minLength": 1,
-                                                "maxLength": 280
+                                                "minLength": 1
                                             },
                                             "numLikes": {
                                                 "type": "integer",
@@ -775,8 +817,7 @@
                                                     },
                                                     "comment": {
                                                         "type": "string",
-                                                        "minLength": 1,
-                                                        "maxLength": 280
+                                                        "minLength": 1
                                                     },
                                                     "numLikes": {
                                                         "type": "integer",
@@ -819,7 +860,9 @@
                                 "type": "object",
                                 "properties": {
                                     "postTitle": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "maxLength": 130,
+                                        "minLength": 1
                                     },
                                     "postBody": {
                                         "type": "string"
@@ -827,7 +870,9 @@
                                     "pollingOptionList": {
                                         "type": "array",
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "maxLength": 30,
+                                            "minLength": 1
                                         }
                                     }
                                 },
@@ -955,11 +1000,12 @@
                                                             "items": {
                                                                 "type": "object",
                                                                 "properties": {
-                                                                    "index": {
+                                                                    "optionNumber": {
                                                                         "type": "integer",
-                                                                        "minimum": 0
+                                                                        "minimum": 1,
+                                                                        "maximum": 6
                                                                     },
-                                                                    "option": {
+                                                                    "optionTitle": {
                                                                         "type": "string",
                                                                         "maxLength": 30,
                                                                         "minLength": 1
@@ -970,8 +1016,8 @@
                                                                     }
                                                                 },
                                                                 "required": [
-                                                                    "index",
-                                                                    "option",
+                                                                    "optionNumber",
+                                                                    "optionTitle",
                                                                     "numResponses"
                                                                 ],
                                                                 "additionalProperties": false

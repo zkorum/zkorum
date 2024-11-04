@@ -1,6 +1,7 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
+  ApiV1PollGetUserPollResponsePostRequest,
   ApiV1PollSubmitResponsePostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
@@ -13,11 +14,38 @@ export function useBackendPollApi() {
 
   const { showMessage } = useDialog();
 
+  async function fetchUserPollResponse(postSlugId: string) {
+    try {
+      const params: ApiV1PollGetUserPollResponsePostRequest = {
+        postSlugId: postSlugId
+      };
+
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1PollGetUserPollResponsePost(params);
+      const encodedUcan = await buildEncodedUcan(url, options);
+      const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1PollGetUserPollResponsePost(params, {
+        headers: {
+          ...buildAuthorizationHeader(encodedUcan),
+        },
+      });
+
+      return response.data;
+    } catch (e) {
+      console.error(e);
+      showMessage("An error had occured", "Failed to submit poll response.");
+      return undefined;
+    }
+  }
+
   async function submitPollResponse(voteIndex: number, postSlugId: string) {
     try {
       const params: ApiV1PollSubmitResponsePostRequest = {
         postSlugId: postSlugId,
-        voteIndex: voteIndex
+        voteOptionChoice: voteIndex + 1
       };
 
       const { url, options } =
@@ -41,6 +69,6 @@ export function useBackendPollApi() {
     }
   }
 
-  return { submitPollResponse };
+  return { submitPollResponse, fetchUserPollResponse };
 
 }

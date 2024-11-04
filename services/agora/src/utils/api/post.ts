@@ -29,9 +29,9 @@ export function useBackendPostApi() {
     const pollOptionList: DummyPollOptionFormat[] = [];
     postElement.payload.poll?.forEach(pollOption => {
       const internalItem: DummyPollOptionFormat = {
-        index: pollOption.index,
+        index: pollOption.optionNumber - 1,
         numResponses: pollOption.numResponses,
-        option: pollOption.option
+        option: pollOption.optionTitle
       };
       pollOptionList.push(internalItem);
     });
@@ -60,11 +60,7 @@ export function useBackendPostApi() {
         commentRanking: {
           assignedRankingItems: [],
           rankedCommentList: new Map<number, PossibleCommentRankingActions>(),
-        },
-        pollVoting: {
-          hasVoted: false,
-          voteIndex: 0,
-        },
+        }
       },
     };
 

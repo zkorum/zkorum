@@ -113,8 +113,14 @@ export class Dto {
     }).strict();
     static createCommentResponse = z.object({ commentSlugId: z.string() }).strict();
     static submitPollResponseRequest = z.object({
-        voteIndex: z.number(),
+        voteOptionChoice: z.number(),
         postSlugId: z.string()
+    }).strict();
+    static fetchUserPollResponseRequest = z.object({
+        postSlugId: z.string()
+    }).strict();
+    static fetchUserPollResponseResponse = z.object({
+        selectedPollOption: z.number().optional()
     }).strict();
 }
 export type AuthenticateRequestBody = z.infer<
@@ -132,3 +138,5 @@ export type FetchPostBySlugIdRequest = z.infer<typeof Dto.fetchPostBySlugIdReque
 export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;
 export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;
 export type SubmitPollResponseRequest = z.infer<typeof Dto.submitPollResponseRequest>;
+export type FetchUserPollResponseRequest = z.infer<typeof Dto.fetchUserPollResponseRequest>;
+export type FetchUserPollResponseResponse = z.infer<typeof Dto.fetchUserPollResponseResponse>;

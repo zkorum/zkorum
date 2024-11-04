@@ -49,8 +49,8 @@ export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).min(1);
 export const zodPostBody = z.string().optional(); // Cannot specify length due to HTML tags
 export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).min(1);
 export const zodPollOptionWithResult = z.object({
-    index: z.number().int().nonnegative(),
-    option: zodPollOptionTitle,
+    optionNumber: z.number().int().min(1).max(6),
+    optionTitle: zodPollOptionTitle,
     numResponses: z.number().int().nonnegative(),
 }).strict();
 export const zodPostDataWithResult = z

@@ -102,44 +102,43 @@ export function useCommonPost() {
             let payload: ExtendedPostPayload;
             if (postItem.option1 !== null && postItem.option2 !== null && postItem.option1Response !== null && postItem.option2Response !== null) { // hasPoll
                 const pollList: PollOptionWithResult[] = [{
-                    index: 1,
-                    option: postItem.option1,
+                    optionNumber: 1,
+                    optionTitle: postItem.option1,
                     numResponses: postItem.option1Response,
                 },
                 {
-                    index: 2,
-                    option: postItem.option2,
+                    optionNumber: 2,
+                    optionTitle: postItem.option2,
                     numResponses: postItem.option2Response,
                 }];
                 if (postItem.option3 !== null) {
                     pollList.push({
-                        index: 3,
-                        option: postItem.option3,
+                        optionNumber: 3,
+                        optionTitle: postItem.option3,
                         numResponses: postItem.option3Response ?? 0,
                     });
                 }
                 if (postItem.option4 !== null) {
                     pollList.push({
-                        index: 4,
-                        option: postItem.option4,
+                        optionNumber: 4,
+                        optionTitle: postItem.option4,
                         numResponses: postItem.option4Response ?? 0,
                     });
                 }
                 if (postItem.option5 !== null) {
                     pollList.push({
-                        index: 5,
-                        option: postItem.option5,
+                        optionNumber: 5,
+                        optionTitle: postItem.option5,
                         numResponses: postItem.option5Response ?? 0,
                     });
                 }
                 if (postItem.option6 !== null) {
                     pollList.push({
-                        index: 6,
-                        option: postItem.option6,
+                        optionNumber: 6,
+                        optionTitle: postItem.option6,
                         numResponses: postItem.option6Response ?? 0,
                     });
                 }
-                console.log(pollList);
                 payload = {
                     title: postItem.title, // Typescript inference limitation
                     body: toUnionUndefined(postItem.body),

@@ -58,7 +58,6 @@ export interface DummyPostDataFormat {
     comments: DummyCommentFormat[];
   };
   userInteraction: {
-    pollVoting: DummyPostUserVote;
     commentRanking: DummyCommentRankingFormat;
   };
 }
@@ -98,10 +97,6 @@ export const usePostStore = defineStore("post", () => {
       comments: [],
     },
     userInteraction: {
-      pollVoting: {
-        hasVoted: false,
-        voteIndex: 0,
-      },
       commentRanking: {
         rankedCommentList: new Map(),
         assignedRankingItems: [],
@@ -564,10 +559,6 @@ export const usePostStore = defineStore("post", () => {
         comments: postComments,
       },
       userInteraction: {
-        pollVoting: {
-          hasVoted: false,
-          voteIndex: 0,
-        },
         commentRanking: {
           rankedCommentList: rankedCommentList,
           assignedRankingItems: assignedRankingItems,

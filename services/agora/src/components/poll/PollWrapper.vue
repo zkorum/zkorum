@@ -1,30 +1,29 @@
 <template>
   <div @click.stop.prevent="">
     <div v-if="dataLoaded" class="pollContainer">
-
+      <!-- Show buttons for voting -->
       <div v-if="pollButtonGroupOptionModel == DisplayModes.Vote">
         <div class="pollOptionList">
-          <ZKButton v-for="optionItem in localPollOptions" :key="optionItem.index" outline :label="optionItem.option"
+          <ZKButton v-for="optionItem in props.pollOptions" :key="optionItem.index" outline :label="optionItem.option"
             text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
         </div>
-
       </div>
 
+      <!-- Show the final result -->
       <div v-if="pollButtonGroupOptionModel == DisplayModes.Results" class="pollOptionList">
-        <option-view v-for="optionItem in localPollOptions" :key="optionItem.index" :option="optionItem.option"
-          :is-vote-mode="isVoteMode" :option-responded="localUserVote.voteIndex == optionItem.index &&
-            localUserVote.hasVoted
-            " :option-percentage="totalCount === 0
-              ? 0
-              : Math.round((optionItem.numResponses * 100) / totalCount)
-              " />
+        <option-view v-for="optionItem in props.pollOptions" :key="optionItem.index" :option="optionItem.option"
+          :is-vote-mode="isVoteMode"
+          :voted-by-user="userVoteStatus.voteIndex == optionItem.index && userVoteStatus.hasVoted" :option-percentage="totalCount === 0
+            ? 0
+            : Math.round((optionItem.numResponses * 100) / totalCount)
+            " />
       </div>
 
       <div class="voteCounter">
         {{ totalCount }} vote<span v-if="totalCount > 1">s</span>
       </div>
 
-      <q-btn-toggle v-if="!localUserVote.hasVoted && isAuthenticated" v-model="pollButtonGroupOptionModel" unelevated
+      <q-btn-toggle v-if="!userVoteStatus.hasVoted && isAuthenticated" v-model="pollButtonGroupOptionModel" unelevated
         spread no-caps toggle-color="purple" color="white" text-color="black" :options="pollButtonGroupOptions" />
 
     </div>
@@ -35,7 +34,7 @@
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { DummyPollOptionFormat, DummyPostUserVote } from "src/stores/post";
-import { computed, ref, toRaw, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
 import { useBackendPollApi } from "src/utils/api/poll";
@@ -43,7 +42,6 @@ import { useDialog } from "src/utils/ui/dialog";
 
 const props = defineProps<{
   pollOptions: DummyPollOptionFormat[];
-  userVote: DummyPostUserVote;
   postSlugId: string;
 }>();
 
@@ -64,8 +62,10 @@ const pollButtonGroupOptions = [
 
 ];
 
-const localPollOptions = structuredClone(toRaw(props.pollOptions));
-const localUserVote = structuredClone(toRaw(props.userVote));
+const userVoteStatus = ref<DummyPostUserVote>({
+  hasVoted: false,
+  voteIndex: 0
+});
 
 let totalCount = 0;
 props.pollOptions.forEach((option) => {
@@ -74,7 +74,16 @@ props.pollOptions.forEach((option) => {
 
 prepareData();
 
-function prepareData() {
+async function prepareData() {
+  const response = await backendPollApi.fetchUserPollResponse(props.postSlugId);
+  if (response?.selectedPollOption) {
+    userVoteStatus.value = {
+      hasVoted: true,
+      voteIndex: response.selectedPollOption - 1
+    };
+    showResultsInterface();
+  }
+
   dataLoaded.value = true;
 }
 
@@ -89,9 +98,7 @@ function showVoteInterface() {
 async function voteCasted(selectedIndex: number) {
   const response = await backendPollApi.submitPollResponse(selectedIndex, props.postSlugId);
   if (response == false) {
-    showMessage("Server error", "Failed to cast vote (each poll can only have 1 vote, create a new poll if you need to test)");
-  } else {
-    showMessage("Casted Vote", "Refresh page to see result");
+    showMessage("Server error", "Failed to cast vote");
   }
 }
 
@@ -116,7 +123,7 @@ watch(pollButtonGroupOptionModel, () => {
 }
 
 .pollContainer {
-  background-color: white;
+  background-color: #ecfeff;
   padding: 1rem;
   border-radius: 15px;
   border-style: solid;

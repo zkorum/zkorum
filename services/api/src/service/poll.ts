@@ -2,13 +2,58 @@ import { pollResponseContentTable, pollResponseProofTable, pollResponseTable, po
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
 import type { HttpErrors } from "@fastify/sensible";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { server } from "@/app.js";
+import type { FetchUserPollResponseResponse } from "@/shared/types/dto.js";
+
+interface GetUserPollResponseProps {
+  db: PostgresDatabase;
+  postSlugId: string;
+  authorId: string;
+  httpErrors: HttpErrors;
+}
+
+export async function getUserPollResponse({
+  db, postSlugId, authorId, httpErrors
+}: GetUserPollResponseProps): Promise<FetchUserPollResponseResponse> {
+
+  const postDetails = await useCommonPost().getPostAndContentIdFromSlugId({
+    db: db,
+    postSlugId: postSlugId,
+    httpErrors: httpErrors
+  });
+
+  const selectStatementResponse = await db.selectDistinct({
+    postId: pollResponseTable.postId,
+    authorId: pollResponseTable.authorId,
+    optionChosen: pollResponseContentTable.optionChosen
+  })
+    .from(pollResponseTable)
+    .innerJoin(
+      pollResponseContentTable,
+      eq(pollResponseTable.authorId, authorId)
+    )
+    .where(
+      and(
+        eq(pollResponseTable.authorId, authorId),
+        eq(pollResponseTable.postId, postDetails.id)
+      )
+    );
+
+  if (selectStatementResponse.length == 1) {
+    // console.log("option chosen: " + selectStatementResponse[0].optionChosen.toString());
+    return { selectedPollOption: selectStatementResponse[0].optionChosen };
+  } else {
+    console.log(selectStatementResponse);
+    return { selectedPollOption: undefined };
+  }
+
+}
 
 interface SubmitPollResponseProps {
   db: PostgresDatabase;
   postSlugId: string;
-  voteIndex: number;
+  voteOptionChoice: number;
   authorId: string;
   httpErrors: HttpErrors;
   didWrite: string;
@@ -18,16 +63,12 @@ interface SubmitPollResponseProps {
 export async function submitPollResponse({
   db,
   postSlugId,
-  voteIndex,
+  voteOptionChoice,
   authorId,
   httpErrors,
   didWrite,
   authHeader
 }: SubmitPollResponseProps) {
-
-  if (voteIndex < 0 || voteIndex > 5) {
-    throw httpErrors.badRequest("Invalid vote index");
-  }
 
   const { id: postId, contentId: postContentId } = await useCommonPost().getPostAndContentIdFromSlugId({
     db: db,
@@ -39,12 +80,7 @@ export async function submitPollResponse({
     throw httpErrors.notFound("Failed to locate post resource: " + postSlugId);
   }
 
-  console.log("Post ID: " + postId.toString());
-  console.log("Current content ID: " + postContentId.toString());
-
   try {
-
-
     await db.transaction(async (tx) => {
 
       const insertPollResponseTableResponse = await tx.insert(pollResponseTable).values({
@@ -70,28 +106,28 @@ export async function submitPollResponse({
         pollResponseProofId: pollResponseProofTableId,
         postContentId: postContentId,
         parentId: null,
-        optionChosen: voteIndex,
+        optionChosen: voteOptionChoice,
       }).returning({ id: pollResponseContentTable.id });
 
       const pollResponseContentId = pollResponseContentTableResponse[0].id;
 
-      const option1CountDiff = voteIndex == 0 ? 1 : 0;
-      const option2CountDiff = voteIndex == 1 ? 1 : 0;
-      const option3CountDiff = voteIndex == 2 ? 1 : 0;
-      const option4CountDiff = voteIndex == 3 ? 1 : 0;
-      const option5CountDiff = voteIndex == 4 ? 1 : 0;
-      const option6CountDiff = voteIndex == 5 ? 1 : 0;
+      const option1CountDiff = voteOptionChoice == 1 ? 1 : 0;
+      const option2CountDiff = voteOptionChoice == 2 ? 1 : 0;
+      const option3CountDiff = voteOptionChoice == 3 ? 1 : 0;
+      const option4CountDiff = voteOptionChoice == 4 ? 1 : 0;
+      const option5CountDiff = voteOptionChoice == 5 ? 1 : 0;
+      const option6CountDiff = voteOptionChoice == 6 ? 1 : 0;
 
       // Update vote counter
       await tx
         .update(pollTable)
         .set({
-          ...voteIndex == 0 && { option1Response: sql`${pollTable.option1Response} + ${option1CountDiff}` },
-          ...voteIndex == 1 && { option2Response: sql`${pollTable.option2Response} + ${option2CountDiff}` },
-          ...voteIndex == 2 && { option3Response: sql`${pollTable.option3Response} + ${option3CountDiff}` },
-          ...voteIndex == 3 && { option4Response: sql`${pollTable.option4Response} + ${option4CountDiff}` },
-          ...voteIndex == 4 && { option5Response: sql`${pollTable.option5Response} + ${option5CountDiff}` },
-          ...voteIndex == 5 && { option6Response: sql`${pollTable.option6Response} + ${option6CountDiff}` },
+          ...voteOptionChoice == 1 && { option1Response: sql`${pollTable.option1Response} + ${option1CountDiff}` },
+          ...voteOptionChoice == 2 && { option2Response: sql`${pollTable.option2Response} + ${option2CountDiff}` },
+          ...voteOptionChoice == 3 && { option3Response: sql`${pollTable.option3Response} + ${option3CountDiff}` },
+          ...voteOptionChoice == 4 && { option4Response: sql`${pollTable.option4Response} + ${option4CountDiff}` },
+          ...voteOptionChoice == 5 && { option5Response: sql`${pollTable.option5Response} + ${option5CountDiff}` },
+          ...voteOptionChoice == 6 && { option6Response: sql`${pollTable.option6Response} + ${option6CountDiff}` },
         })
         .where(eq(pollTable.postContentId, postContentId));
 

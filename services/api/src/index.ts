@@ -28,7 +28,7 @@ import {
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan.js";
 import { fetchCommentsByPostSlugId, postNewComment } from "./service/comment.js";
-import { submitPollResponse } from "./service/poll.js";
+import { getUserPollResponse, submitPollResponse } from "./service/poll.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -186,11 +186,12 @@ async function verifyUCAN(
     if (!result.ok) {
         for (const err of result.error) {
             if (err instanceof Error) {
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                server.log.error(`Error verifying UCAN - ${err.name}: ${err.message} - ${err.cause} - ${err.stack}`);
+                server.log.error(`Error verifying UCAN - ${err.name}: ${err.message}`);
+                server.log.error(err.cause);
+                server.log.error(err.stack);
             } else {
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                server.log.error(`Unknown Error verifying UCAN: ${err}`);
+                server.log.error(`Unknown Error verifying UCAN:`);
+                server.log.error(err);
             }
         }
         throw server.httpErrors.createError(
@@ -435,8 +436,37 @@ server.after(() => {
                         didWrite: didWrite,
                         httpErrors: server.httpErrors,
                         postSlugId: request.body.postSlugId,
-                        voteIndex: request.body.voteIndex
+                        voteOptionChoice: request.body.voteOptionChoice
                     })
+                }
+            },
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/poll/get-user-poll-response`,
+            schema: {
+                body: Dto.fetchUserPollResponseRequest,
+                response: {
+                    200: Dto.fetchUserPollResponseResponse,
+                },
+            },
+            handler: async (request) => {
+
+                const didWrite = await verifyUCAN(db, request, undefined);
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    return await getUserPollResponse({
+                        db: db,
+                        postSlugId: request.body.postSlugId,
+                        authorId: status.userId,
+                        httpErrors: server.httpErrors
+                    });
                 }
             },
         });
