@@ -9,8 +9,8 @@ import { MAX_LENGTH_BODY } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
-import sanitizeHtml from "sanitize-html";
 import { httpErrors } from "@fastify/sensible";
+import { getHtmlStringCharacterCount, sanitizeHtmlInput } from "@/utils/htmlSanitization.js";
 
 interface FetchNextCommentsToVoteOn {
     db: PostgresDatabase;
@@ -87,27 +87,15 @@ export async function createNewPost({
         const postSlugId = generateRandomSlugId();
 
         if (postBody != null) {
-            {
-                const options: sanitizeHtml.IOptions = {
-                    allowedTags: ["b", "br", "i", "strike", "u", "div"],
-                };
-                postBody = sanitizeHtml(postBody, options);
-            }
+            postBody = sanitizeHtmlInput(postBody);
 
-            {
-                const options: sanitizeHtml.IOptions = {
-                    allowedTags: [],
-                    allowedAttributes: {}
-                };
-                const rawTextWithoutTags = sanitizeHtml(postBody, options);
-                if (rawTextWithoutTags.length > MAX_LENGTH_BODY) {
-                    throw httpErrors.badRequest(
-                        "Incoming post's body had exceeded the max both length: " + rawTextWithoutTags.length.toString() + ". " +
-                        "Max allowed: " + MAX_LENGTH_BODY.toString()
-                    );
-                }
+            const characterCount = getHtmlStringCharacterCount(postBody);
+            if (characterCount > MAX_LENGTH_BODY) {
+                throw httpErrors.badRequest(
+                    "Incoming post's body had exceeded the max both length: " + postBody.length.toString() + ". " +
+                    "Max allowed: " + MAX_LENGTH_BODY.toString()
+                );
             }
-
         }
 
         await db.transaction(async (tx) => {
