@@ -6,6 +6,7 @@ import {
     zodUserId,
     zodSlugId,
     zodCommentItem,
+    zodPollOptionTitle,
 } from "./zod.js";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -95,7 +96,7 @@ export class Dto {
     static createNewPostRequest = z.object({
         postTitle: z.string(),
         postBody: z.string().optional(),
-        pollingOptionList: z.string().array().optional()
+        pollingOptionList: zodPollOptionTitle.array().optional()
     }).strict();
     static createNewPostResponse = z.object({ postSlugId: z.string() }).strict();
     static fetchPostBySlugIdRequest = z.object({
