@@ -194,7 +194,7 @@ async function onSubmit() {
   const response = await createNewPost(
     postDraft.value.postTitle,
     postDraft.value.postBody == "" ? undefined : postDraft.value.postBody,
-    postDraft.value.pollingOptionList.length == 0 ? undefined : postDraft.value.pollingOptionList
+    postDraft.value.enablePolling ? postDraft.value.pollingOptionList : undefined
   );
 
   if (response != null) {

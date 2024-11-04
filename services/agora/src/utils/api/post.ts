@@ -120,9 +120,6 @@ export function useBackendPostApi() {
     postBody: string | undefined,
     pollingOptionList: string[] | undefined
   ) {
-
-    console.log(pollingOptionList);
-
     try {
       const params: ApiV1PostCreatePostRequest = {
         postTitle: postTitle,
