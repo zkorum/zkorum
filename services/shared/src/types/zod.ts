@@ -3,7 +3,6 @@ import { validateDidKey, validateDidWeb } from "../did/util.js";
 import {
     MAX_LENGTH_TITLE,
     MAX_LENGTH_OPTION,
-    MAX_LENGTH_COMMENT,
 } from "../shared.js";
 
 export const zodEmail = z
@@ -75,7 +74,7 @@ export const zodPostMetadata = z
         authorImagePath: z.string().url({ message: "Invalid url" }).optional() // TODO: check if it accepts path segments for local dev
     })
     .strict();
-export const zodCommentContent = z.string().min(1).max(MAX_LENGTH_COMMENT);
+export const zodCommentContent = z.string().min(1); // Cannot specify the max length here due to the HTML tags
 export const zodCommentItem = z.object({
     commentSlugId: zodSlugId,
     isHidden: z.boolean().optional(),

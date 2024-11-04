@@ -10,7 +10,7 @@ import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
 import { httpErrors } from "@fastify/sensible";
-import { getHtmlStringCharacterCount, sanitizeHtmlInput } from "@/utils/htmlSanitization.js";
+import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
 
 interface FetchNextCommentsToVoteOn {
     db: PostgresDatabase;
@@ -87,14 +87,14 @@ export async function createNewPost({
         const postSlugId = generateRandomSlugId();
 
         if (postBody != null) {
-            postBody = sanitizeHtmlInput(postBody);
-
-            const characterCount = getHtmlStringCharacterCount(postBody);
-            if (characterCount > MAX_LENGTH_BODY) {
-                throw httpErrors.badRequest(
-                    "Incoming post's body had exceeded the max both length: " + postBody.length.toString() + ". " +
-                    "Max allowed: " + MAX_LENGTH_BODY.toString()
-                );
+            try {
+                postBody = sanitizeHtmlBody(postBody, MAX_LENGTH_BODY);
+            } catch (error) {
+                if (error instanceof Error) {
+                    throw httpErrors.badRequest(error.message);
+                } else {
+                    throw httpErrors.badRequest("Error while sanitizing request body");
+                }
             }
         }
 

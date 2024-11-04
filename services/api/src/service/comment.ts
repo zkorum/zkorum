@@ -6,6 +6,8 @@ import { desc, eq, sql } from "drizzle-orm";
 import type { CommentItem, SlugId } from "@/shared/types/zod.js";
 import { httpErrors, type HttpErrors } from "@fastify/sensible";
 import { useCommonPost } from "./common.js";
+import { MAX_LENGTH_COMMENT } from "@/shared/shared.js";
+import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
 
 export async function fetchCommentsByPostSlugId(
     db: PostgresJsDatabase,
@@ -171,6 +173,7 @@ interface PostNewCommentProps {
     httpErrors: HttpErrors
 }
 
+
 export async function postNewComment({
     db,
     commentBody,
@@ -179,6 +182,16 @@ export async function postNewComment({
     didWrite,
     authHeader,
     httpErrors }: PostNewCommentProps): Promise<CreateCommentResponse> {
+
+    try {
+        commentBody = sanitizeHtmlBody(commentBody, MAX_LENGTH_COMMENT);
+    } catch (error) {
+        if (error instanceof Error) {
+            throw httpErrors.badRequest(error.message);
+        } else {
+            throw httpErrors.badRequest("Error while sanitizing request body");
+        }
+    }
 
     const { id: postId, contentId: postContentId } = await useCommonPost().getPostAndContentIdFromSlugId({
         db: db,
