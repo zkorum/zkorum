@@ -2,7 +2,7 @@
   <div @click.stop.prevent="">
     <div v-if="dataLoaded" class="pollContainer">
       <!-- Show buttons for voting -->
-      <div v-if="pollButtonGroupOptionModel == DisplayModes.Vote">
+      <div v-if="currentDisplayMode == DisplayModes.Vote">
         <div class="pollOptionList">
           <ZKButton v-for="optionItem in localPollOptionList" :key="optionItem.index" outline :label="optionItem.option"
             text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
@@ -10,7 +10,7 @@
       </div>
 
       <!-- Show the final result -->
-      <div v-if="pollButtonGroupOptionModel == DisplayModes.Results" class="pollOptionList">
+      <div v-if="currentDisplayMode == DisplayModes.Results" class="pollOptionList">
         <option-view v-for="optionItem in localPollOptionList" :key="optionItem.index" :option="optionItem.option"
           :voted-by-user="userVoteStatus.voteIndex == optionItem.index && userVoteStatus.hasVoted" :option-percentage="totalVoteCount === 0
             ? 0
@@ -22,8 +22,13 @@
         {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
       </div>
 
-      <q-btn-toggle v-if="!userVoteStatus.hasVoted && isAuthenticated" v-model="pollButtonGroupOptionModel" unelevated
-        spread no-caps toggle-color="purple" color="white" text-color="black" :options="pollButtonGroupOptions" />
+      <div v-if="isAuthenticated && !userVoteStatus.hasVoted" class="actionButtonCluster">
+        <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
+          label="Results" @click.stop.prevent="showResultsInterface()" />
+
+        <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Cast Vote"
+          icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
+      </div>
 
     </div>
   </div>
@@ -56,13 +61,7 @@ enum DisplayModes {
   Vote,
   Results
 }
-const pollButtonGroupOptionModel = ref<DisplayModes>(isAuthenticated.value ? DisplayModes.Vote : DisplayModes.Results);
-
-const pollButtonGroupOptions = [
-  { label: "Vote", value: DisplayModes.Vote },
-  { label: "Results", value: DisplayModes.Results }
-
-];
+const currentDisplayMode = ref<DisplayModes>(isAuthenticated.value ? DisplayModes.Vote : DisplayModes.Results);
 
 const userVoteStatus = ref<DummyPostUserVote>({
   hasVoted: false,
@@ -114,11 +113,11 @@ async function fetchUserData() {
 }
 
 function showResultsInterface() {
-  pollButtonGroupOptionModel.value = DisplayModes.Results;
+  currentDisplayMode.value = DisplayModes.Results;
 }
 
 function showVoteInterface() {
-  pollButtonGroupOptionModel.value = DisplayModes.Vote;
+  currentDisplayMode.value = DisplayModes.Vote;
 }
 
 async function voteCasted(selectedIndex: number) {
@@ -132,8 +131,8 @@ async function voteCasted(selectedIndex: number) {
   }
 }
 
-watch(pollButtonGroupOptionModel, () => {
-  if (pollButtonGroupOptionModel.value == DisplayModes.Results) {
+watch(currentDisplayMode, () => {
+  if (currentDisplayMode.value == DisplayModes.Results) {
     showResultsInterface();
   } else {
     showVoteInterface();
@@ -142,6 +141,12 @@ watch(pollButtonGroupOptionModel, () => {
 </script>
 
 <style scoped>
+.actionButtonCluster {
+  display: flex;
+  gap: 1rem;
+  gap: 1rem;
+}
+
 .pollOptionList {
   display: flex;
   flex-direction: column;
