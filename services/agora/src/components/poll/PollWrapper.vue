@@ -12,7 +12,6 @@
       <!-- Show the final result -->
       <div v-if="pollButtonGroupOptionModel == DisplayModes.Results" class="pollOptionList">
         <option-view v-for="optionItem in props.pollOptions" :key="optionItem.index" :option="optionItem.option"
-          :is-vote-mode="isVoteMode"
           :voted-by-user="userVoteStatus.voteIndex == optionItem.index && userVoteStatus.hasVoted" :option-percentage="totalCount === 0
             ? 0
             : Math.round((optionItem.numResponses * 100) / totalCount)
@@ -34,7 +33,7 @@
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { DummyPollOptionFormat, DummyPostUserVote } from "src/stores/post";
-import { computed, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
 import { useBackendPollApi } from "src/utils/api/poll";
@@ -101,10 +100,6 @@ async function voteCasted(selectedIndex: number) {
     showMessage("Server error", "Failed to cast vote");
   }
 }
-
-const isVoteMode = computed(() => {
-  return pollButtonGroupOptionModel.value == DisplayModes.Vote;
-});
 
 watch(pollButtonGroupOptionModel, () => {
   if (pollButtonGroupOptionModel.value == DisplayModes.Results) {

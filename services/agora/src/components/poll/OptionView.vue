@@ -22,7 +22,6 @@
 
 <script setup lang="ts">
 const props = defineProps<{
-  isVoteMode: boolean;
   option: string;
   optionPercentage: number;
   votedByUser: boolean;
