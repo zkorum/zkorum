@@ -123,7 +123,7 @@ export function useBackendAuthApi() {
     }
   }
 
-  async function deviceIsLoggedOn() {
+  async function deviceIsLoggedIn() {
     try {
       const { url, options } =
         await DefaultApiAxiosParamCreator().apiV1AuthCheckLoginStatusPost();
@@ -173,7 +173,7 @@ export function useBackendAuthApi() {
 
   function initializeAuthState() {
     setTimeout(async () => {
-      const status = await deviceIsLoggedOn();
+      const status = await deviceIsLoggedIn();
       if (!status.isSuccessful) {
         if (status.error == "already_logged_in") {
           // ignore
@@ -193,7 +193,7 @@ export function useBackendAuthApi() {
     sendEmailCode,
     emailCode,
     logout,
-    deviceIsLoggedOn,
+    deviceIsLoggedIn,
     initializeAuthState,
   };
 }
