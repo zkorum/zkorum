@@ -16,6 +16,7 @@ import {
 } from "src/stores/post";
 import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
+import axios from "axios";
 
 export function useBackendPostApi() {
 
@@ -81,11 +82,17 @@ export function useBackendPostApi() {
         api
       ).apiV1PostFetchPost(params, {});
       return createInternalPostData(response.data.postData);
-    } catch (e) {
-      console.error(e);
-      showNotifyMessage("Failed to fetch post by slug ID.");
-      showNotifyMessage("Redirecting user to the home feed.");
-      router.push({ name: "default-home-feed" });
+    } catch (error) {
+      console.error(error);
+      if (axios.isAxiosError(error)) {
+        if (error.status == 400) {
+          showNotifyMessage("Post resource not found.");
+          router.push({ name: "default-home-feed" });
+        }
+      } else {
+        showNotifyMessage("Failed to fetch post by slug ID.");
+      }
+
       return null;
     }
   }
