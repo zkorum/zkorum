@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { DummyPollOptionFormat, DummyPostUserVote } from "src/stores/post";
+import { DummyPollOptionFormat, DummyPostUserVote, DummyUserPollResponse } from "src/stores/post";
 import { ref, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
@@ -45,6 +45,7 @@ import { useBackendPollApi } from "src/utils/api/poll";
 import { useDialog } from "src/utils/ui/dialog";
 
 const props = defineProps<{
+  userResponse: DummyUserPollResponse;
   pollOptions: DummyPollOptionFormat[];
   postSlugId: string;
 }>();
@@ -71,7 +72,7 @@ const userVoteStatus = ref<DummyPostUserVote>({
 const totalVoteCount = ref(0);
 initializeTotalVoteCount();
 
-fetchUserData();
+fetchUserData(false);
 
 function initializeTotalVoteCount() {
   totalVoteCount.value = 0;
@@ -99,15 +100,27 @@ function initializeLocalPoll() {
   });
 }
 
-async function fetchUserData() {
-  const response = await backendPollApi.fetchUserPollResponse(props.postSlugId);
-  if (response?.selectedPollOption) {
+async function fetchUserData(loadFromRemote: boolean) {
+  if (loadFromRemote) {
+    const response = await backendPollApi.fetchUserPollResponse(props.postSlugId);
+    if (response?.selectedPollOption) {
+      userVoteStatus.value = {
+        hasVoted: true,
+        voteIndex: response.selectedPollOption - 1
+      };
+      showResultsInterface();
+    }
+  } else {
     userVoteStatus.value = {
-      hasVoted: true,
-      voteIndex: response.selectedPollOption - 1
+      hasVoted: props.userResponse.hadResponded,
+      voteIndex: props.userResponse.responseIndex
     };
-    showResultsInterface();
+
+    if (userVoteStatus.value.hasVoted) {
+      showResultsInterface();
+    }
   }
+
 
   dataLoaded.value = true;
 }
@@ -125,7 +138,7 @@ async function voteCasted(selectedIndex: number) {
   if (response == false) {
     showMessage("Server error", "Failed to cast vote");
   } else {
-    fetchUserData();
+    fetchUserData(true);
     incrementLocalPollIndex(selectedIndex);
     totalVoteCount.value += 1;
   }

@@ -20,7 +20,8 @@
 
           <div v-if="extendedPostData.payload.poll.hasPoll" class="innerContainer">
             <PollWrapper :poll-options="extendedPostData.payload.poll.options"
-              :post-slug-id="extendedPostData.metadata.slugId" />
+              :post-slug-id="extendedPostData.metadata.slugId"
+              :user-response="extendedPostData.userInteraction.pollResponse" />
           </div>
 
           <div class="bottomButtons">

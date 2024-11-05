@@ -46,6 +46,11 @@ export interface DummyCommentRankingFormat {
   assignedRankingItems: number[];
 }
 
+export interface DummyUserPollResponse {
+  hadResponded: boolean;
+  responseIndex: number;
+}
+
 export interface DummyPostDataFormat {
   metadata: DummyPostMetadataFormat;
   payload: {
@@ -58,6 +63,7 @@ export interface DummyPostDataFormat {
     comments: DummyCommentFormat[];
   };
   userInteraction: {
+    pollResponse: DummyUserPollResponse;
     commentRanking: DummyCommentRankingFormat;
   };
 }
@@ -97,6 +103,10 @@ export const usePostStore = defineStore("post", () => {
       comments: [],
     },
     userInteraction: {
+      pollResponse: {
+        hadResponded: false,
+        responseIndex: 0
+      },
       commentRanking: {
         rankedCommentList: new Map(),
         assignedRankingItems: [],
@@ -559,6 +569,10 @@ export const usePostStore = defineStore("post", () => {
         comments: postComments,
       },
       userInteraction: {
+        pollResponse: {
+          hadResponded: false,
+          responseIndex: 0
+        },
         commentRanking: {
           rankedCommentList: rankedCommentList,
           assignedRankingItems: assignedRankingItems,
