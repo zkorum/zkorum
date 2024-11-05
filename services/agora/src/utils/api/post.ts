@@ -73,7 +73,7 @@ export function useBackendPostApi() {
       userInteraction: {
         pollResponse: {
           hadResponded: pollResponseOption != undefined,
-          responseIndex: pollResponseOption ?? 0
+          responseIndex: pollResponseOption ? pollResponseOption - 1 : 0
         },
         commentRanking: {
           assignedRankingItems: [],
