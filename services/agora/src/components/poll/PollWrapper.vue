@@ -4,22 +4,22 @@
       <!-- Show buttons for voting -->
       <div v-if="pollButtonGroupOptionModel == DisplayModes.Vote">
         <div class="pollOptionList">
-          <ZKButton v-for="optionItem in props.pollOptions" :key="optionItem.index" outline :label="optionItem.option"
+          <ZKButton v-for="optionItem in localPollOptionList" :key="optionItem.index" outline :label="optionItem.option"
             text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
         </div>
       </div>
 
       <!-- Show the final result -->
       <div v-if="pollButtonGroupOptionModel == DisplayModes.Results" class="pollOptionList">
-        <option-view v-for="optionItem in props.pollOptions" :key="optionItem.index" :option="optionItem.option"
-          :voted-by-user="userVoteStatus.voteIndex == optionItem.index && userVoteStatus.hasVoted" :option-percentage="totalCount === 0
+        <option-view v-for="optionItem in localPollOptionList" :key="optionItem.index" :option="optionItem.option"
+          :voted-by-user="userVoteStatus.voteIndex == optionItem.index && userVoteStatus.hasVoted" :option-percentage="totalVoteCount === 0
             ? 0
-            : Math.round((optionItem.numResponses * 100) / totalCount)
+            : Math.round((optionItem.numResponses * 100) / totalVoteCount)
             " />
       </div>
 
       <div class="voteCounter">
-        {{ totalCount }} vote<span v-if="totalCount > 1">s</span>
+        {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
       </div>
 
       <q-btn-toggle v-if="!userVoteStatus.hasVoted && isAuthenticated" v-model="pollButtonGroupOptionModel" unelevated
@@ -44,6 +44,9 @@ const props = defineProps<{
   postSlugId: string;
 }>();
 
+const localPollOptionList = ref<DummyPollOptionFormat[]>([]);
+initializeLocalPoll();
+
 const dataLoaded = ref(false);
 
 const backendPollApi = useBackendPollApi();
@@ -66,14 +69,38 @@ const userVoteStatus = ref<DummyPostUserVote>({
   voteIndex: 0
 });
 
-let totalCount = 0;
-props.pollOptions.forEach((option) => {
-  totalCount += option.numResponses;
-});
+const totalVoteCount = ref(0);
+initializeTotalVoteCount();
 
-prepareData();
+fetchUserData();
 
-async function prepareData() {
+function initializeTotalVoteCount() {
+  totalVoteCount.value = 0;
+  localPollOptionList.value.forEach((option) => {
+    totalVoteCount.value += option.numResponses;
+  });
+}
+
+function incrementLocalPollIndex(targetIndex: number) {
+  localPollOptionList.value.forEach(pollOption => {
+    if (targetIndex == pollOption.index) {
+      pollOption.numResponses += 1;
+    }
+  });
+}
+
+function initializeLocalPoll() {
+  props.pollOptions.forEach(pollOption => {
+    const localPollItem: DummyPollOptionFormat = {
+      index: pollOption.index,
+      numResponses: pollOption.numResponses,
+      option: pollOption.option
+    };
+    localPollOptionList.value.push(localPollItem);
+  });
+}
+
+async function fetchUserData() {
   const response = await backendPollApi.fetchUserPollResponse(props.postSlugId);
   if (response?.selectedPollOption) {
     userVoteStatus.value = {
@@ -98,6 +125,10 @@ async function voteCasted(selectedIndex: number) {
   const response = await backendPollApi.submitPollResponse(selectedIndex, props.postSlugId);
   if (response == false) {
     showMessage("Server error", "Failed to cast vote");
+  } else {
+    fetchUserData();
+    incrementLocalPollIndex(selectedIndex);
+    totalVoteCount.value += 1;
   }
 }
 

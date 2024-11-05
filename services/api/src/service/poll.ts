@@ -23,7 +23,11 @@ export async function getUserPollResponse({
     httpErrors: httpErrors
   });
 
-  const selectStatementResponse = await db.selectDistinct({
+  if (postDetails.contentId == null) {
+    throw httpErrors.notFound("Failed to fetch poll response's content ID");
+  }
+
+  const selectStatementResponse = await db.select({
     postId: pollResponseTable.postId,
     authorId: pollResponseTable.authorId,
     optionChosen: pollResponseContentTable.optionChosen
@@ -31,7 +35,7 @@ export async function getUserPollResponse({
     .from(pollResponseTable)
     .innerJoin(
       pollResponseContentTable,
-      eq(pollResponseTable.authorId, authorId)
+      eq(pollResponseContentTable.postContentId, postDetails.contentId)
     )
     .where(
       and(
@@ -131,7 +135,7 @@ export async function submitPollResponse({
         })
         .where(eq(pollTable.postContentId, postContentId));
 
-      await db
+      await tx
         .update(pollResponseTable)
         .set({
           currentContentId: pollResponseContentId
