@@ -2,7 +2,16 @@
   <div>
     <NewPostButtonWrapper @on-click="createNewPost()">
       <div class="container">
-        <CompactPostList :post-list="postList" :data-ready="dataReady" />
+        <CompactPostList v-if="!showfetchErrorMessage" :post-list="postList" :data-ready="dataReady" />
+
+        <div v-if="showfetchErrorMessage" class="fetchErrorMessage">
+          <div>
+            Failed to fetch posts from the server
+          </div>
+
+          <ZKButton label="Reload Page" color="primary" @click="loadData()" />
+
+        </div>
       </div>
     </NewPostButtonWrapper>
   </div>
@@ -12,6 +21,7 @@
 import { storeToRefs } from "pinia";
 import CompactPostList from "src/components/feed/CompactPostList.vue";
 import NewPostButtonWrapper from "src/components/post/NewPostButtonWrapper.vue";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 import { useBackendPostApi } from "src/utils/api/post";
@@ -34,10 +44,23 @@ const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
 const postList = ref<DummyPostDataFormat[]>([]);
 
+const showfetchErrorMessage = ref(false);
+
 onMounted(async () => {
+  await loadData();
+});
+
+onBeforeUnmount(() => {
+  lastSavedHomeFeedPosition.value = -document.body.getBoundingClientRect().top;
+});
+
+async function loadData() {
   const response = await postStore.fetchRecentPost();
 
+  dataReady.value = false;
+
   if (response != null) {
+    showfetchErrorMessage.value = false;
     postList.value = response;
     dataReady.value = true;
 
@@ -46,13 +69,10 @@ onMounted(async () => {
         window.scrollTo(0, lastSavedHomeFeedPosition.value);
       }, 200);
     }
+  } else {
+    showfetchErrorMessage.value = true;
   }
-
-});
-
-onBeforeUnmount(() => {
-  lastSavedHomeFeedPosition.value = -document.body.getBoundingClientRect().top;
-});
+}
 
 function createNewPost() {
   if (authenticationStore.isAuthenticated) {
@@ -68,5 +88,15 @@ function createNewPost() {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.fetchErrorMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 4rem;
+  font-size: 1.2rem;
 }
 </style>

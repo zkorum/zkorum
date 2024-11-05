@@ -14,13 +14,16 @@ import {
   DummyPostDataFormat,
   PossibleCommentRankingActions,
 } from "src/stores/post";
-import { useDialog } from "../ui/dialog";
+import { useNotify } from "../ui/notify";
+import { useRouter } from "vue-router";
 
 export function useBackendPostApi() {
 
   const { buildEncodedUcan } = useCommonApi();
 
-  const { showMessage } = useDialog();
+  const { showNotifyMessage } = useNotify();
+
+  const router = useRouter();
 
   function createInternalPostData(
     postElement: ApiV1FeedFetchMorePost200ResponseInner
@@ -80,7 +83,9 @@ export function useBackendPostApi() {
       return createInternalPostData(response.data.postData);
     } catch (e) {
       console.error(e);
-      showMessage("An error had occured", "Failed to fetch post by slug ID.");
+      showNotifyMessage("Failed to fetch post by slug ID.");
+      showNotifyMessage("Redirecting user to the home feed.");
+      router.push({ name: "default-home-feed" });
       return null;
     }
   }
@@ -106,7 +111,7 @@ export function useBackendPostApi() {
       return dataList;
     } catch (e) {
       console.error(e);
-      showMessage("An error had occured", "Failed to fetch recent posts from the server.");
+      showNotifyMessage("Failed to fetch recent posts from the server.");
       return null;
     }
   }
@@ -138,7 +143,7 @@ export function useBackendPostApi() {
       return response.data;
     } catch (e) {
       console.error(e);
-      showMessage("An error had occured", "The server had failed to create the post.");
+      showNotifyMessage("Failed to create the new post.");
       return null;
     }
   }
