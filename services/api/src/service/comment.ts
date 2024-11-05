@@ -2,19 +2,18 @@ import { generateRandomSlugId } from "@/crypto.js";
 import { commentContentTable, commentTable, commentProofTable, postTable } from "@/schema.js";
 import type { CreateCommentResponse } from "@/shared/types/dto.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import type { CommentItem, SlugId } from "@/shared/types/zod.js";
-import type { HttpErrors } from "@fastify/sensible";
+import { httpErrors, type HttpErrors } from "@fastify/sensible";
+import { useCommonPost } from "./common.js";
+import { MAX_LENGTH_COMMENT } from "@/shared/shared.js";
+import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
 
 export async function fetchCommentsByPostSlugId(
     db: PostgresJsDatabase,
     postSlugId: SlugId): Promise<CommentItem[]> {
 
     const postId = await getPostIdFromPostSlugId(db, postSlugId);
-    if (postId == null) {
-        return [];
-    }
-
     const results = await db
         .select({
             // comment payload
@@ -35,7 +34,7 @@ export async function fetchCommentsByPostSlugId(
             commentContentTable,
             eq(commentContentTable.id, commentTable.currentContentId)
         )
-        .orderBy(asc(commentTable.createdAt), desc(commentTable.id))
+        .orderBy(desc(commentTable.createdAt))
         .where(
             eq(commentTable.postId, postId)
         );
@@ -53,7 +52,6 @@ export async function fetchCommentsByPostSlugId(
         };
         commentItemList.push(item);
     });
-
     return commentItemList;
 
     /*
@@ -147,7 +145,7 @@ export async function fetchCommentsByPostSlugId(
 
 async function getPostIdFromPostSlugId(
     db: PostgresJsDatabase,
-    postSlugId: string) {
+    postSlugId: string): Promise<number> {
 
     const postTableResponse = await db
         .select({
@@ -155,43 +153,14 @@ async function getPostIdFromPostSlugId(
         })
         .from(postTable)
         .where(eq(postTable.slugId, postSlugId));
-
     if (postTableResponse.length != 1) {
-        return null;
+        throw httpErrors.notFound(
+            "Failed to locate post slug ID: " + postSlugId
+        );
     }
 
     const postId = postTableResponse[0].id;
     return postId;
-}
-
-interface IdAndContentId {
-    id: number;
-    contentId: number | null;
-}
-
-interface GetPostAndContentIdFromSlugIdProps {
-    db: PostgresJsDatabase;
-    postSlugId: string;
-    httpErrors: HttpErrors;
-}
-
-async function getPostAndContentIdFromSlugId(
-    { db,
-        postSlugId,
-        httpErrors }: GetPostAndContentIdFromSlugIdProps): Promise<IdAndContentId> {
-    const postTableResponse = await db
-        .select({
-            id: postTable.id,
-            currentContentId: postTable.currentContentId,
-        })
-        .from(postTable)
-        .where(eq(postTable.slugId, postSlugId));
-
-    if (postTableResponse.length != 1) {
-        throw httpErrors.notFound("Post slugId does not exist")
-    }
-
-    return { contentId: postTableResponse[0].currentContentId, id: postTableResponse[0].id };
 }
 
 interface PostNewCommentProps {
@@ -204,6 +173,7 @@ interface PostNewCommentProps {
     httpErrors: HttpErrors
 }
 
+
 export async function postNewComment({
     db,
     commentBody,
@@ -213,7 +183,21 @@ export async function postNewComment({
     authHeader,
     httpErrors }: PostNewCommentProps): Promise<CreateCommentResponse> {
 
-    const { id: postId, contentId: postContentId } = await getPostAndContentIdFromSlugId({ db, postSlugId, httpErrors });
+    try {
+        commentBody = sanitizeHtmlBody(commentBody, MAX_LENGTH_COMMENT);
+    } catch (error) {
+        if (error instanceof Error) {
+            throw httpErrors.badRequest(error.message);
+        } else {
+            throw httpErrors.badRequest("Error while sanitizing request body");
+        }
+    }
+
+    const { id: postId, contentId: postContentId } = await useCommonPost().getPostAndContentIdFromSlugId({
+        db: db,
+        postSlugId: postSlugId,
+        httpErrors: httpErrors
+    });
     if (postContentId == null) {
         throw httpErrors.gone("Cannot comment on a deleted post");
     }
@@ -266,7 +250,6 @@ export async function postNewComment({
     });
 
     return {
-        isSuccessful: true,
         commentSlugId: commentSlugId
     };
 

@@ -1,7 +1,7 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import type { SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, postContentTable, postProofTable, postTable, voteTable } from "@/schema.js";
+import { commentContentTable, commentTable, pollTable, postContentTable, postProofTable, postTable, voteTable } from "@/schema.js";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import type { CreateNewPostResponse, FetchCommentsToVoteOn200, FetchPostBySlugIdResponse } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
@@ -9,7 +9,8 @@ import { MAX_LENGTH_BODY } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
-import sanitizeHtml from "sanitize-html";
+import { httpErrors } from "@fastify/sensible";
+import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
 
 interface FetchNextCommentsToVoteOn {
     db: PostgresDatabase;
@@ -62,40 +63,39 @@ export async function fetchNextCommentsToVoteOn({
     };
 }
 
-export async function createNewPost(
-    db: PostgresDatabase,
-    postTitle: string,
-    postBody: string | null,
-    authorId: string,
-    didWrite: string,
-    authHeader: string): Promise<CreateNewPostResponse> {
+interface CreateNewPostProps {
+    db: PostgresDatabase;
+    postTitle: string;
+    postBody: string | null;
+    pollingOptionList: string[] | null;
+    authorId: string;
+    didWrite: string;
+    authHeader: string;
+}
+
+export async function createNewPost({
+    db,
+    postTitle,
+    postBody,
+    authorId,
+    didWrite,
+    authHeader,
+    pollingOptionList
+}: CreateNewPostProps): Promise<CreateNewPostResponse> {
 
     try {
         const postSlugId = generateRandomSlugId();
 
         if (postBody != null) {
-            {
-                const options: sanitizeHtml.IOptions = {
-                    allowedTags: ["b", "br", "i", "strike", "u", "div"],
-                };
-                postBody = sanitizeHtml(postBody, options);
-            }
-
-            {
-                const options: sanitizeHtml.IOptions = {
-                    allowedTags: [],
-                    allowedAttributes: {}
-                };
-                const rawTextWithoutTags = sanitizeHtml(postBody, options);
-                if (rawTextWithoutTags.length > MAX_LENGTH_BODY) {
-                    server.log.error("Incoming post's body had exceeded the max both length: " + rawTextWithoutTags.length.toString());
-                    server.log.error("Max allowed: " + MAX_LENGTH_BODY.toString());
-                    return {
-                        isSuccessful: false
-                    };
+            try {
+                postBody = sanitizeHtmlBody(postBody, MAX_LENGTH_BODY);
+            } catch (error) {
+                if (error instanceof Error) {
+                    throw httpErrors.badRequest(error.message);
+                } else {
+                    throw httpErrors.badRequest("Error while sanitizing request body");
                 }
             }
-
         }
 
         await db.transaction(async (tx) => {
@@ -134,18 +134,37 @@ export async function createNewPost(
             await tx.update(postTable).set({
                 currentContentId: postContentId,
             }).where(eq(postTable.id, postId));
+
+            if (pollingOptionList != null) {
+
+                await tx.insert(pollTable).values({
+                    postContentId: postContentId,
+                    option1: pollingOptionList[0],
+                    option2: pollingOptionList[1],
+                    option3: pollingOptionList[2] ?? null,
+                    option4: pollingOptionList[3] ?? null,
+                    option5: pollingOptionList[4] ?? null,
+                    option6: pollingOptionList[5] ?? null,
+                    option1Response: 0,
+                    option2Response: 0,
+                    option3Response: pollingOptionList[2] ? 0 : null,
+                    option4Response: pollingOptionList[3] ? 0 : null,
+                    option5Response: pollingOptionList[4] ? 0 : null,
+                    option6Response: pollingOptionList[5] ? 0 : null
+                });
+            }
+
         });
 
         return {
-            isSuccessful: true,
             postSlugId: postSlugId
         };
 
     } catch (err: unknown) {
-        server.log.error(err);
-        return {
-            isSuccessful: false
-        };
+        console.log(err);
+        throw httpErrors.internalServerError(
+            "Database error while creating the new post"
+        );
     }
 }
 
@@ -155,22 +174,27 @@ export async function fetchPostBySlugId(
 
     try {
         const { fetchPostItems } = useCommonPost();
-        const postData = await fetchPostItems(db, true, 1, eq(postTable.slugId, postSlugId), false);
+        const postData = await fetchPostItems({
+            db: db,
+            showHidden: true,
+            limit: 1,
+            where: eq(postTable.slugId, postSlugId),
+            enableCompactBody: false
+        });
 
         if (postData.length == 1) {
             return {
-                isSuccessful: true,
                 postData: postData[0]
             };
         } else {
-            return {
-                isSuccessful: false
-            };
+            throw httpErrors.notFound(
+                "Failed to locate post slug ID in the database: " + postSlugId
+            );
         }
     } catch (err: unknown) {
         server.log.error(err);
-        return {
-            isSuccessful: false
-        };
+        throw httpErrors.internalServerError(
+            "Failed to fetch post by slug ID: " + postSlugId
+        );
     }
 }

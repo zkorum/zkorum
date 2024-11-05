@@ -1,18 +1,24 @@
 import { postContentTable, pollTable, pollResponseContentTable, postTable, organisationTable, userTable, pollResponseTable } from "@/schema.js";
 import { toUnionUndefined } from "@/shared/shared.js";
 import type { PostMetadata, ExtendedPostPayload, PollOptionWithResult, ExtendedPost } from "@/shared/types/zod.js";
+import type { HttpErrors } from "@fastify/sensible";
 import { eq, and, desc, SQL } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import sanitizeHtml from "sanitize-html";
 
 export function useCommonPost() {
 
-    async function fetchPostItems(
-        db: PostgresJsDatabase,
-        showHidden: boolean,
-        limit: number,
-        where: SQL | undefined,
-        enableCompactBody: boolean) {
+    interface FetchPostItemsProps {
+        db: PostgresJsDatabase;
+        showHidden: boolean;
+        limit: number;
+        where: SQL | undefined;
+        enableCompactBody: boolean;
+    }
+
+    async function fetchPostItems({
+        db, showHidden, limit, where, enableCompactBody
+    }: FetchPostItemsProps) {
 
         const postItems = await db
             .select({
@@ -30,7 +36,6 @@ export function useCommonPost() {
                 option5Response: pollTable.option5Response,
                 option6: pollTable.option6,
                 option6Response: pollTable.option6Response,
-                optionChosen: pollResponseContentTable.optionChosen,
                 // metadata
                 slugId: postTable.slugId,
                 isHidden: postTable.isHidden,
@@ -67,9 +72,7 @@ export function useCommonPost() {
                 postItem.body = sanitizeHtml(postItem.body, {
                     allowedTags: ["b", "i", "strike", "u"],
                     allowedAttributes: {},
-                    textFilter: function (text, tagName) {
-                        console.log(tagName);
-                        console.log(text);
+                    textFilter: function (text) { // , tagName
                         return text + " ";
                     }
                 });
@@ -98,55 +101,48 @@ export function useCommonPost() {
 
             let payload: ExtendedPostPayload;
             if (postItem.option1 !== null && postItem.option2 !== null && postItem.option1Response !== null && postItem.option2Response !== null) { // hasPoll
-                const poll: PollOptionWithResult[] = [{
-                    index: 1,
-                    option: postItem.option1,
+                const pollList: PollOptionWithResult[] = [{
+                    optionNumber: 1,
+                    optionTitle: postItem.option1,
                     numResponses: postItem.option1Response,
-                    isChosen: postItem.optionChosen === 1
                 },
                 {
-                    index: 2,
-                    option: postItem.option2,
+                    optionNumber: 2,
+                    optionTitle: postItem.option2,
                     numResponses: postItem.option2Response,
-                    isChosen: postItem.optionChosen === 2
                 }];
                 if (postItem.option3 !== null) {
-                    poll.push({
-                        index: 3,
-                        option: postItem.option3,
+                    pollList.push({
+                        optionNumber: 3,
+                        optionTitle: postItem.option3,
                         numResponses: postItem.option3Response ?? 0,
-                        isChosen: postItem.optionChosen === 3
                     });
                 }
                 if (postItem.option4 !== null) {
-                    poll.push({
-                        index: 4,
-                        option: postItem.option4,
+                    pollList.push({
+                        optionNumber: 4,
+                        optionTitle: postItem.option4,
                         numResponses: postItem.option4Response ?? 0,
-                        isChosen: postItem.optionChosen === 4
-
                     });
                 }
                 if (postItem.option5 !== null) {
-                    poll.push({
-                        index: 5,
-                        option: postItem.option5,
+                    pollList.push({
+                        optionNumber: 5,
+                        optionTitle: postItem.option5,
                         numResponses: postItem.option5Response ?? 0,
-                        isChosen: postItem.optionChosen === 5
                     });
                 }
                 if (postItem.option6 !== null) {
-                    poll.push({
-                        index: 6,
-                        option: postItem.option6,
+                    pollList.push({
+                        optionNumber: 6,
+                        optionTitle: postItem.option6,
                         numResponses: postItem.option6Response ?? 0,
-                        isChosen: postItem.optionChosen === 6
                     });
                 }
                 payload = {
                     title: postItem.title, // Typescript inference limitation
                     body: toUnionUndefined(postItem.body),
-                    poll: poll,
+                    poll: pollList,
                 };
             } else {
                 payload = {
@@ -159,10 +155,40 @@ export function useCommonPost() {
                 payload: payload,
             };
         });
- 
+
         return posts;
-      
+
     }
 
-    return { fetchPostItems };
+    interface IdAndContentId {
+        id: number;
+        contentId: number | null;
+    }
+
+    interface GetPostAndContentIdFromSlugIdProps {
+        db: PostgresJsDatabase;
+        postSlugId: string;
+        httpErrors: HttpErrors;
+    }
+
+    async function getPostAndContentIdFromSlugId(
+        { db,
+            postSlugId,
+            httpErrors }: GetPostAndContentIdFromSlugIdProps): Promise<IdAndContentId> {
+        const postTableResponse = await db
+            .select({
+                id: postTable.id,
+                currentContentId: postTable.currentContentId,
+            })
+            .from(postTable)
+            .where(eq(postTable.slugId, postSlugId));
+
+        if (postTableResponse.length != 1) {
+            throw httpErrors.notFound("Post slugId does not exist")
+        }
+
+        return { contentId: postTableResponse[0].currentContentId, id: postTableResponse[0].id };
+    }
+
+    return { fetchPostItems, getPostAndContentIdFromSlugId };
 }

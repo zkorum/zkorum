@@ -1,21 +1,17 @@
 <template>
   <div>
     <div class="container">
-      <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)"
-      />
+      <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)" />
 
-      <div class="commentListFlex">
-        <div v-for="(commentItem, index) in commentItems"
-          :key="commentItem.commentSlugId"
-        >
-          <CommentSingle :comment-item="commentItem"
-            :post-slug-id="postSlugId"
-            :is-ranked="
-              props.commentRanking.rankedCommentList.get(index) != null
-            "
-            :ranked-action="getCommentItemRankStatus(index)"
-            :highlight="initialCommentSlugId == commentItem.commentSlugId"
-          />
+      <div v-if="commentItems.length == 0" class="noCommentMessage">
+        There are no comments in this post.
+      </div>
+
+      <div v-if="commentItems.length > 0" class="commentListFlex">
+        <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
+          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :is-ranked="props.commentRanking.rankedCommentList.get(index) != null
+            " :ranked-action="getCommentItemRankStatus(index)"
+            :highlight="initialCommentSlugId == commentItem.commentSlugId" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
@@ -36,9 +32,7 @@
       </div>
       -->
 
-      <div v-if="commentSortPreference == 'surprising'"
-        :style="{ paddingTop: '1rem' }"
-      >
+      <div v-if="commentSortPreference == 'surprising'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <q-icon name="mdi-wrench" size="4rem" />
@@ -49,9 +43,7 @@
         </ZKCard>
       </div>
 
-      <div v-if="commentSortPreference == 'clusters'"
-        :style="{ paddingTop: '1rem' }"
-      >
+      <div v-if="commentSortPreference == 'clusters'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <img src="/development/polis/example.png" class="polisExampleImg" />
@@ -62,9 +54,7 @@
         </ZKCard>
       </div>
 
-      <div v-if="commentSortPreference == 'more'"
-        :style="{ paddingTop: '1rem' }"
-      >
+      <div v-if="commentSortPreference == 'more'" :style="{ paddingTop: '1rem' }">
         <ResearcherContactUsForm />
       </div>
     </div>
@@ -80,7 +70,7 @@ import {
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import Divider from "primevue/divider";
 import CommentSortSelector from "./CommentSortSelector.vue";
 import { useBackendCommentApi } from "src/utils/api/comment";
@@ -99,15 +89,20 @@ const backendCommentApi = useBackendCommentApi();
 
 const commentItems = ref<ApiV1CommentFetchPost200ResponseInner[]>([]);
 
-onMounted(async () => {
-  commentItems.value = await backendCommentApi.fetchCommentsForPost(
-    props.postSlugId
-  );
+fetchData();
 
-  setTimeout(function () {
-    scrollToComment();
-  }, 1000);
-});
+async function fetchData() {
+  if (props.postSlugId.length > 0) {
+    const response = await backendCommentApi.fetchCommentsForPost(props.postSlugId);
+
+    if (response != null) {
+      commentItems.value = response;
+      setTimeout(function () {
+        scrollToComment();
+      }, 1000);
+    }
+  }
+}
 
 function getCommentItemRankStatus(
   commentIndex: number
@@ -141,6 +136,12 @@ function scrollToComment() {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.noCommentMessage {
+  display: flex;
+  justify-content: center;
+  padding-top: 4rem;
 }
 
 .specialMessage {

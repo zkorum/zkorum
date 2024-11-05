@@ -158,8 +158,8 @@ CREATE TABLE IF NOT EXISTS "poll_response" (
 	"current_content_id" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
-	CONSTRAINT "poll_response_post_id_unique" UNIQUE("post_id"),
-	CONSTRAINT "poll_response_current_content_id_unique" UNIQUE("current_content_id")
+	CONSTRAINT "poll_response_current_content_id_unique" UNIQUE("current_content_id"),
+	CONSTRAINT "poll_response_author_id_post_id_unique" UNIQUE("author_id","post_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "poll" (

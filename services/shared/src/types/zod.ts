@@ -3,7 +3,6 @@ import { validateDidKey, validateDidWeb } from "../did/util.js";
 import {
     MAX_LENGTH_TITLE,
     MAX_LENGTH_OPTION,
-    MAX_LENGTH_COMMENT,
 } from "../shared.js";
 
 export const zodEmail = z
@@ -47,18 +46,17 @@ export const zodDevice = z
     .strict();
 export const zodDevices = z.array(zodDevice); // list of didWrite of all the devices belonging to a user
 export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).min(1);
-export const zodPostBody = z.string(); // Cannot specify length due to HTML tags
+export const zodPostBody = z.string().optional(); // Cannot specify length due to HTML tags
 export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).min(1);
 export const zodPollOptionWithResult = z.object({
-    index: z.number().int().nonnegative(),
-    option: zodPollOptionTitle,
+    optionNumber: z.number().int().min(1).max(6),
+    optionTitle: zodPollOptionTitle,
     numResponses: z.number().int().nonnegative(),
-    isChosen: z.boolean()
 }).strict();
 export const zodPostDataWithResult = z
     .object({
         title: zodPostTitle,
-        body: zodPostBody.optional(),
+        body: zodPostBody,
         poll: z.array(zodPollOptionWithResult).optional()
     })
     .strict();
@@ -76,7 +74,7 @@ export const zodPostMetadata = z
         authorImagePath: z.string().url({ message: "Invalid url" }).optional() // TODO: check if it accepts path segments for local dev
     })
     .strict();
-export const zodCommentContent = z.string().min(1).max(MAX_LENGTH_COMMENT);
+export const zodCommentContent = z.string().min(1); // Cannot specify the max length here due to the HTML tags
 export const zodCommentItem = z.object({
     commentSlugId: zodSlugId,
     isHidden: z.boolean().optional(),

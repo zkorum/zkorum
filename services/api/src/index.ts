@@ -28,6 +28,7 @@ import {
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan.js";
 import { fetchCommentsByPostSlugId, postNewComment } from "./service/comment.js";
+import { getUserPollResponse, submitPollResponse } from "./service/poll.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -185,15 +186,12 @@ async function verifyUCAN(
     if (!result.ok) {
         for (const err of result.error) {
             if (err instanceof Error) {
-
-
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                server.log.error(`Error verifying UCAN - ${err.name}: ${err.message} - ${err.cause} - ${err.stack}`);
+                server.log.error(`Error verifying UCAN - ${err.name}: ${err.message}`);
+                server.log.error(err.cause);
+                server.log.error(err.stack);
             } else {
-
-
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                server.log.error(`Unknown Error verifying UCAN: ${err}`);
+                server.log.error(`Unknown Error verifying UCAN:`);
+                server.log.error(err);
             }
         }
         throw server.httpErrors.createError(
@@ -415,6 +413,68 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
+            url: `/api/${apiVersion}/poll/submitResponse`,
+            schema: {
+                body: Dto.submitPollResponseRequest,
+                response: {},
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const authHeader = getAuthHeader(request);
+
+                    await submitPollResponse({
+                        db: db,
+                        authHeader: authHeader,
+                        authorId: status.userId,
+                        didWrite: didWrite,
+                        httpErrors: server.httpErrors,
+                        postSlugId: request.body.postSlugId,
+                        voteOptionChoice: request.body.voteOptionChoice
+                    })
+                }
+            },
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/poll/get-user-poll-response`,
+            schema: {
+                body: Dto.fetchUserPollResponseRequest,
+                response: {
+                    200: Dto.fetchUserPollResponseResponse,
+                },
+            },
+            handler: async (request) => {
+
+                const didWrite = await verifyUCAN(db, request, undefined);
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    return await getUserPollResponse({
+                        db: db,
+                        postSlugId: request.body.postSlugId,
+                        authorId: status.userId,
+                        httpErrors: server.httpErrors
+                    });
+                }
+            },
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
             url: `/api/${apiVersion}/comment/create`,
             schema: {
                 body: Dto.createCommentRequest,
@@ -431,14 +491,15 @@ server.after(() => {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
                     const authHeader = getAuthHeader(request);
-                    return await postNewComment(
-                        db,
-                        request.body.commentBody,
-                        request.body.postSlugId,
-                        status.userId,
-                        didWrite,
-                        authHeader
-                    );
+                    return await postNewComment({
+                        db: db,
+                        commentBody: request.body.commentBody,
+                        postSlugId: request.body.postSlugId,
+                        userId: status.userId,
+                        didWrite: didWrite,
+                        authHeader: authHeader,
+                        httpErrors: server.httpErrors
+                    });
                 }
             },
         });
@@ -556,14 +617,15 @@ server.after(() => {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
                     const authHeader = getAuthHeader(request);
-                    return await postService.createNewPost(
-                        db,
-                        request.body.postTitle,
-                        request.body.postBody ?? null,
-                        status.userId,
-                        didWrite,
-                        authHeader
-                    );
+                    return await postService.createNewPost({
+                        db: db,
+                        postTitle: request.body.postTitle,
+                        postBody: request.body.postBody ?? null,
+                        pollingOptionList: request.body.pollingOptionList ?? null,
+                        authorId: status.userId,
+                        didWrite: didWrite,
+                        authHeader: authHeader
+                    });
                 }
             },
         });

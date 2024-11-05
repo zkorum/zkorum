@@ -19,8 +19,8 @@
           </div>
 
           <div v-if="extendedPostData.payload.poll.hasPoll" class="innerContainer">
-            <PollWrapper :user-vote="extendedPostData.userInteraction.pollVoting"
-              :poll-options="extendedPostData.payload.poll.options" />
+            <PollWrapper :poll-options="extendedPostData.payload.poll.options"
+              :post-slug-id="extendedPostData.metadata.slugId" />
           </div>
 
           <div class="bottomButtons">
@@ -47,19 +47,13 @@
           </div>
         </div>
 
-        <CommentRanking v-if="showRankingMode && !compactMode" :post-slug-id="extendedPostData.metadata.slugId"
+        <CommentRanking v-if="viewMode == 'ranking' && !compactMode" :post-slug-id="extendedPostData.metadata.slugId"
           @clicked-comment-button="clickedCommentButton()" @clicked-see-result-button="clickedSeeResultButton()" />
 
-        <div v-if="!compactMode && !showRankingMode">
-          <div v-if="extendedPostData.metadata.commentCount > 0">
-            <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.slugId"
-              :comment-list="commentList" :comment-ranking="extendedPostData.userInteraction.commentRanking"
-              :initial-comment-slug-id="commentSlugId" />
-          </div>
-
-          <div v-if="extendedPostData.metadata.commentCount == 0" class="noCommentMessage">
-            There are no comments in this post.
-          </div>
+        <div v-if="!compactMode && viewMode == 'comments'">
+          <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.slugId"
+            :comment-list="commentList" :comment-ranking="extendedPostData.userInteraction.commentRanking"
+            :initial-comment-slug-id="commentSlugId" />
         </div>
       </div>
     </ZKHoverEffect>
@@ -98,13 +92,13 @@ const hasCommentSlugId = commentSlugId.value.length > 0;
 const commentCountOffset = ref(0);
 
 const showRankingMode = ref<boolean>(hasCommentSlugId);
-let initialViewMode = "";
+let initialViewMode: "comments" | "ranking" = "comments";
 if (hasCommentSlugId) {
   initialViewMode = "comments";
 } else {
   initialViewMode = "ranking";
 }
-const viewMode = ref(initialViewMode);
+const viewMode = ref<"comments" | "ranking">(initialViewMode);
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
@@ -227,12 +221,6 @@ function shareClicked() {
   padding-right: 0.5rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
-}
-
-.noCommentMessage {
-  display: flex;
-  justify-content: center;
-  padding-top: 4rem;
 }
 
 .truncate {

@@ -1,5 +1,5 @@
 {
-  "id": "726dc5ef-f908-4429-9b8e-3a78e718bba8",
+  "id": "186fc03d-d6ec-4afb-847c-975300c58cc4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1351,18 +1351,19 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "poll_response_post_id_unique": {
-          "name": "poll_response_post_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "post_id"
-          ]
-        },
         "poll_response_current_content_id_unique": {
           "name": "poll_response_current_content_id_unique",
           "nullsNotDistinct": false,
           "columns": [
             "current_content_id"
+          ]
+        },
+        "poll_response_author_id_post_id_unique": {
+          "name": "poll_response_author_id_post_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "author_id",
+            "post_id"
           ]
         }
       },

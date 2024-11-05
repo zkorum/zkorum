@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PostDetails :extended-post-data="postData" :compact-mode="false" />
+    <PostDetails v-if="dataLoaded" :extended-post-data="postData" :compact-mode="false" />
   </div>
 </template>
 
@@ -18,8 +18,14 @@ const { fetchPostBySlugId } = useBackendPostApi();
 const { emptyPost } = usePostStore();
 const postData = ref<DummyPostDataFormat>(emptyPost);
 
+const dataLoaded = ref(false);
+
 onMounted(async () => {
-  postData.value = await fetchPostBySlugId(props.postSlugId);
+  const response = await fetchPostBySlugId(props.postSlugId);
+  if (response != null) {
+    postData.value = response;
+  }
+  dataLoaded.value = true;
 });
 </script>
 

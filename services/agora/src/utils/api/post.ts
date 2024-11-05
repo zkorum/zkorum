@@ -1,10 +1,8 @@
 import { api } from "src/boot/axios";
-import axios from "axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
   ApiV1FeedFetchMorePost200ResponseInner,
   ApiV1FeedFetchMorePostRequest,
-  ApiV1PostCreatePost200Response,
   ApiV1PostCreatePostRequest,
   ApiV1PostFetchPostRequest,
   DefaultApiAxiosParamCreator,
@@ -12,16 +10,35 @@ import {
 } from "src/api";
 import { useCommonApi } from "./common";
 import {
+  DummyPollOptionFormat,
   DummyPostDataFormat,
   PossibleCommentRankingActions,
 } from "src/stores/post";
+import { useNotify } from "../ui/notify";
+import { useRouter } from "vue-router";
 
 export function useBackendPostApi() {
+
   const { buildEncodedUcan } = useCommonApi();
+
+  const { showNotifyMessage } = useNotify();
+
+  const router = useRouter();
 
   function createInternalPostData(
     postElement: ApiV1FeedFetchMorePost200ResponseInner
   ) {
+
+    const pollOptionList: DummyPollOptionFormat[] = [];
+    postElement.payload.poll?.forEach(pollOption => {
+      const internalItem: DummyPollOptionFormat = {
+        index: pollOption.optionNumber - 1,
+        numResponses: pollOption.numResponses,
+        option: pollOption.optionTitle
+      };
+      pollOptionList.push(internalItem);
+    });
+
     const newItem: DummyPostDataFormat = {
       metadata: {
         commentCount: postElement.metadata.commentCount,
@@ -37,8 +54,8 @@ export function useBackendPostApi() {
         body: postElement.payload.body || "",
         comments: [],
         poll: {
-          hasPoll: false,
-          options: [],
+          hasPoll: postElement.payload.poll ? true : false,
+          options: pollOptionList,
         },
         title: postElement.payload.title,
       },
@@ -46,11 +63,7 @@ export function useBackendPostApi() {
         commentRanking: {
           assignedRankingItems: [],
           rankedCommentList: new Map<number, PossibleCommentRankingActions>(),
-        },
-        pollVoting: {
-          hasVoted: false,
-          voteIndex: 0,
-        },
+        }
       },
     };
 
@@ -69,11 +82,11 @@ export function useBackendPostApi() {
       ).apiV1PostFetchPost(params, {});
       return createInternalPostData(response.data.postData);
     } catch (e) {
-      if (axios.isAxiosError(e)) {
-        throw e;
-      } else {
-        throw e;
-      }
+      console.error(e);
+      showNotifyMessage("Failed to fetch post by slug ID.");
+      showNotifyMessage("Redirecting user to the home feed.");
+      router.push({ name: "default-home-feed" });
+      return null;
     }
   }
 
@@ -97,22 +110,22 @@ export function useBackendPostApi() {
 
       return dataList;
     } catch (e) {
-      if (axios.isAxiosError(e)) {
-        throw e;
-      } else {
-        throw e;
-      }
+      console.error(e);
+      showNotifyMessage("Failed to fetch recent posts from the server.");
+      return null;
     }
   }
 
   async function createNewPost(
     postTitle: string,
-    postBody: string
-  ): Promise<ApiV1PostCreatePost200Response> {
+    postBody: string | undefined,
+    pollingOptionList: string[] | undefined
+  ) {
     try {
       const params: ApiV1PostCreatePostRequest = {
         postTitle: postTitle,
         postBody: postBody,
+        pollingOptionList: pollingOptionList
       };
 
       const { url, options } =
@@ -129,11 +142,9 @@ export function useBackendPostApi() {
       });
       return response.data;
     } catch (e) {
-      if (axios.isAxiosError(e)) {
-        throw e;
-      } else {
-        throw e;
-      }
+      console.error(e);
+      showNotifyMessage("Failed to create the new post.");
+      return null;
     }
   }
 
