@@ -9,17 +9,18 @@
             :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode" />
 
           <div class="postDiv">
-            <div v-if="!skeletonMode" class="titleDiv">
-              {{ extendedPostData.payload.title }}
+            <div>
+              <div v-if="!skeletonMode" class="titleDiv">
+                {{ extendedPostData.payload.title }}
+              </div>
+
+              <div v-if="skeletonMode" class="titleDiv">
+                <Skeleton v-if="skeletonMode" width="100%" height="4rem" border-radius="16px"></Skeleton>
+              </div>
             </div>
 
             <div v-if="extendedPostData.payload.body.length > 0" class="bodyDiv">
-              <div v-if="!skeletonMode">
-                <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
-              </div>
-              <div v-if="skeletonMode">
-                <Skeleton v-if="skeletonMode" width="100%" height="5rem"></Skeleton>
-              </div>
+              <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
             </div>
           </div>
 

@@ -21,16 +21,20 @@
       <q-pull-to-refresh @refresh="refreshPage">
         <div v-if="postList.length > 0" class="postListFlex">
           <div v-for="(postData) in postList" :key="postData.metadata.slugId" class="postPadding">
-            <div>
-              <RouterLink :to="!dataReady ? {} : {
+            <div v-if="dataReady">
+              <RouterLink :to="{
                 name: 'single-post',
                 params: {
                   postSlugId: postData.metadata.slugId,
                 },
               }">
                 <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-                  :skeleton-mode="!dataReady" />
+                  :skeleton-mode="false" />
               </RouterLink>
+            </div>
+            <div v-if="!dataReady">
+              <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
+                :skeleton-mode="true" />
             </div>
 
             <div class="seperator">
