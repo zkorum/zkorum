@@ -35,14 +35,4 @@ function createNewPost() {
   flex-direction: column;
   gap: 1rem;
 }
-
-.fetchErrorMessage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  padding: 4rem;
-  font-size: 1.2rem;
-}
 </style>

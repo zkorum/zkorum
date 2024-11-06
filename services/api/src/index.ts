@@ -366,29 +366,6 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
-            url: `/api/${apiVersion}/feed/fetchMore`,
-            schema: {
-                body: Dto.fetchFeedRequest,
-                response: {
-                    200: Dto.fetchFeed200,
-                },
-            },
-            handler: async (request) => {
-                return await feedService.fetchFeed({
-                    db: db,
-                    order: "more",
-                    showHidden: request.body.showHidden,
-                    lastReactedAt:
-                        request.body.lastReactedAt !== undefined
-                            ? new Date(request.body.lastReactedAt)
-                            : undefined,
-                });
-            },
-        });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
             url: `/api/${apiVersion}/feed/fetchRecent`,
             schema: {
                 body: Dto.fetchFeedRequest,
@@ -399,12 +376,8 @@ server.after(() => {
             handler: async (request) => {
                 return await feedService.fetchFeed({
                     db: db,
-                    order: "recent",
                     showHidden: request.body.showHidden,
-                    lastReactedAt:
-                        request.body.lastReactedAt !== undefined
-                            ? new Date(request.body.lastReactedAt)
-                            : undefined,
+                    lastCreatedAt: new Date(request.body.lastCreatedAt),
                 });
             },
         });

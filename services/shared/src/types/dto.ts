@@ -74,7 +74,7 @@ export class Dto {
     static fetchFeedRequest = z
         .object({
             showHidden: z.boolean(),
-            lastReactedAt: z.string().datetime().optional(),
+            lastCreatedAt: z.string().datetime(),
         })
         .strict();
     static fetchFeed200 = z.array(zodExtendedPostData);

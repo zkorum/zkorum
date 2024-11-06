@@ -1,32 +1,25 @@
 import { postTable } from "@/schema.js";
 import type { ExtendedPost } from "@/shared/types/zod.js";
-import { and, eq, gt, lt } from "drizzle-orm";
+import { and, eq, lt } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
 
 interface FetchFeedProps {
     db: PostgresDatabase;
-    lastReactedAt: Date | undefined;
-    order: "more" | "recent";
+    lastCreatedAt: Date;
     limit?: number;
     showHidden?: boolean;
 }
 
 export async function fetchFeed({
     db,
-    lastReactedAt,
-    order,
+    lastCreatedAt,
     limit,
     showHidden,
 }: FetchFeedProps): Promise<ExtendedPost[]> {
-    const defaultLimit = 30;
+    const defaultLimit = 10;
     const actualLimit = limit ?? defaultLimit;
-    const whereUpdatedAt =
-        lastReactedAt === undefined
-            ? undefined
-            : order === "more"
-                ? lt(postTable.lastReactedAt, lastReactedAt)
-                : gt(postTable.lastReactedAt, lastReactedAt);
+    const whereUpdatedAt = lt(postTable.lastReactedAt, lastCreatedAt);
 
     const { fetchPostItems } = useCommonPost();
 

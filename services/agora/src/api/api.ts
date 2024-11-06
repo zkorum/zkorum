@@ -334,145 +334,145 @@ export interface ApiV1CommentFetchToVoteOnPostRequest {
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchMorePost200ResponseInner
+ * @interface ApiV1FeedFetchRecentPost200ResponseInner
  */
-export interface ApiV1FeedFetchMorePost200ResponseInner {
+export interface ApiV1FeedFetchRecentPost200ResponseInner {
     /**
      * 
-     * @type {ApiV1FeedFetchMorePost200ResponseInnerMetadata}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInner
+     * @type {ApiV1FeedFetchRecentPost200ResponseInnerMetadata}
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInner
      */
-    'metadata': ApiV1FeedFetchMorePost200ResponseInnerMetadata;
+    'metadata': ApiV1FeedFetchRecentPost200ResponseInnerMetadata;
     /**
      * 
-     * @type {ApiV1FeedFetchMorePost200ResponseInnerPayload}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInner
+     * @type {ApiV1FeedFetchRecentPost200ResponseInnerPayload}
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInner
      */
-    'payload': ApiV1FeedFetchMorePost200ResponseInnerPayload;
+    'payload': ApiV1FeedFetchRecentPost200ResponseInnerPayload;
 }
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchMorePost200ResponseInnerMetadata
+ * @interface ApiV1FeedFetchRecentPost200ResponseInnerMetadata
  */
-export interface ApiV1FeedFetchMorePost200ResponseInnerMetadata {
+export interface ApiV1FeedFetchRecentPost200ResponseInnerMetadata {
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
      */
     'postSlugId': string;
     /**
      * 
      * @type {boolean}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
      */
     'isHidden'?: boolean;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
      */
     'createdAt': string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
      */
     'updatedAt': string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
      */
     'lastReactedAt': string;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
      */
     'commentCount': number;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
      */
     'authorName'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
      */
     'authorImagePath'?: string;
 }
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchMorePost200ResponseInnerPayload
+ * @interface ApiV1FeedFetchRecentPost200ResponseInnerPayload
  */
-export interface ApiV1FeedFetchMorePost200ResponseInnerPayload {
+export interface ApiV1FeedFetchRecentPost200ResponseInnerPayload {
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayload
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayload
      */
     'title': string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayload
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayload
      */
     'body'?: string;
     /**
      * 
-     * @type {Array<ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner>}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayload
+     * @type {Array<ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner>}
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayload
      */
-    'poll'?: Array<ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner>;
+    'poll'?: Array<ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner>;
 }
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+ * @interface ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner
  */
-export interface ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner {
+export interface ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner {
     /**
      * 
      * @type {number}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner
      */
     'optionNumber': number;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner
      */
     'optionTitle': string;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1FeedFetchMorePost200ResponseInnerPayloadPollInner
+     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner
      */
     'numResponses': number;
 }
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchMorePostRequest
+ * @interface ApiV1FeedFetchRecentPostRequest
  */
-export interface ApiV1FeedFetchMorePostRequest {
+export interface ApiV1FeedFetchRecentPostRequest {
     /**
      * 
      * @type {boolean}
-     * @memberof ApiV1FeedFetchMorePostRequest
+     * @memberof ApiV1FeedFetchRecentPostRequest
      */
     'showHidden': boolean;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchMorePostRequest
+     * @memberof ApiV1FeedFetchRecentPostRequest
      */
-    'lastReactedAt'?: string;
+    'lastCreatedAt': string;
 }
 /**
  * 
@@ -552,10 +552,10 @@ export interface ApiV1PostCreatePostRequest {
 export interface ApiV1PostFetchPost200Response {
     /**
      * 
-     * @type {ApiV1FeedFetchMorePost200ResponseInner}
+     * @type {ApiV1FeedFetchRecentPost200ResponseInner}
      * @memberof ApiV1PostFetchPost200Response
      */
-    'postData': ApiV1FeedFetchMorePost200ResponseInner;
+    'postData': ApiV1FeedFetchRecentPost200ResponseInner;
 }
 /**
  * 
@@ -840,52 +840,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
+         * @param {ApiV1FeedFetchRecentPostRequest} apiV1FeedFetchRecentPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchMorePost: async (apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1FeedFetchMorePostRequest' is not null or undefined
-            assertParamExists('apiV1FeedFetchMorePost', 'apiV1FeedFetchMorePostRequest', apiV1FeedFetchMorePostRequest)
-            const localVarPath = `/api/v1/feed/fetchMore`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchMorePostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1FeedFetchRecentPost: async (apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1FeedFetchMorePostRequest' is not null or undefined
-            assertParamExists('apiV1FeedFetchRecentPost', 'apiV1FeedFetchMorePostRequest', apiV1FeedFetchMorePostRequest)
+        apiV1FeedFetchRecentPost: async (apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1FeedFetchRecentPostRequest' is not null or undefined
+            assertParamExists('apiV1FeedFetchRecentPost', 'apiV1FeedFetchRecentPostRequest', apiV1FeedFetchRecentPostRequest)
             const localVarPath = `/api/v1/feed/fetchRecent`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -909,7 +870,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchMorePostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchRecentPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1166,24 +1127,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
+         * @param {ApiV1FeedFetchRecentPostRequest} apiV1FeedFetchRecentPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1FeedFetchMorePost200ResponseInner>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchMorePost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1FeedFetchMorePost200ResponseInner>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options);
+        async apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponseInner>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchRecentPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1309,21 +1258,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
+         * @param {ApiV1FeedFetchRecentPostRequest} apiV1FeedFetchRecentPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1FeedFetchMorePost200ResponseInner>> {
-            return localVarFp.apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: any): AxiosPromise<Array<ApiV1FeedFetchMorePost200ResponseInner>> {
-            return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(axios, basePath));
+        apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: any): AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponseInner>> {
+            return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1448,24 +1388,13 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
+     * @param {ApiV1FeedFetchRecentPostRequest} apiV1FeedFetchRecentPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1FeedFetchMorePost(apiV1FeedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1FeedFetchMorePostRequest} apiV1FeedFetchMorePostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest: ApiV1FeedFetchMorePostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1FeedFetchRecentPost(apiV1FeedFetchMorePostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

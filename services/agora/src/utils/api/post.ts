@@ -1,8 +1,8 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  ApiV1FeedFetchMorePost200ResponseInner,
-  ApiV1FeedFetchMorePostRequest,
+  ApiV1FeedFetchRecentPost200ResponseInner,
+  ApiV1FeedFetchRecentPostRequest,
   ApiV1PostCreatePostRequest,
   ApiV1PostFetchPostRequest,
   DefaultApiAxiosParamCreator,
@@ -29,7 +29,7 @@ export function useBackendPostApi() {
   const router = useRouter();
 
   async function createInternalPostData(
-    postElement: ApiV1FeedFetchMorePost200ResponseInner
+    postElement: ApiV1FeedFetchRecentPost200ResponseInner
   ) {
 
     // Create the polling object
@@ -111,11 +111,11 @@ export function useBackendPostApi() {
     }
   }
 
-  async function fetchRecentPost() {
+  async function fetchRecentPost(lastCreatedAt: string) {
     try {
-      const params: ApiV1FeedFetchMorePostRequest = {
+      const params: ApiV1FeedFetchRecentPostRequest = {
         showHidden: false,
-        lastReactedAt: undefined,
+        lastCreatedAt: lastCreatedAt,
       };
       const response = await DefaultApiFactory(
         undefined,

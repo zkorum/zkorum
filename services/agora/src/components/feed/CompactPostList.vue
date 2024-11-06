@@ -16,7 +16,7 @@
       </div>
 
       <q-pull-to-refresh @refresh="refreshPage">
-        <q-infinite-scroll v-if="postList.length > 0" :offset="250" @load="onLoad">
+        <q-infinite-scroll v-if="postList.length > 0" :offset="250" :debounce="500" @load="onLoadInfiniteScroll">
           <div class="postListFlex">
             <div v-for="(postData, index) in postList" :key="index" class="postPadding">
               <div>
@@ -44,7 +44,7 @@
         Failed to fetch posts from the server
       </div>
 
-      <ZKButton label="Reload Page" color="primary" @click="loadData()" />
+      <ZKButton label="Reload Page" color="primary" @click="loadPostData(false)" />
 
     </div>
   </div>
@@ -73,28 +73,39 @@ const dataReady = ref(false);
 const showfetchErrorMessage = ref(false);
 
 onMounted(async () => {
-  await loadData();
+  await loadPostData(false);
 });
 
 onBeforeUnmount(() => {
   lastSavedHomeFeedPosition.value = -document.body.getBoundingClientRect().top;
 });
 
-interface DoneFunction {
-  (): void;
-}
+async function loadPostData(loadMoreData: boolean) {
 
-async function loadData() {
-  const response = await postStore.fetchRecentPost();
+  let createdAtThreshold = new Date();
 
-  dataReady.value = false;
+  if (loadMoreData) {
+    const lastPostItem = postList.value.at(-1);
+    if (lastPostItem) {
+      createdAtThreshold = lastPostItem.metadata.createdAt;
+    }
+  }
 
+  const response = await postStore.fetchRecentPost(createdAtThreshold.toISOString());
   if (response != null) {
     showfetchErrorMessage.value = false;
-    postList.value = response;
+
+    // console.log("Loaded posts: " + response.length.toString());
+
+    if (loadMoreData) {
+      postList.value.push(...response);
+    } else {
+      postList.value = response;
+    }
+
     dataReady.value = true;
 
-    if (lastNavigatedRouteName.value == "single-post") {
+    if (lastNavigatedRouteName.value == "single-post" && !loadMoreData) {
       setTimeout(function () {
         window.scrollTo(0, lastSavedHomeFeedPosition.value);
       }, 200);
@@ -103,14 +114,16 @@ async function loadData() {
     showfetchErrorMessage.value = true;
   }
 }
+
 function refreshPage(done: () => void) {
   setTimeout(() => {
+    loadPostData(false);
     done();
   }, 1000);
 }
 
-async function onLoad(index: number, done: DoneFunction) {
-  // generateNewPosts();
+async function onLoadInfiniteScroll(index: number, done: () => void) {
+  loadPostData(true);
   done();
 }
 </script>
@@ -144,5 +157,15 @@ a {
 
 .emptyDivPadding {
   padding-top: 5rem;
+}
+
+.fetchErrorMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 4rem;
+  font-size: 1.2rem;
 }
 </style>
