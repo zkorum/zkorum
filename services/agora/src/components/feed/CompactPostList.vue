@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-page v-if="!showfetchErrorMessage" class="container">
-      <ZKLoading :data-ready="true" />
+      <ZKLoading :data-ready="dataReady" />
 
       <div v-if="postList.length == 0 && dataReady" class="emptyDivPadding">
         <div class="centerMessage">
