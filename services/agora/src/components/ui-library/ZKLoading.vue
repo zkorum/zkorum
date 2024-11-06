@@ -14,12 +14,7 @@ const props = defineProps<{
   dataReady: boolean;
 }>();
 
-const showSpinner = ref(false);
-
-setTimeout(
-  function () {
-    checkDataReadyStatus();
-  }, 500);
+const showSpinner = ref(true);
 
 watch(() => props.dataReady, () => {
   checkDataReadyStatus();
