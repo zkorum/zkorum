@@ -287,143 +287,6 @@
                 }
             }
         },
-        "/api/v1/feed/fetchMore": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "showHidden": {
-                                        "type": "boolean"
-                                    },
-                                    "lastReactedAt": {
-                                        "type": "string",
-                                        "format": "date-time"
-                                    }
-                                },
-                                "required": [
-                                    "showHidden"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "metadata": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "postSlugId": {
-                                                        "type": "string",
-                                                        "maxLength": 10
-                                                    },
-                                                    "isHidden": {
-                                                        "type": "boolean"
-                                                    },
-                                                    "createdAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "updatedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "lastReactedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "commentCount": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "authorName": {
-                                                        "type": "string"
-                                                    },
-                                                    "authorImagePath": {
-                                                        "type": "string",
-                                                        "format": "uri"
-                                                    }
-                                                },
-                                                "required": [
-                                                    "postSlugId",
-                                                    "createdAt",
-                                                    "updatedAt",
-                                                    "lastReactedAt",
-                                                    "commentCount"
-                                                ],
-                                                "additionalProperties": false
-                                            },
-                                            "payload": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "title": {
-                                                        "type": "string",
-                                                        "maxLength": 130,
-                                                        "minLength": 1
-                                                    },
-                                                    "body": {
-                                                        "type": "string"
-                                                    },
-                                                    "poll": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "optionNumber": {
-                                                                    "type": "integer",
-                                                                    "minimum": 1,
-                                                                    "maximum": 6
-                                                                },
-                                                                "optionTitle": {
-                                                                    "type": "string",
-                                                                    "maxLength": 30,
-                                                                    "minLength": 1
-                                                                },
-                                                                "numResponses": {
-                                                                    "type": "integer",
-                                                                    "minimum": 0
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "optionNumber",
-                                                                "optionTitle",
-                                                                "numResponses"
-                                                            ],
-                                                            "additionalProperties": false
-                                                        }
-                                                    }
-                                                },
-                                                "required": [
-                                                    "title"
-                                                ],
-                                                "additionalProperties": false
-                                            }
-                                        },
-                                        "required": [
-                                            "metadata",
-                                            "payload"
-                                        ],
-                                        "additionalProperties": false
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/feed/fetchRecent": {
             "post": {
                 "requestBody": {
@@ -435,13 +298,14 @@
                                     "showHidden": {
                                         "type": "boolean"
                                     },
-                                    "lastReactedAt": {
+                                    "lastCreatedAt": {
                                         "type": "string",
                                         "format": "date-time"
                                     }
                                 },
                                 "required": [
-                                    "showHidden"
+                                    "showHidden",
+                                    "lastCreatedAt"
                                 ],
                                 "additionalProperties": false
                             }

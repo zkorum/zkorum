@@ -1,8 +1,8 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  ApiV1FeedFetchMorePost200ResponseInner,
-  ApiV1FeedFetchMorePostRequest,
+  ApiV1FeedFetchRecentPost200ResponseInner,
+  ApiV1FeedFetchRecentPostRequest,
   ApiV1PostCreatePostRequest,
   ApiV1PostFetchPostRequest,
   DefaultApiAxiosParamCreator,
@@ -16,19 +16,23 @@ import {
 } from "src/stores/post";
 import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
+import axios from "axios";
+import { useBackendPollApi } from "./poll";
 
 export function useBackendPostApi() {
 
   const { buildEncodedUcan } = useCommonApi();
+  const { fetchUserPollResponse } = useBackendPollApi();
 
   const { showNotifyMessage } = useNotify();
 
   const router = useRouter();
 
-  function createInternalPostData(
-    postElement: ApiV1FeedFetchMorePost200ResponseInner
+  async function createInternalPostData(
+    postElement: ApiV1FeedFetchRecentPost200ResponseInner
   ) {
 
+    // Create the polling object
     const pollOptionList: DummyPollOptionFormat[] = [];
     postElement.payload.poll?.forEach(pollOption => {
       const internalItem: DummyPollOptionFormat = {
@@ -38,6 +42,13 @@ export function useBackendPostApi() {
       };
       pollOptionList.push(internalItem);
     });
+
+    // Load user's polling response
+    let pollResponseOption: number | undefined = 0;
+    if (postElement.payload.poll) {
+      const pollResponse = await fetchUserPollResponse(postElement.metadata.postSlugId);
+      pollResponseOption = pollResponse?.selectedPollOption;
+    }
 
     const newItem: DummyPostDataFormat = {
       metadata: {
@@ -60,6 +71,10 @@ export function useBackendPostApi() {
         title: postElement.payload.title,
       },
       userInteraction: {
+        pollResponse: {
+          hadResponded: pollResponseOption != undefined,
+          responseIndex: pollResponseOption ? pollResponseOption - 1 : 0
+        },
         commentRanking: {
           assignedRankingItems: [],
           rankedCommentList: new Map<number, PossibleCommentRankingActions>(),
@@ -80,21 +95,27 @@ export function useBackendPostApi() {
         undefined,
         api
       ).apiV1PostFetchPost(params, {});
-      return createInternalPostData(response.data.postData);
-    } catch (e) {
-      console.error(e);
-      showNotifyMessage("Failed to fetch post by slug ID.");
-      showNotifyMessage("Redirecting user to the home feed.");
-      router.push({ name: "default-home-feed" });
+      return await createInternalPostData(response.data.postData);
+    } catch (error) {
+      console.error(error);
+      if (axios.isAxiosError(error)) {
+        if (error.status == 400) {
+          showNotifyMessage("Post resource not found.");
+          router.push({ name: "default-home-feed" });
+        }
+      } else {
+        showNotifyMessage("Failed to fetch post by slug ID.");
+      }
+
       return null;
     }
   }
 
-  async function fetchRecentPost() {
+  async function fetchRecentPost(lastCreatedAt: string) {
     try {
-      const params: ApiV1FeedFetchMorePostRequest = {
+      const params: ApiV1FeedFetchRecentPostRequest = {
         showHidden: false,
-        lastReactedAt: undefined,
+        lastCreatedAt: lastCreatedAt,
       };
       const response = await DefaultApiFactory(
         undefined,
@@ -103,9 +124,14 @@ export function useBackendPostApi() {
       ).apiV1FeedFetchRecentPost(params, {});
 
       const dataList: DummyPostDataFormat[] = [];
-      response.data.forEach((postElement) => {
-        const dataItem = createInternalPostData(postElement);
+
+      await Promise.all(response.data.map(async (postElement) => {
+        const dataItem = await createInternalPostData(postElement);
         dataList.push(dataItem);
+      }));
+
+      dataList.sort(function (a, b) {
+        return b.metadata.createdAt.getTime() - a.metadata.createdAt.getTime();
       });
 
       return dataList;
