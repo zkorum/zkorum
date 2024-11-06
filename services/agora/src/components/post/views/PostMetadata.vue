@@ -2,23 +2,36 @@
   <div>
     <div class="container">
       <div class="metadata">
-        <img :src="posterImagePath" class="companyIcon" />
+        <div>
+          <img v-if="!skeletonMode" :src="posterImagePath" class="companyIcon" />
+          <Skeleton v-if="skeletonMode" shape="circle" size="2.5rem"></Skeleton>
+        </div>
 
         <div>
-          {{ posterName }}
+          <div v-if="!skeletonMode">
+            {{ posterName }}
+          </div>
+          <Skeleton v-if="skeletonMode" width="5rem"></Skeleton>
         </div>
 
         <div>•</div>
 
         <div>
-          {{ getTimeFromNow(createdAt) }}
+          <div v-if="!skeletonMode">
+            {{ getTimeFromNow(createdAt) }}
+          </div>
+          <Skeleton v-if="skeletonMode" width="2rem"></Skeleton>
         </div>
 
         <div></div>
       </div>
 
       <div>
-        <ZKButton flat text-color="color-text-weak" icon="mdi-dots-vertical" @click.stop.prevent="clickedMoreIcon()" />
+        <div v-if="!skeletonMode">
+          <ZKButton flat text-color="color-text-weak" icon="mdi-dots-vertical"
+            @click.stop.prevent="clickedMoreIcon()" />
+        </div>
+        <Skeleton v-if="skeletonMode" width="3rem" height="2rem" border-radius="16px"></Skeleton>
       </div>
     </div>
   </div>
@@ -28,11 +41,13 @@
 import { getTimeFromNow } from "src/utils/common";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
+import Skeleton from "primevue/skeleton";
 
 defineProps<{
   posterName: string;
   posterImagePath: string;
   createdAt: Date;
+  skeletonMode: boolean;
 }>();
 
 const { showPostOptionSelector } = useBottomSheet();

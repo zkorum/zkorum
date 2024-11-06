@@ -1,9 +1,8 @@
 <template>
   <div>
     <q-page v-if="!showfetchErrorMessage" class="container">
-      <ZKLoading :data-ready="dataReady" />
 
-      <div v-if="postList.length == 0 && dataReady" class="emptyDivPadding">
+      <div v-if="postList.length == 0" class="emptyDivPadding">
         <div class="centerMessage">
           <div>
             <q-icon name="mdi-account-group" size="4rem" />
@@ -21,15 +20,16 @@
 
       <q-pull-to-refresh @refresh="refreshPage">
         <div v-if="postList.length > 0" class="postListFlex">
-          <div v-for="(postData, index) in postList" :key="index" class="postPadding">
+          <div v-for="(postData) in postList" :key="postData.metadata.slugId" class="postPadding">
             <div>
-              <RouterLink :to="{
+              <RouterLink :to="!dataReady ? {} : {
                 name: 'single-post',
                 params: {
                   postSlugId: postData.metadata.slugId,
                 },
               }">
-                <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
+                <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
+                  :skeleton-mode="!dataReady" />
               </RouterLink>
             </div>
 
@@ -78,7 +78,6 @@ import { onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useLastNavigatedRouteName } from "src/utils/nav/lastNavigatedRouteName";
 import { useBackendPostApi } from "src/utils/api/post";
-import ZKLoading from "../ui-library/ZKLoading.vue";
 import { useElementVisibility } from "@vueuse/core";
 
 const postStore = useBackendPostApi();
@@ -86,7 +85,11 @@ const postStore = useBackendPostApi();
 const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
-const postList = ref<DummyPostDataFormat[]>([]);
+const { emptyPost } = usePostStore();
+
+const postList = ref<DummyPostDataFormat[]>([
+  emptyPost, emptyPost, emptyPost, emptyPost
+]);
 
 const dataReady = ref(false);
 

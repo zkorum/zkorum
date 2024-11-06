@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PostDetails v-if="dataLoaded" :extended-post-data="postData" :compact-mode="false" />
+    <PostDetails v-if="dataLoaded" :extended-post-data="postData" :compact-mode="false" :skeleton-mode="false" />
   </div>
 </template>
 

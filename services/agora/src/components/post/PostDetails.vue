@@ -6,19 +6,24 @@
         <div class="innerContainer">
           <PostMetadata :poster-name="extendedPostData.metadata.posterName"
             :poster-image-path="extendedPostData.metadata.posterImagePath"
-            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" />
+            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode" />
 
           <div class="postDiv">
-            <div class="titleDiv">
+            <div v-if="!skeletonMode" class="titleDiv">
               {{ extendedPostData.payload.title }}
             </div>
 
             <div v-if="extendedPostData.payload.body.length > 0" class="bodyDiv">
-              <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
+              <div v-if="!skeletonMode">
+                <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
+              </div>
+              <div v-if="skeletonMode">
+                <Skeleton v-if="skeletonMode" width="100%" height="5rem"></Skeleton>
+              </div>
             </div>
           </div>
 
-          <div v-if="extendedPostData.payload.poll.hasPoll" class="innerContainer">
+          <div v-if="extendedPostData.payload.poll.hasPoll && !skeletonMode" class="innerContainer">
             <PollWrapper :poll-options="extendedPostData.payload.poll.options"
               :post-slug-id="extendedPostData.metadata.slugId"
               :user-response="extendedPostData.userInteraction.pollResponse" />
@@ -26,24 +31,41 @@
 
           <div class="bottomButtons">
             <div class="leftButtonCluster">
-              <ZKButton :color="focusCommentElement
-                ? 'color-text-weak'
-                : 'button-background-color'
-                " :text-color="focusCommentElement ? 'white' : 'black'" :label="(
-                  extendedPostData.metadata.commentCount + commentCountOffset
-                ).toString()
-                  " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
+              <div v-if="!skeletonMode">
+                <ZKButton :color="focusCommentElement
+                  ? 'color-text-weak'
+                  : 'button-background-color'
+                  " :text-color="focusCommentElement ? 'white' : 'black'" :label="(
+                    extendedPostData.metadata.commentCount + commentCountOffset
+                  ).toString()
+                    " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
+              </div>
+              <div v-if="skeletonMode">
+                <Skeleton v-if="skeletonMode" width="3rem" height="2rem" border-radius="16px"></Skeleton>
+              </div>
 
-              <q-btn-toggle v-if="!props.compactMode" v-model="viewMode" no-caps rounded unelevated
-                toggle-color="color-text-weak" color="button-background-color" text-color="black" :options="[
-                  { label: 'Voting', value: 'ranking' },
-                  { label: 'Results', value: 'comments' },
-                ]" />
+              <div v-if="!props.compactMode">
+                <div v-if="!skeletonMode">
+                  <q-btn-toggle v-model="viewMode" no-caps rounded unelevated toggle-color="color-text-weak"
+                    color="button-background-color" text-color="black" :options="[
+                      { label: 'Voting', value: 'ranking' },
+                      { label: 'Results', value: 'comments' },
+                    ]" />
+                </div>
+                <div v-if="skeletonMode">
+                  <Skeleton v-if="skeletonMode" width="3rem" height="2rem" border-radius="16px"></Skeleton>
+                </div>
+              </div>
             </div>
 
             <div>
-              <ZKButton color="button-background-color" text-color="black" icon="mdi-export-variant"
-                @click.stop.prevent="shareClicked()" />
+              <div v-if="!skeletonMode">
+                <ZKButton color="button-background-color" text-color="black" icon="mdi-export-variant"
+                  @click.stop.prevent="shareClicked()" />
+              </div>
+              <div v-if="skeletonMode">
+                <Skeleton v-if="skeletonMode" width="3rem" height="2rem" border-radius="16px"></Skeleton>
+              </div>
             </div>
           </div>
         </div>
@@ -81,10 +103,12 @@ import { useWebShare } from "src/utils/share/WebShare";
 import { useRoute, useRouter } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
+import Skeleton from "primevue/skeleton";
 
 const props = defineProps<{
   extendedPostData: DummyPostDataFormat;
   compactMode: boolean;
+  skeletonMode: boolean;
 }>();
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
