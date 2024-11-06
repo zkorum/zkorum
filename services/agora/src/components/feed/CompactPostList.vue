@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-page v-if="!showfetchErrorMessage">
+    <q-page v-if="!showfetchErrorMessage" class="container">
       <ZKLoading :data-ready="true" />
 
       <div v-if="postList.length == 0 && dataReady" class="emptyDivPadding">
@@ -16,27 +16,43 @@
       </div>
 
       <q-pull-to-refresh @refresh="refreshPage">
-        <q-infinite-scroll v-if="postList.length > 0" :offset="250" :debounce="500" @load="onLoadInfiniteScroll">
-          <div class="postListFlex">
-            <div v-for="(postData, index) in postList" :key="index" class="postPadding">
-              <div>
-                <RouterLink :to="{
-                  name: 'single-post',
-                  params: {
-                    postSlugId: postData.metadata.slugId,
-                  },
-                }">
-                  <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
-                </RouterLink>
-              </div>
+        <div v-if="postList.length > 0" class="postListFlex">
+          <div v-for="(postData, index) in postList" :key="index" class="postPadding">
+            <div>
+              <RouterLink :to="{
+                name: 'single-post',
+                params: {
+                  postSlugId: postData.metadata.slugId,
+                },
+              }">
+                <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false" />
+              </RouterLink>
+            </div>
 
-              <div class="seperator">
-                <q-separator :inset="true" />
-              </div>
+            <div class="seperator">
+              <q-separator :inset="false" />
             </div>
           </div>
-        </q-infinite-scroll>
+        </div>
       </q-pull-to-refresh>
+
+      <div ref="bottomOfPageDiv">
+      </div>
+
+      <div v-if="reachedEndOfPage" class="endOfFeedStyle">
+        <div>
+          <q-icon name="mdi-check" size="4rem" />
+        </div>
+
+        <div :style="{ fontSize: '1.3rem' }">
+          You're all caught up
+        </div>
+
+        <div>
+          You have seen all the new posts.
+        </div>
+      </div>
+
     </q-page>
 
     <div v-if="showfetchErrorMessage" class="fetchErrorMessage">
@@ -55,11 +71,12 @@ import PostDetails from "../post/PostDetails.vue";
 import { DummyPostDataFormat, usePostStore } from "src/stores/post";
 import ZKCard from "../ui-library/ZKCard.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { onMounted, onBeforeUnmount, ref } from "vue";
+import { onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useLastNavigatedRouteName } from "src/utils/nav/lastNavigatedRouteName";
 import { useBackendPostApi } from "src/utils/api/post";
 import ZKLoading from "../ui-library/ZKLoading.vue";
+import { useElementVisibility } from "@vueuse/core";
 
 const postStore = useBackendPostApi();
 
@@ -71,6 +88,18 @@ const postList = ref<DummyPostDataFormat[]>([]);
 const dataReady = ref(false);
 
 const showfetchErrorMessage = ref(false);
+
+const bottomOfPageDiv = ref(null);
+const targetIsVisible = useElementVisibility(bottomOfPageDiv);
+const reachedEndOfPage = ref(false);
+
+watch(targetIsVisible, () => {
+  if (!reachedEndOfPage.value) {
+    if (targetIsVisible.value) {
+      loadPostData(true);
+    }
+  }
+});
 
 onMounted(async () => {
   await loadPostData(false);
@@ -93,9 +122,14 @@ async function loadPostData(loadMoreData: boolean) {
 
   const response = await postStore.fetchRecentPost(createdAtThreshold.toISOString());
   if (response != null) {
+
     showfetchErrorMessage.value = false;
 
-    // console.log("Loaded posts: " + response.length.toString());
+    console.log("Loaded posts: " + response.length.toString());
+
+    if (response.length == 0) {
+      reachedEndOfPage.value = true;
+    }
 
     if (loadMoreData) {
       postList.value.push(...response);
@@ -120,11 +154,6 @@ function refreshPage(done: () => void) {
     loadPostData(false);
     done();
   }, 1000);
-}
-
-async function onLoadInfiniteScroll(index: number, done: () => void) {
-  loadPostData(true);
-  done();
 }
 </script>
 
@@ -167,5 +196,18 @@ a {
   gap: 2rem;
   padding: 4rem;
   font-size: 1.2rem;
+}
+
+.container {
+  padding-bottom: 20rem;
+}
+
+.endOfFeedStyle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding-top: 8rem;
+  flex-direction: column;
 }
 </style>
