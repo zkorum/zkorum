@@ -4,15 +4,19 @@
       <ZKLoading :data-ready="true" />
 
       <div v-if="postList.length == 0 && dataReady" class="emptyDivPadding">
-        <ZKCard padding="2rem">
-          <div class="emptyMessage">
-            <div>Whoops there is nothing here yet...</div>
-
-            <RouterLink :to="{ name: 'create-post' }">
-              <ZKButton label="Create Post" color="primary" />
-            </RouterLink>
+        <div class="centerMessage">
+          <div>
+            <q-icon name="mdi-account-group" size="4rem" />
           </div>
-        </ZKCard>
+
+          <div :style="{ fontSize: '1.3rem' }">
+            It is too quiet here...
+          </div>
+
+          <div>
+            Create a new post using the <q-icon name="mdi-plus-circle" /> button.
+          </div>
+        </div>
       </div>
 
       <q-pull-to-refresh @refresh="refreshPage">
@@ -39,7 +43,7 @@
       <div ref="bottomOfPageDiv">
       </div>
 
-      <div v-if="reachedEndOfPage" class="endOfFeedStyle">
+      <div v-if="reachedEndOfPage" class="centerMessage">
         <div>
           <q-icon name="mdi-check" size="4rem" />
         </div>
@@ -69,7 +73,6 @@
 <script setup lang="ts">
 import PostDetails from "../post/PostDetails.vue";
 import { DummyPostDataFormat, usePostStore } from "src/stores/post";
-import ZKCard from "../ui-library/ZKCard.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
@@ -176,14 +179,6 @@ a {
   padding-bottom: 1rem;
 }
 
-.emptyMessage {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  align-items: center;
-  justify-content: center;
-}
-
 .emptyDivPadding {
   padding-top: 5rem;
 }
@@ -202,7 +197,7 @@ a {
   padding-bottom: 20rem;
 }
 
-.endOfFeedStyle {
+.centerMessage {
   display: flex;
   align-items: center;
   justify-content: center;
