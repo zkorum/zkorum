@@ -15,7 +15,7 @@
               </div>
 
               <div v-if="skeletonMode" class="titleDiv">
-                <Skeleton v-if="skeletonMode" width="100%" height="4rem" border-radius="16px"></Skeleton>
+                <Skeleton width="100%" height="4rem" border-radius="16px"></Skeleton>
               </div>
             </div>
 
@@ -24,7 +24,7 @@
             </div>
           </div>
 
-          <div v-if="extendedPostData.payload.poll.hasPoll && !skeletonMode" class="innerContainer">
+          <div v-if="extendedPostData.payload.poll.hasPoll" class="innerContainer">
             <PollWrapper :poll-options="extendedPostData.payload.poll.options"
               :post-slug-id="extendedPostData.metadata.slugId"
               :user-response="extendedPostData.userInteraction.pollResponse" />
@@ -42,7 +42,7 @@
                     " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
               </div>
               <div v-if="skeletonMode">
-                <Skeleton v-if="skeletonMode" width="3rem" height="2rem" border-radius="16px"></Skeleton>
+                <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
               </div>
 
               <div v-if="!props.compactMode">
@@ -54,7 +54,7 @@
                     ]" />
                 </div>
                 <div v-if="skeletonMode">
-                  <Skeleton v-if="skeletonMode" width="3rem" height="2rem" border-radius="16px"></Skeleton>
+                  <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
                 </div>
               </div>
             </div>
@@ -65,7 +65,7 @@
                   @click.stop.prevent="shareClicked()" />
               </div>
               <div v-if="skeletonMode">
-                <Skeleton v-if="skeletonMode" width="3rem" height="2rem" border-radius="16px"></Skeleton>
+                <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
               </div>
             </div>
           </div>
