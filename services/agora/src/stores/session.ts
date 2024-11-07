@@ -1,15 +1,15 @@
 import { defineStore } from "pinia";
+import { ref } from "vue";
 
-export const useSessionStore = defineStore("session", {
-  state: () => ({
-    sign: {
-      emailToPrefixedKey: {} as Record<string, string>,
-    },
-  }),
+export const useSessionStore = defineStore("session", () => {
 
-  actions: {
-    setPrefixedKey(email: string, prefixedKey: string) {
-      this.sign.emailToPrefixedKey[email] = prefixedKey;
-    },
-  },
+  const sign = ref({
+    emailToPrefixedKey: {} as Record<string, string>,
+  });
+
+  function setPrefixedKey(email: string, prefixedKey: string) {
+    sign.value.emailToPrefixedKey[email] = prefixedKey;
+  }
+
+  return { sign, setPrefixedKey };
 });
