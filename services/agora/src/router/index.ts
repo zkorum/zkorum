@@ -45,7 +45,7 @@ export default route(function (/* { store, ssrContext } */) {
       }
 
       const toRouteName = to.name?.toString() ?? "";
-      if (toRouteName == "default-home-feed") {
+      if (toRouteName == "default-home-feed" && fromRouteName == "single-post") {
         return { left: 0, top: lastSavedHomeFeedPosition.value };
       } else {
         return { left: 0, top: 0 };
