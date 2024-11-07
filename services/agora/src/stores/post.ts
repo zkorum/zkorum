@@ -141,12 +141,14 @@ export const usePostStore = defineStore("post", () => {
     if (response != null) {
       if (response.length == 0) {
         endOfFeed.value = true;
-      }
-
-      if (loadMoreData) {
-        masterPostDataList.value.push(...response);
       } else {
-        masterPostDataList.value = response;
+        endOfFeed.value = false;
+
+        if (loadMoreData) {
+          masterPostDataList.value.push(...response);
+        } else {
+          masterPostDataList.value = response;
+        }
       }
 
       dataReady.value = true;
