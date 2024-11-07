@@ -116,14 +116,15 @@ export const usePostStore = defineStore("post", () => {
   };
 
   const masterPostDataList = ref<DummyPostDataFormat[]>([emptyPost, emptyPost, emptyPost, emptyPost]);
-  onMounted(() => {
-    loadPostData(false);
-  });
 
   const lastSavedHomeFeedPosition = useStorage(
     "last-saved-home-feed-position",
     0
   );
+
+  onMounted(() => {
+    loadPostData(false);
+  });
 
   async function loadPostData(loadMoreData: boolean) {
 

@@ -20,21 +20,9 @@
       <q-pull-to-refresh @refresh="refreshPage">
         <div v-if="masterPostDataList.length > 0" class="postListFlex">
           <div v-for="postData in masterPostDataList" :key="postData.metadata.slugId" class="postPadding">
-            <div v-if="dataReady">
-              <RouterLink :to="{
-                name: 'single-post',
-                params: {
-                  postSlugId: postData.metadata.slugId,
-                },
-              }">
-                <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-                  :skeleton-mode="false" />
-              </RouterLink>
-            </div>
-            <div v-if="!dataReady">
-              <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-                :skeleton-mode="true" />
-            </div>
+            <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
+              :skeleton-mode="!dataReady" class="showCursor" @click="openPost(postData.metadata.slugId)" />
+
             <div class="seperator">
               <q-separator :inset="false" />
             </div>
@@ -79,12 +67,15 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import { onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useElementVisibility } from "@vueuse/core";
+import { useRouter } from "vue-router";
 
 const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 // const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
 const { masterPostDataList, dataReady, endOfFeed } = storeToRefs(usePostStore());
 const { loadPostData } = usePostStore();
+
+const router = useRouter();
 
 const showfetchErrorMessage = ref(false);
 
@@ -103,6 +94,12 @@ watch(targetIsVisible, () => {
 onBeforeUnmount(() => {
   lastSavedHomeFeedPosition.value = -document.body.getBoundingClientRect().top;
 });
+
+function openPost(postSlugId: string) {
+  if (dataReady.value) {
+    router.push({ name: "single-post", params: { postSlugId: postSlugId } });
+  }
+}
 
 function refreshPage(done: () => void) {
   setTimeout(() => {
@@ -156,5 +153,9 @@ a {
   gap: 1rem;
   padding-top: 8rem;
   flex-direction: column;
+}
+
+.showCursor:hover {
+  cursor: pointer;
 }
 </style>
