@@ -8,6 +8,8 @@ import {
 
 import routes from "./routes";
 import { useLastNavigatedRouteName } from "src/utils/nav/lastNavigatedRouteName";
+import { useStorage } from "@vueuse/core";
+
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -18,8 +20,14 @@ import { useLastNavigatedRouteName } from "src/utils/nav/lastNavigatedRouteName"
  */
 
 export default route(function (/* { store, ssrContext } */) {
+
   const { lastNavigatedRouteFullPath, lastNavigatedRouteName } =
     useLastNavigatedRouteName();
+
+  const lastSavedHomeFeedPosition = useStorage(
+    "last-saved-home-feed-position",
+    0
+  );
 
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -36,7 +44,12 @@ export default route(function (/* { store, ssrContext } */) {
         lastNavigatedRouteName.value = fromRouteName;
       }
 
-      return { left: 0, top: 0 };
+      const toRouteName = to.name?.toString() ?? "";
+      if (toRouteName == "default-home-feed") {
+        return { left: 0, top: lastSavedHomeFeedPosition.value };
+      } else {
+        return { left: 0, top: 0 };
+      }
     },
     routes,
     // Leave this as is and make changes in quasar.conf.js instead!
