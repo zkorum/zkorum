@@ -158,6 +158,23 @@ export const usePostStore = defineStore("post", () => {
     }
   }
 
+  async function hasNewPosts() {
+    const response = await fetchRecentPost(new Date().toISOString());
+    if (response != null) {
+      if (response.length > 0 && masterPostDataList.value.length > 0) {
+        if (response[0].metadata.createdAt != masterPostDataList.value[0].metadata.createdAt) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
   function allocateAllCommentsForRanking(postSlugId: string) {
     const postItem = getPostBySlugId(postSlugId);
     postItem.userInteraction.commentRanking.assignedRankingItems = [];
@@ -242,6 +259,7 @@ export const usePostStore = defineStore("post", () => {
     updateCommentRanking,
     allocateAllCommentsForRanking,
     loadPostData,
+    hasNewPosts,
     emptyPost,
     lastSavedHomeFeedPosition,
     dataReady,

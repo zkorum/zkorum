@@ -1,6 +1,7 @@
 <template>
   <div>
-    <q-page v-if="!showfetchErrorMessage" class="container">
+    <div v-if="!showfetchErrorMessage" class="container">
+
       <div v-if="masterPostDataList.length == 0 && dataReady" class="emptyDivPadding">
         <div class="centerMessage">
           <div>
@@ -18,15 +19,22 @@
       </div>
 
       <q-pull-to-refresh @refresh="refreshPage">
-        <div v-if="masterPostDataList.length > 0" class="postListFlex">
-          <div v-for="postData in masterPostDataList" :key="postData.metadata.slugId" class="postPadding">
-            <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-              :skeleton-mode="!dataReady" class="showCursor" @click="openPost(postData.metadata.slugId)" />
+        <div>
+          <div v-if="hasPendingData" class="floatingButton">
+            <ZKButton icon="mdi-arrow-up" label="New" color="secondary" @click="refreshPage(() => { })" />
+          </div>
 
-            <div class="seperator">
-              <q-separator :inset="false" />
+          <div v-if="masterPostDataList.length > 0" class="postListFlex">
+            <div v-for="postData in masterPostDataList" :key="postData.metadata.slugId" class="postPadding">
+              <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
+                :skeleton-mode="!dataReady" class="showCursor" @click="openPost(postData.metadata.slugId)" />
+
+              <div class="seperator">
+                <q-separator :inset="false" />
+              </div>
             </div>
           </div>
+
         </div>
       </q-pull-to-refresh>
 
@@ -47,7 +55,7 @@
         </div>
       </div>
 
-    </q-page>
+    </div>
 
     <div v-if="showfetchErrorMessage" class="fetchErrorMessage">
       <div>
@@ -55,8 +63,8 @@
       </div>
 
       <ZKButton label="Reload Page" color="primary" @click="loadPostData(false)" />
-
     </div>
+
   </div>
 </template>
 
@@ -66,14 +74,14 @@ import { usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { useElementVisibility } from "@vueuse/core";
+import { useDocumentVisibility, useElementVisibility } from "@vueuse/core";
 import { useRouter } from "vue-router";
 
 const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 // const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
 const { masterPostDataList, dataReady, endOfFeed } = storeToRefs(usePostStore());
-const { loadPostData } = usePostStore();
+const { loadPostData, hasNewPosts } = usePostStore();
 
 const router = useRouter();
 
@@ -82,6 +90,14 @@ const showfetchErrorMessage = ref(false);
 const bottomOfPageDiv = ref(null);
 const targetIsVisible = useElementVisibility(bottomOfPageDiv);
 const reachedEndOfPage = ref(false);
+
+const pageIsVisible = useDocumentVisibility();
+
+const hasPendingData = ref(false);
+
+watch(pageIsVisible, async () => {
+  newPostCheck();
+});
 
 watch(targetIsVisible, () => {
   if (!reachedEndOfPage.value) {
@@ -95,6 +111,12 @@ onBeforeUnmount(() => {
   lastSavedHomeFeedPosition.value = -document.body.getBoundingClientRect().top;
 });
 
+async function newPostCheck() {
+  if (hasPendingData.value == false && dataReady.value && pageIsVisible.value == "visible") {
+    hasPendingData.value = await hasNewPosts();
+  }
+}
+
 function openPost(postSlugId: string) {
   if (dataReady.value) {
     router.push({ name: "single-post", params: { postSlugId: postSlugId } });
@@ -102,8 +124,16 @@ function openPost(postSlugId: string) {
 }
 
 function refreshPage(done: () => void) {
+  hasPendingData.value = false;
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  loadPostData(false);
+
   setTimeout(() => {
-    loadPostData(false);
     done();
   }, 1000);
 }
@@ -143,7 +173,7 @@ a {
 }
 
 .container {
-  padding-top: 0.5rem;
+  padding-top: 1rem;
   padding-bottom: 20rem;
 }
 
@@ -158,5 +188,14 @@ a {
 
 .showCursor:hover {
   cursor: pointer;
+}
+
+.floatingButton {
+  position: fixed;
+  bottom: 5rem;
+  left: calc(50% - 4rem);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
 }
 </style>
