@@ -143,6 +143,7 @@ a {
 }
 
 .container {
+  padding-top: 0.5rem;
   padding-bottom: 20rem;
 }
 
