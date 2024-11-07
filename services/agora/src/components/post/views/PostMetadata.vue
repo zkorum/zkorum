@@ -18,7 +18,7 @@
 
         <div>
           <div v-if="!skeletonMode">
-            {{ getTimeFromNow(createdAt) }}
+            {{ getTimeFromNow(new Date(createdAt)) }}
           </div>
           <Skeleton v-if="skeletonMode" width="2rem"></Skeleton>
         </div>
@@ -46,7 +46,7 @@ import Skeleton from "primevue/skeleton";
 defineProps<{
   posterName: string;
   posterImagePath: string;
-  createdAt: Date;
+  createdAt: string;
   skeletonMode: boolean;
 }>();
 

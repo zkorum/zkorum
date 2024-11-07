@@ -54,7 +54,7 @@ export function useBackendPostApi() {
       metadata: {
         commentCount: postElement.metadata.commentCount,
         communityId: "",
-        createdAt: new Date(postElement.metadata.createdAt),
+        createdAt: postElement.metadata.createdAt,
         isHidden: false,
         posterImagePath: "/icons/favicon-128x128.png",
         posterName: "COMPANY NAME",
@@ -131,7 +131,7 @@ export function useBackendPostApi() {
       }));
 
       dataList.sort(function (a, b) {
-        return b.metadata.createdAt.getTime() - a.metadata.createdAt.getTime();
+        return new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime();
       });
 
       return dataList;

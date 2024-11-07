@@ -1,8 +1,8 @@
 <template>
   <div>
-    <q-page v-if="!showfetchErrorMessage" class="container">
+    <div v-if="!showfetchErrorMessage" class="container">
 
-      <div v-if="postList.length == 0" class="emptyDivPadding">
+      <div v-if="masterPostDataList.length == 0 && dataReady" class="emptyDivPadding">
         <div class="centerMessage">
           <div>
             <q-icon name="mdi-account-group" size="4rem" />
@@ -19,35 +19,29 @@
       </div>
 
       <q-pull-to-refresh @refresh="refreshPage">
-        <div v-if="postList.length > 0" class="postListFlex">
-          <div v-for="(postData) in postList" :key="postData.metadata.slugId" class="postPadding">
-            <div v-if="dataReady">
-              <RouterLink :to="{
-                name: 'single-post',
-                params: {
-                  postSlugId: postData.metadata.slugId,
-                },
-              }">
-                <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-                  :skeleton-mode="false" />
-              </RouterLink>
-            </div>
-            <div v-if="!dataReady">
-              <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-                :skeleton-mode="true" />
-            </div>
+        <div>
+          <div v-if="hasPendingData" class="floatingButton">
+            <ZKButton icon="mdi-arrow-up" label="New" color="secondary" @click="refreshPage(() => { })" />
+          </div>
 
-            <div class="seperator">
-              <q-separator :inset="false" />
+          <div v-if="masterPostDataList.length > 0" class="postListFlex">
+            <div v-for="postData in masterPostDataList" :key="postData.metadata.slugId" class="postPadding">
+              <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
+                :skeleton-mode="!dataReady" class="showCursor" @click="openPost(postData.metadata.slugId)" />
+
+              <div class="seperator">
+                <q-separator :inset="false" />
+              </div>
             </div>
           </div>
+
         </div>
       </q-pull-to-refresh>
 
       <div ref="bottomOfPageDiv">
       </div>
 
-      <div v-if="reachedEndOfPage" class="centerMessage">
+      <div v-if="endOfFeed" class="centerMessage">
         <div>
           <q-icon name="mdi-check" size="4rem" />
         </div>
@@ -61,7 +55,7 @@
         </div>
       </div>
 
-    </q-page>
+    </div>
 
     <div v-if="showfetchErrorMessage" class="fetchErrorMessage">
       <div>
@@ -69,39 +63,41 @@
       </div>
 
       <ZKButton label="Reload Page" color="primary" @click="loadPostData(false)" />
-
     </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import PostDetails from "../post/PostDetails.vue";
-import { DummyPostDataFormat, usePostStore } from "src/stores/post";
+import { usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { onMounted, onBeforeUnmount, ref, watch } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { useLastNavigatedRouteName } from "src/utils/nav/lastNavigatedRouteName";
-import { useBackendPostApi } from "src/utils/api/post";
-import { useElementVisibility } from "@vueuse/core";
-
-const postStore = useBackendPostApi();
+import { useDocumentVisibility, useElementVisibility } from "@vueuse/core";
+import { useRouter } from "vue-router";
 
 const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
-const { lastNavigatedRouteName } = useLastNavigatedRouteName();
+// const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
-const { emptyPost } = usePostStore();
+const { masterPostDataList, dataReady, endOfFeed } = storeToRefs(usePostStore());
+const { loadPostData, hasNewPosts } = usePostStore();
 
-const postList = ref<DummyPostDataFormat[]>([
-  emptyPost, emptyPost, emptyPost, emptyPost
-]);
-
-const dataReady = ref(false);
+const router = useRouter();
 
 const showfetchErrorMessage = ref(false);
 
 const bottomOfPageDiv = ref(null);
 const targetIsVisible = useElementVisibility(bottomOfPageDiv);
 const reachedEndOfPage = ref(false);
+
+const pageIsVisible = useDocumentVisibility();
+
+const hasPendingData = ref(false);
+
+watch(pageIsVisible, async () => {
+  newPostCheck();
+});
 
 watch(targetIsVisible, () => {
   if (!reachedEndOfPage.value) {
@@ -111,57 +107,33 @@ watch(targetIsVisible, () => {
   }
 });
 
-onMounted(async () => {
-  await loadPostData(false);
-});
-
 onBeforeUnmount(() => {
   lastSavedHomeFeedPosition.value = -document.body.getBoundingClientRect().top;
 });
 
-async function loadPostData(loadMoreData: boolean) {
-
-  let createdAtThreshold = new Date();
-
-  if (loadMoreData) {
-    const lastPostItem = postList.value.at(-1);
-    if (lastPostItem) {
-      createdAtThreshold = lastPostItem.metadata.createdAt;
-    }
+async function newPostCheck() {
+  if (hasPendingData.value == false && dataReady.value && pageIsVisible.value == "visible") {
+    hasPendingData.value = await hasNewPosts();
   }
+}
 
-  const response = await postStore.fetchRecentPost(createdAtThreshold.toISOString());
-  if (response != null) {
-
-    showfetchErrorMessage.value = false;
-
-    console.log("Loaded posts: " + response.length.toString());
-
-    if (response.length == 0) {
-      reachedEndOfPage.value = true;
-    }
-
-    if (loadMoreData) {
-      postList.value.push(...response);
-    } else {
-      postList.value = response;
-    }
-
-    dataReady.value = true;
-
-    if (lastNavigatedRouteName.value == "single-post" && !loadMoreData) {
-      setTimeout(function () {
-        window.scrollTo(0, lastSavedHomeFeedPosition.value);
-      }, 200);
-    }
-  } else {
-    showfetchErrorMessage.value = true;
+function openPost(postSlugId: string) {
+  if (dataReady.value) {
+    router.push({ name: "single-post", params: { postSlugId: postSlugId } });
   }
 }
 
 function refreshPage(done: () => void) {
+  hasPendingData.value = false;
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  loadPostData(false);
+
   setTimeout(() => {
-    loadPostData(false);
     done();
   }, 1000);
 }
@@ -201,6 +173,7 @@ a {
 }
 
 .container {
+  padding-top: 1rem;
   padding-bottom: 20rem;
 }
 
@@ -211,5 +184,18 @@ a {
   gap: 1rem;
   padding-top: 8rem;
   flex-direction: column;
+}
+
+.showCursor:hover {
+  cursor: pointer;
+}
+
+.floatingButton {
+  position: fixed;
+  bottom: 5rem;
+  left: calc(50% - 4rem);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
 }
 </style>

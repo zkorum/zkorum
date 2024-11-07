@@ -1,20 +1,21 @@
 <template>
   <div>
-    <WidthWrapper :width="reducedWidth ? '25rem' : '35rem'">
-      <q-layout view="hHh lpR fFf"
-        :class="{ bottomPagePadding: addBottomPadding }"
-      >
-        <router-view v-if="enableHeader" name="topmenubar" />
+    <q-layout view="hHh lpR fFf" :class="{ bottomPagePadding: addBottomPadding }">
+      <q-page-container>
+        <q-page>
+          <router-view v-if="enableHeader" name="topmenubar" />
 
-        <q-page-container>
-          <router-view />
-        </q-page-container>
+          <WidthWrapper :width="reducedWidth ? '25rem' : '35rem'">
+            <router-view />
+          </WidthWrapper>
 
-        <q-footer v-if="enableFooter" bordered class="coloredFooter">
-          <FooterBar />
-        </q-footer>
-      </q-layout>
-    </WidthWrapper>
+        </q-page>
+      </q-page-container>
+
+      <q-footer v-if="enableFooter" bordered class="coloredFooter">
+        <FooterBar />
+      </q-footer>
+    </q-layout>
   </div>
 </template>
 
