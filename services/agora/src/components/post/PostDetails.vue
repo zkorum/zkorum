@@ -57,10 +57,9 @@
           </div>
         </div>
 
-        <div v-if="!compactMode">
-          <CommentSection :key="commentCountOffset" ref="commentSectionRef"
-            :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
-            :comment-ranking="extendedPostData.userInteraction.commentRanking"
+        <div v-if="!compactMode" ref="commentSectionRef">
+          <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.slugId"
+            :comment-list="commentList" :comment-ranking="extendedPostData.userInteraction.commentRanking"
             :initial-comment-slug-id="commentSlugId" />
         </div>
       </div>
@@ -82,7 +81,7 @@ import PollWrapper from "../poll/PollWrapper.vue";
 import FloatingBottomContainer from "../navigation/FloatingBottomContainer.vue";
 import CommentComposer from "./views/CommentComposer.vue";
 import { DummyPostDataFormat, usePostStore } from "src/stores/post";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useRoute, useRouter } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
@@ -101,7 +100,7 @@ const commentCountOffset = ref(0);
 
 const commentList = ref(props.extendedPostData.payload.comments);
 
-const commentSectionRef = ref(null);
+const commentSectionRef = ref<HTMLElement | null>(null);
 
 // const { composeDummyCommentItem } = usePostStore();
 
@@ -115,14 +114,26 @@ const webShare = useWebShare();
 const focusCommentElement = ref(false);
 
 const action = useRouteQuery("action");
-if (action.value == "comment") {
-  focusCommentElement.value = true;
+
+onMounted(() => {
+  if (action.value == "comment") {
+    setTimeout(() => {
+      scrollToCommentSection();
+    }, 100);
+  }
+
+});
+
+function scrollToCommentSection() {
+  console.log(commentSectionRef.value);
+  commentSectionRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+
 }
 
 async function submittedComment() {
   commentCountOffset.value += 1;
   focusCommentElement.value = false;
-  window.scrollTo(0, 0);
+  scrollToCommentSection();
   await loadPostData(true);
 }
 
@@ -157,6 +168,7 @@ function shareClicked() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding-bottom: 1rem;
 }
 
 .titleDiv {
