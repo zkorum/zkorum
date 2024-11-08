@@ -175,14 +175,6 @@ export const usePostStore = defineStore("post", () => {
     }
   }
 
-  function allocateAllCommentsForRanking(postSlugId: string) {
-    const postItem = getPostBySlugId(postSlugId);
-    postItem.userInteraction.commentRanking.assignedRankingItems = [];
-    for (let i = 0; i < postItem.payload.comments.length; i++) {
-      postItem.userInteraction.commentRanking.assignedRankingItems.push(i);
-    }
-  }
-
   function getPostBySlugId(slugId: string) {
     for (let i = 0; i < masterPostDataList.value.length; i++) {
       const postItem = masterPostDataList.value[i];
@@ -194,72 +186,11 @@ export const usePostStore = defineStore("post", () => {
     return emptyPost;
   }
 
-  function updateCommentRanking(
-    postSlugId: string,
-    commentIndex: number,
-    rankingAction: PossibleCommentRankingActions
-  ) {
-    const post = getPostBySlugId(postSlugId);
-    const rankedCommentMap =
-      post.userInteraction.commentRanking.rankedCommentList;
-    const currentAction = rankedCommentMap.get(commentIndex);
-
-    let upvoteDiff = 0;
-    let downvoteDiff = 0;
-
-    if (currentAction != undefined && rankingAction != "pass") {
-      if (currentAction == "like") {
-        if (rankingAction == "like") {
-          rankedCommentMap.delete(commentIndex);
-          upvoteDiff -= 1;
-        } else if (rankingAction == "dislike") {
-          rankedCommentMap.set(commentIndex, "dislike");
-          upvoteDiff -= 1;
-          downvoteDiff += 1;
-        } else {
-          console.log("Invalid state");
-        }
-      } else if (currentAction == "dislike") {
-        if (rankingAction == "like") {
-          rankedCommentMap.set(commentIndex, "like");
-          upvoteDiff += 1;
-          downvoteDiff -= 1;
-        } else if (rankingAction == "dislike") {
-          rankedCommentMap.delete(commentIndex);
-          downvoteDiff -= 1;
-        } else {
-          console.log("Invalid state");
-        }
-      }
-    } else {
-      if (rankingAction == "like") {
-        rankedCommentMap.set(commentIndex, "like");
-        upvoteDiff += 1;
-      } else if (rankingAction == "dislike") {
-        rankedCommentMap.set(commentIndex, "dislike");
-        downvoteDiff += 1;
-      } else {
-        rankedCommentMap.set(commentIndex, "pass");
-      }
-    }
-
-    for (let i = 0; i < post.payload.comments.length; i++) {
-      const commentItem = post.payload.comments[i];
-      if (commentItem.index == commentIndex) {
-        commentItem.numUpvotes += upvoteDiff;
-        commentItem.numDownvotes += downvoteDiff;
-        break;
-      }
-    }
-  }
-
   return {
     getPostBySlugId,
-    masterPostDataList,
-    updateCommentRanking,
-    allocateAllCommentsForRanking,
     loadPostData,
     hasNewPosts,
+    masterPostDataList,
     emptyPost,
     lastSavedHomeFeedPosition,
     dataReady,

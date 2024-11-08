@@ -12,6 +12,8 @@
             <div>
               <div v-if="!skeletonMode" class="titleDiv">
                 {{ extendedPostData.payload.title }}
+                <div :class="{ extraTitleBottomPadding: extendedPostData.payload.body.length == 0 }">
+                </div>
               </div>
 
               <div v-if="skeletonMode" class="titleDiv">
@@ -33,29 +35,13 @@
           <div class="bottomButtons">
             <div class="leftButtonCluster">
               <div v-if="!skeletonMode">
-                <ZKButton :color="focusCommentElement
-                  ? 'color-text-weak'
-                  : 'button-background-color'
-                  " :text-color="focusCommentElement ? 'white' : 'black'" :label="(
-                    extendedPostData.metadata.commentCount + commentCountOffset
-                  ).toString()
-                    " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
+                <ZKButton color="button-background-color" text-color="black" :label="(
+                  extendedPostData.metadata.commentCount + commentCountOffset
+                ).toString()
+                  " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
               </div>
               <div v-if="skeletonMode">
                 <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
-              </div>
-
-              <div v-if="!props.compactMode">
-                <div v-if="!skeletonMode">
-                  <q-btn-toggle v-model="viewMode" no-caps rounded unelevated toggle-color="color-text-weak"
-                    color="button-background-color" text-color="black" :options="[
-                      { label: 'Voting', value: 'ranking' },
-                      { label: 'Results', value: 'comments' },
-                    ]" />
-                </div>
-                <div v-if="skeletonMode">
-                  <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
-                </div>
               </div>
             </div>
 
@@ -71,12 +57,10 @@
           </div>
         </div>
 
-        <CommentRanking v-if="viewMode == 'ranking' && !compactMode" :post-slug-id="extendedPostData.metadata.slugId"
-          @clicked-comment-button="clickedCommentButton()" @clicked-see-result-button="clickedSeeResultButton()" />
-
-        <div v-if="!compactMode && viewMode == 'comments'">
-          <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.slugId"
-            :comment-list="commentList" :comment-ranking="extendedPostData.userInteraction.commentRanking"
+        <div v-if="!compactMode">
+          <CommentSection :key="commentCountOffset" ref="commentSectionRef"
+            :post-slug-id="extendedPostData.metadata.slugId" :comment-list="commentList"
+            :comment-ranking="extendedPostData.userInteraction.commentRanking"
             :initial-comment-slug-id="commentSlugId" />
         </div>
       </div>
@@ -95,11 +79,10 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import CommentSection from "./views/CommentSection.vue";
 import PostMetadata from "./views/PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
-import CommentRanking from "./views/CommentRanking.vue";
 import FloatingBottomContainer from "../navigation/FloatingBottomContainer.vue";
 import CommentComposer from "./views/CommentComposer.vue";
-import { DummyPostDataFormat } from "src/stores/post";
-import { onMounted, ref, watch } from "vue";
+import { DummyPostDataFormat, usePostStore } from "src/stores/post";
+import { ref } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useRoute, useRouter } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
@@ -113,25 +96,19 @@ const props = defineProps<{
 }>();
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
-const hasCommentSlugId = commentSlugId.value.length > 0;
 
 const commentCountOffset = ref(0);
 
-const showRankingMode = ref<boolean>(hasCommentSlugId);
-let initialViewMode: "comments" | "ranking" = "comments";
-if (hasCommentSlugId) {
-  initialViewMode = "comments";
-} else {
-  initialViewMode = "ranking";
-}
-const viewMode = ref<"comments" | "ranking">(initialViewMode);
-
 const commentList = ref(props.extendedPostData.payload.comments);
+
+const commentSectionRef = ref(null);
 
 // const { composeDummyCommentItem } = usePostStore();
 
 const router = useRouter();
 const route = useRoute();
+
+const { loadPostData } = usePostStore();
 
 const webShare = useWebShare();
 
@@ -142,41 +119,15 @@ if (action.value == "comment") {
   focusCommentElement.value = true;
 }
 
-onMounted(() => {
-  updateViewMode();
-});
-
-watch(viewMode, () => {
-  updateViewMode();
-  window.scrollTo(0, 0);
-});
-
-function updateViewMode() {
-  if (viewMode.value == "ranking") {
-    showRankingMode.value = true;
-  } else {
-    showRankingMode.value = false;
-  }
-}
-
-function switchToCommentView() {
-  showRankingMode.value = false;
-  viewMode.value = "comments";
-  window.scrollTo(0, 0);
-}
-
-function submittedComment() {
+async function submittedComment() {
   commentCountOffset.value += 1;
   focusCommentElement.value = false;
-  switchToCommentView();
+  window.scrollTo(0, 0);
+  await loadPostData(true);
 }
 
 function cancelledCommentComposor() {
   focusCommentElement.value = false;
-}
-
-function clickedSeeResultButton() {
-  switchToCommentView();
 }
 
 function clickedCommentButton() {
@@ -205,7 +156,7 @@ function shareClicked() {
 .innerContainer {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .titleDiv {
@@ -215,6 +166,7 @@ function shareClicked() {
 
 .bodyDiv {
   font-size: 1rem;
+  padding-bottom: 1rem;
 }
 
 .postDiv {
@@ -256,5 +208,9 @@ function shareClicked() {
   -webkit-line-clamp: 5;
   line-clamp: 5;
   -webkit-box-orient: vertical;
+}
+
+.extraTitleBottomPadding {
+  padding-bottom: 1rem;
 }
 </style>
