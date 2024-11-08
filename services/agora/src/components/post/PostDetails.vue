@@ -26,7 +26,7 @@
             </div>
           </div>
 
-          <div v-if="extendedPostData.payload.poll.hasPoll" class="innerContainer">
+          <div v-if="extendedPostData.payload.poll.hasPoll" class="pollContainer">
             <PollWrapper :poll-options="extendedPostData.payload.poll.options"
               :post-slug-id="extendedPostData.metadata.slugId"
               :user-response="extendedPostData.userInteraction.pollResponse" />
@@ -121,7 +121,6 @@ onMounted(() => {
       scrollToCommentSection();
     }, 100);
   }
-
 });
 
 function scrollToCommentSection() {
@@ -168,17 +167,20 @@ function shareClicked() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.pollContainer {
   padding-bottom: 1rem;
 }
 
 .titleDiv {
   font-size: 1.2rem;
-  font-weight: 500;
 }
 
 .bodyDiv {
   font-size: 1rem;
   padding-bottom: 1rem;
+  font-weight: 300;
 }
 
 .postDiv {
