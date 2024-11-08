@@ -178,7 +178,7 @@ watch(currentDisplayMode, () => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  color: $primary;
+  color: black;
 }
 
 .voteCount {

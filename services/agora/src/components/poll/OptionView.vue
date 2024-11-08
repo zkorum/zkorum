@@ -7,13 +7,11 @@
             {{ option }}
           </div>
           <div v-if="votedByUser">
-            <q-chip icon="mdi-check-circle" color="white">Your Vote</q-chip>
+            <q-chip icon="mdi-check-circle" color="white">Your Choice</q-chip>
           </div>
         </div>
-        <div class="q-ml-auto">
-          <span>
-            {{ `${optionPercentage}%` }}
-          </span>
+        <div>
+          {{ `${optionPercentage}%` }}
         </div>
       </div>
     </div>
@@ -49,6 +47,8 @@ const percentageStyle =
 
 .optionBar {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   font-weight: bold;
   padding: 1rem;
