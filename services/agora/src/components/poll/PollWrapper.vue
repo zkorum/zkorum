@@ -18,16 +18,16 @@
             " />
       </div>
 
-      <div class="voteCounter">
-        {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
-      </div>
-
       <div v-if="isAuthenticated && !userVoteStatus.hasVoted" class="actionButtonCluster">
         <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
           label="Results" @click.stop.prevent="showResultsInterface()" />
 
         <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Cast Vote"
           icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
+
+        <div class="voteCount">
+          {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
+        </div>
       </div>
 
     </div>
@@ -153,9 +153,11 @@ watch(currentDisplayMode, () => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .actionButtonCluster {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   gap: 1rem;
 }
@@ -167,19 +169,14 @@ watch(currentDisplayMode, () => {
 }
 
 .pollContainer {
-  background-color: #ecfeff;
-  padding: 1rem;
-  border-radius: 15px;
-  border-style: solid;
-  border-color: #d1d5db;
-  border-width: 1px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  cursor: auto;
+  color: $primary;
 }
 
-.voteCounter {
-  color: #737373;
+.voteCount {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
 }
 </style>
