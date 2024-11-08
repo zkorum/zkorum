@@ -18,16 +18,22 @@
             " />
       </div>
 
-      <div v-if="isAuthenticated && !userVoteStatus.hasVoted" class="actionButtonCluster">
-        <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
-          label="Results" @click.stop.prevent="showResultsInterface()" />
-
-        <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Cast Vote"
-          icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
-
+      <div class="actionButtonCluster">
         <div class="voteCount">
           {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
         </div>
+
+        <div v-if="userVoteStatus.hasVoted">
+        </div>
+
+        <div v-if="!userVoteStatus.hasVoted">
+          <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
+            label="Results" @click.stop.prevent="showResultsInterface()" />
+
+          <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Vote"
+            icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
+        </div>
+
       </div>
 
     </div>
