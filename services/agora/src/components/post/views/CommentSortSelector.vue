@@ -49,10 +49,6 @@ const commentSortPreference = useStorage(
 const swipingElementRef = ref<SwiperContainer | null>(null);
 
 onMounted(() => {
-  if (commentSortPreference.value == "more") {
-    commentSortPreference.value = "popular";
-  }
-
   updateSlide(commentSortPreference.value);
 
   initializeSlideCount();

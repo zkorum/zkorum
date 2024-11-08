@@ -3,7 +3,7 @@
     <div class="container">
       <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)" />
 
-      <div v-if="commentItems.length == 0" class="noCommentMessage">
+      <div v-if="commentItems.length == 0 && commentSortPreference != 'clusters'" class="noCommentMessage">
         There are no comments in this post.
       </div>
 
@@ -17,32 +17,6 @@
         </div>
       </div>
 
-      <!--
-      <div
-        v-if="commentSortPreference != 'surprising' && commentSortPreference != 'clusters' && commentSortPreference != 'more'"
-        class="commentListFlex">
-        <div v-for="(commentItem, index) in commentList" :id="commentItem.slugId" :key="index">
-          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
-            :is-ranked="props.commentRanking.rankedCommentList.get(index) != null"
-            :ranked-action="getCommentItemRankStatus(index)" :highlight="initialCommentSlugId == commentItem.slugId" />
-
-          <Divider :style="{ width: '100%' }" />
-        </div>
-
-      </div>
-      -->
-
-      <div v-if="commentSortPreference == 'surprising'" :style="{ paddingTop: '1rem' }">
-        <ZKCard padding="2rem">
-          <div class="specialMessage">
-            <q-icon name="mdi-wrench" size="4rem" />
-            <div class="specialText">
-              This sorting option is currently under development!
-            </div>
-          </div>
-        </ZKCard>
-      </div>
-
       <div v-if="commentSortPreference == 'clusters'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
           <div class="specialMessage">
@@ -54,9 +28,6 @@
         </ZKCard>
       </div>
 
-      <div v-if="commentSortPreference == 'more'" :style="{ paddingTop: '1rem' }">
-        <ResearcherContactUsForm />
-      </div>
     </div>
   </div>
 </template>
@@ -69,7 +40,6 @@ import {
 } from "src/stores/post";
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import ResearcherContactUsForm from "./algorithms/ResearcherContactUsForm.vue";
 import { ref } from "vue";
 import Divider from "primevue/divider";
 import CommentSortSelector from "./CommentSortSelector.vue";

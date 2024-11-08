@@ -36,22 +36,7 @@ export function useCommentOptions() {
         value: "clusters",
         description: "Visual representation of the opinion clusters",
         index: 3,
-      },
-      {
-        label: "Surprising",
-        icon: "mdi-lightbulb",
-        value: "surprising",
-        description: "Surprisingly popular comments",
-        index: 4,
-      },
-      {
-        label: "More",
-        icon: "mdi-dots-horizontal",
-        value: "more",
-        description:
-          "Are you a researcher? We are on the lookout for more algorithms",
-        index: 5,
-      },
+      }
     ];
 
     return commentOptions;
