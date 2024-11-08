@@ -69,7 +69,7 @@
       </q-form>
 
       <div class="addPollBar" :class="{ weakColor: postDraft.enablePolling }"
-        :style="{ top: visualViewPortHeight - 50 + 'px' }">
+        :style="{ top: (visualViewPortHeight - 120) + 'px', right: '2rem' }">
         <ZKButton unelevated rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
           color="grey-8" text-color="white" @click="togglePolling()" />
       </div>
