@@ -18,11 +18,14 @@ import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { useBackendPollApi } from "./poll";
+import { storeToRefs } from "pinia";
+import { useAuthenticationStore } from "src/stores/authentication";
 
 export function useBackendPostApi() {
 
   const { buildEncodedUcan } = useCommonApi();
   const { fetchUserPollResponse } = useBackendPollApi();
+  const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
   const { showNotifyMessage } = useNotify();
 
@@ -44,8 +47,8 @@ export function useBackendPostApi() {
     });
 
     // Load user's polling response
-    let pollResponseOption: number | undefined = 0;
-    if (postElement.payload.poll) {
+    let pollResponseOption: number | undefined = undefined;
+    if (postElement.payload.poll && isAuthenticated.value) {
       const pollResponse = await fetchUserPollResponse(postElement.metadata.postSlugId);
       pollResponseOption = pollResponse?.selectedPollOption;
     }
