@@ -25,7 +25,7 @@
           </div>
 
           <div v-if="masterPostDataList.length > 0" class="postListFlex">
-            <div v-for="postData in masterPostDataList" :key="postData.metadata.slugId" class="postPadding">
+            <div v-for="postData in masterPostDataList" :key="postData.metadata.slugId">
               <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
                 :skeleton-mode="!dataReady" class="showCursor" @click="openPost(postData.metadata.slugId)" />
 
@@ -151,11 +151,8 @@ a {
 }
 
 .seperator {
-  margin-top: 1rem;
-}
-
-.postPadding {
-  padding-bottom: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .emptyDivPadding {
@@ -173,7 +170,7 @@ a {
 }
 
 .container {
-  padding-top: 1rem;
+  padding-top: 0.5rem;
   padding-bottom: 20rem;
 }
 
