@@ -180,7 +180,7 @@ function shareClicked() {
 .bodyDiv {
   font-size: 1rem;
   padding-bottom: 1rem;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .postDiv {
