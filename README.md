@@ -1,6 +1,6 @@
-# ZKorum
+# Agora - Citizen Network
 
-For some background, visit [about.zkorum.com](https://about.zkorum.com).
+Monorepo for [Agora](https://agoracitizen.network).
 
 ## Development
 
@@ -57,13 +57,13 @@ make dev-back
 
 ## Services
 
-### Front
+### Agora
 
-A React PWA.
+A Quasar application (frontend)
 
-### Back
+### Api
 
-A Fastify application supported by a PostgreSQL database.
+A Fastify application supported by a PostgreSQL database (backend).
 
 ### OpenAPI
 
@@ -72,10 +72,6 @@ We generate an `openapi-zkorum.json` file from the backend, and then use [openap
 ### Shared
 
 Some typescript source files are shared directly without using npm packages - by copy-pasting using rsync.
-
-### ZKLI
-
-CLI for ZKorum.
 
 ## Contributing
 

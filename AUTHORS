@@ -1,17 +1,16 @@
-ZKorum is written by:
+Agora is written by:
 - Nicolas Gimenez <nicolas.gimenez@zkorum.com>
 - Robin Marien  <robin.marien@hotmail.fr>
 - Hazim Benslimane <hazim_benslimane@hotmail.com>
 - Edmund Wong <edmundwongh@gmail.com>
 
 With help from many libraries and frameworks including:
-- Dock Crypto libraries
+- RariMe SDK
 - UCAN
-- libsodium
 - WebCrypto API
 - Typescript
-- React
-- Material UI
+- Vue
+- Quasar
 - Fastify
 - Vite
 - pnpm
