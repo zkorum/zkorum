@@ -147,6 +147,7 @@ export const usePostStore = defineStore("post", () => {
 
         if (loadMoreData) {
           masterPostDataList.value.push(...response);
+          trimHomeFeedSize(100);
         } else {
           masterPostDataList.value = response;
         }
@@ -155,6 +156,12 @@ export const usePostStore = defineStore("post", () => {
       dataReady.value = true;
     } else {
       dataReady.value = false;
+    }
+  }
+
+  function trimHomeFeedSize(targetPostSize: number) {
+    if (masterPostDataList.value.length > targetPostSize) {
+      masterPostDataList.value = masterPostDataList.value.slice(masterPostDataList.value.length - 100);
     }
   }
 
