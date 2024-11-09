@@ -148,7 +148,6 @@ export const usePostStore = defineStore("post", () => {
         if (loadMoreData) {
           masterPostDataList.value.push(...response);
         } else {
-          console.log(response);
           masterPostDataList.value = response;
         }
       }
