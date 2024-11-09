@@ -174,7 +174,8 @@ function shareClicked() {
 }
 
 .titleDiv {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
 .bodyDiv {
@@ -186,7 +187,7 @@ function shareClicked() {
 .postDiv {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .bottomButtons {
