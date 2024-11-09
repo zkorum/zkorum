@@ -209,8 +209,6 @@ async function onSubmit() {
   if (response != null) {
     loadPostData(false);
 
-    showSubmitLoading.value = false;
-
     router.push({
       name: "single-post",
       params: { postSlugId: response.postSlugId },
