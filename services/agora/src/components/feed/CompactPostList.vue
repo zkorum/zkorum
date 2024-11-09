@@ -1,7 +1,6 @@
 <template>
   <div>
     <div v-if="!showfetchErrorMessage" class="container">
-
       <div v-if="masterPostDataList.length == 0 && dataReady" class="emptyDivPadding">
         <div class="centerMessage">
           <div>
@@ -19,8 +18,8 @@
       </div>
 
       <q-pull-to-refresh @refresh="refreshPage">
-        <div>
-          <div v-if="hasPendingData" class="floatingButton">
+        <div ref="postContainerRef">
+          <div v-if="hasPendingNewPosts" class="floatingButton">
             <ZKButton icon="mdi-arrow-up" label="New" color="secondary" @click="refreshPage(() => { })" />
           </div>
 
@@ -74,7 +73,7 @@ import { usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { useDocumentVisibility, useElementVisibility } from "@vueuse/core";
+import { useDocumentVisibility, useElementSize, useElementVisibility, useWindowScroll } from "@vueuse/core";
 import { useRouter } from "vue-router";
 
 const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
@@ -89,20 +88,40 @@ const showfetchErrorMessage = ref(false);
 
 const bottomOfPageDiv = ref(null);
 const targetIsVisible = useElementVisibility(bottomOfPageDiv);
-const reachedEndOfPage = ref(false);
 
 const pageIsVisible = useDocumentVisibility();
+const reachedEndOfPage = ref(false);
 
-const hasPendingData = ref(false);
+const hasPendingNewPosts = ref(false);
+
+const windowScroll = useWindowScroll();
+let isExpandingPosts = false;
+
+const postContainerRef = ref(null);
+const postContainerSize = useElementSize(postContainerRef);
+
+watch(windowScroll.y, async () => {
+  // console.log(windowScroll.y.value);
+  // console.log(postContainerSize.height.value);
+  // console.log();
+
+  if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts) {
+    isExpandingPosts = true;
+    await loadPostData(true);
+    isExpandingPosts = false;
+  }
+});
 
 watch(pageIsVisible, async () => {
   newPostCheck();
 });
 
-watch(targetIsVisible, () => {
-  if (!reachedEndOfPage.value) {
+watch(targetIsVisible, async () => {
+  if (!reachedEndOfPage.value && !isExpandingPosts) {
     if (targetIsVisible.value) {
-      loadPostData(true);
+      isExpandingPosts = true;
+      await loadPostData(true);
+      isExpandingPosts = false;
     }
   }
 });
@@ -112,8 +131,8 @@ onBeforeUnmount(() => {
 });
 
 async function newPostCheck() {
-  if (hasPendingData.value == false && dataReady.value && pageIsVisible.value == "visible") {
-    hasPendingData.value = await hasNewPosts();
+  if (hasPendingNewPosts.value == false && dataReady.value && pageIsVisible.value == "visible") {
+    hasPendingNewPosts.value = await hasNewPosts();
   }
 }
 
@@ -124,16 +143,16 @@ function openPost(postSlugId: string) {
 }
 
 function refreshPage(done: () => void) {
-  hasPendingData.value = false;
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+  hasPendingNewPosts.value = false;
 
   loadPostData(false);
 
   setTimeout(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
     done();
   }, 1000);
 }
@@ -190,9 +209,10 @@ a {
 .floatingButton {
   position: fixed;
   bottom: 5rem;
-  left: calc(50% - 4rem);
   z-index: 100;
   display: flex;
   justify-content: center;
+  width: 100%;
+  margin: auto;
 }
 </style>
