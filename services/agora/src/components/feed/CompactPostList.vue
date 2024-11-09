@@ -212,7 +212,7 @@ a {
   z-index: 100;
   display: flex;
   justify-content: center;
-  width: 100%;
   margin: auto;
+  left: calc(50% - 3rem);
 }
 </style>
