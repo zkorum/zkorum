@@ -1,6 +1,10 @@
 <template>
   <div>
     <div>
+      <q-inner-loading :showing="showSubmitLoading" label="Submitting post..." label-class="text-teal"
+        label-style="font-size: 1.2em">
+      </q-inner-loading>
+
       <q-form @submit="onSubmit()">
         <TopMenuWrapper :reveal="false">
           <div class="menuFlexGroup">
@@ -114,6 +118,8 @@ import { usePostStore } from "src/stores/post";
 const bodyWordCount = ref(0);
 const exceededBodyWordCount = ref(false);
 
+const showSubmitLoading = ref(false);
+
 const router = useRouter();
 
 const { visualViewPortHeight } = useViewPorts();
@@ -191,6 +197,8 @@ function removePollOption(index: number) {
 }
 
 async function onSubmit() {
+  showSubmitLoading.value = true;
+
   grantedRouteLeave = true;
 
   const response = await createNewPost(
@@ -201,6 +209,8 @@ async function onSubmit() {
 
   if (response != null) {
     loadPostData(false);
+
+    showSubmitLoading.value = false;
 
     router.push({
       name: "single-post",
