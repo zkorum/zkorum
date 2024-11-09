@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { DummyPollOptionFormat, DummyPostUserVote, DummyUserPollResponse } from "src/stores/post";
+import { DummyPollOptionFormat, DummyPostUserVote, DummyUserPollResponse, usePostStore } from "src/stores/post";
 import { ref, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
@@ -64,6 +64,8 @@ const dataLoaded = ref(false);
 const backendPollApi = useBackendPollApi();
 const { showMessage } = useDialog();
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+const { loadPostData } = usePostStore();
+
 enum DisplayModes {
   Vote,
   Results
@@ -78,7 +80,7 @@ const userVoteStatus = ref<DummyPostUserVote>({
 const totalVoteCount = ref(0);
 initializeTotalVoteCount();
 
-fetchUserData(false);
+fetchUserPollResponseData(false);
 
 function initializeTotalVoteCount() {
   totalVoteCount.value = 0;
@@ -106,7 +108,7 @@ function initializeLocalPoll() {
   });
 }
 
-async function fetchUserData(loadFromRemote: boolean) {
+async function fetchUserPollResponseData(loadFromRemote: boolean) {
   if (loadFromRemote) {
     const response = await backendPollApi.fetchUserPollResponse(props.postSlugId);
     if (response?.selectedPollOption) {
@@ -144,7 +146,8 @@ async function voteCasted(selectedIndex: number) {
   if (response == false) {
     showMessage("Server error", "Failed to cast vote");
   } else {
-    fetchUserData(true);
+    loadPostData(false);
+    fetchUserPollResponseData(true);
     incrementLocalPollIndex(selectedIndex);
     totalVoteCount.value += 1;
   }
