@@ -109,6 +109,7 @@ import { useViewPorts } from "src/utils/html/viewPort";
 import { getCharacterCount } from "src/utils/component/editor";
 import { useBackendPostApi } from "src/utils/api/post";
 import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_BODY } from "src/shared/shared";
+import { usePostStore } from "src/stores/post";
 
 const bodyWordCount = ref(0);
 const exceededBodyWordCount = ref(false);
@@ -127,6 +128,7 @@ const { postDraft, isPostEdited } = useNewPostDraftsStore();
 let grantedRouteLeave = false;
 
 const { createNewPost } = useBackendPostApi();
+const { loadPostData } = usePostStore();
 
 let savedToRoute: RouteLocationNormalized = {
   matched: [],
@@ -198,6 +200,8 @@ async function onSubmit() {
   );
 
   if (response != null) {
+    loadPostData(false);
+
     router.push({
       name: "single-post",
       params: { postSlugId: response.postSlugId },

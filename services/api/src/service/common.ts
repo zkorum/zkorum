@@ -62,12 +62,12 @@ export function useCommonPost() {
             .leftJoin(pollTable, eq(postContentTable.id, pollTable.postContentId))
             .leftJoin(pollResponseTable, and(eq(postTable.id, pollResponseTable.postId), eq(userTable.id, pollResponseTable.authorId)))
             .leftJoin(pollResponseContentTable, eq(pollResponseContentTable.id, pollResponseTable.currentContentId))
-            .orderBy(desc(postTable.lastReactedAt), desc(postTable.id))
-            .limit(limit)
-            .where(where);
+            .where(where)
+            .orderBy(desc(postTable.createdAt))
+            .limit(limit);
 
-        const posts: ExtendedPost[] = postItems.map((postItem) => {
-
+        const posts: ExtendedPost[] = [];
+        postItems.forEach(postItem => {
             if (enableCompactBody && postItem.body != null) {
                 postItem.body = sanitizeHtml(postItem.body, {
                     allowedTags: ["b", "i", "strike", "u"],
@@ -150,10 +150,10 @@ export function useCommonPost() {
                     body: toUnionUndefined(postItem.body),
                 };
             }
-            return {
+            posts.push({
                 metadata: metadata,
                 payload: payload,
-            };
+            });
         });
 
         return posts;
