@@ -1,9 +1,7 @@
 <template>
   <div>
     <div>
-      <q-inner-loading :showing="showSubmitLoading" label="Submitting post..." label-class="text-teal"
-        label-style="font-size: 1.2em">
-      </q-inner-loading>
+      <ZKInnerLoading :show-loading="showSubmitLoading" />
 
       <q-form @submit="onSubmit()">
         <TopMenuWrapper :reveal="false">
@@ -30,7 +28,7 @@
           <div>
             <div :class="{ editorPadding: !postDraft.enablePolling }">
               <ZKEditor v-model="postDraft.postBody" placeholder="body text" min-height="5rem" :focus-editor="false"
-                :show-toolbar="true" @update:model-value="checkWordCount()" />
+                :show-toolbar="true" :disable="showSubmitLoading" @update:model-value="checkWordCount()" />
 
               <div class="wordCountDiv">
                 <q-icon v-if="bodyWordCount > MAX_LENGTH_BODY" name="mdi-alert-circle" class="bodySizeWarningIcon" />
@@ -114,6 +112,7 @@ import { getCharacterCount } from "src/utils/component/editor";
 import { useBackendPostApi } from "src/utils/api/post";
 import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_BODY } from "src/shared/shared";
 import { usePostStore } from "src/stores/post";
+import ZKInnerLoading from "src/components/ui-library/ZKInnerLoading.vue";
 
 const bodyWordCount = ref(0);
 const exceededBodyWordCount = ref(false);
