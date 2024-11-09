@@ -298,14 +298,12 @@
                                     "showHidden": {
                                         "type": "boolean"
                                     },
-                                    "lastCreatedAt": {
-                                        "type": "string",
-                                        "format": "date-time"
+                                    "lastSlugId": {
+                                        "type": "string"
                                     }
                                 },
                                 "required": [
-                                    "showHidden",
-                                    "lastCreatedAt"
+                                    "showHidden"
                                 ],
                                 "additionalProperties": false
                             }

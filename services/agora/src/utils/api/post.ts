@@ -114,11 +114,12 @@ export function useBackendPostApi() {
     }
   }
 
-  async function fetchRecentPost(lastCreatedAt: string) {
+  async function fetchRecentPost(lastSlugId: string | undefined) {
+
     try {
       const params: ApiV1FeedFetchRecentPostRequest = {
         showHidden: false,
-        lastCreatedAt: lastCreatedAt,
+        lastSlugId: lastSlugId,
       };
       const response = await DefaultApiFactory(
         undefined,

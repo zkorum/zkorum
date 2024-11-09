@@ -128,16 +128,16 @@ export const usePostStore = defineStore("post", () => {
 
   async function loadPostData(loadMoreData: boolean) {
 
-    let createdAtThreshold = new Date();
+    let lastSlugId: undefined | string = undefined;
 
     if (loadMoreData) {
       const lastPostItem = masterPostDataList.value.at(-1);
       if (lastPostItem) {
-        createdAtThreshold = new Date(lastPostItem.metadata.createdAt);
+        lastSlugId = lastPostItem.metadata.slugId;
       }
     }
 
-    const response = await fetchRecentPost(createdAtThreshold.toISOString());
+    const response = await fetchRecentPost(lastSlugId);
 
     if (response != null) {
       if (response.length == 0) {
@@ -148,6 +148,7 @@ export const usePostStore = defineStore("post", () => {
         if (loadMoreData) {
           masterPostDataList.value.push(...response);
         } else {
+          console.log(response);
           masterPostDataList.value = response;
         }
       }
@@ -159,7 +160,7 @@ export const usePostStore = defineStore("post", () => {
   }
 
   async function hasNewPosts() {
-    const response = await fetchRecentPost(new Date().toISOString());
+    const response = await fetchRecentPost(undefined);
     if (response != null) {
       if (response.length > 0 && masterPostDataList.value.length > 0) {
         if (response[0].metadata.createdAt != masterPostDataList.value[0].metadata.createdAt) {

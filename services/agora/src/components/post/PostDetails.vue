@@ -133,7 +133,7 @@ async function submittedComment() {
   commentCountOffset.value += 1;
   focusCommentElement.value = false;
   scrollToCommentSection();
-  await loadPostData(true);
+  await loadPostData(false);
 }
 
 function cancelledCommentComposor() {
