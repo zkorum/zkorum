@@ -24,10 +24,7 @@ export default route(function (/* { store, ssrContext } */) {
   const { lastNavigatedRouteFullPath, lastNavigatedRouteName } =
     useLastNavigatedRouteName();
 
-  const lastSavedHomeFeedPosition = useStorage(
-    "last-saved-home-feed-position",
-    0
-  );
+  const lastSavedHomeFeedPosition = useStorage("last-saved-home-feed-position", 0);
 
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -50,12 +47,21 @@ export default route(function (/* { store, ssrContext } */) {
       } else {
         return { left: 0, top: 0 };
       }
+
     },
     routes,
     // Leave this as is and make changes in quasar.conf.js instead!
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
+  });
+
+  Router.beforeEach(async (to, from) => {
+    const toRouteName = to.name?.toString() ?? "";
+    const fromRouteName = from.name?.toString() ?? "";
+    if (toRouteName == "create-post" && fromRouteName == "single-post") {
+      Router.go(-1);
+    }
   });
 
   // @see https://stackoverflow.com/questions/69300341/typeerror-failed-to-fetch-dynamically-imported-module-on-vue-vite-vanilla-set
