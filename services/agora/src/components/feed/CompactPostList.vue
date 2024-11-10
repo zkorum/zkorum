@@ -102,7 +102,9 @@ watch(windowScroll.y, async () => {
 });
 
 watch(pageIsVisible, async () => {
-  newPostCheck();
+  if (pageIsVisible.value) {
+    await newPostCheck();
+  }
 });
 
 watch(targetIsVisible, async () => {
