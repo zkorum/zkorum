@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="!showfetchErrorMessage" class="container">
+    <div class="container">
       <div v-if="masterPostDataList.length == 0 && dataReady" class="emptyDivPadding">
         <div class="centerMessage">
           <div>
@@ -53,15 +53,6 @@
           You have seen all the new posts.
         </div>
       </div>
-
-    </div>
-
-    <div v-if="showfetchErrorMessage" class="fetchErrorMessage">
-      <div>
-        Failed to fetch posts from the server
-      </div>
-
-      <ZKButton label="Reload Page" color="primary" @click="loadPostData(false)" />
     </div>
 
   </div>
@@ -83,8 +74,6 @@ const { masterPostDataList, dataReady, endOfFeed } = storeToRefs(usePostStore())
 const { loadPostData, hasNewPosts } = usePostStore();
 
 const router = useRouter();
-
-const showfetchErrorMessage = ref(false);
 
 const bottomOfPageDiv = ref(null);
 const targetIsVisible = useElementVisibility(bottomOfPageDiv);
