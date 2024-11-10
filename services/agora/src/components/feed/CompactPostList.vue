@@ -136,14 +136,14 @@ function openPost(postSlugId: string) {
 function refreshPage(done: () => void) {
   hasPendingNewPosts.value = false;
 
+  window.scrollTo({
+    top: 0,
+    behavior: "instant"
+  });
+
   loadPostData(false);
 
   setTimeout(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-
     done();
   }, 1000);
 }
@@ -188,7 +188,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.5rem;
   padding-top: 8rem;
   flex-direction: column;
 }
