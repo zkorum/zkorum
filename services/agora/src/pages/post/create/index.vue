@@ -17,9 +17,6 @@
           <q-input v-model="postDraft.postTitle" borderless no-error-icon type="textarea" label="Title" lazy-rules
             :rules="[(val) => val && val.length > 0]" class="titleStyle" autogrow :maxlength="MAX_LENGTH_TITLE"
             required>
-            <template v-if="postDraft.postTitle" #append>
-              <q-icon name="cancel" class="cancelIcon" @click.stop.prevent="postDraft.postTitle = ''" />
-            </template>
           </q-input>
 
           <div class="wordCountDiv">
