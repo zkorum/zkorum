@@ -333,9 +333,4 @@ onBeforeRouteLeave((to) => {
   font-size: 1rem;
   font-weight: bold;
 }
-
-.cancelIcon {
-  padding-top: 0.5rem;
-  cursor: pointer;
-}
 </style>
