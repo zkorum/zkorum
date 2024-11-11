@@ -136,7 +136,6 @@ export async function createNewPost({
             }).where(eq(postTable.id, postId));
 
             if (pollingOptionList != null) {
-
                 await tx.insert(pollTable).values({
                     postContentId: postContentId,
                     option1: pollingOptionList[0],
@@ -153,7 +152,6 @@ export async function createNewPost({
                     option6Response: pollingOptionList[5] ? 0 : null
                 });
             }
-
         });
 
         return {

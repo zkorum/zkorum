@@ -472,7 +472,7 @@ export interface ApiV1FeedFetchRecentPostRequest {
      * @type {string}
      * @memberof ApiV1FeedFetchRecentPostRequest
      */
-    'lastCreatedAt': string;
+    'lastSlugId'?: string;
 }
 /**
  * 

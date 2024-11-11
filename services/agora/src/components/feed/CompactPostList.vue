@@ -1,7 +1,6 @@
 <template>
   <div>
-    <div v-if="!showfetchErrorMessage" class="container">
-
+    <div class="container">
       <div v-if="masterPostDataList.length == 0 && dataReady" class="emptyDivPadding">
         <div class="centerMessage">
           <div>
@@ -19,13 +18,13 @@
       </div>
 
       <q-pull-to-refresh @refresh="refreshPage">
-        <div>
-          <div v-if="hasPendingData" class="floatingButton">
+        <div ref="postContainerRef">
+          <div v-if="hasPendingNewPosts" class="floatingButton">
             <ZKButton icon="mdi-arrow-up" label="New" color="secondary" @click="refreshPage(() => { })" />
           </div>
 
           <div v-if="masterPostDataList.length > 0" class="postListFlex">
-            <div v-for="postData in masterPostDataList" :key="postData.metadata.slugId" class="postPadding">
+            <div v-for="postData in masterPostDataList" :key="postData.metadata.slugId">
               <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
                 :skeleton-mode="!dataReady" class="showCursor" @click="openPost(postData.metadata.slugId)" />
 
@@ -54,15 +53,6 @@
           You have seen all the new posts.
         </div>
       </div>
-
-    </div>
-
-    <div v-if="showfetchErrorMessage" class="fetchErrorMessage">
-      <div>
-        Failed to fetch posts from the server
-      </div>
-
-      <ZKButton label="Reload Page" color="primary" @click="loadPostData(false)" />
     </div>
 
   </div>
@@ -74,7 +64,7 @@ import { usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { useDocumentVisibility, useElementVisibility } from "@vueuse/core";
+import { useDocumentVisibility, useElementSize, useElementVisibility, useWindowScroll } from "@vueuse/core";
 import { useRouter } from "vue-router";
 
 const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
@@ -85,24 +75,44 @@ const { loadPostData, hasNewPosts } = usePostStore();
 
 const router = useRouter();
 
-const showfetchErrorMessage = ref(false);
-
 const bottomOfPageDiv = ref(null);
 const targetIsVisible = useElementVisibility(bottomOfPageDiv);
-const reachedEndOfPage = ref(false);
 
 const pageIsVisible = useDocumentVisibility();
+const reachedEndOfPage = ref(false);
 
-const hasPendingData = ref(false);
+const hasPendingNewPosts = ref(false);
 
-watch(pageIsVisible, async () => {
-  newPostCheck();
+const windowScroll = useWindowScroll();
+let isExpandingPosts = false;
+
+const postContainerRef = ref(null);
+const postContainerSize = useElementSize(postContainerRef);
+
+watch(windowScroll.y, async () => {
+  // console.log(windowScroll.y.value);
+  // console.log(postContainerSize.height.value);
+  // console.log();
+
+  if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts) {
+    isExpandingPosts = true;
+    await loadPostData(true);
+    isExpandingPosts = false;
+  }
 });
 
-watch(targetIsVisible, () => {
-  if (!reachedEndOfPage.value) {
+watch(pageIsVisible, async () => {
+  if (pageIsVisible.value) {
+    await newPostCheck();
+  }
+});
+
+watch(targetIsVisible, async () => {
+  if (!reachedEndOfPage.value && !isExpandingPosts) {
     if (targetIsVisible.value) {
-      loadPostData(true);
+      isExpandingPosts = true;
+      await loadPostData(true);
+      isExpandingPosts = false;
     }
   }
 });
@@ -112,8 +122,8 @@ onBeforeUnmount(() => {
 });
 
 async function newPostCheck() {
-  if (hasPendingData.value == false && dataReady.value && pageIsVisible.value == "visible") {
-    hasPendingData.value = await hasNewPosts();
+  if (hasPendingNewPosts.value == false && dataReady.value && pageIsVisible.value == "visible") {
+    hasPendingNewPosts.value = await hasNewPosts();
   }
 }
 
@@ -124,11 +134,11 @@ function openPost(postSlugId: string) {
 }
 
 function refreshPage(done: () => void) {
-  hasPendingData.value = false;
+  hasPendingNewPosts.value = false;
 
   window.scrollTo({
     top: 0,
-    behavior: "smooth"
+    behavior: "instant"
   });
 
   loadPostData(false);
@@ -151,11 +161,8 @@ a {
 }
 
 .seperator {
-  margin-top: 1rem;
-}
-
-.postPadding {
-  padding-bottom: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .emptyDivPadding {
@@ -173,7 +180,7 @@ a {
 }
 
 .container {
-  padding-top: 1rem;
+  padding-top: 0.5rem;
   padding-bottom: 20rem;
 }
 
@@ -181,7 +188,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.5rem;
   padding-top: 8rem;
   flex-direction: column;
 }
@@ -193,9 +200,10 @@ a {
 .floatingButton {
   position: fixed;
   bottom: 5rem;
-  left: calc(50% - 4rem);
   z-index: 100;
   display: flex;
   justify-content: center;
+  margin: auto;
+  left: calc(50% - 3rem);
 }
 </style>

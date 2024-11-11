@@ -69,7 +69,7 @@
       </q-form>
 
       <div class="addPollBar" :class="{ weakColor: postDraft.enablePolling }"
-        :style="{ top: visualViewPortHeight - 50 + 'px' }">
+        :style="{ top: (visualViewPortHeight - 120) + 'px', right: '2rem' }">
         <ZKButton unelevated rounded :label="postDraft.enablePolling ? 'Remove Poll' : 'Add Poll'" icon="mdi-poll"
           color="grey-8" text-color="white" @click="togglePolling()" />
       </div>
@@ -109,11 +109,15 @@ import { useViewPorts } from "src/utils/html/viewPort";
 import { getCharacterCount } from "src/utils/component/editor";
 import { useBackendPostApi } from "src/utils/api/post";
 import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_BODY } from "src/shared/shared";
+import { usePostStore } from "src/stores/post";
+import { useQuasar } from "quasar";
 
 const bodyWordCount = ref(0);
 const exceededBodyWordCount = ref(false);
 
 const router = useRouter();
+
+const quasar = useQuasar();
 
 const { visualViewPortHeight } = useViewPorts();
 
@@ -127,6 +131,7 @@ const { postDraft, isPostEdited } = useNewPostDraftsStore();
 let grantedRouteLeave = false;
 
 const { createNewPost } = useBackendPostApi();
+const { loadPostData } = usePostStore();
 
 let savedToRoute: RouteLocationNormalized = {
   matched: [],
@@ -189,6 +194,9 @@ function removePollOption(index: number) {
 }
 
 async function onSubmit() {
+
+  quasar.loading.show();
+
   grantedRouteLeave = true;
 
   const response = await createNewPost(
@@ -198,10 +206,16 @@ async function onSubmit() {
   );
 
   if (response != null) {
+    quasar.loading.hide();
+
+    loadPostData(false);
+
     router.push({
       name: "single-post",
       params: { postSlugId: response.postSlugId },
     });
+  } else {
+    quasar.loading.hide();
   }
 }
 

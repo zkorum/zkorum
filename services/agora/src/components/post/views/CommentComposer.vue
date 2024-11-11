@@ -2,8 +2,9 @@
   <div>
     <WidthWrapper width="35rem">
       <div class="container">
-        <ZKEditor :key="resetKey" v-model="commentText" placeholder="Add a comment" min-height="2rem"
-          :focus-editor="showControls" :show-toolbar="innerFocus || showControls" @update:model-value="checkWordCount()"
+        <ZKEditor :key="resetKey" v-model="commentText" placeholder="Add a comment"
+          :min-height="innerFocus ? '6rem' : '2rem'" :focus-editor="showControls"
+          :show-toolbar="innerFocus || showControls" @update:model-value="checkWordCount()"
           @manually-focused="editorFocused()" />
         <div v-if="innerFocus || showControls" class="actionButtonCluster">
           <div v-if="characterProgress > 100">

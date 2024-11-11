@@ -377,7 +377,7 @@ server.after(() => {
                 return await feedService.fetchFeed({
                     db: db,
                     showHidden: request.body.showHidden,
-                    lastCreatedAt: new Date(request.body.lastCreatedAt),
+                    lastSlugId: request.body.lastSlugId,
                 });
             },
         });

@@ -18,16 +18,22 @@
             " />
       </div>
 
-      <div class="voteCounter">
-        {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
-      </div>
+      <div class="actionButtonCluster">
+        <div class="voteCount">
+          {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
+        </div>
 
-      <div v-if="isAuthenticated && !userVoteStatus.hasVoted" class="actionButtonCluster">
-        <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
-          label="Results" @click.stop.prevent="showResultsInterface()" />
+        <div v-if="userVoteStatus.hasVoted">
+        </div>
 
-        <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Cast Vote"
-          icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
+        <div v-if="!userVoteStatus.hasVoted">
+          <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
+            label="Results" @click.stop.prevent="showResultsInterface()" />
+
+          <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Vote"
+            icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
+        </div>
+
       </div>
 
     </div>
@@ -37,7 +43,7 @@
 <script setup lang="ts">
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { DummyPollOptionFormat, DummyPostUserVote, DummyUserPollResponse } from "src/stores/post";
+import { DummyPollOptionFormat, DummyPostUserVote, DummyUserPollResponse, usePostStore } from "src/stores/post";
 import { ref, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
@@ -58,6 +64,8 @@ const dataLoaded = ref(false);
 const backendPollApi = useBackendPollApi();
 const { showMessage } = useDialog();
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+const { loadPostData } = usePostStore();
+
 enum DisplayModes {
   Vote,
   Results
@@ -72,7 +80,7 @@ const userVoteStatus = ref<DummyPostUserVote>({
 const totalVoteCount = ref(0);
 initializeTotalVoteCount();
 
-fetchUserData(false);
+fetchUserPollResponseData(false);
 
 function initializeTotalVoteCount() {
   totalVoteCount.value = 0;
@@ -100,7 +108,7 @@ function initializeLocalPoll() {
   });
 }
 
-async function fetchUserData(loadFromRemote: boolean) {
+async function fetchUserPollResponseData(loadFromRemote: boolean) {
   if (loadFromRemote) {
     const response = await backendPollApi.fetchUserPollResponse(props.postSlugId);
     if (response?.selectedPollOption) {
@@ -138,7 +146,8 @@ async function voteCasted(selectedIndex: number) {
   if (response == false) {
     showMessage("Server error", "Failed to cast vote");
   } else {
-    fetchUserData(true);
+    loadPostData(false);
+    fetchUserPollResponseData(true);
     incrementLocalPollIndex(selectedIndex);
     totalVoteCount.value += 1;
   }
@@ -153,9 +162,11 @@ watch(currentDisplayMode, () => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .actionButtonCluster {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   gap: 1rem;
 }
@@ -167,19 +178,14 @@ watch(currentDisplayMode, () => {
 }
 
 .pollContainer {
-  background-color: #ecfeff;
-  padding: 1rem;
-  border-radius: 15px;
-  border-style: solid;
-  border-color: #d1d5db;
-  border-width: 1px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  cursor: auto;
+  color: black;
 }
 
-.voteCounter {
-  color: #737373;
+.voteCount {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
 }
 </style>

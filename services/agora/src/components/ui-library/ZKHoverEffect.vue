@@ -13,7 +13,7 @@ defineProps<{
 <style scoped>
 @media (hover: hover) and (pointer: fine) {
   .desktopHoverEffect:hover {
-    background-color: #f5f5f5;
+    background-color: #f3f4f6;
     border-radius: 15px;
   }
 }

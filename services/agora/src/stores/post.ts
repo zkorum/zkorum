@@ -128,16 +128,16 @@ export const usePostStore = defineStore("post", () => {
 
   async function loadPostData(loadMoreData: boolean) {
 
-    let createdAtThreshold = new Date();
+    let lastSlugId: undefined | string = undefined;
 
     if (loadMoreData) {
       const lastPostItem = masterPostDataList.value.at(-1);
       if (lastPostItem) {
-        createdAtThreshold = new Date(lastPostItem.metadata.createdAt);
+        lastSlugId = lastPostItem.metadata.slugId;
       }
     }
 
-    const response = await fetchRecentPost(createdAtThreshold.toISOString());
+    const response = await fetchRecentPost(lastSlugId);
 
     if (response != null) {
       if (response.length == 0) {
@@ -147,6 +147,7 @@ export const usePostStore = defineStore("post", () => {
 
         if (loadMoreData) {
           masterPostDataList.value.push(...response);
+          trimHomeFeedSize(60);
         } else {
           masterPostDataList.value = response;
         }
@@ -158,8 +159,14 @@ export const usePostStore = defineStore("post", () => {
     }
   }
 
+  function trimHomeFeedSize(targetPostSize: number) {
+    if (masterPostDataList.value.length > targetPostSize) {
+      masterPostDataList.value = masterPostDataList.value.slice(masterPostDataList.value.length - targetPostSize);
+    }
+  }
+
   async function hasNewPosts() {
-    const response = await fetchRecentPost(new Date().toISOString());
+    const response = await fetchRecentPost(undefined);
     if (response != null) {
       if (response.length > 0 && masterPostDataList.value.length > 0) {
         if (response[0].metadata.createdAt != masterPostDataList.value[0].metadata.createdAt) {
@@ -175,14 +182,6 @@ export const usePostStore = defineStore("post", () => {
     }
   }
 
-  function allocateAllCommentsForRanking(postSlugId: string) {
-    const postItem = getPostBySlugId(postSlugId);
-    postItem.userInteraction.commentRanking.assignedRankingItems = [];
-    for (let i = 0; i < postItem.payload.comments.length; i++) {
-      postItem.userInteraction.commentRanking.assignedRankingItems.push(i);
-    }
-  }
-
   function getPostBySlugId(slugId: string) {
     for (let i = 0; i < masterPostDataList.value.length; i++) {
       const postItem = masterPostDataList.value[i];
@@ -194,72 +193,11 @@ export const usePostStore = defineStore("post", () => {
     return emptyPost;
   }
 
-  function updateCommentRanking(
-    postSlugId: string,
-    commentIndex: number,
-    rankingAction: PossibleCommentRankingActions
-  ) {
-    const post = getPostBySlugId(postSlugId);
-    const rankedCommentMap =
-      post.userInteraction.commentRanking.rankedCommentList;
-    const currentAction = rankedCommentMap.get(commentIndex);
-
-    let upvoteDiff = 0;
-    let downvoteDiff = 0;
-
-    if (currentAction != undefined && rankingAction != "pass") {
-      if (currentAction == "like") {
-        if (rankingAction == "like") {
-          rankedCommentMap.delete(commentIndex);
-          upvoteDiff -= 1;
-        } else if (rankingAction == "dislike") {
-          rankedCommentMap.set(commentIndex, "dislike");
-          upvoteDiff -= 1;
-          downvoteDiff += 1;
-        } else {
-          console.log("Invalid state");
-        }
-      } else if (currentAction == "dislike") {
-        if (rankingAction == "like") {
-          rankedCommentMap.set(commentIndex, "like");
-          upvoteDiff += 1;
-          downvoteDiff -= 1;
-        } else if (rankingAction == "dislike") {
-          rankedCommentMap.delete(commentIndex);
-          downvoteDiff -= 1;
-        } else {
-          console.log("Invalid state");
-        }
-      }
-    } else {
-      if (rankingAction == "like") {
-        rankedCommentMap.set(commentIndex, "like");
-        upvoteDiff += 1;
-      } else if (rankingAction == "dislike") {
-        rankedCommentMap.set(commentIndex, "dislike");
-        downvoteDiff += 1;
-      } else {
-        rankedCommentMap.set(commentIndex, "pass");
-      }
-    }
-
-    for (let i = 0; i < post.payload.comments.length; i++) {
-      const commentItem = post.payload.comments[i];
-      if (commentItem.index == commentIndex) {
-        commentItem.numUpvotes += upvoteDiff;
-        commentItem.numDownvotes += downvoteDiff;
-        break;
-      }
-    }
-  }
-
   return {
     getPostBySlugId,
-    masterPostDataList,
-    updateCommentRanking,
-    allocateAllCommentsForRanking,
     loadPostData,
     hasNewPosts,
+    masterPostDataList,
     emptyPost,
     lastSavedHomeFeedPosition,
     dataReady,
