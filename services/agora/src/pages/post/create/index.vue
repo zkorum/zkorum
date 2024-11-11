@@ -16,7 +16,11 @@
         <div class="container">
           <q-input v-model="postDraft.postTitle" borderless no-error-icon type="textarea" label="Title" lazy-rules
             :rules="[(val) => val && val.length > 0]" class="titleStyle" autogrow :maxlength="MAX_LENGTH_TITLE"
-            clearable required />
+            required>
+            <template v-if="postDraft.postTitle" #append>
+              <q-icon name="cancel" class="cancelIcon" @click.stop.prevent="postDraft.postTitle = ''" />
+            </template>
+          </q-input>
 
           <div class="wordCountDiv">
             {{ postDraft.postTitle.length }} /
@@ -331,5 +335,10 @@ onBeforeRouteLeave((to) => {
   justify-content: space-between;
   font-size: 1rem;
   font-weight: bold;
+}
+
+.cancelIcon {
+  padding-top: 0.5rem;
+  cursor: pointer;
 }
 </style>
