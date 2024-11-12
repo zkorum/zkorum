@@ -9,6 +9,7 @@ import {
     zodPollOptionTitle,
     zodPostTitle,
     zodPostBody,
+    zodVotingOption,
 } from "./zod.js";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -122,7 +123,18 @@ export class Dto {
     static fetchUserPollResponseResponse = z.object({
         selectedPollOption: z.number().optional()
     }).strict();
+    static fetchUserVotesForPostSlugIdRequest = z.object({
+        postSlugId: z.string()
+    }).strict();
+    static fetchUserVotesForPostSlugIdResponse = z.array(z.object({
+        commentSlugId: z.string()
+    }).strict());
+    static castVoteForCommentRequest = z.object({
+        commentSlugId: z.string(),
+        chosenOption: zodVotingOption
+    }).strict();
 }
+
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
 >;

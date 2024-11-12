@@ -173,7 +173,6 @@ interface PostNewCommentProps {
     httpErrors: HttpErrors
 }
 
-
 export async function postNewComment({
     db,
     commentBody,
