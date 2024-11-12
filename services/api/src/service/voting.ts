@@ -1,9 +1,10 @@
 import { commentTable, postTable, voteContentTable, voteProofTable, voteTable } from "@/schema.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { httpErrors } from "@fastify/sensible";
 import { server } from "@/app.js";
 import type { VotingOption } from "@/shared/types/zod.js";
+import type { FetchUserVotesForPostSlugIdResponseResponse } from "@/shared/types/dto.js";
 
 
 interface GetCommentIdAndContentIdFromCommentSlugIdProps {
@@ -97,6 +98,14 @@ export async function castVoteForCommentSlugId({
         currentContentId: voteContentTableId,
       }).where(eq(voteTable.id, voteTableId));
 
+      const numLikesDiff = optionChosen == "like" ? 1 : 0;
+      const numDislikesDiff = optionChosen == "dislike" ? 1 : 0;
+
+      await tx.update(commentTable).set({
+        numLikes: sql`${commentTable.numLikes} + ${numLikesDiff}`,
+        numDislikes: sql`${commentTable.numDislikes} + ${numDislikesDiff}`
+      }).where(eq(commentTable.currentContentId, commentData.contentId));
+
     });
 
   } catch (err: unknown) {
@@ -115,7 +124,7 @@ interface GetUserVotesForPostSlugIdProps {
 }
 
 export async function getUserVotesForPostSlugId({
-  db, postSlugId }: GetUserVotesForPostSlugIdProps) {
+  db, postSlugId }: GetUserVotesForPostSlugIdProps): Promise<FetchUserVotesForPostSlugIdResponseResponse> {
 
   const userResponses = await db
     .select({
@@ -128,7 +137,14 @@ export async function getUserVotesForPostSlugId({
     .innerJoin(postTable, eq(commentTable.postId, postTable.id))
     .where(eq(postTable.slugId, postSlugId));
 
+  const userVoteList: FetchUserVotesForPostSlugIdResponseResponse = [];
+
   userResponses.forEach(response => {
-    console.log(response);
+    userVoteList.push({
+      commentSlugId: response.commentSlugId,
+      chosenOption: response.optionChosen
+    })
   });
+
+  return userVoteList;
 }

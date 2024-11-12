@@ -399,12 +399,11 @@ server.after(() => {
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: undefined,
                 });
-
                 const status = await authUtilService.isLoggedIn(db, didWrite);
                 if (!status.isLoggedIn) {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
-                    await getUserVotesForPostSlugId({
+                    return await getUserVotesForPostSlugId({
                         db: db,
                         postSlugId: request.body.postSlugId,
                         userId: status.userId

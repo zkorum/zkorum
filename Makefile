@@ -1,13 +1,8 @@
 all: dev
 
-# templates are used because of 
-# https://github.com/OpenAPITools/openapi-generator/pull/16125/files
-# https://stackoverflow.com/a/76330785/11046178
-# TODO: remove this patch when the PR will be merged
-# and change version to latest?
 generate:
 	docker run --rm \
-  -v ${PWD}:/local openapitools/openapi-generator-cli:latest-release generate \
+  -v ${PWD}:/local openapitools/openapi-generator-cli:latest generate \
   -i /local/services/api/openapi-zkorum.json \
   -g typescript-axios \
   -o /local/services/agora/src/api

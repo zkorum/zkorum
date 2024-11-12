@@ -40,11 +40,14 @@ import {
 } from "src/stores/post";
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import Divider from "primevue/divider";
 import CommentSortSelector from "./CommentSortSelector.vue";
 import { useBackendCommentApi } from "src/utils/api/comment";
 import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
+import { useBackendVoteApi } from "src/utils/api/vote";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { storeToRefs } from "pinia";
 
 const props = defineProps<{
   commentList: DummyCommentFormat[];
@@ -57,9 +60,24 @@ const commentSortPreference = ref("");
 
 const backendCommentApi = useBackendCommentApi();
 
+const backendVoteApi = useBackendVoteApi();
+
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+
 const commentItems = ref<ApiV1CommentFetchPost200ResponseInner[]>([]);
 
 fetchData();
+
+onMounted(() => {
+  fetchVotes();
+});
+
+async function fetchVotes() {
+  if (isAuthenticated.value) {
+    const response = await backendVoteApi.fetchUserVotesForPostSlugId(props.postSlugId);
+    console.log(response);
+  }
+}
 
 async function fetchData() {
   if (props.postSlugId.length > 0) {

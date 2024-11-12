@@ -128,7 +128,8 @@ export class Dto {
         postSlugId: z.string()
     }).strict();
     static fetchUserVotesForPostSlugIdResponse = z.array(z.object({
-        commentSlugId: z.string()
+        commentSlugId: z.string(),
+        chosenOption: zodVotingOption
     }).strict());
     static castVoteForCommentRequest = z.object({
         commentSlugId: z.string(),
@@ -150,3 +151,4 @@ export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
 export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;
 export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;
 export type FetchUserPollResponseResponse = z.infer<typeof Dto.fetchUserPollResponseResponse>;
+export type FetchUserVotesForPostSlugIdResponseResponse = z.infer<typeof Dto.fetchUserVotesForPostSlugIdResponse>;
