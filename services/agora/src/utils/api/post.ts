@@ -18,21 +18,19 @@ import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { useBackendPollApi } from "./poll";
-import { storeToRefs } from "pinia";
-import { useAuthenticationStore } from "src/stores/authentication";
 
 export function useBackendPostApi() {
 
   const { buildEncodedUcan } = useCommonApi();
   const { fetchUserPollResponse } = useBackendPollApi();
-  const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
   const { showNotifyMessage } = useNotify();
 
   const router = useRouter();
 
   async function createInternalPostData(
-    postElement: ApiV1FeedFetchRecentPost200ResponseInner
+    postElement: ApiV1FeedFetchRecentPost200ResponseInner,
+    loadUserData: boolean
   ) {
 
     // Create the polling object
@@ -48,7 +46,7 @@ export function useBackendPostApi() {
 
     // Load user's polling response
     let pollResponseOption: number | undefined = undefined;
-    if (postElement.payload.poll && isAuthenticated.value) {
+    if (postElement.payload.poll && loadUserData) {
       const pollResponse = await fetchUserPollResponse(postElement.metadata.postSlugId);
       pollResponseOption = pollResponse?.selectedPollOption;
     }
@@ -88,7 +86,7 @@ export function useBackendPostApi() {
     return newItem;
   }
 
-  async function fetchPostBySlugId(postSlugId: string) {
+  async function fetchPostBySlugId(postSlugId: string, loadUserPollResponse: boolean) {
     try {
       const params: ApiV1PostFetchPostRequest = {
         postSlugId: postSlugId,
@@ -98,7 +96,7 @@ export function useBackendPostApi() {
         undefined,
         api
       ).apiV1PostFetchPost(params, {});
-      return await createInternalPostData(response.data.postData);
+      return await createInternalPostData(response.data.postData, loadUserPollResponse);
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
@@ -114,7 +112,7 @@ export function useBackendPostApi() {
     }
   }
 
-  async function fetchRecentPost(lastSlugId: string | undefined) {
+  async function fetchRecentPost(lastSlugId: string | undefined, loadUserPollData: boolean) {
 
     try {
       const params: ApiV1FeedFetchRecentPostRequest = {
@@ -130,7 +128,7 @@ export function useBackendPostApi() {
       const dataList: DummyPostDataFormat[] = [];
 
       await Promise.all(response.data.map(async (postElement) => {
-        const dataItem = await createInternalPostData(postElement);
+        const dataItem = await createInternalPostData(postElement, loadUserPollData);
         dataList.push(dataItem);
       }));
 

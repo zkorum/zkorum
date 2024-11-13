@@ -9,18 +9,13 @@
 import * as swiperElement from "swiper/element/bundle";
 import { onMounted } from "vue";
 import { useBackendAuthApi } from "./utils/api/auth";
-import { useAuthenticationStore } from "./stores/authentication";
-import { storeToRefs } from "pinia";
 
 swiperElement.register();
 
 const authenticationStore = useBackendAuthApi();
-const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 onMounted(() => {
-  if (isAuthenticated.value) {
-    authenticationStore.initializeAuthState();
-  }
+  authenticationStore.initializeAuthState();
 });
 </script>
 

@@ -1322,7 +1322,7 @@ autoprefixer@^10.4.2:
     picocolors "^1.0.1"
     postcss-value-parser "^4.2.0"
 
-axios@^1.6.8:
+axios@^1.7.7:
   version "1.7.7"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.7.tgz#2f554296f9892a72ac8d8e4c5b79c14a91d0a47f"
   integrity sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==
@@ -3226,17 +3226,17 @@ picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.3.1:
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.1.tgz#3ba3833733646d9d3e4995946c1365a67fb07a42"
   integrity sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==
 
-pinia-plugin-persistedstate-2@^2.0.20:
-  version "2.0.24"
-  resolved "https://registry.yarnpkg.com/pinia-plugin-persistedstate-2/-/pinia-plugin-persistedstate-2-2.0.24.tgz#a13744d4b366d74a3ce4bf23187e29c27325a5c7"
-  integrity sha512-pw6NFvw/L4SVPfLnk5RBikdvtfAVD20CLje8k4wDGnBqJG3V+AHe5zQzAenJMFQ87A0bn9geRmmuJz+CgYGhWg==
+pinia-plugin-persistedstate-2@^2.0.26:
+  version "2.0.26"
+  resolved "https://registry.yarnpkg.com/pinia-plugin-persistedstate-2/-/pinia-plugin-persistedstate-2-2.0.26.tgz#128607e17df12e630968e0882d11924c06e13d55"
+  integrity sha512-BpKKZ4T8pNfUMe1FS+EmmayKL9nJyfQlQK2jYGF717BOIeSU9cXtb3ELlOu/PsFA+Fq/2ZnZPqQCgoUvC8BKhg==
   dependencies:
     shvl "^3.0.0"
 
-pinia@^2.1.7:
-  version "2.2.4"
-  resolved "https://registry.yarnpkg.com/pinia/-/pinia-2.2.4.tgz#79b63b231a3da80968ab58f7721f575fe2c509ac"
-  integrity sha512-K7ZhpMY9iJ9ShTC0cR2+PnxdQRuwVIsXDO/WIEV/RnMC/vmSoKDTKW/exNQYPI+4ij10UjXqdNiEHwn47McANQ==
+pinia@^2.2.6:
+  version "2.2.6"
+  resolved "https://registry.yarnpkg.com/pinia/-/pinia-2.2.6.tgz#ff93f35b8c02033eaedc8c92ad5f10f215d6c804"
+  integrity sha512-vIsR8JkDN5Ga2vAxqOE2cJj4VtsHnzpR1Fz30kClxlh0yCHfec6uoMeM3e/ddqmwFUejK3NlrcQa/shnpyT4hA==
   dependencies:
     "@vue/devtools-api" "^6.6.3"
     vue-demi "^0.14.10"

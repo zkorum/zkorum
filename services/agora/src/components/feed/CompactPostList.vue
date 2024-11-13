@@ -62,15 +62,14 @@
 import PostDetails from "../post/PostDetails.vue";
 import { usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { onBeforeUnmount, ref, watch } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useDocumentVisibility, useElementSize, useElementVisibility, useWindowScroll } from "@vueuse/core";
 import { useRouter } from "vue-router";
 
-const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 // const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
-const { masterPostDataList, dataReady, endOfFeed } = storeToRefs(usePostStore());
+const { masterPostDataList, dataReady, endOfFeed, lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 const { loadPostData, hasNewPosts } = usePostStore();
 
 const router = useRouter();
@@ -89,15 +88,15 @@ let isExpandingPosts = false;
 const postContainerRef = ref(null);
 const postContainerSize = useElementSize(postContainerRef);
 
-watch(windowScroll.y, async () => {
-  // console.log(windowScroll.y.value);
-  // console.log(postContainerSize.height.value);
-  // console.log();
+let isMounted = false;
 
-  if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts) {
-    isExpandingPosts = true;
-    await loadPostData(true);
-    isExpandingPosts = false;
+watch(windowScroll.y, async () => {
+  if (isMounted) {
+    if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts) {
+      isExpandingPosts = true;
+      await loadPostData(true);
+      isExpandingPosts = false;
+    }
   }
 });
 
@@ -108,17 +107,24 @@ watch(pageIsVisible, async () => {
 });
 
 watch(targetIsVisible, async () => {
-  if (!reachedEndOfPage.value && !isExpandingPosts) {
-    if (targetIsVisible.value) {
-      isExpandingPosts = true;
-      await loadPostData(true);
-      isExpandingPosts = false;
+  if (isMounted) {
+    if (!reachedEndOfPage.value && !isExpandingPosts) {
+      if (targetIsVisible.value) {
+        isExpandingPosts = true;
+        await loadPostData(true);
+        isExpandingPosts = false;
+      }
     }
   }
 });
 
 onBeforeUnmount(() => {
   lastSavedHomeFeedPosition.value = -document.body.getBoundingClientRect().top;
+});
+
+onMounted(async () => {
+  await loadPostData(false);
+  isMounted = false;
 });
 
 async function newPostCheck() {

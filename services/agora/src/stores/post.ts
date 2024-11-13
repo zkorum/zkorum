@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { useStorage } from "@vueuse/core";
 import { useBackendPostApi } from "src/utils/api/post";
+import { useAuthenticationStore } from "./authentication";
 
 export interface DummyPollOptionFormat {
   index: number;
@@ -79,6 +80,7 @@ export interface DummyUserPostDataFormat {
 
 export const usePostStore = defineStore("post", () => {
   const { fetchRecentPost } = useBackendPostApi();
+  const { isAuthenticated } = useAuthenticationStore();
 
   const dataReady = ref(false);
   const endOfFeed = ref(false);
@@ -122,10 +124,6 @@ export const usePostStore = defineStore("post", () => {
     0
   );
 
-  onMounted(() => {
-    loadPostData(false);
-  });
-
   async function loadPostData(loadMoreData: boolean) {
     let lastSlugId: undefined | string = undefined;
 
@@ -136,7 +134,7 @@ export const usePostStore = defineStore("post", () => {
       }
     }
 
-    const response = await fetchRecentPost(lastSlugId);
+    const response = await fetchRecentPost(lastSlugId, isAuthenticated);
 
     if (response != null) {
       if (response.length == 0) {
@@ -170,7 +168,7 @@ export const usePostStore = defineStore("post", () => {
   }
 
   async function hasNewPosts() {
-    const response = await fetchRecentPost(undefined);
+    const response = await fetchRecentPost(undefined, isAuthenticated);
     if (response != null) {
       if (response.length > 0 && masterPostDataList.value.length > 0) {
         if (response[0].metadata.createdAt != masterPostDataList.value[0].metadata.createdAt) {
