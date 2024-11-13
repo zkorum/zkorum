@@ -9,9 +9,10 @@
 
       <div v-if="commentItems.length > 0" class="commentListFlex">
         <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
-          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :is-ranked="props.commentRanking.rankedCommentList.get(index) != null
-            " :ranked-action="getCommentItemRankStatus(index)"
-            :highlight="initialCommentSlugId == commentItem.commentSlugId" />
+          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
+            :ranked-action="getCommentItemRankStatus(index)"
+            :highlight="initialCommentSlugId == commentItem.commentSlugId"
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
@@ -66,16 +67,24 @@ const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const commentItems = ref<ApiV1CommentFetchPost200ResponseInner[]>([]);
 
+const commentSlugIdLikedMap = new Map<string, boolean>();
+
 fetchData();
 
 onMounted(() => {
-  fetchVotes();
+  fetchPersonalLikes();
 });
 
-async function fetchVotes() {
+async function fetchPersonalLikes() {
   if (isAuthenticated.value) {
+    commentSlugIdLikedMap.clear();
     const response = await backendVoteApi.fetchUserVotesForPostSlugId(props.postSlugId);
-    console.log(response);
+    if (response) {
+      response.forEach(userVote => {
+        commentSlugIdLikedMap.set(userVote.commentSlugId, userVote.chosenOption == "like");
+      });
+    }
+    console.log(commentSlugIdLikedMap);
   }
 }
 

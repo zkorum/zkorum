@@ -456,10 +456,18 @@
                                         "properties": {
                                             "commentSlugId": {
                                                 "type": "string"
+                                            },
+                                            "chosenOption": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "like",
+                                                    "dislike"
+                                                ]
                                             }
                                         },
                                         "required": [
-                                            "commentSlugId"
+                                            "commentSlugId",
+                                            "chosenOption"
                                         ],
                                         "additionalProperties": false
                                     }

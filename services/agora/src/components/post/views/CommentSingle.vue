@@ -12,11 +12,8 @@
         </div>
 
         <div class="actionBarPaddings">
-          <CommentActionBar :comment-item="commentItem"
-            :post-slug-id="postSlugId"
-            :is-ranked="isRanked"
-            :ranked-action="rankedAction"
-          />
+          <CommentActionBar :comment-item="commentItem" :post-slug-id="postSlugId" :ranked-action="rankedAction"
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
         </div>
       </div>
     </div>
@@ -32,9 +29,9 @@ import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
 defineProps<{
   commentItem: ApiV1CommentFetchPost200ResponseInner;
   postSlugId: string;
-  isRanked: boolean;
   rankedAction: PossibleCommentRankingActions;
   highlight: boolean;
+  commentSlugIdLikedMap: Map<string, boolean>;
 }>();
 </script>
 

@@ -242,7 +242,6 @@ CREATE TABLE IF NOT EXISTS "vote_content" (
 	"vote_id" integer NOT NULL,
 	"vote_proof_id" integer NOT NULL,
 	"comment_content_id" integer NOT NULL,
-	"parent_id" integer,
 	"option_chosen" "vote_enum" NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL
 );
@@ -251,7 +250,6 @@ CREATE TABLE IF NOT EXISTS "vote_proof" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "vote_proof_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"proof_type" "proof_type" NOT NULL,
 	"vote_id" integer NOT NULL,
-	"parent_id" integer,
 	"author_did" varchar(1000) NOT NULL,
 	"proof" text NOT NULL,
 	"proof_version" integer NOT NULL,
@@ -264,7 +262,8 @@ CREATE TABLE IF NOT EXISTS "vote" (
 	"comment_id" integer NOT NULL,
 	"current_content_id" integer,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
-	"updated_at" timestamp (0) DEFAULT now() NOT NULL
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
+	CONSTRAINT "vote_author_id_comment_id_unique" UNIQUE("author_id","comment_id")
 );
 --> statement-breakpoint
 DO $$ BEGIN
@@ -538,19 +537,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "vote_content" ADD CONSTRAINT "vote_content_parent_id_vote_content_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."vote_content"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
  ALTER TABLE "vote_proof" ADD CONSTRAINT "vote_proof_vote_id_vote_id_fk" FOREIGN KEY ("vote_id") REFERENCES "public"."vote"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "vote_proof" ADD CONSTRAINT "vote_proof_parent_id_vote_proof_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."vote_proof"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

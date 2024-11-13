@@ -1,5 +1,5 @@
 {
-  "id": "186fc03d-d6ec-4afb-847c-975300c58cc4",
+  "id": "2d3c72a4-1cd5-4420-8887-a29701c033a3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2083,12 +2083,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "option_chosen": {
           "name": "option_chosen",
           "type": "vote_enum",
@@ -2144,19 +2138,6 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        },
-        "vote_content_parent_id_vote_content_id_fk": {
-          "name": "vote_content_parent_id_vote_content_id_fk",
-          "tableFrom": "vote_content",
-          "tableTo": "vote_content",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2197,12 +2178,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "author_did": {
           "name": "author_did",
           "type": "varchar(1000)",
@@ -2237,19 +2212,6 @@
           "tableTo": "vote",
           "columnsFrom": [
             "vote_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "vote_proof_parent_id_vote_proof_id_fk": {
-          "name": "vote_proof_parent_id_vote_proof_id_fk",
-          "tableFrom": "vote_proof",
-          "tableTo": "vote_proof",
-          "columnsFrom": [
-            "parent_id"
           ],
           "columnsTo": [
             "id"
@@ -2372,7 +2334,16 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "vote_author_id_comment_id_unique": {
+          "name": "vote_author_id_comment_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "author_id",
+            "comment_id"
+          ]
+        }
+      },
       "checkConstraints": {}
     }
   },

@@ -127,7 +127,6 @@ export const usePostStore = defineStore("post", () => {
   });
 
   async function loadPostData(loadMoreData: boolean) {
-
     let lastSlugId: undefined | string = undefined;
 
     if (loadMoreData) {
@@ -141,7 +140,12 @@ export const usePostStore = defineStore("post", () => {
 
     if (response != null) {
       if (response.length == 0) {
-        endOfFeed.value = true;
+        if (loadMoreData) {
+          endOfFeed.value = true;
+        } else {
+          masterPostDataList.value = [];
+          endOfFeed.value = false;
+        }
       } else {
         endOfFeed.value = false;
 
@@ -193,10 +197,15 @@ export const usePostStore = defineStore("post", () => {
     return emptyPost;
   }
 
+  function resetPostData() {
+    masterPostDataList.value = [];
+  }
+
   return {
     getPostBySlugId,
     loadPostData,
     hasNewPosts,
+    resetPostData,
     masterPostDataList,
     emptyPost,
     lastSavedHomeFeedPosition,

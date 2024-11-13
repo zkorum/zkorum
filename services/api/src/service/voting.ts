@@ -76,7 +76,6 @@ export async function castVoteForCommentSlugId({
       const voteProofTableResponse = await tx.insert(voteProofTable).values({
         type: "creation",
         voteId: voteTableId,
-        parentId: null,
         authorDid: didWrite,
         proof: authHeader,
         proofVersion: 1
@@ -88,7 +87,6 @@ export async function castVoteForCommentSlugId({
         voteId: voteTableId,
         voteProofId: voteProofTableId,
         commentContentId: commentData.contentId,
-        parentId: null,
         optionChosen: optionChosen
       }).returning({ voteContentTableId: voteContentTable.id });
 
