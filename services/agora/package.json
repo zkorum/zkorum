@@ -41,14 +41,14 @@
     "pinia-plugin-persistedstate-2": "^2.0.26",
     "primevue": "^4.0.7",
     "qrcode": "^1",
-    "quasar": "^2.16.11",
+    "quasar": "^2.17.2",
     "swiper": "^11.1.9",
     "tweetnacl": "^1.0.3",
     "uint8arrays": "^5.1.0",
     "vue": "^3.5.12",
     "vue-i18n": "^10.0.4",
-    "vue-router": "^4.0.12",
-    "zod": "^3.23.0"
+    "vue-router": "^4.4.5",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@quasar/app-vite": "^2.0.0-beta.24",
