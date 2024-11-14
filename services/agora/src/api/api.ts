@@ -1352,7 +1352,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest: ApiV1AuthAuthenticatePostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1AuthAuthenticatePost200Response> {
+        apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest: ApiV1AuthAuthenticatePostRequest, options?: any): AxiosPromise<ApiV1AuthAuthenticatePost200Response> {
             return localVarFp.apiV1AuthAuthenticatePost(apiV1AuthAuthenticatePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1360,7 +1360,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1AuthCheckLoginStatusPost(options?: RawAxiosRequestConfig): AxiosPromise<object> {
+        apiV1AuthCheckLoginStatusPost(options?: any): AxiosPromise<object> {
             return localVarFp.apiV1AuthCheckLoginStatusPost(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1368,7 +1368,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1AuthLogoutPost(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiV1AuthLogoutPost(options?: any): AxiosPromise<void> {
             return localVarFp.apiV1AuthLogoutPost(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1377,7 +1377,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest: ApiV1AuthVerifyOtpPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1AuthVerifyOtpPost200Response> {
+        apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest: ApiV1AuthVerifyOtpPostRequest, options?: any): AxiosPromise<ApiV1AuthVerifyOtpPost200Response> {
             return localVarFp.apiV1AuthVerifyOtpPost(apiV1AuthVerifyOtpPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1386,7 +1386,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CommentCreatePost(apiV1CommentCreatePostRequest: ApiV1CommentCreatePostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1CommentCreatePost200Response> {
+        apiV1CommentCreatePost(apiV1CommentCreatePostRequest: ApiV1CommentCreatePostRequest, options?: any): AxiosPromise<ApiV1CommentCreatePost200Response> {
             return localVarFp.apiV1CommentCreatePost(apiV1CommentCreatePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1395,7 +1395,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest: ApiV1CommentFetchCommentsByPostSlugIdPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner>> {
+        apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest: ApiV1CommentFetchCommentsByPostSlugIdPostRequest, options?: any): AxiosPromise<Array<ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner>> {
             return localVarFp.apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1404,7 +1404,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest: ApiV1CommentFetchToVoteOnPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1CommentFetchToVoteOnPost200Response> {
+        apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest: ApiV1CommentFetchToVoteOnPostRequest, options?: any): AxiosPromise<ApiV1CommentFetchToVoteOnPost200Response> {
             return localVarFp.apiV1CommentFetchToVoteOnPost(apiV1CommentFetchToVoteOnPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1413,7 +1413,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponseInner>> {
+        apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: any): AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponseInner>> {
             return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1422,7 +1422,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1PollGetUserPollResponsePost200Response> {
+        apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, options?: any): AxiosPromise<ApiV1PollGetUserPollResponsePost200Response> {
             return localVarFp.apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1431,7 +1431,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PollSubmitResponsePost(apiV1PollSubmitResponsePostRequest: ApiV1PollSubmitResponsePostRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiV1PollSubmitResponsePost(apiV1PollSubmitResponsePostRequest: ApiV1PollSubmitResponsePostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.apiV1PollSubmitResponsePost(apiV1PollSubmitResponsePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1440,7 +1440,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1VotingFetchUserVotesForPostSlugIdPostRequest> {
+        apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: any): AxiosPromise<ApiV1VotingFetchUserVotesForPostSlugIdPostRequest> {
             return localVarFp.apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1449,7 +1449,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest: ApiV1PostFetchPostBySlugIdPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1PostFetchPostBySlugIdPost200Response> {
+        apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest: ApiV1PostFetchPostBySlugIdPostRequest, options?: any): AxiosPromise<ApiV1PostFetchPostBySlugIdPost200Response> {
             return localVarFp.apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1458,7 +1458,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest: ApiV1VotingCastVotePostRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest: ApiV1VotingCastVotePostRequest, options?: any): AxiosPromise<void> {
             return localVarFp.apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1467,7 +1467,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1VotingFetchUserVotesForPostSlugIdPost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner>> {
+        apiV1VotingFetchUserVotesForPostSlugIdPost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, options?: any): AxiosPromise<Array<ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner>> {
             return localVarFp.apiV1VotingFetchUserVotesForPostSlugIdPost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest, options).then((request) => request(axios, basePath));
         },
     };

@@ -3,7 +3,6 @@ import type { ExtendedPost } from "@/shared/types/zod.js";
 import { and, eq, lt } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
-import { httpErrors } from "@fastify/sensible";
 
 interface FetchFeedProps {
     db: PostgresDatabase;
@@ -31,7 +30,7 @@ export async function fetchFeed({
         if (selectResponse.length == 1) {
             lastCreatedAt = selectResponse[0].createdAt;
         } else {
-            throw httpErrors.badRequest("An invalid slug ID had been specified for the fetch feed request: " + lastSlugId);
+            // Ignore the slug ID if it cannot be found
         }
     }
 

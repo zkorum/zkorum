@@ -10,6 +10,7 @@ import axios from "axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useCommonApi } from "./common";
 import { useAuthenticationStore } from "src/stores/authentication";
+import { usePostStore } from "src/stores/post";
 
 interface AuthenticateReturn {
   isSuccessful: boolean;
@@ -20,6 +21,7 @@ interface AuthenticateReturn {
 export function useBackendAuthApi() {
   const { buildEncodedUcan } = useCommonApi();
   const { userLogout } = useAuthenticationStore();
+  const { loadPostData } = usePostStore();
 
   async function sendEmailCode(
     email: string,
@@ -181,6 +183,8 @@ export function useBackendAuthApi() {
           userLogout();
         }
       }
+
+      loadPostData(false);
     }, 1000);
   }
 
