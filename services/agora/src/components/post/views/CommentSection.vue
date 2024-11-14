@@ -59,17 +59,16 @@ const props = defineProps<{
 
 const commentSortPreference = ref("");
 
-const backendCommentApi = useBackendCommentApi();
-
-const backendVoteApi = useBackendVoteApi();
+const { fetchCommentsForPost } = useBackendCommentApi();
+const { fetchUserVotesForPostSlugId } = useBackendVoteApi();
 
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const commentItems = ref<CommentItem[]>([]);
 
-const commentSlugIdLikedMap = new Map<string, boolean>();
+const commentSlugIdLikedMap = ref<Map<string, "like" | "dislike">>(new Map());
 
-fetchData();
+fetchCommentList();
 
 onMounted(() => {
   fetchPersonalLikes();
@@ -77,20 +76,19 @@ onMounted(() => {
 
 async function fetchPersonalLikes() {
   if (isAuthenticated.value) {
-    commentSlugIdLikedMap.clear();
-    const response = await backendVoteApi.fetchUserVotesForPostSlugId(props.postSlugId);
+    commentSlugIdLikedMap.value.clear();
+    const response = await fetchUserVotesForPostSlugId(props.postSlugId);
     if (response) {
       response.forEach(userVote => {
-        commentSlugIdLikedMap.set(userVote.commentSlugId, userVote.chosenOption == "like");
+        commentSlugIdLikedMap.value.set(userVote.commentSlugId, userVote.chosenOption);
       });
     }
-    console.log(commentSlugIdLikedMap);
   }
 }
 
-async function fetchData() {
+async function fetchCommentList() {
   if (props.postSlugId.length > 0) {
-    const response = await backendCommentApi.fetchCommentsForPost(props.postSlugId);
+    const response = await fetchCommentsForPost(props.postSlugId);
 
     if (response != null) {
       commentItems.value = response;

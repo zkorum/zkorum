@@ -10,15 +10,6 @@ import { useCommonApi } from "./common";
 import { useDialog } from "../ui/dialog";
 import { CommentItem } from "src/shared/types/zod";
 
-export interface InternalCommentStructure {
-  "commentSlugId": string;
-  "createdAt": string;
-  "updatedAt": string;
-  "comment": string;
-  "numLikes": number;
-  "numDislikes": number;
-}
-
 export function useBackendCommentApi() {
   const { buildEncodedUcan } = useCommonApi();
 

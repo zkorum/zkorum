@@ -31,7 +31,7 @@ defineProps<{
   postSlugId: string;
   rankedAction: PossibleCommentRankingActions;
   highlight: boolean;
-  commentSlugIdLikedMap: Map<string, boolean>;
+  commentSlugIdLikedMap: Map<string, "like" | "dislike">;
 }>();
 </script>
 

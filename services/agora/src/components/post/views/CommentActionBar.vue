@@ -6,18 +6,18 @@
 
       <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
         @click.stop.prevent="shareButtonClicked()" />
-      <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(false)" size="0.8rem" @click.stop.prevent="
+      <ZKButton flat :text-color="downvoteIcon.color" :icon="downvoteIcon.icon" size="0.8rem" @click.stop.prevent="
         toggleVote(props.commentItem.commentSlugId, false)
         ">
-        <div v-if="isRanked" class="voteCountLabel">
+        <div v-if="userCastedVote" class="voteCountLabel">
           {{ commentItem.numDislikes }}
         </div>
       </ZKButton>
 
-      <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(true)" size="0.8rem" @click.stop.prevent="
+      <ZKButton flat :text-color="upvoteIcon.color" :icon="upvoteIcon.icon" size="0.8rem" @click.stop.prevent="
         toggleVote(props.commentItem.commentSlugId, true)
         ">
-        <div v-if="isRanked" class="voteCountLabel">
+        <div v-if="userCastedVote" class="voteCountLabel">
           {{ commentItem.numLikes }}
         </div>
       </ZKButton>
@@ -38,7 +38,7 @@ const props = defineProps<{
   commentItem: CommentItem;
   postSlugId: string;
   rankedAction: PossibleCommentRankingActions;
-  commentSlugIdLikedMap: Map<string, boolean>;
+  commentSlugIdLikedMap: Map<string, "like" | "dislike">;
 }>();
 
 const bottomSheet = useBottomSheet();
@@ -47,9 +47,44 @@ const webShare = useWebShare();
 
 const { castVoteForComment } = useBackendVoteApi();
 
-const isRanked = computed(() => {
-  const hasEntry = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+const userCastedVote = computed(() => {
+  const hasEntry = props.commentSlugIdLikedMap.has(props.commentItem.commentSlugId);
   return hasEntry ? true : false;
+});
+
+interface IconObject {
+  icon: string;
+  color: string;
+}
+
+const downvoteIcon = computed<IconObject>(() => {
+  const userAction = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+  if (userAction == "dislike") {
+    return {
+      icon: "mdi-thumb-down",
+      color: "primary"
+    };
+  } else {
+    return {
+      icon: "mdi-thumb-down-outline",
+      color: "color-text-weak"
+    };
+  }
+});
+
+const upvoteIcon = computed<IconObject>(() => {
+  const userAction = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+  if (userAction == "like") {
+    return {
+      icon: "mdi-thumb-up",
+      color: "primary"
+    };
+  } else {
+    return {
+      icon: "mdi-thumb-up-outline",
+      color: "color-text-weak"
+    };
+  }
 });
 
 function shareButtonClicked() {
@@ -66,19 +101,12 @@ function optionButtonClicked() {
   bottomSheet.showCommentOptionSelector();
 }
 
-function toggleVote(
+async function toggleVote(
   commentSlugId: string,
   isUpvote: boolean
 ) {
-  castVoteForComment(commentSlugId, isUpvote);
-}
-
-function getButtonIcon(isUpvoteButton: boolean): string {
-  if (isUpvoteButton) {
-    return "mdi-thumb-up-outline";
-  } else {
-    return "mdi-thumb-down-outline";
-  }
+  const response = await castVoteForComment(commentSlugId, isUpvote);
+  console.log(response);
 }
 </script>
 

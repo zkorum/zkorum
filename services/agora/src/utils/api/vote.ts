@@ -22,7 +22,7 @@ export function useBackendVoteApi() {
       const { url, options } =
         await DefaultApiAxiosParamCreator().apiV1VotingCastVotePost(params);
       const encodedUcan = await buildEncodedUcan(url, options);
-      const response = await DefaultApiFactory(
+      await DefaultApiFactory(
         undefined,
         undefined,
         api
@@ -32,11 +32,11 @@ export function useBackendVoteApi() {
         },
       });
 
-      return response.data;
+      return true;
     } catch (e) {
       console.error(e);
       showMessage("An error had occured", "Failed to fetch user's personal votes.");
-      return undefined;
+      return false;
     }
   }
 
