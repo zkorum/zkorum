@@ -6,19 +6,19 @@
 
       <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
         @click.stop.prevent="shareButtonClicked()" />
-      <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(false)" size="0.8rem" @click.stop.prevent="
-        toggleVote(props.commentItem.commentSlugId, 'dislike')
+      <ZKButton flat :text-color="downvoteIcon.color" :icon="downvoteIcon.icon" size="0.8rem" @click.stop.prevent="
+        castPersonalVote(props.commentItem.commentSlugId, false)
         ">
-        <div v-if="isRanked" class="voteCountLabel">
-          {{ commentItem.numDislikes }}
+        <div v-if="userCastedVote" class="voteCountLabel">
+          {{ numDislikesLocal }}
         </div>
       </ZKButton>
 
-      <ZKButton flat text-color="color-text-weak" :icon="getButtonIcon(true)" size="0.8rem" @click.stop.prevent="
-        toggleVote(props.commentItem.commentSlugId, 'like')
+      <ZKButton flat :text-color="upvoteIcon.color" :icon="upvoteIcon.icon" size="0.8rem" @click.stop.prevent="
+        castPersonalVote(props.commentItem.commentSlugId, true)
         ">
-        <div v-if="isRanked" class="voteCountLabel">
-          {{ commentItem.numLikes }}
+        <div v-if="userCastedVote" class="voteCountLabel">
+          {{ numLikesLocal }}
         </div>
       </ZKButton>
     </div>
@@ -30,18 +30,70 @@ import { PossibleCommentRankingActions } from "src/stores/post";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useWebShare } from "src/utils/share/WebShare";
-import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
+import { useBackendVoteApi } from "src/utils/api/vote";
+import { computed, ref } from "vue";
+import { CommentItem, VotingAction } from "src/shared/types/zod";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { useDialog } from "src/utils/ui/dialog";
 
 const props = defineProps<{
-  commentItem: ApiV1CommentFetchPost200ResponseInner;
+  commentItem: CommentItem;
   postSlugId: string;
-  isRanked: boolean;
   rankedAction: PossibleCommentRankingActions;
+  commentSlugIdLikedMap: Map<string, "like" | "dislike">;
 }>();
 
 const bottomSheet = useBottomSheet();
 
 const webShare = useWebShare();
+
+const { showLoginConfirmationDialog } = useDialog();
+
+const { castVoteForComment } = useBackendVoteApi();
+const { isAuthenticated } = useAuthenticationStore();
+
+const numLikesLocal = ref(props.commentItem.numLikes);
+const numDislikesLocal = ref(props.commentItem.numDislikes);
+
+const userCastedVote = computed(() => {
+  const hasEntry = props.commentSlugIdLikedMap.has(props.commentItem.commentSlugId);
+  return hasEntry ? true : false;
+});
+
+interface IconObject {
+  icon: string;
+  color: string;
+}
+
+const downvoteIcon = computed<IconObject>(() => {
+  const userAction = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+  if (userAction == "dislike") {
+    return {
+      icon: "mdi-thumb-down",
+      color: "primary"
+    };
+  } else {
+    return {
+      icon: "mdi-thumb-down-outline",
+      color: "color-text-weak"
+    };
+  }
+});
+
+const upvoteIcon = computed<IconObject>(() => {
+  const userAction = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+  if (userAction == "like") {
+    return {
+      icon: "mdi-thumb-up",
+      color: "primary"
+    };
+  } else {
+    return {
+      icon: "mdi-thumb-up-outline",
+      color: "color-text-weak"
+    };
+  }
+});
 
 function shareButtonClicked() {
   const sharePostUrl =
@@ -57,38 +109,75 @@ function optionButtonClicked() {
   bottomSheet.showCommentOptionSelector();
 }
 
-function toggleVote(
+async function castPersonalVote(
   commentSlugId: string,
-  isUpvoteButton: PossibleCommentRankingActions
+  isUpvoteButton: boolean
 ) {
-  console.log(commentSlugId);
-  console.log(isUpvoteButton);
-  // updateCommentRanking(props.postSlugId, commentIndex, isUpvoteButton);
-}
+  if (!isAuthenticated) {
+    showLoginConfirmationDialog();
+  } else {
 
-function getButtonIcon(isUpvoteButton: boolean): string {
-  if (props.isRanked && props.rankedAction != "pass") {
-    if (isUpvoteButton) {
-      if (props.rankedAction == "like") {
-        return "mdi-thumb-up";
-      } else {
-        return "mdi-thumb-up-outline";
-      }
+    const numLikesBackup = numLikesLocal.value;
+    const numDislikesBackup = numDislikesLocal.value;
+
+    let targetState: VotingAction = "cancel";
+    const originalSelection = props.commentSlugIdLikedMap.get(commentSlugId);
+    if (originalSelection == undefined) {
+      targetState = isUpvoteButton ? "like" : "dislike";
     } else {
-      if (props.rankedAction == "dislike") {
-        return "mdi-thumb-down";
+      if (originalSelection == "like") {
+        if (isUpvoteButton) {
+          targetState = "cancel";
+        } else {
+          targetState = "dislike";
+        }
       } else {
-        return "mdi-thumb-down-outline";
+        if (isUpvoteButton) {
+          targetState = "like";
+        } else {
+          targetState = "cancel";
+        }
       }
     }
-  } else {
-    if (isUpvoteButton) {
-      return "mdi-thumb-up-outline";
+
+    if (targetState == "cancel") {
+      props.commentSlugIdLikedMap.delete(commentSlugId);
+      if (originalSelection == "like") {
+        numLikesLocal.value = numLikesLocal.value - 1;
+      } else {
+        numDislikesLocal.value = numDislikesLocal.value - 1;
+      }
     } else {
-      return "mdi-thumb-down-outline";
+      if (targetState == "like") {
+        props.commentSlugIdLikedMap.set(commentSlugId, "like");
+        numLikesLocal.value = numLikesLocal.value + 1;
+        if (originalSelection == "dislike") {
+          numDislikesLocal.value = numDislikesLocal.value - 1;
+        }
+      } else {
+        props.commentSlugIdLikedMap.set(commentSlugId, "dislike");
+        numDislikesLocal.value = numDislikesLocal.value + 1;
+        if (originalSelection == "like") {
+          numLikesLocal.value = numLikesLocal.value - 1;
+        }
+      }
+    }
+
+    const response = await castVoteForComment(commentSlugId, targetState);
+    if (!response) {
+      // Revert
+      if (originalSelection == undefined) {
+        props.commentSlugIdLikedMap.delete(commentSlugId);
+      } else {
+        props.commentSlugIdLikedMap.set(commentSlugId, originalSelection);
+      }
+
+      numLikesLocal.value = numLikesBackup;
+      numDislikesLocal.value = numDislikesBackup;
     }
   }
 }
+
 </script>
 
 <style scoped lang="scss">

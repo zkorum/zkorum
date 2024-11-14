@@ -423,6 +423,98 @@
                 }
             }
         },
+        "/api/v1/voting/fetch-user-votes-for-post-slug-id": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "commentSlugId": {
+                                                "type": "string"
+                                            },
+                                            "votingAction": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "like",
+                                                    "dislike"
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "commentSlugId",
+                                            "votingAction"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/voting/cast-vote": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "commentSlugId": {
+                                        "type": "string"
+                                    },
+                                    "chosenOption": {
+                                        "type": "string",
+                                        "enum": [
+                                            "like",
+                                            "dislike",
+                                            "cancel"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "commentSlugId",
+                                    "chosenOption"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
         "/api/v1/poll/submitResponse": {
             "post": {
                 "requestBody": {
@@ -540,7 +632,7 @@
                 }
             }
         },
-        "/api/v1/comment/fetch": {
+        "/api/v1/comment/fetch-comments-by-post-slugId": {
             "post": {
                 "requestBody": {
                     "content": {
@@ -579,9 +671,6 @@
                                             "commentSlugId": {
                                                 "type": "string",
                                                 "maxLength": 10
-                                            },
-                                            "isHidden": {
-                                                "type": "boolean"
                                             },
                                             "createdAt": {
                                                 "type": "string",
@@ -665,9 +754,6 @@
                                                     "commentSlugId": {
                                                         "type": "string",
                                                         "maxLength": 10
-                                                    },
-                                                    "isHidden": {
-                                                        "type": "boolean"
                                                     },
                                                     "createdAt": {
                                                         "type": "string",
@@ -770,7 +856,7 @@
                 }
             }
         },
-        "/api/v1/post/fetch": {
+        "/api/v1/post/fetch-post-by-slug-id": {
             "post": {
                 "requestBody": {
                     "content": {

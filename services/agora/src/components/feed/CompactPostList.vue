@@ -40,7 +40,7 @@
       <div ref="bottomOfPageDiv">
       </div>
 
-      <div v-if="endOfFeed" class="centerMessage">
+      <div v-if="endOfFeed && masterPostDataList.length != 0" class="centerMessage">
         <div>
           <q-icon name="mdi-check" size="4rem" />
         </div>
@@ -67,10 +67,9 @@ import { storeToRefs } from "pinia";
 import { useDocumentVisibility, useElementSize, useElementVisibility, useWindowScroll } from "@vueuse/core";
 import { useRouter } from "vue-router";
 
-const { lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 // const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
-const { masterPostDataList, dataReady, endOfFeed } = storeToRefs(usePostStore());
+const { masterPostDataList, dataReady, endOfFeed, lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 const { loadPostData, hasNewPosts } = usePostStore();
 
 const router = useRouter();
@@ -90,25 +89,24 @@ const postContainerRef = ref(null);
 const postContainerSize = useElementSize(postContainerRef);
 
 watch(windowScroll.y, async () => {
-  // console.log(windowScroll.y.value);
-  // console.log(postContainerSize.height.value);
-  // console.log();
-
-  if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts) {
+  if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts && !endOfFeed.value) {
     isExpandingPosts = true;
     await loadPostData(true);
-    isExpandingPosts = false;
+    setTimeout(
+      function () {
+        isExpandingPosts = false;
+      }, 500);
   }
 });
 
 watch(pageIsVisible, async () => {
-  if (pageIsVisible.value) {
+  if (pageIsVisible.value && !endOfFeed.value) {
     await newPostCheck();
   }
 });
 
 watch(targetIsVisible, async () => {
-  if (!reachedEndOfPage.value && !isExpandingPosts) {
+  if (!reachedEndOfPage.value && !isExpandingPosts && !endOfFeed.value) {
     if (targetIsVisible.value) {
       isExpandingPosts = true;
       await loadPostData(true);

@@ -16,7 +16,8 @@
         <div class="container">
           <q-input v-model="postDraft.postTitle" borderless no-error-icon type="textarea" label="Title" lazy-rules
             :rules="[(val) => val && val.length > 0]" class="titleStyle" autogrow :maxlength="MAX_LENGTH_TITLE"
-            clearable required />
+            required>
+          </q-input>
 
           <div class="wordCountDiv">
             {{ postDraft.postTitle.length }} /

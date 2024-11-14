@@ -78,7 +78,6 @@ export const zodPostMetadata = z
 export const zodCommentContent = z.string().min(1); // Cannot specify the max length here due to the HTML tags
 export const zodCommentItem = z.object({
     commentSlugId: zodSlugId,
-    isHidden: z.boolean().optional(),
     createdAt: z.date(),
     updatedAt: z.date(),
     comment: zodCommentContent,
@@ -91,6 +90,8 @@ export const zodExtendedPostData = z
         payload: zodPostDataWithResult,
     })
     .strict();
+export const zodVotingOption = z.enum(["like", "dislike"]);
+export const zodVotingAction = z.enum(["like", "dislike", "cancel"]);
 
 export type Email = z.infer<typeof zodEmail>;
 export type Device = z.infer<typeof zodDevice>;
@@ -102,3 +103,5 @@ export type PollOptionWithResult = z.infer<typeof zodPollOptionWithResult>
 export type CommentContent = z.infer<typeof zodCommentContent>;
 export type SlugId = z.infer<typeof zodSlugId>;
 export type CommentItem = z.infer<typeof zodCommentItem>;
+export type VotingOption = z.infer<typeof zodVotingOption>;
+export type VotingAction = z.infer<typeof zodVotingAction>;

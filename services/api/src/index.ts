@@ -29,6 +29,7 @@ import {
 } from "./shared/ucan/ucan.js";
 import { fetchCommentsByPostSlugId, postNewComment } from "./service/comment.js";
 import { getUserPollResponse, submitPollResponse } from "./service/poll.js";
+import { castVoteForCommentSlugId, getUserVotesForPostSlugId } from "./service/voting.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -362,6 +363,7 @@ server.after(() => {
                 await authService.logout(db, didWrite);
             },
         });
+
     server
         .withTypeProvider<ZodTypeProvider>()
         .route({
@@ -379,6 +381,65 @@ server.after(() => {
                     showHidden: request.body.showHidden,
                     lastSlugId: request.body.lastSlugId,
                 });
+            },
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/voting/fetch-user-votes-for-post-slug-id`,
+            schema: {
+                body: Dto.fetchUserVotesForPostSlugIdRequest,
+                response: {
+                    200: Dto.fetchUserVotesForPostSlugIdResponse,
+                },
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    return await getUserVotesForPostSlugId({
+                        db: db,
+                        postSlugId: request.body.postSlugId,
+                        userId: status.userId
+                    });
+                }
+            },
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/voting/cast-vote`,
+            schema: {
+                body: Dto.castVoteForCommentRequest
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const authHeader = getAuthHeader(request);
+
+                    await castVoteForCommentSlugId({
+                        db: db,
+                        commentSlugId: request.body.commentSlugId,
+                        userId: status.userId,
+                        didWrite: didWrite,
+                        authHeader: authHeader,
+                        votingAction: request.body.chosenOption
+                    });
+                }
             },
         });
 
@@ -481,7 +542,7 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
-            url: `/api/${apiVersion}/comment/fetch`,
+            url: `/api/${apiVersion}/comment/fetch-comments-by-post-slugId`,
             schema: {
                 body: Dto.fetchCommentFeedRequest,
                 response: {
@@ -740,7 +801,7 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
-            url: `/api/${apiVersion}/post/fetch`,
+            url: `/api/${apiVersion}/post/fetch-post-by-slug-id`,
             schema: {
                 body: Dto.fetchPostBySlugIdRequest,
                 response: {

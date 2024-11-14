@@ -1,8 +1,8 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  ApiV1PollGetUserPollResponsePostRequest,
   ApiV1PollSubmitResponsePostRequest,
+  ApiV1VotingFetchUserVotesForPostSlugIdPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
@@ -16,7 +16,7 @@ export function useBackendPollApi() {
 
   async function fetchUserPollResponse(postSlugId: string) {
     try {
-      const params: ApiV1PollGetUserPollResponsePostRequest = {
+      const params: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest = {
         postSlugId: postSlugId
       };
 

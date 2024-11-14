@@ -2,12 +2,13 @@ import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
   ApiV1CommentCreatePostRequest,
-  ApiV1CommentFetchPostRequest,
+  ApiV1CommentFetchCommentsByPostSlugIdPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
 import { useCommonApi } from "./common";
 import { useDialog } from "../ui/dialog";
+import { CommentItem } from "src/shared/types/zod";
 
 export function useBackendCommentApi() {
   const { buildEncodedUcan } = useCommonApi();
@@ -16,7 +17,7 @@ export function useBackendCommentApi() {
 
   async function fetchCommentsForPost(postSlugId: string) {
     try {
-      const params: ApiV1CommentFetchPostRequest = {
+      const params: ApiV1CommentFetchCommentsByPostSlugIdPostRequest = {
         postSlugId: postSlugId,
       };
 
@@ -24,9 +25,21 @@ export function useBackendCommentApi() {
         undefined,
         undefined,
         api
-      ).apiV1CommentFetchPost(params, {});
+      ).apiV1CommentFetchCommentsByPostSlugIdPost(params, {});
 
-      return response.data;
+      const postList: CommentItem[] = [];
+      response.data.forEach(item => {
+        postList.push({
+          comment: item.comment,
+          commentSlugId: item.commentSlugId,
+          createdAt: new Date(item.createdAt),
+          numDislikes: item.numDislikes,
+          numLikes: item.numLikes,
+          updatedAt: new Date(item.updatedAt)
+        });
+      });
+
+      return postList;
     } catch (e) {
       console.error(e);
       showMessage("An error had occured", "Failed to fetch comments for post.");

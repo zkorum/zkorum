@@ -9,6 +9,8 @@ import {
     zodPollOptionTitle,
     zodPostTitle,
     zodPostBody,
+    zodVotingOption,
+    zodVotingAction,
 } from "./zod.js";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -122,7 +124,19 @@ export class Dto {
     static fetchUserPollResponseResponse = z.object({
         selectedPollOption: z.number().optional()
     }).strict();
+    static fetchUserVotesForPostSlugIdRequest = z.object({
+        postSlugId: z.string()
+    }).strict();
+    static fetchUserVotesForPostSlugIdResponse = z.array(z.object({
+        commentSlugId: z.string(),
+        votingAction: zodVotingOption
+    }).strict());
+    static castVoteForCommentRequest = z.object({
+        commentSlugId: z.string(),
+        chosenOption: zodVotingAction
+    }).strict();
 }
+
 export type AuthenticateRequestBody = z.infer<
     typeof Dto.authenticateRequestBody
 >;
@@ -137,3 +151,4 @@ export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
 export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;
 export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;
 export type FetchUserPollResponseResponse = z.infer<typeof Dto.fetchUserPollResponseResponse>;
+export type FetchUserVotesForPostSlugIdResponseResponse = z.infer<typeof Dto.fetchUserVotesForPostSlugIdResponse>;

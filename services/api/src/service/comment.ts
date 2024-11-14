@@ -18,7 +18,6 @@ export async function fetchCommentsByPostSlugId(
         .select({
             // comment payload
             commentSlugId: commentTable.slugId,
-            isHidden: commentTable.isHidden,
             createdAt: commentTable.createdAt,
             updatedAt: commentTable.updatedAt,
             comment: commentContentTable.content,
@@ -48,7 +47,6 @@ export async function fetchCommentsByPostSlugId(
             numDislikes: commentResponse.numDislikes,
             numLikes: commentResponse.numLikes,
             updatedAt: commentResponse.updatedAt,
-            isHidden: commentResponse.isHidden
         };
         commentItemList.push(item);
     });
@@ -172,7 +170,6 @@ interface PostNewCommentProps {
     authHeader: string,
     httpErrors: HttpErrors
 }
-
 
 export async function postNewComment({
     db,

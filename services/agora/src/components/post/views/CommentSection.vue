@@ -9,9 +9,10 @@
 
       <div v-if="commentItems.length > 0" class="commentListFlex">
         <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
-          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId" :is-ranked="props.commentRanking.rankedCommentList.get(index) != null
-            " :ranked-action="getCommentItemRankStatus(index)"
-            :highlight="initialCommentSlugId == commentItem.commentSlugId" />
+          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
+            :ranked-action="getCommentItemRankStatus(index)"
+            :highlight="initialCommentSlugId == commentItem.commentSlugId"
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
@@ -40,11 +41,13 @@ import {
 } from "src/stores/post";
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import Divider from "primevue/divider";
 import CommentSortSelector from "./CommentSortSelector.vue";
 import { useBackendCommentApi } from "src/utils/api/comment";
-import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
+import { useBackendVoteApi } from "src/utils/api/vote";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { CommentItem } from "src/shared/types/zod";
 
 const props = defineProps<{
   commentList: DummyCommentFormat[];
@@ -55,15 +58,36 @@ const props = defineProps<{
 
 const commentSortPreference = ref("");
 
-const backendCommentApi = useBackendCommentApi();
+const { fetchCommentsForPost } = useBackendCommentApi();
+const { fetchUserVotesForPostSlugId } = useBackendVoteApi();
 
-const commentItems = ref<ApiV1CommentFetchPost200ResponseInner[]>([]);
+const { isAuthenticated } = useAuthenticationStore();
 
-fetchData();
+const commentItems = ref<CommentItem[]>([]);
 
-async function fetchData() {
+const commentSlugIdLikedMap = ref<Map<string, "like" | "dislike">>(new Map());
+
+fetchCommentList();
+
+onMounted(() => {
+  fetchPersonalLikes();
+});
+
+async function fetchPersonalLikes() {
+  if (isAuthenticated) {
+    commentSlugIdLikedMap.value.clear();
+    const response = await fetchUserVotesForPostSlugId(props.postSlugId);
+    if (response) {
+      response.forEach(userVote => {
+        commentSlugIdLikedMap.value.set(userVote.commentSlugId, userVote.votingAction);
+      });
+    }
+  }
+}
+
+async function fetchCommentList() {
   if (props.postSlugId.length > 0) {
-    const response = await backendCommentApi.fetchCommentsForPost(props.postSlugId);
+    const response = await fetchCommentsForPost(props.postSlugId);
 
     if (response != null) {
       commentItems.value = response;

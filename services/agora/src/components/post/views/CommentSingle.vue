@@ -12,11 +12,8 @@
         </div>
 
         <div class="actionBarPaddings">
-          <CommentActionBar :comment-item="commentItem"
-            :post-slug-id="postSlugId"
-            :is-ranked="isRanked"
-            :ranked-action="rankedAction"
-          />
+          <CommentActionBar :comment-item="commentItem" :post-slug-id="postSlugId" :ranked-action="rankedAction"
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
         </div>
       </div>
     </div>
@@ -27,14 +24,14 @@
 import { PossibleCommentRankingActions } from "src/stores/post";
 import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
-import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
+import { CommentItem } from "src/shared/types/zod";
 
 defineProps<{
-  commentItem: ApiV1CommentFetchPost200ResponseInner;
+  commentItem: CommentItem;
   postSlugId: string;
-  isRanked: boolean;
   rankedAction: PossibleCommentRankingActions;
   highlight: boolean;
+  commentSlugIdLikedMap: Map<string, "like" | "dislike">;
 }>();
 </script>
 

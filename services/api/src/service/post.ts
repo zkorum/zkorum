@@ -159,7 +159,7 @@ export async function createNewPost({
         };
 
     } catch (err: unknown) {
-        console.log(err);
+        server.log.error(err);
         throw httpErrors.internalServerError(
             "Database error while creating the new post"
         );

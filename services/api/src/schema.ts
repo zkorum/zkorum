@@ -526,13 +526,14 @@ export const voteTable = pgTable("vote", {
     })
         .defaultNow()
         .notNull(),
-});
+}, (t) => ({
+    oneCommentVotePerUser: unique().on(t.authorId, t.commentId),
+}));
 
 export const voteProofTable = pgTable("vote_proof", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
     voteId: integer("vote_id").notNull().references(() => voteTable.id), // the postTable never gets deleted
-    parentId: integer("parent_id").references((): AnyPgColumn => voteProofTable.id), // not null if edit or delete, else null
     authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
@@ -555,7 +556,6 @@ export const voteContentTable = pgTable("vote_content", {
         .references(() => voteTable.id),
     voteProofId: integer("vote_proof_id").notNull().references((): AnyPgColumn => voteProofTable.id),
     commentContentId: integer("comment_content_id").references(() => commentContentTable.id).notNull(), // exact comment content that existed when this vote was cast. Cascade delete from commentContent if commentContent was deleted.
-    parentId: integer("parent_id").references((): AnyPgColumn => voteContentTable.id), // not null if edit
     optionChosen: voteEnum("option_chosen").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
