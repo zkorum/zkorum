@@ -10,7 +10,7 @@
         castPersonalVote(props.commentItem.commentSlugId, false)
         ">
         <div v-if="userCastedVote" class="voteCountLabel">
-          {{ commentItem.numDislikes }}
+          {{ numDislikesLocal }}
         </div>
       </ZKButton>
 
@@ -18,7 +18,7 @@
         castPersonalVote(props.commentItem.commentSlugId, true)
         ">
         <div v-if="userCastedVote" class="voteCountLabel">
-          {{ commentItem.numLikes }}
+          {{ numLikesLocal }}
         </div>
       </ZKButton>
     </div>
@@ -31,7 +31,7 @@ import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useBackendVoteApi } from "src/utils/api/vote";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { CommentItem, VotingAction } from "src/shared/types/zod";
 
 const props = defineProps<{
@@ -46,6 +46,9 @@ const bottomSheet = useBottomSheet();
 const webShare = useWebShare();
 
 const { castVoteForComment } = useBackendVoteApi();
+
+const numLikesLocal = ref(props.commentItem.numLikes);
+const numDislikesLocal = ref(props.commentItem.numDislikes);
 
 const userCastedVote = computed(() => {
   const hasEntry = props.commentSlugIdLikedMap.has(props.commentItem.commentSlugId);
@@ -129,8 +132,25 @@ async function castPersonalVote(
   if (response) {
     if (targetState == "cancel") {
       props.commentSlugIdLikedMap.delete(commentSlugId);
+      if (currentSelection == "like") {
+        numLikesLocal.value = numLikesLocal.value - 1;
+      } else {
+        numDislikesLocal.value = numDislikesLocal.value - 1;
+      }
     } else {
-      props.commentSlugIdLikedMap.set(commentSlugId, targetState);
+      if (targetState == "like") {
+        props.commentSlugIdLikedMap.set(commentSlugId, "like");
+        numLikesLocal.value = numLikesLocal.value + 1;
+        if (currentSelection == "dislike") {
+          numDislikesLocal.value = numDislikesLocal.value - 1;
+        }
+      } else {
+        props.commentSlugIdLikedMap.set(commentSlugId, "dislike");
+        numDislikesLocal.value = numDislikesLocal.value + 1;
+        if (currentSelection == "like") {
+          numLikesLocal.value = numLikesLocal.value - 1;
+        }
+      }
     }
   }
 }
