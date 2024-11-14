@@ -24,10 +24,10 @@
 import { PossibleCommentRankingActions } from "src/stores/post";
 import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
-import { ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner } from "src/api";
+import { CommentItem } from "src/shared/types/zod";
 
 defineProps<{
-  commentItem: ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner;
+  commentItem: CommentItem;
   postSlugId: string;
   rankedAction: PossibleCommentRankingActions;
   highlight: boolean;

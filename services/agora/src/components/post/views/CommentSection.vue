@@ -45,10 +45,10 @@ import { onMounted, ref } from "vue";
 import Divider from "primevue/divider";
 import CommentSortSelector from "./CommentSortSelector.vue";
 import { useBackendCommentApi } from "src/utils/api/comment";
-import { ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner } from "src/api";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
+import { CommentItem } from "src/shared/types/zod";
 
 const props = defineProps<{
   commentList: DummyCommentFormat[];
@@ -65,7 +65,7 @@ const backendVoteApi = useBackendVoteApi();
 
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
-const commentItems = ref<ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner[]>([]);
+const commentItems = ref<CommentItem[]>([]);
 
 const commentSlugIdLikedMap = new Map<string, boolean>();
 

@@ -77,7 +77,6 @@ export const zodPostMetadata = z
 export const zodCommentContent = z.string().min(1); // Cannot specify the max length here due to the HTML tags
 export const zodCommentItem = z.object({
     commentSlugId: zodSlugId,
-    isHidden: z.boolean().optional(),
     createdAt: z.date(),
     updatedAt: z.date(),
     comment: zodCommentContent,

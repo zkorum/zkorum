@@ -245,12 +245,6 @@ export interface ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner {
     'commentSlugId': string;
     /**
      * 
-     * @type {boolean}
-     * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
-     */
-    'isHidden'?: boolean;
-    /**
-     * 
      * @type {string}
      * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
      */
