@@ -1,22 +1,20 @@
-import { ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
+import { ApiV1VotingCastVotePostRequest, ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useDialog } from "../ui/dialog";
 import { useCommonApi } from "./common";
+import { VotingAction } from "src/shared/types/zod";
 
 export function useBackendVoteApi() {
   const { buildEncodedUcan } = useCommonApi();
 
   const { showMessage } = useDialog();
 
-  async function castVoteForComment(commentSlugId: string, isUpvote: boolean) {
-
-    const chosenOption = isUpvote ? "like" : "dislike";
-
+  async function castVoteForComment(commentSlugId: string, votingAction: VotingAction) {
     try {
-      const params: ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner = {
+      const params: ApiV1VotingCastVotePostRequest = {
         commentSlugId: commentSlugId,
-        chosenOption: chosenOption
+        chosenOption: votingAction
       };
 
       const { url, options } =

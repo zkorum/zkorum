@@ -457,7 +457,7 @@
                                             "commentSlugId": {
                                                 "type": "string"
                                             },
-                                            "chosenOption": {
+                                            "votingAction": {
                                                 "type": "string",
                                                 "enum": [
                                                     "like",
@@ -467,7 +467,7 @@
                                         },
                                         "required": [
                                             "commentSlugId",
-                                            "chosenOption"
+                                            "votingAction"
                                         ],
                                         "additionalProperties": false
                                     }
@@ -493,7 +493,8 @@
                                         "type": "string",
                                         "enum": [
                                             "like",
-                                            "dislike"
+                                            "dislike",
+                                            "cancel"
                                         ]
                                     }
                                 },

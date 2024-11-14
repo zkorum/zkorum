@@ -80,7 +80,7 @@ async function fetchPersonalLikes() {
     const response = await fetchUserVotesForPostSlugId(props.postSlugId);
     if (response) {
       response.forEach(userVote => {
-        commentSlugIdLikedMap.value.set(userVote.commentSlugId, userVote.chosenOption);
+        commentSlugIdLikedMap.value.set(userVote.commentSlugId, userVote.votingAction);
       });
     }
   }

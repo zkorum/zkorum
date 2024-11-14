@@ -554,6 +554,34 @@ export interface ApiV1PostFetchPostBySlugIdPostRequest {
 /**
  * 
  * @export
+ * @interface ApiV1VotingCastVotePostRequest
+ */
+export interface ApiV1VotingCastVotePostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1VotingCastVotePostRequest
+     */
+    'commentSlugId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1VotingCastVotePostRequest
+     */
+    'chosenOption': ApiV1VotingCastVotePostRequestChosenOptionEnum;
+}
+
+export const ApiV1VotingCastVotePostRequestChosenOptionEnum = {
+    Like: 'like',
+    Dislike: 'dislike',
+    Cancel: 'cancel'
+} as const;
+
+export type ApiV1VotingCastVotePostRequestChosenOptionEnum = typeof ApiV1VotingCastVotePostRequestChosenOptionEnum[keyof typeof ApiV1VotingCastVotePostRequestChosenOptionEnum];
+
+/**
+ * 
+ * @export
  * @interface ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner
  */
 export interface ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner {
@@ -568,15 +596,15 @@ export interface ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner {
      * @type {string}
      * @memberof ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner
      */
-    'chosenOption': ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerChosenOptionEnum;
+    'votingAction': ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerVotingActionEnum;
 }
 
-export const ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerChosenOptionEnum = {
+export const ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerVotingActionEnum = {
     Like: 'like',
     Dislike: 'dislike'
 } as const;
 
-export type ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerChosenOptionEnum = typeof ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerChosenOptionEnum[keyof typeof ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerChosenOptionEnum];
+export type ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerVotingActionEnum = typeof ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerVotingActionEnum[keyof typeof ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInnerVotingActionEnum];
 
 /**
  * 
@@ -1056,13 +1084,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner} apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner 
+         * @param {ApiV1VotingCastVotePostRequest} apiV1VotingCastVotePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1VotingCastVotePost: async (apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner: ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner' is not null or undefined
-            assertParamExists('apiV1VotingCastVotePost', 'apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner', apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner)
+        apiV1VotingCastVotePost: async (apiV1VotingCastVotePostRequest: ApiV1VotingCastVotePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1VotingCastVotePostRequest' is not null or undefined
+            assertParamExists('apiV1VotingCastVotePost', 'apiV1VotingCastVotePostRequest', apiV1VotingCastVotePostRequest)
             const localVarPath = `/api/v1/voting/cast-vote`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1086,7 +1114,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1VotingCastVotePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1286,12 +1314,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner} apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner 
+         * @param {ApiV1VotingCastVotePostRequest} apiV1VotingCastVotePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1VotingCastVotePost(apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner: ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1VotingCastVotePost(apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, options);
+        async apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest: ApiV1VotingCastVotePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1VotingCastVotePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1426,12 +1454,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner} apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner 
+         * @param {ApiV1VotingCastVotePostRequest} apiV1VotingCastVotePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1VotingCastVotePost(apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner: ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV1VotingCastVotePost(apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, options).then((request) => request(axios, basePath));
+        apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest: ApiV1VotingCastVotePostRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1584,13 +1612,13 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner} apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner 
+     * @param {ApiV1VotingCastVotePostRequest} apiV1VotingCastVotePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1VotingCastVotePost(apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner: ApiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1VotingCastVotePost(apiV1VotingFetchUserVotesForPostSlugIdPost200ResponseInner, options).then((request) => request(this.axios, this.basePath));
+    public apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest: ApiV1VotingCastVotePostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1VotingCastVotePost(apiV1VotingCastVotePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

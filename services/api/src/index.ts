@@ -437,7 +437,7 @@ server.after(() => {
                         userId: status.userId,
                         didWrite: didWrite,
                         authHeader: authHeader,
-                        optionChosen: request.body.chosenOption
+                        votingAction: request.body.chosenOption
                     });
                 }
             },

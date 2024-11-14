@@ -11,6 +11,7 @@ import {
     zodPostTitle,
     zodPostBody,
     zodVotingOption,
+    zodVotingAction,
 } from "./zod.js";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -129,11 +130,11 @@ export class Dto {
     }).strict();
     static fetchUserVotesForPostSlugIdResponse = z.array(z.object({
         commentSlugId: z.string(),
-        chosenOption: zodVotingOption
+        votingAction: zodVotingOption
     }).strict());
     static castVoteForCommentRequest = z.object({
         commentSlugId: z.string(),
-        chosenOption: zodVotingOption
+        chosenOption: zodVotingAction
     }).strict();
 }
 

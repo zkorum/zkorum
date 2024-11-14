@@ -90,6 +90,7 @@ export const zodExtendedPostData = z
     })
     .strict();
 export const zodVotingOption = z.enum(["like", "dislike"]);
+export const zodVotingAction = z.enum(["like", "dislike", "cancel"]);
 
 export type Email = z.infer<typeof zodEmail>;
 export type Device = z.infer<typeof zodDevice>;
@@ -102,3 +103,4 @@ export type CommentContent = z.infer<typeof zodCommentContent>;
 export type SlugId = z.infer<typeof zodSlugId>;
 export type CommentItem = z.infer<typeof zodCommentItem>;
 export type VotingOption = z.infer<typeof zodVotingOption>;
+export type VotingAction = z.infer<typeof zodVotingAction>;

@@ -7,7 +7,7 @@
       <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
         @click.stop.prevent="shareButtonClicked()" />
       <ZKButton flat :text-color="downvoteIcon.color" :icon="downvoteIcon.icon" size="0.8rem" @click.stop.prevent="
-        toggleVote(props.commentItem.commentSlugId, false)
+        castPersonalVote(props.commentItem.commentSlugId, false)
         ">
         <div v-if="userCastedVote" class="voteCountLabel">
           {{ commentItem.numDislikes }}
@@ -15,7 +15,7 @@
       </ZKButton>
 
       <ZKButton flat :text-color="upvoteIcon.color" :icon="upvoteIcon.icon" size="0.8rem" @click.stop.prevent="
-        toggleVote(props.commentItem.commentSlugId, true)
+        castPersonalVote(props.commentItem.commentSlugId, true)
         ">
         <div v-if="userCastedVote" class="voteCountLabel">
           {{ commentItem.numLikes }}
@@ -32,7 +32,7 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { computed } from "vue";
-import { CommentItem } from "src/shared/types/zod";
+import { CommentItem, VotingAction } from "src/shared/types/zod";
 
 const props = defineProps<{
   commentItem: CommentItem;
@@ -101,11 +101,31 @@ function optionButtonClicked() {
   bottomSheet.showCommentOptionSelector();
 }
 
-async function toggleVote(
+async function castPersonalVote(
   commentSlugId: string,
-  isUpvote: boolean
+  isUpvoteButton: boolean
 ) {
-  const response = await castVoteForComment(commentSlugId, isUpvote);
+  let targetState: VotingAction = "cancel";
+  const currentSelection = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+  if (currentSelection == undefined) {
+    targetState = isUpvoteButton ? "like" : "dislike";
+  } else {
+    if (currentSelection == "like") {
+      if (isUpvoteButton) {
+        targetState = "cancel";
+      } else {
+        targetState = "dislike";
+      }
+    } else {
+      if (isUpvoteButton) {
+        targetState = "like";
+      } else {
+        targetState = "cancel";
+      }
+    }
+  }
+
+  const response = await castVoteForComment(commentSlugId, targetState);
   console.log(response);
 }
 </script>

@@ -1,9 +1,9 @@
 import { commentTable, postTable, voteContentTable, voteProofTable, voteTable } from "@/schema.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { httpErrors } from "@fastify/sensible";
 import { server } from "@/app.js";
-import type { VotingOption } from "@/shared/types/zod.js";
+import type { VotingAction } from "@/shared/types/zod.js";
 import type { FetchUserVotesForPostSlugIdResponseResponse } from "@/shared/types/dto.js";
 
 
@@ -54,27 +54,95 @@ interface CastVoteForCommentSlugIdProps {
   userId: string,
   didWrite: string,
   authHeader: string,
-  optionChosen: VotingOption
+  votingAction: VotingAction
 }
 
 export async function castVoteForCommentSlugId({
-  db, userId, commentSlugId, didWrite, authHeader, optionChosen }: CastVoteForCommentSlugIdProps) {
+  db, userId, commentSlugId, didWrite, authHeader, votingAction }: CastVoteForCommentSlugIdProps) {
 
   const commentData = await getCommentIdAndContentIdFromCommentSlugId({ db: db, commentSlugId: commentSlugId });
+
+  const existingVoteTableResponse = await db
+    .select({
+      optionChosen: voteContentTable.optionChosen,
+      voteTableId: voteTable.id
+    })
+    .from(voteTable)
+    .leftJoin(voteContentTable, eq(voteContentTable.id, voteTable.currentContentId))
+    .where(and(eq(voteTable.authorId, userId), eq(voteTable.commentId, commentData.commentId)));
+
+  let numLikesDiff = 0;
+  let numDislikesDiff = 0;
+
+
+  if (existingVoteTableResponse.length == 0) {
+    // No existing vote
+    if (votingAction == "cancel") {
+      throw httpErrors.badRequest("Cannot cancel a vote that does not exist");
+    } else {
+      if (votingAction == "like") {
+        numLikesDiff = 1;
+      } else {
+        numDislikesDiff = 1;
+      }
+    }
+  } else if (existingVoteTableResponse.length == 1) {
+    const existingResponse = existingVoteTableResponse[0].optionChosen;
+    if (existingResponse == "like") {
+      if (votingAction == "like") {
+        throw httpErrors.badRequest("User already liked the target comment");
+      } else if (votingAction == "cancel") {
+        numLikesDiff = -1;
+      } else {
+        numDislikesDiff = 1;
+        numLikesDiff = -1;
+      }
+    } else if (existingResponse == "dislike") {
+      if (votingAction == "dislike") {
+        throw httpErrors.badRequest("User already disliked the target comment");
+      } else if (votingAction == "cancel") {
+        numDislikesDiff = -1;
+      } else {
+        numDislikesDiff = -1;
+        numLikesDiff = 1;
+      }
+    } else {
+      // null case meaning user cancelled
+      if (votingAction == "like") {
+        numLikesDiff = 1;
+      } else {
+        numDislikesDiff = 1;
+      }
+    }
+  } else {
+    throw httpErrors.internalServerError("Database relation error");
+  }
 
   try {
     await db.transaction(async (tx) => {
 
-      const voteTableResponse = await tx.insert(voteTable).values({
-        authorId: userId,
-        commentId: commentData.commentId,
-        currentContentId: null,
-      }).returning({ voteTableId: voteTable.id });
+      let voteTableId = 0;
 
-      const voteTableId = voteTableResponse[0].voteTableId;
+      if (existingVoteTableResponse.length == 0) {
+        // There are no votes yet
+        const voteTableResponse = await tx.insert(voteTable).values({
+          authorId: userId,
+          commentId: commentData.commentId,
+          currentContentId: null,
+        }).returning({ voteTableId: voteTable.id });
+        voteTableId = voteTableResponse[0].voteTableId;
+      } else {
+        if (votingAction == "cancel") {
+          await tx.update(voteTable).set({
+            currentContentId: null
+          }).where(eq(voteTable.id, existingVoteTableResponse[0].voteTableId));
+        }
+
+        voteTableId = existingVoteTableResponse[0].voteTableId;
+      }
 
       const voteProofTableResponse = await tx.insert(voteProofTable).values({
-        type: "creation",
+        type: votingAction == "cancel" ? "deletion" : "creation",
         voteId: voteTableId,
         authorDid: didWrite,
         proof: authHeader,
@@ -83,25 +151,24 @@ export async function castVoteForCommentSlugId({
 
       const voteProofTableId = voteProofTableResponse[0].voteProofTableId;
 
-      const voteContentTableResponse = await tx.insert(voteContentTable).values({
-        voteId: voteTableId,
-        voteProofId: voteProofTableId,
-        commentContentId: commentData.contentId,
-        optionChosen: optionChosen
-      }).returning({ voteContentTableId: voteContentTable.id });
+      if (votingAction != "cancel") {
+        const voteContentTableResponse = await tx.insert(voteContentTable).values({
+          voteId: voteTableId,
+          voteProofId: voteProofTableId,
+          commentContentId: commentData.contentId,
+          optionChosen: votingAction == "like" ? "like" : "dislike"
+        }).returning({ voteContentTableId: voteContentTable.id });
 
-      const voteContentTableId = voteContentTableResponse[0].voteContentTableId;
+        const voteContentTableId = voteContentTableResponse[0].voteContentTableId;
 
-      await tx.update(voteTable).set({
-        currentContentId: voteContentTableId,
-      }).where(eq(voteTable.id, voteTableId));
-
-      const numLikesDiff = optionChosen == "like" ? 1 : 0;
-      const numDislikesDiff = optionChosen == "dislike" ? 1 : 0;
+        await tx.update(voteTable).set({
+          currentContentId: voteContentTableId,
+        }).where(eq(voteTable.id, voteTableId));
+      }
 
       await tx.update(commentTable).set({
         numLikes: sql`${commentTable.numLikes} + ${numLikesDiff}`,
-        numDislikes: sql`${commentTable.numDislikes} + ${numDislikesDiff}`
+        numDislikes: sql`${commentTable.numDislikes} + ${numDislikesDiff}`,
       }).where(eq(commentTable.currentContentId, commentData.contentId));
 
     });
@@ -140,7 +207,7 @@ export async function getUserVotesForPostSlugId({
   userResponses.forEach(response => {
     userVoteList.push({
       commentSlugId: response.commentSlugId,
-      chosenOption: response.optionChosen
+      votingAction: response.optionChosen
     })
   });
 
