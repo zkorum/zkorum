@@ -88,15 +88,11 @@ let isExpandingPosts = false;
 const postContainerRef = ref(null);
 const postContainerSize = useElementSize(postContainerRef);
 
-let isMounted = false;
-
 watch(windowScroll.y, async () => {
-  if (isMounted) {
-    if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts) {
-      isExpandingPosts = true;
-      await loadPostData(true);
-      isExpandingPosts = false;
-    }
+  if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts) {
+    isExpandingPosts = true;
+    await loadPostData(true);
+    isExpandingPosts = false;
   }
 });
 
@@ -107,13 +103,11 @@ watch(pageIsVisible, async () => {
 });
 
 watch(targetIsVisible, async () => {
-  if (isMounted) {
-    if (!reachedEndOfPage.value && !isExpandingPosts) {
-      if (targetIsVisible.value) {
-        isExpandingPosts = true;
-        await loadPostData(true);
-        isExpandingPosts = false;
-      }
+  if (!reachedEndOfPage.value && !isExpandingPosts) {
+    if (targetIsVisible.value) {
+      isExpandingPosts = true;
+      await loadPostData(true);
+      isExpandingPosts = false;
     }
   }
 });
@@ -124,7 +118,6 @@ onBeforeUnmount(() => {
 
 onMounted(async () => {
   await loadPostData(false);
-  isMounted = false;
 });
 
 async function newPostCheck() {
