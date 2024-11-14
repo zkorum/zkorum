@@ -126,7 +126,13 @@ async function castPersonalVote(
   }
 
   const response = await castVoteForComment(commentSlugId, targetState);
-  console.log(response);
+  if (response) {
+    if (targetState == "cancel") {
+      props.commentSlugIdLikedMap.delete(commentSlugId);
+    } else {
+      props.commentSlugIdLikedMap.set(commentSlugId, targetState);
+    }
+  }
 }
 </script>
 
