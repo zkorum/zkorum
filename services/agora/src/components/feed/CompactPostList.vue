@@ -62,7 +62,7 @@
 import PostDetails from "../post/PostDetails.vue";
 import { usePostStore } from "src/stores/post";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useDocumentVisibility, useElementSize, useElementVisibility, useWindowScroll } from "@vueuse/core";
 import { useRouter } from "vue-router";
@@ -117,10 +117,6 @@ watch(targetIsVisible, async () => {
 
 onBeforeUnmount(() => {
   lastSavedHomeFeedPosition.value = -document.body.getBoundingClientRect().top;
-});
-
-onMounted(async () => {
-  await loadPostData(false);
 });
 
 async function newPostCheck() {
