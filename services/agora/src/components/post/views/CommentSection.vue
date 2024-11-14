@@ -47,7 +47,6 @@ import CommentSortSelector from "./CommentSortSelector.vue";
 import { useBackendCommentApi } from "src/utils/api/comment";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { storeToRefs } from "pinia";
 import { CommentItem } from "src/shared/types/zod";
 
 const props = defineProps<{
@@ -62,7 +61,7 @@ const commentSortPreference = ref("");
 const { fetchCommentsForPost } = useBackendCommentApi();
 const { fetchUserVotesForPostSlugId } = useBackendVoteApi();
 
-const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+const { isAuthenticated } = useAuthenticationStore();
 
 const commentItems = ref<CommentItem[]>([]);
 
@@ -75,7 +74,7 @@ onMounted(() => {
 });
 
 async function fetchPersonalLikes() {
-  if (isAuthenticated.value) {
+  if (isAuthenticated) {
     commentSlugIdLikedMap.value.clear();
     const response = await fetchUserVotesForPostSlugId(props.postSlugId);
     if (response) {
