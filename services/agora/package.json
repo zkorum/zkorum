@@ -45,6 +45,7 @@
     "swiper": "^11.1.9",
     "tweetnacl": "^1.0.3",
     "uint8arrays": "^5.1.0",
+    "validator": "^13.12.0",
     "vue": "^3.5.12",
     "vue-i18n": "^10.0.4",
     "vue-router": "^4.4.5",
@@ -53,6 +54,7 @@
   "devDependencies": {
     "@quasar/app-vite": "^2.0.0-beta.24",
     "@types/node": "^20.5.9",
+    "@types/validator": "^13.12.2",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "@vitejs/plugin-basic-ssl": "^1.1.0",

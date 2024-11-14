@@ -1,12 +1,12 @@
-import { codeToString, generateOneTimeCode, generateUUID } from "@/crypto.js";
-import { authAttemptTable, deviceTable, emailTable, userTable } from "@/schema.js";
+import { codeToString, generateOneTimeCode, generateUUID, hashWithSalt } from "@/crypto.js";
+import { authAttemptPhoneTable, deviceTable, emailTable, phoneTable, userTable } from "@/schema.js";
 import { nowZeroMs } from "@/shared/common/util.js";
 import type { AuthenticateRequestBody, GetDeviceStatusResp, VerifyOtp200 } from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { eq } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import sesClientModule from "@aws-sdk/client-ses";
-import nodemailer from "nodemailer";
+import { base64 } from "@/shared/common/index.js";
+import type { PhoneCountryCode } from "@/shared/types/zod.js";
 
 interface VerifyOtpProps {
     db: PostgresDatabase;
@@ -19,6 +19,12 @@ interface VerifyOtpProps {
 interface RegisterProps {
     db: PostgresDatabase;
     didWrite: string;
+    lastTwoDigits: string;
+    phoneCountryCode: PhoneCountryCode;
+    phoneHash: string;
+    pepperVersion: number;
+    userAgent: string;
+    userId: string;
     now: Date;
     sessionExpiry: Date;
 }
@@ -33,6 +39,8 @@ interface LoginProps {
 interface LoginNewDeviceProps {
     db: PostgresDatabase;
     didWrite: string;
+    userAgent: string;
+    userId: string;
     now: Date;
     sessionExpiry: Date;
 }
@@ -52,10 +60,10 @@ interface AuthenticateAttemptProps {
     userAgent: string;
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
-    doSendEmail: boolean;
-    awsMailConf: AwsMailConf;
+    doSend: boolean;
     testCode: number;
     doUseTestCode: boolean;
+    peppers: string[];
 }
 
 interface UpdateAuthAttemptCodeProps {
@@ -68,15 +76,10 @@ interface UpdateAuthAttemptCodeProps {
     authenticateRequestBody: AuthenticateRequestBody;
     throttleMinutesInterval: number;
     httpErrors: HttpErrors;
-    doSendEmail: boolean;
-    awsMailConf: AwsMailConf;
+    doSend: boolean;
     testCode: number;
     doUseTestCode: boolean;
-}
-
-export interface AwsMailConf {
-    accessKeyId: string;
-    secretAccessKey: string;
+    peppers: string[];
 }
 
 interface InsertAuthAttemptCodeProps {
@@ -92,15 +95,15 @@ interface InsertAuthAttemptCodeProps {
     httpErrors: HttpErrors;
     testCode: number;
     doUseTestCode: boolean;
-    doSendEmail: boolean;
-    awsMailConf: AwsMailConf;
+    doSend: boolean;
+    peppers: string[];
 }
 
-interface SendOtpEmailProps {
-    email: string;
-    otp: number;
-    awsMailConf: AwsMailConf;
-}
+// interface SendOtpPhoneNumberProps {
+//     phoneNumber: string;
+//     phoneCountryCode: PhoneCountryCode;
+//     otp: number;
+// }
 
 interface AuthenticateOtp {
     codeExpiry: Date;
@@ -161,15 +164,19 @@ export async function verifyOtp({
     await throwIfAlreadyLoggedIn(db, didWrite, httpErrors);
     const resultOtp = await db
         .select({
-            userId: authAttemptTable.userId,
-            email: authAttemptTable.email,
-            authType: authAttemptTable.type,
-            guessAttemptAmount: authAttemptTable.guessAttemptAmount,
-            code: authAttemptTable.code,
-            codeExpiry: authAttemptTable.codeExpiry,
+            userId: authAttemptPhoneTable.userId,
+            lastTwoDigits: authAttemptPhoneTable.lastTwoDigits,
+            phoneCountryCode: authAttemptPhoneTable.phoneCountryCode,
+            phoneHash: authAttemptPhoneTable.phoneHash,
+            pepperVersion: authAttemptPhoneTable.pepperVersion,
+            userAgent: authAttemptPhoneTable.userAgent,
+            authType: authAttemptPhoneTable.type,
+            guessAttemptAmount: authAttemptPhoneTable.guessAttemptAmount,
+            code: authAttemptPhoneTable.code,
+            codeExpiry: authAttemptPhoneTable.codeExpiry,
         })
-        .from(authAttemptTable)
-        .where(eq(authAttemptTable.didWrite, didWrite));
+        .from(authAttemptPhoneTable)
+        .where(eq(authAttemptPhoneTable.didWrite, didWrite));
     if (resultOtp.length === 0) {
         throw httpErrors.badRequest(
             "Device has never made an authentication attempt"
@@ -188,6 +195,12 @@ export async function verifyOtp({
                 await register({
                     db,
                     didWrite,
+                    lastTwoDigits: resultOtp[0].lastTwoDigits,
+                    phoneCountryCode: resultOtp[0].phoneCountryCode,
+                    phoneHash: resultOtp[0].phoneHash,
+                    pepperVersion: resultOtp[0].pepperVersion,
+                    userAgent: resultOtp[0].userAgent,
+                    userId: resultOtp[0].userId,
                     now,
                     sessionExpiry: loginSessionExpiry,
                 });
@@ -214,6 +227,8 @@ export async function verifyOtp({
                 await loginNewDevice({
                     db,
                     didWrite,
+                    userAgent: resultOtp[0].userAgent,
+                    userId: resultOtp[0].userId,
                     now,
                     sessionExpiry: loginSessionExpiry,
                 });
@@ -249,12 +264,12 @@ export async function verifyOtp({
 export async function expireCode(db: PostgresDatabase, didWrite: string) {
     const now = nowZeroMs();
     await db
-        .update(authAttemptTable)
+        .update(authAttemptPhoneTable)
         .set({
             codeExpiry: now,
             updatedAt: now,
         })
-        .where(eq(authAttemptTable.didWrite, didWrite));
+        .where(eq(authAttemptPhoneTable.didWrite, didWrite));
 }
 
 export async function updateCodeGuessAttemptAmount(
@@ -264,55 +279,50 @@ export async function updateCodeGuessAttemptAmount(
 ) {
     const now = nowZeroMs();
     return await db
-        .update(authAttemptTable)
+        .update(authAttemptPhoneTable)
         .set({
             guessAttemptAmount: attemptAmount,
             updatedAt: now,
         })
-        .where(eq(authAttemptTable.didWrite, didWrite));
+        .where(eq(authAttemptPhoneTable.didWrite, didWrite));
 }
 
-// ! WARN we assume the OTP was verified for registering at this point
+// WARN: we assume the OTP was verified for registering at this point
 export async function register({
     db,
     didWrite,
+    lastTwoDigits,
+    phoneCountryCode,
+    phoneHash,
+    pepperVersion,
+    userAgent,
+    userId,
     now,
     sessionExpiry,
 }: RegisterProps): Promise<void> {
     await db.transaction(async (tx) => {
-        const authAttemptResult = await tx
-            .select({
-                email: authAttemptTable.email,
-                userId: authAttemptTable.userId,
-                userAgent: authAttemptTable.userAgent,
-            })
-            .from(authAttemptTable)
-            .where(eq(authAttemptTable.didWrite, didWrite));
-        if (authAttemptResult.length === 0) {
-            throw new Error(
-                "No register attempt was initiated - cannot register the user"
-            );
-        }
         await tx
-            .update(authAttemptTable)
+            .update(authAttemptPhoneTable)
             .set({
                 codeExpiry: now, // this is important to forbid further usage of the same code once it has been successfully guessed
                 updatedAt: now,
             })
-            .where(eq(authAttemptTable.didWrite, didWrite));
+            .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(userTable).values({
-            id: authAttemptResult[0].userId,
+            id: userId,
         });
         await tx.insert(deviceTable).values({
-            userId: authAttemptResult[0].userId,
+            userId: userId,
             didWrite: didWrite,
-            userAgent: authAttemptResult[0].userAgent,
+            userAgent: userAgent,
             sessionExpiry: sessionExpiry,
         });
-        await tx.insert(emailTable).values({
-            userId: authAttemptResult[0].userId,
-            type: "primary",
-            email: authAttemptResult[0].email,
+        await tx.insert(phoneTable).values({
+            userId: userId,
+            lastTwoDigits: lastTwoDigits,
+            phoneCountryCode: phoneCountryCode,
+            pepperVersion: pepperVersion,
+            phoneHash: phoneHash,
         });
     });
 }
@@ -321,33 +331,23 @@ export async function register({
 export async function loginNewDevice({
     db,
     didWrite,
+    userId,
+    userAgent,
     now,
     sessionExpiry,
 }: LoginNewDeviceProps) {
     await db.transaction(async (tx) => {
-        const authAttemptResult = await tx
-            .select({
-                userId: authAttemptTable.userId,
-                userAgent: authAttemptTable.userAgent,
-            })
-            .from(authAttemptTable)
-            .where(eq(authAttemptTable.didWrite, didWrite));
-        if (authAttemptResult.length === 0) {
-            throw new Error(
-                "No loginNewDevice attempt was initiated - cannot login the user"
-            );
-        }
         await tx
-            .update(authAttemptTable)
+            .update(authAttemptPhoneTable)
             .set({
                 codeExpiry: now, // this is important to forbid further usage of the same code once it has been successfully guessed
                 updatedAt: now,
             })
-            .where(eq(authAttemptTable.didWrite, didWrite));
+            .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(deviceTable).values({
-            userId: authAttemptResult[0].userId,
+            userId: userId,
             didWrite: didWrite,
-            userAgent: authAttemptResult[0].userAgent,
+            userAgent: userAgent,
             sessionExpiry: sessionExpiry,
         });
     });
@@ -357,12 +357,12 @@ export async function loginNewDevice({
 export async function loginKnownDevice({ db, didWrite, now, sessionExpiry }: LoginProps) {
     await db.transaction(async (tx) => {
         await tx
-            .update(authAttemptTable)
+            .update(authAttemptPhoneTable)
             .set({
                 codeExpiry: now, // this is important to forbid further usage of the same code once it has been successfully guessed
                 updatedAt: now,
             })
-            .where(eq(authAttemptTable.didWrite, didWrite));
+            .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx
             .update(deviceTable)
             .set({
@@ -413,20 +413,24 @@ export async function isDidWriteAvailable(
 
 export async function getOrGenerateUserId(
     db: PostgresDatabase,
-    email: string
+    phoneNumber: string,
+    peppers: string[],
 ): Promise<string> {
+    const pepper = base64.base64Decode(peppers[0]); // for now we only support one unique app-wide pepper - we'll see when rotating
+    const calculatedPhoneHash = await hashWithSalt({ value: phoneNumber, salt: pepper })
+    const expectedPhoneHash = base64.base64Encode(calculatedPhoneHash);
     const result = await db
         .select({ userId: userTable.id })
         .from(userTable)
-        .leftJoin(emailTable, eq(emailTable.userId, userTable.id))
-        .where(eq(emailTable.email, email));
+        .leftJoin(phoneTable, eq(phoneTable.userId, userTable.id))
+        .where(eq(phoneTable.phoneHash, expectedPhoneHash));
     if (result.length === 0) {
-        // The email is not associated with any existing user
+        // The phone number is not associated with any existing user
         // But maybe it was already used to attempt a register
         const resultAttempt = await db
-            .select({ userId: authAttemptTable.userId })
-            .from(authAttemptTable)
-            .where(eq(authAttemptTable.email, email));
+            .select({ userId: authAttemptPhoneTable.userId })
+            .from(authAttemptPhoneTable)
+            .where(eq(authAttemptPhoneTable.phoneHash, expectedPhoneHash));
         if (resultAttempt.length === 0) {
             // this email has never been used to attempt a register
             return generateUUID();
@@ -443,11 +447,12 @@ export async function getAuthenticateType(
     db: PostgresDatabase,
     authenticateBody: AuthenticateRequestBody,
     didWrite: string,
+    peppers: string[],
     httpErrors: HttpErrors
 ): Promise<AuthTypeAndUserId> {
     const isEmailAvailableVal = await isEmailAvailable(
         db,
-        authenticateBody.email
+        authenticateBody.phoneNumber
     );
     const isDidWriteAvailableVal = await isDidWriteAvailable(
         db,
@@ -455,7 +460,8 @@ export async function getAuthenticateType(
     );
     const userId = await getOrGenerateUserId(
         db,
-        authenticateBody.email
+        authenticateBody.phoneNumber,
+        peppers
     );
     if (isEmailAvailableVal && isDidWriteAvailableVal) {
         return { type: AuthenticateType.REGISTER, userId: userId };
@@ -491,17 +497,17 @@ export async function authenticateAttempt({
     httpErrors,
     testCode,
     doUseTestCode,
-    doSendEmail,
-    awsMailConf,
+    doSend,
+    peppers,
 }: AuthenticateAttemptProps): Promise<AuthenticateOtp> {
     const now = nowZeroMs();
     const resultHasAttempted = await db
         .select({
-            codeExpiry: authAttemptTable.codeExpiry,
-            lastEmailSentAt: authAttemptTable.lastEmailSentAt,
+            codeExpiry: authAttemptPhoneTable.codeExpiry,
+            lastOtpSentAt: authAttemptPhoneTable.lastOtpSentAt,
         })
-        .from(authAttemptTable)
-        .where(eq(authAttemptTable.didWrite, didWrite));
+        .from(authAttemptPhoneTable)
+        .where(eq(authAttemptPhoneTable.didWrite, didWrite));
     if (resultHasAttempted.length === 0) {
         // this is a first attempt, generate new code, insert data and send email in one transaction
         return await insertAuthAttemptCode({
@@ -515,10 +521,10 @@ export async function authenticateAttempt({
             authenticateRequestBody,
             throttleMinutesInterval,
             httpErrors,
-            doSendEmail,
-            awsMailConf,
+            doSend,
             doUseTestCode,
             testCode,
+            peppers,
         });
     } else if (authenticateRequestBody.isRequestingNewCode) {
         // if user wants to regenerate new code, do it (if possible according to throttling rules)
@@ -532,14 +538,14 @@ export async function authenticateAttempt({
             authenticateRequestBody,
             throttleMinutesInterval,
             httpErrors,
-            doSendEmail,
-            awsMailConf,
+            doSend,
             doUseTestCode,
             testCode,
+            peppers,
         });
     } else if (resultHasAttempted[0].codeExpiry > now) {
         // code hasn't expired
-        const nextCodeSoonestTime = resultHasAttempted[0].lastEmailSentAt;
+        const nextCodeSoonestTime = resultHasAttempted[0].lastOtpSentAt;
         nextCodeSoonestTime.setMinutes(
             nextCodeSoonestTime.getMinutes() + throttleMinutesInterval
         );
@@ -559,47 +565,18 @@ export async function authenticateAttempt({
             authenticateRequestBody,
             throttleMinutesInterval,
             httpErrors,
-            doSendEmail,
-            awsMailConf,
+            doSend,
             doUseTestCode,
             testCode,
+            peppers,
         });
     }
 }
 
-export async function sendOtpEmail({ email, otp, awsMailConf }: SendOtpEmailProps) {
-    // TODO: verify if email does exist and is reachable to avoid bounce. Use: https://github.com/reacherhq/check-if-email-exists
-
-    const ses = new sesClientModule.SESClient({
-        region: "eu-north-1",
-        credentials: {
-            accessKeyId: awsMailConf.accessKeyId,
-            secretAccessKey: awsMailConf.secretAccessKey,
-        },
-    });
-    const transporter = nodemailer.createTransport({
-        SES: { ses, aws: sesClientModule },
-    });
-
-    return new Promise((resolve, reject) => {
-        transporter.sendMail(
-            {
-                from: "noreply@notify.zkorum.com", // TODO: make this configurable
-                to: email,
-                subject: `ZKorum confirmation code: ${codeToString(otp)}`, // TODO make this configurable
-                text: `Your confirmation code is ${codeToString(otp)}
-                    \n\nEnter it shortly in the same browser/device that you used for your authentication request.\n\nIf you didn’t request this email, there’s nothing to worry about — you can safely ignore it.`, // TODO: use a beaauautiful HTML template
-            },
-            (err, info) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(info);
-                }
-            }
-        );
-    });
-}
+// export async function sendOtpPhoneNumber({ phoneNumber, phoneCountryCode, otp, awsMailConf }: SendOtpPhoneNumberProps) {
+//     // TODO: verify phone number validity with Twilio 
+//     return
+// }
 
 export async function insertAuthAttemptCode({
     db,
@@ -614,17 +591,21 @@ export async function insertAuthAttemptCode({
     httpErrors,
     testCode,
     doUseTestCode,
-    doSendEmail,
-    awsMailConf,
+    doSend,
+    peppers,
 }: InsertAuthAttemptCodeProps): Promise<AuthenticateOtp> {
-    if (doUseTestCode && doSendEmail) {
+    if (doUseTestCode && doSend) {
         throw httpErrors.badRequest(
-            "Test code shall not be sent via email"
+            "Test code shall not be sent via sms"
         );
     }
-    await throttleByEmail(
+    const pepperVersion = 0
+    const pepper = base64.base64Decode(peppers[pepperVersion]); // we don't rotate peppers yet
+    const hash = await hashWithSalt({ value: authenticateRequestBody.phoneNumber, salt: pepper })
+    const phoneHash = base64.base64Encode(hash)
+    await throttleByPhoneHash(
         db,
-        authenticateRequestBody.email,
+        phoneHash,
         throttleMinutesInterval,
         minutesBeforeCodeExpiry,
         httpErrors
@@ -634,13 +615,14 @@ export async function insertAuthAttemptCode({
     codeExpiry.setMinutes(
         codeExpiry.getMinutes() + minutesBeforeCodeExpiry
     );
-    if (doSendEmail) {
+    if (doSend) {
         // may throw errors and return 500 :)
-        await sendOtpEmail({
-            email: authenticateRequestBody.email,
-            otp: oneTimeCode,
-            awsMailConf,
-        });
+        // await sendOtpPhoneNumber({
+        //     phoneNumber: authenticateRequestBody.phoneNumber,
+        //     phoneCountryCode: authenticateRequestBody.phoneCountryCode,
+        //     otp: oneTimeCode,
+        //     awsMailConf,
+        // });
     } else {
         console.log(
             "\n\nCode:",
@@ -649,15 +631,20 @@ export async function insertAuthAttemptCode({
             "\n\n"
         );
     }
-    await db.insert(authAttemptTable).values({
+    const lastTwoDigits = authenticateRequestBody.phoneNumber.slice(-2);
+    const phoneCountryCode = authenticateRequestBody.phoneCountryCode;
+    await db.insert(authAttemptPhoneTable).values({
         didWrite: didWrite,
         type: type,
-        email: authenticateRequestBody.email,
+        lastTwoDigits: lastTwoDigits,
+        phoneCountryCode: phoneCountryCode,
+        phoneHash: phoneHash,
+        pepperVersion: pepperVersion,
         userId: userId,
         userAgent: userAgent,
         code: oneTimeCode,
         codeExpiry: codeExpiry,
-        lastEmailSentAt: now,
+        lastOtpSentAt: now,
     });
     const nextCodeSoonestTime = new Date(now);
     nextCodeSoonestTime.setMinutes(
@@ -679,19 +666,23 @@ export async function updateAuthAttemptCode({
     authenticateRequestBody,
     throttleMinutesInterval,
     httpErrors,
-    doSendEmail,
-    awsMailConf,
+    doSend,
     doUseTestCode,
     testCode,
+    peppers
 }: UpdateAuthAttemptCodeProps): Promise<AuthenticateOtp> {
-    if (doUseTestCode && doSendEmail) {
+    if (doUseTestCode && doSend) {
         throw httpErrors.badRequest(
-            "Test code shall not be sent via email"
+            "Test code shall not be sent via sms"
         );
     }
-    await throttleByEmail(
+    const pepperVersion = 0
+    const pepper = base64.base64Decode(peppers[pepperVersion]); // we don't rotate peppers yet
+    const hash = await hashWithSalt({ value: authenticateRequestBody.phoneNumber, salt: pepper })
+    const phoneHash = base64.base64Encode(hash)
+    await throttleByPhoneHash(
         db,
-        authenticateRequestBody.email,
+        phoneHash,
         throttleMinutesInterval,
         minutesBeforeCodeExpiry,
         httpErrors
@@ -701,12 +692,13 @@ export async function updateAuthAttemptCode({
     codeExpiry.setMinutes(
         codeExpiry.getMinutes() + minutesBeforeCodeExpiry
     );
-    if (doSendEmail) {
-        await sendOtpEmail({
-            email: authenticateRequestBody.email,
-            otp: oneTimeCode,
-            awsMailConf,
-        });
+    if (doSend) {
+        // await sendOtpPhoneNumber({
+        //     phoneNumber: authenticateRequestBody.phoneNumber,
+        //     phoneCountryCode: authenticateRequestBody.phoneCountryCode,
+        //     otp: oneTimeCode,
+        //     awsMailConf,
+        // });
     } else {
         console.log(
             "\n\nCode:",
@@ -715,19 +707,24 @@ export async function updateAuthAttemptCode({
             "\n\n"
         );
     }
+    const lastTwoDigits = authenticateRequestBody.phoneNumber.slice(-2);
+    const phoneCountryCode = authenticateRequestBody.phoneCountryCode;
     await db
-        .update(authAttemptTable)
+        .update(authAttemptPhoneTable)
         .set({
             userId: userId,
-            email: authenticateRequestBody.email,
             type: type,
+            lastTwoDigits: lastTwoDigits,
+            phoneCountryCode: phoneCountryCode,
+            phoneHash: phoneHash,
+            pepperVersion: pepperVersion,
             code: oneTimeCode,
             codeExpiry: codeExpiry,
             guessAttemptAmount: 0,
-            lastEmailSentAt: now,
+            lastOtpSentAt: now,
             updatedAt: now,
         })
-        .where(eq(authAttemptTable.didWrite, didWrite));
+        .where(eq(authAttemptPhoneTable.didWrite, didWrite));
     const nextCodeSoonestTime = new Date(now);
     nextCodeSoonestTime.setMinutes(
         nextCodeSoonestTime.getMinutes() + throttleMinutesInterval
@@ -738,10 +735,10 @@ export async function updateAuthAttemptCode({
     };
 }
 
-// minutesInterval: "3" in "we allow one email every 3 minutes"
-export async function throttleByEmail(
+// minutesInterval: "3" in "we allow one sms every 3 minutes"
+export async function throttleByPhoneHash(
     db: PostgresDatabase,
-    email: string,
+    phoneHash: string,
     minutesInterval: number,
     minutesBeforeCodeExpiry: number,
     httpErrors: HttpErrors
@@ -755,23 +752,23 @@ export async function throttleByEmail(
 
     const results = await db
         .select({
-            lastEmailSentAt: authAttemptTable.lastEmailSentAt,
-            codeExpiry: authAttemptTable.codeExpiry,
+            lastOtpSentAt: authAttemptPhoneTable.lastOtpSentAt,
+            codeExpiry: authAttemptPhoneTable.codeExpiry,
         })
-        .from(authAttemptTable)
-        .where(eq(authAttemptTable.email, email));
+        .from(authAttemptPhoneTable)
+        .where(eq(authAttemptPhoneTable.phoneHash, phoneHash));
     for (const result of results) {
-        const expectedExpiryTime = new Date(result.lastEmailSentAt);
+        const expectedExpiryTime = new Date(result.lastOtpSentAt);
         expectedExpiryTime.setMinutes(
             expectedExpiryTime.getMinutes() + minutesBeforeCodeExpiry
         );
         if (
-            result.lastEmailSentAt.getTime() >=
+            result.lastOtpSentAt.getTime() >=
             minutesIntervalAgo.getTime() &&
             expectedExpiryTime.getTime() === result.codeExpiry.getTime() // code hasn't been guessed, because otherwise it would have been manually expired before the normal expiry time
         ) {
             throw httpErrors.tooManyRequests(
-                "Throttling amount of emails sent"
+                "Throttling amount of sms sent"
             );
         }
     }

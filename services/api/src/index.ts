@@ -52,12 +52,12 @@ server.register(fastifyCors, {
 server.setValidatorCompiler(validatorCompiler);
 server.setSerializerCompiler(serializerCompiler);
 
-const speciallyAuthorizedEmails: string[] =
+const speciallyAuthorizedPhones: string[] =
     config.NODE_ENV === "production"
         ? []
-        : config.SPECIALLY_AUTHORIZED_EMAILS !== undefined &&
-            config.SPECIALLY_AUTHORIZED_EMAILS.length !== 0
-            ? config.SPECIALLY_AUTHORIZED_EMAILS.replace(/\s/g, "").split(",")
+        : config.SPECIALLY_AUTHORIZED_PHONES !== undefined &&
+            config.SPECIALLY_AUTHORIZED_PHONES.length !== 0
+            ? config.SPECIALLY_AUTHORIZED_PHONES.replace(/\s/g, "").split(",")
             : [];
 
 server.register(fastifySwagger, {
@@ -240,10 +240,10 @@ async function verifyUCAN(
 
 const apiVersion = "v1";
 
-const awsMailConf = {
-    accessKeyId: config.AWS_ACCESS_KEY_ID,
-    secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
-};
+// const awsMailConf = {
+//     accessKeyId: config.AWS_ACCESS_KEY_ID,
+//     secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
+// };
 
 server.after(() => {
 
@@ -278,10 +278,7 @@ server.after(() => {
                 // This endpoint is accessible without being logged in
                 // this endpoint could be especially subject to attacks such as DDoS or man-in-the-middle (to associate their own DID instead of the legitimate user's ones for example)
                 // => TODO: restrict this endpoint and the "verifyOtp" endpoint to use same IP Address: the correct IP Address must part of the UCAN
-                // => TODO: allow email owners to report spam/attacks and to request blocking the IP Addresses that attempted access
-                // The web infrastructure is as it is and IP Addresses are the backbone over which our HTTP endpoints function, we can avoid storing/logging IP Addresses as much as possible, but we can't fix it magically
-                // As a social network (hopefully) subject to heavy traffic, the whole app will need to be protected via a privacy-preserving alternative to CAPTCHA anyway, such as Turnstile: https://developers.cloudflare.com/turnstile/
-                // => TODO: encourage users to use a mixnet such as Tor to preserve their privacy.
+                // => TODO: allow phone number owners to report spam/attacks and to request blocking the IP Addresses that attempted access
                 const didWrite = await verifyUCAN(db, request, {
                     expectedDeviceStatus: undefined,
                 });
@@ -289,6 +286,7 @@ server.after(() => {
                     db,
                     request.body,
                     didWrite,
+                    config.PEPPERS,
                     server.httpErrors
                 );
                 const userAgent =
@@ -297,10 +295,10 @@ server.after(() => {
                 return await authService.authenticateAttempt({
                     db,
                     type,
-                    doSendEmail: config.NODE_ENV === "production",
+                    doSend: config.NODE_ENV === "production",
                     doUseTestCode:
                         config.NODE_ENV !== "production" &&
-                        speciallyAuthorizedEmails.includes(request.body.email),
+                        speciallyAuthorizedPhones.includes(request.body.phoneNumber),
                     testCode: config.TEST_CODE,
                     authenticateRequestBody: request.body,
                     userId,
@@ -310,8 +308,9 @@ server.after(() => {
                     throttleMinutesInterval:
                         config.THROTTLE_EMAIL_MINUTES_INTERVAL,
                     httpErrors: server.httpErrors,
-                    awsMailConf: awsMailConf,
+                    // awsMailConf: awsMailConf,
                     userAgent: userAgent,
+                    peppers: config.PEPPERS
                 }).then(({ codeExpiry, nextCodeSoonestTime }) => {
                     // backend intentionally does NOT send whether it is a register or a login, and does not send the address the email is sent to - in order to protect privacy and give no information to potential attackers
                     return {

@@ -1,7 +1,6 @@
 /** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/
 import { z } from "zod";
 import {
-    zodEmail,
     zodExtendedPostData,
     zodCode,
     zodUserId,
@@ -12,6 +11,8 @@ import {
     zodPostBody,
     zodVotingOption,
     zodVotingAction,
+    zodPhoneNumber,
+    zodPhoneCountryCode,
 } from "./zod.js";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -22,7 +23,8 @@ export class Dto {
         .strict();
     static authenticateRequestBody = z
         .object({
-            email: zodEmail,
+            phoneNumber: zodPhoneNumber,
+            phoneCountryCode: zodPhoneCountryCode,
             isRequestingNewCode: z.boolean(),
         })
         .strict();

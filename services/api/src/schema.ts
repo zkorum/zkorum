@@ -40,6 +40,7 @@ export const countryCodeEnum = pgEnum("country_code", ["AND", "ARE", "AFG", "ATG
 export const ageGroupEnum = pgEnum("age_group", ["8-15", "16-24", "25-34", "35-44", "45-54", "55-64", "65+"]);
 export const sexEnum = pgEnum("sex", ["F", "M", "X"]);
 
+// WARNING: CHANGE THIS AT THE SAME TIME AS ZOD ENUM IN SHARED/ZOD.TS
 export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
     "376", "971", "93", "1268", "1264", "355", "374", "244", "672", "54", "1684", "43", "297", "358", "994", "387", "1246",
     "880", "32", "226", "359", "973", "257", "229", "590", "1441", "673", "591", "5997", "55", "1242", "975", "47", "267", "375",
@@ -131,8 +132,8 @@ export const phoneTable = pgTable("phone", {
         .notNull(),
     lastTwoDigits: varchar("last_two_digits", { length: 2 }).notNull(), // add check for it to be numbers?
     phoneCountryCode: phoneCountryCodeEnum("phone_country_code").notNull(),
-    hashedPhone: text("hashed_phone").notNull(), // base64 encoded hash of phone + salt
-    salt: text("salt").notNull(), // base64 encoded salt, might change the type
+    pepperVersion: integer("pepper_version").notNull().default(0), // used pepper version - we rotate app-wide pepper one in a while
+    phoneHash: text("phone_hash").notNull(), // base64 encoded hash of phone + pepper
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -246,16 +247,19 @@ export const authType = pgEnum("auth_type", [
 // This table serves as a transitory store of information between the intial register attempt and the validation of the one-time code sent to the email address (no multi-factor because it is register)
 // the record will be first created as "register" or "login_new_device", and latter updated to "login_known_device" on next authenticate action
 // TODO: this table may have to be broke down when introducing 2FA
-export const authAttemptTable = pgTable("auth_attempt", {
+export const authAttemptPhoneTable = pgTable("auth_attempt_phone", {
     didWrite: varchar("did_write", { length: 1000 }).primaryKey(), // TODO: make sure of length
     type: authType("type").notNull(),
-    email: varchar("email", { length: 254 }).notNull(),
+    lastTwoDigits: varchar("last_two_digits", { length: 2 }).notNull(), // add check for it to be numbers?
+    phoneCountryCode: phoneCountryCodeEnum("phone_country_code").notNull(),
+    phoneHash: text("phone_hash").notNull(), // base64 encoded hash of phone + pepper
+    pepperVersion: integer("pepper_version").notNull().default(0), // used pepper - we rotate app-wide pepper once in a while
     userId: uuid("user_id").notNull(),
     userAgent: text("user_agent").notNull(), // user-agent length is not fixed
     code: integer("code").notNull(), // one-time password sent to the email ("otp")
     codeExpiry: timestamp("code_expiry").notNull(),
     guessAttemptAmount: integer("guess_attempt_amount").default(0).notNull(),
-    lastEmailSentAt: timestamp("last_email_sent_at").notNull(),
+    lastOtpSentAt: timestamp("last_otp_sent_at").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,

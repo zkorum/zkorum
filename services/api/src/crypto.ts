@@ -1,4 +1,5 @@
 import { log } from "./app.js";
+import { stringToBytes } from "./shared/common/arrbufs.js";
 import { base64 } from "./shared/common/index.js";
 
 // see https://nodejs.org/api/crypto.html for reasons behind dynamic ESM import
@@ -40,3 +41,31 @@ export function codeToString(code: number): string {
 export function generateUUID() {
     return crypto.webcrypto.randomUUID();
 }
+
+export function generateSalt(length = 16): Uint8Array {
+    const salt = new Uint8Array(length);
+    crypto.webcrypto.getRandomValues(salt);
+    return salt;
+}
+
+interface HashWithSaltProps {
+    value: string;
+    salt: Uint8Array
+}
+
+export async function hashWithSalt({value, salt}: HashWithSaltProps): Promise<Uint8Array> {
+    // Encode the value as a Uint8Array
+    const valueBytes = stringToBytes(value)
+
+    // Concatenate salt and value into a single Uint8Array
+    const saltedValue = new Uint8Array(salt.length + valueBytes.length);
+    saltedValue.set(salt);
+    saltedValue.set(valueBytes, salt.length);
+
+    // Hash the combined salt + value
+    const hashBuffer = await crypto.subtle.digest('SHA-256', saltedValue);
+    const hash = new Uint8Array(hashBuffer)
+
+    return hash;
+}
+
