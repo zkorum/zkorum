@@ -33,6 +33,8 @@ import { useWebShare } from "src/utils/share/WebShare";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { computed, ref } from "vue";
 import { CommentItem, VotingAction } from "src/shared/types/zod";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { useDialog } from "src/utils/ui/dialog";
 
 const props = defineProps<{
   commentItem: CommentItem;
@@ -45,7 +47,10 @@ const bottomSheet = useBottomSheet();
 
 const webShare = useWebShare();
 
+const { showLoginConfirmationDialog } = useDialog();
+
 const { castVoteForComment } = useBackendVoteApi();
+const { isAuthenticated } = useAuthenticationStore();
 
 const numLikesLocal = ref(props.commentItem.numLikes);
 const numDislikesLocal = ref(props.commentItem.numDislikes);
@@ -108,52 +113,58 @@ async function castPersonalVote(
   commentSlugId: string,
   isUpvoteButton: boolean
 ) {
-  let targetState: VotingAction = "cancel";
-  const currentSelection = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
-  if (currentSelection == undefined) {
-    targetState = isUpvoteButton ? "like" : "dislike";
+  if (!isAuthenticated) {
+    showLoginConfirmationDialog();
   } else {
-    if (currentSelection == "like") {
-      if (isUpvoteButton) {
-        targetState = "cancel";
-      } else {
-        targetState = "dislike";
-      }
+
+    let targetState: VotingAction = "cancel";
+    const currentSelection = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+    if (currentSelection == undefined) {
+      targetState = isUpvoteButton ? "like" : "dislike";
     } else {
-      if (isUpvoteButton) {
-        targetState = "like";
+      if (currentSelection == "like") {
+        if (isUpvoteButton) {
+          targetState = "cancel";
+        } else {
+          targetState = "dislike";
+        }
       } else {
-        targetState = "cancel";
+        if (isUpvoteButton) {
+          targetState = "like";
+        } else {
+          targetState = "cancel";
+        }
       }
     }
-  }
 
-  const response = await castVoteForComment(commentSlugId, targetState);
-  if (response) {
-    if (targetState == "cancel") {
-      props.commentSlugIdLikedMap.delete(commentSlugId);
-      if (currentSelection == "like") {
-        numLikesLocal.value = numLikesLocal.value - 1;
-      } else {
-        numDislikesLocal.value = numDislikesLocal.value - 1;
-      }
-    } else {
-      if (targetState == "like") {
-        props.commentSlugIdLikedMap.set(commentSlugId, "like");
-        numLikesLocal.value = numLikesLocal.value + 1;
-        if (currentSelection == "dislike") {
+    const response = await castVoteForComment(commentSlugId, targetState);
+    if (response) {
+      if (targetState == "cancel") {
+        props.commentSlugIdLikedMap.delete(commentSlugId);
+        if (currentSelection == "like") {
+          numLikesLocal.value = numLikesLocal.value - 1;
+        } else {
           numDislikesLocal.value = numDislikesLocal.value - 1;
         }
       } else {
-        props.commentSlugIdLikedMap.set(commentSlugId, "dislike");
-        numDislikesLocal.value = numDislikesLocal.value + 1;
-        if (currentSelection == "like") {
-          numLikesLocal.value = numLikesLocal.value - 1;
+        if (targetState == "like") {
+          props.commentSlugIdLikedMap.set(commentSlugId, "like");
+          numLikesLocal.value = numLikesLocal.value + 1;
+          if (currentSelection == "dislike") {
+            numDislikesLocal.value = numDislikesLocal.value - 1;
+          }
+        } else {
+          props.commentSlugIdLikedMap.set(commentSlugId, "dislike");
+          numDislikesLocal.value = numDislikesLocal.value + 1;
+          if (currentSelection == "like") {
+            numLikesLocal.value = numLikesLocal.value - 1;
+          }
         }
       }
     }
   }
 }
+
 </script>
 
 <style scoped lang="scss">
