@@ -189,7 +189,7 @@ interface GetUserVotesForPostSlugIdProps {
 }
 
 export async function getUserVotesForPostSlugId({
-  db, postSlugId }: GetUserVotesForPostSlugIdProps): Promise<FetchUserVotesForPostSlugIdResponseResponse> {
+  db, postSlugId, userId }: GetUserVotesForPostSlugIdProps): Promise<FetchUserVotesForPostSlugIdResponseResponse> {
 
   const userResponses = await db
     .select({
@@ -200,7 +200,7 @@ export async function getUserVotesForPostSlugId({
     .innerJoin(voteContentTable, eq(voteContentTable.id, voteTable.currentContentId))
     .innerJoin(commentTable, eq(commentTable.id, voteTable.commentId))
     .innerJoin(postTable, eq(commentTable.postId, postTable.id))
-    .where(eq(postTable.slugId, postSlugId));
+    .where(and(eq(postTable.slugId, postSlugId), eq(voteTable.authorId, userId)));
 
   const userVoteList: FetchUserVotesForPostSlugIdResponseResponse = [];
 
