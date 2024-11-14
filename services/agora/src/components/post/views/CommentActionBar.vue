@@ -117,12 +117,15 @@ async function castPersonalVote(
     showLoginConfirmationDialog();
   } else {
 
+    const numLikesBackup = numLikesLocal.value;
+    const numDislikesBackup = numDislikesLocal.value;
+
     let targetState: VotingAction = "cancel";
-    const currentSelection = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
-    if (currentSelection == undefined) {
+    const originalSelection = props.commentSlugIdLikedMap.get(commentSlugId);
+    if (originalSelection == undefined) {
       targetState = isUpvoteButton ? "like" : "dislike";
     } else {
-      if (currentSelection == "like") {
+      if (originalSelection == "like") {
         if (isUpvoteButton) {
           targetState = "cancel";
         } else {
@@ -137,30 +140,40 @@ async function castPersonalVote(
       }
     }
 
-    const response = await castVoteForComment(commentSlugId, targetState);
-    if (response) {
-      if (targetState == "cancel") {
-        props.commentSlugIdLikedMap.delete(commentSlugId);
-        if (currentSelection == "like") {
-          numLikesLocal.value = numLikesLocal.value - 1;
-        } else {
+    if (targetState == "cancel") {
+      props.commentSlugIdLikedMap.delete(commentSlugId);
+      if (originalSelection == "like") {
+        numLikesLocal.value = numLikesLocal.value - 1;
+      } else {
+        numDislikesLocal.value = numDislikesLocal.value - 1;
+      }
+    } else {
+      if (targetState == "like") {
+        props.commentSlugIdLikedMap.set(commentSlugId, "like");
+        numLikesLocal.value = numLikesLocal.value + 1;
+        if (originalSelection == "dislike") {
           numDislikesLocal.value = numDislikesLocal.value - 1;
         }
       } else {
-        if (targetState == "like") {
-          props.commentSlugIdLikedMap.set(commentSlugId, "like");
-          numLikesLocal.value = numLikesLocal.value + 1;
-          if (currentSelection == "dislike") {
-            numDislikesLocal.value = numDislikesLocal.value - 1;
-          }
-        } else {
-          props.commentSlugIdLikedMap.set(commentSlugId, "dislike");
-          numDislikesLocal.value = numDislikesLocal.value + 1;
-          if (currentSelection == "like") {
-            numLikesLocal.value = numLikesLocal.value - 1;
-          }
+        props.commentSlugIdLikedMap.set(commentSlugId, "dislike");
+        numDislikesLocal.value = numDislikesLocal.value + 1;
+        if (originalSelection == "like") {
+          numLikesLocal.value = numLikesLocal.value - 1;
         }
       }
+    }
+
+    const response = await castVoteForComment(commentSlugId, targetState);
+    if (!response) {
+      // Revert
+      if (originalSelection == undefined) {
+        props.commentSlugIdLikedMap.delete(commentSlugId);
+      } else {
+        props.commentSlugIdLikedMap.set(commentSlugId, originalSelection);
+      }
+
+      numLikesLocal.value = numLikesBackup;
+      numDislikesLocal.value = numDislikesBackup;
     }
   }
 }
