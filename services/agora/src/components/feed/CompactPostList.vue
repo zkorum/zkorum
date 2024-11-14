@@ -89,21 +89,24 @@ const postContainerRef = ref(null);
 const postContainerSize = useElementSize(postContainerRef);
 
 watch(windowScroll.y, async () => {
-  if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts) {
+  if (windowScroll.y.value > (postContainerSize.height.value - 1000) && !isExpandingPosts && !endOfFeed.value) {
     isExpandingPosts = true;
     await loadPostData(true);
-    isExpandingPosts = false;
+    setTimeout(
+      function () {
+        isExpandingPosts = false;
+      }, 500);
   }
 });
 
 watch(pageIsVisible, async () => {
-  if (pageIsVisible.value) {
+  if (pageIsVisible.value && !endOfFeed.value) {
     await newPostCheck();
   }
 });
 
 watch(targetIsVisible, async () => {
-  if (!reachedEndOfPage.value && !isExpandingPosts) {
+  if (!reachedEndOfPage.value && !isExpandingPosts && !endOfFeed.value) {
     if (targetIsVisible.value) {
       isExpandingPosts = true;
       await loadPostData(true);
