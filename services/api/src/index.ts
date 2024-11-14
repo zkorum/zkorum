@@ -542,7 +542,7 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
-            url: `/api/${apiVersion}/comment/fetch`,
+            url: `/api/${apiVersion}/comment/fetch-comments-by-post-slugId`,
             schema: {
                 body: Dto.fetchCommentFeedRequest,
                 response: {
@@ -801,7 +801,7 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
-            url: `/api/${apiVersion}/post/fetch`,
+            url: `/api/${apiVersion}/post/fetch-post-by-slug-id`,
             schema: {
                 body: Dto.fetchPostBySlugIdRequest,
                 response: {

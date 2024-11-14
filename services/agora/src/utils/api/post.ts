@@ -4,7 +4,7 @@ import {
   ApiV1FeedFetchRecentPost200ResponseInner,
   ApiV1FeedFetchRecentPostRequest,
   ApiV1PostCreatePostRequest,
-  ApiV1PostFetchPostRequest,
+  ApiV1PostFetchPostBySlugIdPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
@@ -88,14 +88,14 @@ export function useBackendPostApi() {
 
   async function fetchPostBySlugId(postSlugId: string, loadUserPollResponse: boolean) {
     try {
-      const params: ApiV1PostFetchPostRequest = {
+      const params: ApiV1PostFetchPostBySlugIdPostRequest = {
         postSlugId: postSlugId,
       };
       const response = await DefaultApiFactory(
         undefined,
         undefined,
         api
-      ).apiV1PostFetchPost(params, {});
+      ).apiV1PostFetchPostBySlugIdPost(params, {});
       return await createInternalPostData(response.data.postData, loadUserPollResponse);
     } catch (error) {
       console.error(error);

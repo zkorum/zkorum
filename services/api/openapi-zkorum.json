@@ -631,7 +631,7 @@
                 }
             }
         },
-        "/api/v1/comment/fetch": {
+        "/api/v1/comment/fetch-comments-by-post-slugId": {
             "post": {
                 "requestBody": {
                     "content": {
@@ -861,7 +861,7 @@
                 }
             }
         },
-        "/api/v1/post/fetch": {
+        "/api/v1/post/fetch-post-by-slug-id": {
             "post": {
                 "requestBody": {
                     "content": {

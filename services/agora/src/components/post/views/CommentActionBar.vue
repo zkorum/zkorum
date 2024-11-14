@@ -30,12 +30,12 @@ import { PossibleCommentRankingActions } from "src/stores/post";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useWebShare } from "src/utils/share/WebShare";
-import { ApiV1CommentFetchPost200ResponseInner } from "src/api";
+import { ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner } from "src/api";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { computed } from "vue";
 
 const props = defineProps<{
-  commentItem: ApiV1CommentFetchPost200ResponseInner;
+  commentItem: ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner;
   postSlugId: string;
   rankedAction: PossibleCommentRankingActions;
   commentSlugIdLikedMap: Map<string, boolean>;

@@ -2,7 +2,7 @@ import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
   ApiV1CommentCreatePostRequest,
-  ApiV1CommentFetchPostRequest,
+  ApiV1CommentFetchCommentsByPostSlugIdPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
@@ -16,7 +16,7 @@ export function useBackendCommentApi() {
 
   async function fetchCommentsForPost(postSlugId: string) {
     try {
-      const params: ApiV1CommentFetchPostRequest = {
+      const params: ApiV1CommentFetchCommentsByPostSlugIdPostRequest = {
         postSlugId: postSlugId,
       };
 
@@ -24,7 +24,7 @@ export function useBackendCommentApi() {
         undefined,
         undefined,
         api
-      ).apiV1CommentFetchPost(params, {});
+      ).apiV1CommentFetchCommentsByPostSlugIdPost(params, {});
 
       return response.data;
     } catch (e) {
