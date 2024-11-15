@@ -1,9 +1,10 @@
+import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
-import { ref } from "vue";
 
 export const useAuthenticationStore = defineStore("authentication", () => {
-  const verificationEmailAddress = ref("");
-  const isAuthenticated = ref(false);
+
+  const verificationEmailAddress = useStorage("verification_email_address", "");
+  const isAuthenticated = useStorage("is_authenticated", false);
 
   function userLogout() {
     isAuthenticated.value = false;

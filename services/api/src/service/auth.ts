@@ -184,45 +184,45 @@ export async function verifyOtp({
             loginSessionExpiry.getFullYear() + 1000
         );
         switch (resultOtp[0].authType) {
-            case "register": {
-                await register({
-                    db,
-                    didWrite,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
-            case "login_known_device": {
-                await loginKnownDevice({
-                    db,
-                    didWrite,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
-            case "login_new_device": {
-                await loginNewDevice({
-                    db,
-                    didWrite,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
+        case "register": {
+            await register({
+                db,
+                didWrite,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
+        case "login_known_device": {
+            await loginKnownDevice({
+                db,
+                didWrite,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
+        case "login_new_device": {
+            await loginNewDevice({
+                db,
+                didWrite,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
         }
     } else {
         await updateCodeGuessAttemptAmount(

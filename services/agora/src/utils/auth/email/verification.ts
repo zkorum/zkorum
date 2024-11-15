@@ -4,7 +4,7 @@ import { useBackendAuthApi } from "src/utils/api/auth";
 import { useRouter } from "vue-router";
 
 export function useEmailVerification() {
-  const { emailCode, sendEmailCode } = useBackendAuthApi();
+  const { verifyOptEmailCode, sendEmailCode } = useBackendAuthApi();
 
   const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
@@ -15,7 +15,7 @@ export function useEmailVerification() {
       code = 0;
     }
 
-    const response = await emailCode(code);
+    const response = await verifyOptEmailCode(code);
     if (response.data?.success) {
       isAuthenticated.value = true;
       router.push({ name: "verification-options" });
