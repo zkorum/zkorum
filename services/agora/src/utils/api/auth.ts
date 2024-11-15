@@ -27,6 +27,7 @@ interface SendSmsCodeProps {
 export function useBackendAuthApi() {
   const { buildEncodedUcan } = useCommonApi();
   const { userLogout } = useAuthenticationStore();
+  const { isAuthenticated } = useAuthenticationStore();
   const { loadPostData } = usePostStore();
 
   async function sendSmsCode({
@@ -116,7 +117,7 @@ export function useBackendAuthApi() {
       if (axios.isAxiosError(e)) {
         if (e.response?.status === 409) {
           return {
-            isSuccessful: false,
+            isSuccessful: true,
             data: null,
             error: "already_logged_in",
           };
@@ -154,7 +155,7 @@ export function useBackendAuthApi() {
     } catch (e) {
       if (axios.isAxiosError(e)) {
         if (e.response?.status === 409) {
-          return { isSuccessful: false, error: "already_logged_in" };
+          return { isSuccessful: true, error: "already_logged_in" };
         } else if (e.response?.status === 429) {
           return { isSuccessful: false, error: "throttled" };
         } else if (e.response?.status === 401) {
@@ -185,15 +186,19 @@ export function useBackendAuthApi() {
   }
 
   async function initializeAuthState() {
-    const status = await deviceIsLoggedIn();
-    if (!status.isSuccessful) {
-      if (status.error == "already_logged_in") {
-        console.log("user is already logged in");
-      } else if (status.error == "throttled") {
-        console.log("auth check had been throttled");
-      } else {
-        // unauthorized
-        userLogout();
+    if (isAuthenticated) {
+      const status = await deviceIsLoggedIn();
+      if (!status.isSuccessful) {
+        if (status.error == "already_logged_in") {
+          console.log("user is already logged in");
+        } else if (status.error == "throttled") {
+          console.log("auth check had been throttled");
+        } else {
+          // unauthorized
+          console.group("Failed to check user login status");
+          console.log(status.error);
+          userLogout();
+        }
       }
     }
 

@@ -208,56 +208,56 @@ export async function verifyOtp({
         const loginSessionExpiry = new Date(now);
         loginSessionExpiry.setFullYear(loginSessionExpiry.getFullYear() + 1000);
         switch (resultOtp[0].authType) {
-            case "register": {
-                await register({
-                    db,
-                    didWrite,
-                    lastTwoDigits: resultOtp[0].lastTwoDigits,
-                    countryCallingCode: resultOtp[0].countryCallingCode,
-                    phoneCountryCode: toUnionUndefined(
-                        resultOtp[0].phoneCountryCode,
-                    ),
-                    phoneHash: resultOtp[0].phoneHash,
-                    pepperVersion: resultOtp[0].pepperVersion,
-                    userAgent: resultOtp[0].userAgent,
-                    userId: resultOtp[0].userId,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
-            case "login_known_device": {
-                await loginKnownDevice({
-                    db,
-                    didWrite,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
-            case "login_new_device": {
-                await loginNewDevice({
-                    db,
-                    didWrite,
-                    userAgent: resultOtp[0].userAgent,
-                    userId: resultOtp[0].userId,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
+        case "register": {
+            await register({
+                db,
+                didWrite,
+                lastTwoDigits: resultOtp[0].lastTwoDigits,
+                countryCallingCode: resultOtp[0].countryCallingCode,
+                phoneCountryCode: toUnionUndefined(
+                    resultOtp[0].phoneCountryCode,
+                ),
+                phoneHash: resultOtp[0].phoneHash,
+                pepperVersion: resultOtp[0].pepperVersion,
+                userAgent: resultOtp[0].userAgent,
+                userId: resultOtp[0].userId,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
+        case "login_known_device": {
+            await loginKnownDevice({
+                db,
+                didWrite,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
+        case "login_new_device": {
+            await loginNewDevice({
+                db,
+                didWrite,
+                userAgent: resultOtp[0].userAgent,
+                userId: resultOtp[0].userId,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
         }
     } else {
         await updateCodeGuessAttemptAmount(
