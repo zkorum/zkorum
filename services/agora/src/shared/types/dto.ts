@@ -58,8 +58,9 @@ export class Dto {
             reason: z.literal("already_logged_in"),
             userId: zodUserId,
             sessionExpiry: z.date(),
-        })
-        .strict();
+            status: z.number(),
+            expose: z.boolean()
+        }).strict();
     static isLoggedInResponse = z.discriminatedUnion("isLoggedIn", [
         z.object({ isLoggedIn: z.literal(true), userId: zodUserId }).strict(),
         z

@@ -184,22 +184,20 @@ export function useBackendAuthApi() {
     return { data: otpDetails.data };
   }
 
-  function initializeAuthState() {
-    setTimeout(async () => {
-      const status = await deviceIsLoggedIn();
-      if (!status.isSuccessful) {
-        if (status.error == "already_logged_in") {
-          console.log("user is already logged in");
-        } else if (status.error == "throttled") {
-          console.log("auth check had been throttled");
-        } else {
-          // unauthorized
-          userLogout();
-        }
+  async function initializeAuthState() {
+    const status = await deviceIsLoggedIn();
+    if (!status.isSuccessful) {
+      if (status.error == "already_logged_in") {
+        console.log("user is already logged in");
+      } else if (status.error == "throttled") {
+        console.log("auth check had been throttled");
+      } else {
+        // unauthorized
+        userLogout();
       }
+    }
 
-      loadPostData(false);
-    }, 1000);
+    loadPostData(false);
   }
 
   return {
