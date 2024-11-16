@@ -1,5 +1,5 @@
 import { generateRandomSlugId } from "@/crypto.js";
-import { commentContentTable, commentTable, commentProofTable, postTable } from "@/schema.js";
+import { commentContentTable, commentTable, commentProofTable, postTable, userTable } from "@/schema.js";
 import type { CreateCommentResponse } from "@/shared/types/dto.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { desc, eq, sql } from "drizzle-orm";
@@ -22,7 +22,8 @@ export async function fetchCommentsByPostSlugId(
             updatedAt: commentTable.updatedAt,
             comment: commentContentTable.content,
             numLikes: commentTable.numLikes,
-            numDislikes: commentTable.numDislikes
+            numDislikes: commentTable.numDislikes,
+            userName: userTable.userName
         })
         .from(commentTable)
         .innerJoin(
@@ -32,6 +33,10 @@ export async function fetchCommentsByPostSlugId(
         .innerJoin(
             commentContentTable,
             eq(commentContentTable.id, commentTable.currentContentId)
+        )
+        .innerJoin(
+            userTable,
+            eq(userTable.id, commentTable.authorId)
         )
         .orderBy(desc(commentTable.createdAt))
         .where(
@@ -47,6 +52,7 @@ export async function fetchCommentsByPostSlugId(
             numDislikes: commentResponse.numDislikes,
             numLikes: commentResponse.numLikes,
             updatedAt: commentResponse.updatedAt,
+            userName: commentResponse.userName
         };
         commentItemList.push(item);
     });

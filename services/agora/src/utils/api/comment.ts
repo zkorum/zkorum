@@ -35,7 +35,8 @@ export function useBackendCommentApi() {
           createdAt: new Date(item.createdAt),
           numDislikes: item.numDislikes,
           numLikes: item.numLikes,
-          updatedAt: new Date(item.updatedAt)
+          updatedAt: new Date(item.updatedAt),
+          userName: item.userName
         });
       });
 

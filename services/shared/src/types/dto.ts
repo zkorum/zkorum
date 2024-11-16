@@ -94,11 +94,6 @@ export class Dto {
         createdAt: z.string().datetime().optional(),
     }).strict();
     static fetchCommentFeedResponse = z.array(zodCommentItem);
-    static commentFetchToVoteOnRequest = z.object({
-        postSlugId: zodSlugId,
-        numberOfCommentsToFetch: z.number().int().positive()
-    }).strict();
-    static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodCommentItem) }).strict();
     static createNewPostRequest = z.object({
         postTitle: zodPostTitle,
         postBody: zodPostBody,
@@ -148,7 +143,6 @@ export type Auth409 = z.infer<typeof Dto.auth409>;
 export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;
 export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
-export type FetchCommentsToVoteOn200 = z.infer<typeof Dto.commentFetchToVoteOn200>;
 export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
 export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;
 export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;

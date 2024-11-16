@@ -598,39 +598,7 @@ server.after(() => {
                 */
             },
         });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/comment/fetchToVoteOn`,
-            schema: {
-                body: Dto.commentFetchToVoteOnRequest,
-                response: {
-                    200: Dto.commentFetchToVoteOn200,
-                },
-            },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: {
-                        isLoggedIn: undefined,
-                    },
-                });
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    throw server.httpErrors.unauthorized("Device is not logged in");
-                } else {
-                    const { userId } = status;
-                    const comments = await postService.fetchNextCommentsToVoteOn({
-                        db: db,
-                        userId: userId,
-                        postSlugId: request.body.postSlugId,
-                        numberOfCommentsToFetch: request.body.numberOfCommentsToFetch,
-                        httpErrors: server.httpErrors
-                    });
-                    return comments;
-                }
-            },
-        });
+
     server
         .withTypeProvider<ZodTypeProvider>()
         .route({

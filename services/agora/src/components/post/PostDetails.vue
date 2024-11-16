@@ -4,16 +4,15 @@
     <ZKHoverEffect :enable-hover="compactMode">
       <div class="container postPadding">
         <div class="innerContainer">
-          <PostMetadata :poster-name="extendedPostData.metadata.posterName"
+          <PostMetadata :poster-user-name="extendedPostData.metadata.posterName"
             :poster-image-path="extendedPostData.metadata.posterImagePath"
             :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode" />
 
           <div class="postDiv">
             <div>
-              <div v-if="!skeletonMode" class="titleDiv">
+              <div v-if="!skeletonMode" class="titleDiv"
+                :class="{ extraTitleBottomPadding: extendedPostData.payload.body.length == 0 }">
                 {{ extendedPostData.payload.title }}
-                <div :class="{ extraTitleBottomPadding: extendedPostData.payload.body.length == 0 }">
-                </div>
               </div>
 
               <div v-if="skeletonMode" class="titleDiv">
@@ -35,7 +34,7 @@
           <div class="bottomButtons">
             <div class="leftButtonCluster">
               <div v-if="!skeletonMode">
-                <ZKButton color="button-background-color" text-color="black" :label="(
+                <ZKButton text-color="color-text-weak" size="0.8rem" :label="(
                   extendedPostData.metadata.commentCount + commentCountOffset
                 ).toString()
                   " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
@@ -47,7 +46,7 @@
 
             <div>
               <div v-if="!skeletonMode">
-                <ZKButton color="button-background-color" text-color="black" icon="mdi-export-variant"
+                <ZKButton text-color="color-text-weak" size="0.8rem" icon="mdi-export-variant"
                   @click.stop.prevent="shareClicked()" />
               </div>
               <div v-if="skeletonMode">
@@ -226,6 +225,6 @@ function shareClicked() {
 }
 
 .extraTitleBottomPadding {
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 </style>
