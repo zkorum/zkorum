@@ -81,7 +81,10 @@ export class Dto {
             lastSlugId: z.string().optional(),
         })
         .strict();
-    static fetchFeed200 = z.array(zodExtendedPostData);
+    static fetchFeedResponse = z.object({
+        postDataList: z.array(zodExtendedPostData),
+        reachedEndOfFeed: z.boolean()
+    }).strict();
     static postFetchRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(
     }).strict();
@@ -148,3 +151,5 @@ export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResp
 export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;
 export type FetchUserPollResponseResponse = z.infer<typeof Dto.fetchUserPollResponseResponse>;
 export type FetchUserVotesForPostSlugIdResponseResponse = z.infer<typeof Dto.fetchUserVotesForPostSlugIdResponse>;
+export type FetchCommentFeedResponse = z.infer<typeof Dto.fetchCommentFeedResponse>;
+export type FetchFeedResponse = z.infer<typeof Dto.fetchFeedResponse>;

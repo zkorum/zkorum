@@ -82,7 +82,10 @@ export class Dto {
             lastSlugId: z.string().optional(),
         })
         .strict();
-    static fetchFeed200 = z.array(zodExtendedPostData);
+    static fetchFeedResponse = z.object({
+        postDataList: z.array(zodExtendedPostData),
+        reachedEndOfFeed: z.boolean()
+    }).strict();
     static postFetchRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(
     }).strict();
@@ -95,11 +98,6 @@ export class Dto {
         createdAt: z.string().datetime().optional(),
     }).strict();
     static fetchCommentFeedResponse = z.array(zodCommentItem);
-    static commentFetchToVoteOnRequest = z.object({
-        postSlugId: zodSlugId,
-        numberOfCommentsToFetch: z.number().int().positive()
-    }).strict();
-    static commentFetchToVoteOn200 = z.object({ assignedComments: z.array(zodCommentItem) }).strict();
     static createNewPostRequest = z.object({
         postTitle: zodPostTitle,
         postBody: zodPostBody,
@@ -149,9 +147,10 @@ export type Auth409 = z.infer<typeof Dto.auth409>;
 export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;
 export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
-export type FetchCommentsToVoteOn200 = z.infer<typeof Dto.commentFetchToVoteOn200>;
 export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
 export type FetchPostBySlugIdResponse = z.infer<typeof Dto.fetchPostBySlugIdResponse>;
 export type CreateCommentResponse = z.infer<typeof Dto.createCommentResponse>;
 export type FetchUserPollResponseResponse = z.infer<typeof Dto.fetchUserPollResponseResponse>;
 export type FetchUserVotesForPostSlugIdResponseResponse = z.infer<typeof Dto.fetchUserVotesForPostSlugIdResponse>;
+export type FetchCommentFeedResponse = z.infer<typeof Dto.fetchCommentFeedResponse>;
+export type FetchFeedResponse = z.infer<typeof Dto.fetchFeedResponse>;

@@ -341,108 +341,121 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "metadata": {
+                                    "type": "object",
+                                    "properties": {
+                                        "postDataList": {
+                                            "type": "array",
+                                            "items": {
                                                 "type": "object",
                                                 "properties": {
-                                                    "postSlugId": {
-                                                        "type": "string",
-                                                        "maxLength": 10
-                                                    },
-                                                    "isHidden": {
-                                                        "type": "boolean"
-                                                    },
-                                                    "createdAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "updatedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "lastReactedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "commentCount": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "authorUserName": {
-                                                        "type": "string",
-                                                        "maxLength": 23,
-                                                        "minLength": 3
-                                                    },
-                                                    "authorImagePath": {
-                                                        "type": "string",
-                                                        "format": "uri"
-                                                    }
-                                                },
-                                                "required": [
-                                                    "postSlugId",
-                                                    "createdAt",
-                                                    "updatedAt",
-                                                    "lastReactedAt",
-                                                    "commentCount",
-                                                    "authorUserName"
-                                                ],
-                                                "additionalProperties": false
-                                            },
-                                            "payload": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "title": {
-                                                        "type": "string",
-                                                        "maxLength": 130,
-                                                        "minLength": 1
-                                                    },
-                                                    "body": {
-                                                        "type": "string"
-                                                    },
-                                                    "poll": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "optionNumber": {
-                                                                    "type": "integer",
-                                                                    "minimum": 1,
-                                                                    "maximum": 6
-                                                                },
-                                                                "optionTitle": {
-                                                                    "type": "string",
-                                                                    "maxLength": 30,
-                                                                    "minLength": 1
-                                                                },
-                                                                "numResponses": {
-                                                                    "type": "integer",
-                                                                    "minimum": 0
-                                                                }
+                                                    "metadata": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "postSlugId": {
+                                                                "type": "string",
+                                                                "maxLength": 10
                                                             },
-                                                            "required": [
-                                                                "optionNumber",
-                                                                "optionTitle",
-                                                                "numResponses"
-                                                            ],
-                                                            "additionalProperties": false
-                                                        }
+                                                            "isHidden": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "createdAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "updatedAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "lastReactedAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "commentCount": {
+                                                                "type": "integer",
+                                                                "minimum": 0
+                                                            },
+                                                            "authorUserName": {
+                                                                "type": "string",
+                                                                "maxLength": 23,
+                                                                "minLength": 3
+                                                            },
+                                                            "authorImagePath": {
+                                                                "type": "string",
+                                                                "format": "uri"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "postSlugId",
+                                                            "createdAt",
+                                                            "updatedAt",
+                                                            "lastReactedAt",
+                                                            "commentCount",
+                                                            "authorUserName"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    },
+                                                    "payload": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "title": {
+                                                                "type": "string",
+                                                                "maxLength": 130,
+                                                                "minLength": 1
+                                                            },
+                                                            "body": {
+                                                                "type": "string"
+                                                            },
+                                                            "poll": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "optionNumber": {
+                                                                            "type": "integer",
+                                                                            "minimum": 1,
+                                                                            "maximum": 6
+                                                                        },
+                                                                        "optionTitle": {
+                                                                            "type": "string",
+                                                                            "maxLength": 30,
+                                                                            "minLength": 1
+                                                                        },
+                                                                        "numResponses": {
+                                                                            "type": "integer",
+                                                                            "minimum": 0
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "optionNumber",
+                                                                        "optionTitle",
+                                                                        "numResponses"
+                                                                    ],
+                                                                    "additionalProperties": false
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "title"
+                                                        ],
+                                                        "additionalProperties": false
                                                     }
                                                 },
                                                 "required": [
-                                                    "title"
+                                                    "metadata",
+                                                    "payload"
                                                 ],
                                                 "additionalProperties": false
                                             }
                                         },
-                                        "required": [
-                                            "metadata",
-                                            "payload"
-                                        ],
-                                        "additionalProperties": false
-                                    }
+                                        "reachedEndOfFeed": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "postDataList",
+                                        "reachedEndOfFeed"
+                                    ],
+                                    "additionalProperties": false
                                 }
                             }
                         }

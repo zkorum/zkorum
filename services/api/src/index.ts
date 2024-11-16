@@ -372,7 +372,7 @@ server.after(() => {
             schema: {
                 body: Dto.fetchFeedRequest,
                 response: {
-                    200: Dto.fetchFeed200,
+                    200: Dto.fetchFeedResponse,
                 },
             },
             handler: async (request) => {

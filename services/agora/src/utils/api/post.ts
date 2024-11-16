@@ -1,7 +1,7 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  ApiV1FeedFetchRecentPost200ResponseInner,
+  ApiV1FeedFetchRecentPost200ResponsePostDataListInner,
   ApiV1FeedFetchRecentPostRequest,
   ApiV1PostCreatePostRequest,
   ApiV1PostFetchPostBySlugIdPostRequest,
@@ -29,7 +29,7 @@ export function useBackendPostApi() {
   const router = useRouter();
 
   async function createInternalPostData(
-    postElement: ApiV1FeedFetchRecentPost200ResponseInner,
+    postElement: ApiV1FeedFetchRecentPost200ResponsePostDataListInner,
     loadUserData: boolean
   ) {
 
@@ -127,7 +127,7 @@ export function useBackendPostApi() {
 
       const dataList: DummyPostDataFormat[] = [];
 
-      await Promise.all(response.data.map(async (postElement) => {
+      await Promise.all(response.data.postDataList.map(async (postElement) => {
         const dataItem = await createInternalPostData(postElement, loadUserPollData);
         dataList.push(dataItem);
       }));
@@ -136,7 +136,10 @@ export function useBackendPostApi() {
         return new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime();
       });
 
-      return dataList;
+      return {
+        postDataList: dataList,
+        reachedEndOfFeed: response.data.reachedEndOfFeed
+      };
     } catch (e) {
       console.error(e);
       showNotifyMessage("Failed to fetch recent posts from the server.");

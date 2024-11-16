@@ -137,24 +137,16 @@ export const usePostStore = defineStore("post", () => {
     const response = await fetchRecentPost(lastSlugId, isAuthenticated);
 
     if (response != null) {
-      if (response.length == 0) {
+      if (response.postDataList.length > 0) {
         if (loadMoreData) {
-          endOfFeed.value = true;
-        } else {
-          masterPostDataList.value = [];
-          endOfFeed.value = false;
-        }
-      } else {
-        endOfFeed.value = false;
-
-        if (loadMoreData) {
-          masterPostDataList.value.push(...response);
+          masterPostDataList.value.push(...response.postDataList);
           trimHomeFeedSize(60);
         } else {
-          masterPostDataList.value = response;
+          masterPostDataList.value = response.postDataList;
         }
       }
 
+      endOfFeed.value = response.reachedEndOfFeed;
       dataReady.value = true;
     } else {
       dataReady.value = false;
@@ -170,8 +162,8 @@ export const usePostStore = defineStore("post", () => {
   async function hasNewPosts() {
     const response = await fetchRecentPost(undefined, isAuthenticated);
     if (response != null) {
-      if (response.length > 0 && masterPostDataList.value.length > 0) {
-        if (response[0].metadata.createdAt != masterPostDataList.value[0].metadata.createdAt) {
+      if (response.postDataList.length > 0 && masterPostDataList.value.length > 0) {
+        if (response.postDataList[0].metadata.createdAt != masterPostDataList.value[0].metadata.createdAt) {
           return true;
         } else {
           return false;
