@@ -1,26 +1,16 @@
 <template>
   <div>
     <ZKCard padding="1rem">
-      <div class="swiperCluster">
+      <div>
         <div class="descriptionLabel">
           {{ description }}
         </div>
-        <swiper-container
-          ref="swipingElementRef"
-          :slides-per-view="slidesPerView"
-          :initial-slide="currentSlide"
-          :scrollbar="true"
-        >
-          <swiper-slide
-            v-for="sortOptionItem in getCommentSortOptions()"
-            :key="sortOptionItem.value"
-            class="scrollPadding"
-          >
-            <CommentSortItem
-              :is-selected="commentSortPreference == sortOptionItem.value"
-              :sort-item="sortOptionItem"
-              @click="commentSortPreference = sortOptionItem.value"
-            />
+        <swiper-container ref="swipingElementRef" :slides-per-view="slidesPerView" :initial-slide="currentSlide"
+          :scrollbar="true" class="swiperClusterHover">
+          <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value"
+            class="scrollPadding">
+            <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem"
+              @click="commentSortPreference = sortOptionItem.value" />
           </swiper-slide>
         </swiper-container>
       </div>
@@ -114,7 +104,7 @@ function initializeSlideCount() {
 </script>
 
 <style scoped lang="scss">
-.swiperCluster {
+.swiperClusterHover {
   cursor: pointer;
 }
 
@@ -122,10 +112,10 @@ function initializeSlideCount() {
   text-align: left;
   color: $color-text-weak;
   font-size: 0.9rem;
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .scrollPadding {
-  padding-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
 }
 </style>
