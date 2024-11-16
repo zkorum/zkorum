@@ -18,6 +18,8 @@ const MAX_LENGTH_TITLE = 130;
 const MAX_LENGTH_BODY = 260;
 const MAX_LENGTH_NAME_CREATOR = 65;
 const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
+export const MAX_LENGTH_USERNAME = 23;
+export const MIN_LENGTH_USERNAME = 3;
 
 export const bytea = customType<{
     data: string;
@@ -560,11 +562,14 @@ export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
 // The association between users and devices/emails can change over time.
 // A user must have at least 1 validated primary email and 1 device associated with it.
 // The "at least one" conditon is not enforced directly in the SQL model yet. It is done in the application code.
+export const languageOptions = pgEnum("lang", ["en", "es", "fr", "zh"]);
 export const userTable = pgTable("user", {
     id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
     organisationId: integer("organisation_id").references(
         () => organisationTable.id,
     ), // for now a user can belong to at most 1 organisation
+    userName: varchar("user_name", { length: MAX_LENGTH_USERNAME }).notNull(),
+    languageId: languageOptions("language_id"),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,

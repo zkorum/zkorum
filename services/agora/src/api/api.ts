@@ -91,6 +91,18 @@ export interface ApiV1AuthCheckLoginStatusPost409Response {
      * @memberof ApiV1AuthCheckLoginStatusPost409Response
      */
     'sessionExpiry': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1AuthCheckLoginStatusPost409Response
+     */
+    'status': number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1AuthCheckLoginStatusPost409Response
+     */
+    'expose': boolean;
 }
 
 export const ApiV1AuthCheckLoginStatusPost409ResponseReasonEnum = {

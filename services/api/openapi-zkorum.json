@@ -51,12 +51,20 @@
                                         "sessionExpiry": {
                                             "type": "string",
                                             "format": "date-time"
+                                        },
+                                        "status": {
+                                            "type": "number"
+                                        },
+                                        "expose": {
+                                            "type": "boolean"
                                         }
                                     },
                                     "required": [
                                         "reason",
                                         "userId",
-                                        "sessionExpiry"
+                                        "sessionExpiry",
+                                        "status",
+                                        "expose"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -143,12 +151,20 @@
                                         "sessionExpiry": {
                                             "type": "string",
                                             "format": "date-time"
+                                        },
+                                        "status": {
+                                            "type": "number"
+                                        },
+                                        "expose": {
+                                            "type": "boolean"
                                         }
                                     },
                                     "required": [
                                         "reason",
                                         "userId",
-                                        "sessionExpiry"
+                                        "sessionExpiry",
+                                        "status",
+                                        "expose"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -264,12 +280,20 @@
                                         "sessionExpiry": {
                                             "type": "string",
                                             "format": "date-time"
+                                        },
+                                        "status": {
+                                            "type": "number"
+                                        },
+                                        "expose": {
+                                            "type": "boolean"
                                         }
                                     },
                                     "required": [
                                         "reason",
                                         "userId",
-                                        "sessionExpiry"
+                                        "sessionExpiry",
+                                        "status",
+                                        "expose"
                                     ],
                                     "additionalProperties": false
                                 }
