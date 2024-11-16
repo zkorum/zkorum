@@ -1,12 +1,12 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  type ApiV1FeedFetchRecentPost200ResponseInner,
+  DefaultApiAxiosParamCreator,
+  DefaultApiFactory,
+  type ApiV1FeedFetchRecentPost200ResponsePostDataListInner,
   type ApiV1FeedFetchRecentPostRequest,
   type ApiV1PostCreatePostRequest,
   type ApiV1PostFetchPostBySlugIdPostRequest,
-  DefaultApiAxiosParamCreator,
-  DefaultApiFactory,
 } from "src/api";
 import { useCommonApi } from "./common";
 import {
@@ -28,7 +28,7 @@ export function useBackendPostApi() {
   const router = useRouter();
 
   async function createInternalPostData(
-    postElement: ApiV1FeedFetchRecentPost200ResponseInner,
+    postElement: ApiV1FeedFetchRecentPost200ResponsePostDataListInner,
     loadUserData: boolean
   ) {
     // Create the polling object
@@ -135,15 +135,10 @@ export function useBackendPostApi() {
 
       const dataList: DummyPostDataFormat[] = [];
 
-      await Promise.all(
-        response.data.map(async (postElement) => {
-          const dataItem = await createInternalPostData(
-            postElement,
-            loadUserPollData
-          );
-          dataList.push(dataItem);
-        })
-      );
+      await Promise.all(response.data.postDataList.map(async (postElement) => {
+        const dataItem = await createInternalPostData(postElement, loadUserPollData);
+        dataList.push(dataItem);
+      }));
 
       dataList.sort(function (a, b) {
         return (
@@ -152,7 +147,10 @@ export function useBackendPostApi() {
         );
       });
 
-      return dataList;
+      return {
+        postDataList: dataList,
+        reachedEndOfFeed: response.data.reachedEndOfFeed
+      };
     } catch (e) {
       console.error(e);
       showNotifyMessage("Failed to fetch recent posts from the server.");

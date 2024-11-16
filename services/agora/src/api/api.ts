@@ -320,124 +320,143 @@ export interface ApiV1CommentFetchCommentsByPostSlugIdPostRequest {
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchRecentPost200ResponseInner
+ * @interface ApiV1FeedFetchRecentPost200Response
  */
-export interface ApiV1FeedFetchRecentPost200ResponseInner {
+export interface ApiV1FeedFetchRecentPost200Response {
     /**
      * 
-     * @type {ApiV1FeedFetchRecentPost200ResponseInnerMetadata}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInner
+     * @type {Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInner>}
+     * @memberof ApiV1FeedFetchRecentPost200Response
      */
-    'metadata': ApiV1FeedFetchRecentPost200ResponseInnerMetadata;
+    'postDataList': Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInner>;
     /**
      * 
-     * @type {ApiV1FeedFetchRecentPost200ResponseInnerPayload}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInner
+     * @type {boolean}
+     * @memberof ApiV1FeedFetchRecentPost200Response
      */
-    'payload': ApiV1FeedFetchRecentPost200ResponseInnerPayload;
+    'reachedEndOfFeed': boolean;
 }
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+ * @interface ApiV1FeedFetchRecentPost200ResponsePostDataListInner
  */
-export interface ApiV1FeedFetchRecentPost200ResponseInnerMetadata {
+export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInner {
+    /**
+     * 
+     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata}
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInner
+     */
+    'metadata': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata;
+    /**
+     * 
+     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayload}
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInner
+     */
+    'payload': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayload;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
+ */
+export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata {
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'postSlugId': string;
     /**
      * 
      * @type {boolean}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'isHidden'?: boolean;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'createdAt': string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'updatedAt': string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'lastReactedAt': string;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'commentCount': number;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'authorUserName': string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerMetadata
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'authorImagePath'?: string;
 }
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchRecentPost200ResponseInnerPayload
+ * @interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayload
  */
-export interface ApiV1FeedFetchRecentPost200ResponseInnerPayload {
+export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayload {
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayload
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayload
      */
     'title': string;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayload
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayload
      */
     'body'?: string;
     /**
      * 
-     * @type {Array<ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner>}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayload
+     * @type {Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayloadPollInner>}
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayload
      */
-    'poll'?: Array<ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner>;
+    'poll'?: Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayloadPollInner>;
 }
 /**
  * 
  * @export
- * @interface ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner
+ * @interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayloadPollInner
  */
-export interface ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner {
+export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayloadPollInner {
     /**
      * 
      * @type {number}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayloadPollInner
      */
     'optionNumber': number;
     /**
      * 
      * @type {string}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayloadPollInner
      */
     'optionTitle': string;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1FeedFetchRecentPost200ResponseInnerPayloadPollInner
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerPayloadPollInner
      */
     'numResponses': number;
 }
@@ -525,10 +544,10 @@ export interface ApiV1PostCreatePostRequest {
 export interface ApiV1PostFetchPostBySlugIdPost200Response {
     /**
      * 
-     * @type {ApiV1FeedFetchRecentPost200ResponseInner}
+     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInner}
      * @memberof ApiV1PostFetchPostBySlugIdPost200Response
      */
-    'postData': ApiV1FeedFetchRecentPost200ResponseInner;
+    'postData': ApiV1FeedFetchRecentPost200ResponsePostDataListInner;
 }
 /**
  * 
@@ -1199,7 +1218,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponseInner>>> {
+        async apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1FeedFetchRecentPost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchRecentPost']?.[localVarOperationServerIndex]?.url;
@@ -1345,7 +1364,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: any): AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponseInner>> {
+        apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: any): AxiosPromise<ApiV1FeedFetchRecentPost200Response> {
             return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options).then((request) => request(axios, basePath));
         },
         /**

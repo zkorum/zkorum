@@ -376,23 +376,25 @@ server.after(() => {
         },
     });
 
-    server.withTypeProvider<ZodTypeProvider>().route({
-        method: "POST",
-        url: `/api/${apiVersion}/feed/fetchRecent`,
-        schema: {
-            body: Dto.fetchFeedRequest,
-            response: {
-                200: Dto.fetchFeed200,
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/feed/fetchRecent`,
+            schema: {
+                body: Dto.fetchFeedRequest,
+                response: {
+                    200: Dto.fetchFeedResponse,
+                },
             },
-        },
-        handler: async (request) => {
-            return await feedService.fetchFeed({
-                db: db,
-                showHidden: request.body.showHidden,
-                lastSlugId: request.body.lastSlugId,
-            });
-        },
-    });
+            handler: async (request) => {
+                return await feedService.fetchFeed({
+                    db: db,
+                    showHidden: request.body.showHidden,
+                    lastSlugId: request.body.lastSlugId,
+                });
+            },
+        });
 
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
