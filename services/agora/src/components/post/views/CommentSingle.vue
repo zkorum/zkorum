@@ -3,7 +3,7 @@
   <div>
     <div class="contentLayout">
       <div class="metadata">
-        <Avatar variant="bauhaus" :name="commentItem.userName" :colors="boringAvatarColors" class="avatarIcon" />
+        <UserAvatar :user-name="commentItem.userName" class="avatarIcon" />
 
         <div class="userNameTime">
           <div>
@@ -36,8 +36,7 @@ import { PossibleCommentRankingActions } from "src/stores/post";
 import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
 import { CommentItem } from "src/shared/types/zod";
-import { boringAvatarColors } from "src/utils/ui/profilePicture";
-import Avatar from "vue-boring-avatars";
+import UserAvatar from "src/components/account/UserAvatar.vue";
 
 defineProps<{
   commentItem: CommentItem;

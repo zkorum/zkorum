@@ -3,8 +3,7 @@
     <div class="container">
       <div class="metadata">
         <div>
-          <Avatar v-if="!skeletonMode" variant="bauhaus" :name="posterUserName" :colors="boringAvatarColors"
-            class="avatarIcon" />
+          <UserAvatar v-if="!skeletonMode" :user-name="posterUserName" class="avatarIcon" />
 
           <Skeleton v-if="skeletonMode" shape="circle" size="2.5rem">
           </Skeleton>
@@ -44,8 +43,7 @@ import { getTimeFromNow } from "src/utils/common";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import Skeleton from "primevue/skeleton";
-import Avatar from "vue-boring-avatars";
-import { boringAvatarColors } from "src/utils/ui/profilePicture";
+import UserAvatar from "src/components/account/UserAvatar.vue";
 
 defineProps<{
   posterUserName: string;
