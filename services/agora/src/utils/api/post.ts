@@ -58,7 +58,7 @@ export function useBackendPostApi() {
         createdAt: postElement.metadata.createdAt,
         isHidden: false,
         posterImagePath: "/icons/favicon-128x128.png",
-        posterName: "COMPANY NAME",
+        posterName: postElement.metadata.authorUserName,
         slugId: postElement.metadata.postSlugId,
         uid: "",
       },

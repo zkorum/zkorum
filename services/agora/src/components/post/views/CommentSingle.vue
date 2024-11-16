@@ -3,7 +3,18 @@
   <div>
     <div class="contentLayout">
       <div class="metadata">
-        {{ getTimeFromNow(new Date(commentItem.createdAt)) }}
+        <Avatar variant="bauhaus" :name="commentItem.userName" :colors="boringAvatarColors" class="avatarIcon" />
+
+        <div class="userNameTime">
+          <div>
+            {{ commentItem.userName }}
+          </div>
+
+          <div>
+            {{ getTimeFromNow(new Date(commentItem.createdAt)) }}
+          </div>
+        </div>
+
       </div>
 
       <div>
@@ -12,12 +23,8 @@
         </div>
 
         <div class="actionBarPaddings">
-          <CommentActionBar
-            :comment-item="commentItem"
-            :post-slug-id="postSlugId"
-            :ranked-action="rankedAction"
-            :comment-slug-id-liked-map="commentSlugIdLikedMap"
-          />
+          <CommentActionBar :comment-item="commentItem" :post-slug-id="postSlugId" :ranked-action="rankedAction"
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
         </div>
       </div>
     </div>
@@ -28,7 +35,9 @@
 import { type PossibleCommentRankingActions } from "src/stores/post";
 import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
-import { type CommentItem } from "src/shared/types/zod";
+import Avatar from "vue-boring-avatars";
+import type { CommentItem } from "src/shared/types/zod";
+import { boringAvatarColors } from "src/utils/ui/profilePicture";
 
 defineProps<{
   commentItem: CommentItem;
@@ -49,7 +58,7 @@ defineProps<{
 
 .metadata {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   align-items: center;
   font-size: 0.9rem;
   color: $color-text-weak;
@@ -63,5 +72,16 @@ defineProps<{
   background-color: #ccfbf1;
   border-radius: 15px;
   padding: 0.5rem;
+}
+
+.avatarIcon {
+  width: 2rem;
+  margin-right: 0.5rem;
+}
+
+.userNameTime {
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
 }
 </style>

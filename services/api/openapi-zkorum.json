@@ -372,8 +372,10 @@
                                                         "type": "integer",
                                                         "minimum": 0
                                                     },
-                                                    "authorName": {
-                                                        "type": "string"
+                                                    "authorUserName": {
+                                                        "type": "string",
+                                                        "maxLength": 23,
+                                                        "minLength": 3
                                                     },
                                                     "authorImagePath": {
                                                         "type": "string",
@@ -385,7 +387,8 @@
                                                     "createdAt",
                                                     "updatedAt",
                                                     "lastReactedAt",
-                                                    "commentCount"
+                                                    "commentCount",
+                                                    "authorUserName"
                                                 ],
                                                 "additionalProperties": false
                                             },
@@ -716,6 +719,11 @@
                                             "numDislikes": {
                                                 "type": "integer",
                                                 "minimum": 0
+                                            },
+                                            "userName": {
+                                                "type": "string",
+                                                "maxLength": 23,
+                                                "minLength": 3
                                             }
                                         },
                                         "required": [
@@ -724,99 +732,11 @@
                                             "updatedAt",
                                             "comment",
                                             "numLikes",
-                                            "numDislikes"
+                                            "numDislikes",
+                                            "userName"
                                         ],
                                         "additionalProperties": false
                                     }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/comment/fetchToVoteOn": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "postSlugId": {
-                                        "type": "string",
-                                        "maxLength": 10
-                                    },
-                                    "numberOfCommentsToFetch": {
-                                        "type": "integer",
-                                        "exclusiveMinimum": true,
-                                        "minimum": 0
-                                    }
-                                },
-                                "required": [
-                                    "postSlugId",
-                                    "numberOfCommentsToFetch"
-                                ],
-                                "additionalProperties": false
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "assignedComments": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "commentSlugId": {
-                                                        "type": "string",
-                                                        "maxLength": 10
-                                                    },
-                                                    "createdAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "updatedAt": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "comment": {
-                                                        "type": "string",
-                                                        "minLength": 1
-                                                    },
-                                                    "numLikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    },
-                                                    "numDislikes": {
-                                                        "type": "integer",
-                                                        "minimum": 0
-                                                    }
-                                                },
-                                                "required": [
-                                                    "commentSlugId",
-                                                    "createdAt",
-                                                    "updatedAt",
-                                                    "comment",
-                                                    "numLikes",
-                                                    "numDislikes"
-                                                ],
-                                                "additionalProperties": false
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "assignedComments"
-                                    ],
-                                    "additionalProperties": false
                                 }
                             }
                         }
@@ -940,8 +860,10 @@
                                                             "type": "integer",
                                                             "minimum": 0
                                                         },
-                                                        "authorName": {
-                                                            "type": "string"
+                                                        "authorUserName": {
+                                                            "type": "string",
+                                                            "maxLength": 23,
+                                                            "minLength": 3
                                                         },
                                                         "authorImagePath": {
                                                             "type": "string",
@@ -953,7 +875,8 @@
                                                         "createdAt",
                                                         "updatedAt",
                                                         "lastReactedAt",
-                                                        "commentCount"
+                                                        "commentCount",
+                                                        "authorUserName"
                                                     ],
                                                     "additionalProperties": false
                                                 },

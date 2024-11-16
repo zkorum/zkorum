@@ -3,29 +3,29 @@
     <div class="container">
       <div class="metadata">
         <div>
-          <Avatar v-if="!skeletonMode" variant="bauhaus" name="Mujahid Anuar" :colors="colors" class="avatarIcon" />
+          <Avatar v-if="!skeletonMode" variant="bauhaus" :name="posterUserName" :colors="boringAvatarColors"
+            class="avatarIcon" />
 
           <Skeleton v-if="skeletonMode" shape="circle" size="2.5rem">
           </Skeleton>
         </div>
 
-        <div>
-          <div v-if="!skeletonMode">
-            {{ posterName }}
+        <div class="userNameTime">
+          <div>
+            <div v-if="!skeletonMode">
+              {{ posterUserName }}
+            </div>
+            <Skeleton v-if="skeletonMode" width="5rem"></Skeleton>
           </div>
-          <Skeleton v-if="skeletonMode" width="5rem"></Skeleton>
+
+          <div>
+            <div v-if="!skeletonMode">
+              {{ getTimeFromNow(new Date(createdAt)) }}
+            </div>
+            <Skeleton v-if="skeletonMode" width="2rem"></Skeleton>
+          </div>
         </div>
 
-        <div>•</div>
-
-        <div>
-          <div v-if="!skeletonMode">
-            {{ getTimeFromNow(new Date(createdAt)) }}
-          </div>
-          <Skeleton v-if="skeletonMode" width="2rem"></Skeleton>
-        </div>
-
-        <div></div>
       </div>
 
       <div>
@@ -45,15 +45,14 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import Skeleton from "primevue/skeleton";
 import Avatar from "vue-boring-avatars";
+import { boringAvatarColors } from "src/utils/ui/profilePicture";
 
 defineProps<{
-  posterName: string;
+  posterUserName: string;
   posterImagePath: string;
   createdAt: string;
   skeletonMode: boolean;
 }>();
-
-const colors = ["#92A1C6", "#146A7C", "#F0AB3D", "#C271B4", "#C20D90"];
 
 const { showPostOptionSelector } = useBottomSheet();
 
@@ -76,7 +75,7 @@ function clickedMoreIcon() {
 }
 
 .avatarIcon {
-  width: 2rem;
+  width: 2.5rem;
   margin-right: 0.5rem;
 }
 
@@ -84,12 +83,15 @@ function clickedMoreIcon() {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  align-items: center;
-  height: 100%;
-  font-size: 0.9rem;
 }
 
 .reportDialog {
   background-color: white;
+}
+
+.userNameTime {
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
 }
 </style>

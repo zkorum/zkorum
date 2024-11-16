@@ -102,79 +102,44 @@ export class Dto {
         })
         .strict();
     static fetchCommentFeedResponse = z.array(zodCommentItem);
-    static commentFetchToVoteOnRequest = z
-        .object({
-            postSlugId: zodSlugId,
-            numberOfCommentsToFetch: z.number().int().positive(),
-        })
-        .strict();
-    static commentFetchToVoteOn200 = z
-        .object({ assignedComments: z.array(zodCommentItem) })
-        .strict();
-    static createNewPostRequest = z
-        .object({
-            postTitle: zodPostTitle,
-            postBody: zodPostBody,
-            pollingOptionList: zodPollOptionTitle.array().optional(),
-        })
-        .strict();
-    static createNewPostResponse = z
-        .object({ postSlugId: z.string() })
-        .strict();
-    static fetchPostBySlugIdRequest = z
-        .object({
-            postSlugId: zodSlugId,
-        })
-        .strict();
-    static fetchPostBySlugIdResponse = z
-        .object({
-            postData: zodExtendedPostData,
-        })
-        .strict();
-    static createCommentRequest = z
-        .object({
-            postSlugId: z.string(),
-            commentBody: z.string(),
-        })
-        .strict();
-    static createCommentResponse = z
-        .object({ commentSlugId: z.string() })
-        .strict();
-    static submitPollResponseRequest = z
-        .object({
-            voteOptionChoice: z.number(),
-            postSlugId: z.string(),
-        })
-        .strict();
-    static fetchUserPollResponseRequest = z
-        .object({
-            postSlugId: z.string(),
-        })
-        .strict();
-    static fetchUserPollResponseResponse = z
-        .object({
-            selectedPollOption: z.number().optional(),
-        })
-        .strict();
-    static fetchUserVotesForPostSlugIdRequest = z
-        .object({
-            postSlugId: z.string(),
-        })
-        .strict();
-    static fetchUserVotesForPostSlugIdResponse = z.array(
-        z
-            .object({
-                commentSlugId: z.string(),
-                votingAction: zodVotingOption,
-            })
-            .strict(),
-    );
-    static castVoteForCommentRequest = z
-        .object({
-            commentSlugId: z.string(),
-            chosenOption: zodVotingAction,
-        })
-        .strict();
+    static createNewPostRequest = z.object({
+        postTitle: zodPostTitle,
+        postBody: zodPostBody,
+        pollingOptionList: zodPollOptionTitle.array().optional()
+    }).strict();
+    static createNewPostResponse = z.object({ postSlugId: z.string() }).strict();
+    static fetchPostBySlugIdRequest = z.object({
+        postSlugId: zodSlugId,
+    }).strict();
+    static fetchPostBySlugIdResponse = z.object({
+        postData: zodExtendedPostData
+    }).strict();
+    static createCommentRequest = z.object({
+        postSlugId: z.string(),
+        commentBody: z.string()
+    }).strict();
+    static createCommentResponse = z.object({ commentSlugId: z.string() }).strict();
+    static submitPollResponseRequest = z.object({
+        voteOptionChoice: z.number(),
+        postSlugId: z.string()
+    }).strict();
+    static fetchUserPollResponseRequest = z.object({
+        postSlugId: z.string()
+    }).strict();
+    static fetchUserPollResponseResponse = z.object({
+        selectedPollOption: z.number().optional()
+    }).strict();
+    static fetchUserVotesForPostSlugIdRequest = z.object({
+        postSlugId: z.string()
+    }).strict();
+    static fetchUserVotesForPostSlugIdResponse = z.array(z.object({
+        commentSlugId: z.string(),
+        votingAction: zodVotingOption
+    }).strict());
+    static castVoteForCommentRequest = z.object({
+        commentSlugId: z.string(),
+        chosenOption: zodVotingAction
+    }).strict();
 }
 
 export type AuthenticateRequestBody = z.infer<
@@ -186,9 +151,6 @@ export type Auth409 = z.infer<typeof Dto.auth409>;
 export type IsLoggedInResponse = z.infer<typeof Dto.isLoggedInResponse>;
 export type GetDeviceStatusResp = z.infer<typeof Dto.getDeviceStatusResp>;
 export type PostFetch200 = z.infer<typeof Dto.postFetch200>;
-export type FetchCommentsToVoteOn200 = z.infer<
-    typeof Dto.commentFetchToVoteOn200
->;
 export type CreateNewPostResponse = z.infer<typeof Dto.createNewPostResponse>;
 export type FetchPostBySlugIdResponse = z.infer<
     typeof Dto.fetchPostBySlugIdResponse

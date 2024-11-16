@@ -43,7 +43,7 @@ export function useCommonPost() {
                 updatedAt: postTable.updatedAt,
                 lastReactedAt: postTable.lastReactedAt,
                 commentCount: postTable.commentCount,
-                authorName: organisationTable.name,
+                authorName: userTable.userName,
                 authorImagePath: organisationTable.imageUrl,
             })
             .from(postTable)
@@ -86,8 +86,8 @@ export function useCommonPost() {
                     updatedAt: postItem.updatedAt,
                     lastReactedAt: postItem.lastReactedAt,
                     commentCount: postItem.commentCount,
-                    authorName: toUnionUndefined(postItem.authorName),
-                    authorImagePath: toUnionUndefined(postItem.authorImagePath)
+                    authorUserName: postItem.authorName,
+                    authorImagePath: toUnionUndefined(postItem.authorImagePath),
                 }
                 : {
                     postSlugId: postItem.slugId,
@@ -95,7 +95,7 @@ export function useCommonPost() {
                     updatedAt: postItem.updatedAt,
                     lastReactedAt: postItem.lastReactedAt,
                     commentCount: postItem.commentCount,
-                    authorName: toUnionUndefined(postItem.authorName),
+                    authorUserName: postItem.authorName,
                     authorImagePath: toUnionUndefined(postItem.authorImagePath)
                 };
 

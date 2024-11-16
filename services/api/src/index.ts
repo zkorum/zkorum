@@ -594,52 +594,23 @@ server.after(() => {
                     }
                 }
                 */
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().route({
-        method: "POST",
-        url: `/api/${apiVersion}/comment/fetchToVoteOn`,
-        schema: {
-            body: Dto.commentFetchToVoteOnRequest,
-            response: {
-                200: Dto.commentFetchToVoteOn200,
             },
-        },
-        handler: async (request) => {
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: undefined,
-            });
-            const status = await authUtilService.isLoggedIn(db, didWrite);
-            if (!status.isLoggedIn) {
-                throw server.httpErrors.unauthorized("Device is not logged in");
-            } else {
-                const { userId } = status;
-                const comments = await postService.fetchNextCommentsToVoteOn({
-                    db: db,
-                    userId: userId,
-                    postSlugId: request.body.postSlugId,
-                    numberOfCommentsToFetch:
-                        request.body.numberOfCommentsToFetch,
-                    httpErrors: server.httpErrors,
-                });
-                return comments;
-            }
-        },
-    });
-    server.withTypeProvider<ZodTypeProvider>().route({
-        method: "POST",
-        url: `/api/${apiVersion}/post/create`,
-        schema: {
-            body: Dto.createNewPostRequest,
-            response: {
-                200: Dto.createNewPostResponse,
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/post/create`,
+            schema: {
+                body: Dto.createNewPostRequest,
+                response: {
+                    200: Dto.createNewPostResponse
+                }
             },
-        },
-        handler: async (request) => {
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: undefined,
-            });
-            // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, undefined);
+                // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
 
             const status = await authUtilService.isLoggedIn(db, didWrite);
             if (!status.isLoggedIn) {

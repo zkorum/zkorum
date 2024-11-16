@@ -4,122 +4,70 @@
     <ZKHoverEffect :enable-hover="compactMode">
       <div class="container postPadding">
         <div class="innerContainer">
-          <PostMetadata
-            :poster-name="extendedPostData.metadata.posterName"
+          <PostMetadata :poster-user-name="extendedPostData.metadata.posterName"
             :poster-image-path="extendedPostData.metadata.posterImagePath"
-            :created-at="extendedPostData.metadata.createdAt"
-            :is-compat-size="true"
-            :skeleton-mode="skeletonMode"
-          />
+            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode" />
 
           <div class="postDiv">
             <div>
-              <div v-if="!skeletonMode" class="titleDiv">
+              <div v-if="!skeletonMode" class="titleDiv"
+                :class="{ extraTitleBottomPadding: extendedPostData.payload.body.length == 0 }">
                 {{ extendedPostData.payload.title }}
-                <div
-                  :class="{
-                    extraTitleBottomPadding:
-                      extendedPostData.payload.body.length == 0,
-                  }"
-                ></div>
               </div>
 
               <div v-if="skeletonMode" class="titleDiv">
-                <Skeleton
-                  width="100%"
-                  height="4rem"
-                  border-radius="16px"
-                ></Skeleton>
+                <Skeleton width="100%" height="4rem" border-radius="16px"></Skeleton>
               </div>
             </div>
 
-            <div
-              v-if="extendedPostData.payload.body.length > 0"
-              class="bodyDiv"
-            >
-              <span
-                :class="{ truncate: compactMode }"
-                v-html="extendedPostData.payload.body"
-              ></span>
+            <div v-if="extendedPostData.payload.body.length > 0" class="bodyDiv">
+              <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
             </div>
           </div>
 
-          <div
-            v-if="extendedPostData.payload.poll.hasPoll"
-            class="pollContainer"
-          >
-            <PollWrapper
-              :poll-options="extendedPostData.payload.poll.options"
+          <div v-if="extendedPostData.payload.poll.hasPoll" class="pollContainer">
+            <PollWrapper :poll-options="extendedPostData.payload.poll.options"
               :post-slug-id="extendedPostData.metadata.slugId"
-              :user-response="extendedPostData.userInteraction.pollResponse"
-            />
+              :user-response="extendedPostData.userInteraction.pollResponse" />
           </div>
 
           <div class="bottomButtons">
             <div class="leftButtonCluster">
               <div v-if="!skeletonMode">
-                <ZKButton
-                  color="button-background-color"
-                  text-color="black"
-                  :label="
-                    (
-                      extendedPostData.metadata.commentCount +
-                      commentCountOffset
-                    ).toString()
-                  "
-                  icon="mdi-comment-outline"
-                  @click.stop.prevent="clickedCommentButton()"
-                />
+                <ZKButton text-color="color-text-weak" size="0.8rem" :label="(
+                  extendedPostData.metadata.commentCount + commentCountOffset
+                ).toString()
+                  " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
               </div>
               <div v-if="skeletonMode">
-                <Skeleton
-                  width="3rem"
-                  height="2rem"
-                  border-radius="16px"
-                ></Skeleton>
+                <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
               </div>
             </div>
 
             <div>
               <div v-if="!skeletonMode">
-                <ZKButton
-                  color="button-background-color"
-                  text-color="black"
-                  icon="mdi-export-variant"
-                  @click.stop.prevent="shareClicked()"
-                />
+                <ZKButton text-color="color-text-weak" size="0.8rem" icon="mdi-export-variant"
+                  @click.stop.prevent="shareClicked()" />
               </div>
               <div v-if="skeletonMode">
-                <Skeleton
-                  width="3rem"
-                  height="2rem"
-                  border-radius="16px"
-                ></Skeleton>
+                <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
               </div>
             </div>
           </div>
         </div>
 
         <div v-if="!compactMode" ref="commentSectionRef">
-          <CommentSection
-            :key="commentCountOffset"
-            :post-slug-id="extendedPostData.metadata.slugId"
-            :comment-list="commentList"
-            :comment-ranking="extendedPostData.userInteraction.commentRanking"
-            :initial-comment-slug-id="commentSlugId"
-          />
+          <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.slugId"
+            :comment-list="commentList" :comment-ranking="extendedPostData.userInteraction.commentRanking"
+            :initial-comment-slug-id="commentSlugId" />
         </div>
       </div>
     </ZKHoverEffect>
 
     <FloatingBottomContainer v-if="!compactMode">
-      <CommentComposer
-        :show-controls="focusCommentElement"
-        :post-slug-id="extendedPostData.metadata.slugId"
-        @cancel-clicked="cancelledCommentComposor()"
-        @submitted-comment="submittedComment()"
-        @editor-focused="focusCommentElement = true"
-      />
+      <CommentComposer :show-controls="focusCommentElement" :post-slug-id="extendedPostData.metadata.slugId"
+        @cancel-clicked="cancelledCommentComposor()" @submitted-comment="submittedComment()"
+        @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
   </div>
 </template>
@@ -279,6 +227,6 @@ function shareClicked() {
 }
 
 .extraTitleBottomPadding {
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 </style>

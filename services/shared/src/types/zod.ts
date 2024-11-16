@@ -72,6 +72,7 @@ export const zodPostDataWithResult = z
     .strict();
 export const zodSlugId = z.string().max(10);
 export const zodCommentCount = z.number().int().nonnegative();
+export const zodUserName = z.string().max(MAX_LENGTH_USERNAME).min(MIN_LENGTH_USERNAME);
 export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,
@@ -80,21 +81,20 @@ export const zodPostMetadata = z
         updatedAt: z.date(),
         lastReactedAt: z.date(),
         commentCount: zodCommentCount,
-        authorName: z.string().optional(),
-        authorImagePath: z.string().url({ message: "Invalid url" }).optional(), // TODO: check if it accepts path segments for local dev
+        authorUserName: zodUserName,
+        authorImagePath: z.string().url({ message: "Invalid url" }).optional() // TODO: check if it accepts path segments for local dev
     })
     .strict();
 export const zodCommentContent = z.string().min(1); // Cannot specify the max length here due to the HTML tags
-export const zodCommentItem = z
-    .object({
-        commentSlugId: zodSlugId,
-        createdAt: z.date(),
-        updatedAt: z.date(),
-        comment: zodCommentContent,
-        numLikes: z.number().int().nonnegative(),
-        numDislikes: z.number().int().nonnegative(),
-    })
-    .strict();
+export const zodCommentItem = z.object({
+    commentSlugId: zodSlugId,
+    createdAt: z.date(),
+    updatedAt: z.date(),
+    comment: zodCommentContent,
+    numLikes: z.number().int().nonnegative(),
+    numDislikes: z.number().int().nonnegative(),
+    userName: zodUserName,
+}).strict();
 export const zodExtendedPostData = z
     .object({
         metadata: zodPostMetadata,
@@ -114,7 +114,6 @@ export const languageObjectList: LanguageObject[] = [
     { lang: "fr", name: "French" },
     { lang: "zh", name: "Chinese" },
 ];
-export const zodUserName = z.string().max(MAX_LENGTH_USERNAME).min(MIN_LENGTH_USERNAME);
 
 export type Device = z.infer<typeof zodDevice>;
 export type Devices = z.infer<typeof zodDevices>;
