@@ -3,6 +3,8 @@ import { validateDidKey, validateDidWeb } from "../did/util.js";
 import {
     MAX_LENGTH_TITLE,
     MAX_LENGTH_OPTION,
+    MIN_LENGTH_USERNAME,
+    MAX_LENGTH_USERNAME,
 } from "../shared.js";
 
 export const zodEmail = z
@@ -91,6 +93,18 @@ export const zodExtendedPostData = z
     .strict();
 export const zodVotingOption = z.enum(["like", "dislike"]);
 export const zodVotingAction = z.enum(["like", "dislike", "cancel"]);
+export const zodLanguageNameOption = z.enum(["English", "Spanish", "Chinese"]);
+export interface LanguageObject {
+    name: string;
+    lang: string;
+}
+export const languageObjectList: LanguageObject[] = [
+    { lang: "en", name: "English" },
+    { lang: "es", name: "Spanish" },
+    { lang: "fr", name: "French" },
+    { lang: "zh", name: "Chinese" },
+];
+export const zodUserName = z.string().max(MAX_LENGTH_USERNAME).min(MIN_LENGTH_USERNAME);
 
 export type Email = z.infer<typeof zodEmail>;
 export type Device = z.infer<typeof zodDevice>;

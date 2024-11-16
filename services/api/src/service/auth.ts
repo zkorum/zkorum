@@ -21,6 +21,7 @@ interface RegisterProps {
     didWrite: string;
     now: Date;
     sessionExpiry: Date;
+    userName: string;
 }
 
 interface LoginProps {
@@ -190,6 +191,7 @@ export async function verifyOtp({
                 didWrite,
                 now,
                 sessionExpiry: loginSessionExpiry,
+                userName: "TEST USER"
             });
             return {
                 success: true,
@@ -278,6 +280,7 @@ export async function register({
     didWrite,
     now,
     sessionExpiry,
+    userName
 }: RegisterProps): Promise<void> {
     await db.transaction(async (tx) => {
         const authAttemptResult = await tx
@@ -302,6 +305,7 @@ export async function register({
             .where(eq(authAttemptTable.didWrite, didWrite));
         await tx.insert(userTable).values({
             id: authAttemptResult[0].userId,
+            userName: userName
         });
         await tx.insert(deviceTable).values({
             userId: authAttemptResult[0].userId,

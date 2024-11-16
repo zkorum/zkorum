@@ -3,8 +3,10 @@
     <div class="container">
       <div class="metadata">
         <div>
-          <img v-if="!skeletonMode" :src="posterImagePath" class="companyIcon" />
-          <Skeleton v-if="skeletonMode" shape="circle" size="2.5rem"></Skeleton>
+          <Avatar v-if="!skeletonMode" variant="bauhaus" name="Mujahid Anuar" :colors="colors" class="avatarIcon" />
+
+          <Skeleton v-if="skeletonMode" shape="circle" size="2.5rem">
+          </Skeleton>
         </div>
 
         <div>
@@ -42,6 +44,7 @@ import { getTimeFromNow } from "src/utils/common";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import Skeleton from "primevue/skeleton";
+import Avatar from "vue-boring-avatars";
 
 defineProps<{
   posterName: string;
@@ -49,6 +52,8 @@ defineProps<{
   createdAt: string;
   skeletonMode: boolean;
 }>();
+
+const colors = ["#92A1C6", "#146A7C", "#F0AB3D", "#C271B4", "#C20D90"];
 
 const { showPostOptionSelector } = useBottomSheet();
 
@@ -70,8 +75,7 @@ function clickedMoreIcon() {
   width: 4rem;
 }
 
-.companyIcon {
-  border-radius: 50%;
+.avatarIcon {
   width: 2rem;
   margin-right: 0.5rem;
 }

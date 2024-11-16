@@ -1,5 +1,5 @@
 {
-  "id": "2d3c72a4-1cd5-4420-8887-a29701c033a3",
+  "id": "2b117dcd-04cf-4896-a0e1-d91d4438466b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2009,6 +2009,19 @@
           "primaryKey": false,
           "notNull": false
         },
+        "user_name": {
+          "name": "user_name",
+          "type": "varchar(23)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "language_id": {
+          "name": "language_id",
+          "type": "lang",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp (0)",
@@ -2634,6 +2647,16 @@
         "backup",
         "secondary",
         "other"
+      ]
+    },
+    "public.lang": {
+      "name": "lang",
+      "schema": "public",
+      "values": [
+        "en",
+        "es",
+        "fr",
+        "zh"
       ]
     },
     "public.moderation_action": {
