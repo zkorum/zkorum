@@ -6,7 +6,7 @@
           {{ description }}
         </div>
         <swiper-container ref="swipingElementRef" :slides-per-view="slidesPerView" :initial-slide="currentSlide"
-          :scrollbar="true" class="swiperClusterHover">
+          :scrollbar="false" class="swiperClusterHover">
           <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value"
             class="scrollPadding">
             <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem"
