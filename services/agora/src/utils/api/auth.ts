@@ -187,7 +187,7 @@ export function useBackendAuthApi() {
     return { data: otpDetails.data };
   }
 
-  function loadCommonModules() {
+  function loadAuthenticatedModules() {
     loadUserProfile();
   }
 
@@ -197,15 +197,18 @@ export function useBackendAuthApi() {
       if (!status.isSuccessful) {
         if (status.error == "already_logged_in") {
           console.log("user is already logged in");
-          loadCommonModules();
+          loadAuthenticatedModules();
         } else if (status.error == "throttled") {
           console.log("auth check had been throttled");
         } else {
           // unauthorized
           console.group("Failed to check user login status");
           console.log(status.error);
+          loadPostData(false);
           userLogout();
         }
+      } else {
+        loadAuthenticatedModules();
       }
     }
 
