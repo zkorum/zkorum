@@ -11,6 +11,7 @@ import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useCommonApi } from "./common";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { usePostStore } from "src/stores/post";
+import { useUserStore } from "src/stores/user";
 
 export interface AuthenticateReturn {
   isSuccessful: boolean;
@@ -29,6 +30,7 @@ export function useBackendAuthApi() {
   const { userLogout } = useAuthenticationStore();
   const { isAuthenticated } = useAuthenticationStore();
   const { loadPostData } = usePostStore();
+  const { loadUserProfile } = useUserStore();
 
   async function sendSmsCode({
     phoneNumber,
@@ -185,12 +187,17 @@ export function useBackendAuthApi() {
     return { data: otpDetails.data };
   }
 
+  function loadCommonModules() {
+    loadUserProfile();
+  }
+
   async function initializeAuthState() {
     if (isAuthenticated) {
       const status = await deviceIsLoggedIn();
       if (!status.isSuccessful) {
         if (status.error == "already_logged_in") {
           console.log("user is already logged in");
+          loadCommonModules();
         } else if (status.error == "throttled") {
           console.log("auth check had been throttled");
         } else {
