@@ -141,7 +141,8 @@ export class Dto {
         commentCount: z.number().gte(0),
         postCount: z.number().gte(0),
         createdAt: z.date(),
-        userName: zodUserName
+        userName: zodUserName,
+        userPostList: z.array(zodExtendedPostData),
     }).strict();
 }
 

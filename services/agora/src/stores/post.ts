@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { useStorage } from "@vueuse/core";
 import { useBackendPostApi } from "src/utils/api/post";
 import { useAuthenticationStore } from "./authentication";
+import type { ExtendedPost } from "src/shared/types/zod";
 
 export interface DummyPollOptionFormat {
   index: number;
@@ -52,23 +53,6 @@ export interface DummyUserPollResponse {
   responseIndex: number;
 }
 
-export interface DummyPostDataFormat {
-  metadata: DummyPostMetadataFormat;
-  payload: {
-    title: string;
-    body: string;
-    poll: {
-      hasPoll: boolean;
-      options: DummyPollOptionFormat[];
-    };
-    comments: DummyCommentFormat[];
-  };
-  userInteraction: {
-    pollResponse: DummyUserPollResponse;
-    commentRanking: DummyCommentRankingFormat;
-  };
-}
-
 export interface DummyUserPostDataFormat {
   slugId: string;
   poll: {
@@ -76,6 +60,13 @@ export interface DummyUserPostDataFormat {
     votedIndex: number;
   };
   comment: { ratedIndexList: number[] };
+}
+
+export interface DummyPostDataFormat extends ExtendedPost {
+  userInteraction: {
+    pollResponse: DummyUserPollResponse;
+    commentRanking: DummyCommentRankingFormat;
+  };
 }
 
 export const usePostStore = defineStore("post", () => {
@@ -87,34 +78,30 @@ export const usePostStore = defineStore("post", () => {
 
   const emptyPost: DummyPostDataFormat = {
     metadata: {
-      uid: "",
-      slugId: "",
       isHidden: false,
-      createdAt: new Date().toString(),
+      createdAt: new Date(),
       commentCount: 0,
-      communityId: "",
-      posterName: "",
-      posterImagePath: "",
+      authorUserName: "",
+      lastReactedAt: new Date(),
+      postSlugId: "",
+      updatedAt: new Date(),
+      authorImagePath: ""
     },
     payload: {
       title: "",
       body: "",
-      poll: {
-        hasPoll: false,
-        options: [],
-      },
-      comments: [],
+      poll: []
     },
     userInteraction: {
+      commentRanking: {
+        assignedRankingItems: [],
+        rankedCommentList: new Map<number, PossibleCommentRankingActions>
+      },
       pollResponse: {
         hadResponded: false,
         responseIndex: 0
-      },
-      commentRanking: {
-        rankedCommentList: new Map(),
-        assignedRankingItems: [],
-      },
-    },
+      }
+    }
   };
 
   const masterPostDataList = ref<DummyPostDataFormat[]>([emptyPost, emptyPost, emptyPost, emptyPost]);
@@ -130,7 +117,7 @@ export const usePostStore = defineStore("post", () => {
     if (loadMoreData) {
       const lastPostItem = masterPostDataList.value.at(-1);
       if (lastPostItem) {
-        lastSlugId = lastPostItem.metadata.slugId;
+        lastSlugId = lastPostItem.metadata.postSlugId;
       }
     }
 
@@ -179,7 +166,7 @@ export const usePostStore = defineStore("post", () => {
   function getPostBySlugId(slugId: string) {
     for (let i = 0; i < masterPostDataList.value.length; i++) {
       const postItem = masterPostDataList.value[i];
-      if (slugId == postItem.metadata.slugId) {
+      if (slugId == postItem.metadata.postSlugId) {
         return postItem;
       }
     }

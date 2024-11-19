@@ -18,6 +18,7 @@ import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { useBackendPollApi } from "./poll";
+import type { ExtendedPost } from "src/shared/types/zod";
 
 export function useBackendPostApi() {
   const { buildEncodedUcan } = useCommonApi();
@@ -54,23 +55,15 @@ export function useBackendPostApi() {
     const newItem: DummyPostDataFormat = {
       metadata: {
         commentCount: postElement.metadata.commentCount,
-        communityId: "",
-        createdAt: postElement.metadata.createdAt,
-        isHidden: false,
-        posterImagePath: "/icons/favicon-128x128.png",
-        posterName: postElement.metadata.authorUserName,
-        slugId: postElement.metadata.postSlugId,
-        uid: "",
+        createdAt: new Date(postElement.metadata.createdAt),
+        isHidden: postElement.metadata.isHidden,
+        authorUserName: postElement.metadata.authorUserName,
+        lastReactedAt: new Date(postElement.metadata.lastReactedAt),
+        postSlugId: postElement.metadata.postSlugId,
+        updatedAt: new Date(postElement.metadata.updatedAt),
+        authorImagePath: postElement.metadata.authorImagePath
       },
-      payload: {
-        body: postElement.payload.body || "",
-        comments: [],
-        poll: {
-          hasPoll: postElement.payload.poll ? true : false,
-          options: pollOptionList,
-        },
-        title: postElement.payload.title,
-      },
+      payload: postElement.payload,
       userInteraction: {
         pollResponse: {
           hadResponded: pollResponseOption != undefined,
@@ -79,12 +72,12 @@ export function useBackendPostApi() {
         commentRanking: {
           assignedRankingItems: [],
           rankedCommentList: new Map<number, PossibleCommentRankingActions>(),
-        },
-      },
+        }
+      }
     };
 
     return newItem;
-  }
+  };
 
   async function fetchPostBySlugId(
     postSlugId: string,
@@ -190,5 +183,33 @@ export function useBackendPostApi() {
     }
   }
 
-  return { createNewPost, fetchRecentPost, fetchPostBySlugId };
+  function composeInternalPostList(incomingPostList: ApiV1FeedFetchRecentPost200ResponsePostDataListInner[]): ExtendedPost[] {
+    const parsedList: ExtendedPost[] = [];
+
+    incomingPostList.forEach(item => {
+      const newPost: ExtendedPost = {
+        metadata: {
+          authorUserName: item.metadata.authorUserName,
+          commentCount: item.metadata.commentCount,
+          createdAt: new Date(item.metadata.createdAt),
+          lastReactedAt: new Date(item.metadata.lastReactedAt),
+          postSlugId: item.metadata.postSlugId,
+          updatedAt: new Date(item.metadata.updatedAt),
+          authorImagePath: item.metadata.authorImagePath,
+          isHidden: item.metadata.isHidden
+        },
+        payload: {
+          title: item.payload.title,
+          body: item.payload.body,
+          poll: item.payload.poll
+        }
+      };
+
+      parsedList.push(newPost);
+    });
+
+    return parsedList;
+  }
+
+  return { createNewPost, fetchRecentPost, fetchPostBySlugId, composeInternalPostList };
 }

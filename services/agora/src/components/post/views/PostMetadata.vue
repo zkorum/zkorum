@@ -47,8 +47,7 @@ import UserAvatar from "src/components/account/UserAvatar.vue";
 
 defineProps<{
   posterUserName: string;
-  posterImagePath: string;
-  createdAt: string;
+  createdAt: Date;
   skeletonMode: boolean;
 }>();
 

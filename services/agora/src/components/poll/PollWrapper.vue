@@ -4,36 +4,20 @@
       <!-- Show buttons for voting -->
       <div v-if="currentDisplayMode == DisplayModes.Vote">
         <div class="pollOptionList">
-          <ZKButton
-            v-for="optionItem in localPollOptionList"
-            :key="optionItem.index"
-            outline
-            :label="optionItem.option"
-            text-color="primary"
-            @click.stop.prevent="voteCasted(optionItem.index)"
-          />
+          <ZKButton v-for="optionItem in localPollOptionList" :key="optionItem.index" outline :label="optionItem.option"
+            text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
         </div>
       </div>
 
       <!-- Show the final result -->
-      <div
-        v-if="currentDisplayMode == DisplayModes.Results"
-        class="pollOptionList"
-      >
-        <option-view
-          v-for="optionItem in localPollOptionList"
-          :key="optionItem.index"
-          :option="optionItem.option"
-          :voted-by-user="
-            userVoteStatus.voteIndex == optionItem.index &&
+      <div v-if="currentDisplayMode == DisplayModes.Results" class="pollOptionList">
+        <option-view v-for="optionItem in localPollOptionList" :key="optionItem.index" :option="optionItem.option"
+          :voted-by-user="userVoteStatus.voteIndex == optionItem.index &&
             userVoteStatus.hasVoted
-          "
-          :option-percentage="
-            totalVoteCount === 0
+            " :option-percentage="totalVoteCount === 0
               ? 0
               : Math.round((optionItem.numResponses * 100) / totalVoteCount)
-          "
-        />
+              " />
       </div>
 
       <div class="actionButtonCluster">
@@ -44,23 +28,11 @@
         <div v-if="userVoteStatus.hasVoted"></div>
 
         <div v-if="!userVoteStatus.hasVoted">
-          <ZKButton
-            v-if="currentDisplayMode == DisplayModes.Vote"
-            outline
-            text-color="primary"
-            icon="mdi-chart-bar"
-            label="Results"
-            @click.stop.prevent="showResultsInterface()"
-          />
+          <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
+            label="Results" @click.stop.prevent="showResultsInterface()" />
 
-          <ZKButton
-            v-if="currentDisplayMode == DisplayModes.Results"
-            outline
-            text-color="primary"
-            label="Vote"
-            icon="mdi-vote"
-            @click.stop.prevent="showVoteInterface()"
-          />
+          <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Vote"
+            icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
         </div>
       </div>
     </div>
@@ -81,10 +53,11 @@ import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
 import { useBackendPollApi } from "src/utils/api/poll";
 import { useDialog } from "src/utils/ui/dialog";
+import type { PollList } from "src/shared/types/zod";
 
 const props = defineProps<{
   userResponse: DummyUserPollResponse;
-  pollOptions: DummyPollOptionFormat[];
+  pollOptions: PollList;
   postSlugId: string;
 }>();
 
@@ -132,11 +105,11 @@ function incrementLocalPollIndex(targetIndex: number) {
 }
 
 function initializeLocalPoll() {
-  props.pollOptions.forEach((pollOption) => {
+  props.pollOptions?.forEach(pollOption => {
     const localPollItem: DummyPollOptionFormat = {
-      index: pollOption.index,
+      index: pollOption.optionNumber - 1,
       numResponses: pollOption.numResponses,
-      option: pollOption.option,
+      option: pollOption.optionTitle
     };
     localPollOptionList.value.push(localPollItem);
   });

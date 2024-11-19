@@ -56,18 +56,17 @@ export const zodDevices = z.array(zodDevice); // list of didWrite of all the dev
 export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).min(1);
 export const zodPostBody = z.string().optional(); // Cannot specify length due to HTML tags
 export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).min(1);
-export const zodPollOptionWithResult = z
-    .object({
-        optionNumber: z.number().int().min(1).max(6),
-        optionTitle: zodPollOptionTitle,
-        numResponses: z.number().int().nonnegative(),
-    })
-    .strict();
+export const zodPollOptionWithResult = z.object({
+    optionNumber: z.number().int().min(1).max(6),
+    optionTitle: zodPollOptionTitle,
+    numResponses: z.number().int().nonnegative(),
+}).strict();
+export const zodPollList = z.array(zodPollOptionWithResult).optional();
 export const zodPostDataWithResult = z
     .object({
         title: zodPostTitle,
         body: zodPostBody,
-        poll: z.array(zodPollOptionWithResult).optional(),
+        poll: zodPollList
     })
     .strict();
 export const zodSlugId = z.string().max(10);
@@ -126,3 +125,4 @@ export type CommentItem = z.infer<typeof zodCommentItem>;
 export type SlugId = z.infer<typeof zodSlugId>;
 export type VotingOption = z.infer<typeof zodVotingOption>;
 export type VotingAction = z.infer<typeof zodVotingAction>;
+export type PollList = z.infer<typeof zodPollList>;

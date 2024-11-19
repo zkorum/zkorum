@@ -3,10 +3,12 @@ import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useDialog } from "../ui/dialog";
 import { useCommonApi } from "./common";
-import { FetchUserProfileResponse } from "src/shared/types/dto";
+import { useBackendPostApi } from "./post";
+import type { FetchUserProfileResponse } from "src/shared/types/dto";
 
 export function useBackendUserApi() {
   const { buildEncodedUcan } = useCommonApi();
+  const { composeInternalPostList } = useBackendPostApi();
 
   const { showMessage } = useDialog();
 
@@ -25,11 +27,14 @@ export function useBackendUserApi() {
         },
       });
 
+      const internalPostList = composeInternalPostList(response.data.userPostList);
+
       return {
         commentCount: response.data.commentCount,
         postCount: response.data.postCount,
         createdAt: new Date(response.data.createdAt),
-        userName: response.data.userName
+        userName: response.data.userName,
+        userPostList: internalPostList
       };
     } catch (e) {
       console.error(e);
@@ -37,6 +42,7 @@ export function useBackendUserApi() {
       return undefined;
     }
   }
+
 
   return { fetchUserProfile };
 }

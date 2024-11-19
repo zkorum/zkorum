@@ -592,6 +592,12 @@ export interface ApiV1UserFetchUserProfilePost200Response {
      * @memberof ApiV1UserFetchUserProfilePost200Response
      */
     'userName': string;
+    /**
+     * 
+     * @type {Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInner>}
+     * @memberof ApiV1UserFetchUserProfilePost200Response
+     */
+    'userPostList': Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInner>;
 }
 /**
  * 

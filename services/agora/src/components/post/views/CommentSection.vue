@@ -1,38 +1,24 @@
 <template>
   <div>
     <div class="container">
-      <CommentSortSelector
-        @changed-algorithm="(value) => (commentSortPreference = value)"
-      />
+      <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)" />
 
-      <div
-        v-if="commentItems.length == 0 && commentSortPreference != 'clusters'"
-        class="noCommentMessage"
-      >
+      <div v-if="commentItems.length == 0 && commentSortPreference != 'clusters'" class="noCommentMessage">
         There are no comments in this post.
       </div>
 
       <div v-if="commentItems.length > 0" class="commentListFlex">
-        <div
-          v-for="(commentItem, index) in commentItems"
-          :key="commentItem.commentSlugId"
-        >
-          <CommentSingle
-            :comment-item="commentItem"
-            :post-slug-id="postSlugId"
+        <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
+          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
             :ranked-action="getCommentItemRankStatus(index)"
             :highlight="initialCommentSlugId == commentItem.commentSlugId"
-            :comment-slug-id-liked-map="commentSlugIdLikedMap"
-          />
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
       </div>
 
-      <div
-        v-if="commentSortPreference == 'clusters'"
-        :style="{ paddingTop: '1rem' }"
-      >
+      <div v-if="commentSortPreference == 'clusters'" :style="{ paddingTop: '1rem' }">
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <img src="/development/polis/example.png" class="polisExampleImg" />
@@ -47,11 +33,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-  type DummyCommentFormat,
-  type DummyCommentRankingFormat,
-  type PossibleCommentRankingActions,
-} from "src/stores/post";
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { onMounted, ref } from "vue";
@@ -61,9 +42,9 @@ import { useBackendCommentApi } from "src/utils/api/comment";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { type CommentItem } from "src/shared/types/zod";
+import type { DummyCommentRankingFormat, PossibleCommentRankingActions } from "src/stores/post";
 
 const props = defineProps<{
-  commentList: DummyCommentFormat[];
   postSlugId: string;
   commentRanking: DummyCommentRankingFormat;
   initialCommentSlugId: string;

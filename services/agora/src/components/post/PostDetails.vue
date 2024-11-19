@@ -4,14 +4,13 @@
     <ZKHoverEffect :enable-hover="compactMode">
       <div class="container postPadding">
         <div class="innerContainer">
-          <PostMetadata :poster-user-name="extendedPostData.metadata.posterName"
-            :poster-image-path="extendedPostData.metadata.posterImagePath"
+          <PostMetadata :poster-user-name="extendedPostData.metadata.authorUserName"
             :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode" />
 
           <div class="postDiv">
             <div>
               <div v-if="!skeletonMode" class="titleDiv"
-                :class="{ extraTitleBottomPadding: extendedPostData.payload.body.length == 0 }">
+                :class="{ extraTitleBottomPadding: extendedPostData.payload.body?.length == 0 }">
                 {{ extendedPostData.payload.title }}
               </div>
 
@@ -20,14 +19,15 @@
               </div>
             </div>
 
-            <div v-if="extendedPostData.payload.body.length > 0" class="bodyDiv">
+            <div v-if="extendedPostData.payload.body != undefined && extendedPostData.payload.body.length > 0"
+              class="bodyDiv">
               <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
             </div>
           </div>
 
-          <div v-if="extendedPostData.payload.poll.hasPoll" class="pollContainer">
-            <PollWrapper :poll-options="extendedPostData.payload.poll.options"
-              :post-slug-id="extendedPostData.metadata.slugId"
+          <div v-if="extendedPostData.payload.poll" class="pollContainer">
+            <PollWrapper :poll-options="extendedPostData.payload.poll"
+              :post-slug-id="extendedPostData.metadata.postSlugId"
               :user-response="extendedPostData.userInteraction.pollResponse" />
           </div>
 
@@ -57,15 +57,15 @@
         </div>
 
         <div v-if="!compactMode" ref="commentSectionRef">
-          <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.slugId"
-            :comment-list="commentList" :comment-ranking="extendedPostData.userInteraction.commentRanking"
+          <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.postSlugId"
+            :comment-ranking="extendedPostData.userInteraction.commentRanking"
             :initial-comment-slug-id="commentSlugId" />
         </div>
       </div>
     </ZKHoverEffect>
 
     <FloatingBottomContainer v-if="!compactMode">
-      <CommentComposer :show-controls="focusCommentElement" :post-slug-id="extendedPostData.metadata.slugId"
+      <CommentComposer :show-controls="focusCommentElement" :post-slug-id="extendedPostData.metadata.postSlugId"
         @cancel-clicked="cancelledCommentComposor()" @submitted-comment="submittedComment()"
         @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
@@ -96,8 +96,6 @@ const props = defineProps<{
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 
 const commentCountOffset = ref(0);
-
-const commentList = ref(props.extendedPostData.payload.comments);
 
 const commentSectionRef = ref<HTMLElement | null>(null);
 
@@ -145,7 +143,7 @@ function clickedCommentButton() {
   if (route.name != "single-post") {
     router.push({
       name: "single-post",
-      params: { postSlugId: props.extendedPostData.metadata.slugId },
+      params: { postSlugId: props.extendedPostData.metadata.postSlugId },
       query: { action: "comment" },
     });
   } else {
@@ -155,7 +153,7 @@ function clickedCommentButton() {
 
 function shareClicked() {
   const sharePostUrl =
-    window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
+    window.location.origin + "/post/" + props.extendedPostData.metadata.postSlugId;
   webShare.share(
     "Agora - " + props.extendedPostData.payload.title,
     sharePostUrl

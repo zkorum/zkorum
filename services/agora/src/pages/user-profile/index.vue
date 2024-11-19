@@ -10,8 +10,8 @@
       </div>
 
       <div class="profileMetadataBar">
+        <div>{{ profileData.postCount }} posts <span class="dotPadding">•</span></div>
         <div>{{ profileData.commentCount }} comments <span class="dotPadding">•</span></div>
-        <div>{{ profileData.postCount }} votes <span class="dotPadding">•</span></div>
         <div>{{ profileCreateDateString }}</div>
       </div>
     </div>
