@@ -2,7 +2,7 @@
   <div>
     <div class="container">
       <div class="metadata">
-        <div>
+        <div v-if="showAuthor">
           <UserAvatar v-if="!skeletonMode" :user-name="posterUserName" :size="40" class="avatarIcon" />
 
           <Skeleton v-if="skeletonMode" shape="circle" size="2.5rem">
@@ -10,7 +10,7 @@
         </div>
 
         <div class="userNameTime">
-          <div>
+          <div v-if="showAuthor">
             <div v-if="!skeletonMode">
               {{ posterUserName }}
             </div>
@@ -19,7 +19,14 @@
 
           <div>
             <div v-if="!skeletonMode">
-              {{ getTimeFromNow(new Date(createdAt)) }}
+              <div v-if="displayAbsoluteTime">
+                <Tag>
+                  {{ getDateString(new Date(createdAt)) }}
+                </Tag>
+              </div>
+              <div v-if="!displayAbsoluteTime">
+                {{ getTimeFromNow(new Date(createdAt)) }}
+              </div>
             </div>
             <Skeleton v-if="skeletonMode" width="2rem"></Skeleton>
           </div>
@@ -39,16 +46,19 @@
 </template>
 
 <script setup lang="ts">
-import { getTimeFromNow } from "src/utils/common";
+import { getDateString, getTimeFromNow } from "src/utils/common";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import Skeleton from "primevue/skeleton";
 import UserAvatar from "src/components/account/UserAvatar.vue";
+import Tag from "primevue/tag";
 
 defineProps<{
   posterUserName: string;
   createdAt: Date;
   skeletonMode: boolean;
+  showAuthor: boolean;
+  displayAbsoluteTime: boolean;
 }>();
 
 const { showPostOptionSelector } = useBottomSheet();

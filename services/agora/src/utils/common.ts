@@ -2,6 +2,14 @@ import { nowZeroMs } from "src/shared/common/util";
 import { Platform } from "quasar";
 import { z } from "zod";
 
+export function getDateString(dateObject: Date) {
+  const parsedDate = new Date(dateObject);
+  return parsedDate.toLocaleDateString("en-US", {
+    year: "numeric", month: "short",
+    day: "numeric"
+  });
+}
+
 export function getTimeFromNow(time: Date): string {
   const now = nowZeroMs();
   const difference = now.getTime() - time.getTime();

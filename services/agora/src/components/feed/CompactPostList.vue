@@ -26,7 +26,8 @@
           <div v-if="masterPostDataList.length > 0" class="postListFlex">
             <div v-for="postData in masterPostDataList" :key="postData.metadata.postSlugId">
               <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-                :skeleton-mode="!dataReady" class="showCursor" @click="openPost(postData.metadata.postSlugId)" />
+                :skeleton-mode="!dataReady" class="showCursor" :show-author="true" :display-absolute-time="false"
+                @click="openPost(postData.metadata.postSlugId)" />
 
               <div class="seperator">
                 <q-separator :inset="false" />
@@ -66,8 +67,6 @@ import { onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useDocumentVisibility, useElementSize, useElementVisibility, useWindowScroll } from "@vueuse/core";
 import { useRouter } from "vue-router";
-
-// const { lastNavigatedRouteName } = useLastNavigatedRouteName();
 
 const { masterPostDataList, dataReady, endOfFeed, lastSavedHomeFeedPosition } = storeToRefs(usePostStore());
 const { loadPostData, hasNewPosts } = usePostStore();

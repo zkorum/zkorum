@@ -5,7 +5,8 @@
       <div class="container postPadding">
         <div class="innerContainer">
           <PostMetadata :poster-user-name="extendedPostData.metadata.authorUserName"
-            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode" />
+            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode"
+            :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime" />
 
           <div class="postDiv">
             <div>
@@ -91,6 +92,8 @@ const props = defineProps<{
   extendedPostData: DummyPostDataFormat;
   compactMode: boolean;
   skeletonMode: boolean;
+  showAuthor: boolean;
+  displayAbsoluteTime: boolean;
 }>();
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
@@ -173,12 +176,11 @@ function shareClicked() {
 }
 
 .titleDiv {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: 1rem;
 }
 
 .bodyDiv {
-  font-size: 1rem;
+  font-size: 0.9rem;
   padding-bottom: 1rem;
   font-weight: 400;
 }

@@ -1,11 +1,7 @@
 <template>
   <div>
-    <PostDetails
-      v-if="dataLoaded"
-      :extended-post-data="postData"
-      :compact-mode="false"
-      :skeleton-mode="false"
-    />
+    <PostDetails v-if="dataLoaded" :extended-post-data="postData" :compact-mode="false" :skeleton-mode="false"
+      :show-author="true" :display-absolute-time="false" />
   </div>
 </template>
 

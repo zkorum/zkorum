@@ -26,7 +26,8 @@
         <div class="tabPanelPadding">
           <div v-for="postData in profileData.userPostList" :key="postData.metadata.postSlugId">
             <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-              :skeleton-mode="false" class="showCursor" @click="openPost(postData.metadata.postSlugId)" />
+              :skeleton-mode="false" class="showCursor" :show-author="false" :display-absolute-time="true"
+              @click="openPost(postData.metadata.postSlugId)" />
 
             <div class="seperator">
               <q-separator :inset="false" />
@@ -54,6 +55,7 @@ import { useUserStore } from "src/stores/user";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import PostDetails from "src/components/post/PostDetails.vue";
+import { getDateString } from "src/utils/common";
 
 const { profileData } = useUserStore();
 
@@ -62,14 +64,6 @@ const router = useRouter();
 const profileCreateDateString = computed(() => {
   return getDateString(profileData.value.createdAt);
 });
-
-function getDateString(dateObject: Date) {
-  const parsedDate = new Date(dateObject);
-  return parsedDate.toLocaleDateString("en-US", {
-    year: "numeric", month: "short",
-    day: "numeric"
-  });
-}
 
 function openPost(postSlugId: string) {
   router.push({ name: "single-post", params: { postSlugId: postSlugId } });
