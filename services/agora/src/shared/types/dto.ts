@@ -11,6 +11,7 @@ import {
     zodPostBody,
     zodVotingOption,
     zodVotingAction,
+    zodUserName,
     zodPhoneNumber,
 } from "./zod.js";
 
@@ -137,6 +138,12 @@ export class Dto {
         commentSlugId: z.string(),
         chosenOption: zodVotingAction
     }).strict();
+    static fetchUserProfileResponse = z.object({
+        commentCount: z.number().gte(0),
+        postCount: z.number().gte(0),
+        createdAt: z.date(),
+        userName: zodUserName
+    }).strict();
 }
 
 export type AuthenticateRequestBody = z.infer<
@@ -157,3 +164,4 @@ export type FetchUserPollResponseResponse = z.infer<typeof Dto.fetchUserPollResp
 export type FetchUserVotesForPostSlugIdResponseResponse = z.infer<typeof Dto.fetchUserVotesForPostSlugIdResponse>;
 export type FetchCommentFeedResponse = z.infer<typeof Dto.fetchCommentFeedResponse>;
 export type FetchFeedResponse = z.infer<typeof Dto.fetchFeedResponse>;
+export type FetchUserProfileResponse = z.infer<typeof Dto.fetchUserProfileResponse>;

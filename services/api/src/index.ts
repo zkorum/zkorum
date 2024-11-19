@@ -32,10 +32,8 @@ import {
     postNewComment,
 } from "./service/comment.js";
 import { getUserPollResponse, submitPollResponse } from "./service/poll.js";
-import {
-    castVoteForCommentSlugId,
-    getUserVotesForPostSlugId,
-} from "./service/voting.js";
+import { castVoteForCommentSlugId, getUserVotesForPostSlugId } from "./service/voting.js";
+import { getUserProfile } from "./service/user.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -396,31 +394,59 @@ server.after(() => {
             },
         });
 
-    server.withTypeProvider<ZodTypeProvider>().route({
-        method: "POST",
-        url: `/api/${apiVersion}/voting/fetch-user-votes-for-post-slug-id`,
-        schema: {
-            body: Dto.fetchUserVotesForPostSlugIdRequest,
-            response: {
-                200: Dto.fetchUserVotesForPostSlugIdResponse,
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/user/fetch-user-profile`,
+            schema: {
+                response: {
+                    200: Dto.fetchUserProfileResponse,
+                },
             },
-        },
-        handler: async (request) => {
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: undefined,
-            });
-            const status = await authUtilService.isLoggedIn(db, didWrite);
-            if (!status.isLoggedIn) {
-                throw server.httpErrors.unauthorized("Device is not logged in");
-            } else {
-                return await getUserVotesForPostSlugId({
-                    db: db,
-                    postSlugId: request.body.postSlugId,
-                    userId: status.userId,
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
                 });
-            }
-        },
-    });
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    return await getUserProfile({
+                        db: db,
+                        userId: status.userId
+                    });
+                }
+            },
+        });
+
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/voting/fetch-user-votes-for-post-slug-id`,
+            schema: {
+                body: Dto.fetchUserVotesForPostSlugIdRequest,
+                response: {
+                    200: Dto.fetchUserVotesForPostSlugIdResponse,
+                },
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    return await getUserVotesForPostSlugId({
+                        db: db,
+                        postSlugId: request.body.postSlugId,
+                        userId: status.userId
+                    });
+                }
+            },
+        });
 
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",

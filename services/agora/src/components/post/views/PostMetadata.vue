@@ -3,7 +3,7 @@
     <div class="container">
       <div class="metadata">
         <div>
-          <UserAvatar v-if="!skeletonMode" :user-name="posterUserName" class="avatarIcon" />
+          <UserAvatar v-if="!skeletonMode" :user-name="posterUserName" :size="40" class="avatarIcon" />
 
           <Skeleton v-if="skeletonMode" shape="circle" size="2.5rem">
           </Skeleton>
@@ -73,7 +73,6 @@ function clickedMoreIcon() {
 }
 
 .avatarIcon {
-  width: 2.5rem;
   margin-right: 0.5rem;
 }
 

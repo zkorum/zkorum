@@ -1,10 +1,18 @@
 <template>
   <div>
+
     <div class="topBar">
-      <div class="profileDetails">
-        <div>100 comments <span class="dotPadding">•</span></div>
-        <div>1000 votes <span class="dotPadding">•</span></div>
-        <div>Jan 1, 2024</div>
+
+      <UserAvatar :user-name="userName" :size="60" />
+
+      <div class="userName">
+        {{ userName }}
+      </div>
+
+      <div class="profileMetadataBar">
+        <div>{{ commentCount }} comments <span class="dotPadding">•</span></div>
+        <div>{{ postCount }} votes <span class="dotPadding">•</span></div>
+        <div>{{ createdAt }}</div>
       </div>
     </div>
 
@@ -31,31 +39,59 @@ import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import TabPanel from "primevue/tabpanel";
 import CompactCommentList from "src/components/profile/CompactCommentList.vue";
+import { useBackendUserApi } from "src/utils/api/user";
+import { onMounted, ref } from "vue";
+import UserAvatar from "src/components/account/UserAvatar.vue";
+
+const { fetchUserProfile } = useBackendUserApi();
+
+const userName = ref("");
+const commentCount = ref(0);
+const createdAt = ref("");
+const postCount = ref(0);
+
+onMounted(async () => {
+  const response = await fetchUserProfile();
+  if (response) {
+    commentCount.value = response.commentCount;
+    postCount.value = response.postCount;
+    createdAt.value = response.createdAt.toLocaleDateString("en-US", {
+      year: "numeric", month: "short",
+      day: "numeric"
+    });
+    userName.value = response.userName;
+  }
+});
+
 </script>
 
 <style scoped lang="scss">
-.profileDetails {
+.profileMetadataBar {
   display: flex;
   flex-wrap: wrap;
+  gap: 0.3rem;
   color: $color-text-strong;
   font-size: 0.9rem;
 }
 
 .dotPadding {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
 }
 
 .topBar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
   justify-content: space-between;
-  padding-top: 0.5rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding: 0.5rem;
 }
 
 .tabPanelPadding {
   padding-top: 0.5rem;
+}
+
+.userName {
+  font-size: 1.2rem;
 }
 </style>

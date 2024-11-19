@@ -7,21 +7,13 @@
     </div>
 
     <div class="menuButtons">
-      <RouterLink
-        v-if="hasLoginButton && !isAuthenticated && showAuthButton"
-        :to="{ name: 'verification-options' }"
-      >
+      <RouterLink v-if="hasLoginButton && !isAuthenticated && showAuthButton" :to="{ name: 'verification-options' }">
         <ZKButton label="Log in" text-color="white" color="warning" />
       </RouterLink>
 
       <HelpButton />
       <RouterLink :to="{ name: 'settings-page' }">
-        <ZKButton
-          v-if="hasSettingsButton"
-          icon="mdi-cog"
-          text-color="color-text-strong"
-          flat
-        />
+        <ZKButton v-if="hasSettingsButton" icon="mdi-cog" text-color="color-text-strong" flat />
       </RouterLink>
     </div>
   </TopMenuWrapper>

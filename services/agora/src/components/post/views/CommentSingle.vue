@@ -3,7 +3,7 @@
   <div>
     <div class="contentLayout">
       <div class="metadata">
-        <UserAvatar :user-name="commentItem.userName" class="avatarIcon" />
+        <UserAvatar :user-name="commentItem.userName" :size="40" class="avatarIcon" />
 
         <div class="userNameTime">
           <div>
@@ -74,7 +74,6 @@ defineProps<{
 }
 
 .avatarIcon {
-  width: 2rem;
   margin-right: 0.5rem;
 }
 

@@ -565,6 +565,37 @@ export interface ApiV1PostFetchPostBySlugIdPostRequest {
 /**
  * 
  * @export
+ * @interface ApiV1UserFetchUserProfilePost200Response
+ */
+export interface ApiV1UserFetchUserProfilePost200Response {
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1UserFetchUserProfilePost200Response
+     */
+    'commentCount': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1UserFetchUserProfilePost200Response
+     */
+    'postCount': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserProfilePost200Response
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserProfilePost200Response
+     */
+    'userName': string;
+}
+/**
+ * 
+ * @export
  * @interface ApiV1VotingCastVotePostRequest
  */
 export interface ApiV1VotingCastVotePostRequest {
@@ -1056,6 +1087,39 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1UserFetchUserProfilePost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/user/fetch-user-profile`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {ApiV1VotingCastVotePostRequest} apiV1VotingCastVotePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1274,6 +1338,17 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1UserFetchUserProfilePost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1UserFetchUserProfilePost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1UserFetchUserProfilePost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1UserFetchUserProfilePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {ApiV1VotingCastVotePostRequest} apiV1VotingCastVotePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1402,6 +1477,14 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest: ApiV1PostFetchPostBySlugIdPostRequest, options?: any): AxiosPromise<ApiV1PostFetchPostBySlugIdPost200Response> {
             return localVarFp.apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1UserFetchUserProfilePost(options?: any): AxiosPromise<ApiV1UserFetchUserProfilePost200Response> {
+            return localVarFp.apiV1UserFetchUserProfilePost(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1548,6 +1631,16 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest: ApiV1PostFetchPostBySlugIdPostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1UserFetchUserProfilePost(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1UserFetchUserProfilePost(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
