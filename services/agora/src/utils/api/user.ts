@@ -33,6 +33,10 @@ export function useBackendUserApi() {
         internalPostList.push(dataItem);
       }));
 
+      internalPostList.sort(function (a, b) {
+        return new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime();
+      });
+
       return {
         commentCount: response.data.commentCount,
         postCount: response.data.postCount,
