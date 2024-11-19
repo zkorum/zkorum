@@ -14,6 +14,7 @@
         <div>{{ profileData.commentCount }} comments <span class="dotPadding">•</span></div>
         <div>{{ profileCreateDateString }}</div>
       </div>
+
     </div>
 
     <Tabs value="0">
@@ -22,7 +23,16 @@
         <Tab value="1">Comments</Tab>
       </TabList>
       <TabPanel value="0">
-        <div class="tabPanelPadding"></div>
+        <div class="tabPanelPadding">
+          <div v-for="postData in profileData.userPostList" :key="postData.metadata.postSlugId">
+            <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
+              :skeleton-mode="false" class="showCursor" @click="openPost(postData.metadata.postSlugId)" />
+
+            <div class="seperator">
+              <q-separator :inset="false" />
+            </div>
+          </div>
+        </div>
       </TabPanel>
       <TabPanel value="1">
         <div class="tabPanelPadding">
@@ -42,8 +52,12 @@ import CompactCommentList from "src/components/profile/CompactCommentList.vue";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { useUserStore } from "src/stores/user";
 import { computed } from "vue";
+import { useRouter } from "vue-router";
+import PostDetails from "src/components/post/PostDetails.vue";
 
 const { profileData } = useUserStore();
+
+const router = useRouter();
 
 const profileCreateDateString = computed(() => {
   return getDateString(profileData.value.createdAt);
@@ -56,6 +70,11 @@ function getDateString(dateObject: Date) {
     day: "numeric"
   });
 }
+
+function openPost(postSlugId: string) {
+  router.push({ name: "single-post", params: { postSlugId: postSlugId } });
+}
+
 
 </script>
 
@@ -87,5 +106,14 @@ function getDateString(dateObject: Date) {
 
 .userName {
   font-size: 1.2rem;
+}
+
+.showCursor:hover {
+  cursor: pointer;
+}
+
+.seperator {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 </style>

@@ -1,5 +1,6 @@
 import { useStorage } from "@vueuse/core";
 import { useBackendUserApi } from "src/utils/api/user";
+import { DummyPostDataFormat } from "./post";
 
 export function useUserStore() {
 
@@ -10,13 +11,15 @@ export function useUserStore() {
     postCount: number;
     createdAt: Date;
     userName: string;
+    userPostList: DummyPostDataFormat[];
   }
 
   const emptyProfile: UserProfile = {
     commentCount: 0,
     postCount: 0,
     createdAt: new Date(),
-    userName: ""
+    userName: "",
+    userPostList: []
   };
 
   const profileData = useStorage("user-profile-data", emptyProfile);
@@ -28,7 +31,8 @@ export function useUserStore() {
         commentCount: response.commentCount,
         postCount: response.postCount,
         createdAt: response.createdAt,
-        userName: response.userName
+        userName: response.userName,
+        userPostList: response.userPostList
       };
     }
   }

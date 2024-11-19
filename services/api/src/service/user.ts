@@ -34,7 +34,7 @@ export async function getUserProfile({
     const posts: ExtendedPost[] = await fetchPostItems({
       db: db,
       showHidden: false,
-      limit: 0,
+      limit: 10,
       where: whereClause,
       enableCompactBody: true
     });

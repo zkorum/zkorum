@@ -4,15 +4,15 @@ import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useDialog } from "../ui/dialog";
 import { useCommonApi } from "./common";
 import { useBackendPostApi } from "./post";
-import type { FetchUserProfileResponse } from "src/shared/types/dto";
+import { DummyPostDataFormat } from "src/stores/post";
 
 export function useBackendUserApi() {
   const { buildEncodedUcan } = useCommonApi();
-  const { composeInternalPostList } = useBackendPostApi();
+  const { createInternalPostData } = useBackendPostApi();
 
   const { showMessage } = useDialog();
 
-  async function fetchUserProfile(): Promise<FetchUserProfileResponse | undefined> {
+  async function fetchUserProfile() {
     try {
       const { url, options } =
         await DefaultApiAxiosParamCreator().apiV1UserFetchUserProfilePost();
@@ -27,7 +27,11 @@ export function useBackendUserApi() {
         },
       });
 
-      const internalPostList = composeInternalPostList(response.data.userPostList);
+      const internalPostList: DummyPostDataFormat[] = [];
+      await Promise.all(response.data.userPostList.map(async (postElement) => {
+        const dataItem = await createInternalPostData(postElement, true);
+        internalPostList.push(dataItem);
+      }));
 
       return {
         commentCount: response.data.commentCount,

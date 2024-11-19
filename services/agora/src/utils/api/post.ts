@@ -52,18 +52,10 @@ export function useBackendPostApi() {
       pollResponseOption = pollResponse?.selectedPollOption;
     }
 
+    const parseditem = composeInternalPostList([postElement])[0];
+
     const newItem: DummyPostDataFormat = {
-      metadata: {
-        commentCount: postElement.metadata.commentCount,
-        createdAt: new Date(postElement.metadata.createdAt),
-        isHidden: postElement.metadata.isHidden,
-        authorUserName: postElement.metadata.authorUserName,
-        lastReactedAt: new Date(postElement.metadata.lastReactedAt),
-        postSlugId: postElement.metadata.postSlugId,
-        updatedAt: new Date(postElement.metadata.updatedAt),
-        authorImagePath: postElement.metadata.authorImagePath
-      },
-      payload: postElement.payload,
+      ...parseditem,
       userInteraction: {
         pollResponse: {
           hadResponded: pollResponseOption != undefined,
@@ -211,5 +203,5 @@ export function useBackendPostApi() {
     return parsedList;
   }
 
-  return { createNewPost, fetchRecentPost, fetchPostBySlugId, composeInternalPostList };
+  return { createNewPost, fetchRecentPost, fetchPostBySlugId, createInternalPostData, composeInternalPostList };
 }
