@@ -40,7 +40,7 @@
       <div ref="bottomOfPageDiv">
       </div>
 
-      <div v-if="endOfFeed && masterPostDataList.length != 0" class="centerMessage">
+      <div v-if="endOfFeed && masterPostDataList.length > 0" class="centerMessage">
         <div>
           <q-icon name="mdi-check" size="4rem" />
         </div>

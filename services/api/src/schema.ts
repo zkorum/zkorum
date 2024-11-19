@@ -569,7 +569,8 @@ export const userTable = pgTable("user", {
         () => organisationTable.id,
     ), // for now a user can belong to at most 1 organisation
     userName: varchar("user_name", { length: MAX_LENGTH_USERNAME }).notNull(),
-    languageId: languageOptions("language_id"),
+    postCount: integer("post_count").notNull().default(0),
+    commentCount: integer("comment_count").notNull().default(0),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,

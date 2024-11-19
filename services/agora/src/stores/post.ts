@@ -137,13 +137,13 @@ export const usePostStore = defineStore("post", () => {
     const response = await fetchRecentPost(lastSlugId, isAuthenticated);
 
     if (response != null) {
-      if (response.postDataList.length > 0) {
-        if (loadMoreData) {
+      if (loadMoreData) {
+        if (response.postDataList.length > 0) {
           masterPostDataList.value.push(...response.postDataList);
           trimHomeFeedSize(60);
-        } else {
-          masterPostDataList.value = response.postDataList;
         }
+      } else {
+        masterPostDataList.value = response.postDataList;
       }
 
       endOfFeed.value = response.reachedEndOfFeed;

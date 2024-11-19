@@ -1,7 +1,7 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import { pollTable, postContentTable, postProofTable, postTable } from "@/schema.js";
-import { eq } from "drizzle-orm";
+import { pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
+import { eq, sql } from "drizzle-orm";
 import type { CreateNewPostResponse, FetchPostBySlugIdResponse } from "@/shared/types/dto.js";
 import { MAX_LENGTH_BODY } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
@@ -99,6 +99,14 @@ export async function createNewPost({
                     option6Response: pollingOptionList[5] ? 0 : null
                 });
             }
+
+            // Update the user profile's post count
+            await tx
+                .update(userTable)
+                .set({
+                    postCount: sql`${userTable.postCount} + 1`
+                })
+                .where(eq(userTable.id, authorId));
         });
 
         return {

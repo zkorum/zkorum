@@ -242,13 +242,21 @@ export async function postNewComment({
             currentContentId: commentContentTableId,
         }).where(eq(commentTable.id, commentId));
 
-        // Update comment count
-        await db
+        // Update the post's comment count
+        await tx
             .update(postTable)
             .set({
                 commentCount: sql`${postTable.commentCount} + 1`
             })
             .where(eq(postTable.slugId, postSlugId));
+
+        // Update the user profile's comment count
+        await tx
+            .update(userTable)
+            .set({
+                commentCount: sql`${userTable.commentCount} + 1`
+            })
+            .where(eq(userTable.id, userId));
 
     });
 
