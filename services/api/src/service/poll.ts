@@ -8,49 +8,55 @@ import type { FetchUserPollResponseResponse } from "@/shared/types/dto.js";
 
 interface GetUserPollResponseProps {
   db: PostgresDatabase;
-  postSlugId: string;
+  postSlugIdList: string[];
   authorId: string;
   httpErrors: HttpErrors;
 }
 
 export async function getUserPollResponse({
-  db, postSlugId, authorId, httpErrors
+  db, postSlugIdList, authorId, httpErrors
 }: GetUserPollResponseProps): Promise<FetchUserPollResponseResponse> {
 
-  const postDetails = await useCommonPost().getPostAndContentIdFromSlugId({
-    db: db,
-    postSlugId: postSlugId,
-    httpErrors: httpErrors
-  });
+  const resultList: FetchUserPollResponseResponse = [];
 
-  if (postDetails.contentId == null) {
-    throw httpErrors.notFound("Failed to fetch poll response's content ID");
-  }
+  for (const postSlugId of postSlugIdList) {
 
-  const selectStatementResponse = await db.select({
-    postId: pollResponseTable.postId,
-    authorId: pollResponseTable.authorId,
-    optionChosen: pollResponseContentTable.optionChosen
-  })
-    .from(pollResponseTable)
-    .innerJoin(
-      pollResponseContentTable,
-      eq(pollResponseContentTable.postContentId, postDetails.contentId)
-    )
-    .where(
-      and(
-        eq(pollResponseTable.authorId, authorId),
-        eq(pollResponseTable.postId, postDetails.id)
+    const postDetails = await useCommonPost().getPostAndContentIdFromSlugId({
+      db: db,
+      postSlugId: postSlugId,
+      httpErrors: httpErrors
+    });
+
+    if (postDetails.contentId == null) {
+      throw httpErrors.notFound("Failed to fetch poll response's content ID");
+    }
+
+    const selectStatementResponse = await db.select({
+      postId: pollResponseTable.postId,
+      authorId: pollResponseTable.authorId,
+      optionChosen: pollResponseContentTable.optionChosen
+    })
+      .from(pollResponseTable)
+      .innerJoin(
+        pollResponseContentTable,
+        eq(pollResponseContentTable.postContentId, postDetails.contentId)
       )
-    );
+      .where(
+        and(
+          eq(pollResponseTable.authorId, authorId),
+          eq(pollResponseTable.postId, postDetails.id)
+        )
+      );
 
-  if (selectStatementResponse.length == 1) {
-    // console.log("option chosen: " + selectStatementResponse[0].optionChosen.toString());
-    return { selectedPollOption: selectStatementResponse[0].optionChosen };
-  } else {
-    console.log(selectStatementResponse);
-    return { selectedPollOption: undefined };
+    if (selectStatementResponse.length == 1) {
+      resultList.push({
+        postSlugId: postSlugId,
+        optionChosen: selectStatementResponse[0].optionChosen
+      });
+    }
   }
+
+  return resultList;
 
 }
 

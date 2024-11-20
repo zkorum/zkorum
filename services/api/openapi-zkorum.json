@@ -737,20 +737,13 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "postSlugId": {
-                                        "type": "string"
-                                    }
-                                },
-                                "required": [
-                                    "postSlugId"
-                                ],
-                                "additionalProperties": false
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "200": {
@@ -758,13 +751,24 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "selectedPollOption": {
-                                            "type": "number"
-                                        }
-                                    },
-                                    "additionalProperties": false
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "postSlugId": {
+                                                "type": "string"
+                                            },
+                                            "optionChosen": {
+                                                "type": "number",
+                                                "minimum": 0
+                                            }
+                                        },
+                                        "required": [
+                                            "postSlugId",
+                                            "optionChosen"
+                                        ],
+                                        "additionalProperties": false
+                                    }
                                 }
                             }
                         }

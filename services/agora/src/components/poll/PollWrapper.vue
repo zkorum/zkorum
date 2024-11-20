@@ -25,14 +25,12 @@
           {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
         </div>
 
-        <div v-if="userVoteStatus.hasVoted"></div>
-
         <div v-if="!userVoteStatus.hasVoted">
           <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
             label="Results" @click.stop.prevent="showResultsInterface()" />
 
-          <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Vote"
-            icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
+          <ZKButton v-if="currentDisplayMode == DisplayModes.Results && isAuthenticated" outline text-color="primary"
+            label="Vote" icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
         </div>
       </div>
     </div>
@@ -117,13 +115,12 @@ function initializeLocalPoll() {
 
 async function fetchUserPollResponseData(loadFromRemote: boolean) {
   if (loadFromRemote) {
-    const response = await backendPollApi.fetchUserPollResponse(
-      props.postSlugId
-    );
-    if (response?.selectedPollOption) {
+    const response = await backendPollApi.fetchUserPollResponse([props.postSlugId]);
+    const selectedOption = response.get(props.postSlugId);
+    if (selectedOption) {
       userVoteStatus.value = {
         hasVoted: true,
-        voteIndex: response.selectedPollOption - 1,
+        voteIndex: selectedOption - 1
       };
       showResultsInterface();
     }

@@ -482,15 +482,21 @@ export interface ApiV1FeedFetchRecentPostRequest {
 /**
  * 
  * @export
- * @interface ApiV1PollGetUserPollResponsePost200Response
+ * @interface ApiV1PollGetUserPollResponsePost200ResponseInner
  */
-export interface ApiV1PollGetUserPollResponsePost200Response {
+export interface ApiV1PollGetUserPollResponsePost200ResponseInner {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PollGetUserPollResponsePost200ResponseInner
+     */
+    'postSlugId': string;
     /**
      * 
      * @type {number}
-     * @memberof ApiV1PollGetUserPollResponsePost200Response
+     * @memberof ApiV1PollGetUserPollResponsePost200ResponseInner
      */
-    'selectedPollOption'?: number;
+    'optionChosen': number;
 }
 /**
  * 
@@ -937,13 +943,11 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {ApiV1VotingFetchUserVotesForPostSlugIdPostRequest} apiV1VotingFetchUserVotesForPostSlugIdPostRequest 
+         * @param {Array<string>} [requestBody] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PollGetUserPollResponsePost: async (apiV1VotingFetchUserVotesForPostSlugIdPostRequest: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1VotingFetchUserVotesForPostSlugIdPostRequest' is not null or undefined
-            assertParamExists('apiV1PollGetUserPollResponsePost', 'apiV1VotingFetchUserVotesForPostSlugIdPostRequest', apiV1VotingFetchUserVotesForPostSlugIdPostRequest)
+        apiV1PollGetUserPollResponsePost: async (requestBody?: Array<string>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/v1/poll/get-user-poll-response`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -967,7 +971,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1VotingFetchUserVotesForPostSlugIdPostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(requestBody, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1296,12 +1300,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {ApiV1VotingFetchUserVotesForPostSlugIdPostRequest} apiV1VotingFetchUserVotesForPostSlugIdPostRequest 
+         * @param {Array<string>} [requestBody] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1PollGetUserPollResponsePost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest, options);
+        async apiV1PollGetUserPollResponsePost(requestBody?: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollGetUserPollResponsePost200ResponseInner>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollGetUserPollResponsePost(requestBody, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PollGetUserPollResponsePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1450,12 +1454,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {ApiV1VotingFetchUserVotesForPostSlugIdPostRequest} apiV1VotingFetchUserVotesForPostSlugIdPostRequest 
+         * @param {Array<string>} [requestBody] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, options?: any): AxiosPromise<ApiV1PollGetUserPollResponsePost200Response> {
-            return localVarFp.apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest, options).then((request) => request(axios, basePath));
+        apiV1PollGetUserPollResponsePost(requestBody?: Array<string>, options?: any): AxiosPromise<Array<ApiV1PollGetUserPollResponsePost200ResponseInner>> {
+            return localVarFp.apiV1PollGetUserPollResponsePost(requestBody, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1597,13 +1601,13 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {ApiV1VotingFetchUserVotesForPostSlugIdPostRequest} apiV1VotingFetchUserVotesForPostSlugIdPostRequest 
+     * @param {Array<string>} [requestBody] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1PollGetUserPollResponsePost(apiV1VotingFetchUserVotesForPostSlugIdPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PollGetUserPollResponsePost(requestBody?: Array<string>, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1PollGetUserPollResponsePost(requestBody, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

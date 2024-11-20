@@ -46,10 +46,8 @@ export function useBackendPostApi() {
     // Load user's polling response
     let pollResponseOption: number | undefined = undefined;
     if (postElement.payload.poll && loadUserData) {
-      const pollResponse = await fetchUserPollResponse(
-        postElement.metadata.postSlugId
-      );
-      pollResponseOption = pollResponse?.selectedPollOption;
+      const pollResponse = await fetchUserPollResponse([postElement.metadata.postSlugId]);
+      pollResponseOption = pollResponse.get(postElement.metadata.postSlugId);
     }
 
     const parseditem = composeInternalPostList([postElement])[0];

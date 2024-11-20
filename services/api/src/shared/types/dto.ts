@@ -121,12 +121,11 @@ export class Dto {
         voteOptionChoice: z.number(),
         postSlugId: z.string()
     }).strict();
-    static fetchUserPollResponseRequest = z.object({
-        postSlugId: z.string()
-    }).strict();
-    static fetchUserPollResponseResponse = z.object({
-        selectedPollOption: z.number().optional()
-    }).strict();
+    static fetchUserPollResponseRequest = z.array(z.string());
+    static fetchUserPollResponseResponse = z.array(z.object({
+        postSlugId: z.string(),
+        optionChosen: z.number().gte(0)
+    }).strict());
     static fetchUserVotesForPostSlugIdRequest = z.object({
         postSlugId: z.string()
     }).strict();

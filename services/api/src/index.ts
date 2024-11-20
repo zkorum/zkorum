@@ -522,19 +522,19 @@ server.after(() => {
                 expectedDeviceStatus: undefined,
             });
 
-            const status = await authUtilService.isLoggedIn(db, didWrite);
-            if (!status.isLoggedIn) {
-                throw server.httpErrors.unauthorized("Device is not logged in");
-            } else {
-                return await getUserPollResponse({
-                    db: db,
-                    postSlugId: request.body.postSlugId,
-                    authorId: status.userId,
-                    httpErrors: server.httpErrors,
-                });
-            }
-        },
-    });
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    return await getUserPollResponse({
+                        db: db,
+                        postSlugIdList: request.body,
+                        authorId: status.userId,
+                        httpErrors: server.httpErrors
+                    });
+                }
+            },
+        });
 
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
