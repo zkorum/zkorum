@@ -325,10 +325,14 @@
                                     },
                                     "lastSlugId": {
                                         "type": "string"
+                                    },
+                                    "isAuthenticatedRequest": {
+                                        "type": "boolean"
                                     }
                                 },
                                 "required": [
-                                    "showHidden"
+                                    "showHidden",
+                                    "isAuthenticatedRequest"
                                 ],
                                 "additionalProperties": false
                             }

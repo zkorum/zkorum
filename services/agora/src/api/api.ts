@@ -503,6 +503,12 @@ export interface ApiV1FeedFetchRecentPostRequest {
      * @memberof ApiV1FeedFetchRecentPostRequest
      */
     'lastSlugId'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1FeedFetchRecentPostRequest
+     */
+    'isAuthenticatedRequest': boolean;
 }
 /**
  * 

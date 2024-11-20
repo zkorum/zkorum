@@ -95,6 +95,7 @@ export function useBackendPostApi() {
       const params: ApiV1FeedFetchRecentPostRequest = {
         showHidden: false,
         lastSlugId: lastSlugId,
+        isAuthenticatedRequest: loadUserPollData
       };
 
       const { url, options } =

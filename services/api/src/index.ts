@@ -1,7 +1,7 @@
 import { Dto } from "@/shared/types/dto.js";
 import fastifyAuth from "@fastify/auth";
 import fastifyCors from "@fastify/cors";
-import fastifySensible from "@fastify/sensible";
+import fastifySensible, { httpErrors } from "@fastify/sensible";
 import fastifySwagger from "@fastify/swagger";
 import * as ucans from "@ucans/ucans";
 import {
@@ -386,24 +386,29 @@ server.after(() => {
                 },
             },
             handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: undefined,
-                });
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    return await feedService.fetchFeed({
-                        db: db,
-                        showHidden: request.body.showHidden,
-                        lastSlugId: request.body.lastSlugId,
-                        fetchPollResponse: false
+                if (request.body.isAuthenticatedRequest) {
+                    const didWrite = await verifyUCAN(db, request, {
+                        expectedDeviceStatus: undefined,
                     });
+
+                    const status = await authUtilService.isLoggedIn(db, didWrite);
+                    if (!status.isLoggedIn) {
+                        throw httpErrors.unauthorized("User is not logged in");
+                    } else {
+                        return await feedService.fetchFeed({
+                            db: db,
+                            showHidden: request.body.showHidden,
+                            lastSlugId: request.body.lastSlugId,
+                            fetchPollResponse: true,
+                            userId: status.userId
+                        });
+                    }
                 } else {
                     return await feedService.fetchFeed({
                         db: db,
                         showHidden: request.body.showHidden,
                         lastSlugId: request.body.lastSlugId,
-                        fetchPollResponse: true,
-                        userId: status.userId
+                        fetchPollResponse: false
                     });
                 }
             },

@@ -82,6 +82,7 @@ export class Dto {
         .object({
             showHidden: z.boolean(),
             lastSlugId: z.string().optional(),
+            isAuthenticatedRequest: z.boolean()
         })
         .strict();
     static fetchFeedResponse = z.object({
