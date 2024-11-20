@@ -1,44 +1,22 @@
 <template>
   <div>
     <div class="actionButtonCluster">
-      <ZKButton
-        flat
-        text-color="color-text-weak"
-        icon="mdi-dots-horizontal"
-        size="0.8rem"
-        @click.stop.prevent="optionButtonClicked()"
-      />
+      <ZKButton flat text-color="color-text-weak" icon="mdi-dots-horizontal" size="0.8rem"
+        @click.stop.prevent="optionButtonClicked()" />
 
-      <ZKButton
-        flat
-        text-color="color-text-weak"
-        icon="mdi-export-variant"
-        size="0.8rem"
-        @click.stop.prevent="shareButtonClicked()"
-      />
-      <ZKButton
-        flat
-        :text-color="downvoteIcon.color"
-        :icon="downvoteIcon.icon"
-        size="0.8rem"
-        @click.stop.prevent="
-          castPersonalVote(props.commentItem.commentSlugId, false)
-        "
-      >
+      <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
+        @click.stop.prevent="shareButtonClicked()" />
+      <ZKButton flat :text-color="downvoteIcon.color" :icon="downvoteIcon.icon" size="0.8rem" @click.stop.prevent="
+        castPersonalVote(props.commentItem.commentSlugId, false)
+        ">
         <div v-if="userCastedVote" class="voteCountLabel">
           {{ numDislikesLocal }}
         </div>
       </ZKButton>
 
-      <ZKButton
-        flat
-        :text-color="upvoteIcon.color"
-        :icon="upvoteIcon.icon"
-        size="0.8rem"
-        @click.stop.prevent="
-          castPersonalVote(props.commentItem.commentSlugId, true)
-        "
-      >
+      <ZKButton flat :text-color="upvoteIcon.color" :icon="upvoteIcon.icon" size="0.8rem" @click.stop.prevent="
+        castPersonalVote(props.commentItem.commentSlugId, true)
+        ">
         <div v-if="userCastedVote" class="voteCountLabel">
           {{ numLikesLocal }}
         </div>
@@ -48,7 +26,6 @@
 </template>
 
 <script setup lang="ts">
-import { type PossibleCommentRankingActions } from "src/stores/post";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useWebShare } from "src/utils/share/WebShare";
@@ -61,7 +38,6 @@ import { useDialog } from "src/utils/ui/dialog";
 const props = defineProps<{
   commentItem: CommentItem;
   postSlugId: string;
-  rankedAction: PossibleCommentRankingActions;
   commentSlugIdLikedMap: Map<string, "like" | "dislike">;
 }>();
 

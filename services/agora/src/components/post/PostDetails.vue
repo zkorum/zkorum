@@ -28,8 +28,7 @@
 
           <div v-if="extendedPostData.payload.poll" class="pollContainer">
             <PollWrapper :poll-options="extendedPostData.payload.poll"
-              :post-slug-id="extendedPostData.metadata.postSlugId"
-              :user-response="extendedPostData.userInteraction.pollResponse" />
+              :post-slug-id="extendedPostData.metadata.postSlugId" :user-response="extendedPostData.interaction" />
           </div>
 
           <div class="bottomButtons">
@@ -59,7 +58,6 @@
 
         <div v-if="!compactMode" ref="commentSectionRef">
           <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.postSlugId"
-            :comment-ranking="extendedPostData.userInteraction.commentRanking"
             :initial-comment-slug-id="commentSlugId" />
         </div>
       </div>
@@ -80,16 +78,17 @@ import PostMetadata from "./views/PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
 import FloatingBottomContainer from "../navigation/FloatingBottomContainer.vue";
 import CommentComposer from "./views/CommentComposer.vue";
-import { type DummyPostDataFormat, usePostStore } from "src/stores/post";
+import { usePostStore } from "src/stores/post";
 import { onMounted, ref } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useRoute, useRouter } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 import Skeleton from "primevue/skeleton";
+import type { ExtendedPost } from "src/shared/types/zod";
 
 const props = defineProps<{
-  extendedPostData: DummyPostDataFormat;
+  extendedPostData: ExtendedPost;
   compactMode: boolean;
   skeletonMode: boolean;
   showAuthor: boolean;

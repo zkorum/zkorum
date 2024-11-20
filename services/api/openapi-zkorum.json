@@ -443,37 +443,35 @@
                                                             "title"
                                                         ],
                                                         "additionalProperties": false
+                                                    },
+                                                    "interaction": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "hasVoted": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "votedIndex": {
+                                                                "type": "integer",
+                                                                "minimum": 0
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "hasVoted",
+                                                            "votedIndex"
+                                                        ],
+                                                        "additionalProperties": false
                                                     }
                                                 },
                                                 "required": [
                                                     "metadata",
-                                                    "payload"
+                                                    "payload",
+                                                    "interaction"
                                                 ],
                                                 "additionalProperties": false
                                             }
                                         },
                                         "reachedEndOfFeed": {
                                             "type": "boolean"
-                                        },
-                                        "pollResponse": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "postSlugId": {
-                                                        "type": "string"
-                                                    },
-                                                    "optionChosen": {
-                                                        "type": "number",
-                                                        "minimum": 0
-                                                    }
-                                                },
-                                                "required": [
-                                                    "postSlugId",
-                                                    "optionChosen"
-                                                ],
-                                                "additionalProperties": false
-                                            }
                                         }
                                     },
                                     "required": [
@@ -610,11 +608,29 @@
                                                             "title"
                                                         ],
                                                         "additionalProperties": false
+                                                    },
+                                                    "interaction": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "hasVoted": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "votedIndex": {
+                                                                "type": "integer",
+                                                                "minimum": 0
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "hasVoted",
+                                                            "votedIndex"
+                                                        ],
+                                                        "additionalProperties": false
                                                     }
                                                 },
                                                 "required": [
                                                     "metadata",
-                                                    "payload"
+                                                    "payload",
+                                                    "interaction"
                                                 ],
                                                 "additionalProperties": false
                                             }
@@ -1112,11 +1128,29 @@
                                                         "title"
                                                     ],
                                                     "additionalProperties": false
+                                                },
+                                                "interaction": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "hasVoted": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "votedIndex": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "hasVoted",
+                                                        "votedIndex"
+                                                    ],
+                                                    "additionalProperties": false
                                                 }
                                             },
                                             "required": [
                                                 "metadata",
-                                                "payload"
+                                                "payload",
+                                                "interaction"
                                             ],
                                             "additionalProperties": false
                                         }

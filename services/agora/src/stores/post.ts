@@ -70,7 +70,7 @@ export interface DummyPostDataFormat extends ExtendedPost {
 }
 
 export const usePostStore = defineStore("post", () => {
-  const { fetchRecentPost } = useBackendPostApi();
+  const { fetchRecentPost, composeInternalPostList } = useBackendPostApi();
   const { isAuthenticated } = useAuthenticationStore();
 
   const dataReady = ref(false);
@@ -92,6 +92,10 @@ export const usePostStore = defineStore("post", () => {
       body: "",
       poll: []
     },
+    interaction: {
+      hasVoted: false,
+      votedIndex: 0
+    },
     userInteraction: {
       commentRanking: {
         assignedRankingItems: [],
@@ -104,7 +108,7 @@ export const usePostStore = defineStore("post", () => {
     }
   };
 
-  const masterPostDataList = ref<DummyPostDataFormat[]>([emptyPost, emptyPost, emptyPost, emptyPost]);
+  const masterPostDataList = ref<ExtendedPost[]>([emptyPost, emptyPost, emptyPost, emptyPost]);
 
   const lastSavedHomeFeedPosition = useStorage(
     "last-saved-home-feed-position",
@@ -124,13 +128,14 @@ export const usePostStore = defineStore("post", () => {
     const response = await fetchRecentPost(lastSlugId, isAuthenticated);
 
     if (response != null) {
+      const internalDataList = composeInternalPostList(response.postDataList);
       if (loadMoreData) {
         if (response.postDataList.length > 0) {
-          masterPostDataList.value.push(...response.postDataList);
+          masterPostDataList.value.push(...internalDataList);
           trimHomeFeedSize(60);
         }
       } else {
-        masterPostDataList.value = response.postDataList;
+        masterPostDataList.value = internalDataList;
       }
 
       endOfFeed.value = response.reachedEndOfFeed;
@@ -150,7 +155,7 @@ export const usePostStore = defineStore("post", () => {
     const response = await fetchRecentPost(undefined, isAuthenticated);
     if (response != null) {
       if (response.postDataList.length > 0 && masterPostDataList.value.length > 0) {
-        if (response.postDataList[0].metadata.createdAt != masterPostDataList.value[0].metadata.createdAt) {
+        if (new Date(response.postDataList[0].metadata.createdAt) != masterPostDataList.value[0].metadata.createdAt) {
           return true;
         } else {
           return false;

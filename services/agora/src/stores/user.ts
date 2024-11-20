@@ -1,6 +1,6 @@
 import { useStorage } from "@vueuse/core";
 import { useBackendUserApi } from "src/utils/api/user";
-import { DummyPostDataFormat } from "./post";
+import type { ExtendedPost } from "src/shared/types/zod";
 
 export function useUserStore() {
 
@@ -11,7 +11,7 @@ export function useUserStore() {
     postCount: number;
     createdAt: Date;
     userName: string;
-    userPostList: DummyPostDataFormat[];
+    userPostList: ExtendedPost[];
   }
 
   const emptyProfile: UserProfile = {

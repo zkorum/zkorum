@@ -88,8 +88,7 @@ export class Dto {
         .strict();
     static fetchFeedResponse = z.object({
         postDataList: z.array(zodExtendedPostData),
-        reachedEndOfFeed: z.boolean(),
-        pollResponse: z.array(zodPollResponse).optional()
+        reachedEndOfFeed: z.boolean()
     });
     static postFetchRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(

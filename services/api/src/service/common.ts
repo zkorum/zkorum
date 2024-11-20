@@ -153,6 +153,10 @@ export function useCommonPost() {
             posts.push({
                 metadata: metadata,
                 payload: payload,
+                interaction: {
+                    hasVoted: false,
+                    votedIndex: 0
+                }
             });
         });
 

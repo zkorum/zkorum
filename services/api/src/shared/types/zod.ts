@@ -99,10 +99,15 @@ export const zodCommentItem = z.object({
     numDislikes: z.number().int().nonnegative(),
     userName: zodUserName,
 }).strict();
+export const zodUserInteraction = z.object({
+    hasVoted: z.boolean(),
+    votedIndex: z.number().int().nonnegative()
+}).strict();
 export const zodExtendedPostData = z
     .object({
         metadata: zodPostMetadata,
-        payload: zodPostDataWithResult
+        payload: zodPostDataWithResult,
+        interaction: zodUserInteraction
     })
     .strict();
 export const zodVotingOption = z.enum(["like", "dislike"]);
@@ -122,6 +127,7 @@ export const languageObjectList: LanguageObject[] = [
 export type Device = z.infer<typeof zodDevice>;
 export type Devices = z.infer<typeof zodDevices>;
 export type ExtendedPost = z.infer<typeof zodExtendedPostData>;
+export type UserInteraction = z.infer<typeof zodUserInteraction>;
 export type PostMetadata = z.infer<typeof zodPostMetadata>;
 export type ExtendedPostPayload = z.infer<typeof zodPostDataWithResult>;
 export type PollOptionWithResult = z.infer<typeof zodPollOptionWithResult>;

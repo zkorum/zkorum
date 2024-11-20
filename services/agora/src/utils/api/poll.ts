@@ -1,9 +1,9 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  ApiV1PollSubmitResponsePostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
+  type ApiV1PollSubmitResponsePostRequest,
 } from "src/api";
 import { useCommonApi } from "./common";
 import { useDialog } from "../ui/dialog";

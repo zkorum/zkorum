@@ -8,9 +8,8 @@
       </div>
 
       <div v-if="commentItems.length > 0" class="commentListFlex">
-        <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
+        <div v-for="commentItem in commentItems" :key="commentItem.commentSlugId">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
-            :ranked-action="getCommentItemRankStatus(index)"
             :highlight="initialCommentSlugId == commentItem.commentSlugId"
             :comment-slug-id-liked-map="commentSlugIdLikedMap" />
 
@@ -42,11 +41,9 @@ import { useBackendCommentApi } from "src/utils/api/comment";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { type CommentItem } from "src/shared/types/zod";
-import type { DummyCommentRankingFormat, PossibleCommentRankingActions } from "src/stores/post";
 
 const props = defineProps<{
   postSlugId: string;
-  commentRanking: DummyCommentRankingFormat;
   initialCommentSlugId: string;
 }>();
 
@@ -92,17 +89,6 @@ async function fetchCommentList() {
         scrollToComment();
       }, 1000);
     }
-  }
-}
-
-function getCommentItemRankStatus(
-  commentIndex: number
-): PossibleCommentRankingActions {
-  const action = props.commentRanking.rankedCommentList.get(commentIndex);
-  if (action == null) {
-    return "pass";
-  } else {
-    return action;
   }
 }
 

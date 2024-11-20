@@ -12,12 +12,10 @@
       <!-- Show the final result -->
       <div v-if="currentDisplayMode == DisplayModes.Results" class="pollOptionList">
         <option-view v-for="optionItem in localPollOptionList" :key="optionItem.index" :option="optionItem.option"
-          :voted-by-user="userVoteStatus.voteIndex == optionItem.index &&
-            userVoteStatus.hasVoted
-            " :option-percentage="totalVoteCount === 0
-              ? 0
-              : Math.round((optionItem.numResponses * 100) / totalVoteCount)
-              " />
+          :voted-by-user="userVoteStatus.votedIndex == optionItem.index && userVoteStatus.hasVoted" :option-percentage="totalVoteCount === 0
+            ? 0
+            : Math.round((optionItem.numResponses * 100) / totalVoteCount)
+            " />
       </div>
 
       <div class="actionButtonCluster">
@@ -40,21 +38,16 @@
 <script setup lang="ts">
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
-import {
-  type DummyPollOptionFormat,
-  type DummyPostUserVote,
-  type DummyUserPollResponse,
-  usePostStore,
-} from "src/stores/post";
+import { usePostStore, type DummyPollOptionFormat } from "src/stores/post";
 import { ref, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
 import { useBackendPollApi } from "src/utils/api/poll";
 import { useDialog } from "src/utils/ui/dialog";
-import type { PollList } from "src/shared/types/zod";
+import type { UserInteraction, PollList } from "src/shared/types/zod";
 
 const props = defineProps<{
-  userResponse: DummyUserPollResponse;
+  userResponse: UserInteraction;
   pollOptions: PollList;
   postSlugId: string;
 }>();
@@ -77,9 +70,9 @@ const currentDisplayMode = ref<DisplayModes>(
   isAuthenticated.value ? DisplayModes.Vote : DisplayModes.Results
 );
 
-const userVoteStatus = ref<DummyPostUserVote>({
+const userVoteStatus = ref<UserInteraction>({
   hasVoted: false,
-  voteIndex: 0,
+  votedIndex: 0
 });
 
 const totalVoteCount = ref(0);
@@ -120,14 +113,14 @@ async function fetchUserPollResponseData(loadFromRemote: boolean) {
     if (selectedOption) {
       userVoteStatus.value = {
         hasVoted: true,
-        voteIndex: selectedOption - 1
+        votedIndex: selectedOption - 1
       };
       showResultsInterface();
     }
   } else {
     userVoteStatus.value = {
-      hasVoted: props.userResponse.hadResponded,
-      voteIndex: props.userResponse.responseIndex,
+      hasVoted: props.userResponse.hasVoted,
+      votedIndex: props.userResponse.votedIndex
     };
 
     if (userVoteStatus.value.hasVoted) {

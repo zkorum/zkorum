@@ -3,7 +3,7 @@ import type { ExtendedPost } from "@/shared/types/zod.js";
 import { and, eq, lt } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
-import type { FetchFeedResponse, FetchUserPollResponseResponse } from "@/shared/types/dto.js";
+import type { FetchFeedResponse } from "@/shared/types/dto.js";
 import { getUserPollResponse } from "./poll.js";
 import { httpErrors } from "@fastify/sensible";
 
@@ -56,7 +56,6 @@ export async function fetchFeed({
         enableCompactBody: true
     });
 
-    let pollResponses: FetchUserPollResponseResponse | undefined = undefined;
     if (fetchPollResponse) {
         if (!userId) {
             throw httpErrors.internalServerError("Missing author ID for fetching poll response");
@@ -66,18 +65,31 @@ export async function fetchFeed({
                 postSlugIdList.push(post.metadata.postSlugId);
             });
 
-            pollResponses = await getUserPollResponse({
+            const pollResponses = await getUserPollResponse({
                 db: db,
                 authorId: userId,
                 httpErrors: httpErrors,
                 postSlugIdList: postSlugIdList
             });
+
+            const responseMap = new Map<string, number>();
+            pollResponses.forEach(response => {
+                responseMap.set(response.postSlugId, response.optionChosen);
+            });
+
+            posts.forEach(post => {
+                const voteIndex = responseMap.get(post.metadata.postSlugId);
+                post.interaction = {
+                    hasVoted: voteIndex != undefined,
+                    votedIndex: voteIndex ?? 0
+                }
+            });
+
         }
     }
 
     return {
         postDataList: posts.length == targetLimit ? posts.splice(-1) : posts,
         reachedEndOfFeed: posts.length == targetLimit ? false : true,
-        pollResponse: pollResponses
     };
 }

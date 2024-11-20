@@ -4,7 +4,7 @@ import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useDialog } from "../ui/dialog";
 import { useCommonApi } from "./common";
 import { useBackendPostApi } from "./post";
-import type { DummyPostDataFormat } from "src/stores/post";
+import type { ExtendedPost } from "src/shared/types/zod";
 
 export function useBackendUserApi() {
   const { buildEncodedUcan } = useCommonApi();
@@ -27,14 +27,9 @@ export function useBackendUserApi() {
         },
       });
 
-      const internalPostList: DummyPostDataFormat[] = [];
-      await Promise.all(response.data.userPostList.map(async (postElement) => {
-        const dataItem = createInternalPostData(postElement, true, undefined);
-        internalPostList.push(dataItem);
-      }));
-
-      internalPostList.sort(function (a, b) {
-        return new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime();
+      const internalPostList: ExtendedPost[] = response.data.userPostList.map((postElement) => {
+        const dataItem: ExtendedPost = createInternalPostData(postElement);
+        return dataItem;
       });
 
       return {

@@ -9,15 +9,11 @@ import {
   type ApiV1PostFetchPostBySlugIdPostRequest,
 } from "src/api";
 import { useCommonApi } from "./common";
-import {
-  type DummyPollOptionFormat,
-  type DummyPostDataFormat,
-  type PossibleCommentRankingActions,
-} from "src/stores/post";
 import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import type { ExtendedPost } from "src/shared/types/zod";
+import type { DummyPollOptionFormat } from "src/stores/post";
 
 export function useBackendPostApi() {
   const { buildEncodedUcan } = useCommonApi();
@@ -27,10 +23,9 @@ export function useBackendPostApi() {
   const router = useRouter();
 
   function createInternalPostData(
-    postElement: ApiV1FeedFetchRecentPost200ResponsePostDataListInner,
-    loadUserData: boolean,
-    pollResponseOption: undefined | number
-  ) {
+    postElement: ApiV1FeedFetchRecentPost200ResponsePostDataListInner
+  ): ExtendedPost {
+
     // Create the polling object
     const pollOptionList: DummyPollOptionFormat[] = [];
     postElement.payload.poll?.forEach((pollOption) => {
@@ -43,28 +38,13 @@ export function useBackendPostApi() {
     });
 
     const parseditem = composeInternalPostList([postElement])[0];
-
-    const newItem: DummyPostDataFormat = {
-      ...parseditem,
-      userInteraction: {
-        pollResponse: {
-          hadResponded: pollResponseOption != undefined,
-          responseIndex: pollResponseOption ? pollResponseOption - 1 : 0,
-        },
-        commentRanking: {
-          assignedRankingItems: [],
-          rankedCommentList: new Map<number, PossibleCommentRankingActions>(),
-        }
-      }
-    };
-
-    return newItem;
+    return parseditem;
   };
 
-  async function fetchPostBySlugId(
-    postSlugId: string,
-    loadUserPollResponse: boolean
-  ) {
+  async function fetchPostBySlugId(postSlugId: string, loadUserPollResponse: boolean): Promise<ExtendedPost | null> {
+
+    console.log(loadUserPollResponse);
+
     try {
       const params: ApiV1PostFetchPostBySlugIdPostRequest = {
         postSlugId: postSlugId,
@@ -74,7 +54,7 @@ export function useBackendPostApi() {
         undefined,
         api
       ).apiV1PostFetchPostBySlugIdPost(params, {});
-      return createInternalPostData(response.data.postData, loadUserPollResponse, undefined);
+      return createInternalPostData(response.data.postData);
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
@@ -107,13 +87,8 @@ export function useBackendPostApi() {
           api
         ).apiV1FeedFetchRecentPost(params, {});
 
-        const dataList = response.data.postDataList.map(postItem => {
-          const dataItem = createInternalPostData(postItem, loadUserPollData, undefined);
-          return dataItem;
-        });
-
         return {
-          postDataList: dataList,
+          postDataList: response.data.postDataList,
           reachedEndOfFeed: response.data.reachedEndOfFeed
         };
       } else {
@@ -128,26 +103,10 @@ export function useBackendPostApi() {
           },
         });
 
-        if (response.data.pollResponse) {
-          const responseMap = new Map<string, number>();
-          response.data.pollResponse.forEach(response => {
-            responseMap.set(response.postSlugId, response.optionChosen);
-          });
-
-          const dataList = response.data.postDataList.map(postItem => {
-            const dataItem = createInternalPostData(postItem, loadUserPollData, responseMap.get(postItem.metadata.postSlugId));
-            return dataItem;
-          });
-
-          return {
-            postDataList: dataList,
-            reachedEndOfFeed: response.data.reachedEndOfFeed
-          };
-        } else {
-          showNotifyMessage("Missing personal poll data in the feed response");
-          return null;
-        }
-
+        return {
+          postDataList: response.data.postDataList,
+          reachedEndOfFeed: response.data.reachedEndOfFeed
+        };
       }
     } catch (e) {
       console.error(e);
@@ -207,6 +166,10 @@ export function useBackendPostApi() {
           title: item.payload.title,
           body: item.payload.body,
           poll: item.payload.poll
+        },
+        interaction: {
+          hasVoted: item.interaction.hasVoted,
+          votedIndex: item.interaction.votedIndex
         }
       };
 
