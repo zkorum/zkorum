@@ -17,7 +17,7 @@ import {
 import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
 import axios from "axios";
-import { ExtendedPost } from "src/shared/types/zod";
+import type { ExtendedPost } from "src/shared/types/zod";
 
 export function useBackendPostApi() {
   const { buildEncodedUcan } = useCommonApi();
