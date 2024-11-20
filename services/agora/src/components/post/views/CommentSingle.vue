@@ -35,6 +35,7 @@
 import CommentActionBar from "./CommentActionBar.vue";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { formatTimeAgo } from "@vueuse/core";
+import type { CommentItem } from "src/shared/types/zod";
 
 defineProps<{
   commentItem: CommentItem;
