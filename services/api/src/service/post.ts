@@ -121,9 +121,15 @@ export async function createNewPost({
     }
 }
 
-export async function fetchPostBySlugId(
-    db: PostgresDatabase,
-    postSlugId: string): Promise<FetchPostBySlugIdResponse> {
+interface FetchPostBySlugIdProps {
+    db: PostgresDatabase;
+    postSlugId: string;
+    fetchPollResponse: boolean;
+    userId?: string;
+}
+
+export async function fetchPostBySlugId({
+    db, postSlugId, fetchPollResponse, userId }: FetchPostBySlugIdProps): Promise<FetchPostBySlugIdResponse> {
 
     try {
         const { fetchPostItems } = useCommonPost();
@@ -132,7 +138,9 @@ export async function fetchPostBySlugId(
             showHidden: true,
             limit: 1,
             where: eq(postTable.slugId, postSlugId),
-            enableCompactBody: false
+            enableCompactBody: false,
+            fetchPollResponse: fetchPollResponse,
+            userId: userId
         });
 
         if (postData.length == 1) {

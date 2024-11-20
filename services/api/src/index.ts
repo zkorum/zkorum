@@ -811,40 +811,44 @@ server.after(() => {
     //             // });
     //         },
     //     });
-    server.withTypeProvider<ZodTypeProvider>().route({
-        method: "POST",
-        url: `/api/${apiVersion}/post/fetch-post-by-slug-id`,
-        schema: {
-            body: Dto.fetchPostBySlugIdRequest,
-            response: {
-                200: Dto.fetchPostBySlugIdResponse,
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/post/fetch-post-by-slug-id`,
+            schema: {
+                body: Dto.fetchPostBySlugIdRequest,
+                response: {
+                    200: Dto.fetchPostBySlugIdResponse,
+                },
             },
-        },
-        handler: async (request) => {
-            return await postService.fetchPostBySlugId(
-                db,
-                request.body.postSlugId,
-            );
+            handler: async (request) => {
+                if (request.body.isAuthenticatedRequest) {
+                    const didWrite = await verifyUCAN(db, request, {
+                        expectedDeviceStatus: undefined,
+                    });
 
-            /*
-                  // anonymous request, no auth
-                  const { post, postId } = await Service.fetchPostByUidOrSlugId({
-                      db: db,
-                      postUidOrSlugId: request.body.postSlugId,
-                      type: "slugId",
-                      httpErrors: server.httpErrors,
-                  });
-                  const comments = await Service.fetchCommentsByPostId({
-                      db: db,
-                      postId: postId,
-                      order: "more",
-                      showHidden: true,
-                      updatedAt: undefined,
-                  });
-                  return { post, comments };
-                */
-        },
-    });
+                    const status = await authUtilService.isLoggedIn(db, didWrite);
+                    if (!status.isLoggedIn) {
+                        throw httpErrors.unauthorized("User is not logged in");
+                    } else {
+                        return await postService.fetchPostBySlugId({
+                            db: db,
+                            postSlugId: request.body.postSlugId,
+                            fetchPollResponse: true,
+                            userId: status.userId
+                        });
+                    }
+                } else {
+                    return await postService.fetchPostBySlugId({
+                        db: db,
+                        postSlugId: request.body.postSlugId,
+                        fetchPollResponse: false,
+                    });
+                }
+
+            },
+        });
 });
 
 server.ready((e) => {

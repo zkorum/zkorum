@@ -109,6 +109,7 @@ export class Dto {
     static createNewPostResponse = z.object({ postSlugId: z.string() }).strict();
     static fetchPostBySlugIdRequest = z.object({
         postSlugId: zodSlugId,
+        isAuthenticatedRequest: z.boolean()
     }).strict();
     static fetchPostBySlugIdResponse = z.object({
         postData: zodExtendedPostData
@@ -134,6 +135,9 @@ export class Dto {
     static castVoteForCommentRequest = z.object({
         commentSlugId: z.string(),
         chosenOption: zodVotingAction
+    }).strict();
+    static fetchUserProfileRequest = z.object({
+        isAuthenticatedRequest: z.boolean()
     }).strict();
     static fetchUserProfileResponse = z.object({
         commentCount: z.number().gte(0),

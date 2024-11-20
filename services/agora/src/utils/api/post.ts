@@ -42,19 +42,37 @@ export function useBackendPostApi() {
   };
 
   async function fetchPostBySlugId(postSlugId: string, loadUserPollResponse: boolean): Promise<ExtendedPost | null> {
-
-    console.log(loadUserPollResponse);
-
     try {
       const params: ApiV1PostFetchPostBySlugIdPostRequest = {
         postSlugId: postSlugId,
+        isAuthenticatedRequest: loadUserPollResponse
       };
-      const response = await DefaultApiFactory(
-        undefined,
-        undefined,
-        api
-      ).apiV1PostFetchPostBySlugIdPost(params, {});
-      return createInternalPostData(response.data.postData);
+
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1PostFetchPostBySlugIdPost(params);
+      if (!loadUserPollResponse) {
+        const response = await DefaultApiFactory(
+          undefined,
+          undefined,
+          api
+        ).apiV1PostFetchPostBySlugIdPost(params, {});
+
+        return createInternalPostData(response.data.postData);
+      } else {
+        const encodedUcan = await buildEncodedUcan(url, options);
+        const response = await DefaultApiFactory(
+          undefined,
+          undefined,
+          api
+        ).apiV1PostFetchPostBySlugIdPost(params, {
+          headers: {
+            ...buildAuthorizationHeader(encodedUcan),
+          },
+        });
+
+        return createInternalPostData(response.data.postData);
+      }
+
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {

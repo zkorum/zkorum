@@ -4,8 +4,6 @@ import { and, eq, lt } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
 import type { FetchFeedResponse } from "@/shared/types/dto.js";
-import { getUserPollResponse } from "./poll.js";
-import { httpErrors } from "@fastify/sensible";
 
 interface FetchFeedProps {
     db: PostgresDatabase;
@@ -53,40 +51,10 @@ export async function fetchFeed({
         showHidden: showHidden ?? false,
         limit: targetLimit + 1,
         where: whereClause,
-        enableCompactBody: true
+        enableCompactBody: true,
+        fetchPollResponse: fetchPollResponse,
+        userId: userId
     });
-
-    if (fetchPollResponse) {
-        if (!userId) {
-            throw httpErrors.internalServerError("Missing author ID for fetching poll response");
-        } else {
-            const postSlugIdList: string[] = [];
-            posts.forEach(post => {
-                postSlugIdList.push(post.metadata.postSlugId);
-            });
-
-            const pollResponses = await getUserPollResponse({
-                db: db,
-                authorId: userId,
-                httpErrors: httpErrors,
-                postSlugIdList: postSlugIdList
-            });
-
-            const responseMap = new Map<string, number>();
-            pollResponses.forEach(response => {
-                responseMap.set(response.postSlugId, response.optionChosen);
-            });
-
-            posts.forEach(post => {
-                const voteIndex = responseMap.get(post.metadata.postSlugId);
-                post.interaction = {
-                    hasVoted: voteIndex != undefined,
-                    votedIndex: voteIndex ?? 0
-                }
-            });
-
-        }
-    }
 
     return {
         postDataList: posts.length == targetLimit ? posts.splice(-1) : posts,

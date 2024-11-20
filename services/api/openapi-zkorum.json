@@ -1016,10 +1016,14 @@
                                     "postSlugId": {
                                         "type": "string",
                                         "maxLength": 10
+                                    },
+                                    "isAuthenticatedRequest": {
+                                        "type": "boolean"
                                     }
                                 },
                                 "required": [
-                                    "postSlugId"
+                                    "postSlugId",
+                                    "isAuthenticatedRequest"
                                 ],
                                 "additionalProperties": false
                             }

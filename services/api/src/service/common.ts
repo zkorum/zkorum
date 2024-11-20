@@ -2,9 +2,11 @@ import { postContentTable, pollTable, pollResponseContentTable, postTable, organ
 import { toUnionUndefined } from "@/shared/shared.js";
 import type { PostMetadata, ExtendedPostPayload, PollOptionWithResult, ExtendedPost } from "@/shared/types/zod.js";
 import type { HttpErrors } from "@fastify/sensible";
+import { httpErrors } from "@fastify/sensible";
 import { eq, and, desc, SQL } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import sanitizeHtml from "sanitize-html";
+import { getUserPollResponse } from "./poll.js";
 
 export function useCommonPost() {
 
@@ -14,10 +16,12 @@ export function useCommonPost() {
         limit: number;
         where: SQL | undefined;
         enableCompactBody: boolean;
+        fetchPollResponse: boolean;
+        userId?: string;
     }
 
     async function fetchPostItems({
-        db, showHidden, limit, where, enableCompactBody
+        db, showHidden, limit, where, enableCompactBody, fetchPollResponse, userId
     }: FetchPostItemsProps) {
 
         const postItems = await db
@@ -160,8 +164,39 @@ export function useCommonPost() {
             });
         });
 
-        return posts;
+        if (fetchPollResponse) {
+            if (!userId) {
+                throw httpErrors.internalServerError("Missing author ID for fetching poll response");
+            } else {
+                const postSlugIdList: string[] = [];
+                posts.forEach(post => {
+                    postSlugIdList.push(post.metadata.postSlugId);
+                });
 
+                const pollResponses = await getUserPollResponse({
+                    db: db,
+                    authorId: userId,
+                    httpErrors: httpErrors,
+                    postSlugIdList: postSlugIdList
+                });
+
+                const responseMap = new Map<string, number>();
+                pollResponses.forEach(response => {
+                    responseMap.set(response.postSlugId, response.optionChosen);
+                });
+
+                posts.forEach(post => {
+                    const voteIndex = responseMap.get(post.metadata.postSlugId);
+                    post.interaction = {
+                        hasVoted: voteIndex != undefined,
+                        votedIndex: voteIndex ?? 0
+                    }
+                });
+
+            }
+        }
+
+        return posts;
     }
 
     interface IdAndContentId {

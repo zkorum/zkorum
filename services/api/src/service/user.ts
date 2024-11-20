@@ -36,7 +36,9 @@ export async function getUserProfile({
       showHidden: false,
       limit: 10,
       where: whereClause,
-      enableCompactBody: true
+      enableCompactBody: true,
+      fetchPollResponse: true,
+      userId: userId
     });
 
     if (userTableResponse.length == 0) {

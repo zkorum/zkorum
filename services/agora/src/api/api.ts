@@ -598,6 +598,12 @@ export interface ApiV1PostFetchPostBySlugIdPostRequest {
      * @memberof ApiV1PostFetchPostBySlugIdPostRequest
      */
     'postSlugId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiV1PostFetchPostBySlugIdPostRequest
+     */
+    'isAuthenticatedRequest': boolean;
 }
 /**
  * 
