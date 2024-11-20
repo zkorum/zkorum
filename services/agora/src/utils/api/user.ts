@@ -4,7 +4,7 @@ import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useDialog } from "../ui/dialog";
 import { useCommonApi } from "./common";
 import { useBackendPostApi } from "./post";
-import { DummyPostDataFormat } from "src/stores/post";
+import type { DummyPostDataFormat } from "src/stores/post";
 
 export function useBackendUserApi() {
   const { buildEncodedUcan } = useCommonApi();
