@@ -25,7 +25,7 @@
                 </Tag>
               </div>
               <div v-if="!displayAbsoluteTime">
-                {{ getTimeFromNow(new Date(createdAt)) }}
+                {{ formatTimeAgo(new Date(createdAt)) }}
               </div>
             </div>
             <Skeleton v-if="skeletonMode" width="2rem"></Skeleton>
@@ -46,12 +46,13 @@
 </template>
 
 <script setup lang="ts">
-import { getDateString, getTimeFromNow } from "src/utils/common";
+import { getDateString } from "src/utils/common";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import Skeleton from "primevue/skeleton";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import Tag from "primevue/tag";
+import { formatTimeAgo } from "@vueuse/core";
 
 defineProps<{
   posterUserName: string;

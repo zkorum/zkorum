@@ -11,7 +11,7 @@
           </div>
 
           <div>
-            {{ getTimeFromNow(new Date(commentItem.createdAt)) }}
+            {{ formatTimeAgo(new Date(commentItem.createdAt)) }}
           </div>
         </div>
 
@@ -32,10 +32,9 @@
 </template>
 
 <script setup lang="ts">
-import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
 import UserAvatar from "src/components/account/UserAvatar.vue";
-import type { CommentItem } from "src/shared/types/zod";
+import { formatTimeAgo } from "@vueuse/core";
 
 defineProps<{
   commentItem: CommentItem;
