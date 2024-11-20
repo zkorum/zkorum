@@ -5,7 +5,7 @@
         {{ title }}
       </div>
 
-      <ZKCard padding="1rem">
+      <ZKCard padding="0rem">
         <div class="flexStyle">
           <div v-for="(item, index) in settingsItemList" :key="item.icon">
             <RouterLink :to="{ name: item.routeName }">
@@ -18,10 +18,7 @@
                 </div>
               </div>
 
-              <q-separator
-                v-if="index != settingsItemList.length - 1"
-                class="separatorStyle"
-              />
+              <q-separator v-if="index != settingsItemList.length - 1" />
             </RouterLink>
           </div>
         </div>
@@ -47,6 +44,7 @@ defineProps<{
   align-items: center;
   font-size: 1rem;
   cursor: pointer;
+  padding: 1rem;
 }
 
 .flexStyle {
@@ -62,10 +60,5 @@ defineProps<{
 
 .container {
   padding-bottom: 2rem;
-}
-
-.separatorStyle {
-  margin-top: 0.8rem;
-  margin-bottom: 0.8rem;
 }
 </style>
