@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import {
-  DummyCommentFormat,
-  PossibleCommentRankingActions,
+  type DummyCommentFormat,
+  type PossibleCommentRankingActions,
 } from "./post";
 
 export interface UserCommentHistoryitem {

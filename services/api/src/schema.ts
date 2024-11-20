@@ -36,27 +36,521 @@ export const bytea = customType<{
     },
 });
 
-export const countryCodeEnum = pgEnum("country_code", ["AND", "ARE", "AFG", "ATG", "AIA", "ALB", "ARM", "AGO", "ATA", "ARG", "ASM", "AUT", "AUS", "ABW", "ALA", "AZE", "BIH", "BRB", "BGD", "BEL", "BFA", "BGR", "BHR", "BDI", "BEN", "BLM", "BMU", "BRN", "BOL", "BES", "BRA", "BHS", "BTN", "BVT", "BWA", "BLR", "BLZ", "CAN", "CCK", "COD", "CAF", "COG", "CHE", "CIV", "COK", "CHL", "CMR", "CHN", "COL", "CRI", "CUB", "CPV", "CUW", "CXR", "CYP", "CZE", "DEU", "DJI", "DNK", "DMA", "DOM", "DZA", "ECU", "EST", "EGY", "ESH", "ERI", "ESP", "ETH", "FIN", "FJI", "FLK", "FSM", "FRO", "FRA", "GAB", "GBR", "GRD", "GEO", "GUF", "GGY", "GHA", "GIB", "GRL", "GMB", "GIN", "GLP", "GNQ", "GRC", "SGS", "GTM", "GUM", "GNB", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IRL", "ISR", "IMN", "IND", "IOT", "IRQ", "IRN", "ISL", "ITA", "JEY", "JAM", "JOR", "JPN", "KEN", "KGZ", "KHM", "KIR", "COM", "KNA", "PRK", "KOR", "KWT", "CYM", "KAZ", "LAO", "LBN", "LCA", "LIE", "LKA", "LBR", "LSO", "LTU", "LUX", "LVA", "LBY", "MAR", "MCO", "MDA", "MNE", "MAF", "MDG", "MHL", "MKD", "MLI", "MMR", "MNG", "MAC", "MNP", "MTQ", "MRT", "MSR", "MLT", "MUS", "MDV", "MWI", "MEX", "MYS", "MOZ", "NAM", "NCL", "NER", "NFK", "NGA", "NIC", "NLD", "NOR", "NPL", "NRU", "NIU", "NZL", "OMN", "PAN", "PER", "PYF", "PNG", "PHL", "PAK", "POL", "SPM", "PCN", "PRI", "PSE", "PRT", "PLW", "PRY", "QAT", "REU", "ROU", "SRB", "RUS", "RWA", "SAU", "SLB", "SYC", "SDN", "SWE", "SGP", "SHN", "SVN", "SJM", "SVK", "SLE", "SMR", "SEN", "SOM", "SUR", "SSD", "STP", "SLV", "SXM", "SYR", "SWZ", "TCA", "TCD", "ATF", "TGO", "THA", "TJK", "TKL", "TLS", "TKM", "TUN", "TON", "TUR", "TTO", "TUV", "TWN", "TZA", "UKR", "UGA", "UMI", "USA", "URY", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WLF", "WSM", "XKX", "YEM", "MYT", "ZAF", "ZMB", "ZWE"]); // warning: german passport has "D" instead of "DEU", so a mapping must be created
-export const ageGroupEnum = pgEnum("age_group", ["8-15", "16-24", "25-34", "35-44", "45-54", "55-64", "65+"]);
+// 3 digits standard, because that's what passport use
+export const countryCodeEnum = pgEnum("country_code", [
+    "AND",
+    "ARE",
+    "AFG",
+    "ATG",
+    "AIA",
+    "ALB",
+    "ARM",
+    "AGO",
+    "ATA",
+    "ARG",
+    "ASM",
+    "AUT",
+    "AUS",
+    "ABW",
+    "ALA",
+    "AZE",
+    "BIH",
+    "BRB",
+    "BGD",
+    "BEL",
+    "BFA",
+    "BGR",
+    "BHR",
+    "BDI",
+    "BEN",
+    "BLM",
+    "BMU",
+    "BRN",
+    "BOL",
+    "BES",
+    "BRA",
+    "BHS",
+    "BTN",
+    "BVT",
+    "BWA",
+    "BLR",
+    "BLZ",
+    "CAN",
+    "CCK",
+    "COD",
+    "CAF",
+    "COG",
+    "CHE",
+    "CIV",
+    "COK",
+    "CHL",
+    "CMR",
+    "CHN",
+    "COL",
+    "CRI",
+    "CUB",
+    "CPV",
+    "CUW",
+    "CXR",
+    "CYP",
+    "CZE",
+    "DEU",
+    "DJI",
+    "DNK",
+    "DMA",
+    "DOM",
+    "DZA",
+    "ECU",
+    "EST",
+    "EGY",
+    "ESH",
+    "ERI",
+    "ESP",
+    "ETH",
+    "FIN",
+    "FJI",
+    "FLK",
+    "FSM",
+    "FRO",
+    "FRA",
+    "GAB",
+    "GBR",
+    "GRD",
+    "GEO",
+    "GUF",
+    "GGY",
+    "GHA",
+    "GIB",
+    "GRL",
+    "GMB",
+    "GIN",
+    "GLP",
+    "GNQ",
+    "GRC",
+    "SGS",
+    "GTM",
+    "GUM",
+    "GNB",
+    "GUY",
+    "HKG",
+    "HMD",
+    "HND",
+    "HRV",
+    "HTI",
+    "HUN",
+    "IDN",
+    "IRL",
+    "ISR",
+    "IMN",
+    "IND",
+    "IOT",
+    "IRQ",
+    "IRN",
+    "ISL",
+    "ITA",
+    "JEY",
+    "JAM",
+    "JOR",
+    "JPN",
+    "KEN",
+    "KGZ",
+    "KHM",
+    "KIR",
+    "COM",
+    "KNA",
+    "PRK",
+    "KOR",
+    "KWT",
+    "CYM",
+    "KAZ",
+    "LAO",
+    "LBN",
+    "LCA",
+    "LIE",
+    "LKA",
+    "LBR",
+    "LSO",
+    "LTU",
+    "LUX",
+    "LVA",
+    "LBY",
+    "MAR",
+    "MCO",
+    "MDA",
+    "MNE",
+    "MAF",
+    "MDG",
+    "MHL",
+    "MKD",
+    "MLI",
+    "MMR",
+    "MNG",
+    "MAC",
+    "MNP",
+    "MTQ",
+    "MRT",
+    "MSR",
+    "MLT",
+    "MUS",
+    "MDV",
+    "MWI",
+    "MEX",
+    "MYS",
+    "MOZ",
+    "NAM",
+    "NCL",
+    "NER",
+    "NFK",
+    "NGA",
+    "NIC",
+    "NLD",
+    "NOR",
+    "NPL",
+    "NRU",
+    "NIU",
+    "NZL",
+    "OMN",
+    "PAN",
+    "PER",
+    "PYF",
+    "PNG",
+    "PHL",
+    "PAK",
+    "POL",
+    "SPM",
+    "PCN",
+    "PRI",
+    "PSE",
+    "PRT",
+    "PLW",
+    "PRY",
+    "QAT",
+    "REU",
+    "ROU",
+    "SRB",
+    "RUS",
+    "RWA",
+    "SAU",
+    "SLB",
+    "SYC",
+    "SDN",
+    "SWE",
+    "SGP",
+    "SHN",
+    "SVN",
+    "SJM",
+    "SVK",
+    "SLE",
+    "SMR",
+    "SEN",
+    "SOM",
+    "SUR",
+    "SSD",
+    "STP",
+    "SLV",
+    "SXM",
+    "SYR",
+    "SWZ",
+    "TCA",
+    "TCD",
+    "ATF",
+    "TGO",
+    "THA",
+    "TJK",
+    "TKL",
+    "TLS",
+    "TKM",
+    "TUN",
+    "TON",
+    "TUR",
+    "TTO",
+    "TUV",
+    "TWN",
+    "TZA",
+    "UKR",
+    "UGA",
+    "UMI",
+    "USA",
+    "URY",
+    "UZB",
+    "VAT",
+    "VCT",
+    "VEN",
+    "VGB",
+    "VIR",
+    "VNM",
+    "VUT",
+    "WLF",
+    "WSM",
+    "XKX",
+    "YEM",
+    "MYT",
+    "ZAF",
+    "ZMB",
+    "ZWE",
+]); // warning: german passport has "D" instead of "DEU", so a mapping must be created
+export const ageGroupEnum = pgEnum("age_group", [
+    "8-15",
+    "16-24",
+    "25-34",
+    "35-44",
+    "45-54",
+    "55-64",
+    "65+",
+]);
 export const sexEnum = pgEnum("sex", ["F", "M", "X"]);
 
-// WARNING: CHANGE THIS AT THE SAME TIME AS ZOD ENUM IN SHARED/ZOD.TS
+// slight differences from the standard:
+// AC is not part of the official ISO 3166-1 alpha-2 standard, which is the primary reference for 2-character country codes. Instead, AC is commonly used as an IANA subtag to represent Ascension Island, a small territory in the South Atlantic Ocean that is part of the British Overseas Territories. It is recognized in contexts such as domain registrations and geocoding, but not officially in ISO 3166-1.
+// XK - Used unofficially to represent Kosovo, which does not have an ISO-assigned code due to political reasons.
+// TA - Refers to Tristan da Cunha, part of the British Overseas Territories, often treated separately from the main territory of Saint Helena (code SH).
+// EU - Sometimes used to represent the European Union, though it's not an ISO country code.
 export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
-    "376", "971", "93", "1268", "1264", "355", "374", "244", "672", "54", "1684", "43", "297", "358", "994", "387", "1246",
-    "880", "32", "226", "359", "973", "257", "229", "590", "1441", "673", "591", "5997", "55", "1242", "975", "47", "267", "375",
-    "501", "1", "243", "236", "242", "41", "225", "682", "56", "237", "86", "57", "506", "53", "238", "5999", "61", "357",
-    "420", "49", "253", "45", "1767", "1809", "1829", "1849", "213", "593", "372", "20", "212", "291", "34", "251", "679",
-    "500", "691", "298", "33", "241", "1473", "995", "594", "233", "350", "299", "220", "224", "240", "30",
-    "502", "1671", "245", "592", "852", "504", "385", "509", "36", "62", "353", "972", "91", "246", "964",
-    "98", "354", "39", "44", "1876", "962", "81", "254", "996", "855", "686", "269", "1869", "850", "82", "965", "1345", "76",
-    "77", "856", "961", "1758", "423", "94", "231", "266", "370", "352", "371", "218", "377", "373", "382", "261",
-    "692", "389", "223", "95", "976", "853", "1670", "596", "222", "1664", "356", "230", "960", "265", "52", "60", "258", "264",
-    "687", "227", "234", "505", "31", "977", "674", "683", "64", "968", "507", "51", "689", "675", "63", "92",
-    "48", "508", "1787", "1939", "970", "351", "680", "595", "974", "262", "40", "381", "7", "250", "966", "677", "248",
-    "249", "46", "65", "290", "386", "4779", "421", "232", "378", "221", "252", "597", "211", "239", "503", "1721", "963",
-    "268", "1649", "235", "228", "66", "992", "690", "670", "993", "216", "676", "90", "1868", "688", "886", "255",
-    "380", "256", "598", "998", "379", "1784", "58", "1284", "1340", "84", "678", "681", "685", "383",
-    "967", "27", "260", "263"
+    "AC",
+    "AD",
+    "AE",
+    "AF",
+    "AG",
+    "AI",
+    "AL",
+    "AM",
+    "AO",
+    "AR",
+    "AS",
+    "AT",
+    "AU",
+    "AW",
+    "AX",
+    "AZ",
+    "BA",
+    "BB",
+    "BD",
+    "BE",
+    "BF",
+    "BG",
+    "BH",
+    "BI",
+    "BJ",
+    "BL",
+    "BM",
+    "BN",
+    "BO",
+    "BQ",
+    "BR",
+    "BS",
+    "BT",
+    "BW",
+    "BY",
+    "BZ",
+    "CA",
+    "CC",
+    "CD",
+    "CF",
+    "CG",
+    "CH",
+    "CI",
+    "CK",
+    "CL",
+    "CM",
+    "CN",
+    "CO",
+    "CR",
+    "CU",
+    "CV",
+    "CW",
+    "CX",
+    "CY",
+    "CZ",
+    "DE",
+    "DJ",
+    "DK",
+    "DM",
+    "DO",
+    "DZ",
+    "EC",
+    "EE",
+    "EG",
+    "EH",
+    "ER",
+    "ES",
+    "ET",
+    "FI",
+    "FJ",
+    "FK",
+    "FM",
+    "FO",
+    "FR",
+    "GA",
+    "GB",
+    "GD",
+    "GE",
+    "GF",
+    "GG",
+    "GH",
+    "GI",
+    "GL",
+    "GM",
+    "GN",
+    "GP",
+    "GQ",
+    "GR",
+    "GT",
+    "GU",
+    "GW",
+    "GY",
+    "HK",
+    "HN",
+    "HR",
+    "HT",
+    "HU",
+    "ID",
+    "IE",
+    "IL",
+    "IM",
+    "IN",
+    "IO",
+    "IQ",
+    "IR",
+    "IS",
+    "IT",
+    "JE",
+    "JM",
+    "JO",
+    "JP",
+    "KE",
+    "KG",
+    "KH",
+    "KI",
+    "KM",
+    "KN",
+    "KP",
+    "KR",
+    "KW",
+    "KY",
+    "KZ",
+    "LA",
+    "LB",
+    "LC",
+    "LI",
+    "LK",
+    "LR",
+    "LS",
+    "LT",
+    "LU",
+    "LV",
+    "LY",
+    "MA",
+    "MC",
+    "MD",
+    "ME",
+    "MF",
+    "MG",
+    "MH",
+    "MK",
+    "ML",
+    "MM",
+    "MN",
+    "MO",
+    "MP",
+    "MQ",
+    "MR",
+    "MS",
+    "MT",
+    "MU",
+    "MV",
+    "MW",
+    "MX",
+    "MY",
+    "MZ",
+    "NA",
+    "NC",
+    "NE",
+    "NF",
+    "NG",
+    "NI",
+    "NL",
+    "NO",
+    "NP",
+    "NR",
+    "NU",
+    "NZ",
+    "OM",
+    "PA",
+    "PE",
+    "PF",
+    "PG",
+    "PH",
+    "PK",
+    "PL",
+    "PM",
+    "PR",
+    "PS",
+    "PT",
+    "PW",
+    "PY",
+    "QA",
+    "RE",
+    "RO",
+    "RS",
+    "RU",
+    "RW",
+    "SA",
+    "SB",
+    "SC",
+    "SD",
+    "SE",
+    "SG",
+    "SH",
+    "SI",
+    "SJ",
+    "SK",
+    "SL",
+    "SM",
+    "SN",
+    "SO",
+    "SR",
+    "SS",
+    "ST",
+    "SV",
+    "SX",
+    "SY",
+    "SZ",
+    "TA",
+    "TC",
+    "TD",
+    "TG",
+    "TH",
+    "TJ",
+    "TK",
+    "TL",
+    "TM",
+    "TN",
+    "TO",
+    "TR",
+    "TT",
+    "TV",
+    "TW",
+    "TZ",
+    "UA",
+    "UG",
+    "US",
+    "UY",
+    "UZ",
+    "VA",
+    "VC",
+    "VE",
+    "VG",
+    "VI",
+    "VN",
+    "VU",
+    "WF",
+    "WS",
+    "XK",
+    "YE",
+    "YT",
+    "ZA",
+    "ZM",
+    "ZW",
 ]);
 
 // One user == one account.
@@ -68,7 +562,9 @@ export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
 // The "at least one" conditon is not enforced directly in the SQL model yet. It is done in the application code.
 export const userTable = pgTable("user", {
     id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
-    organisationId: integer("organisation_id").references(() => organisationTable.id), // for now a user can belong to at most 1 organisation
+    organisationId: integer("organisation_id").references(
+        () => organisationTable.id,
+    ), // for now a user can belong to at most 1 organisation
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -88,7 +584,9 @@ export const organisationTable = pgTable("organisation", {
     name: varchar("name", { length: MAX_LENGTH_NAME_CREATOR }).notNull(),
     imageUrl: text("image_url"),
     websiteUrl: text("website_url"),
-    description: varchar("description", { length: MAX_LENGTH_DESCRIPTION_CREATOR }),
+    description: varchar("description", {
+        length: MAX_LENGTH_DESCRIPTION_CREATOR,
+    }),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -131,9 +629,10 @@ export const phoneTable = pgTable("phone", {
         .references(() => userTable.id)
         .notNull(),
     lastTwoDigits: varchar("last_two_digits", { length: 2 }).notNull(), // add check for it to be numbers?
-    phoneCountryCode: phoneCountryCodeEnum("phone_country_code").notNull(),
-    pepperVersion: integer("pepper_version").notNull().default(0), // used pepper version - we rotate app-wide pepper one in a while
+    countryCallingCode: varchar("", { length: 10 }).notNull(),
+    phoneCountryCode: phoneCountryCodeEnum("phone_country_code"),
     phoneHash: text("phone_hash").notNull(), // base64 encoded hash of phone + pepper
+    pepperVersion: integer("pepper_version").notNull().default(0), // used pepper version - we rotate app-wide pepper one in a while
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
@@ -251,7 +750,8 @@ export const authAttemptPhoneTable = pgTable("auth_attempt_phone", {
     didWrite: varchar("did_write", { length: 1000 }).primaryKey(), // TODO: make sure of length
     type: authType("type").notNull(),
     lastTwoDigits: varchar("last_two_digits", { length: 2 }).notNull(), // add check for it to be numbers?
-    phoneCountryCode: phoneCountryCodeEnum("phone_country_code").notNull(),
+    countryCallingCode: varchar("", { length: 10 }).notNull(),
+    phoneCountryCode: phoneCountryCodeEnum("phone_country_code"),
     phoneHash: text("phone_hash").notNull(), // base64 encoded hash of phone + pepper
     pepperVersion: integer("pepper_version").notNull().default(0), // used pepper - we rotate app-wide pepper once in a while
     userId: uuid("user_id").notNull(),
@@ -273,7 +773,6 @@ export const authAttemptPhoneTable = pgTable("auth_attempt_phone", {
         .defaultNow()
         .notNull(),
 });
-
 
 // conceptually, it is a "pollContentTable"
 export const pollTable = pgTable("poll", {
@@ -309,13 +808,21 @@ export const pollTable = pgTable("poll", {
         .notNull(),
 });
 
-export const proofTypeEnum = pgEnum("proof_type", ["creation", "edit", "deletion"]);
+export const proofTypeEnum = pgEnum("proof_type", [
+    "creation",
+    "edit",
+    "deletion",
+]);
 
 export const postProofTable = pgTable("post_proof", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
-    postId: integer("post_id").notNull().references(() => postTable.id), // the postTable never gets deleted
-    parentId: integer("parent_id").references((): AnyPgColumn => postProofTable.id), // not null if edit or delete, else null
+    postId: integer("post_id")
+        .notNull()
+        .references(() => postTable.id), // the postTable never gets deleted
+    parentId: integer("parent_id").references(
+        (): AnyPgColumn => postProofTable.id,
+    ), // not null if edit or delete, else null
     authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
@@ -331,12 +838,16 @@ export const postProofTable = pgTable("post_proof", {
 
 export const postContentTable = pgTable("post_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    postId: integer("post_id").references(() => postTable.id).notNull(),
+    postId: integer("post_id")
+        .references(() => postTable.id)
+        .notNull(),
     postProofId: integer("post_proof_id")
         .notNull()
         .unique()
         .references(() => postProofTable.id), // cannot point to deletion proof
-    parentId: integer("parent_id").references((): AnyPgColumn => postContentTable.id), // not null if edit
+    parentId: integer("parent_id").references(
+        (): AnyPgColumn => postContentTable.id,
+    ), // not null if edit
     title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
     body: varchar("body"),
     pollId: integer("poll_id").references((): AnyPgColumn => pollTable.id), // for now there is only one poll per post at most
@@ -345,7 +856,7 @@ export const postContentTable = pgTable("post_content", {
         precision: 0,
     })
         .defaultNow()
-        .notNull()
+        .notNull(),
 });
 
 export const postTable = pgTable("post", {
@@ -354,7 +865,9 @@ export const postTable = pgTable("post", {
     authorId: uuid("author_id") // "postAs"
         .notNull()
         .references(() => userTable.id), // the author of the poll
-    currentContentId: integer("current_content_id").references((): AnyPgColumn => postContentTable.id).unique(), // null if post was deleted
+    currentContentId: integer("current_content_id")
+        .references((): AnyPgColumn => postContentTable.id)
+        .unique(), // null if post was deleted
     isHidden: boolean("is_hidden").notNull().default(false),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -378,36 +891,46 @@ export const postTable = pgTable("post", {
     commentCount: integer("comment_count").notNull().default(0),
 });
 
-export const pollResponseTable = pgTable("poll_response", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    authorId: uuid("author_id")
-        .notNull()
-        .references(() => userTable.id),
-    postId: integer("post_id") // poll is bound to the post
-        .notNull()
-        .references(() => postTable.id),
-    currentContentId: integer("current_content_id").references((): AnyPgColumn => pollResponseContentTable.id).unique(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-}, (t) => ({
-    onePollResponsePerAuthor: unique().on(t.authorId, t.postId),
-}));
+export const pollResponseTable = pgTable(
+    "poll_response",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        authorId: uuid("author_id")
+            .notNull()
+            .references(() => userTable.id),
+        postId: integer("post_id") // poll is bound to the post
+            .notNull()
+            .references(() => postTable.id),
+        currentContentId: integer("current_content_id")
+            .references((): AnyPgColumn => pollResponseContentTable.id)
+            .unique(),
+        createdAt: timestamp("created_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+        updatedAt: timestamp("updated_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+    },
+    (t) => ({
+        onePollResponsePerAuthor: unique().on(t.authorId, t.postId),
+    }),
+);
 
 export const pollResponseProofTable = pgTable("poll_response_proof", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
-    postId: integer("post_id").notNull().references(() => postTable.id), // the postTable never gets deleted
-    parentId: integer("parent_id").references((): AnyPgColumn => pollResponseProofTable.id), // not null if edit or delete, else null
+    postId: integer("post_id")
+        .notNull()
+        .references(() => postTable.id), // the postTable never gets deleted
+    parentId: integer("parent_id").references(
+        (): AnyPgColumn => pollResponseProofTable.id,
+    ), // not null if edit or delete, else null
     authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
@@ -426,23 +949,34 @@ export const pollResponseContentTable = pgTable("poll_response_content", {
     pollResponseId: integer("poll_response_id") //
         .notNull()
         .references(() => pollResponseTable.id),
-    pollResponseProofId: integer("poll_response_proof_id").notNull().unique().references((): AnyPgColumn => pollResponseProofTable.id),
-    postContentId: integer("post_content_id").references(() => postContentTable.id).notNull(), // exact post content and associated poll that existed when this poll was responded.
-    parentId: integer("parent_id").references((): AnyPgColumn => pollResponseContentTable.id), // not null if edit
+    pollResponseProofId: integer("poll_response_proof_id")
+        .notNull()
+        .unique()
+        .references((): AnyPgColumn => pollResponseProofTable.id),
+    postContentId: integer("post_content_id")
+        .references(() => postContentTable.id)
+        .notNull(), // exact post content and associated poll that existed when this poll was responded.
+    parentId: integer("parent_id").references(
+        (): AnyPgColumn => pollResponseContentTable.id,
+    ), // not null if edit
     optionChosen: integer("option_chosen").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
     })
         .defaultNow()
-        .notNull()
+        .notNull(),
 });
 
 export const commentProofTable = pgTable("comment_proof", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
-    commentId: integer("comment_id").notNull().references(() => commentTable.id), // the commentTable never gets deleted
-    parentId: integer("parent_id").references((): AnyPgColumn => commentProofTable.id), // not null if edit or delete, else null
+    commentId: integer("comment_id")
+        .notNull()
+        .references(() => commentTable.id), // the commentTable never gets deleted
+    parentId: integer("parent_id").references(
+        (): AnyPgColumn => commentProofTable.id,
+    ), // not null if edit or delete, else null
     authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
@@ -456,7 +990,6 @@ export const commentProofTable = pgTable("comment_proof", {
         .notNull(),
 });
 
-
 export const commentTable = pgTable("comment", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     slugId: varchar("slug_id", { length: 8 }).notNull().unique(), // used for permanent URL
@@ -466,7 +999,9 @@ export const commentTable = pgTable("comment", {
     postId: integer("post_id")
         .references(() => postTable.id)
         .notNull(),
-    currentContentId: integer("current_content_id").references((): AnyPgColumn => commentContentTable.id), // null if comment was deleted
+    currentContentId: integer("current_content_id").references(
+        (): AnyPgColumn => commentContentTable.id,
+    ), // null if comment was deleted
     numLikes: integer("num_likes").notNull().default(0),
     numDislikes: integer("num_dislikes").notNull().default(0),
     isHidden: boolean("is_hidden").notNull().default(false),
@@ -493,12 +1028,18 @@ export const commentTable = pgTable("comment", {
 
 export const commentContentTable = pgTable("comment_content", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    commentId: integer("comment_id").references(() => commentTable.id).notNull(), // used to delete all commentContent when deleting a comment
-    postContentId: integer("post_content_id").references(() => postContentTable.id).notNull(), // used to cascade delete all commentContent when deleting a post(content)
+    commentId: integer("comment_id")
+        .references(() => commentTable.id)
+        .notNull(), // used to delete all commentContent when deleting a comment
+    postContentId: integer("post_content_id")
+        .references(() => postContentTable.id)
+        .notNull(), // used to cascade delete all commentContent when deleting a post(content)
     commentProofId: integer("comment_proof_id")
         .notNull()
         .references(() => commentProofTable.id), // cannot point to deletion proof
-    parentId: integer("parent_id").references((): AnyPgColumn => commentContentTable.id), // not null if edit
+    parentId: integer("parent_id").references(
+        (): AnyPgColumn => commentContentTable.id,
+    ), // not null if edit
     content: varchar("content").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -509,35 +1050,43 @@ export const commentContentTable = pgTable("comment_content", {
 });
 
 // like or dislike on comments for each user
-export const voteTable = pgTable("vote", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    authorId: uuid("author_id")
-        .notNull()
-        .references(() => userTable.id),
-    commentId: integer("comment_id")
-        .notNull()
-        .references(() => commentTable.id),
-    currentContentId: integer("current_content_id").references((): AnyPgColumn => voteContentTable.id), // not null if not deleted, else null
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-}, (t) => ({
-    oneCommentVotePerUser: unique().on(t.authorId, t.commentId),
-}));
+export const voteTable = pgTable(
+    "vote",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        authorId: uuid("author_id")
+            .notNull()
+            .references(() => userTable.id),
+        commentId: integer("comment_id")
+            .notNull()
+            .references(() => commentTable.id),
+        currentContentId: integer("current_content_id").references(
+            (): AnyPgColumn => voteContentTable.id,
+        ), // not null if not deleted, else null
+        createdAt: timestamp("created_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+        updatedAt: timestamp("updated_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+    },
+    (t) => ({
+        oneCommentVotePerUser: unique().on(t.authorId, t.commentId),
+    }),
+);
 
 export const voteProofTable = pgTable("vote_proof", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     type: proofTypeEnum("proof_type").notNull(),
-    voteId: integer("vote_id").notNull().references(() => voteTable.id), // the postTable never gets deleted
+    voteId: integer("vote_id")
+        .notNull()
+        .references(() => voteTable.id), // the postTable never gets deleted
     authorDid: varchar("author_did", { length: 1000 }) // TODO: make sure of length
         .notNull()
         .references(() => deviceTable.didWrite),
@@ -558,25 +1107,46 @@ export const voteContentTable = pgTable("vote_content", {
     voteId: integer("vote_id") //
         .notNull()
         .references(() => voteTable.id),
-    voteProofId: integer("vote_proof_id").notNull().references((): AnyPgColumn => voteProofTable.id),
-    commentContentId: integer("comment_content_id").references(() => commentContentTable.id).notNull(), // exact comment content that existed when this vote was cast. Cascade delete from commentContent if commentContent was deleted.
+    voteProofId: integer("vote_proof_id")
+        .notNull()
+        .references((): AnyPgColumn => voteProofTable.id),
+    commentContentId: integer("comment_content_id")
+        .references(() => commentContentTable.id)
+        .notNull(), // exact comment content that existed when this vote was cast. Cascade delete from commentContent if commentContent was deleted.
     optionChosen: voteEnum("option_chosen").notNull(),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
     })
         .defaultNow()
-        .notNull()
+        .notNull(),
 });
 
 // illegal = glaring violation of law (scam, terrorism, threat, etc)
-const [firstReason, restReason] = ["off-topic", "spam", "misleading", "privacy", "sexual", "toxic", "illegal"];
-export const reportReasonEnum = pgEnum("report_reason_enum", [firstReason, ...restReason]);
+const [firstReason, restReason] = [
+    "off-topic",
+    "spam",
+    "misleading",
+    "privacy",
+    "sexual",
+    "toxic",
+    "illegal",
+];
+export const reportReasonEnum = pgEnum("report_reason_enum", [
+    firstReason,
+    ...restReason,
+]);
 const restModeration = [...restReason, "nothing"];
-export const moderationReasonEnum = pgEnum("moderation_reason_enum", [firstReason, ...restModeration]);
+export const moderationReasonEnum = pgEnum("moderation_reason_enum", [
+    firstReason,
+    ...restModeration,
+]);
 
 // todo: add suspend and ban
-export const moderationAction = pgEnum("moderation_action", ["hide", "nothing"]);
+export const moderationAction = pgEnum("moderation_action", [
+    "hide",
+    "nothing",
+]);
 
 export const reportTable = pgTable("report_table", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -586,7 +1156,9 @@ export const reportTable = pgTable("report_table", {
         .references(() => postTable.id), // at least one or the other should be not null - add a check
     reporterId: uuid("reporter_id").references(() => userTable.id), // null if reported by AI
     reportReason: reportReasonEnum("reporter_reason").notNull(),
-    reportExplanation: varchar("report_explanation", { length: MAX_LENGTH_BODY }),
+    reportExplanation: varchar("report_explanation", {
+        length: MAX_LENGTH_BODY,
+    }),
     moderationId: integer("moderation_id").references(() => moderationTable.id),
     createdAt: timestamp("created_at", {
         mode: "date",
@@ -604,11 +1176,15 @@ export const reportTable = pgTable("report_table", {
 
 export const moderationTable = pgTable("moderation_table", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    reportId: integer("report_id").references((): AnyPgColumn => reportTable.id).notNull(), // if moderation is not in reaction to a report, then create the report with the moderator userId before inserting data in this table
+    reportId: integer("report_id")
+        .references((): AnyPgColumn => reportTable.id)
+        .notNull(), // if moderation is not in reaction to a report, then create the report with the moderator userId before inserting data in this table
     moderatorId: uuid("moderator_id").references(() => userTable.id),
     moderationAction: moderationAction("moderation_action").notNull(), // add check
     moderationReason: moderationReasonEnum("moderation_reason").notNull(), // add check: if not nothing above, must not be nothing here
-    moderationExplanation: varchar("moderation_explanation", { length: MAX_LENGTH_BODY }),
+    moderationExplanation: varchar("moderation_explanation", {
+        length: MAX_LENGTH_BODY,
+    }),
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,

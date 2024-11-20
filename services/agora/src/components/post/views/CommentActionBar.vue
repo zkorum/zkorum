@@ -1,22 +1,44 @@
 <template>
   <div>
     <div class="actionButtonCluster">
-      <ZKButton flat text-color="color-text-weak" icon="mdi-dots-horizontal" size="0.8rem"
-        @click.stop.prevent="optionButtonClicked()" />
+      <ZKButton
+        flat
+        text-color="color-text-weak"
+        icon="mdi-dots-horizontal"
+        size="0.8rem"
+        @click.stop.prevent="optionButtonClicked()"
+      />
 
-      <ZKButton flat text-color="color-text-weak" icon="mdi-export-variant" size="0.8rem"
-        @click.stop.prevent="shareButtonClicked()" />
-      <ZKButton flat :text-color="downvoteIcon.color" :icon="downvoteIcon.icon" size="0.8rem" @click.stop.prevent="
-        castPersonalVote(props.commentItem.commentSlugId, false)
-        ">
+      <ZKButton
+        flat
+        text-color="color-text-weak"
+        icon="mdi-export-variant"
+        size="0.8rem"
+        @click.stop.prevent="shareButtonClicked()"
+      />
+      <ZKButton
+        flat
+        :text-color="downvoteIcon.color"
+        :icon="downvoteIcon.icon"
+        size="0.8rem"
+        @click.stop.prevent="
+          castPersonalVote(props.commentItem.commentSlugId, false)
+        "
+      >
         <div v-if="userCastedVote" class="voteCountLabel">
           {{ numDislikesLocal }}
         </div>
       </ZKButton>
 
-      <ZKButton flat :text-color="upvoteIcon.color" :icon="upvoteIcon.icon" size="0.8rem" @click.stop.prevent="
-        castPersonalVote(props.commentItem.commentSlugId, true)
-        ">
+      <ZKButton
+        flat
+        :text-color="upvoteIcon.color"
+        :icon="upvoteIcon.icon"
+        size="0.8rem"
+        @click.stop.prevent="
+          castPersonalVote(props.commentItem.commentSlugId, true)
+        "
+      >
         <div v-if="userCastedVote" class="voteCountLabel">
           {{ numLikesLocal }}
         </div>
@@ -26,13 +48,13 @@
 </template>
 
 <script setup lang="ts">
-import { PossibleCommentRankingActions } from "src/stores/post";
+import { type PossibleCommentRankingActions } from "src/stores/post";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { computed, ref } from "vue";
-import { CommentItem, VotingAction } from "src/shared/types/zod";
+import { type CommentItem, type VotingAction } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useDialog } from "src/utils/ui/dialog";
 
@@ -56,7 +78,9 @@ const numLikesLocal = ref(props.commentItem.numLikes);
 const numDislikesLocal = ref(props.commentItem.numDislikes);
 
 const userCastedVote = computed(() => {
-  const hasEntry = props.commentSlugIdLikedMap.has(props.commentItem.commentSlugId);
+  const hasEntry = props.commentSlugIdLikedMap.has(
+    props.commentItem.commentSlugId
+  );
   return hasEntry ? true : false;
 });
 
@@ -66,31 +90,35 @@ interface IconObject {
 }
 
 const downvoteIcon = computed<IconObject>(() => {
-  const userAction = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+  const userAction = props.commentSlugIdLikedMap.get(
+    props.commentItem.commentSlugId
+  );
   if (userAction == "dislike") {
     return {
       icon: "mdi-thumb-down",
-      color: "primary"
+      color: "primary",
     };
   } else {
     return {
       icon: "mdi-thumb-down-outline",
-      color: "color-text-weak"
+      color: "color-text-weak",
     };
   }
 });
 
 const upvoteIcon = computed<IconObject>(() => {
-  const userAction = props.commentSlugIdLikedMap.get(props.commentItem.commentSlugId);
+  const userAction = props.commentSlugIdLikedMap.get(
+    props.commentItem.commentSlugId
+  );
   if (userAction == "like") {
     return {
       icon: "mdi-thumb-up",
-      color: "primary"
+      color: "primary",
     };
   } else {
     return {
       icon: "mdi-thumb-up-outline",
-      color: "color-text-weak"
+      color: "color-text-weak",
     };
   }
 });
@@ -116,7 +144,6 @@ async function castPersonalVote(
   if (!isAuthenticated) {
     showLoginConfirmationDialog();
   } else {
-
     const numLikesBackup = numLikesLocal.value;
     const numDislikesBackup = numDislikesLocal.value;
 
@@ -177,7 +204,6 @@ async function castPersonalVote(
     }
   }
 }
-
 </script>
 
 <style scoped lang="scss">

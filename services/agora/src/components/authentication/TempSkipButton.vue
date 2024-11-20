@@ -1,29 +1,38 @@
 <template>
-  <ZKButton outline label="Verify" text-color="color-text-strong" @click="skipButton()" />
+  <ZKButton
+    outline
+    label="Verify"
+    text-color="color-text-strong"
+    @click="skipButton()"
+  />
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useEmailVerification } from "src/utils/auth/email/verification";
+import { usePhoneVerification } from "src/utils/auth/email/verification";
 import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
 
 const router = useRouter();
-const { isAuthenticated, verificationEmailAddress } = storeToRefs(
-  useAuthenticationStore()
-);
-const emailVerificaton = useEmailVerification();
+const {
+  isAuthenticated,
+  verificationPhoneNumber,
+  verificationDefaultCallingCode,
+} = storeToRefs(useAuthenticationStore());
+const phoneVerification = usePhoneVerification();
 
 async function skipButton() {
-  verificationEmailAddress.value = "test@gmail.com";
+  verificationPhoneNumber.value = "+33612345678";
+  verificationDefaultCallingCode.value = "33";
 
-  const requestCodeResponse = await emailVerificaton.requestCode(
-    false,
-    verificationEmailAddress.value
-  );
+  const requestCodeResponse = await phoneVerification.requestCode({
+    isRequestingNewCode: false,
+    phoneNumber: verificationPhoneNumber.value,
+    defaultCallingCode: verificationDefaultCallingCode.value,
+  });
   if (requestCodeResponse.isSuccessful) {
-    await emailVerificaton.submitCode(0);
+    await phoneVerification.submitCode(0);
     isAuthenticated.value = true;
     router.push({ name: "verification-successful" });
   } else {

@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { publicKeyToDid } from "src/shared/did/util";
-import { SupportedPlatform } from "src/utils/common";
+import { type SupportedPlatform } from "src/utils/common";
 import { SecureSigning } from "@zkorum/capacitor-secure-signing";
 import { base64Decode } from "src/shared/common/base64";
 import { getWebCryptoStore } from "../store";
@@ -32,20 +32,20 @@ export async function createDidIfDoesNotExist(
   const prefixedKey = getPrefixedKeyByEmail(email);
 
   switch (platform) {
-  case "mobile":
-    const { publicKey } = await SecureSigning.createKeyPairIfDoesNotExist({
-      prefixedKey: prefixedKey,
-    });
-    const decodedPublicKey = base64Decode(publicKey);
-    const didMobile = publicKeyToDid(decodedPublicKey);
-    sessionStore.setPrefixedKey(email, prefixedKey);
-    return { did: didMobile, prefixedKey };
-  case "web":
-    const cryptoStore = await getWebCryptoStore();
-    await cryptoStore.keystore.createIfDoesNotExists(prefixedKey);
-    const didWeb = await DID.write(cryptoStore, prefixedKey);
-    sessionStore.setPrefixedKey(email, prefixedKey);
-    return { did: didWeb, prefixedKey };
+    case "mobile":
+      const { publicKey } = await SecureSigning.createKeyPairIfDoesNotExist({
+        prefixedKey: prefixedKey,
+      });
+      const decodedPublicKey = base64Decode(publicKey);
+      const didMobile = publicKeyToDid(decodedPublicKey);
+      sessionStore.setPrefixedKey(email, prefixedKey);
+      return { did: didMobile, prefixedKey };
+    case "web":
+      const cryptoStore = await getWebCryptoStore();
+      await cryptoStore.keystore.createIfDoesNotExists(prefixedKey);
+      const didWeb = await DID.write(cryptoStore, prefixedKey);
+      sessionStore.setPrefixedKey(email, prefixedKey);
+      return { did: didWeb, prefixedKey };
   }
 }
 
@@ -117,10 +117,10 @@ async function buildMobileUcan({
 
 export async function buildUcan(props: CreateUcanProps): Promise<string> {
   switch (props.platform) {
-  case "web":
-    return buildWebUcan(props);
-  case "mobile":
-    return buildMobileUcan(props);
+    case "web":
+      return buildWebUcan(props);
+    case "mobile":
+      return buildMobileUcan(props);
   }
 }
 

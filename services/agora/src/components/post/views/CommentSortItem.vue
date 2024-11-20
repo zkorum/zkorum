@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { CommentSortingItemInterface } from "src/utils/component/comments";
+import { type CommentSortingItemInterface } from "src/utils/component/comments";
 
 defineProps<{
   sortItem: CommentSortingItemInterface;

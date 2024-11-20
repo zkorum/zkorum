@@ -46,14 +46,8 @@ const configSchema = z.object({
         .default(10),
     // AWS_ACCESS_KEY_ID: z.string().default("CHANGEME"), // only use for prod
     // AWS_SECRET_ACCESS_KEY: z.string().default("CHANGEME"),
-    PK_VERSION: z.coerce.number().int().min(1),
-    EMAIL_CREDENTIAL_VERSION: z.string().default("0.2.0"),
-    SECRET_CREDENTIAL_VERSION: z.string().default("0.2.0"),
-    PRESENTATION_VERSION: z.string().default("0.1.0"),
-    PRIVATE_KEY_FILEPATH: z.string(),
     TEST_CODE: z.coerce.number().int().min(0).max(999999).default(0),
     SPECIALLY_AUTHORIZED_PHONES: z.string().optional(),
-    NLP_BASE_URL: z.string().default("http://localhost:8081"),
     PEPPERS: z
         .string()
         .transform((value) =>

@@ -1,5 +1,5 @@
 import * as BrowserCrypto from "../crypto/ucan/implementation/browser.js";
-import { Implementation } from "./ucan/implementation.js";
+import { type Implementation } from "./ucan/implementation.js";
 
 // localForage instance for storing keys only
 let webCryptoStore: Implementation | undefined = undefined;

@@ -7,7 +7,8 @@
     </div>
 
     <div class="menuButtons">
-      <RouterLink v-if="hasLoginButton && !isAuthenticated && showAuthButton"
+      <RouterLink
+        v-if="hasLoginButton && !isAuthenticated && showAuthButton"
         :to="{ name: 'verification-options' }"
       >
         <ZKButton label="Log in" text-color="white" color="warning" />
@@ -15,7 +16,8 @@
 
       <HelpButton />
       <RouterLink :to="{ name: 'settings-page' }">
-        <ZKButton v-if="hasSettingsButton"
+        <ZKButton
+          v-if="hasSettingsButton"
           icon="mdi-cog"
           text-color="color-text-strong"
           flat
@@ -29,7 +31,7 @@
 import ZKButton from "../ui-library/ZKButton.vue";
 import HelpButton from "./buttons/HelpButton.vue";
 import BackButton from "./buttons/BackButton.vue";
-import { DefaultMenuBarProps } from "src/utils/model/props";
+import { type DefaultMenuBarProps } from "src/utils/model/props";
 import TopMenuWrapper from "./TopMenuWrapper.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";

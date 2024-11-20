@@ -4,21 +4,25 @@ CREATE TYPE "public"."country_code" AS ENUM('AND', 'ARE', 'AFG', 'ATG', 'AIA', '
 CREATE TYPE "public"."email_type" AS ENUM('primary', 'backup', 'secondary', 'other');--> statement-breakpoint
 CREATE TYPE "public"."moderation_action" AS ENUM('hide', 'nothing');--> statement-breakpoint
 CREATE TYPE "public"."moderation_reason_enum" AS ENUM('off-topic', 's', 'p', 'a', 'm', 'nothing');--> statement-breakpoint
-CREATE TYPE "public"."phone_country_code" AS ENUM('376', '971', '93', '1268', '1264', '355', '374', '244', '672', '54', '1684', '43', '297', '358', '994', '387', '1246', '880', '32', '226', '359', '973', '257', '229', '590', '1441', '673', '591', '5997', '55', '1242', '975', '47', '267', '375', '501', '1', '243', '236', '242', '41', '225', '682', '56', '237', '86', '57', '506', '53', '238', '5999', '61', '357', '420', '49', '253', '45', '1767', '1809', '1829', '1849', '213', '593', '372', '20', '212', '291', '34', '251', '679', '500', '691', '298', '33', '241', '1473', '995', '594', '233', '350', '299', '220', '224', '240', '30', '502', '1671', '245', '592', '852', '504', '385', '509', '36', '62', '353', '972', '91', '246', '964', '98', '354', '39', '44', '1876', '962', '81', '254', '996', '855', '686', '269', '1869', '850', '82', '965', '1345', '76', '77', '856', '961', '1758', '423', '94', '231', '266', '370', '352', '371', '218', '377', '373', '382', '261', '692', '389', '223', '95', '976', '853', '1670', '596', '222', '1664', '356', '230', '960', '265', '52', '60', '258', '264', '687', '227', '234', '505', '31', '977', '674', '683', '64', '968', '507', '51', '689', '675', '63', '92', '48', '508', '1787', '1939', '970', '351', '680', '595', '974', '262', '40', '381', '7', '250', '966', '677', '248', '249', '46', '65', '290', '386', '4779', '421', '232', '378', '221', '252', '597', '211', '239', '503', '1721', '963', '268', '1649', '235', '228', '66', '992', '690', '670', '993', '216', '676', '90', '1868', '688', '886', '255', '380', '256', '598', '998', '379', '1784', '58', '1284', '1340', '84', '678', '681', '685', '383', '967', '27', '260', '263');--> statement-breakpoint
+CREATE TYPE "public"."phone_country_code" AS ENUM('AC', 'AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GT', 'GU', 'GW', 'GY', 'HK', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TA', 'TC', 'TD', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'XK', 'YE', 'YT', 'ZA', 'ZM', 'ZW');--> statement-breakpoint
 CREATE TYPE "public"."proof_type" AS ENUM('creation', 'edit', 'deletion');--> statement-breakpoint
 CREATE TYPE "public"."report_reason_enum" AS ENUM('off-topic', 's', 'p', 'a', 'm');--> statement-breakpoint
 CREATE TYPE "public"."sex" AS ENUM('F', 'M', 'X');--> statement-breakpoint
 CREATE TYPE "public"."vote_enum" AS ENUM('like', 'dislike');--> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "auth_attempt" (
+CREATE TABLE IF NOT EXISTS "auth_attempt_phone" (
 	"did_write" varchar(1000) PRIMARY KEY NOT NULL,
 	"type" "auth_type" NOT NULL,
-	"email" varchar(254) NOT NULL,
+	"last_two_digits" varchar(2) NOT NULL,
+	"countryCallingCode" varchar(10) NOT NULL,
+	"phone_country_code" "phone_country_code",
+	"phone_hash" text NOT NULL,
+	"pepper_version" integer DEFAULT 0 NOT NULL,
 	"user_id" uuid NOT NULL,
 	"user_agent" text NOT NULL,
 	"code" integer NOT NULL,
 	"code_expiry" timestamp NOT NULL,
 	"guess_attempt_amount" integer DEFAULT 0 NOT NULL,
-	"last_email_sent_at" timestamp NOT NULL,
+	"last_otp_sent_at" timestamp NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL
 );
@@ -122,9 +126,10 @@ CREATE TABLE IF NOT EXISTS "phone" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "phone_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"user_id" uuid NOT NULL,
 	"last_two_digits" varchar(2) NOT NULL,
-	"phone_country_code" "phone_country_code" NOT NULL,
-	"hashed_phone" text NOT NULL,
-	"salt" text NOT NULL,
+	"countryCallingCode" varchar(10) NOT NULL,
+	"phone_country_code" "phone_country_code",
+	"phone_hash" text NOT NULL,
+	"pepper_version" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL
 );

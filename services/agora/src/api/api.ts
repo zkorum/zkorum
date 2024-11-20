@@ -49,11 +49,17 @@ export interface ApiV1AuthAuthenticatePost200Response {
  */
 export interface ApiV1AuthAuthenticatePostRequest {
     /**
-     * Email address
+     * Phone number
      * @type {string}
      * @memberof ApiV1AuthAuthenticatePostRequest
      */
-    'email': string;
+    'phoneNumber': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AuthAuthenticatePostRequest
+     */
+    'defaultCallingCode': string;
     /**
      * 
      * @type {boolean}

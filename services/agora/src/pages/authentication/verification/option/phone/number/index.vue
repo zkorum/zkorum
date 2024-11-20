@@ -7,7 +7,8 @@
           <div class="container">
             <div>A one-time password will be sent to your phone number.</div>
 
-            <Select v-model="selectedCountryCode"
+            <Select
+              v-model="selectedCountryCode"
               filter
               :virtual-scroller-options="{
                 lazy: true,
@@ -19,10 +20,12 @@
               placeholder="Country Code"
             >
               <template #value="slotProps">
-                <div v-if="slotProps.value.code != ''"
+                <div
+                  v-if="slotProps.value.code != ''"
                   class="flex items-center"
                 >
-                  <img :alt="slotProps.value.label"
+                  <img
+                    :alt="slotProps.value.label"
                     :src="
                       '/images/communities/flags/' +
                       slotProps.value.country +
@@ -38,7 +41,8 @@
               </template>
               <template #option="slotProps">
                 <div class="innerOption">
-                  <img :src="
+                  <img
+                    :src="
                       '/images/communities/flags/' +
                       slotProps.option.country +
                       '.svg'
@@ -51,13 +55,15 @@
               </template>
             </Select>
 
-            <InputText v-model="inputNumber"
+            <InputText
+              v-model="inputNumber"
               type="tel"
               placeholder="Phone number"
               required
             />
 
-            <ZKButton label="Next"
+            <ZKButton
+              label="Next"
               color="primary"
               text-color="white"
               :disabled="
@@ -81,7 +87,6 @@ import {
   parsePhoneNumber,
   getCountries,
   getCountryCallingCode,
-  CountryCode,
 } from "libphonenumber-js";
 import { useDialog } from "src/utils/ui/dialog";
 import Select from "primevue/select";
@@ -107,291 +112,32 @@ interface SelectItem {
 }
 const countries = ref<SelectItem[]>([]);
 
-const { verificationNumber } = storeToRefs(phoneVerificationStore());
+const { verificationPhoneNumber: verificationNumber } = storeToRefs(
+  phoneVerificationStore()
+);
 
 const countryList = getCountries();
 for (let i = 0; i < countryList.length; i++) {
-  const code = countryList[i];
+  const country = countryList[i];
   const countryItem: SelectItem = {
-    name: code + " +" + getCountryCallingCode(code),
-    country: code,
-    code: getCountryCallingCode(code),
+    name: country + " +" + getCountryCallingCode(country),
+    country: country,
+    code: getCountryCallingCode(country),
   };
   countries.value.push(countryItem);
-}
-
-function isOfTypeCountryCode(countryCode: string): countryCode is CountryCode {
-  return [
-    "AC",
-    "AD",
-    "AE",
-    "AF",
-    "AG",
-    "AI",
-    "AL",
-    "AM",
-    "AO",
-    "AR",
-    "AS",
-    "AT",
-    "AU",
-    "AW",
-    "AX",
-    "AZ",
-    "BA",
-    "BB",
-    "BD",
-    "BE",
-    "BF",
-    "BG",
-    "BH",
-    "BI",
-    "BJ",
-    "BL",
-    "BM",
-    "BN",
-    "BO",
-    "BQ",
-    "BR",
-    "BS",
-    "BT",
-    "BW",
-    "BY",
-    "BZ",
-    "CA",
-    "CC",
-    "CD",
-    "CF",
-    "CG",
-    "CH",
-    "CI",
-    "CK",
-    "CL",
-    "CM",
-    "CN",
-    "CO",
-    "CR",
-    "CU",
-    "CV",
-    "CW",
-    "CX",
-    "CY",
-    "CZ",
-    "DE",
-    "DJ",
-    "DK",
-    "DM",
-    "DO",
-    "DZ",
-    "EC",
-    "EE",
-    "EG",
-    "EH",
-    "ER",
-    "ES",
-    "ET",
-    "FI",
-    "FJ",
-    "FK",
-    "FM",
-    "FO",
-    "FR",
-    "GA",
-    "GB",
-    "GD",
-    "GE",
-    "GF",
-    "GG",
-    "GH",
-    "GI",
-    "GL",
-    "GM",
-    "GN",
-    "GP",
-    "GQ",
-    "GR",
-    "GT",
-    "GU",
-    "GW",
-    "GY",
-    "HK",
-    "HN",
-    "HR",
-    "HT",
-    "HU",
-    "ID",
-    "IE",
-    "IL",
-    "IM",
-    "IN",
-    "IO",
-    "IQ",
-    "IR",
-    "IS",
-    "IT",
-    "JE",
-    "JM",
-    "JO",
-    "JP",
-    "KE",
-    "KG",
-    "KH",
-    "KI",
-    "KM",
-    "KN",
-    "KP",
-    "KR",
-    "KW",
-    "KY",
-    "KZ",
-    "LA",
-    "LB",
-    "LC",
-    "LI",
-    "LK",
-    "LR",
-    "LS",
-    "LT",
-    "LU",
-    "LV",
-    "LY",
-    "MA",
-    "MC",
-    "MD",
-    "ME",
-    "MF",
-    "MG",
-    "MH",
-    "MK",
-    "ML",
-    "MM",
-    "MN",
-    "MO",
-    "MP",
-    "MQ",
-    "MR",
-    "MS",
-    "MT",
-    "MU",
-    "MV",
-    "MW",
-    "MX",
-    "MY",
-    "MZ",
-    "NA",
-    "NC",
-    "NE",
-    "NF",
-    "NG",
-    "NI",
-    "NL",
-    "NO",
-    "NP",
-    "NR",
-    "NU",
-    "NZ",
-    "OM",
-    "PA",
-    "PE",
-    "PF",
-    "PG",
-    "PH",
-    "PK",
-    "PL",
-    "PM",
-    "PR",
-    "PS",
-    "PT",
-    "PW",
-    "PY",
-    "QA",
-    "RE",
-    "RO",
-    "RS",
-    "RU",
-    "RW",
-    "SA",
-    "SB",
-    "SC",
-    "SD",
-    "SE",
-    "SG",
-    "SH",
-    "SI",
-    "SJ",
-    "SK",
-    "SL",
-    "SM",
-    "SN",
-    "SO",
-    "SR",
-    "SS",
-    "ST",
-    "SV",
-    "SX",
-    "SY",
-    "SZ",
-    "TA",
-    "TC",
-    "TD",
-    "TG",
-    "TH",
-    "TJ",
-    "TK",
-    "TL",
-    "TM",
-    "TN",
-    "TO",
-    "TR",
-    "TT",
-    "TV",
-    "TW",
-    "TZ",
-    "UA",
-    "UG",
-    "US",
-    "UY",
-    "UZ",
-    "VA",
-    "VC",
-    "VE",
-    "VG",
-    "VI",
-    "VN",
-    "VU",
-    "WF",
-    "WS",
-    "XK",
-    "YE",
-    "YT",
-    "ZA",
-    "ZM",
-    "ZW",
-  ].includes(countryCode);
-}
+} // TODO: some phone numbers may not be associated with any country: https://gitlab.com/catamphetamine/libphonenumber-js/-/tree/master?ref_type=heads#non-geographic - probably add those manually in the future
 
 function validateNumber() {
   try {
-    const fullNumber =
-      "+1 " + selectedCountryCode.value.code + inputNumber.value;
-    const country = selectedCountryCode.value.country;
-    const isValid = isOfTypeCountryCode(country);
-    if (!isValid) {
-      dialog.showMessage("Phone Number", "Unsupported country: " + country);
+    const phoneNumber = parsePhoneNumber(inputNumber.value, {
+      defaultCallingCode: selectedCountryCode.value.code,
+    });
+    if (phoneNumber.isValid()) {
+      verificationNumber.value = phoneNumber.number;
+      // TODO: use phoneNumber and defaultCallingCode to send the OTP on click and add both to the store in case the user wants to resend in next page
+      router.push({ name: "verification-option-phone-code" });
     } else {
-      const countryCode: CountryCode = country;
-      const phoneNumber = parsePhoneNumber(fullNumber, {
-        defaultCountry: countryCode,
-      });
-      if (phoneNumber.isValid()) {
-        verificationNumber.value = fullNumber;
-        router.push({ name: "verification-option-phone-code" });
-      } else {
-        dialog.showMessage(
-          "Phone Number",
-          "The input phone number is invalid."
-        );
-      }
+      dialog.showMessage("Phone Number", "The input phone number is invalid.");
     }
   } catch (e) {
     console.log(e);

@@ -2,7 +2,8 @@
   <div>
     <div class="container">
       <div v-if="isAuthenticated">
-        <SettingsSection :settings-item-list="accountSettings"
+        <SettingsSection
+          :settings-item-list="accountSettings"
           title="Account"
         />
       </div>
@@ -10,7 +11,8 @@
       <SettingsSection :settings-item-list="aboutSettings" title="About" />
 
       <div v-if="isAuthenticated">
-        <SettingsSection :settings-item-list="supportSettings"
+        <SettingsSection
+          :settings-item-list="supportSettings"
           title="Support"
         />
       </div>
@@ -23,7 +25,7 @@ import { storeToRefs } from "pinia";
 import SettingsSection from "src/components/settings/SettingsSection.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendAuthApi } from "src/utils/api/auth";
-import { SettingsInterface } from "src/utils/component/settings/settings";
+import { type SettingsInterface } from "src/utils/component/settings/settings";
 import { useRouter } from "vue-router";
 
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());

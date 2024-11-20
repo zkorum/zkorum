@@ -3,11 +3,12 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-import { configure } from "quasar/wrappers";
+import { defineConfig } from "#q-app/wrappers";
 import "dotenv/config";
-import basicSsl from "@vitejs/plugin-basic-ssl";
+// TODO: add env var to use TLS/SSL
+// import basicSsl from "@vitejs/plugin-basic-ssl";
 
-export default configure((ctx) => {
+export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -51,6 +52,12 @@ export default configure((ctx) => {
         node: "node20",
       },
 
+      // typescript: {
+      //   // strict: true,
+      //   vueShim: true,
+      //   // extendTsConfig (tsConfig) {}
+      // },
+
       vueRouterMode: "history", // available values: 'hash', 'history'
       // vueRouterBase: '/feed/',
       // vueDevtools,
@@ -63,11 +70,6 @@ export default configure((ctx) => {
       env: {
         USE_DUMMY_ACCESS: process.env.FRONTEND_USE_DUMMY_ACCESS,
         API_BASE_URL: process.env.FRONTEND_API_BASE_URL,
-        BACK_PUBLIC_KEY: ctx.dev
-          ? "a33d87ba094e5fb522459da31ef501eedff2ef6b672ed6668555a90e5d099f2f8ac9b428c6b05479aebd9febe64011d707e3e331a01fd32e7bcca2e90405132014d395dade3aa95f72420567c6d4e75a5c70478691d36aa54030f31d326f9414"
-          : ctx.debug
-            ? "a17f8e504a42e53d53ae5ff92a7ba592f8a290cd2a6ed590a32265189cad76dd970b36582a8faca1697711c2fb8560ed084387bcb367f2d90b69887a51e7f41746678d4fc893a53ee6c7a2427b5bb277c6a35670530fbddfcddd1ce131b34288"
-            : "94dbc0cc2cc457d9fc23823d7bbb46f3a59f5ec5062628147c89aabcef565593858ffb4f2897c2b8fc2336de2f84dab00eb1b91675e0e89ca18c37b29fde190f266ab2592caf88276ea8fe0449d91b84a32adc95cd969fe266db462a75147352",
         // https://quasar.dev/quasar-cli-webpack/handling-process-env/#using-dotenv
         VITE_BACK_DID: process.env.FRONTEND_VITE_BACK_DID,
       },
@@ -77,52 +79,28 @@ export default configure((ctx) => {
       // polyfillModulePreload: true,
       // distDir
 
-      // For some reasons, it does NOT work...
-      // https://quasar.dev/quasar-cli-vite/handling-vite/#adding-folder-aliases
-      // extendViteConf(viteConf, _invokeParams) {
-      //   if (viteConf.resolve?.alias !== undefined) {
-      //     Object.assign(viteConf.resolve.alias, {
-      //       utils: path.join(__dirname, './src/utils'),
-      //       api: path.join(__dirname, './src/api')
-      //     })
-      //   }
-      // },
-      viteVuePluginOptions: {
-        // see https://docs.hanko.io/quickstarts/frontend/vue#configure-component-resolution
-        template: {
-          compilerOptions: {
-            isCustomElement: (tag) => tag.startsWith("swiper-"),
-          },
-        },
-      },
+      // extendViteConf (viteConf) {},
+      // viteVuePluginOptions: {},
 
       vitePlugins: [
         [
           "vite-plugin-checker",
           {
-            vueTsc: {
-              tsconfigPath: "tsconfig.vue-tsc.json",
-            },
+            vueTsc: true,
             eslint: {
               lintCommand: 'eslint "./**/*.{js,ts,mjs,cjs,vue}"',
             },
           },
           { server: false },
         ],
-        // create "The CJS build of Vite's Node API is deprecated. See https://vitejs.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details." warning
-        [
-          "vite-tsconfig-paths",
-          {
-            // projects: ['./tsconfig.json', '../../tsconfig.json'] // if you have multiple tsconfig files (e.g. in a monorepo)
-          },
-        ],
-        basicSsl(),
+        // TODO: add env variable to add TLS/SSL
+        // basicSsl(),
       ],
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
     devServer: {
-      https: {},
+      // https: {},
       open: true, // opens browser window automatically
     },
 
@@ -144,9 +122,9 @@ export default configure((ctx) => {
       plugins: ["BottomSheet", "Dialog", "Notify", "Loading"],
     },
 
-    // animations: 'all', // --- includes all animations
+    animations: "all", // --- includes all animations
     // https://v2.quasar.dev/options/animations
-    animations: "all",
+    // animations: [],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#sourcefiles
     // sourceFiles: {
@@ -248,7 +226,7 @@ export default configure((ctx) => {
       // extendBexScriptsConf (esbuildConf) {},
       // extendBexManifestJson (json) {},
 
-      contentScripts: ["my-content-script"],
+      extraScripts: [],
     },
   };
 });

@@ -1,7 +1,7 @@
 import {
-  ApiV1AuthAuthenticatePost200Response,
-  ApiV1AuthAuthenticatePostRequest,
-  ApiV1AuthVerifyOtpPostRequest,
+  type ApiV1AuthAuthenticatePost200Response,
+  type ApiV1AuthAuthenticatePostRequest,
+  type ApiV1AuthVerifyOtpPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
@@ -12,10 +12,16 @@ import { useCommonApi } from "./common";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { usePostStore } from "src/stores/post";
 
-interface AuthenticateReturn {
+export interface AuthenticateReturn {
   isSuccessful: boolean;
   data: ApiV1AuthAuthenticatePost200Response | null;
   error: "already_logged_in" | "throttled" | "";
+}
+
+interface SendSmsCodeProps {
+  phoneNumber: string;
+  defaultCallingCode: string;
+  isRequestingNewCode: boolean;
 }
 
 export function useBackendAuthApi() {
@@ -23,16 +29,18 @@ export function useBackendAuthApi() {
   const { userLogout } = useAuthenticationStore();
   const { loadPostData } = usePostStore();
 
-  async function sendEmailCode(
-    email: string,
-    isRequestingNewCode: boolean
-  ): Promise<AuthenticateReturn> {
+  async function sendSmsCode({
+    phoneNumber,
+    defaultCallingCode,
+    isRequestingNewCode,
+  }: SendSmsCodeProps): Promise<AuthenticateReturn> {
     if (process.env.USE_DUMMY_ACCESS == "true") {
-      email = "test@gmail.com";
+      phoneNumber = "+33612345678";
     }
 
     const params: ApiV1AuthAuthenticatePostRequest = {
-      email: email,
+      phoneNumber: phoneNumber,
+      defaultCallingCode: defaultCallingCode,
       isRequestingNewCode: isRequestingNewCode,
     };
     try {
@@ -45,7 +53,8 @@ export function useBackendAuthApi() {
         api
       ).apiV1AuthAuthenticatePost(
         {
-          email: email,
+          phoneNumber: phoneNumber,
+          defaultCallingCode: defaultCallingCode,
           isRequestingNewCode: isRequestingNewCode,
         },
         {
@@ -80,7 +89,7 @@ export function useBackendAuthApi() {
     }
   }
 
-  async function emailCode(code: number) {
+  async function smsCode(code: number) {
     try {
       const params: ApiV1AuthVerifyOtpPostRequest = {
         code: code,
@@ -97,7 +106,12 @@ export function useBackendAuthApi() {
           ...buildAuthorizationHeader(encodedUcan),
         },
       });
-      return { isSuccessful: true, data: response.data, error: "" };
+
+      return {
+        isSuccessful: response.data.success,
+        data: response.data,
+        error: response.data.reason,
+      };
     } catch (e) {
       if (axios.isAxiosError(e)) {
         if (e.response?.status === 409) {
@@ -189,8 +203,8 @@ export function useBackendAuthApi() {
   }
 
   return {
-    sendEmailCode,
-    emailCode,
+    sendSmsCode,
+    smsCode,
     logout,
     deviceIsLoggedIn,
     initializeAuthState,

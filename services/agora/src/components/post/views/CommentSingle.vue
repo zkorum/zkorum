@@ -12,8 +12,12 @@
         </div>
 
         <div class="actionBarPaddings">
-          <CommentActionBar :comment-item="commentItem" :post-slug-id="postSlugId" :ranked-action="rankedAction"
-            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
+          <CommentActionBar
+            :comment-item="commentItem"
+            :post-slug-id="postSlugId"
+            :ranked-action="rankedAction"
+            :comment-slug-id-liked-map="commentSlugIdLikedMap"
+          />
         </div>
       </div>
     </div>
@@ -21,10 +25,10 @@
 </template>
 
 <script setup lang="ts">
-import { PossibleCommentRankingActions } from "src/stores/post";
+import { type PossibleCommentRankingActions } from "src/stores/post";
 import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
-import { CommentItem } from "src/shared/types/zod";
+import { type CommentItem } from "src/shared/types/zod";
 
 defineProps<{
   commentItem: CommentItem;

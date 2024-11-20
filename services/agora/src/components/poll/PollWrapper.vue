@@ -4,18 +4,36 @@
       <!-- Show buttons for voting -->
       <div v-if="currentDisplayMode == DisplayModes.Vote">
         <div class="pollOptionList">
-          <ZKButton v-for="optionItem in localPollOptionList" :key="optionItem.index" outline :label="optionItem.option"
-            text-color="primary" @click.stop.prevent="voteCasted(optionItem.index)" />
+          <ZKButton
+            v-for="optionItem in localPollOptionList"
+            :key="optionItem.index"
+            outline
+            :label="optionItem.option"
+            text-color="primary"
+            @click.stop.prevent="voteCasted(optionItem.index)"
+          />
         </div>
       </div>
 
       <!-- Show the final result -->
-      <div v-if="currentDisplayMode == DisplayModes.Results" class="pollOptionList">
-        <option-view v-for="optionItem in localPollOptionList" :key="optionItem.index" :option="optionItem.option"
-          :voted-by-user="userVoteStatus.voteIndex == optionItem.index && userVoteStatus.hasVoted" :option-percentage="totalVoteCount === 0
-            ? 0
-            : Math.round((optionItem.numResponses * 100) / totalVoteCount)
-            " />
+      <div
+        v-if="currentDisplayMode == DisplayModes.Results"
+        class="pollOptionList"
+      >
+        <option-view
+          v-for="optionItem in localPollOptionList"
+          :key="optionItem.index"
+          :option="optionItem.option"
+          :voted-by-user="
+            userVoteStatus.voteIndex == optionItem.index &&
+            userVoteStatus.hasVoted
+          "
+          :option-percentage="
+            totalVoteCount === 0
+              ? 0
+              : Math.round((optionItem.numResponses * 100) / totalVoteCount)
+          "
+        />
       </div>
 
       <div class="actionButtonCluster">
@@ -23,19 +41,28 @@
           {{ totalVoteCount }} vote<span v-if="totalVoteCount > 1">s</span>
         </div>
 
-        <div v-if="userVoteStatus.hasVoted">
-        </div>
+        <div v-if="userVoteStatus.hasVoted"></div>
 
         <div v-if="!userVoteStatus.hasVoted">
-          <ZKButton v-if="currentDisplayMode == DisplayModes.Vote" outline text-color="primary" icon="mdi-chart-bar"
-            label="Results" @click.stop.prevent="showResultsInterface()" />
+          <ZKButton
+            v-if="currentDisplayMode == DisplayModes.Vote"
+            outline
+            text-color="primary"
+            icon="mdi-chart-bar"
+            label="Results"
+            @click.stop.prevent="showResultsInterface()"
+          />
 
-          <ZKButton v-if="currentDisplayMode == DisplayModes.Results" outline text-color="primary" label="Vote"
-            icon="mdi-vote" @click.stop.prevent="showVoteInterface()" />
+          <ZKButton
+            v-if="currentDisplayMode == DisplayModes.Results"
+            outline
+            text-color="primary"
+            label="Vote"
+            icon="mdi-vote"
+            @click.stop.prevent="showVoteInterface()"
+          />
         </div>
-
       </div>
-
     </div>
   </div>
 </template>
@@ -43,7 +70,12 @@
 <script setup lang="ts">
 import OptionView from "components/poll/OptionView.vue";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { DummyPollOptionFormat, DummyPostUserVote, DummyUserPollResponse, usePostStore } from "src/stores/post";
+import {
+  type DummyPollOptionFormat,
+  type DummyPostUserVote,
+  type DummyUserPollResponse,
+  usePostStore,
+} from "src/stores/post";
 import { ref, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { storeToRefs } from "pinia";
@@ -68,13 +100,15 @@ const { loadPostData } = usePostStore();
 
 enum DisplayModes {
   Vote,
-  Results
+  Results,
 }
-const currentDisplayMode = ref<DisplayModes>(isAuthenticated.value ? DisplayModes.Vote : DisplayModes.Results);
+const currentDisplayMode = ref<DisplayModes>(
+  isAuthenticated.value ? DisplayModes.Vote : DisplayModes.Results
+);
 
 const userVoteStatus = ref<DummyPostUserVote>({
   hasVoted: false,
-  voteIndex: 0
+  voteIndex: 0,
 });
 
 const totalVoteCount = ref(0);
@@ -90,7 +124,7 @@ function initializeTotalVoteCount() {
 }
 
 function incrementLocalPollIndex(targetIndex: number) {
-  localPollOptionList.value.forEach(pollOption => {
+  localPollOptionList.value.forEach((pollOption) => {
     if (targetIndex == pollOption.index) {
       pollOption.numResponses += 1;
     }
@@ -98,11 +132,11 @@ function incrementLocalPollIndex(targetIndex: number) {
 }
 
 function initializeLocalPoll() {
-  props.pollOptions.forEach(pollOption => {
+  props.pollOptions.forEach((pollOption) => {
     const localPollItem: DummyPollOptionFormat = {
       index: pollOption.index,
       numResponses: pollOption.numResponses,
-      option: pollOption.option
+      option: pollOption.option,
     };
     localPollOptionList.value.push(localPollItem);
   });
@@ -110,25 +144,26 @@ function initializeLocalPoll() {
 
 async function fetchUserPollResponseData(loadFromRemote: boolean) {
   if (loadFromRemote) {
-    const response = await backendPollApi.fetchUserPollResponse(props.postSlugId);
+    const response = await backendPollApi.fetchUserPollResponse(
+      props.postSlugId
+    );
     if (response?.selectedPollOption) {
       userVoteStatus.value = {
         hasVoted: true,
-        voteIndex: response.selectedPollOption - 1
+        voteIndex: response.selectedPollOption - 1,
       };
       showResultsInterface();
     }
   } else {
     userVoteStatus.value = {
       hasVoted: props.userResponse.hadResponded,
-      voteIndex: props.userResponse.responseIndex
+      voteIndex: props.userResponse.responseIndex,
     };
 
     if (userVoteStatus.value.hasVoted) {
       showResultsInterface();
     }
   }
-
 
   dataLoaded.value = true;
 }
@@ -142,7 +177,10 @@ function showVoteInterface() {
 }
 
 async function voteCasted(selectedIndex: number) {
-  const response = await backendPollApi.submitPollResponse(selectedIndex, props.postSlugId);
+  const response = await backendPollApi.submitPollResponse(
+    selectedIndex,
+    props.postSlugId
+  );
   if (response == false) {
     showMessage("Server error", "Failed to cast vote");
   } else {

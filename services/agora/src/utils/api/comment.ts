@@ -1,14 +1,14 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  ApiV1CommentCreatePostRequest,
-  ApiV1CommentFetchCommentsByPostSlugIdPostRequest,
+  type ApiV1CommentCreatePostRequest,
+  type ApiV1CommentFetchCommentsByPostSlugIdPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
 import { useCommonApi } from "./common";
 import { useDialog } from "../ui/dialog";
-import { CommentItem } from "src/shared/types/zod";
+import { type CommentItem } from "src/shared/types/zod";
 
 export function useBackendCommentApi() {
   const { buildEncodedUcan } = useCommonApi();
@@ -28,14 +28,14 @@ export function useBackendCommentApi() {
       ).apiV1CommentFetchCommentsByPostSlugIdPost(params, {});
 
       const postList: CommentItem[] = [];
-      response.data.forEach(item => {
+      response.data.forEach((item) => {
         postList.push({
           comment: item.comment,
           commentSlugId: item.commentSlugId,
           createdAt: new Date(item.createdAt),
           numDislikes: item.numDislikes,
           numLikes: item.numLikes,
-          updatedAt: new Date(item.updatedAt)
+          updatedAt: new Date(item.updatedAt),
         });
       });
 

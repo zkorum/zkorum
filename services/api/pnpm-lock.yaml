@@ -47,6 +47,9 @@ importers:
       keystore-idb:
         specifier: ^0.15.5
         version: 0.15.5
+      libphonenumber-js:
+        specifier: ^1.11.14
+        version: 1.11.14
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -77,9 +80,6 @@ importers:
       uint8arrays:
         specifier: ^4.0.6
         version: 4.0.6
-      validator:
-        specifier: ^13.12.0
-        version: 13.12.0
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -111,9 +111,6 @@ importers:
       '@types/sanitize-html':
         specifier: ^2.13.0
         version: 2.13.0
-      '@types/validator':
-        specifier: ^13.12.2
-        version: 13.12.2
       drizzle-kit:
         specifier: ^0.26.2
         version: 0.26.2
@@ -1225,9 +1222,6 @@ packages:
 
   '@types/stack-utils@2.0.1':
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
-
-  '@types/validator@13.12.2':
-    resolution: {integrity: sha512-6SlHBzUW8Jhf3liqrGGXyTJSIFe4nqlJ5A5KaMZ2l/vbM3Wh3KSybots/wfWVzNLK4D1NZluDlSQIbIEPx6oyA==}
 
   '@types/yargs-parser@21.0.1':
     resolution: {integrity: sha512-axdPBuLuEJt0c4yI5OZssC19K2Mq1uKdrfZBzuxLvaztgqUtFYZUNw7lETExPYJR9jdEoIg4mb7RQKRQzOkeGQ==}
@@ -2468,6 +2462,9 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
+  libphonenumber-js@1.11.14:
+    resolution: {integrity: sha512-sexvAfwcW1Lqws4zFp8heAtAEXbEDnvkYCEGzvOoMgZR7JhXo/IkE9MkkGACgBed5fWqh3ShBGnJBdDnU9N8EQ==}
+
   lie@3.1.1:
     resolution: {integrity: sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==}
 
@@ -3308,10 +3305,6 @@ packages:
   v8-to-istanbul@9.1.0:
     resolution: {integrity: sha512-6z3GW9x8G1gd+JIIgQQQxXuiJtCXeAjp6RaPEPLv62mH3iPHPxV6W3robxtCzNErRo6ZwTmzWhsbNvjyEBKzKA==}
     engines: {node: '>=10.12.0'}
-
-  validator@13.12.0:
-    resolution: {integrity: sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==}
-    engines: {node: '>= 0.10'}
 
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
@@ -4871,8 +4864,6 @@ snapshots:
 
   '@types/stack-utils@2.0.1': {}
 
-  '@types/validator@13.12.2': {}
-
   '@types/yargs-parser@21.0.1': {}
 
   '@types/yargs@17.0.26':
@@ -6335,6 +6326,8 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
+  libphonenumber-js@1.11.14: {}
+
   lie@3.1.1:
     dependencies:
       immediate: 3.0.6
@@ -7114,8 +7107,6 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.19
       '@types/istanbul-lib-coverage': 2.0.4
       convert-source-map: 1.9.0
-
-  validator@13.12.0: {}
 
   vary@1.1.2: {}
 

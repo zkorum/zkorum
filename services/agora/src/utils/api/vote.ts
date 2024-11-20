@@ -1,20 +1,28 @@
-import { ApiV1VotingCastVotePostRequest, ApiV1VotingFetchUserVotesForPostSlugIdPostRequest, DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
+import {
+  type ApiV1VotingCastVotePostRequest,
+  type ApiV1VotingFetchUserVotesForPostSlugIdPostRequest,
+  DefaultApiAxiosParamCreator,
+  DefaultApiFactory,
+} from "src/api";
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useDialog } from "../ui/dialog";
 import { useCommonApi } from "./common";
-import { VotingAction } from "src/shared/types/zod";
+import { type VotingAction } from "src/shared/types/zod";
 
 export function useBackendVoteApi() {
   const { buildEncodedUcan } = useCommonApi();
 
   const { showMessage } = useDialog();
 
-  async function castVoteForComment(commentSlugId: string, votingAction: VotingAction) {
+  async function castVoteForComment(
+    commentSlugId: string,
+    votingAction: VotingAction
+  ) {
     try {
       const params: ApiV1VotingCastVotePostRequest = {
         commentSlugId: commentSlugId,
-        chosenOption: votingAction
+        chosenOption: votingAction,
       };
 
       const { url, options } =
@@ -33,7 +41,10 @@ export function useBackendVoteApi() {
       return true;
     } catch (e) {
       console.error(e);
-      showMessage("An error had occured", "Failed to fetch user's personal votes.");
+      showMessage(
+        "An error had occured",
+        "Failed to fetch user's personal votes."
+      );
       return false;
     }
   }
@@ -41,11 +52,13 @@ export function useBackendVoteApi() {
   async function fetchUserVotesForPostSlugId(postSlugId: string) {
     try {
       const params: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest = {
-        postSlugId: postSlugId
+        postSlugId: postSlugId,
       };
 
       const { url, options } =
-        await DefaultApiAxiosParamCreator().apiV1VotingFetchUserVotesForPostSlugIdPost(params);
+        await DefaultApiAxiosParamCreator().apiV1VotingFetchUserVotesForPostSlugIdPost(
+          params
+        );
       const encodedUcan = await buildEncodedUcan(url, options);
       const response = await DefaultApiFactory(
         undefined,
@@ -60,7 +73,10 @@ export function useBackendVoteApi() {
       return response.data;
     } catch (e) {
       console.error(e);
-      showMessage("An error had occured", "Failed to fetch user's personal votes.");
+      showMessage(
+        "An error had occured",
+        "Failed to fetch user's personal votes."
+      );
       return undefined;
     }
   }

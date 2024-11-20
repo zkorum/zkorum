@@ -6,7 +6,7 @@
         <form class="formStyle" @submit.prevent="">
           <div class="instructions">
             Please enter the 6-digit code that was sent to
-            <span class="phoneNumberStyle">{{ verificationNumber }}</span
+            <span class="phoneNumberStyle">{{ verificationPhoneNumber }}</span
             >.
           </div>
 
@@ -15,13 +15,15 @@
               <InputOtp v-model="verificationCode" :length="6" integer-only />
             </div>
 
-            <div v-if="verificationCodeExpirySeconds != 0"
+            <div
+              v-if="verificationCodeExpirySeconds != 0"
               class="weakColor codeExpiry"
             >
               Expires in {{ verificationCodeExpirySeconds }}s
             </div>
 
-            <div v-if="verificationCodeExpirySeconds != 0"
+            <div
+              v-if="verificationCodeExpirySeconds != 0"
               class="weakColor codeExpiry"
             >
               Code expired
@@ -53,7 +55,7 @@ import { ref } from "vue";
 import InputOtp from "primevue/inputotp";
 import TempSkipButton from "src/components/authentication/TempSkipButton.vue";
 
-const { verificationNumber } = storeToRefs(phoneVerificationStore());
+const { verificationPhoneNumber } = storeToRefs(phoneVerificationStore());
 
 const verificationCode = ref("");
 

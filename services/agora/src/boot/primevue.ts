@@ -1,8 +1,8 @@
 import PrimeVue from "primevue/config";
 import Aura from "@primevue/themes/aura";
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   // something to do
   app.use(PrimeVue, {
     theme: {

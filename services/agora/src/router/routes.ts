@@ -1,7 +1,10 @@
-import { RouteRecordRaw } from "vue-router";
+import { type RouteRecordRaw } from "vue-router";
 import MainLayout from "layouts/MainLayout.vue";
 import DefaultMenuBar from "src/components/navigation/DefaultMenuBar.vue";
-import { MainLayoutProps, DefaultMenuBarProps } from "src/utils/model/props";
+import {
+  type MainLayoutProps,
+  type DefaultMenuBarProps,
+} from "src/utils/model/props";
 
 const routes: RouteRecordRaw[] = [
   {

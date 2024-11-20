@@ -5,12 +5,22 @@
         <div class="descriptionLabel">
           {{ description }}
         </div>
-        <swiper-container ref="swipingElementRef" :slides-per-view="slidesPerView" :initial-slide="currentSlide"
-          :scrollbar="true">
-          <swiper-slide v-for="sortOptionItem in getCommentSortOptions()" :key="sortOptionItem.value"
-            class="scrollPadding">
-            <CommentSortItem :is-selected="commentSortPreference == sortOptionItem.value" :sort-item="sortOptionItem"
-              @click="commentSortPreference = sortOptionItem.value" />
+        <swiper-container
+          ref="swipingElementRef"
+          :slides-per-view="slidesPerView"
+          :initial-slide="currentSlide"
+          :scrollbar="true"
+        >
+          <swiper-slide
+            v-for="sortOptionItem in getCommentSortOptions()"
+            :key="sortOptionItem.value"
+            class="scrollPadding"
+          >
+            <CommentSortItem
+              :is-selected="commentSortPreference == sortOptionItem.value"
+              :sort-item="sortOptionItem"
+              @click="commentSortPreference = sortOptionItem.value"
+            />
           </swiper-slide>
         </swiper-container>
       </div>
@@ -24,10 +34,10 @@ import CommentSortItem from "./CommentSortItem.vue";
 import { onMounted, ref, watch } from "vue";
 import {
   useCommentOptions,
-  CommentSortingItemInterface,
+  type CommentSortingItemInterface,
 } from "src/utils/component/comments";
 import { useStorage, useWindowSize } from "@vueuse/core";
-import { SwiperContainer } from "swiper/element";
+import { type SwiperContainer } from "swiper/element";
 
 const emit = defineEmits(["changedAlgorithm"]);
 

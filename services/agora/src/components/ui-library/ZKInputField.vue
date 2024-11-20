@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { QInputProps } from "quasar";
+import { type QInputProps } from "quasar";
 
 const props = defineProps<QInputProps>();
 </script>

@@ -18,7 +18,10 @@
                 </div>
               </div>
 
-              <q-separator v-if="index != settingsItemList.length - 1" class="separatorStyle" />
+              <q-separator
+                v-if="index != settingsItemList.length - 1"
+                class="separatorStyle"
+              />
             </RouterLink>
           </div>
         </div>
@@ -28,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { SettingsInterface } from "src/utils/component/settings/settings";
+import { type SettingsInterface } from "src/utils/component/settings/settings";
 import ZKCard from "../ui-library/ZKCard.vue";
 
 defineProps<{

@@ -1,13 +1,18 @@
 <template>
   <div>
-    <PostDetails v-if="dataLoaded" :extended-post-data="postData" :compact-mode="false" :skeleton-mode="false" />
+    <PostDetails
+      v-if="dataLoaded"
+      :extended-post-data="postData"
+      :compact-mode="false"
+      :skeleton-mode="false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import PostDetails from "src/components/post/PostDetails.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { DummyPostDataFormat, usePostStore } from "src/stores/post";
+import { type DummyPostDataFormat, usePostStore } from "src/stores/post";
 import { useBackendPostApi } from "src/utils/api/post";
 import { onMounted, ref } from "vue";
 

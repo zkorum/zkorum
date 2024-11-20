@@ -1,12 +1,29 @@
-import { codeToString, generateOneTimeCode, generateUUID, hashWithSalt } from "@/crypto.js";
-import { authAttemptPhoneTable, deviceTable, emailTable, phoneTable, userTable } from "@/schema.js";
+import {
+    codeToString,
+    generateOneTimeCode,
+    generateUUID,
+    hashWithSalt,
+} from "@/crypto.js";
+import {
+    authAttemptPhoneTable,
+    deviceTable,
+    emailTable,
+    phoneTable,
+    userTable,
+} from "@/schema.js";
 import { nowZeroMs } from "@/shared/common/util.js";
-import type { AuthenticateRequestBody, GetDeviceStatusResp, VerifyOtp200 } from "@/shared/types/dto.js";
+import type {
+    AuthenticateRequestBody,
+    GetDeviceStatusResp,
+    VerifyOtp200,
+} from "@/shared/types/dto.js";
 import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { eq } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { base64 } from "@/shared/common/index.js";
-import type { PhoneCountryCode } from "@/shared/types/zod.js";
+import parsePhoneNumber, { type CountryCode } from "libphonenumber-js";
+import { log } from "@/app.js";
+import { toUnionUndefined } from "@/shared/shared.js";
 
 interface VerifyOtpProps {
     db: PostgresDatabase;
@@ -20,7 +37,8 @@ interface RegisterProps {
     db: PostgresDatabase;
     didWrite: string;
     lastTwoDigits: string;
-    phoneCountryCode: PhoneCountryCode;
+    countryCallingCode: string;
+    phoneCountryCode?: CountryCode;
     phoneHash: string;
     pepperVersion: number;
     userAgent: string;
@@ -112,7 +130,7 @@ interface AuthenticateOtp {
 
 export async function getDeviceStatus(
     db: PostgresDatabase,
-    didWrite: string
+    didWrite: string,
 ): Promise<GetDeviceStatusResp> {
     const now = nowZeroMs();
     const resultDevice = await db
@@ -134,11 +152,10 @@ export async function getDeviceStatus(
     }
 }
 
-
 export async function throwIfAlreadyLoggedIn(
     db: PostgresDatabase,
     didWrite: string,
-    httpErrors: HttpErrors
+    httpErrors: HttpErrors,
 ): Promise<GetDeviceStatusResp> {
     const deviceStatus = await getDeviceStatus(db, didWrite);
     if (deviceStatus !== undefined) {
@@ -153,7 +170,6 @@ export async function throwIfAlreadyLoggedIn(
     return deviceStatus;
 }
 
-
 export async function verifyOtp({
     db,
     maxAttempt,
@@ -167,6 +183,7 @@ export async function verifyOtp({
             userId: authAttemptPhoneTable.userId,
             lastTwoDigits: authAttemptPhoneTable.lastTwoDigits,
             phoneCountryCode: authAttemptPhoneTable.phoneCountryCode,
+            countryCallingCode: authAttemptPhoneTable.countryCallingCode,
             phoneHash: authAttemptPhoneTable.phoneHash,
             pepperVersion: authAttemptPhoneTable.pepperVersion,
             userAgent: authAttemptPhoneTable.userAgent,
@@ -179,7 +196,7 @@ export async function verifyOtp({
         .where(eq(authAttemptPhoneTable.didWrite, didWrite));
     if (resultOtp.length === 0) {
         throw httpErrors.badRequest(
-            "Device has never made an authentication attempt"
+            "Device has never made an authentication attempt",
         );
     }
     const now = nowZeroMs();
@@ -187,16 +204,17 @@ export async function verifyOtp({
         return { success: false, reason: "expired_code" };
     } else if (resultOtp[0].code === code) {
         const loginSessionExpiry = new Date(now);
-        loginSessionExpiry.setFullYear(
-            loginSessionExpiry.getFullYear() + 1000
-        );
+        loginSessionExpiry.setFullYear(loginSessionExpiry.getFullYear() + 1000);
         switch (resultOtp[0].authType) {
             case "register": {
                 await register({
                     db,
                     didWrite,
                     lastTwoDigits: resultOtp[0].lastTwoDigits,
-                    phoneCountryCode: resultOtp[0].phoneCountryCode,
+                    countryCallingCode: resultOtp[0].countryCallingCode,
+                    phoneCountryCode: toUnionUndefined(
+                        resultOtp[0].phoneCountryCode,
+                    ),
                     phoneHash: resultOtp[0].phoneHash,
                     pepperVersion: resultOtp[0].pepperVersion,
                     userAgent: resultOtp[0].userAgent,
@@ -243,7 +261,7 @@ export async function verifyOtp({
         await updateCodeGuessAttemptAmount(
             db,
             didWrite,
-            resultOtp[0].guessAttemptAmount + 1
+            resultOtp[0].guessAttemptAmount + 1,
         );
         if (resultOtp[0].guessAttemptAmount + 1 >= maxAttempt) {
             // code is now considered expired
@@ -260,7 +278,6 @@ export async function verifyOtp({
     }
 }
 
-
 export async function expireCode(db: PostgresDatabase, didWrite: string) {
     const now = nowZeroMs();
     await db
@@ -275,7 +292,7 @@ export async function expireCode(db: PostgresDatabase, didWrite: string) {
 export async function updateCodeGuessAttemptAmount(
     db: PostgresDatabase,
     didWrite: string,
-    attemptAmount: number
+    attemptAmount: number,
 ) {
     const now = nowZeroMs();
     return await db
@@ -293,6 +310,7 @@ export async function register({
     didWrite,
     lastTwoDigits,
     phoneCountryCode,
+    countryCallingCode,
     phoneHash,
     pepperVersion,
     userAgent,
@@ -321,6 +339,7 @@ export async function register({
             userId: userId,
             lastTwoDigits: lastTwoDigits,
             phoneCountryCode: phoneCountryCode,
+            countryCallingCode: countryCallingCode,
             pepperVersion: pepperVersion,
             phoneHash: phoneHash,
         });
@@ -354,7 +373,12 @@ export async function loginNewDevice({
 }
 
 // ! WARN we assume the OTP was verified and the device is already syncing
-export async function loginKnownDevice({ db, didWrite, now, sessionExpiry }: LoginProps) {
+export async function loginKnownDevice({
+    db,
+    didWrite,
+    now,
+    sessionExpiry,
+}: LoginProps) {
     await db.transaction(async (tx) => {
         await tx
             .update(authAttemptPhoneTable)
@@ -383,7 +407,7 @@ export enum AuthenticateType {
 
 export async function isEmailAvailable(
     db: PostgresDatabase,
-    email: string
+    email: string,
 ): Promise<boolean> {
     const result = await db
         .select()
@@ -398,7 +422,7 @@ export async function isEmailAvailable(
 
 export async function isDidWriteAvailable(
     db: PostgresDatabase,
-    didWrite: string
+    didWrite: string,
 ): Promise<boolean> {
     const result = await db
         .select()
@@ -417,7 +441,10 @@ export async function getOrGenerateUserId(
     peppers: string[],
 ): Promise<string> {
     const pepper = base64.base64Decode(peppers[0]); // for now we only support one unique app-wide pepper - we'll see when rotating
-    const calculatedPhoneHash = await hashWithSalt({ value: phoneNumber, salt: pepper })
+    const calculatedPhoneHash = await hashWithSalt({
+        value: phoneNumber,
+        salt: pepper,
+    });
     const expectedPhoneHash = base64.base64Encode(calculatedPhoneHash);
     const result = await db
         .select({ userId: userTable.id })
@@ -448,31 +475,24 @@ export async function getAuthenticateType(
     authenticateBody: AuthenticateRequestBody,
     didWrite: string,
     peppers: string[],
-    httpErrors: HttpErrors
+    httpErrors: HttpErrors,
 ): Promise<AuthTypeAndUserId> {
     const isEmailAvailableVal = await isEmailAvailable(
         db,
-        authenticateBody.phoneNumber
+        authenticateBody.phoneNumber,
     );
-    const isDidWriteAvailableVal = await isDidWriteAvailable(
-        db,
-        didWrite
-    );
+    const isDidWriteAvailableVal = await isDidWriteAvailable(db, didWrite);
     const userId = await getOrGenerateUserId(
         db,
         authenticateBody.phoneNumber,
-        peppers
+        peppers,
     );
     if (isEmailAvailableVal && isDidWriteAvailableVal) {
         return { type: AuthenticateType.REGISTER, userId: userId };
     } else if (!isEmailAvailableVal && isDidWriteAvailableVal) {
         return { type: AuthenticateType.LOGIN_NEW_DEVICE, userId: userId };
     } else if (!isEmailAvailableVal && !isDidWriteAvailableVal) {
-        await throwIfAlreadyLoggedIn(
-            db,
-            didWrite,
-            httpErrors
-        );
+        await throwIfAlreadyLoggedIn(db, didWrite, httpErrors);
         return {
             type: AuthenticateType.LOGIN_KNOWN_DEVICE,
             userId: userId,
@@ -480,7 +500,7 @@ export async function getAuthenticateType(
     } else {
         // if (isEmailAvailable && !isDidWriteAvailable)
         throw httpErrors.forbidden(
-            `The DID is associated with another email address`
+            `The DID is associated with another email address`,
         );
     }
 }
@@ -539,6 +559,7 @@ export async function authenticateAttempt({
             throttleMinutesInterval,
             httpErrors,
             doSend,
+            // awsMailConf,
             doUseTestCode,
             testCode,
             peppers,
@@ -547,7 +568,7 @@ export async function authenticateAttempt({
         // code hasn't expired
         const nextCodeSoonestTime = resultHasAttempted[0].lastOtpSentAt;
         nextCodeSoonestTime.setMinutes(
-            nextCodeSoonestTime.getMinutes() + throttleMinutesInterval
+            nextCodeSoonestTime.getMinutes() + throttleMinutesInterval,
         );
         return {
             codeExpiry: resultHasAttempted[0].codeExpiry,
@@ -566,6 +587,7 @@ export async function authenticateAttempt({
             throttleMinutesInterval,
             httpErrors,
             doSend,
+            // awsMailConf,
             doUseTestCode,
             testCode,
             peppers,
@@ -574,7 +596,7 @@ export async function authenticateAttempt({
 }
 
 // export async function sendOtpPhoneNumber({ phoneNumber, phoneCountryCode, otp, awsMailConf }: SendOtpPhoneNumberProps) {
-//     // TODO: verify phone number validity with Twilio 
+//     // TODO: verify phone number validity with Twilio
 //     return
 // }
 
@@ -592,29 +614,28 @@ export async function insertAuthAttemptCode({
     testCode,
     doUseTestCode,
     doSend,
-    peppers,
+    peppers, // awsMailConf,
 }: InsertAuthAttemptCodeProps): Promise<AuthenticateOtp> {
     if (doUseTestCode && doSend) {
-        throw httpErrors.badRequest(
-            "Test code shall not be sent via sms"
-        );
+        throw httpErrors.badRequest("Test code shall not be sent via sms");
     }
-    const pepperVersion = 0
+    const pepperVersion = 0;
     const pepper = base64.base64Decode(peppers[pepperVersion]); // we don't rotate peppers yet
-    const hash = await hashWithSalt({ value: authenticateRequestBody.phoneNumber, salt: pepper })
-    const phoneHash = base64.base64Encode(hash)
+    const hash = await hashWithSalt({
+        value: authenticateRequestBody.phoneNumber,
+        salt: pepper,
+    });
+    const phoneHash = base64.base64Encode(hash);
     await throttleByPhoneHash(
         db,
         phoneHash,
         throttleMinutesInterval,
         minutesBeforeCodeExpiry,
-        httpErrors
+        httpErrors,
     );
     const oneTimeCode = doUseTestCode ? testCode : generateOneTimeCode();
     const codeExpiry = new Date(now);
-    codeExpiry.setMinutes(
-        codeExpiry.getMinutes() + minutesBeforeCodeExpiry
-    );
+    codeExpiry.setMinutes(codeExpiry.getMinutes() + minutesBeforeCodeExpiry);
     if (doSend) {
         // may throw errors and return 500 :)
         // await sendOtpPhoneNumber({
@@ -624,19 +645,31 @@ export async function insertAuthAttemptCode({
         //     awsMailConf,
         // });
     } else {
-        console.log(
-            "\n\nCode:",
-            codeToString(oneTimeCode),
-            codeExpiry,
-            "\n\n"
-        );
+        console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
     const lastTwoDigits = authenticateRequestBody.phoneNumber.slice(-2);
-    const phoneCountryCode = authenticateRequestBody.phoneCountryCode;
+    const phoneNumber = parsePhoneNumber(authenticateRequestBody.phoneNumber, {
+        defaultCallingCode: authenticateRequestBody.defaultCallingCode,
+    });
+    if (!phoneNumber) {
+        throw httpErrors.badRequest("Phone number cannot be parsed correctly");
+    }
+    if (
+        phoneNumber.country === undefined &&
+        phoneNumber.getPossibleCountries.length === 0
+    ) {
+        log.warn("Cannot infer phone country code from phone number");
+    }
+    const phoneCountryCode =
+        phoneNumber.country ?? phoneNumber.getPossibleCountries().length !== 0
+            ? phoneNumber.getPossibleCountries()[0]
+            : undefined;
+    const countryCallingCode = phoneNumber.countryCallingCode;
     await db.insert(authAttemptPhoneTable).values({
         didWrite: didWrite,
         type: type,
         lastTwoDigits: lastTwoDigits,
+        countryCallingCode: countryCallingCode,
         phoneCountryCode: phoneCountryCode,
         phoneHash: phoneHash,
         pepperVersion: pepperVersion,
@@ -648,7 +681,7 @@ export async function insertAuthAttemptCode({
     });
     const nextCodeSoonestTime = new Date(now);
     nextCodeSoonestTime.setMinutes(
-        nextCodeSoonestTime.getMinutes() + throttleMinutesInterval
+        nextCodeSoonestTime.getMinutes() + throttleMinutesInterval,
     );
     return {
         codeExpiry: codeExpiry,
@@ -669,29 +702,28 @@ export async function updateAuthAttemptCode({
     doSend,
     doUseTestCode,
     testCode,
-    peppers
+    peppers,
 }: UpdateAuthAttemptCodeProps): Promise<AuthenticateOtp> {
     if (doUseTestCode && doSend) {
-        throw httpErrors.badRequest(
-            "Test code shall not be sent via sms"
-        );
+        throw httpErrors.badRequest("Test code shall not be sent via sms");
     }
-    const pepperVersion = 0
+    const pepperVersion = 0;
     const pepper = base64.base64Decode(peppers[pepperVersion]); // we don't rotate peppers yet
-    const hash = await hashWithSalt({ value: authenticateRequestBody.phoneNumber, salt: pepper })
-    const phoneHash = base64.base64Encode(hash)
+    const hash = await hashWithSalt({
+        value: authenticateRequestBody.phoneNumber,
+        salt: pepper,
+    });
+    const phoneHash = base64.base64Encode(hash);
     await throttleByPhoneHash(
         db,
         phoneHash,
         throttleMinutesInterval,
         minutesBeforeCodeExpiry,
-        httpErrors
+        httpErrors,
     );
     const oneTimeCode = doUseTestCode ? testCode : generateOneTimeCode();
     const codeExpiry = new Date(now);
-    codeExpiry.setMinutes(
-        codeExpiry.getMinutes() + minutesBeforeCodeExpiry
-    );
+    codeExpiry.setMinutes(codeExpiry.getMinutes() + minutesBeforeCodeExpiry);
     if (doSend) {
         // await sendOtpPhoneNumber({
         //     phoneNumber: authenticateRequestBody.phoneNumber,
@@ -700,21 +732,33 @@ export async function updateAuthAttemptCode({
         //     awsMailConf,
         // });
     } else {
-        console.log(
-            "\n\nCode:",
-            codeToString(oneTimeCode),
-            codeExpiry,
-            "\n\n"
-        );
+        console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
     const lastTwoDigits = authenticateRequestBody.phoneNumber.slice(-2);
-    const phoneCountryCode = authenticateRequestBody.phoneCountryCode;
+    const phoneNumber = parsePhoneNumber(authenticateRequestBody.phoneNumber, {
+        defaultCallingCode: authenticateRequestBody.defaultCallingCode,
+    });
+    if (!phoneNumber) {
+        throw httpErrors.badRequest("Phone number cannot be parsed correctly");
+    }
+    if (
+        phoneNumber.country === undefined &&
+        phoneNumber.getPossibleCountries.length === 0
+    ) {
+        log.warn("Cannot infer phone country code from phone number");
+    }
+    const phoneCountryCode =
+        phoneNumber.country ?? phoneNumber.getPossibleCountries().length !== 0
+            ? phoneNumber.getPossibleCountries()[0]
+            : undefined;
+    const countryCallingCode = phoneNumber.countryCallingCode;
     await db
         .update(authAttemptPhoneTable)
         .set({
             userId: userId,
             type: type,
             lastTwoDigits: lastTwoDigits,
+            countryCallingCode: countryCallingCode,
             phoneCountryCode: phoneCountryCode,
             phoneHash: phoneHash,
             pepperVersion: pepperVersion,
@@ -727,7 +771,7 @@ export async function updateAuthAttemptCode({
         .where(eq(authAttemptPhoneTable.didWrite, didWrite));
     const nextCodeSoonestTime = new Date(now);
     nextCodeSoonestTime.setMinutes(
-        nextCodeSoonestTime.getMinutes() + throttleMinutesInterval
+        nextCodeSoonestTime.getMinutes() + throttleMinutesInterval,
     );
     return {
         codeExpiry: codeExpiry,
@@ -741,13 +785,13 @@ export async function throttleByPhoneHash(
     phoneHash: string,
     minutesInterval: number,
     minutesBeforeCodeExpiry: number,
-    httpErrors: HttpErrors
+    httpErrors: HttpErrors,
 ) {
     const now = nowZeroMs();
     // now - 3 minutes if minutesInterval == 3
     const minutesIntervalAgo = new Date(now);
     minutesIntervalAgo.setMinutes(
-        minutesIntervalAgo.getMinutes() - minutesInterval
+        minutesIntervalAgo.getMinutes() - minutesInterval,
     );
 
     const results = await db
@@ -760,16 +804,13 @@ export async function throttleByPhoneHash(
     for (const result of results) {
         const expectedExpiryTime = new Date(result.lastOtpSentAt);
         expectedExpiryTime.setMinutes(
-            expectedExpiryTime.getMinutes() + minutesBeforeCodeExpiry
+            expectedExpiryTime.getMinutes() + minutesBeforeCodeExpiry,
         );
         if (
-            result.lastOtpSentAt.getTime() >=
-            minutesIntervalAgo.getTime() &&
+            result.lastOtpSentAt.getTime() >= minutesIntervalAgo.getTime() &&
             expectedExpiryTime.getTime() === result.codeExpiry.getTime() // code hasn't been guessed, because otherwise it would have been manually expired before the normal expiry time
         ) {
-            throw httpErrors.tooManyRequests(
-                "Throttling amount of sms sent"
-            );
+            throw httpErrors.tooManyRequests("Throttling amount of sms sent");
         }
     }
 }

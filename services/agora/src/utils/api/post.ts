@@ -1,18 +1,18 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  ApiV1FeedFetchRecentPost200ResponseInner,
-  ApiV1FeedFetchRecentPostRequest,
-  ApiV1PostCreatePostRequest,
-  ApiV1PostFetchPostBySlugIdPostRequest,
+  type ApiV1FeedFetchRecentPost200ResponseInner,
+  type ApiV1FeedFetchRecentPostRequest,
+  type ApiV1PostCreatePostRequest,
+  type ApiV1PostFetchPostBySlugIdPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
 import { useCommonApi } from "./common";
 import {
-  DummyPollOptionFormat,
-  DummyPostDataFormat,
-  PossibleCommentRankingActions,
+  type DummyPollOptionFormat,
+  type DummyPostDataFormat,
+  type PossibleCommentRankingActions,
 } from "src/stores/post";
 import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
@@ -20,7 +20,6 @@ import axios from "axios";
 import { useBackendPollApi } from "./poll";
 
 export function useBackendPostApi() {
-
   const { buildEncodedUcan } = useCommonApi();
   const { fetchUserPollResponse } = useBackendPollApi();
 
@@ -32,14 +31,13 @@ export function useBackendPostApi() {
     postElement: ApiV1FeedFetchRecentPost200ResponseInner,
     loadUserData: boolean
   ) {
-
     // Create the polling object
     const pollOptionList: DummyPollOptionFormat[] = [];
-    postElement.payload.poll?.forEach(pollOption => {
+    postElement.payload.poll?.forEach((pollOption) => {
       const internalItem: DummyPollOptionFormat = {
         index: pollOption.optionNumber - 1,
         numResponses: pollOption.numResponses,
-        option: pollOption.optionTitle
+        option: pollOption.optionTitle,
       };
       pollOptionList.push(internalItem);
     });
@@ -47,7 +45,9 @@ export function useBackendPostApi() {
     // Load user's polling response
     let pollResponseOption: number | undefined = undefined;
     if (postElement.payload.poll && loadUserData) {
-      const pollResponse = await fetchUserPollResponse(postElement.metadata.postSlugId);
+      const pollResponse = await fetchUserPollResponse(
+        postElement.metadata.postSlugId
+      );
       pollResponseOption = pollResponse?.selectedPollOption;
     }
 
@@ -74,19 +74,22 @@ export function useBackendPostApi() {
       userInteraction: {
         pollResponse: {
           hadResponded: pollResponseOption != undefined,
-          responseIndex: pollResponseOption ? pollResponseOption - 1 : 0
+          responseIndex: pollResponseOption ? pollResponseOption - 1 : 0,
         },
         commentRanking: {
           assignedRankingItems: [],
           rankedCommentList: new Map<number, PossibleCommentRankingActions>(),
-        }
+        },
       },
     };
 
     return newItem;
   }
 
-  async function fetchPostBySlugId(postSlugId: string, loadUserPollResponse: boolean) {
+  async function fetchPostBySlugId(
+    postSlugId: string,
+    loadUserPollResponse: boolean
+  ) {
     try {
       const params: ApiV1PostFetchPostBySlugIdPostRequest = {
         postSlugId: postSlugId,
@@ -96,7 +99,10 @@ export function useBackendPostApi() {
         undefined,
         api
       ).apiV1PostFetchPostBySlugIdPost(params, {});
-      return await createInternalPostData(response.data.postData, loadUserPollResponse);
+      return await createInternalPostData(
+        response.data.postData,
+        loadUserPollResponse
+      );
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
@@ -112,8 +118,10 @@ export function useBackendPostApi() {
     }
   }
 
-  async function fetchRecentPost(lastSlugId: string | undefined, loadUserPollData: boolean) {
-
+  async function fetchRecentPost(
+    lastSlugId: string | undefined,
+    loadUserPollData: boolean
+  ) {
     try {
       const params: ApiV1FeedFetchRecentPostRequest = {
         showHidden: false,
@@ -127,13 +135,21 @@ export function useBackendPostApi() {
 
       const dataList: DummyPostDataFormat[] = [];
 
-      await Promise.all(response.data.map(async (postElement) => {
-        const dataItem = await createInternalPostData(postElement, loadUserPollData);
-        dataList.push(dataItem);
-      }));
+      await Promise.all(
+        response.data.map(async (postElement) => {
+          const dataItem = await createInternalPostData(
+            postElement,
+            loadUserPollData
+          );
+          dataList.push(dataItem);
+        })
+      );
 
       dataList.sort(function (a, b) {
-        return new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime();
+        return (
+          new Date(b.metadata.createdAt).getTime() -
+          new Date(a.metadata.createdAt).getTime()
+        );
       });
 
       return dataList;
@@ -153,7 +169,7 @@ export function useBackendPostApi() {
       const params: ApiV1PostCreatePostRequest = {
         postTitle: postTitle,
         postBody: postBody,
-        pollingOptionList: pollingOptionList
+        pollingOptionList: pollingOptionList,
       };
 
       const { url, options } =

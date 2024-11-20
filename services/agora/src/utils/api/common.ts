@@ -1,4 +1,4 @@
-import { RawAxiosRequestConfig } from "axios";
+import { type RawAxiosRequestConfig } from "axios";
 import { useQuasar } from "quasar";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { getPlatform } from "src/utils/common";
@@ -7,17 +7,17 @@ import { storeToRefs } from "pinia";
 
 export function useCommonApi() {
   const $q = useQuasar();
-  const { verificationEmailAddress } = storeToRefs(useAuthenticationStore());
+  const { verificationPhoneNumber } = storeToRefs(useAuthenticationStore());
 
   async function buildEncodedUcan(url: string, options: RawAxiosRequestConfig) {
     let platform: "mobile" | "web" = "web";
 
     platform = getPlatform($q.platform);
 
-    console.log("Build UCAN for email: " + verificationEmailAddress.value);
+    console.log("Build UCAN for phoneNumber: " + verificationPhoneNumber.value);
 
     const { did, prefixedKey } = await createDidIfDoesNotExist(
-      verificationEmailAddress.value,
+      verificationPhoneNumber.value,
       platform
     );
     // TODO: get DID if exist, else create it

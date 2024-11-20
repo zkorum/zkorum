@@ -1,4 +1,4 @@
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 import { SecureStorage } from "@aparajita/capacitor-secure-storage";
 import { Dialog } from "quasar";
 import { i18n } from "src/boot/i18n";
@@ -6,7 +6,7 @@ import { App } from "@capacitor/app";
 
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
-export default boot(async (/* { app } */) => {
+export default defineBoot(async (/* { app } */) => {
   try {
     await SecureStorage.setKeyPrefix("com.zkorum.agora/v1");
     // await nativeAuthenticate();

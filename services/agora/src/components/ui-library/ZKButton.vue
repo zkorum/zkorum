@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { QBtnProps } from "quasar";
+import { type QBtnProps } from "quasar";
 
 const props = defineProps<QBtnProps>();
 </script>

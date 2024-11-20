@@ -1,24 +1,38 @@
 <template>
   <div>
     <div class="container">
-      <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)" />
+      <CommentSortSelector
+        @changed-algorithm="(value) => (commentSortPreference = value)"
+      />
 
-      <div v-if="commentItems.length == 0 && commentSortPreference != 'clusters'" class="noCommentMessage">
+      <div
+        v-if="commentItems.length == 0 && commentSortPreference != 'clusters'"
+        class="noCommentMessage"
+      >
         There are no comments in this post.
       </div>
 
       <div v-if="commentItems.length > 0" class="commentListFlex">
-        <div v-for="(commentItem, index) in commentItems" :key="commentItem.commentSlugId">
-          <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
+        <div
+          v-for="(commentItem, index) in commentItems"
+          :key="commentItem.commentSlugId"
+        >
+          <CommentSingle
+            :comment-item="commentItem"
+            :post-slug-id="postSlugId"
             :ranked-action="getCommentItemRankStatus(index)"
             :highlight="initialCommentSlugId == commentItem.commentSlugId"
-            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
+            :comment-slug-id-liked-map="commentSlugIdLikedMap"
+          />
 
           <Divider :style="{ width: '100%' }" />
         </div>
       </div>
 
-      <div v-if="commentSortPreference == 'clusters'" :style="{ paddingTop: '1rem' }">
+      <div
+        v-if="commentSortPreference == 'clusters'"
+        :style="{ paddingTop: '1rem' }"
+      >
         <ZKCard padding="2rem">
           <div class="specialMessage">
             <img src="/development/polis/example.png" class="polisExampleImg" />
@@ -28,16 +42,15 @@
           </div>
         </ZKCard>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  DummyCommentFormat,
-  DummyCommentRankingFormat,
-  PossibleCommentRankingActions,
+  type DummyCommentFormat,
+  type DummyCommentRankingFormat,
+  type PossibleCommentRankingActions,
 } from "src/stores/post";
 import CommentSingle from "./CommentSingle.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
@@ -47,7 +60,7 @@ import CommentSortSelector from "./CommentSortSelector.vue";
 import { useBackendCommentApi } from "src/utils/api/comment";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { CommentItem } from "src/shared/types/zod";
+import { type CommentItem } from "src/shared/types/zod";
 
 const props = defineProps<{
   commentList: DummyCommentFormat[];
@@ -78,8 +91,11 @@ async function fetchPersonalLikes() {
     commentSlugIdLikedMap.value.clear();
     const response = await fetchUserVotesForPostSlugId(props.postSlugId);
     if (response) {
-      response.forEach(userVote => {
-        commentSlugIdLikedMap.value.set(userVote.commentSlugId, userVote.votingAction);
+      response.forEach((userVote) => {
+        commentSlugIdLikedMap.value.set(
+          userVote.commentSlugId,
+          userVote.votingAction
+        );
       });
     }
   }

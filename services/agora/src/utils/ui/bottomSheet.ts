@@ -1,5 +1,5 @@
 import { useQuasar } from "quasar";
-import { Ref } from "vue";
+import { type Ref } from "vue";
 import { useDialog } from "./dialog";
 
 export const useBottomSheet = () => {

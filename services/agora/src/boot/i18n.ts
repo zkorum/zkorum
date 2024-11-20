@@ -1,4 +1,4 @@
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 import { createI18n } from "vue-i18n";
 import { Quasar } from "quasar";
 
@@ -40,6 +40,6 @@ function loadAndConfigureI18n() {
 
 export const i18n = loadAndConfigureI18n();
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   app.use(i18n);
 });

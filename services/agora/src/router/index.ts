@@ -1,4 +1,4 @@
-import { route } from "quasar/wrappers";
+import { defineRouter } from "#q-app/wrappers";
 import {
   createMemoryHistory,
   createRouter,
@@ -19,12 +19,14 @@ import { useStorage } from "@vueuse/core";
  * with the Router instance.
  */
 
-export default route(function (/* { store, ssrContext } */) {
-
+export default defineRouter(function (/* { store, ssrContext } */) {
   const { lastNavigatedRouteFullPath, lastNavigatedRouteName } =
     useLastNavigatedRouteName();
 
-  const lastSavedHomeFeedPosition = useStorage("last-saved-home-feed-position", 0);
+  const lastSavedHomeFeedPosition = useStorage(
+    "last-saved-home-feed-position",
+    0
+  );
 
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -42,12 +44,14 @@ export default route(function (/* { store, ssrContext } */) {
       }
 
       const toRouteName = to.name?.toString() ?? "";
-      if (toRouteName == "default-home-feed" && fromRouteName == "single-post") {
+      if (
+        toRouteName == "default-home-feed" &&
+        fromRouteName == "single-post"
+      ) {
         return { left: 0, top: lastSavedHomeFeedPosition.value };
       } else {
         return { left: 0, top: 0 };
       }
-
     },
     routes,
     // Leave this as is and make changes in quasar.conf.js instead!

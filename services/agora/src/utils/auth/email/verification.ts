@@ -1,10 +1,16 @@
 import { storeToRefs } from "pinia";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useBackendAuthApi } from "src/utils/api/auth";
+import { useBackendAuthApi, type AuthenticateReturn } from "src/utils/api/auth";
 import { useRouter } from "vue-router";
 
-export function useEmailVerification() {
-  const { emailCode, sendEmailCode } = useBackendAuthApi();
+interface RequestCodeProps {
+  isRequestingNewCode: boolean;
+  phoneNumber: string;
+  defaultCallingCode: string;
+}
+
+export function usePhoneVerification() {
+  const { smsCode, sendSmsCode } = useBackendAuthApi();
 
   const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
@@ -15,11 +21,13 @@ export function useEmailVerification() {
       code = 0;
     }
 
-    const response = await emailCode(code);
+    const response = await smsCode(code);
     if (response.data?.success) {
       isAuthenticated.value = true;
+      //TODO: cast to 200 DTO and parse data
       router.push({ name: "verification-options" });
     } else {
+      // TODO: cast to expected DTO and switch the possible enum errors
       console.log(response.error);
       if (response.error == "already_logged_in") {
         console.log("User is already logged in");
@@ -29,11 +37,16 @@ export function useEmailVerification() {
     }
   }
 
-  async function requestCode(
-    isRequestingNewCode: boolean,
-    emailAddress: string
-  ) {
-    const response = await sendEmailCode(emailAddress, isRequestingNewCode);
+  async function requestCode({
+    isRequestingNewCode,
+    phoneNumber,
+    defaultCallingCode,
+  }: RequestCodeProps): Promise<AuthenticateReturn> {
+    const response = await sendSmsCode({
+      phoneNumber,
+      defaultCallingCode,
+      isRequestingNewCode,
+    });
     return response;
   }
 

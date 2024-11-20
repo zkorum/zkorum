@@ -84,21 +84,23 @@ module.exports = {
     // allow debugger during development only
     "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off",
 
-    "linebreak-style": ["error", "unix"],
-
-    indent: ["error", 2],
-
-    semi: ["error", "always"],
-
+    // "linebreak-style": ["error", "unix"],
+    //
+    // indent: ["error", 2],
+    //
+    // semi: ["error", "always"],
+    //
     "vue/multi-word-component-names": 0,
 
-    "vue/first-attribute-linebreak": [
-      "error",
-      {
-        singleline: "beside",
-        multiline: "beside",
-      },
-    ],
+    // conflicts with Prettier
+    // see https://eslint.vuejs.org/user-guide/#conflict-with-prettier
+    // "vue/first-attribute-linebreak": [
+    //   "error",
+    //   {
+    //     singleline: "beside",
+    //     multiline: "beside",
+    //   },
+    // ],
 
     "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
   },
