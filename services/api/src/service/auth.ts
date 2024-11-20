@@ -21,7 +21,9 @@ import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { eq } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { base64 } from "@/shared/common/index.js";
-import parsePhoneNumber, { type CountryCode } from "libphonenumber-js";
+import parsePhoneNumberFromString, {
+    type CountryCode,
+} from "libphonenumber-js";
 import { log } from "@/app.js";
 import { toUnionUndefined } from "@/shared/shared.js";
 
@@ -648,9 +650,12 @@ export async function insertAuthAttemptCode({
         console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
     const lastTwoDigits = authenticateRequestBody.phoneNumber.slice(-2);
-    const phoneNumber = parsePhoneNumber(authenticateRequestBody.phoneNumber, {
-        defaultCallingCode: authenticateRequestBody.defaultCallingCode,
-    });
+    const phoneNumber = parsePhoneNumberFromString(
+        authenticateRequestBody.phoneNumber,
+        {
+            defaultCallingCode: authenticateRequestBody.defaultCallingCode,
+        },
+    );
     if (!phoneNumber) {
         throw httpErrors.badRequest("Phone number cannot be parsed correctly");
     }
@@ -735,9 +740,12 @@ export async function updateAuthAttemptCode({
         console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
     const lastTwoDigits = authenticateRequestBody.phoneNumber.slice(-2);
-    const phoneNumber = parsePhoneNumber(authenticateRequestBody.phoneNumber, {
-        defaultCallingCode: authenticateRequestBody.defaultCallingCode,
-    });
+    const phoneNumber = parsePhoneNumberFromString(
+        authenticateRequestBody.phoneNumber,
+        {
+            defaultCallingCode: authenticateRequestBody.defaultCallingCode,
+        },
+    );
     if (!phoneNumber) {
         throw httpErrors.badRequest("Phone number cannot be parsed correctly");
     }
