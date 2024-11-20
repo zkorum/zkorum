@@ -17,20 +17,19 @@ import {
 import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
 import axios from "axios";
-import { useBackendPollApi } from "./poll";
-import type { ExtendedPost } from "src/shared/types/zod";
+import { ExtendedPost } from "src/shared/types/zod";
 
 export function useBackendPostApi() {
   const { buildEncodedUcan } = useCommonApi();
-  const { fetchUserPollResponse } = useBackendPollApi();
 
   const { showNotifyMessage } = useNotify();
 
   const router = useRouter();
 
-  async function createInternalPostData(
+  function createInternalPostData(
     postElement: ApiV1FeedFetchRecentPost200ResponsePostDataListInner,
-    loadUserData: boolean
+    loadUserData: boolean,
+    pollResponseOption: undefined | number
   ) {
     // Create the polling object
     const pollOptionList: DummyPollOptionFormat[] = [];
@@ -42,13 +41,6 @@ export function useBackendPostApi() {
       };
       pollOptionList.push(internalItem);
     });
-
-    // Load user's polling response
-    let pollResponseOption: number | undefined = undefined;
-    if (postElement.payload.poll && loadUserData) {
-      const pollResponse = await fetchUserPollResponse([postElement.metadata.postSlugId]);
-      pollResponseOption = pollResponse.get(postElement.metadata.postSlugId);
-    }
 
     const parseditem = composeInternalPostList([postElement])[0];
 
@@ -82,10 +74,7 @@ export function useBackendPostApi() {
         undefined,
         api
       ).apiV1PostFetchPostBySlugIdPost(params, {});
-      return await createInternalPostData(
-        response.data.postData,
-        loadUserPollResponse
-      );
+      return createInternalPostData(response.data.postData, loadUserPollResponse, undefined);
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
@@ -101,39 +90,64 @@ export function useBackendPostApi() {
     }
   }
 
-  async function fetchRecentPost(
-    lastSlugId: string | undefined,
-    loadUserPollData: boolean
-  ) {
+  async function fetchRecentPost(lastSlugId: string | undefined, loadUserPollData: boolean) {
     try {
       const params: ApiV1FeedFetchRecentPostRequest = {
         showHidden: false,
         lastSlugId: lastSlugId,
       };
-      const response = await DefaultApiFactory(
-        undefined,
-        undefined,
-        api
-      ).apiV1FeedFetchRecentPost(params, {});
 
-      const dataList: DummyPostDataFormat[] = [];
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1FeedFetchRecentPost(params);
+      if (!loadUserPollData) {
+        const response = await DefaultApiFactory(
+          undefined,
+          undefined,
+          api
+        ).apiV1FeedFetchRecentPost(params, {});
 
-      await Promise.all(response.data.postDataList.map(async (postElement) => {
-        const dataItem = await createInternalPostData(postElement, loadUserPollData);
-        dataList.push(dataItem);
-      }));
+        const dataList = response.data.postDataList.map(postItem => {
+          const dataItem = createInternalPostData(postItem, loadUserPollData, undefined);
+          return dataItem;
+        });
 
-      dataList.sort(function (a, b) {
-        return (
-          new Date(b.metadata.createdAt).getTime() -
-          new Date(a.metadata.createdAt).getTime()
-        );
-      });
+        return {
+          postDataList: dataList,
+          reachedEndOfFeed: response.data.reachedEndOfFeed
+        };
+      } else {
+        const encodedUcan = await buildEncodedUcan(url, options);
+        const response = await DefaultApiFactory(
+          undefined,
+          undefined,
+          api
+        ).apiV1FeedFetchRecentPost(params, {
+          headers: {
+            ...buildAuthorizationHeader(encodedUcan),
+          },
+        });
 
-      return {
-        postDataList: dataList,
-        reachedEndOfFeed: response.data.reachedEndOfFeed
-      };
+        if (response.data.pollResponse) {
+          const responseMap = new Map<string, number>();
+          response.data.pollResponse.forEach(response => {
+            responseMap.set(response.postSlugId, response.optionChosen);
+          });
+
+          const dataList = response.data.postDataList.map(postItem => {
+            const dataItem = createInternalPostData(postItem, loadUserPollData, responseMap.get(postItem.metadata.postSlugId));
+            return dataItem;
+          });
+
+          return {
+            postDataList: dataList,
+            reachedEndOfFeed: response.data.reachedEndOfFeed
+          };
+        } else {
+          showNotifyMessage("Missing personal poll data in the feed response");
+          return null;
+        }
+
+      }
     } catch (e) {
       console.error(e);
       showNotifyMessage("Failed to fetch recent posts from the server.");

@@ -335,6 +335,31 @@ export interface ApiV1FeedFetchRecentPost200Response {
      * @memberof ApiV1FeedFetchRecentPost200Response
      */
     'reachedEndOfFeed': boolean;
+    /**
+     * 
+     * @type {Array<ApiV1FeedFetchRecentPost200ResponsePollResponseInner>}
+     * @memberof ApiV1FeedFetchRecentPost200Response
+     */
+    'pollResponse'?: Array<ApiV1FeedFetchRecentPost200ResponsePollResponseInner>;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1FeedFetchRecentPost200ResponsePollResponseInner
+ */
+export interface ApiV1FeedFetchRecentPost200ResponsePollResponseInner {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePollResponseInner
+     */
+    'postSlugId': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1FeedFetchRecentPost200ResponsePollResponseInner
+     */
+    'optionChosen': number;
 }
 /**
  * 
@@ -478,25 +503,6 @@ export interface ApiV1FeedFetchRecentPostRequest {
      * @memberof ApiV1FeedFetchRecentPostRequest
      */
     'lastSlugId'?: string;
-}
-/**
- * 
- * @export
- * @interface ApiV1PollGetUserPollResponsePost200ResponseInner
- */
-export interface ApiV1PollGetUserPollResponsePost200ResponseInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1PollGetUserPollResponsePost200ResponseInner
-     */
-    'postSlugId': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1PollGetUserPollResponsePost200ResponseInner
-     */
-    'optionChosen': number;
 }
 /**
  * 
@@ -911,7 +917,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         apiV1FeedFetchRecentPost: async (apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'apiV1FeedFetchRecentPostRequest' is not null or undefined
             assertParamExists('apiV1FeedFetchRecentPost', 'apiV1FeedFetchRecentPostRequest', apiV1FeedFetchRecentPostRequest)
-            const localVarPath = `/api/v1/feed/fetchRecent`;
+            const localVarPath = `/api/v1/feed/fetch-recent`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -1304,7 +1310,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PollGetUserPollResponsePost(requestBody?: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1PollGetUserPollResponsePost200ResponseInner>>> {
+        async apiV1PollGetUserPollResponsePost(requestBody?: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponsePollResponseInner>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PollGetUserPollResponsePost(requestBody, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PollGetUserPollResponsePost']?.[localVarOperationServerIndex]?.url;
@@ -1458,7 +1464,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PollGetUserPollResponsePost(requestBody?: Array<string>, options?: any): AxiosPromise<Array<ApiV1PollGetUserPollResponsePost200ResponseInner>> {
+        apiV1PollGetUserPollResponsePost(requestBody?: Array<string>, options?: any): AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponsePollResponseInner>> {
             return localVarFp.apiV1PollGetUserPollResponsePost(requestBody, options).then((request) => request(axios, basePath));
         },
         /**

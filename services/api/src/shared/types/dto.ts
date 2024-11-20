@@ -12,6 +12,7 @@ import {
     zodVotingOption,
     zodVotingAction,
     zodUserName,
+    zodPollResponse,
     zodPhoneNumber,
 } from "./zod.js";
 
@@ -86,8 +87,9 @@ export class Dto {
         .strict();
     static fetchFeedResponse = z.object({
         postDataList: z.array(zodExtendedPostData),
-        reachedEndOfFeed: z.boolean()
-    }).strict();
+        reachedEndOfFeed: z.boolean(),
+        pollResponse: z.array(zodPollResponse).optional()
+    });
     static postFetchRequest = z.object({
         postSlugId: zodSlugId, // z.object() does not exist :(
     }).strict();
@@ -122,10 +124,7 @@ export class Dto {
         postSlugId: z.string()
     }).strict();
     static fetchUserPollResponseRequest = z.array(z.string());
-    static fetchUserPollResponseResponse = z.array(z.object({
-        postSlugId: z.string(),
-        optionChosen: z.number().gte(0)
-    }).strict());
+    static fetchUserPollResponseResponse = z.array(zodPollResponse);
     static fetchUserVotesForPostSlugIdRequest = z.object({
         postSlugId: z.string()
     }).strict();

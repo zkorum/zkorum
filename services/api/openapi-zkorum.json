@@ -312,7 +312,7 @@
                 }
             }
         },
-        "/api/v1/feed/fetchRecent": {
+        "/api/v1/feed/fetch-recent": {
             "post": {
                 "requestBody": {
                     "content": {
@@ -450,6 +450,26 @@
                                         },
                                         "reachedEndOfFeed": {
                                             "type": "boolean"
+                                        },
+                                        "pollResponse": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "postSlugId": {
+                                                        "type": "string"
+                                                    },
+                                                    "optionChosen": {
+                                                        "type": "number",
+                                                        "minimum": 0
+                                                    }
+                                                },
+                                                "required": [
+                                                    "postSlugId",
+                                                    "optionChosen"
+                                                ],
+                                                "additionalProperties": false
+                                            }
                                         }
                                     },
                                     "required": [

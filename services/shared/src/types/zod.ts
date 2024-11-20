@@ -69,6 +69,10 @@ export const zodPostDataWithResult = z
         poll: zodPollList
     })
     .strict();
+export const zodPollResponse = z.object({
+    postSlugId: z.string(),
+    optionChosen: z.number().gte(0)
+}).strict();
 export const zodSlugId = z.string().max(10);
 export const zodCommentCount = z.number().int().nonnegative();
 export const zodUserName = z.string().max(MAX_LENGTH_USERNAME).min(MIN_LENGTH_USERNAME);
@@ -97,7 +101,7 @@ export const zodCommentItem = z.object({
 export const zodExtendedPostData = z
     .object({
         metadata: zodPostMetadata,
-        payload: zodPostDataWithResult,
+        payload: zodPostDataWithResult
     })
     .strict();
 export const zodVotingOption = z.enum(["like", "dislike"]);

@@ -378,7 +378,7 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
-            url: `/api/${apiVersion}/feed/fetchRecent`,
+            url: `/api/${apiVersion}/feed/fetch-recent`,
             schema: {
                 body: Dto.fetchFeedRequest,
                 response: {
@@ -386,11 +386,26 @@ server.after(() => {
                 },
             },
             handler: async (request) => {
-                return await feedService.fetchFeed({
-                    db: db,
-                    showHidden: request.body.showHidden,
-                    lastSlugId: request.body.lastSlugId,
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
                 });
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    return await feedService.fetchFeed({
+                        db: db,
+                        showHidden: request.body.showHidden,
+                        lastSlugId: request.body.lastSlugId,
+                        fetchPollResponse: false
+                    });
+                } else {
+                    return await feedService.fetchFeed({
+                        db: db,
+                        showHidden: request.body.showHidden,
+                        lastSlugId: request.body.lastSlugId,
+                        fetchPollResponse: true,
+                        userId: status.userId
+                    });
+                }
             },
         });
 
@@ -508,19 +523,19 @@ server.after(() => {
         },
     });
 
-    server.withTypeProvider<ZodTypeProvider>().route({
-        method: "POST",
-        url: `/api/${apiVersion}/poll/get-user-poll-response`,
-        schema: {
-            body: Dto.fetchUserPollResponseRequest,
-            response: {
-                200: Dto.fetchUserPollResponseResponse,
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/poll/get-user-poll-response`,
+            schema: {
+                body: Dto.fetchUserPollResponseRequest,
+                response: {
+                    200: Dto.fetchUserPollResponseResponse,
+                },
             },
-        },
-        handler: async (request) => {
-            const didWrite = await verifyUCAN(db, request, {
-                expectedDeviceStatus: undefined,
-            });
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, undefined);
 
                 const status = await authUtilService.isLoggedIn(db, didWrite);
                 if (!status.isLoggedIn) {

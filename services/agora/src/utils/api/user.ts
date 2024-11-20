@@ -29,7 +29,7 @@ export function useBackendUserApi() {
 
       const internalPostList: DummyPostDataFormat[] = [];
       await Promise.all(response.data.userPostList.map(async (postElement) => {
-        const dataItem = await createInternalPostData(postElement, true);
+        const dataItem = createInternalPostData(postElement, true, undefined);
         internalPostList.push(dataItem);
       }));
 
