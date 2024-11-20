@@ -94,13 +94,13 @@ module.exports = {
 
     // conflicts with Prettier
     // see https://eslint.vuejs.org/user-guide/#conflict-with-prettier
-    // "vue/first-attribute-linebreak": [
-    //   "error",
-    //   {
-    //     singleline: "beside",
-    //     multiline: "beside",
-    //   },
-    // ],
+    "vue/first-attribute-linebreak": [
+      "off",
+      {
+        singleline: "beside",
+        multiline: "beside",
+      },
+    ],
 
     "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
   },
