@@ -67,6 +67,8 @@ export const MAX_LENGTH_COMMENT = 280; // tweet and community notes max length
 export const MAX_LENGTH_USERNAME = 23;
 export const MIN_LENGTH_USERNAME = 3;
 
+export const PEPPER_VERSION = 0;
+
 export function toUnionUndefined<T>(value: T | null): T | undefined {
     if (value === null) {
         return undefined;
