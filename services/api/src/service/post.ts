@@ -1,67 +1,14 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import type { SlugId } from "@/shared/types/zod.js";
-import { commentContentTable, commentTable, pollTable, postContentTable, postProofTable, postTable, voteTable } from "@/schema.js";
-import { and, eq, isNull, sql } from "drizzle-orm";
-import type { CreateNewPostResponse, FetchCommentsToVoteOn200, FetchPostBySlugIdResponse } from "@/shared/types/dto.js";
-import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
+import { pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
+import { eq, sql } from "drizzle-orm";
+import type { CreateNewPostResponse, FetchPostBySlugIdResponse } from "@/shared/types/dto.js";
 import { MAX_LENGTH_BODY } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
 import { httpErrors } from "@fastify/sensible";
 import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
-
-interface FetchNextCommentsToVoteOn {
-    db: PostgresDatabase;
-    userId: string;
-    postSlugId: SlugId;
-    numberOfCommentsToFetch: number;
-    httpErrors: HttpErrors;
-}
-
-export async function fetchNextCommentsToVoteOn({
-    db,
-    userId,
-    postSlugId,
-    numberOfCommentsToFetch,
-    httpErrors
-}: FetchNextCommentsToVoteOn): Promise<FetchCommentsToVoteOn200> {
-    if (numberOfCommentsToFetch > 15) {
-        throw httpErrors.badRequest("The number of comments requested for voting cannot be above 15");
-    }
-    const results = await db
-        .select({
-            commentSlugId: commentTable.slugId,
-            isHidden: commentTable.isHidden,
-            createdAt: commentTable.createdAt,
-            updatedAt: commentTable.updatedAt,
-            comment: commentContentTable.content,
-            numLikes: commentTable.numLikes,
-            numDislikes: commentTable.numDislikes,
-        })
-        .from(commentTable)
-        .innerJoin(
-            postTable,
-            eq(postTable.id, commentTable.postId)
-        )
-        .leftJoin(
-            voteTable,
-            and(eq(voteTable.commentId, commentTable.id), eq(voteTable.authorId, userId))
-        )
-        .orderBy(sql`RANDOM()`)
-        .limit(numberOfCommentsToFetch)
-        .where(
-            and(
-                eq(commentTable.isHidden, false),
-                eq(postTable.slugId, postSlugId),
-                isNull(voteTable.currentContentId)
-            )
-        );
-    return {
-        assignedComments: results
-    };
-}
 
 interface CreateNewPostProps {
     db: PostgresDatabase;
@@ -152,6 +99,14 @@ export async function createNewPost({
                     option6Response: pollingOptionList[5] ? 0 : null
                 });
             }
+
+            // Update the user profile's post count
+            await tx
+                .update(userTable)
+                .set({
+                    postCount: sql`${userTable.postCount} + 1`
+                })
+                .where(eq(userTable.id, authorId));
         });
 
         return {
@@ -166,9 +121,15 @@ export async function createNewPost({
     }
 }
 
-export async function fetchPostBySlugId(
-    db: PostgresDatabase,
-    postSlugId: string): Promise<FetchPostBySlugIdResponse> {
+interface FetchPostBySlugIdProps {
+    db: PostgresDatabase;
+    postSlugId: string;
+    fetchPollResponse: boolean;
+    userId?: string;
+}
+
+export async function fetchPostBySlugId({
+    db, postSlugId, fetchPollResponse, userId }: FetchPostBySlugIdProps): Promise<FetchPostBySlugIdResponse> {
 
     try {
         const { fetchPostItems } = useCommonPost();
@@ -177,7 +138,9 @@ export async function fetchPostBySlugId(
             showHidden: true,
             limit: 1,
             where: eq(postTable.slugId, postSlugId),
-            enableCompactBody: false
+            enableCompactBody: false,
+            fetchPollResponse: fetchPollResponse,
+            userId: userId
         });
 
         if (postData.length == 1) {

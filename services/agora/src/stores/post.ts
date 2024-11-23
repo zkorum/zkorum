@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { useStorage } from "@vueuse/core";
 import { useBackendPostApi } from "src/utils/api/post";
 import { useAuthenticationStore } from "./authentication";
+import type { ExtendedPost } from "src/shared/types/zod";
 
 export interface DummyPollOptionFormat {
   index: number;
@@ -52,23 +53,6 @@ export interface DummyUserPollResponse {
   responseIndex: number;
 }
 
-export interface DummyPostDataFormat {
-  metadata: DummyPostMetadataFormat;
-  payload: {
-    title: string;
-    body: string;
-    poll: {
-      hasPoll: boolean;
-      options: DummyPollOptionFormat[];
-    };
-    comments: DummyCommentFormat[];
-  };
-  userInteraction: {
-    pollResponse: DummyUserPollResponse;
-    commentRanking: DummyCommentRankingFormat;
-  };
-}
-
 export interface DummyUserPostDataFormat {
   slugId: string;
   poll: {
@@ -78,8 +62,15 @@ export interface DummyUserPostDataFormat {
   comment: { ratedIndexList: number[] };
 }
 
+export interface DummyPostDataFormat extends ExtendedPost {
+  userInteraction: {
+    pollResponse: DummyUserPollResponse;
+    commentRanking: DummyCommentRankingFormat;
+  };
+}
+
 export const usePostStore = defineStore("post", () => {
-  const { fetchRecentPost } = useBackendPostApi();
+  const { fetchRecentPost, composeInternalPostList } = useBackendPostApi();
   const { isAuthenticated } = useAuthenticationStore();
 
   const dataReady = ref(false);
@@ -87,37 +78,37 @@ export const usePostStore = defineStore("post", () => {
 
   const emptyPost: DummyPostDataFormat = {
     metadata: {
-      uid: "",
-      slugId: "",
       isHidden: false,
-      createdAt: new Date().toString(),
+      createdAt: new Date(),
       commentCount: 0,
-      communityId: "",
-      posterName: "",
-      posterImagePath: "",
+      authorUserName: "",
+      lastReactedAt: new Date(),
+      postSlugId: "",
+      updatedAt: new Date(),
+      authorImagePath: ""
     },
     payload: {
       title: "",
       body: "",
-      poll: {
-        hasPoll: false,
-        options: [],
-      },
-      comments: [],
+      poll: []
+    },
+    interaction: {
+      hasVoted: false,
+      votedIndex: 0
     },
     userInteraction: {
+      commentRanking: {
+        assignedRankingItems: [],
+        rankedCommentList: new Map<number, PossibleCommentRankingActions>
+      },
       pollResponse: {
         hadResponded: false,
         responseIndex: 0
-      },
-      commentRanking: {
-        rankedCommentList: new Map(),
-        assignedRankingItems: [],
-      },
-    },
+      }
+    }
   };
 
-  const masterPostDataList = ref<DummyPostDataFormat[]>([emptyPost, emptyPost, emptyPost, emptyPost]);
+  const masterPostDataList = ref<ExtendedPost[]>([emptyPost, emptyPost, emptyPost, emptyPost]);
 
   const lastSavedHomeFeedPosition = useStorage(
     "last-saved-home-feed-position",
@@ -130,31 +121,24 @@ export const usePostStore = defineStore("post", () => {
     if (loadMoreData) {
       const lastPostItem = masterPostDataList.value.at(-1);
       if (lastPostItem) {
-        lastSlugId = lastPostItem.metadata.slugId;
+        lastSlugId = lastPostItem.metadata.postSlugId;
       }
     }
 
     const response = await fetchRecentPost(lastSlugId, isAuthenticated);
 
     if (response != null) {
-      if (response.length == 0) {
-        if (loadMoreData) {
-          endOfFeed.value = true;
-        } else {
-          masterPostDataList.value = [];
-          endOfFeed.value = false;
+      const internalDataList = composeInternalPostList(response.postDataList);
+      if (loadMoreData) {
+        if (response.postDataList.length > 0) {
+          masterPostDataList.value.push(...internalDataList);
+          trimHomeFeedSize(60);
         }
       } else {
-        endOfFeed.value = false;
-
-        if (loadMoreData) {
-          masterPostDataList.value.push(...response);
-          trimHomeFeedSize(60);
-        } else {
-          masterPostDataList.value = response;
-        }
+        masterPostDataList.value = internalDataList;
       }
 
+      endOfFeed.value = response.reachedEndOfFeed;
       dataReady.value = true;
     } else {
       dataReady.value = false;
@@ -170,8 +154,8 @@ export const usePostStore = defineStore("post", () => {
   async function hasNewPosts() {
     const response = await fetchRecentPost(undefined, isAuthenticated);
     if (response != null) {
-      if (response.length > 0 && masterPostDataList.value.length > 0) {
-        if (response[0].metadata.createdAt != masterPostDataList.value[0].metadata.createdAt) {
+      if (response.postDataList.length > 0 && masterPostDataList.value.length > 0) {
+        if (new Date(response.postDataList[0].metadata.createdAt) != masterPostDataList.value[0].metadata.createdAt) {
           return true;
         } else {
           return false;
@@ -187,7 +171,7 @@ export const usePostStore = defineStore("post", () => {
   function getPostBySlugId(slugId: string) {
     for (let i = 0; i < masterPostDataList.value.length; i++) {
       const postItem = masterPostDataList.value[i];
-      if (slugId == postItem.metadata.slugId) {
+      if (slugId == postItem.metadata.postSlugId) {
         return postItem;
       }
     }

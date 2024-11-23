@@ -2,7 +2,6 @@
   "editor.tabSize": 2,
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
-
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always"
@@ -14,6 +13,6 @@
     "**/node_modules": true,
     "**/.DS_Store": true,
   },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "typescript.tsdk": "node_modules/typescript/lib"
 }

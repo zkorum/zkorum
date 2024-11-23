@@ -11,6 +11,7 @@ import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useCommonApi } from "./common";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { usePostStore } from "src/stores/post";
+import { useUserStore } from "src/stores/user";
 
 export interface AuthenticateReturn {
   isSuccessful: boolean;
@@ -27,7 +28,9 @@ interface SendSmsCodeProps {
 export function useBackendAuthApi() {
   const { buildEncodedUcan } = useCommonApi();
   const { userLogout } = useAuthenticationStore();
+  const { isAuthenticated } = useAuthenticationStore();
   const { loadPostData } = usePostStore();
+  const { loadUserProfile } = useUserStore();
 
   async function sendSmsCode({
     phoneNumber,
@@ -116,7 +119,7 @@ export function useBackendAuthApi() {
       if (axios.isAxiosError(e)) {
         if (e.response?.status === 409) {
           return {
-            isSuccessful: false,
+            isSuccessful: true,
             data: null,
             error: "already_logged_in",
           };
@@ -154,7 +157,7 @@ export function useBackendAuthApi() {
     } catch (e) {
       if (axios.isAxiosError(e)) {
         if (e.response?.status === 409) {
-          return { isSuccessful: false, error: "already_logged_in" };
+          return { isSuccessful: true, error: "already_logged_in" };
         } else if (e.response?.status === 429) {
           return { isSuccessful: false, error: "throttled" };
         } else if (e.response?.status === 401) {
@@ -184,22 +187,32 @@ export function useBackendAuthApi() {
     return { data: otpDetails.data };
   }
 
-  function initializeAuthState() {
-    setTimeout(async () => {
+  function loadAuthenticatedModules() {
+    loadUserProfile();
+  }
+
+  async function initializeAuthState() {
+    if (isAuthenticated) {
       const status = await deviceIsLoggedIn();
       if (!status.isSuccessful) {
         if (status.error == "already_logged_in") {
           console.log("user is already logged in");
+          loadAuthenticatedModules();
         } else if (status.error == "throttled") {
           console.log("auth check had been throttled");
         } else {
           // unauthorized
+          console.group("Failed to check user login status");
+          console.log(status.error);
+          loadPostData(false);
           userLogout();
         }
+      } else {
+        loadAuthenticatedModules();
       }
+    }
 
-      loadPostData(false);
-    }, 1000);
+    loadPostData(false);
   }
 
   return {

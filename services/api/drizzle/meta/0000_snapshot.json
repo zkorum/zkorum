@@ -1,5 +1,5 @@
 {
-  "id": "af269501-7708-45c2-8217-ea4b45dc5a7f",
+  "id": "e4288f51-cb3b-49c4-959c-7825aba47f43",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2042,6 +2042,26 @@
           "primaryKey": false,
           "notNull": false
         },
+        "user_name": {
+          "name": "user_name",
+          "type": "varchar(23)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "post_count": {
+          "name": "post_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "comment_count": {
+          "name": "comment_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp (0)",
@@ -2667,6 +2687,16 @@
         "backup",
         "secondary",
         "other"
+      ]
+    },
+    "public.lang": {
+      "name": "lang",
+      "schema": "public",
+      "values": [
+        "en",
+        "es",
+        "fr",
+        "zh"
       ]
     },
     "public.moderation_action": {

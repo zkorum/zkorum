@@ -1,10 +1,9 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  type ApiV1PollSubmitResponsePostRequest,
-  type ApiV1VotingFetchUserVotesForPostSlugIdPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
+  type ApiV1PollSubmitResponsePostRequest,
 } from "src/api";
 import { useCommonApi } from "./common";
 import { useDialog } from "../ui/dialog";
@@ -14,11 +13,9 @@ export function useBackendPollApi() {
 
   const { showMessage } = useDialog();
 
-  async function fetchUserPollResponse(postSlugId: string) {
+  async function fetchUserPollResponse(postSlugIdList: string[]) {
     try {
-      const params: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest = {
-        postSlugId: postSlugId,
-      };
+      const params = postSlugIdList;
 
       const { url, options } =
         await DefaultApiAxiosParamCreator().apiV1PollGetUserPollResponsePost(
@@ -35,11 +32,17 @@ export function useBackendPollApi() {
         },
       });
 
-      return response.data;
+      const userResponseList = response.data;
+      const responseMap = new Map<string, number>();
+      userResponseList.forEach(response => {
+        responseMap.set(response.postSlugId, response.optionChosen);
+      });
+
+      return responseMap;
     } catch (e) {
       console.error(e);
       showMessage("An error had occured", "Failed to submit poll response.");
-      return undefined;
+      return new Map<string, number>();
     }
   }
 

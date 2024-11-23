@@ -1,36 +1,31 @@
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
-  type ApiV1FeedFetchRecentPost200ResponseInner,
+  DefaultApiAxiosParamCreator,
+  DefaultApiFactory,
+  type ApiV1FeedFetchRecentPost200ResponsePostDataListInner,
   type ApiV1FeedFetchRecentPostRequest,
   type ApiV1PostCreatePostRequest,
   type ApiV1PostFetchPostBySlugIdPostRequest,
-  DefaultApiAxiosParamCreator,
-  DefaultApiFactory,
 } from "src/api";
 import { useCommonApi } from "./common";
-import {
-  type DummyPollOptionFormat,
-  type DummyPostDataFormat,
-  type PossibleCommentRankingActions,
-} from "src/stores/post";
 import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
 import axios from "axios";
-import { useBackendPollApi } from "./poll";
+import type { ExtendedPost } from "src/shared/types/zod";
+import type { DummyPollOptionFormat } from "src/stores/post";
 
 export function useBackendPostApi() {
   const { buildEncodedUcan } = useCommonApi();
-  const { fetchUserPollResponse } = useBackendPollApi();
 
   const { showNotifyMessage } = useNotify();
 
   const router = useRouter();
 
-  async function createInternalPostData(
-    postElement: ApiV1FeedFetchRecentPost200ResponseInner,
-    loadUserData: boolean
-  ) {
+  function createInternalPostData(
+    postElement: ApiV1FeedFetchRecentPost200ResponsePostDataListInner
+  ): ExtendedPost {
+
     // Create the polling object
     const pollOptionList: DummyPollOptionFormat[] = [];
     postElement.payload.poll?.forEach((pollOption) => {
@@ -42,67 +37,42 @@ export function useBackendPostApi() {
       pollOptionList.push(internalItem);
     });
 
-    // Load user's polling response
-    let pollResponseOption: number | undefined = undefined;
-    if (postElement.payload.poll && loadUserData) {
-      const pollResponse = await fetchUserPollResponse(
-        postElement.metadata.postSlugId
-      );
-      pollResponseOption = pollResponse?.selectedPollOption;
-    }
+    const parseditem = composeInternalPostList([postElement])[0];
+    return parseditem;
+  };
 
-    const newItem: DummyPostDataFormat = {
-      metadata: {
-        commentCount: postElement.metadata.commentCount,
-        communityId: "",
-        createdAt: postElement.metadata.createdAt,
-        isHidden: false,
-        posterImagePath: "/icons/favicon-128x128.png",
-        posterName: "COMPANY NAME",
-        slugId: postElement.metadata.postSlugId,
-        uid: "",
-      },
-      payload: {
-        body: postElement.payload.body || "",
-        comments: [],
-        poll: {
-          hasPoll: postElement.payload.poll ? true : false,
-          options: pollOptionList,
-        },
-        title: postElement.payload.title,
-      },
-      userInteraction: {
-        pollResponse: {
-          hadResponded: pollResponseOption != undefined,
-          responseIndex: pollResponseOption ? pollResponseOption - 1 : 0,
-        },
-        commentRanking: {
-          assignedRankingItems: [],
-          rankedCommentList: new Map<number, PossibleCommentRankingActions>(),
-        },
-      },
-    };
-
-    return newItem;
-  }
-
-  async function fetchPostBySlugId(
-    postSlugId: string,
-    loadUserPollResponse: boolean
-  ) {
+  async function fetchPostBySlugId(postSlugId: string, loadUserPollResponse: boolean): Promise<ExtendedPost | null> {
     try {
       const params: ApiV1PostFetchPostBySlugIdPostRequest = {
         postSlugId: postSlugId,
+        isAuthenticatedRequest: loadUserPollResponse
       };
-      const response = await DefaultApiFactory(
-        undefined,
-        undefined,
-        api
-      ).apiV1PostFetchPostBySlugIdPost(params, {});
-      return await createInternalPostData(
-        response.data.postData,
-        loadUserPollResponse
-      );
+
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1PostFetchPostBySlugIdPost(params);
+      if (!loadUserPollResponse) {
+        const response = await DefaultApiFactory(
+          undefined,
+          undefined,
+          api
+        ).apiV1PostFetchPostBySlugIdPost(params, {});
+
+        return createInternalPostData(response.data.postData);
+      } else {
+        const encodedUcan = await buildEncodedUcan(url, options);
+        const response = await DefaultApiFactory(
+          undefined,
+          undefined,
+          api
+        ).apiV1PostFetchPostBySlugIdPost(params, {
+          headers: {
+            ...buildAuthorizationHeader(encodedUcan),
+          },
+        });
+
+        return createInternalPostData(response.data.postData);
+      }
+
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
@@ -118,41 +88,44 @@ export function useBackendPostApi() {
     }
   }
 
-  async function fetchRecentPost(
-    lastSlugId: string | undefined,
-    loadUserPollData: boolean
-  ) {
+  async function fetchRecentPost(lastSlugId: string | undefined, loadUserPollData: boolean) {
     try {
       const params: ApiV1FeedFetchRecentPostRequest = {
         showHidden: false,
         lastSlugId: lastSlugId,
+        isAuthenticatedRequest: loadUserPollData
       };
-      const response = await DefaultApiFactory(
-        undefined,
-        undefined,
-        api
-      ).apiV1FeedFetchRecentPost(params, {});
 
-      const dataList: DummyPostDataFormat[] = [];
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1FeedFetchRecentPost(params);
+      if (!loadUserPollData) {
+        const response = await DefaultApiFactory(
+          undefined,
+          undefined,
+          api
+        ).apiV1FeedFetchRecentPost(params, {});
 
-      await Promise.all(
-        response.data.map(async (postElement) => {
-          const dataItem = await createInternalPostData(
-            postElement,
-            loadUserPollData
-          );
-          dataList.push(dataItem);
-        })
-      );
+        return {
+          postDataList: response.data.postDataList,
+          reachedEndOfFeed: response.data.reachedEndOfFeed
+        };
+      } else {
+        const encodedUcan = await buildEncodedUcan(url, options);
+        const response = await DefaultApiFactory(
+          undefined,
+          undefined,
+          api
+        ).apiV1FeedFetchRecentPost(params, {
+          headers: {
+            ...buildAuthorizationHeader(encodedUcan),
+          },
+        });
 
-      dataList.sort(function (a, b) {
-        return (
-          new Date(b.metadata.createdAt).getTime() -
-          new Date(a.metadata.createdAt).getTime()
-        );
-      });
-
-      return dataList;
+        return {
+          postDataList: response.data.postDataList,
+          reachedEndOfFeed: response.data.reachedEndOfFeed
+        };
+      }
     } catch (e) {
       console.error(e);
       showNotifyMessage("Failed to fetch recent posts from the server.");
@@ -192,5 +165,37 @@ export function useBackendPostApi() {
     }
   }
 
-  return { createNewPost, fetchRecentPost, fetchPostBySlugId };
+  function composeInternalPostList(incomingPostList: ApiV1FeedFetchRecentPost200ResponsePostDataListInner[]): ExtendedPost[] {
+    const parsedList: ExtendedPost[] = [];
+
+    incomingPostList.forEach(item => {
+      const newPost: ExtendedPost = {
+        metadata: {
+          authorUserName: item.metadata.authorUserName,
+          commentCount: item.metadata.commentCount,
+          createdAt: new Date(item.metadata.createdAt),
+          lastReactedAt: new Date(item.metadata.lastReactedAt),
+          postSlugId: item.metadata.postSlugId,
+          updatedAt: new Date(item.metadata.updatedAt),
+          authorImagePath: item.metadata.authorImagePath,
+          isHidden: item.metadata.isHidden
+        },
+        payload: {
+          title: item.payload.title,
+          body: item.payload.body,
+          poll: item.payload.poll
+        },
+        interaction: {
+          hasVoted: item.interaction.hasVoted,
+          votedIndex: item.interaction.votedIndex
+        }
+      };
+
+      parsedList.push(newPost);
+    });
+
+    return parsedList;
+  }
+
+  return { createNewPost, fetchRecentPost, fetchPostBySlugId, createInternalPostData, composeInternalPostList };
 }

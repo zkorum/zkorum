@@ -7,7 +7,6 @@ import {
 import {
     authAttemptPhoneTable,
     deviceTable,
-    emailTable,
     phoneTable,
     userTable,
 } from "@/schema.js";
@@ -21,9 +20,11 @@ import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { eq } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { base64 } from "@/shared/common/index.js";
-import parsePhoneNumber, { type CountryCode } from "libphonenumber-js";
+import parsePhoneNumberFromString, {
+    type CountryCode,
+} from "libphonenumber-js";
 import { log } from "@/app.js";
-import { toUnionUndefined } from "@/shared/shared.js";
+import { PEPPER_VERSION, toUnionUndefined } from "@/shared/shared.js";
 
 interface VerifyOtpProps {
     db: PostgresDatabase;
@@ -45,6 +46,7 @@ interface RegisterProps {
     userId: string;
     now: Date;
     sessionExpiry: Date;
+    userName: string;
 }
 
 interface LoginProps {
@@ -206,56 +208,57 @@ export async function verifyOtp({
         const loginSessionExpiry = new Date(now);
         loginSessionExpiry.setFullYear(loginSessionExpiry.getFullYear() + 1000);
         switch (resultOtp[0].authType) {
-            case "register": {
-                await register({
-                    db,
-                    didWrite,
-                    lastTwoDigits: resultOtp[0].lastTwoDigits,
-                    countryCallingCode: resultOtp[0].countryCallingCode,
-                    phoneCountryCode: toUnionUndefined(
-                        resultOtp[0].phoneCountryCode,
-                    ),
-                    phoneHash: resultOtp[0].phoneHash,
-                    pepperVersion: resultOtp[0].pepperVersion,
-                    userAgent: resultOtp[0].userAgent,
-                    userId: resultOtp[0].userId,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
-            case "login_known_device": {
-                await loginKnownDevice({
-                    db,
-                    didWrite,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
-            case "login_new_device": {
-                await loginNewDevice({
-                    db,
-                    didWrite,
-                    userAgent: resultOtp[0].userAgent,
-                    userId: resultOtp[0].userId,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                return {
-                    success: true,
-                    userId: resultOtp[0].userId,
-                    sessionExpiry: loginSessionExpiry,
-                };
-            }
+        case "register": {
+            await register({
+                db,
+                didWrite,
+                lastTwoDigits: resultOtp[0].lastTwoDigits,
+                countryCallingCode: resultOtp[0].countryCallingCode,
+                phoneCountryCode: toUnionUndefined(
+                    resultOtp[0].phoneCountryCode,
+                ),
+                phoneHash: resultOtp[0].phoneHash,
+                pepperVersion: resultOtp[0].pepperVersion,
+                userAgent: resultOtp[0].userAgent,
+                userId: resultOtp[0].userId,
+                now,
+                sessionExpiry: loginSessionExpiry,
+                userName: "TEST USER"
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
+        case "login_known_device": {
+            await loginKnownDevice({
+                db,
+                didWrite,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
+        case "login_new_device": {
+            await loginNewDevice({
+                db,
+                didWrite,
+                userAgent: resultOtp[0].userAgent,
+                userId: resultOtp[0].userId,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            return {
+                success: true,
+                userId: resultOtp[0].userId,
+                sessionExpiry: loginSessionExpiry,
+            };
+        }
         }
     } else {
         await updateCodeGuessAttemptAmount(
@@ -317,6 +320,7 @@ export async function register({
     userId,
     now,
     sessionExpiry,
+    userName
 }: RegisterProps): Promise<void> {
     await db.transaction(async (tx) => {
         await tx
@@ -327,6 +331,7 @@ export async function register({
             })
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(userTable).values({
+            userName: userName,
             id: userId,
         });
         await tx.insert(deviceTable).values({
@@ -405,14 +410,14 @@ export enum AuthenticateType {
     LOGIN_NEW_DEVICE = "login_new_device",
 }
 
-export async function isEmailAvailable(
+export async function isPhoneNumberAvailable(
     db: PostgresDatabase,
-    email: string,
+    phoneHash: string,
 ): Promise<boolean> {
     const result = await db
         .select()
-        .from(emailTable)
-        .where(eq(emailTable.email, email));
+        .from(phoneTable)
+        .where(eq(phoneTable.phoneHash, phoneHash));
     if (result.length === 0) {
         return true;
     } else {
@@ -477,9 +482,16 @@ export async function getAuthenticateType(
     peppers: string[],
     httpErrors: HttpErrors,
 ): Promise<AuthTypeAndUserId> {
-    const isEmailAvailableVal = await isEmailAvailable(
+
+    const phoneHash = await generatePhoneHash({
+        phoneNumber: authenticateBody.phoneNumber,
+        peppers: peppers,
+        pepperVersion: PEPPER_VERSION
+    });
+
+    const isPhoneNumberAvailableVal = await isPhoneNumberAvailable(
         db,
-        authenticateBody.phoneNumber,
+        phoneHash,
     );
     const isDidWriteAvailableVal = await isDidWriteAvailable(db, didWrite);
     const userId = await getOrGenerateUserId(
@@ -487,20 +499,19 @@ export async function getAuthenticateType(
         authenticateBody.phoneNumber,
         peppers,
     );
-    if (isEmailAvailableVal && isDidWriteAvailableVal) {
+    if (isPhoneNumberAvailableVal && isDidWriteAvailableVal) {
         return { type: AuthenticateType.REGISTER, userId: userId };
-    } else if (!isEmailAvailableVal && isDidWriteAvailableVal) {
+    } else if (!isPhoneNumberAvailableVal && isDidWriteAvailableVal) {
         return { type: AuthenticateType.LOGIN_NEW_DEVICE, userId: userId };
-    } else if (!isEmailAvailableVal && !isDidWriteAvailableVal) {
+    } else if (!isPhoneNumberAvailableVal && !isDidWriteAvailableVal) {
         await throwIfAlreadyLoggedIn(db, didWrite, httpErrors);
         return {
             type: AuthenticateType.LOGIN_KNOWN_DEVICE,
             userId: userId,
         };
     } else {
-        // if (isEmailAvailable && !isDidWriteAvailable)
         throw httpErrors.forbidden(
-            `The DID is associated with another email address`,
+            `The DID is associated with another phone number`,
         );
     }
 }
@@ -600,6 +611,26 @@ export async function authenticateAttempt({
 //     return
 // }
 
+interface GeneratePhoneHashProps {
+    phoneNumber: string,
+    peppers: string[],
+    pepperVersion: number
+}
+
+async function generatePhoneHash({
+    phoneNumber,
+    peppers,
+    pepperVersion,
+}: GeneratePhoneHashProps): Promise<string> {
+    const pepper = base64.base64Decode(peppers[pepperVersion]); // we don't rotate peppers yet
+    const hash = await hashWithSalt({
+        value: phoneNumber,
+        salt: pepper,
+    });
+    const phoneHash = base64.base64Encode(hash);
+    return phoneHash;
+}
+
 export async function insertAuthAttemptCode({
     db,
     type,
@@ -619,13 +650,11 @@ export async function insertAuthAttemptCode({
     if (doUseTestCode && doSend) {
         throw httpErrors.badRequest("Test code shall not be sent via sms");
     }
-    const pepperVersion = 0;
-    const pepper = base64.base64Decode(peppers[pepperVersion]); // we don't rotate peppers yet
-    const hash = await hashWithSalt({
-        value: authenticateRequestBody.phoneNumber,
-        salt: pepper,
+    const phoneHash = await generatePhoneHash({
+        phoneNumber: authenticateRequestBody.phoneNumber,
+        peppers: peppers,
+        pepperVersion: PEPPER_VERSION
     });
-    const phoneHash = base64.base64Encode(hash);
     await throttleByPhoneHash(
         db,
         phoneHash,
@@ -648,9 +677,12 @@ export async function insertAuthAttemptCode({
         console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
     const lastTwoDigits = authenticateRequestBody.phoneNumber.slice(-2);
-    const phoneNumber = parsePhoneNumber(authenticateRequestBody.phoneNumber, {
-        defaultCallingCode: authenticateRequestBody.defaultCallingCode,
-    });
+    const phoneNumber = parsePhoneNumberFromString(
+        authenticateRequestBody.phoneNumber,
+        {
+            defaultCallingCode: authenticateRequestBody.defaultCallingCode,
+        },
+    );
     if (!phoneNumber) {
         throw httpErrors.badRequest("Phone number cannot be parsed correctly");
     }
@@ -672,7 +704,7 @@ export async function insertAuthAttemptCode({
         countryCallingCode: countryCallingCode,
         phoneCountryCode: phoneCountryCode,
         phoneHash: phoneHash,
-        pepperVersion: pepperVersion,
+        pepperVersion: PEPPER_VERSION,
         userId: userId,
         userAgent: userAgent,
         code: oneTimeCode,
@@ -735,9 +767,12 @@ export async function updateAuthAttemptCode({
         console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
     const lastTwoDigits = authenticateRequestBody.phoneNumber.slice(-2);
-    const phoneNumber = parsePhoneNumber(authenticateRequestBody.phoneNumber, {
-        defaultCallingCode: authenticateRequestBody.defaultCallingCode,
-    });
+    const phoneNumber = parsePhoneNumberFromString(
+        authenticateRequestBody.phoneNumber,
+        {
+            defaultCallingCode: authenticateRequestBody.defaultCallingCode,
+        },
+    );
     if (!phoneNumber) {
         throw httpErrors.badRequest("Phone number cannot be parsed correctly");
     }

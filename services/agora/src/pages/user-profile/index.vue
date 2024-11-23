@@ -1,25 +1,44 @@
 <template>
   <div>
+
     <div class="topBar">
-      <div class="profileDetails">
-        <div>100 comments <span class="dotPadding">•</span></div>
-        <div>1000 votes <span class="dotPadding">•</span></div>
-        <div>Jan 1, 2024</div>
+
+      <UserAvatar :user-name="profileData.userName" :size="60" />
+
+      <div class="userName">
+        {{ profileData.userName }}
       </div>
+
+      <div class="profileMetadataBar">
+        <div>{{ profileData.postCount }} posts <span class="dotPadding">•</span></div>
+        <div>{{ profileData.commentCount }} comments <span class="dotPadding">•</span></div>
+        <div>{{ profileCreateDateString }}</div>
+      </div>
+
     </div>
 
     <Tabs value="0">
       <TabList>
-        <Tab value="0">Comments</Tab>
-        <Tab value="1">Votes</Tab>
+        <Tab value="0">Posts</Tab>
+        <Tab value="1">Comments</Tab>
       </TabList>
       <TabPanel value="0">
         <div class="tabPanelPadding">
-          <CompactCommentList />
+          <div v-for="postData in profileData.userPostList" :key="postData.metadata.postSlugId">
+            <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
+              :skeleton-mode="false" class="showCursor" :show-author="false" :display-absolute-time="true"
+              @click="openPost(postData.metadata.postSlugId)" />
+
+            <div class="seperator">
+              <q-separator :inset="false" />
+            </div>
+          </div>
         </div>
       </TabPanel>
       <TabPanel value="1">
-        <div class="tabPanelPadding"></div>
+        <div class="tabPanelPadding">
+          <CompactCommentList />
+        </div>
       </TabPanel>
     </Tabs>
   </div>
@@ -31,31 +50,64 @@ import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import TabPanel from "primevue/tabpanel";
 import CompactCommentList from "src/components/profile/CompactCommentList.vue";
+import UserAvatar from "src/components/account/UserAvatar.vue";
+import { useUserStore } from "src/stores/user";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import PostDetails from "src/components/post/PostDetails.vue";
+import { getDateString } from "src/utils/common";
+
+const { profileData } = useUserStore();
+
+const router = useRouter();
+
+const profileCreateDateString = computed(() => {
+  return getDateString(profileData.value.createdAt);
+});
+
+function openPost(postSlugId: string) {
+  router.push({ name: "single-post", params: { postSlugId: postSlugId } });
+}
+
+
 </script>
 
 <style scoped lang="scss">
-.profileDetails {
+.profileMetadataBar {
   display: flex;
   flex-wrap: wrap;
+  gap: 0.3rem;
   color: $color-text-strong;
   font-size: 0.9rem;
 }
 
 .dotPadding {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
 }
 
 .topBar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
   justify-content: space-between;
-  padding-top: 0.5rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding: 0.5rem;
 }
 
 .tabPanelPadding {
   padding-top: 0.5rem;
+}
+
+.userName {
+  font-size: 1.2rem;
+}
+
+.showCursor:hover {
+  cursor: pointer;
+}
+
+.seperator {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 </style>

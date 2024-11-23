@@ -1,6 +1,7 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
+    <!---
     <div v-for="commentItem in commentList" :key="commentItem.postSlugId">
       <ZKHoverEffect :enable-hover="true">
         <RouterLink :to="{
@@ -22,26 +23,18 @@
               <span v-html="commentItem.commentItem.comment"></span>
             </div>
 
-            <!--
-            <CommentActionBar :comment-item="commentItem.commentItem" :is-ranked="commentItem.isRanked"
-              :post-slug-id="commentItem.postSlugId" :ranked-action="commentItem.rankedAction" />
-            -->
           </div>
         </RouterLink>
       </ZKHoverEffect>
 
       <Divider />
     </div>
+    -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { useProfileStore } from "src/stores/profile";
-import Divider from "primevue/divider";
-import { getTimeFromNow } from "src/utils/common";
-import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 
-const { commentList } = useProfileStore();
 </script>
 
 <style scoped lang="scss">

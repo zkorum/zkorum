@@ -2,9 +2,11 @@ import { postContentTable, pollTable, pollResponseContentTable, postTable, organ
 import { toUnionUndefined } from "@/shared/shared.js";
 import type { PostMetadata, ExtendedPostPayload, PollOptionWithResult, ExtendedPost } from "@/shared/types/zod.js";
 import type { HttpErrors } from "@fastify/sensible";
+import { httpErrors } from "@fastify/sensible";
 import { eq, and, desc, SQL } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import sanitizeHtml from "sanitize-html";
+import { getUserPollResponse } from "./poll.js";
 
 export function useCommonPost() {
 
@@ -14,10 +16,12 @@ export function useCommonPost() {
         limit: number;
         where: SQL | undefined;
         enableCompactBody: boolean;
+        fetchPollResponse: boolean;
+        userId?: string;
     }
 
     async function fetchPostItems({
-        db, showHidden, limit, where, enableCompactBody
+        db, showHidden, limit, where, enableCompactBody, fetchPollResponse, userId
     }: FetchPostItemsProps) {
 
         const postItems = await db
@@ -43,7 +47,7 @@ export function useCommonPost() {
                 updatedAt: postTable.updatedAt,
                 lastReactedAt: postTable.lastReactedAt,
                 commentCount: postTable.commentCount,
-                authorName: organisationTable.name,
+                authorName: userTable.userName,
                 authorImagePath: organisationTable.imageUrl,
             })
             .from(postTable)
@@ -86,8 +90,8 @@ export function useCommonPost() {
                     updatedAt: postItem.updatedAt,
                     lastReactedAt: postItem.lastReactedAt,
                     commentCount: postItem.commentCount,
-                    authorName: toUnionUndefined(postItem.authorName),
-                    authorImagePath: toUnionUndefined(postItem.authorImagePath)
+                    authorUserName: postItem.authorName,
+                    authorImagePath: toUnionUndefined(postItem.authorImagePath),
                 }
                 : {
                     postSlugId: postItem.slugId,
@@ -95,7 +99,7 @@ export function useCommonPost() {
                     updatedAt: postItem.updatedAt,
                     lastReactedAt: postItem.lastReactedAt,
                     commentCount: postItem.commentCount,
-                    authorName: toUnionUndefined(postItem.authorName),
+                    authorUserName: postItem.authorName,
                     authorImagePath: toUnionUndefined(postItem.authorImagePath)
                 };
 
@@ -153,11 +157,46 @@ export function useCommonPost() {
             posts.push({
                 metadata: metadata,
                 payload: payload,
+                interaction: {
+                    hasVoted: false,
+                    votedIndex: 0
+                }
             });
         });
 
-        return posts;
+        if (fetchPollResponse) {
+            if (!userId) {
+                throw httpErrors.internalServerError("Missing author ID for fetching poll response");
+            } else {
+                const postSlugIdList: string[] = [];
+                posts.forEach(post => {
+                    postSlugIdList.push(post.metadata.postSlugId);
+                });
 
+                const pollResponses = await getUserPollResponse({
+                    db: db,
+                    authorId: userId,
+                    httpErrors: httpErrors,
+                    postSlugIdList: postSlugIdList
+                });
+
+                const responseMap = new Map<string, number>();
+                pollResponses.forEach(response => {
+                    responseMap.set(response.postSlugId, response.optionChosen);
+                });
+
+                posts.forEach(post => {
+                    const voteIndex = responseMap.get(post.metadata.postSlugId);
+                    post.interaction = {
+                        hasVoted: voteIndex != undefined,
+                        votedIndex: voteIndex ?? 0
+                    }
+                });
+
+            }
+        }
+
+        return posts;
     }
 
     interface IdAndContentId {

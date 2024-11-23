@@ -4,122 +4,69 @@
     <ZKHoverEffect :enable-hover="compactMode">
       <div class="container postPadding">
         <div class="innerContainer">
-          <PostMetadata
-            :poster-name="extendedPostData.metadata.posterName"
-            :poster-image-path="extendedPostData.metadata.posterImagePath"
-            :created-at="extendedPostData.metadata.createdAt"
-            :is-compat-size="true"
-            :skeleton-mode="skeletonMode"
-          />
+          <PostMetadata :poster-user-name="extendedPostData.metadata.authorUserName"
+            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode"
+            :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime" />
 
           <div class="postDiv">
             <div>
-              <div v-if="!skeletonMode" class="titleDiv">
+              <div v-if="!skeletonMode" class="titleDiv"
+                :class="{ extraTitleBottomPadding: extendedPostData.payload.body?.length == 0 }">
                 {{ extendedPostData.payload.title }}
-                <div
-                  :class="{
-                    extraTitleBottomPadding:
-                      extendedPostData.payload.body.length == 0,
-                  }"
-                ></div>
               </div>
 
               <div v-if="skeletonMode" class="titleDiv">
-                <Skeleton
-                  width="100%"
-                  height="4rem"
-                  border-radius="16px"
-                ></Skeleton>
+                <Skeleton width="100%" height="4rem" border-radius="16px"></Skeleton>
               </div>
             </div>
 
-            <div
-              v-if="extendedPostData.payload.body.length > 0"
-              class="bodyDiv"
-            >
-              <span
-                :class="{ truncate: compactMode }"
-                v-html="extendedPostData.payload.body"
-              ></span>
+            <div v-if="extendedPostData.payload.body != undefined && extendedPostData.payload.body.length > 0"
+              class="bodyDiv">
+              <span :class="{ truncate: compactMode }" v-html="extendedPostData.payload.body"></span>
             </div>
           </div>
 
-          <div
-            v-if="extendedPostData.payload.poll.hasPoll"
-            class="pollContainer"
-          >
-            <PollWrapper
-              :poll-options="extendedPostData.payload.poll.options"
-              :post-slug-id="extendedPostData.metadata.slugId"
-              :user-response="extendedPostData.userInteraction.pollResponse"
-            />
+          <div v-if="extendedPostData.payload.poll" class="pollContainer">
+            <PollWrapper :poll-options="extendedPostData.payload.poll"
+              :post-slug-id="extendedPostData.metadata.postSlugId" :user-response="extendedPostData.interaction" />
           </div>
 
           <div class="bottomButtons">
             <div class="leftButtonCluster">
               <div v-if="!skeletonMode">
-                <ZKButton
-                  color="button-background-color"
-                  text-color="black"
-                  :label="
-                    (
-                      extendedPostData.metadata.commentCount +
-                      commentCountOffset
-                    ).toString()
-                  "
-                  icon="mdi-comment-outline"
-                  @click.stop.prevent="clickedCommentButton()"
-                />
+                <ZKButton text-color="color-text-weak" size="0.8rem" :label="(
+                  extendedPostData.metadata.commentCount + commentCountOffset
+                ).toString()
+                  " icon="mdi-comment-outline" @click.stop.prevent="clickedCommentButton()" />
               </div>
               <div v-if="skeletonMode">
-                <Skeleton
-                  width="3rem"
-                  height="2rem"
-                  border-radius="16px"
-                ></Skeleton>
+                <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
               </div>
             </div>
 
             <div>
               <div v-if="!skeletonMode">
-                <ZKButton
-                  color="button-background-color"
-                  text-color="black"
-                  icon="mdi-export-variant"
-                  @click.stop.prevent="shareClicked()"
-                />
+                <ZKButton text-color="color-text-weak" size="0.8rem" icon="mdi-export-variant"
+                  @click.stop.prevent="shareClicked()" />
               </div>
               <div v-if="skeletonMode">
-                <Skeleton
-                  width="3rem"
-                  height="2rem"
-                  border-radius="16px"
-                ></Skeleton>
+                <Skeleton width="3rem" height="2rem" border-radius="16px"></Skeleton>
               </div>
             </div>
           </div>
         </div>
 
         <div v-if="!compactMode" ref="commentSectionRef">
-          <CommentSection
-            :key="commentCountOffset"
-            :post-slug-id="extendedPostData.metadata.slugId"
-            :comment-list="commentList"
-            :comment-ranking="extendedPostData.userInteraction.commentRanking"
-            :initial-comment-slug-id="commentSlugId"
-          />
+          <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.postSlugId"
+            :initial-comment-slug-id="commentSlugId" />
         </div>
       </div>
     </ZKHoverEffect>
 
     <FloatingBottomContainer v-if="!compactMode">
-      <CommentComposer
-        :show-controls="focusCommentElement"
-        :post-slug-id="extendedPostData.metadata.slugId"
-        @cancel-clicked="cancelledCommentComposor()"
-        @submitted-comment="submittedComment()"
-        @editor-focused="focusCommentElement = true"
-      />
+      <CommentComposer :show-controls="focusCommentElement" :post-slug-id="extendedPostData.metadata.postSlugId"
+        @cancel-clicked="cancelledCommentComposor()" @submitted-comment="submittedComment()"
+        @editor-focused="focusCommentElement = true" />
     </FloatingBottomContainer>
   </div>
 </template>
@@ -131,25 +78,26 @@ import PostMetadata from "./views/PostMetadata.vue";
 import PollWrapper from "../poll/PollWrapper.vue";
 import FloatingBottomContainer from "../navigation/FloatingBottomContainer.vue";
 import CommentComposer from "./views/CommentComposer.vue";
-import { type DummyPostDataFormat, usePostStore } from "src/stores/post";
+import { usePostStore } from "src/stores/post";
 import { onMounted, ref } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
 import { useRoute, useRouter } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 import Skeleton from "primevue/skeleton";
+import type { ExtendedPost } from "src/shared/types/zod";
 
 const props = defineProps<{
-  extendedPostData: DummyPostDataFormat;
+  extendedPostData: ExtendedPost;
   compactMode: boolean;
   skeletonMode: boolean;
+  showAuthor: boolean;
+  displayAbsoluteTime: boolean;
 }>();
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 
 const commentCountOffset = ref(0);
-
-const commentList = ref(props.extendedPostData.payload.comments);
 
 const commentSectionRef = ref<HTMLElement | null>(null);
 
@@ -197,7 +145,7 @@ function clickedCommentButton() {
   if (route.name != "single-post") {
     router.push({
       name: "single-post",
-      params: { postSlugId: props.extendedPostData.metadata.slugId },
+      params: { postSlugId: props.extendedPostData.metadata.postSlugId },
       query: { action: "comment" },
     });
   } else {
@@ -207,7 +155,7 @@ function clickedCommentButton() {
 
 function shareClicked() {
   const sharePostUrl =
-    window.location.origin + "/post/" + props.extendedPostData.metadata.slugId;
+    window.location.origin + "/post/" + props.extendedPostData.metadata.postSlugId;
   webShare.share(
     "Agora - " + props.extendedPostData.payload.title,
     sharePostUrl
@@ -227,12 +175,11 @@ function shareClicked() {
 }
 
 .titleDiv {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: 1rem;
 }
 
 .bodyDiv {
-  font-size: 1rem;
+  font-size: 0.9rem;
   padding-bottom: 1rem;
   font-weight: 400;
 }
@@ -279,6 +226,6 @@ function shareClicked() {
 }
 
 .extraTitleBottomPadding {
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 </style>

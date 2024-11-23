@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { validateDidKey, validateDidWeb } from "../did/util.js";
-import { MAX_LENGTH_TITLE, MAX_LENGTH_OPTION } from "../shared.js";
+import {
+    MAX_LENGTH_TITLE,
+    MAX_LENGTH_OPTION,
+    MIN_LENGTH_USERNAME,
+    MAX_LENGTH_USERNAME,
+} from "../shared.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 
 export const zodPhoneNumber = z
@@ -51,22 +56,26 @@ export const zodDevices = z.array(zodDevice); // list of didWrite of all the dev
 export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).min(1);
 export const zodPostBody = z.string().optional(); // Cannot specify length due to HTML tags
 export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).min(1);
-export const zodPollOptionWithResult = z
-    .object({
-        optionNumber: z.number().int().min(1).max(6),
-        optionTitle: zodPollOptionTitle,
-        numResponses: z.number().int().nonnegative(),
-    })
-    .strict();
+export const zodPollOptionWithResult = z.object({
+    optionNumber: z.number().int().min(1).max(6),
+    optionTitle: zodPollOptionTitle,
+    numResponses: z.number().int().nonnegative(),
+}).strict();
+export const zodPollList = z.array(zodPollOptionWithResult).optional();
 export const zodPostDataWithResult = z
     .object({
         title: zodPostTitle,
         body: zodPostBody,
-        poll: z.array(zodPollOptionWithResult).optional(),
+        poll: zodPollList
     })
     .strict();
+export const zodPollResponse = z.object({
+    postSlugId: z.string(),
+    optionChosen: z.number().gte(0)
+}).strict();
 export const zodSlugId = z.string().max(10);
 export const zodCommentCount = z.number().int().nonnegative();
+export const zodUserName = z.string().max(MAX_LENGTH_USERNAME).min(MIN_LENGTH_USERNAME);
 export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,
@@ -75,33 +84,49 @@ export const zodPostMetadata = z
         updatedAt: z.date(),
         lastReactedAt: z.date(),
         commentCount: zodCommentCount,
-        authorName: z.string().optional(),
-        authorImagePath: z.string().url({ message: "Invalid url" }).optional(), // TODO: check if it accepts path segments for local dev
+        authorUserName: zodUserName,
+        authorImagePath: z.string().url({ message: "Invalid url" }).optional() // TODO: check if it accepts path segments for local dev
     })
     .strict();
 export const zodCommentContent = z.string().min(1); // Cannot specify the max length here due to the HTML tags
-export const zodCommentItem = z
-    .object({
-        commentSlugId: zodSlugId,
-        createdAt: z.date(),
-        updatedAt: z.date(),
-        comment: zodCommentContent,
-        numLikes: z.number().int().nonnegative(),
-        numDislikes: z.number().int().nonnegative(),
-    })
-    .strict();
+export const zodCommentItem = z.object({
+    commentSlugId: zodSlugId,
+    createdAt: z.date(),
+    updatedAt: z.date(),
+    comment: zodCommentContent,
+    numLikes: z.number().int().nonnegative(),
+    numDislikes: z.number().int().nonnegative(),
+    userName: zodUserName,
+}).strict();
+export const zodUserInteraction = z.object({
+    hasVoted: z.boolean(),
+    votedIndex: z.number().int().nonnegative()
+}).strict();
 export const zodExtendedPostData = z
     .object({
         metadata: zodPostMetadata,
         payload: zodPostDataWithResult,
+        interaction: zodUserInteraction
     })
     .strict();
 export const zodVotingOption = z.enum(["like", "dislike"]);
 export const zodVotingAction = z.enum(["like", "dislike", "cancel"]);
+export const zodLanguageNameOption = z.enum(["English", "Spanish", "Chinese"]);
+export interface LanguageObject {
+    name: string;
+    lang: string;
+}
+export const languageObjectList: LanguageObject[] = [
+    { lang: "en", name: "English" },
+    { lang: "es", name: "Spanish" },
+    { lang: "fr", name: "French" },
+    { lang: "zh", name: "Chinese" },
+];
 
 export type Device = z.infer<typeof zodDevice>;
 export type Devices = z.infer<typeof zodDevices>;
 export type ExtendedPost = z.infer<typeof zodExtendedPostData>;
+export type UserInteraction = z.infer<typeof zodUserInteraction>;
 export type PostMetadata = z.infer<typeof zodPostMetadata>;
 export type ExtendedPostPayload = z.infer<typeof zodPostDataWithResult>;
 export type PollOptionWithResult = z.infer<typeof zodPollOptionWithResult>;
@@ -110,3 +135,4 @@ export type CommentItem = z.infer<typeof zodCommentItem>;
 export type SlugId = z.infer<typeof zodSlugId>;
 export type VotingOption = z.infer<typeof zodVotingOption>;
 export type VotingAction = z.infer<typeof zodVotingAction>;
+export type PollList = z.infer<typeof zodPollList>;

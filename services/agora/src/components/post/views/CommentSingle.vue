@@ -3,7 +3,18 @@
   <div>
     <div class="contentLayout">
       <div class="metadata">
-        {{ getTimeFromNow(new Date(commentItem.createdAt)) }}
+        <UserAvatar :user-name="commentItem.userName" :size="40" class="avatarIcon" />
+
+        <div class="userNameTime">
+          <div>
+            {{ commentItem.userName }}
+          </div>
+
+          <div>
+            {{ formatTimeAgo(new Date(commentItem.createdAt)) }}
+          </div>
+        </div>
+
       </div>
 
       <div>
@@ -12,12 +23,8 @@
         </div>
 
         <div class="actionBarPaddings">
-          <CommentActionBar
-            :comment-item="commentItem"
-            :post-slug-id="postSlugId"
-            :ranked-action="rankedAction"
-            :comment-slug-id-liked-map="commentSlugIdLikedMap"
-          />
+          <CommentActionBar :comment-item="commentItem" :post-slug-id="postSlugId"
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
         </div>
       </div>
     </div>
@@ -25,15 +32,14 @@
 </template>
 
 <script setup lang="ts">
-import { type PossibleCommentRankingActions } from "src/stores/post";
-import { getTimeFromNow } from "src/utils/common";
 import CommentActionBar from "./CommentActionBar.vue";
-import { type CommentItem } from "src/shared/types/zod";
+import UserAvatar from "src/components/account/UserAvatar.vue";
+import { formatTimeAgo } from "@vueuse/core";
+import type { CommentItem } from "src/shared/types/zod";
 
 defineProps<{
   commentItem: CommentItem;
   postSlugId: string;
-  rankedAction: PossibleCommentRankingActions;
   highlight: boolean;
   commentSlugIdLikedMap: Map<string, "like" | "dislike">;
 }>();
@@ -49,7 +55,7 @@ defineProps<{
 
 .metadata {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   align-items: center;
   font-size: 0.9rem;
   color: $color-text-weak;
@@ -63,5 +69,15 @@ defineProps<{
   background-color: #ccfbf1;
   border-radius: 15px;
   padding: 0.5rem;
+}
+
+.avatarIcon {
+  margin-right: 0.5rem;
+}
+
+.userNameTime {
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
 }
 </style>

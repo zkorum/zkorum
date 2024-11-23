@@ -3,12 +3,15 @@ import type { ExtendedPost } from "@/shared/types/zod.js";
 import { and, eq, lt } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
+import type { FetchFeedResponse } from "@/shared/types/dto.js";
 
 interface FetchFeedProps {
     db: PostgresDatabase;
     lastSlugId: string | undefined;
     limit?: number;
     showHidden?: boolean;
+    fetchPollResponse: boolean;
+    userId?: string;
 }
 
 export async function fetchFeed({
@@ -16,9 +19,11 @@ export async function fetchFeed({
     lastSlugId,
     limit,
     showHidden,
-}: FetchFeedProps): Promise<ExtendedPost[]> {
+    fetchPollResponse,
+    userId
+}: FetchFeedProps): Promise<FetchFeedResponse> {
     const defaultLimit = 10;
-    const actualLimit = limit ?? defaultLimit;
+    const targetLimit = limit ?? defaultLimit;
 
     let lastCreatedAt = new Date();
 
@@ -44,10 +49,15 @@ export async function fetchFeed({
     const posts: ExtendedPost[] = await fetchPostItems({
         db: db,
         showHidden: showHidden ?? false,
-        limit: actualLimit,
+        limit: targetLimit + 1,
         where: whereClause,
-        enableCompactBody: true
+        enableCompactBody: true,
+        fetchPollResponse: fetchPollResponse,
+        userId: userId
     });
 
-    return posts;
+    return {
+        postDataList: posts.length == targetLimit ? posts.splice(-1) : posts,
+        reachedEndOfFeed: posts.length == targetLimit ? false : true,
+    };
 }
