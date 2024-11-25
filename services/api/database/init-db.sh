@@ -5,10 +5,10 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   CREATE USER readwritedelete;
   CREATE USER readwrite;
   CREATE USER read;
-  REVOKE CONNECT ON DATABASE zkorum FROM PUBLIC;
-  GRANT CONNECT ON DATABASE zkorum TO readwritedelete;
-  GRANT CONNECT ON DATABASE zkorum TO readwrite;
-  GRANT CONNECT ON DATABASE zkorum TO read;
+  REVOKE CONNECT ON DATABASE agora FROM PUBLIC;
+  GRANT CONNECT ON DATABASE agora TO readwritedelete;
+  GRANT CONNECT ON DATABASE agora TO readwrite;
+  GRANT CONNECT ON DATABASE agora TO read;
   ALTER DEFAULT PRIVILEGES 
     FOR USER readwritedelete
     IN SCHEMA public

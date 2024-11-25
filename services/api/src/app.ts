@@ -3,7 +3,7 @@ import { z } from "zod";
 import Fastify from "fastify";
 import { zodDidWeb } from "./shared/types/zod.js";
 
-export type Environment = "development" | "production" | "staging1";
+export type Environment = "development" | "production" | "staging";
 
 const defaultPort = 8080;
 
@@ -19,23 +19,25 @@ const configSchema = z.object({
     CONNECTION_STRING: z.string(),
     PORT: z.coerce.number().int().nonnegative().default(defaultPort),
     NODE_ENV: z
-        .enum(["development", "staging1", "production"])
+        .enum(["development", "staging", "production"])
         .default("development"),
     MODE: z.enum(["web", "capacitor"]).default("web"),
     SERVER_URL_DEV: z
         .string()
         .url()
         .default(`http://localhost:${defaultPort.toString()}`),
-    SERVER_URL_STAGING1: z
+    SERVER_URL_STAGING: z
         .string()
         .url()
-        .default(`https://staging1.zkorum.com`),
-    SERVER_URL_PROD: z.string().url().default(`https://zkorum.com`),
+        .default(`https://staging.agoracitizen.network`),
+    SERVER_URL_PROD: z.string().url().default(`https://agoracitizen.network`),
     SERVER_DID_DEV: zodDidWeb.default(
         `did:web:localhost%3A${defaultPort.toString()}`,
     ),
-    SERVER_DID_STAGING1: zodDidWeb.default(`did:web:staging1.zkorum.com`),
-    SERVER_DID_PROD: zodDidWeb.default(`did:web:zkorum.com`),
+    SERVER_DID_STAGING: zodDidWeb.default(
+        `did:web:staging.agoracitizen.network`,
+    ),
+    SERVER_DID_PROD: zodDidWeb.default(`did:web:agoracitizen.network`),
     EMAIL_OTP_MAX_ATTEMPT_AMOUNT: z.number().int().min(1).max(5).default(3),
     THROTTLE_EMAIL_MINUTES_INTERVAL: z.number().int().min(3).default(3),
     MINUTES_BEFORE_EMAIL_OTP_EXPIRY: z
@@ -73,7 +75,7 @@ function envToLogger(env: Environment) {
                 },
             };
         case "production":
-        case "staging1":
+        case "staging":
             return true;
     }
 }

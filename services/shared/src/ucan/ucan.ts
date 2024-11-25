@@ -9,7 +9,7 @@ export function httpUrlToResourcePointer(url: URL | string): {
         urlVal = new URL(url);
     }
     const scheme = "https";
-    const hierPart = `//zkorum.com${urlVal.pathname}`;
+    const hierPart = `//agoracitizen.network${urlVal.pathname}`;
     return { scheme, hierPart };
 }
 
@@ -18,7 +18,7 @@ export function httpPathnameToResourcePointer(pathname: string): {
     hierPart: string;
 } {
     const scheme = "https";
-    const hierPart = `//zkorum.com${pathname}`;
+    const hierPart = `//agoracitizen.network${pathname}`;
     return { scheme, hierPart };
 }
 

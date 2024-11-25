@@ -141,15 +141,15 @@ interface OptionsVerifyUcan {
 const SERVER_URL =
     config.NODE_ENV === "production"
         ? config.SERVER_URL_PROD
-        : config.NODE_ENV === "staging1"
-        ? config.SERVER_URL_STAGING1
+        : config.NODE_ENV === "staging"
+        ? config.SERVER_URL_STAGING
         : config.SERVER_URL_DEV;
 
 const SERVER_DID =
     config.NODE_ENV === "production"
         ? config.SERVER_DID_PROD
-        : config.NODE_ENV === "staging1"
-        ? config.SERVER_DID_STAGING1
+        : config.NODE_ENV === "staging"
+        ? config.SERVER_DID_STAGING
         : config.SERVER_DID_DEV;
 
 function getAuthHeader(request: FastifyRequest) {

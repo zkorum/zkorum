@@ -1,12 +1,12 @@
 version: "3.8"
 services:
   postgres:
-    container_name: zkorum_postgres
+    container_name: agora_postgres
     image: postgres:16
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: CHANGEME
-      POSTGRES_DB: zkorum
+      POSTGRES_DB: agora
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
@@ -15,7 +15,7 @@ services:
       - "5432"
     restart: unless-stopped
   pgadmin:
-    container_name: zkorum_pgadmin
+    container_name: agora_pgadmin
     image: dpage/pgadmin4:latest
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@zkorum.com
@@ -25,36 +25,26 @@ services:
     expose:
       - "80"
     restart: unless-stopped
-  back:
-    container_name: zkorum_back
-    image: zkorum/back:0.4.0
+  api:
+    container_name: agora_api
+    image: zkorum/agora-api:0.1.0
     environment:
-      CONNECTION_STRING: "postgres://postgres:CHANGEME@postgres:5432/zkorum"
-      AWS_ACCESS_KEY_ID: "CHANGEME"
-      AWS_SECRET_ACCESS_KEY: "CHANGEME"
-      PK_VERSION: 2
-      PRIVATE_KEY_FILEPATH: /run/secrets/iss_sk_v2
+      CONNECTION_STRING: "postgres://postgres:CHANGEME@postgres:5432/agora"
+      CORS_ORIGIN_LIST: "http://localhost:9000,http://127.0.0.1:9000,http://172.19.0.1:9000,http://192.168.1.22:9000"
+      PEPPERS: "fmgXvsChQsx9fAlq0DPiVg=="
       NODE_ENV: "production"
-    secrets:
-      - iss_sk_v2
     expose:
       - "8080"
     restart: unless-stopped
-  front:
-    container_name: zkorum_front
-    image: zkorum/front:0.4.5
-    expose:
-      - "80"
-    restart: unless-stopped
-  landing-page:
-    container_name: zkorum_landing-page
-    image: zkorum/landing-page:1.0.0
+  agora:
+    container_name: agora_app
+    image: zkorum/agora-app:0.1.0
     expose:
       - "80"
     restart: unless-stopped
   nginx:
     image: nginx:stable-alpine
-    container_name: zkorum_nginx
+    container_name: agora_nginx
     restart: unless-stopped
     ports:
       - 80:80
@@ -66,7 +56,7 @@ services:
       - ./certbot/conf/:/etc/nginx/ssl/:ro
   certbot:
     image: certbot/certbot:latest
-    command: certonly --webroot --webroot-path=/var/www/certbot/ --email admin@zkorum.com --agree-tos --no-eff-email -d zkorum.com
+    command: certonly --webroot --webroot-path=/var/www/certbot/ --email admin@zkorum.com --agree-tos --no-eff-email -d agoracitizen.network
     volumes:
       - ./certbot/www/:/var/www/certbot/:rw
       - ./certbot/conf/:/etc/letsencrypt/:rw
@@ -75,7 +65,3 @@ services:
 volumes:
   postgres:
   pgadmin:
-
-secrets:
-  iss_sk_v2:
-    external: true
