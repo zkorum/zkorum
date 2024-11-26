@@ -58,7 +58,19 @@ export function useUserStore() {
     return { reachedEndOfFeed: userPosts.length == 0 };
   }
 
-  return { loadUserProfile, loadMoreUserPosts, profileData };
+  async function loadMoreUserComments() {
+    let lastCommentSlugId: undefined | string = undefined;
+    if (profileData.value.userPostList.length > 0) {
+      lastCommentSlugId = profileData.value.userCommentList.at(-1).commentItem.commentSlugId;
+    }
+
+    const userComments = await fetchUserComments(lastCommentSlugId);
+    profileData.value.userCommentList.push(...userComments);
+
+    return { reachedEndOfFeed: userComments.length == 0 };
+  }
+
+  return { loadUserProfile, loadMoreUserPosts, loadMoreUserComments, profileData };
 
 }
 

@@ -1,22 +1,21 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
-    <!---
-    <div v-for="commentItem in commentList" :key="commentItem.postSlugId">
+    <div v-for="commentItem in profileData.userCommentList" :key="commentItem.commentItem.commentSlugId">
       <ZKHoverEffect :enable-hover="true">
         <RouterLink :to="{
           name: 'single-post',
-          params: { postSlugId: commentItem.postSlugId },
-          query: { commentSlugId: 'comment-slug-id-1' },
+          params: { postSlugId: commentItem.postData.metadata.postSlugId },
+          query: { commentSlugId: commentItem.commentItem.commentSlugId },
         }">
           <div class="container">
             <div class="postTitle">
-              {{ commentItem.title }}
+              {{ commentItem.postData.payload.title }}
             </div>
 
             <div class="commentMetadata">
-              Commented
-              {{ getTimeFromNow(commentItem.createdAt) }} ago
+              <span :style="{ fontWeight: 'bold' }">{{ commentItem.commentItem.userName }}</span> commented
+              {{ useTimeAgo(commentItem.commentItem.createdAt) }}
             </div>
 
             <div class="commentBody">
@@ -29,11 +28,38 @@
 
       <Divider />
     </div>
-    -->
+
+    <div ref="bottomOfPostDiv">
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
+import { useElementVisibility, useTimeAgo } from "@vueuse/core";
+import { useUserStore } from "src/stores/user";
+import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
+import Divider from "primevue/divider";
+import { ref, watch } from "vue";
+
+const { profileData, loadMoreUserComments } = useUserStore();
+
+const endOfFeed = ref(false);
+let isExpandingPosts = false;
+
+const bottomOfPostDiv = ref(null);
+const targetIsVisible = useElementVisibility(bottomOfPostDiv);
+
+watch(targetIsVisible, async () => {
+  if (targetIsVisible.value && !isExpandingPosts && !endOfFeed.value) {
+    isExpandingPosts = true;
+
+    const response = await loadMoreUserComments();
+    endOfFeed.value = response.reachedEndOfFeed;
+
+    isExpandingPosts = false;
+  }
+});
 
 </script>
 
@@ -43,7 +69,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 
 .container {

@@ -5,12 +5,12 @@
         :skeleton-mode="false" class="showCursor" :show-author="false" :display-absolute-time="true"
         @click="openPost(postData.metadata.postSlugId)" />
 
-      <div class="seperator">
+      <div>
         <q-separator :inset="false" />
       </div>
     </div>
 
-    <div ref="bottomOfPostPageDiv">
+    <div ref="bottomOfPostDiv">
     </div>
   </div>
 </template>
@@ -29,9 +29,8 @@ const router = useRouter();
 const endOfFeed = ref(false);
 let isExpandingPosts = false;
 
-const bottomOfPostPageDiv = ref(null);
-const targetIsVisible = useElementVisibility(bottomOfPostPageDiv);
-
+const bottomOfPostDiv = ref(null);
+const targetIsVisible = useElementVisibility(bottomOfPostDiv);
 
 watch(targetIsVisible, async () => {
   if (targetIsVisible.value && !isExpandingPosts && !endOfFeed.value) {

@@ -19,7 +19,7 @@ export async function getCommentSlugIdLastCreatedAt({ lastSlugId, db }: GetComme
 
     if (lastSlugId) {
         const selectResponse = await db
-            .select({ createdAt: postTable.createdAt })
+            .select({ createdAt: commentTable.createdAt })
             .from(commentTable)
             .where(eq(commentTable.slugId, lastSlugId))
         if (selectResponse.length == 1) {
