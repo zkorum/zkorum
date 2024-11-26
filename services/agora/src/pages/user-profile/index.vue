@@ -17,21 +17,16 @@
 
     </div>
 
-    <Tabs value="0">
+    <Tabs :value="currentTab">
       <TabList>
-        <Tab value="0">Posts</Tab>
-        <Tab value="1">Comments</Tab>
+        <RouterLink :to="{ name: 'user-profile-posts' }">
+          <Tab :value="0">Posts</Tab>
+        </RouterLink>
+        <RouterLink :to="{ name: 'user-profile-comments' }">
+          <Tab :value="1">Comments</Tab>
+        </RouterLink>
       </TabList>
-      <TabPanel value="0">
-        <div class="tabPanelPadding">
-          <UserPostList />
-        </div>
-      </TabPanel>
-      <TabPanel value="1">
-        <div class="tabPanelPadding">
-          <CompactCommentList />
-        </div>
-      </TabPanel>
+      <router-view />
     </Tabs>
   </div>
 </template>
@@ -40,19 +35,35 @@
 import Tabs from "primevue/tabs";
 import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
-import TabPanel from "primevue/tabpanel";
-import CompactCommentList from "src/components/profile/UserCommentList.vue";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { useUserStore } from "src/stores/user";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { getDateString } from "src/utils/common";
-import UserPostList from "src/components/profile/UserPostList.vue";
+import { useRoute } from "vue-router";
 
 const { profileData } = useUserStore();
 
 const profileCreateDateString = computed(() => {
   return getDateString(profileData.value.createdAt);
 });
+
+const currentTab = ref(0);
+
+const route = useRoute();
+
+applyCurrentTab();
+
+watch(route, () => {
+  applyCurrentTab();
+});
+
+function applyCurrentTab() {
+  if (route.name == "user-profile-posts") {
+    currentTab.value = 0;
+  } else {
+    currentTab.value = 1;
+  }
+}
 
 </script>
 
