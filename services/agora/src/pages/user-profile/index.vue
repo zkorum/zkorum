@@ -33,6 +33,9 @@
               <q-separator :inset="false" />
             </div>
           </div>
+
+          <div ref="bottomOfPostPageDiv">
+          </div>
         </div>
       </TabPanel>
       <TabPanel value="1">
@@ -52,17 +55,35 @@ import TabPanel from "primevue/tabpanel";
 import CompactCommentList from "src/components/profile/CompactCommentList.vue";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { useUserStore } from "src/stores/user";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import PostDetails from "src/components/post/PostDetails.vue";
 import { getDateString } from "src/utils/common";
+import { useElementVisibility } from "@vueuse/core";
 
-const { profileData } = useUserStore();
+const { profileData, loadMoreUserPosts } = useUserStore();
 
 const router = useRouter();
 
+const bottomOfPostPageDiv = ref(null);
+const targetIsVisible = useElementVisibility(bottomOfPostPageDiv);
+
+const endOfFeed = ref(false);
+let isExpandingPosts = false;
+
 const profileCreateDateString = computed(() => {
   return getDateString(profileData.value.createdAt);
+});
+
+watch(targetIsVisible, async () => {
+  if (targetIsVisible.value && !isExpandingPosts && !endOfFeed.value) {
+    isExpandingPosts = true;
+
+    const response = await loadMoreUserPosts();
+    endOfFeed.value = response.reachedEndOfFeed;
+
+    isExpandingPosts = false;
+  }
 });
 
 function openPost(postSlugId: string) {

@@ -33,7 +33,7 @@ import {
 } from "./service/comment.js";
 import { getUserPollResponse, submitPollResponse } from "./service/poll.js";
 import { castVoteForCommentSlugId, getUserVotesForPostSlugId } from "./service/voting.js";
-import { getUserProfile } from "./service/user.js";
+import { getUserPosts, getUserProfile } from "./service/user.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -440,6 +440,34 @@ server.after(() => {
             },
         });
 
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/user/fetch-user-posts`,
+            schema: {
+                body: Dto.fetchUserPostsRequest,
+                response: {
+                    200: Dto.fetchUserPostsResponse,
+                },
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    return await getUserPosts({
+                        db: db,
+                        userId: status.userId,
+                        lastPostSlugId: request.body.lastPostSlugId
+                    });
+                }
+            },
+        });
+    
     server
         .withTypeProvider<ZodTypeProvider>()
         .route({

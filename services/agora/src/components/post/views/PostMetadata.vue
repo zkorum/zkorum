@@ -21,7 +21,7 @@
             <div v-if="!skeletonMode">
               <div v-if="displayAbsoluteTime">
                 <Tag>
-                  {{ getDateString(new Date(createdAt)) }}
+                  {{ createdAt }}
                 </Tag>
               </div>
               <div v-if="!displayAbsoluteTime">
@@ -46,7 +46,6 @@
 </template>
 
 <script setup lang="ts">
-import { getDateString } from "src/utils/common";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useBottomSheet } from "src/utils/ui/bottomSheet";
 import Skeleton from "primevue/skeleton";
@@ -56,7 +55,7 @@ import { formatTimeAgo } from "@vueuse/core";
 
 defineProps<{
   posterUserName: string;
-  createdAt: Date;
+  createdAt: string;
   skeletonMode: boolean;
   showAuthor: boolean;
   displayAbsoluteTime: boolean;

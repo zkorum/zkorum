@@ -110,6 +110,12 @@ export const zodExtendedPostData = z
         interaction: zodUserInteraction
     })
     .strict();
+export const zodExtendedCommentData = z
+    .object({
+        postData: zodExtendedPostData,
+        commentItem: zodCommentItem
+    })
+    .strict();
 export const zodVotingOption = z.enum(["like", "dislike"]);
 export const zodVotingAction = z.enum(["like", "dislike", "cancel"]);
 export const zodLanguageNameOption = z.enum(["English", "Spanish", "Chinese"]);

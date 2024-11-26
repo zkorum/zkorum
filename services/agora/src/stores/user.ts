@@ -4,7 +4,7 @@ import type { ExtendedPost } from "src/shared/types/zod";
 
 export function useUserStore() {
 
-  const { fetchUserProfile } = useBackendUserApi();
+  const { fetchUserProfile, fetchUserPosts } = useBackendUserApi();
 
   interface UserProfile {
     commentCount: number;
@@ -25,19 +25,32 @@ export function useUserStore() {
   const profileData = useStorage("user-profile-data", emptyProfile);
 
   async function loadUserProfile() {
-    const response = await fetchUserProfile();
-    if (response) {
+    const userProfile = await fetchUserProfile();
+    if (userProfile) {
+      const userPosts = await fetchUserPosts(undefined);
       profileData.value = {
-        commentCount: response.commentCount,
-        postCount: response.postCount,
-        createdAt: response.createdAt,
-        userName: response.userName,
-        userPostList: response.userPostList
+        commentCount: userProfile.commentCount,
+        postCount: userProfile.postCount,
+        createdAt: userProfile.createdAt,
+        userName: userProfile.userName,
+        userPostList: userPosts
       };
     }
   }
 
-  return { loadUserProfile, profileData };
+  async function loadMoreUserPosts() {
+    let lastPostSlugId: undefined | string = undefined;
+    if (profileData.value.userPostList.length > 0) {
+      lastPostSlugId = profileData.value.userPostList.at(-1).metadata.postSlugId;
+    }
+
+    const userPosts = await fetchUserPosts(lastPostSlugId);
+    profileData.value.userPostList.push(...userPosts);
+
+    return { reachedEndOfFeed: userPosts.length == 0 };
+  }
+
+  return { loadUserProfile, loadMoreUserPosts, profileData };
 
 }
 
