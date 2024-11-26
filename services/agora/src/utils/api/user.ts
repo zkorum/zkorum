@@ -1,5 +1,5 @@
 import { DefaultApiAxiosParamCreator, DefaultApiFactory, type ApiV1UserFetchUserCommentsPostRequest, type ApiV1UserFetchUserPostsPostRequest } from "src/api";
-import { api } from "src/boot/axios";
+import { api } from "boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useCommonApi } from "./common";
 import type { ExtendedComment, ExtendedPost } from "src/shared/types/zod";
@@ -27,19 +27,51 @@ export function useBackendUserApi() {
         },
       });
 
+<<<<<<< HEAD
+||||||| parent of 31f7843 (chore: prepare for staging deployment)
+      const internalPostList: ExtendedPost[] = response.data.userPostList.map((postElement) => {
+        const dataItem: ExtendedPost = createInternalPostData(postElement);
+        return dataItem;
+      });
+
+=======
+      const internalPostList: ExtendedPost[] = response.data.userPostList.map(
+        (postElement) => {
+          const dataItem: ExtendedPost = createInternalPostData(postElement);
+          return dataItem;
+        }
+      );
+
+>>>>>>> 31f7843 (chore: prepare for staging deployment)
       return {
         commentCount: response.data.commentCount,
         postCount: response.data.postCount,
         createdAt: new Date(response.data.createdAt),
         userName: response.data.userName,
+<<<<<<< HEAD
+||||||| parent of 31f7843 (chore: prepare for staging deployment)
+        userPostList: internalPostList
+=======
+        userPostList: internalPostList,
+>>>>>>> 31f7843 (chore: prepare for staging deployment)
       };
     } catch (e) {
       console.error(e);
+<<<<<<< HEAD
       showNotifyMessage("Failed to fetch user's personal profile.");
+||||||| parent of 31f7843 (chore: prepare for staging deployment)
+      showMessage("An error had occured", "Failed to fetch user's personal votes.");
+=======
+      showMessage(
+        "An error had occured",
+        "Failed to fetch user's personal votes."
+      );
+>>>>>>> 31f7843 (chore: prepare for staging deployment)
       return undefined;
     }
   }
 
+<<<<<<< HEAD
   async function fetchUserPosts(lastPostSlugId: string | undefined): Promise<ExtendedPost[]> {
     try {
       const params: ApiV1UserFetchUserPostsPostRequest = {
@@ -118,4 +150,10 @@ export function useBackendUserApi() {
   }
 
   return { fetchUserProfile, fetchUserPosts, fetchUserComments };
+||||||| parent of 31f7843 (chore: prepare for staging deployment)
+
+  return { fetchUserProfile };
+=======
+  return { fetchUserProfile };
+>>>>>>> 31f7843 (chore: prepare for staging deployment)
 }

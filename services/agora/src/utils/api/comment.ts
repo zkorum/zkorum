@@ -1,4 +1,4 @@
-import { api } from "src/boot/axios";
+import { api } from "boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
   type ApiV1CommentCreatePostRequest,
@@ -36,7 +36,7 @@ export function useBackendCommentApi() {
           numDislikes: item.numDislikes,
           numLikes: item.numLikes,
           updatedAt: new Date(item.updatedAt),
-          userName: item.userName
+          userName: item.userName,
         });
       });
 

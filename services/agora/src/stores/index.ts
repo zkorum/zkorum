@@ -14,7 +14,7 @@ import {
   StorageError,
   StorageErrorType,
 } from "@aparajita/capacitor-secure-storage";
-import { i18n } from "src/boot/i18n";
+import { i18n } from "boot/i18n";
 import { App } from "@capacitor/app";
 
 /*

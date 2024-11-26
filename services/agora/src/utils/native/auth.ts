@@ -5,7 +5,7 @@ import {
   BiometryErrorType,
 } from "@aparajita/capacitor-biometric-auth";
 import { Dialog } from "quasar";
-import { i18n } from "src/boot/i18n";
+import { i18n } from "boot/i18n";
 import { App } from "@capacitor/app";
 
 export async function nativeAuthenticate() {

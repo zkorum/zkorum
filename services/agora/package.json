@@ -14,10 +14,16 @@
     "dev": "quasar dev",
     "dev:android": "quasar dev -m capacitor -T android",
     "build": "quasar build",
+    "build:staging": "env-cmd -f .env.staging quasar build",
+    "build:production": "env-cmd -f .env.production quasar build",
     "build:ios": "quasar build -m capacitor -T ios --skip-pkg",
     "build:android": "quasar build -m capacitor -T android -- bundleRelease",
     "sign:android": "./scripts/artifact_sign.sh",
-    "build:ci:ios": "yarn quasar build -m capacitor -T ios --skip-pkg"
+    "build:ci:ios": "yarn quasar build -m capacitor -T ios --skip-pkg",
+    "image:build": "docker build -f Dockerfile.production -t agora-app .",
+    "image:build:staging": "docker build -f Dockerfile.staging -t agora-app-staging .",
+    "image:tag": "docker tag zkorum-frontJustForExample:latest zkorum/frontJustForExample:0.1.0",
+    "image:push": "docker image push zkorum/frontJustForExample:0.1.0"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^8.0.0",
@@ -58,7 +64,7 @@
     "@typescript-eslint/parser": "^7.16.0",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "autoprefixer": "^10.4.2",
-    "dotenv": "^16.4.5",
+    "env-cmd": "^10.1.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-vue": "^9.0.0",

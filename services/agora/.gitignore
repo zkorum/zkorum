@@ -44,3 +44,5 @@ logo-square-rounded-centered-smaller.png
 pepk.jar
 *.jks
 *.pem
+
+serve.json

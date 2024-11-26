@@ -5,8 +5,7 @@ import {
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
-import { api } from "src/boot/axios";
-import axios from "axios";
+import { axios, api } from "boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { useCommonApi } from "./common";
 import { useAuthenticationStore } from "src/stores/authentication";
@@ -36,7 +35,7 @@ export function useBackendAuthApi() {
     defaultCallingCode,
     isRequestingNewCode,
   }: SendSmsCodeProps): Promise<AuthenticateReturn> {
-    if (process.env.USE_DUMMY_ACCESS == "true") {
+    if (process.env.VITE_USE_DUMMY_ACCESS == "true") {
       phoneNumber = "+33612345678";
     }
 

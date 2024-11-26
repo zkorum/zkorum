@@ -1,4 +1,4 @@
-import { api } from "src/boot/axios";
+import { axios, api } from "boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
   DefaultApiAxiosParamCreator,
@@ -11,7 +11,6 @@ import {
 import { useCommonApi } from "./common";
 import { useNotify } from "../ui/notify";
 import { useRouter } from "vue-router";
-import axios from "axios";
 import type { ExtendedPost } from "src/shared/types/zod";
 import type { DummyPollOptionFormat } from "src/stores/post";
 
@@ -25,7 +24,6 @@ export function useBackendPostApi() {
   function createInternalPostData(
     postElement: ApiV1FeedFetchRecentPost200ResponsePostDataListInner
   ): ExtendedPost {
-
     // Create the polling object
     const pollOptionList: DummyPollOptionFormat[] = [];
     postElement.payload.poll?.forEach((pollOption) => {
@@ -39,17 +37,22 @@ export function useBackendPostApi() {
 
     const parseditem = composeInternalPostList([postElement])[0];
     return parseditem;
-  };
+  }
 
-  async function fetchPostBySlugId(postSlugId: string, loadUserPollResponse: boolean): Promise<ExtendedPost | null> {
+  async function fetchPostBySlugId(
+    postSlugId: string,
+    loadUserPollResponse: boolean
+  ): Promise<ExtendedPost | null> {
     try {
       const params: ApiV1PostFetchPostBySlugIdPostRequest = {
         postSlugId: postSlugId,
-        isAuthenticatedRequest: loadUserPollResponse
+        isAuthenticatedRequest: loadUserPollResponse,
       };
 
       const { url, options } =
-        await DefaultApiAxiosParamCreator().apiV1PostFetchPostBySlugIdPost(params);
+        await DefaultApiAxiosParamCreator().apiV1PostFetchPostBySlugIdPost(
+          params
+        );
       if (!loadUserPollResponse) {
         const response = await DefaultApiFactory(
           undefined,
@@ -72,7 +75,6 @@ export function useBackendPostApi() {
 
         return createInternalPostData(response.data.postData);
       }
-
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
@@ -88,12 +90,15 @@ export function useBackendPostApi() {
     }
   }
 
-  async function fetchRecentPost(lastSlugId: string | undefined, loadUserPollData: boolean) {
+  async function fetchRecentPost(
+    lastSlugId: string | undefined,
+    loadUserPollData: boolean
+  ) {
     try {
       const params: ApiV1FeedFetchRecentPostRequest = {
         showHidden: false,
         lastSlugId: lastSlugId,
-        isAuthenticatedRequest: loadUserPollData
+        isAuthenticatedRequest: loadUserPollData,
       };
 
       const { url, options } =
@@ -107,7 +112,7 @@ export function useBackendPostApi() {
 
         return {
           postDataList: response.data.postDataList,
-          reachedEndOfFeed: response.data.reachedEndOfFeed
+          reachedEndOfFeed: response.data.reachedEndOfFeed,
         };
       } else {
         const encodedUcan = await buildEncodedUcan(url, options);
@@ -123,7 +128,7 @@ export function useBackendPostApi() {
 
         return {
           postDataList: response.data.postDataList,
-          reachedEndOfFeed: response.data.reachedEndOfFeed
+          reachedEndOfFeed: response.data.reachedEndOfFeed,
         };
       }
     } catch (e) {
@@ -165,10 +170,12 @@ export function useBackendPostApi() {
     }
   }
 
-  function composeInternalPostList(incomingPostList: ApiV1FeedFetchRecentPost200ResponsePostDataListInner[]): ExtendedPost[] {
+  function composeInternalPostList(
+    incomingPostList: ApiV1FeedFetchRecentPost200ResponsePostDataListInner[]
+  ): ExtendedPost[] {
     const parsedList: ExtendedPost[] = [];
 
-    incomingPostList.forEach(item => {
+    incomingPostList.forEach((item) => {
       const newPost: ExtendedPost = {
         metadata: {
           authorUserName: item.metadata.authorUserName,
@@ -178,17 +185,17 @@ export function useBackendPostApi() {
           postSlugId: item.metadata.postSlugId,
           updatedAt: new Date(item.metadata.updatedAt),
           authorImagePath: item.metadata.authorImagePath,
-          isHidden: item.metadata.isHidden
+          isHidden: item.metadata.isHidden,
         },
         payload: {
           title: item.payload.title,
           body: item.payload.body,
-          poll: item.payload.poll
+          poll: item.payload.poll,
         },
         interaction: {
           hasVoted: item.interaction.hasVoted,
-          votedIndex: item.interaction.votedIndex
-        }
+          votedIndex: item.interaction.votedIndex,
+        },
       };
 
       parsedList.push(newPost);
@@ -202,6 +209,6 @@ export function useBackendPostApi() {
     fetchRecentPost,
     fetchPostBySlugId,
     createInternalPostData,
-    composeInternalPostList
+    composeInternalPostList,
   };
 }

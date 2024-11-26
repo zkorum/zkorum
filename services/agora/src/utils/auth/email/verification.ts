@@ -16,7 +16,7 @@ export function usePhoneVerification() {
   const router = useRouter();
 
   async function submitCode(code: number) {
-    if (process.env.USE_DUMMY_ACCESS == "true") {
+    if (process.env.VITE_USE_DUMMY_ACCESS == "true") {
       code = 0;
     }
 

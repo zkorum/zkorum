@@ -1,7 +1,7 @@
 FROM node:20.10.0-alpine
 WORKDIR /app
 RUN npm install -g pnpm
-ENV PATH /app/node_modules/.bin:$PATH
+ENV PATH=/app/node_modules/.bin:$PATH
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 RUN pnpm install

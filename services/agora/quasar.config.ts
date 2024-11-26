@@ -4,7 +4,6 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
 import { defineConfig } from "#q-app/wrappers";
-import "dotenv/config";
 // TODO: add env var to use TLS/SSL
 // import basicSsl from "@vitejs/plugin-basic-ssl";
 
@@ -65,13 +64,17 @@ export default defineConfig((ctx) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      // publicPath: "/feed",
+      // publicPath: ctx.dev ? "/" : "/feed/",
+      publicPath: "/feed/",
       // analyze: true,
+      // See
+      // https://quasar.dev/quasar-cli-webpack/handling-process-env/#using-dotenv
+      // https://github.com/quasarframework/quasar/discussions/15303#discussioncomment-5904464
+      // https://vite.dev/config/
       env: {
-        USE_DUMMY_ACCESS: process.env.FRONTEND_USE_DUMMY_ACCESS,
-        API_BASE_URL: process.env.FRONTEND_API_BASE_URL,
-        // https://quasar.dev/quasar-cli-webpack/handling-process-env/#using-dotenv
-        VITE_BACK_DID: process.env.FRONTEND_VITE_BACK_DID,
+        VITE_USE_DUMMY_ACCESS: process.env.VITE_USE_DUMMY_ACCESS,
+        VITE_API_BASE_URL: process.env.VITE_API_BASE_URL,
+        VITE_BACK_DID: process.env.VITE_BACK_DID,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

@@ -18,7 +18,7 @@ services:
         environment:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: 7QPgtYETx4EdzvqUeNfo
-            POSTGRES_DB: zkorum
+            POSTGRES_DB: agora
             PGDATA: /data/postgres
         volumes:
             - postgres:/data/postgres

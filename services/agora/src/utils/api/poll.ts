@@ -1,4 +1,4 @@
-import { api } from "src/boot/axios";
+import { api } from "boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import {
   DefaultApiAxiosParamCreator,
@@ -34,7 +34,7 @@ export function useBackendPollApi() {
 
       const userResponseList = response.data;
       const responseMap = new Map<string, number>();
-      userResponseList.forEach(response => {
+      userResponseList.forEach((response) => {
         responseMap.set(response.postSlugId, response.optionChosen);
       });
 

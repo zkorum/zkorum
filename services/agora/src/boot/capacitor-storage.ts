@@ -1,7 +1,7 @@
 import { defineBoot } from "#q-app/wrappers";
 import { SecureStorage } from "@aparajita/capacitor-secure-storage";
 import { Dialog } from "quasar";
-import { i18n } from "src/boot/i18n";
+import { i18n } from "boot/i18n";
 import { App } from "@capacitor/app";
 
 // "async" is optional;
