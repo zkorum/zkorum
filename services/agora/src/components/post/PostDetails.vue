@@ -10,8 +10,7 @@
 
           <div class="postDiv">
             <div>
-              <div v-if="!skeletonMode" class="titleDiv"
-                :class="{ extraTitleBottomPadding: extendedPostData.payload.body?.length == 0 }">
+              <div v-if="!skeletonMode" class="titleDiv extraTitleBottomPadding">
                 {{ extendedPostData.payload.title }}
               </div>
 
@@ -175,7 +174,8 @@ function shareClicked() {
 }
 
 .titleDiv {
-  font-size: 1rem;
+  font-size: 1.2rem;
+  font-weight: 500;
 }
 
 .bodyDiv {
