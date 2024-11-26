@@ -26,7 +26,7 @@
         </RouterLink>
       </ZKHoverEffect>
 
-      <Divider />
+      <q-separator :inset="false" />
     </div>
 
     <div ref="bottomOfPostDiv">
@@ -39,7 +39,6 @@
 import { useElementVisibility, useTimeAgo } from "@vueuse/core";
 import { useUserStore } from "src/stores/user";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
-import Divider from "primevue/divider";
 import { ref, watch } from "vue";
 
 const { profileData, loadMoreUserComments } = useUserStore();
