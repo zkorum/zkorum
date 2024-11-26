@@ -5,6 +5,8 @@ import {
   type MainLayoutProps,
   type DefaultMenuBarProps,
 } from "src/utils/model/props";
+import UserPostList from "src/components/profile/UserPostList.vue";
+import UserCommentList from "src/components/profile/UserCommentList.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -47,7 +49,18 @@ const routes: RouteRecordRaw[] = [
             hasLoginButton: true,
           } as DefaultMenuBarProps,
         },
-        name: "user-profile",
+        children: [
+          {
+            path: "posts",
+            component: UserPostList,
+            name: "user-profile-posts"
+          },
+          {
+            path: "comments",
+            component: UserCommentList,
+            name: "user-profile-comments"
+          },
+        ]
       },
     ],
   },

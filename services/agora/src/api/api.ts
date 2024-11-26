@@ -252,55 +252,6 @@ export interface ApiV1CommentCreatePostRequest {
 /**
  * 
  * @export
- * @interface ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
- */
-export interface ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
-     */
-    'commentSlugId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
-     */
-    'createdAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
-     */
-    'updatedAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
-     */
-    'comment': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
-     */
-    'numLikes': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
-     */
-    'numDislikes': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner
-     */
-    'userName': string;
-}
-/**
- * 
- * @export
  * @interface ApiV1CommentFetchCommentsByPostSlugIdPostRequest
  */
 export interface ApiV1CommentFetchCommentsByPostSlugIdPostRequest {
@@ -608,6 +559,100 @@ export interface ApiV1PostFetchPostBySlugIdPostRequest {
 /**
  * 
  * @export
+ * @interface ApiV1UserFetchUserCommentsPost200ResponseInner
+ */
+export interface ApiV1UserFetchUserCommentsPost200ResponseInner {
+    /**
+     * 
+     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInner}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInner
+     */
+    'postData': ApiV1FeedFetchRecentPost200ResponsePostDataListInner;
+    /**
+     * 
+     * @type {ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInner
+     */
+    'commentItem': ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
+ */
+export interface ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
+     */
+    'commentSlugId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
+     */
+    'comment': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
+     */
+    'numLikes': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
+     */
+    'numDislikes': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
+     */
+    'userName': string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1UserFetchUserCommentsPostRequest
+ */
+export interface ApiV1UserFetchUserCommentsPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserCommentsPostRequest
+     */
+    'lastCommentSlugId'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1UserFetchUserPostsPostRequest
+ */
+export interface ApiV1UserFetchUserPostsPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1UserFetchUserPostsPostRequest
+     */
+    'lastPostSlugId'?: string;
+}
+/**
+ * 
+ * @export
  * @interface ApiV1UserFetchUserProfilePost200Response
  */
 export interface ApiV1UserFetchUserProfilePost200Response {
@@ -635,12 +680,6 @@ export interface ApiV1UserFetchUserProfilePost200Response {
      * @memberof ApiV1UserFetchUserProfilePost200Response
      */
     'userName': string;
-    /**
-     * 
-     * @type {Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInner>}
-     * @memberof ApiV1UserFetchUserProfilePost200Response
-     */
-    'userPostList': Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInner>;
 }
 /**
  * 
@@ -1134,6 +1173,80 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {ApiV1UserFetchUserCommentsPostRequest} [apiV1UserFetchUserCommentsPostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1UserFetchUserCommentsPost: async (apiV1UserFetchUserCommentsPostRequest?: ApiV1UserFetchUserCommentsPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/user/fetch-user-comments`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1UserFetchUserCommentsPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiV1UserFetchUserPostsPostRequest} [apiV1UserFetchUserPostsPostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1UserFetchUserPostsPost: async (apiV1UserFetchUserPostsPostRequest?: ApiV1UserFetchUserPostsPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/user/fetch-user-posts`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1UserFetchUserPostsPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1317,7 +1430,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest: ApiV1CommentFetchCommentsByPostSlugIdPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner>>> {
+        async apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest: ApiV1CommentFetchCommentsByPostSlugIdPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1CommentFetchCommentsByPostSlugIdPost']?.[localVarOperationServerIndex]?.url;
@@ -1381,6 +1494,30 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostFetchPostBySlugIdPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ApiV1UserFetchUserCommentsPostRequest} [apiV1UserFetchUserCommentsPostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1UserFetchUserCommentsPost(apiV1UserFetchUserCommentsPostRequest?: ApiV1UserFetchUserCommentsPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1UserFetchUserCommentsPost200ResponseInner>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1UserFetchUserCommentsPost(apiV1UserFetchUserCommentsPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1UserFetchUserCommentsPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ApiV1UserFetchUserPostsPostRequest} [apiV1UserFetchUserPostsPostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1UserFetchUserPostsPost(apiV1UserFetchUserPostsPostRequest?: ApiV1UserFetchUserPostsPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInner>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1UserFetchUserPostsPost(apiV1UserFetchUserPostsPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1UserFetchUserPostsPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1477,7 +1614,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest: ApiV1CommentFetchCommentsByPostSlugIdPostRequest, options?: any): AxiosPromise<Array<ApiV1CommentFetchCommentsByPostSlugIdPost200ResponseInner>> {
+        apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest: ApiV1CommentFetchCommentsByPostSlugIdPostRequest, options?: any): AxiosPromise<Array<ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem>> {
             return localVarFp.apiV1CommentFetchCommentsByPostSlugIdPost(apiV1CommentFetchCommentsByPostSlugIdPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1524,6 +1661,24 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest: ApiV1PostFetchPostBySlugIdPostRequest, options?: any): AxiosPromise<ApiV1PostFetchPostBySlugIdPost200Response> {
             return localVarFp.apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1UserFetchUserCommentsPostRequest} [apiV1UserFetchUserCommentsPostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1UserFetchUserCommentsPost(apiV1UserFetchUserCommentsPostRequest?: ApiV1UserFetchUserCommentsPostRequest, options?: any): AxiosPromise<Array<ApiV1UserFetchUserCommentsPost200ResponseInner>> {
+            return localVarFp.apiV1UserFetchUserCommentsPost(apiV1UserFetchUserCommentsPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1UserFetchUserPostsPostRequest} [apiV1UserFetchUserPostsPostRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1UserFetchUserPostsPost(apiV1UserFetchUserPostsPostRequest?: ApiV1UserFetchUserPostsPostRequest, options?: any): AxiosPromise<Array<ApiV1FeedFetchRecentPost200ResponsePostDataListInner>> {
+            return localVarFp.apiV1UserFetchUserPostsPost(apiV1UserFetchUserPostsPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1678,6 +1833,28 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest: ApiV1PostFetchPostBySlugIdPostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1UserFetchUserCommentsPostRequest} [apiV1UserFetchUserCommentsPostRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1UserFetchUserCommentsPost(apiV1UserFetchUserCommentsPostRequest?: ApiV1UserFetchUserCommentsPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1UserFetchUserCommentsPost(apiV1UserFetchUserCommentsPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1UserFetchUserPostsPostRequest} [apiV1UserFetchUserPostsPostRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1UserFetchUserPostsPost(apiV1UserFetchUserPostsPostRequest?: ApiV1UserFetchUserPostsPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1UserFetchUserPostsPost(apiV1UserFetchUserPostsPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

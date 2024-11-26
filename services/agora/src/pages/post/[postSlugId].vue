@@ -25,7 +25,7 @@ const postData = ref<ExtendedPost>(emptyPost);
 const dataLoaded = ref(false);
 
 onMounted(async () => {
-  const response = await fetchPostBySlugId(props.postSlugId, isAuthenticated);
+  const response = await fetchPostBySlugId(props.postSlugId, isAuthenticated.value);
   if (response != null) {
     postData.value = response;
   }

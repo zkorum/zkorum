@@ -8,7 +8,7 @@
       </div>
 
       <div v-if="commentItems.length > 0" class="commentListFlex">
-        <div v-for="commentItem in commentItems" :key="commentItem.commentSlugId">
+        <div v-for="commentItem in commentItems" :id="commentItem.commentSlugId" :key="commentItem.commentSlugId">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
             :highlight="initialCommentSlugId == commentItem.commentSlugId"
             :comment-slug-id-liked-map="commentSlugIdLikedMap" />
@@ -65,7 +65,7 @@ onMounted(() => {
 });
 
 async function fetchPersonalLikes() {
-  if (isAuthenticated) {
+  if (isAuthenticated.value) {
     commentSlugIdLikedMap.value.clear();
     const response = await fetchUserVotesForPostSlugId(props.postSlugId);
     if (response) {
@@ -102,7 +102,7 @@ function scrollToComment() {
         block: "center",
       });
     } else {
-      console.log("Failed to locate ID: " + props.initialCommentSlugId);
+      console.log("Failed to locate comment slug ID: " + props.initialCommentSlugId);
     }
   }
 }

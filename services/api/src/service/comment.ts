@@ -9,6 +9,29 @@ import { useCommonPost } from "./common.js";
 import { MAX_LENGTH_COMMENT } from "@/shared/shared.js";
 import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
 
+interface GetCommentSlugIdLastCreatedAtProps {
+    lastSlugId: string | undefined;
+    db: PostgresJsDatabase;
+}
+
+export async function getCommentSlugIdLastCreatedAt({ lastSlugId, db }: GetCommentSlugIdLastCreatedAtProps) {
+    let lastCreatedAt = new Date();
+
+    if (lastSlugId) {
+        const selectResponse = await db
+            .select({ createdAt: commentTable.createdAt })
+            .from(commentTable)
+            .where(eq(commentTable.slugId, lastSlugId))
+        if (selectResponse.length == 1) {
+            lastCreatedAt = selectResponse[0].createdAt;
+        } else {
+            // Ignore the slug ID if it cannot be found
+        }
+    }
+
+    return lastCreatedAt;
+}
+
 export async function fetchCommentsByPostSlugId(
     db: PostgresJsDatabase,
     postSlugId: SlugId): Promise<CommentItem[]> {

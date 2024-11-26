@@ -41,7 +41,6 @@ import ZKButton from "../ui-library/ZKButton.vue";
 import { usePostStore, type DummyPollOptionFormat } from "src/stores/post";
 import { ref, watch } from "vue";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { storeToRefs } from "pinia";
 import { useBackendPollApi } from "src/utils/api/poll";
 import { useDialog } from "src/utils/ui/dialog";
 import type { UserInteraction, PollList } from "src/shared/types/zod";
@@ -59,7 +58,7 @@ const dataLoaded = ref(false);
 
 const backendPollApi = useBackendPollApi();
 const { showMessage } = useDialog();
-const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+const { isAuthenticated } = useAuthenticationStore();
 const { loadPostData } = usePostStore();
 
 enum DisplayModes {

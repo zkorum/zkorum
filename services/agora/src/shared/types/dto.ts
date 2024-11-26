@@ -14,6 +14,7 @@ import {
     zodUserName,
     zodPollResponse,
     zodPhoneNumber,
+    zodExtendedCommentData,
 } from "./zod.js";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -137,16 +138,24 @@ export class Dto {
         commentSlugId: z.string(),
         chosenOption: zodVotingAction
     }).strict();
-    static fetchUserProfileRequest = z.object({
-        isAuthenticatedRequest: z.boolean()
-    }).strict();
     static fetchUserProfileResponse = z.object({
         commentCount: z.number().gte(0),
         postCount: z.number().gte(0),
         createdAt: z.date(),
         userName: zodUserName,
-        userPostList: z.array(zodExtendedPostData),
     }).strict();
+    static fetchUserPostsRequest = z
+        .object({
+            lastPostSlugId: zodSlugId.optional(),
+        })
+        .strict();
+    static fetchUserPostsResponse = z.array(zodExtendedPostData);
+    static fetchUserCommentsRequest = z
+        .object({
+            lastCommentSlugId: zodSlugId.optional(),
+        })
+        .strict();
+    static fetchUserCommentsResponse = z.array(zodExtendedCommentData);
 }
 
 export type AuthenticateRequestBody = z.infer<
@@ -168,3 +177,4 @@ export type FetchUserVotesForPostSlugIdResponseResponse = z.infer<typeof Dto.fet
 export type FetchCommentFeedResponse = z.infer<typeof Dto.fetchCommentFeedResponse>;
 export type FetchFeedResponse = z.infer<typeof Dto.fetchFeedResponse>;
 export type FetchUserProfileResponse = z.infer<typeof Dto.fetchUserProfileResponse>;
+export type FetchUserPostsResponse = z.infer<typeof Dto.fetchUserPostsResponse>;

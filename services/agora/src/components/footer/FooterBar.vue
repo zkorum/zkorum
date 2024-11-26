@@ -17,10 +17,10 @@
     </RouterLink>
 
     <div class="iconStyle" @click="accessProfile()">
-      <q-icon name="mdi-account-circle" size="1.6rem" :color="route.name === 'user-profile' ? 'color-highlight' : 'color-text-weak'
+      <q-icon name="mdi-account-circle" size="1.6rem" :color="route.name === 'user-profile-posts' || route.name === 'user-profile-comments' ? 'color-highlight' : 'color-text-weak'
         " />
       <div :class="'text-' +
-        (route.name === 'user-profile'
+        (route.name === 'user-profile-posts' || route.name === 'user-profile-comments'
           ? 'color-highlight'
           : 'color-text-weak')
         ">
@@ -36,7 +36,7 @@ import { useUserStore } from "src/stores/user";
 import { useDialog } from "src/utils/ui/dialog";
 import { useRoute, useRouter } from "vue-router";
 
-const authenticationStore = useAuthenticationStore();
+const { isAuthenticated } = useAuthenticationStore();
 const { loadUserProfile } = useUserStore();
 
 const dialog = useDialog();
@@ -45,11 +45,11 @@ const route = useRoute();
 const router = useRouter();
 
 function accessProfile() {
-  if (!authenticationStore.isAuthenticated) {
+  if (!isAuthenticated.value) {
     dialog.showLoginConfirmationDialog();
   } else {
     loadUserProfile();
-    router.push({ name: "user-profile" });
+    router.push({ name: "user-profile-posts" });
   }
 }
 </script>

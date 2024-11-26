@@ -2,33 +2,26 @@
   <div>
     <div class="container">
       <div v-if="isAuthenticated">
-        <SettingsSection
-          :settings-item-list="accountSettings"
-          title="Account"
-        />
+        <SettingsSection :settings-item-list="accountSettings" title="Account" />
       </div>
 
       <SettingsSection :settings-item-list="aboutSettings" title="About" />
 
       <div v-if="isAuthenticated">
-        <SettingsSection
-          :settings-item-list="supportSettings"
-          title="Support"
-        />
+        <SettingsSection :settings-item-list="supportSettings" title="Support" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import SettingsSection from "src/components/settings/SettingsSection.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { type SettingsInterface } from "src/utils/component/settings/settings";
 import { useRouter } from "vue-router";
 
-const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+const { isAuthenticated } = useAuthenticationStore();
 
 const { userLogout } = useAuthenticationStore();
 
@@ -62,13 +55,13 @@ const aboutSettings: SettingsInterface[] = [
   {
     icon: "mdi-key",
     label: "Privacy policy",
-    action: () => {},
+    action: () => { },
     routeName: "privacy",
   },
   {
     icon: "mdi-file-document",
     label: "Terms of service",
-    action: () => {},
+    action: () => { },
     routeName: "terms",
   },
 ];
@@ -77,7 +70,7 @@ const supportSettings: SettingsInterface[] = [
   {
     icon: "mdi-delete",
     label: "Delete Account",
-    action: () => {},
+    action: () => { },
     routeName: "",
   },
 ];

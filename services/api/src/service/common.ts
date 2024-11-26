@@ -22,7 +22,7 @@ export function useCommonPost() {
 
     async function fetchPostItems({
         db, showHidden, limit, where, enableCompactBody, fetchPollResponse, userId
-    }: FetchPostItemsProps) {
+    }: FetchPostItemsProps): Promise<ExtendedPost[]> {
 
         const postItems = await db
             .select({

@@ -1,4 +1,3 @@
-import { storeToRefs } from "pinia";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendAuthApi, type AuthenticateReturn } from "src/utils/api/auth";
 import { useRouter } from "vue-router";
@@ -12,7 +11,7 @@ interface RequestCodeProps {
 export function usePhoneVerification() {
   const { smsCode, sendSmsCode } = useBackendAuthApi();
 
-  const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+  const { isAuthenticated } = useAuthenticationStore();
 
   const router = useRouter();
 

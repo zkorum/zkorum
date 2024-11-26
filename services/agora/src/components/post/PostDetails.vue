@@ -5,13 +5,12 @@
       <div class="container postPadding">
         <div class="innerContainer">
           <PostMetadata :poster-user-name="extendedPostData.metadata.authorUserName"
-            :created-at="extendedPostData.metadata.createdAt" :is-compat-size="true" :skeleton-mode="skeletonMode"
-            :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime" />
+            :created-at="getDateString(extendedPostData.metadata.createdAt)" :is-compat-size="true"
+            :skeleton-mode="skeletonMode" :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime" />
 
           <div class="postDiv">
             <div>
-              <div v-if="!skeletonMode" class="titleDiv"
-                :class="{ extraTitleBottomPadding: extendedPostData.payload.body?.length == 0 }">
+              <div v-if="!skeletonMode" class="titleDiv extraTitleBottomPadding">
                 {{ extendedPostData.payload.title }}
               </div>
 
@@ -86,6 +85,7 @@ import { useRouteQuery } from "@vueuse/router";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 import Skeleton from "primevue/skeleton";
 import type { ExtendedPost } from "src/shared/types/zod";
+import { getDateString } from "src/utils/common";
 
 const props = defineProps<{
   extendedPostData: ExtendedPost;
@@ -175,7 +175,8 @@ function shareClicked() {
 }
 
 .titleDiv {
-  font-size: 1rem;
+  font-size: 1.2rem;
+  font-weight: 500;
 }
 
 .bodyDiv {

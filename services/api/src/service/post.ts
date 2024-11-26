@@ -9,6 +9,7 @@ import { server } from "@/app.js";
 import { useCommonPost } from "./common.js";
 import { httpErrors } from "@fastify/sensible";
 import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
+import type { ExtendedPost } from "@/shared/types/zod.js";
 
 interface CreateNewPostProps {
     db: PostgresDatabase;
@@ -129,7 +130,7 @@ interface FetchPostBySlugIdProps {
 }
 
 export async function fetchPostBySlugId({
-    db, postSlugId, fetchPollResponse, userId }: FetchPostBySlugIdProps): Promise<FetchPostBySlugIdResponse> {
+    db, postSlugId, fetchPollResponse, userId }: FetchPostBySlugIdProps): Promise<ExtendedPost> {
 
     try {
         const { fetchPostItems } = useCommonPost();
@@ -144,9 +145,7 @@ export async function fetchPostBySlugId({
         });
 
         if (postData.length == 1) {
-            return {
-                postData: postData[0]
-            };
+            return postData[0];
         } else {
             throw httpErrors.notFound(
                 "Failed to locate post slug ID in the database: " + postSlugId

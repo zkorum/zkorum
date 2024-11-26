@@ -109,6 +109,12 @@ export const zodExtendedPostData = z
         interaction: zodUserInteraction
     })
     .strict();
+export const zodExtendedCommentData = z
+    .object({
+        postData: zodExtendedPostData,
+        commentItem: zodCommentItem
+    })
+    .strict();
 export const zodVotingOption = z.enum(["like", "dislike"]);
 export const zodVotingAction = z.enum(["like", "dislike", "cancel"]);
 export const zodLanguageNameOption = z.enum(["English", "Spanish", "Chinese"]);
@@ -132,6 +138,7 @@ export type ExtendedPostPayload = z.infer<typeof zodPostDataWithResult>;
 export type PollOptionWithResult = z.infer<typeof zodPollOptionWithResult>;
 export type CommentContent = z.infer<typeof zodCommentContent>;
 export type CommentItem = z.infer<typeof zodCommentItem>;
+export type ExtendedComment = z.infer<typeof zodExtendedCommentData>;
 export type SlugId = z.infer<typeof zodSlugId>;
 export type VotingOption = z.infer<typeof zodVotingOption>;
 export type VotingAction = z.infer<typeof zodVotingAction>;

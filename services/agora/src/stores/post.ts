@@ -125,7 +125,7 @@ export const usePostStore = defineStore("post", () => {
       }
     }
 
-    const response = await fetchRecentPost(lastSlugId, isAuthenticated);
+    const response = await fetchRecentPost(lastSlugId, isAuthenticated.value);
 
     if (response != null) {
       const internalDataList = composeInternalPostList(response.postDataList);
@@ -152,7 +152,7 @@ export const usePostStore = defineStore("post", () => {
   }
 
   async function hasNewPosts() {
-    const response = await fetchRecentPost(undefined, isAuthenticated);
+    const response = await fetchRecentPost(undefined, isAuthenticated.value);
     if (response != null) {
       if (response.postDataList.length > 0 && masterPostDataList.value.length > 0) {
         if (new Date(response.postDataList[0].metadata.createdAt) != masterPostDataList.value[0].metadata.createdAt) {
@@ -181,6 +181,7 @@ export const usePostStore = defineStore("post", () => {
 
   function resetPostData() {
     masterPostDataList.value = [];
+    loadPostData(false);
   }
 
   return {
