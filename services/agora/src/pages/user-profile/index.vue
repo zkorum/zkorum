@@ -24,18 +24,7 @@
       </TabList>
       <TabPanel value="0">
         <div class="tabPanelPadding">
-          <div v-for="postData in profileData.userPostList" :key="postData.metadata.postSlugId">
-            <PostDetails :extended-post-data="postData" :compact-mode="true" :show-comment-section="false"
-              :skeleton-mode="false" class="showCursor" :show-author="false" :display-absolute-time="true"
-              @click="openPost(postData.metadata.postSlugId)" />
-
-            <div class="seperator">
-              <q-separator :inset="false" />
-            </div>
-          </div>
-
-          <div ref="bottomOfPostPageDiv">
-          </div>
+          <UserPostList />
         </div>
       </TabPanel>
       <TabPanel value="1">
@@ -52,44 +41,18 @@ import Tabs from "primevue/tabs";
 import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import TabPanel from "primevue/tabpanel";
-import CompactCommentList from "src/components/profile/CompactCommentList.vue";
+import CompactCommentList from "src/components/profile/UserCommentList.vue";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { useUserStore } from "src/stores/user";
-import { computed, ref, watch } from "vue";
-import { useRouter } from "vue-router";
-import PostDetails from "src/components/post/PostDetails.vue";
+import { computed } from "vue";
 import { getDateString } from "src/utils/common";
-import { useElementVisibility } from "@vueuse/core";
+import UserPostList from "src/components/profile/UserPostList.vue";
 
-const { profileData, loadMoreUserPosts } = useUserStore();
-
-const router = useRouter();
-
-const bottomOfPostPageDiv = ref(null);
-const targetIsVisible = useElementVisibility(bottomOfPostPageDiv);
-
-const endOfFeed = ref(false);
-let isExpandingPosts = false;
+const { profileData } = useUserStore();
 
 const profileCreateDateString = computed(() => {
   return getDateString(profileData.value.createdAt);
 });
-
-watch(targetIsVisible, async () => {
-  if (targetIsVisible.value && !isExpandingPosts && !endOfFeed.value) {
-    isExpandingPosts = true;
-
-    const response = await loadMoreUserPosts();
-    endOfFeed.value = response.reachedEndOfFeed;
-
-    isExpandingPosts = false;
-  }
-});
-
-function openPost(postSlugId: string) {
-  router.push({ name: "single-post", params: { postSlugId: postSlugId } });
-}
-
 
 </script>
 

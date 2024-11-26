@@ -13,6 +13,7 @@ import {
     zodUserName,
     zodPollResponse,
     zodPhoneNumber,
+    zodExtendedCommentData,
 } from "./zod.js";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -144,10 +145,16 @@ export class Dto {
     }).strict();
     static fetchUserPostsRequest = z
         .object({
-            lastPostSlugId: z.string().optional(),
+            lastPostSlugId: zodSlugId.optional(),
         })
         .strict();
     static fetchUserPostsResponse = z.array(zodExtendedPostData);
+    static fetchUserCommentsRequest = z
+        .object({
+            lastCommentSlugId: zodSlugId.optional(),
+        })
+        .strict();
+    static fetchUserCommentsResponse = z.array(zodExtendedCommentData);
 }
 
 export type AuthenticateRequestBody = z.infer<

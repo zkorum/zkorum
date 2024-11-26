@@ -1,16 +1,16 @@
-import { DefaultApiAxiosParamCreator, DefaultApiFactory, type ApiV1UserFetchUserPostsPostRequest } from "src/api";
+import { DefaultApiAxiosParamCreator, DefaultApiFactory, type ApiV1UserFetchUserCommentsPostRequest, type ApiV1UserFetchUserPostsPostRequest } from "src/api";
 import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
-import { useDialog } from "../ui/dialog";
 import { useCommonApi } from "./common";
-import type { ExtendedPost } from "src/shared/types/zod";
+import type { ExtendedComment, ExtendedPost } from "src/shared/types/zod";
 import { useBackendPostApi } from "./post";
+import { useNotify } from "../ui/notify";
 
 export function useBackendUserApi() {
   const { buildEncodedUcan } = useCommonApi();
   const { createInternalPostData } = useBackendPostApi();
 
-  const { showMessage } = useDialog();
+  const { showNotifyMessage } = useNotify();
 
   async function fetchUserProfile() {
     try {
@@ -35,7 +35,7 @@ export function useBackendUserApi() {
       };
     } catch (e) {
       console.error(e);
-      showMessage("An error had occured", "Failed to fetch user's personal votes.");
+      showNotifyMessage("Failed to fetch user's personal profile.");
       return undefined;
     }
   }
@@ -67,10 +67,55 @@ export function useBackendUserApi() {
       return internalPostList;
     } catch (e) {
       console.error(e);
-      showMessage("An error had occured", "Failed to fetch user's personal votes.");
+      showNotifyMessage("Failed to fetch user's personal votes.");
       return undefined;
     }
   }
 
-  return { fetchUserProfile, fetchUserPosts };
+  async function fetchUserComments(lastCommentSlugId: string | undefined): Promise<ExtendedComment[]> {
+    try {
+      const params: ApiV1UserFetchUserCommentsPostRequest = {
+        lastCommentSlugId: lastCommentSlugId
+      };
+
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1UserFetchUserCommentsPost(params);
+      const encodedUcan = await buildEncodedUcan(url, options);
+      const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1UserFetchUserCommentsPost(params, {
+        headers: {
+          ...buildAuthorizationHeader(encodedUcan),
+        },
+      });
+
+      const extendedCommentList: ExtendedComment[] = [];
+      response.data.forEach(responseItem => {
+        const extendedComment: ExtendedComment = {
+          postData: createInternalPostData(responseItem.postData),
+          commentItem: {
+            comment: responseItem.commentItem.comment,
+            commentSlugId: responseItem.commentItem.commentSlugId,
+            createdAt: new Date(responseItem.commentItem.createdAt),
+            numDislikes: responseItem.commentItem.numDislikes,
+            numLikes: responseItem.commentItem.numLikes,
+            updatedAt: new Date(responseItem.commentItem.updatedAt),
+            userName: responseItem.commentItem.userName
+          }
+        }
+        extendedCommentList.push(extendedComment);
+      });
+
+      return extendedCommentList;
+
+    } catch (e) {
+      console.error(e);
+      showNotifyMessage("Failed to fetch user's personal comments.");
+      return undefined;
+    }
+  }
+
+  return { fetchUserProfile, fetchUserPosts, fetchUserComments };
 }

@@ -537,7 +537,8 @@
                                 "type": "object",
                                 "properties": {
                                     "lastPostSlugId": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "maxLength": 10
                                     }
                                 },
                                 "additionalProperties": false
@@ -668,6 +669,211 @@
                                             "metadata",
                                             "payload",
                                             "interaction"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/fetch-user-comments": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "lastCommentSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "postData": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "metadata": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "postSlugId": {
+                                                                "type": "string",
+                                                                "maxLength": 10
+                                                            },
+                                                            "isHidden": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "createdAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "updatedAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "lastReactedAt": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "commentCount": {
+                                                                "type": "integer",
+                                                                "minimum": 0
+                                                            },
+                                                            "authorUserName": {
+                                                                "type": "string",
+                                                                "maxLength": 23,
+                                                                "minLength": 3
+                                                            },
+                                                            "authorImagePath": {
+                                                                "type": "string",
+                                                                "format": "uri"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "postSlugId",
+                                                            "createdAt",
+                                                            "updatedAt",
+                                                            "lastReactedAt",
+                                                            "commentCount",
+                                                            "authorUserName"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    },
+                                                    "payload": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "title": {
+                                                                "type": "string",
+                                                                "maxLength": 130,
+                                                                "minLength": 1
+                                                            },
+                                                            "body": {
+                                                                "type": "string"
+                                                            },
+                                                            "poll": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "optionNumber": {
+                                                                            "type": "integer",
+                                                                            "minimum": 1,
+                                                                            "maximum": 6
+                                                                        },
+                                                                        "optionTitle": {
+                                                                            "type": "string",
+                                                                            "maxLength": 30,
+                                                                            "minLength": 1
+                                                                        },
+                                                                        "numResponses": {
+                                                                            "type": "integer",
+                                                                            "minimum": 0
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "optionNumber",
+                                                                        "optionTitle",
+                                                                        "numResponses"
+                                                                    ],
+                                                                    "additionalProperties": false
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "title"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    },
+                                                    "interaction": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "hasVoted": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "votedIndex": {
+                                                                "type": "integer",
+                                                                "minimum": 0
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "hasVoted",
+                                                            "votedIndex"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "required": [
+                                                    "metadata",
+                                                    "payload",
+                                                    "interaction"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "commentItem": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "commentSlugId": {
+                                                        "type": "string",
+                                                        "maxLength": 10
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "comment": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    },
+                                                    "numLikes": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    },
+                                                    "numDislikes": {
+                                                        "type": "integer",
+                                                        "minimum": 0
+                                                    },
+                                                    "userName": {
+                                                        "type": "string",
+                                                        "maxLength": 23,
+                                                        "minLength": 3
+                                                    }
+                                                },
+                                                "required": [
+                                                    "commentSlugId",
+                                                    "createdAt",
+                                                    "updatedAt",
+                                                    "comment",
+                                                    "numLikes",
+                                                    "numDislikes",
+                                                    "userName"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        "required": [
+                                            "postData",
+                                            "commentItem"
                                         ],
                                         "additionalProperties": false
                                     }

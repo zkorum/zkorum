@@ -1,10 +1,10 @@
 import { useStorage } from "@vueuse/core";
 import { useBackendUserApi } from "src/utils/api/user";
-import type { ExtendedPost } from "src/shared/types/zod";
+import type { ExtendedComment, ExtendedPost } from "src/shared/types/zod";
 
 export function useUserStore() {
 
-  const { fetchUserProfile, fetchUserPosts } = useBackendUserApi();
+  const { fetchUserProfile, fetchUserPosts, fetchUserComments } = useBackendUserApi();
 
   interface UserProfile {
     commentCount: number;
@@ -12,6 +12,7 @@ export function useUserStore() {
     createdAt: Date;
     userName: string;
     userPostList: ExtendedPost[];
+    userCommentList: ExtendedComment[];
   }
 
   const emptyProfile: UserProfile = {
@@ -19,21 +20,28 @@ export function useUserStore() {
     postCount: 0,
     createdAt: new Date(),
     userName: "",
-    userPostList: []
+    userPostList: [],
+    userCommentList: []
   };
 
   const profileData = useStorage("user-profile-data", emptyProfile);
 
+
   async function loadUserProfile() {
-    const userProfile = await fetchUserProfile();
-    if (userProfile) {
-      const userPosts = await fetchUserPosts(undefined);
+
+    const [userProfile, userPosts, userComments] = await Promise.all([
+      fetchUserProfile(),
+      fetchUserPosts(undefined),
+      fetchUserComments(undefined)]);
+
+    if (userProfile && userPosts && userComments) {
       profileData.value = {
         commentCount: userProfile.commentCount,
         postCount: userProfile.postCount,
         createdAt: userProfile.createdAt,
         userName: userProfile.userName,
-        userPostList: userPosts
+        userPostList: userPosts,
+        userCommentList: userComments
       };
     }
   }
