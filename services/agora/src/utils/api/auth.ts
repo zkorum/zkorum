@@ -27,8 +27,7 @@ interface SendSmsCodeProps {
 
 export function useBackendAuthApi() {
   const { buildEncodedUcan } = useCommonApi();
-  const { userLogout } = useAuthenticationStore();
-  const { isAuthenticated } = useAuthenticationStore();
+  const { userLogout, isAuthenticated } = useAuthenticationStore();
   const { loadPostData } = usePostStore();
   const { loadUserProfile } = useUserStore();
 
@@ -192,7 +191,7 @@ export function useBackendAuthApi() {
   }
 
   async function initializeAuthState() {
-    if (isAuthenticated) {
+    if (isAuthenticated.value) {
       const status = await deviceIsLoggedIn();
       if (!status.isSuccessful) {
         if (status.error == "already_logged_in") {
@@ -204,7 +203,6 @@ export function useBackendAuthApi() {
           // unauthorized
           console.group("Failed to check user login status");
           console.log(status.error);
-          loadPostData(false);
           userLogout();
         }
       } else {
@@ -213,6 +211,7 @@ export function useBackendAuthApi() {
     }
 
     loadPostData(false);
+
   }
 
   return {

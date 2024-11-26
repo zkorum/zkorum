@@ -3,11 +3,10 @@ import { useQuasar } from "quasar";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { getPlatform } from "src/utils/common";
 import { buildUcan, createDidIfDoesNotExist } from "../crypto/ucan/operation";
-import { storeToRefs } from "pinia";
 
 export function useCommonApi() {
   const $q = useQuasar();
-  const { verificationPhoneNumber } = storeToRefs(useAuthenticationStore());
+  const { verificationPhoneNumber } = useAuthenticationStore();
 
   async function buildEncodedUcan(url: string, options: RawAxiosRequestConfig) {
     let platform: "mobile" | "web" = "web";

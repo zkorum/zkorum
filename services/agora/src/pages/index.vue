@@ -18,10 +18,10 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const dialog = useDialog();
 
-const authenticationStore = useAuthenticationStore();
+const { isAuthenticated } = useAuthenticationStore();
 
 function createNewPost() {
-  if (authenticationStore.isAuthenticated) {
+  if (isAuthenticated.value) {
     router.push({ name: "create-post" });
   } else {
     dialog.showLoginConfirmationDialog();

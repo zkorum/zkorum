@@ -117,7 +117,7 @@ async function castPersonalVote(
   commentSlugId: string,
   isUpvoteButton: boolean
 ) {
-  if (!isAuthenticated) {
+  if (!isAuthenticated.value) {
     showLoginConfirmationDialog();
   } else {
     const numLikesBackup = numLikesLocal.value;

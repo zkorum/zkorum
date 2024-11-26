@@ -1,14 +1,8 @@
 <template>
-  <ZKButton
-    outline
-    label="Verify"
-    text-color="color-text-strong"
-    @click="skipButton()"
-  />
+  <ZKButton outline label="Verify" text-color="color-text-strong" @click="skipButton()" />
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { usePhoneVerification } from "src/utils/auth/email/verification";
 import { useRouter } from "vue-router";
@@ -19,7 +13,7 @@ const {
   isAuthenticated,
   verificationPhoneNumber,
   verificationDefaultCallingCode,
-} = storeToRefs(useAuthenticationStore());
+} = useAuthenticationStore();
 const phoneVerification = usePhoneVerification();
 
 async function skipButton() {

@@ -197,5 +197,11 @@ export function useBackendPostApi() {
     return parsedList;
   }
 
-  return { createNewPost, fetchRecentPost, fetchPostBySlugId, createInternalPostData, composeInternalPostList };
+  return {
+    createNewPost,
+    fetchRecentPost,
+    fetchPostBySlugId,
+    createInternalPostData,
+    composeInternalPostList
+  };
 }

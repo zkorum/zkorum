@@ -65,7 +65,7 @@ onMounted(() => {
 });
 
 async function fetchPersonalLikes() {
-  if (isAuthenticated) {
+  if (isAuthenticated.value) {
     commentSlugIdLikedMap.value.clear();
     const response = await fetchUserVotesForPostSlugId(props.postSlugId);
     if (response) {
