@@ -7,7 +7,6 @@ import { useAuthenticationStore } from "src/stores/authentication";
 import { usePhoneVerification } from "src/utils/auth/email/verification";
 import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
-import { usePostStore } from "src/stores/post";
 
 const router = useRouter();
 const {
@@ -16,8 +15,6 @@ const {
   verificationDefaultCallingCode,
 } = useAuthenticationStore();
 const phoneVerification = usePhoneVerification();
-
-const { loadPostData } = usePostStore();
 
 async function skipButton() {
   verificationPhoneNumber.value = "+33612345678";
@@ -31,11 +28,11 @@ async function skipButton() {
   if (requestCodeResponse.isSuccessful) {
     await phoneVerification.submitCode(0);
     isAuthenticated.value = true;
-    loadPostData(false);
     router.push({ name: "verification-successful" });
   } else {
     console.log("Failed to request code");
     if (requestCodeResponse.error == "already_logged_in") {
+      console.log("Already logged in");
       isAuthenticated.value = true;
       router.push({ name: "verification-successful" });
     } else if (requestCodeResponse.error == "throttled") {

@@ -9,19 +9,24 @@
         You can now start participating in the discussions anonymously.
       </div>
 
-      <ZKButton label="Start Exploring"
-        color="primary"
-        @click="goToHomePage()"
-      />
+      <ZKButton label="Start Exploring" color="primary" @click="goToHomePage()" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import ZKButton from "src/components/ui-library/ZKButton.vue";
+import { usePostStore } from "src/stores/post";
+import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 
+const { loadPostData } = usePostStore();
+
 const router = useRouter();
+
+onMounted(() => {
+  loadPostData(false);
+})
 
 function goToHomePage() {
   router.push({ name: "default-home-feed" });
