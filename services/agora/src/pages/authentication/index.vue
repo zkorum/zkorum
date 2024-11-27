@@ -1,12 +1,14 @@
 <template>
   <div class="container">
-    <img src="/images/onboarding/brand.webp" class="welcomeImage" />
+    <img src="/feed/images/onboarding/brand.webp" class="welcomeImage" />
     <div class="buttonFlex">
-      <ZKButton :label="t('welcome.login')"
+      <ZKButton
+        :label="t('welcome.login')"
         :to="{ name: 'verification-options' }"
         color="primary"
       />
-      <ZKButton color="black"
+      <ZKButton
+        color="black"
         label="Skip Authentication"
         @click="skipAuthentication()"
       />
@@ -55,7 +57,7 @@ function isDevMode() {
   justify-content: center;
   gap: 3rem;
   height: 100vh;
-  background-image: url("/images/onboarding/background.webp");
+  background-image: url("/feed/images/onboarding/background.webp");
   background-size: cover;
 }
 </style>

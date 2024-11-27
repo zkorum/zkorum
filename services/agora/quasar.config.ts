@@ -58,14 +58,17 @@ export default defineConfig((ctx) => {
       // },
 
       vueRouterMode: "history", // available values: 'hash', 'history'
-      // vueRouterBase: '/feed/',
+      // vueRouterBase: "/feed/",
       // vueDevtools,
       vueOptionsAPI: false,
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
       // publicPath: ctx.dev ? "/" : "/feed/",
-      publicPath: "/feed/",
+      publicPath: "/feed/", // we serve this behind a global nginx configured to serve the app at /feed/
+      // extendViteConf(viteConf, _params) {
+      //   viteConf.base = ""; // @see https://github.com/quasarframework/quasar/issues/8513#issuecomment-1127654470 - otherwise the browser doesn't find index.html!
+      // },
       // analyze: true,
       // See
       // https://quasar.dev/quasar-cli-webpack/handling-process-env/#using-dotenv
@@ -86,9 +89,9 @@ export default defineConfig((ctx) => {
       viteVuePluginOptions: {
         template: {
           compilerOptions: {
-            isCustomElement: (tag) => tag.startsWith("swiper-")
-          }
-        }
+            isCustomElement: (tag) => tag.startsWith("swiper-"),
+          },
+        },
       },
 
       vitePlugins: [

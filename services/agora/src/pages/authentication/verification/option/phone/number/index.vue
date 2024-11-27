@@ -27,7 +27,7 @@
                   <img
                     :alt="slotProps.value.label"
                     :src="
-                      '/images/communities/flags/' +
+                      '/feed/images/communities/flags/' +
                       slotProps.value.country +
                       '.svg'
                     "
@@ -43,7 +43,7 @@
                 <div class="innerOption">
                   <img
                     :src="
-                      '/images/communities/flags/' +
+                      '/feed/images/communities/flags/' +
                       slotProps.option.country +
                       '.svg'
                     "

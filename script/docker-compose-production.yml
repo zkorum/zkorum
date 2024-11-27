@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
   api:
     container_name: agora_api
-    image: zkorum/agora-api:0.1.0
+    image: zkorum/agora-api:0.1.26
     environment:
       CONNECTION_STRING: "postgres://postgres:CHANGEME@postgres:5432/agora"
       CORS_ORIGIN_LIST: "http://localhost:9000,http://127.0.0.1:9000,http://172.19.0.1:9000,http://192.168.1.22:9000"
