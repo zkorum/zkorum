@@ -2,7 +2,7 @@
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
 import { eq, sql } from "drizzle-orm";
-import type { CreateNewPostResponse, FetchPostBySlugIdResponse } from "@/shared/types/dto.js";
+import type { CreateNewPostResponse } from "@/shared/types/dto.js";
 import { MAX_LENGTH_BODY } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
 import { server } from "@/app.js";
