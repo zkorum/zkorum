@@ -205,6 +205,118 @@ const routes: RouteRecordRaw[] = [
     name: "welcome",
   },
   {
+    path: "/onboarding",
+    components: {
+      default: MainLayout,
+    },
+    props: {
+      default: {
+        addBottomPadding: false,
+        enableHeader: true,
+        enableFooter: false,
+        useStylelessFooter: false,
+        reducedWidth: true,
+      } as MainLayoutProps,
+    },
+    children: [
+      {
+        path: "step1",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step1/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step1",
+      },
+      {
+        path: "step2",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step2/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step2",
+      },
+      {
+        path: "step3-passport",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step3-passport/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step3-passport",
+      },
+      {
+        path: "step3-phone-1",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step3-phone-1/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step3-phone-1",
+      },
+      {
+        path: "step3-phone-2",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step3-phone-2/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step3-phone-2",
+      },
+    ]
+  },
+  {
     path: "/authentication",
     component: MainLayout,
     props: {
@@ -307,7 +419,7 @@ const routes: RouteRecordRaw[] = [
         },
         props: {
           topmenubar: {
-            hasBackButton: false,
+            hasBackButton: true,
             hasSettingsButton: true,
             hasCloseButton: false,
             hasLoginButton: false,

@@ -2,16 +2,8 @@
   <div class="container">
     <img src="/feed/images/onboarding/brand.webp" class="welcomeImage" />
     <div class="buttonFlex">
-      <ZKButton
-        :label="t('welcome.login')"
-        :to="{ name: 'verification-options' }"
-        color="primary"
-      />
-      <ZKButton
-        color="black"
-        label="Skip Authentication"
-        @click="skipAuthentication()"
-      />
+      <ZKButton :label="t('welcome.login')" :to="{ name: 'onboarding-step1' }" color="primary" />
+      <ZKButton color="black" label="Skip Authentication" @click="skipAuthentication()" />
     </div>
   </div>
 </template>
