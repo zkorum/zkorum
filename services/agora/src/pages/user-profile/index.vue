@@ -12,7 +12,7 @@
       <div class="profileMetadataBar">
         <div>{{ profileData.postCount }} posts <span class="dotPadding">•</span></div>
         <div>{{ profileData.commentCount }} comments <span class="dotPadding">•</span></div>
-        <div>{{ profileCreateDateString }}</div>
+        <div>{{ getDateString(new Date(profileData.createdAt)) }}</div>
       </div>
 
     </div>
@@ -37,15 +37,11 @@ import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { useUserStore } from "src/stores/user";
-import { computed, ref, watch } from "vue";
-import { getDateString } from "src/utils/common";
+import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import { getDateString } from "src/utils/common";
 
 const { profileData } = useUserStore();
-
-const profileCreateDateString = computed(() => {
-  return getDateString(profileData.value.createdAt);
-});
 
 const currentTab = ref(0);
 
