@@ -12,14 +12,15 @@
           <div class="stepContainer">
             <div class="stepFlex">
               <q-icon name="mdi-numeric-1" size="2rem" class="numberCircle" />
-              Use the following to download RariMe app
+              Use the following deep link to download RariMe app
             </div>
 
             <div class="innerInstructions">
               <img v-if="!quasar.platform.is.mobile" :src="qrcode" alt="QR Code" class="qrCode" />
 
               <a :href="rarimeLink" target="_blank" rel="noopener noreferrer">
-                <ZKButton icon="mdi-open-in-new" label="Open RariMe" color="primary" @click="completeVerification()" />
+                <ZKButton icon="mdi-open-in-new" label="Open RariMe" color="secondary"
+                  @click="completeVerification()" />
               </a>
             </div>
 
@@ -83,7 +84,7 @@ if (quasar.platform.is.android) {
 const qrcode = useQRCode(rarimeLink, { version: "10" });
 
 function completeVerification() {
-  router.push({ name: "verification-successful" });
+  router.push({ name: "onboarding-step4-username" });
 }
 
 function goToPhoneVerification() {

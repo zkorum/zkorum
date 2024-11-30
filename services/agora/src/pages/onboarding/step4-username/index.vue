@@ -1,7 +1,7 @@
 <template>
   <div>
     <StepperLayout :submit-call-back="goToNextRoute" :current-step="4" :total-steps="6"
-      :enable-next-button="userName.length > 0" :show-next-button="true">
+      :enable-next-button="userName.length > 0 || checkedAnonymous" :show-next-button="true">
 
       <template #header>
         <InfoHeader title="Choose your username" :description="description" icon-name="mdi-account-circle" />
@@ -13,7 +13,7 @@
             How do you want to appear in Agora?
           </div>
 
-          <q-input v-model="userName" outlined :placeholder="placeholder">
+          <q-input v-model="userName" outlined :placeholder="placeholder" :disable="checkedAnonymous">
             <template #append>
               <ZKButton icon="mdi-dice-6" @click="generateRandomName()" />
             </template>
@@ -73,11 +73,11 @@ const infoToggle = (event) => {
 const placeholder = ref("RandomGenerated1234");
 
 watch(checkedAnonymous, () => {
-
+  userName.value = "";
 })
 
 function generateRandomName() {
-  console.log("?");
+  userName.value = window.crypto.randomUUID();
 }
 
 function goToNextRoute() {
