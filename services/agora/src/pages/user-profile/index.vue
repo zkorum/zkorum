@@ -10,8 +10,8 @@
       </div>
 
       <div class="profileMetadataBar">
-        <div>{{ profileData.postCount }} posts <span class="dotPadding">•</span></div>
-        <div>{{ profileData.commentCount }} comments <span class="dotPadding">•</span></div>
+        <div>{{ profileData.postCount }} conservations <span class="dotPadding">•</span></div>
+        <div>{{ profileData.commentCount }} opinions <span class="dotPadding">•</span></div>
         <div>{{ getDateString(new Date(profileData.createdAt)) }}</div>
       </div>
 
@@ -20,10 +20,10 @@
     <Tabs :value="currentTab">
       <TabList>
         <RouterLink :to="{ name: 'user-profile-posts' }">
-          <Tab :value="0">Posts</Tab>
+          <Tab :value="0">Conservations</Tab>
         </RouterLink>
         <RouterLink :to="{ name: 'user-profile-comments' }">
-          <Tab :value="1">Comments</Tab>
+          <Tab :value="1">Opinions</Tab>
         </RouterLink>
       </TabList>
       <router-view />

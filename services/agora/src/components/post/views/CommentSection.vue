@@ -4,7 +4,7 @@
       <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)" />
 
       <div v-if="commentItems.length == 0 && commentSortPreference != 'clusters'" class="noCommentMessage">
-        There are no comments in this post.
+        There are no opinions in this conservation.
       </div>
 
       <div v-if="commentItems.length > 0" class="commentListFlex">
