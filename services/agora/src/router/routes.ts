@@ -314,6 +314,63 @@ const routes: RouteRecordRaw[] = [
         },
         name: "onboarding-step3-phone-2",
       },
+      {
+        path: "step4-username",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step4-username/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step4-username",
+      },
+      {
+        path: "step5-experience",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step5-experience/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step5-experience",
+      },
+      {
+        path: "step6-preferences",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step6-preferences/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step6-preferences",
+      },
     ]
   },
   {
@@ -353,80 +410,6 @@ const routes: RouteRecordRaw[] = [
         name: "login-verify"
       },
     */
-      {
-        path: "/verification/option/passport",
-        components: {
-          default: () =>
-            import(
-              "src/pages/authentication/verification/option/passport/index.vue"
-            ),
-          topmenubar: DefaultMenuBar,
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true,
-            hasSettingsButton: true,
-            hasCloseButton: false,
-            hasLoginButton: false,
-          } as DefaultMenuBarProps,
-        },
-        name: "verification-option-passport",
-      },
-      {
-        path: "/verification/option/phone/number",
-        components: {
-          default: () =>
-            import(
-              "src/pages/authentication/verification/option/phone/number/index.vue"
-            ),
-          topmenubar: DefaultMenuBar,
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true,
-            hasSettingsButton: true,
-            hasCloseButton: false,
-            hasLoginButton: false,
-          } as DefaultMenuBarProps,
-        },
-        name: "verification-option-phone-number",
-      },
-      {
-        path: "/verification/option/phone/code",
-        components: {
-          default: () =>
-            import(
-              "src/pages/authentication/verification/option/phone/code/index.vue"
-            ),
-          topmenubar: DefaultMenuBar,
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true,
-            hasSettingsButton: true,
-            hasCloseButton: false,
-            hasLoginButton: false,
-          } as DefaultMenuBarProps,
-        },
-        name: "verification-option-phone-code",
-      },
-      {
-        path: "/verification/options",
-        components: {
-          default: () =>
-            import("src/pages/authentication/verification/options/index.vue"),
-          topmenubar: DefaultMenuBar,
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true,
-            hasSettingsButton: true,
-            hasCloseButton: false,
-            hasLoginButton: false,
-          } as DefaultMenuBarProps,
-        },
-        name: "verification-options",
-      },
       {
         path: "/verification/successful",
         components: {

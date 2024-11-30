@@ -4,6 +4,8 @@ import { useRouter } from "vue-router";
 
 export function useSkipAuth() {
 
+  const finalRouteName = "default-home-feed";
+
   const router = useRouter();
   const {
     isAuthenticated,
@@ -24,13 +26,13 @@ export function useSkipAuth() {
     if (requestCodeResponse.isSuccessful) {
       await phoneVerification.submitCode(0);
       isAuthenticated.value = true;
-      router.push({ name: "verification-successful" });
+      router.push({ name: finalRouteName });
     } else {
       console.log("Failed to request code");
       if (requestCodeResponse.error == "already_logged_in") {
         console.log("Already logged in");
         isAuthenticated.value = true;
-        router.push({ name: "verification-successful" });
+        router.push({ name: finalRouteName });
       } else if (requestCodeResponse.error == "throttled") {
         console.log("Throttled please try again later");
       }

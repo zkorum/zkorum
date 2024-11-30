@@ -1,6 +1,6 @@
 <template>
   <div>
-    <StepperLayout :submit-call-back="goToNextRoute" :current-step="1" :total-steps="5" :enable-next-button="true"
+    <StepperLayout :submit-call-back="goToNextRoute" :current-step="1" :total-steps="6" :enable-next-button="true"
       :show-next-button="true">
 
       <template #header>

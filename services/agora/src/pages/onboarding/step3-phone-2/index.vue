@@ -1,7 +1,7 @@
 <template>
   <div>
-    <form class="formStyle" @submit.prevent="skipEverything()">
-      <StepperLayout :submit-call-back="skipEverything" :current-step="3" :total-steps="4"
+    <form class="formStyle" @submit.prevent="goToNextStep()">
+      <StepperLayout :submit-call-back="goToNextStep" :current-step="3.5" :total-steps="6"
         :enable-next-button="verificationCode.length == 6" :show-next-button="true">
 
         <template #header>
@@ -51,9 +51,8 @@ import { phoneVerificationStore } from "src/stores/verification/phone";
 import { ref } from "vue";
 import InputOtp from "primevue/inputotp";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import { useSkipAuth } from "src/utils/auth/skipAuth";
-
-const { skipEverything } = useSkipAuth();
+import { useRouter } from "vue-router";
+import { usePostStore } from "src/stores/post";
 
 const { verificationPhoneNumber } = storeToRefs(phoneVerificationStore());
 
@@ -61,6 +60,15 @@ const verificationCode = ref("");
 
 const verificationNextCodeSeconds = ref(0);
 const verificationCodeExpirySeconds = ref(0);
+
+const router = useRouter();
+
+const { loadPostData } = usePostStore();
+
+async function goToNextStep() {
+  await loadPostData(false);
+  router.push({ name: "onboarding-step4-username" });
+}
 
 function changeNumber() {
   history.back();

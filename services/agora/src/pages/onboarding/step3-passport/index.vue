@@ -1,6 +1,6 @@
 <template>
   <div>
-    <StepperLayout :submit-call-back="goToNextRoute" :current-step="3" :total-steps="4" :enable-next-button="true"
+    <StepperLayout :submit-call-back="() => { }" :current-step="3" :total-steps="6" :enable-next-button="true"
       :show-next-button="false">
 
       <template #header>
@@ -32,7 +32,7 @@
               Come back here and click the verify button
             </div>
 
-            <ZKButton label="Verify with RariMe" color="blue" @click="skipEverything()" />
+            <ZKButton label="Verify with RariMe" color="primary" @click="goToNextRoute()" />
 
             <ZKButton label="I'd rather verify with my phone number" text-color="color-text-strong"
               @click="goToPhoneVerification()" />
@@ -54,9 +54,7 @@ import { useQRCode } from "@vueuse/integrations/useQRCode.mjs";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import { useSkipAuth } from "src/utils/auth/skipAuth";
-
-const { skipEverything } = useSkipAuth();
+import { usePostStore } from "src/stores/post";
 
 const description = "RariMe is a ZK-powered identity wallet that converts your passport into an anonymous digital ID, stored on your device, so you can prove that you’re a unique human without sharing any personal data with anyone.";
 
@@ -66,8 +64,11 @@ const router = useRouter();
 
 const rarimeLink = ref("");
 
-function goToNextRoute() {
-  router.push({ name: "verification-successful" });
+const { loadPostData } = usePostStore();
+
+async function goToNextRoute() {
+  await loadPostData(false);
+  router.push({ name: "onboarding-step4-username" });
 }
 
 if (quasar.platform.is.android) {
