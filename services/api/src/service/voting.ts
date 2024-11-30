@@ -4,8 +4,7 @@ import { eq, sql, and } from "drizzle-orm";
 import { httpErrors } from "@fastify/sensible";
 import { server } from "@/app.js";
 import type { VotingAction } from "@/shared/types/zod.js";
-import type { FetchUserVotesForPostSlugIdResponseResponse } from "@/shared/types/dto.js";
-
+import type { FetchUserVotesForPostSlugIdsResponse } from "@/shared/types/dto.js";
 
 interface GetCommentIdAndContentIdFromCommentSlugIdProps {
   db: PostgresJsDatabase,
@@ -182,34 +181,36 @@ export async function castVoteForCommentSlugId({
 
 }
 
-interface GetUserVotesForPostSlugIdProps {
+interface GetUserVotesForPostSlugIdsProps {
   db: PostgresJsDatabase,
-  postSlugId: string,
+  postSlugIdList: string[],
   userId: string
 }
 
-export async function getUserVotesForPostSlugId({
-  db, postSlugId, userId }: GetUserVotesForPostSlugIdProps): Promise<FetchUserVotesForPostSlugIdResponseResponse> {
+export async function getUserVotesForPostSlugIds({
+  db, postSlugIdList, userId }: GetUserVotesForPostSlugIdsProps): Promise<FetchUserVotesForPostSlugIdsResponse> {
 
-  const userResponses = await db
-    .select({
-      optionChosen: voteContentTable.optionChosen,
-      commentSlugId: commentTable.slugId
-    })
-    .from(voteTable)
-    .innerJoin(voteContentTable, eq(voteContentTable.id, voteTable.currentContentId))
-    .innerJoin(commentTable, eq(commentTable.id, voteTable.commentId))
-    .innerJoin(postTable, eq(commentTable.postId, postTable.id))
-    .where(and(eq(postTable.slugId, postSlugId), eq(voteTable.authorId, userId)));
+  const userVoteList: FetchUserVotesForPostSlugIdsResponse = [];
 
-  const userVoteList: FetchUserVotesForPostSlugIdResponseResponse = [];
+  for (const postSlugId of postSlugIdList) {
+    const userResponses = await db
+      .select({
+        optionChosen: voteContentTable.optionChosen,
+        commentSlugId: commentTable.slugId
+      })
+      .from(voteTable)
+      .innerJoin(voteContentTable, eq(voteContentTable.id, voteTable.currentContentId))
+      .innerJoin(commentTable, eq(commentTable.id, voteTable.commentId))
+      .innerJoin(postTable, eq(commentTable.postId, postTable.id))
+      .where(and(eq(postTable.slugId, postSlugId), eq(voteTable.authorId, userId)));
 
-  userResponses.forEach(response => {
-    userVoteList.push({
-      commentSlugId: response.commentSlugId,
-      votingAction: response.optionChosen
-    })
-  });
+    userResponses.forEach(response => {
+      userVoteList.push( {
+        commentSlugId: response.commentSlugId,
+        votingAction: response.optionChosen
+      })
+    });
+  }
 
   return userVoteList;
 }

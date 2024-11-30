@@ -884,7 +884,7 @@
                 }
             }
         },
-        "/api/v1/voting/fetch-user-votes-for-post-slug-id": {
+        "/api/v1/voting/fetch-user-votes-for-post-slug-ids": {
             "post": {
                 "requestBody": {
                     "content": {
@@ -892,12 +892,15 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "postSlugId": {
-                                        "type": "string"
+                                    "postSlugIdList": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
                                     }
                                 },
                                 "required": [
-                                    "postSlugId"
+                                    "postSlugIdList"
                                 ],
                                 "additionalProperties": false
                             }

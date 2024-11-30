@@ -50,7 +50,7 @@ const props = defineProps<{
 const commentSortPreference = ref("");
 
 const { fetchCommentsForPost } = useBackendCommentApi();
-const { fetchUserVotesForPostSlugId } = useBackendVoteApi();
+const { fetchUserVotesForPostSlugIds } = useBackendVoteApi();
 
 const { isAuthenticated } = useAuthenticationStore();
 
@@ -67,7 +67,7 @@ onMounted(() => {
 async function fetchPersonalLikes() {
   if (isAuthenticated.value) {
     commentSlugIdLikedMap.value.clear();
-    const response = await fetchUserVotesForPostSlugId(props.postSlugId);
+    const response = await fetchUserVotesForPostSlugIds([props.postSlugId]);
     if (response) {
       response.forEach((userVote) => {
         commentSlugIdLikedMap.value.set(

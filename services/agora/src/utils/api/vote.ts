@@ -1,6 +1,6 @@
 import {
   type ApiV1VotingCastVotePostRequest,
-  type ApiV1VotingFetchUserVotesForPostSlugIdPostRequest,
+  type ApiV1VotingFetchUserVotesForPostSlugIdsPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
@@ -49,14 +49,14 @@ export function useBackendVoteApi() {
     }
   }
 
-  async function fetchUserVotesForPostSlugId(postSlugId: string) {
+  async function fetchUserVotesForPostSlugIds(postSlugIdList: string[]) {
     try {
-      const params: ApiV1VotingFetchUserVotesForPostSlugIdPostRequest = {
-        postSlugId: postSlugId,
+      const params: ApiV1VotingFetchUserVotesForPostSlugIdsPostRequest = {
+        postSlugIdList: postSlugIdList,
       };
 
       const { url, options } =
-        await DefaultApiAxiosParamCreator().apiV1VotingFetchUserVotesForPostSlugIdPost(
+        await DefaultApiAxiosParamCreator().apiV1VotingFetchUserVotesForPostSlugIdsPost(
           params
         );
       const encodedUcan = await buildEncodedUcan(url, options);
@@ -64,7 +64,7 @@ export function useBackendVoteApi() {
         undefined,
         undefined,
         api
-      ).apiV1VotingFetchUserVotesForPostSlugIdPost(params, {
+      ).apiV1VotingFetchUserVotesForPostSlugIdsPost(params, {
         headers: {
           ...buildAuthorizationHeader(encodedUcan),
         },
@@ -81,5 +81,5 @@ export function useBackendVoteApi() {
     }
   }
 
-  return { fetchUserVotesForPostSlugId, castVoteForComment };
+  return { fetchUserVotesForPostSlugIds, castVoteForComment };
 }
