@@ -4,9 +4,9 @@
 
 <script setup lang="ts">
 import { useAuthenticationStore } from "src/stores/authentication";
-import { usePhoneVerification } from "src/utils/auth/email/verification";
 import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
+import { useBackendPhoneVerification } from "src/utils/api/phoneVerification";
 
 const router = useRouter();
 const {
@@ -14,7 +14,7 @@ const {
   verificationPhoneNumber,
   verificationDefaultCallingCode,
 } = useAuthenticationStore();
-const phoneVerification = usePhoneVerification();
+const phoneVerification = useBackendPhoneVerification();
 
 async function skipButton() {
   verificationPhoneNumber.value = "+33612345678";

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <form class="formStyle" @submit.prevent="goToNextStep()">
-      <StepperLayout :submit-call-back="goToNextStep" :current-step="3.5" :total-steps="6"
+    <form class="formStyle" @submit.prevent="">
+      <StepperLayout :submit-call-back="nextButtonClicked" :current-step="3.5" :total-steps="6"
         :enable-next-button="verificationCode.length == 6" :show-next-button="true">
 
         <template #header>
@@ -24,17 +24,17 @@
               Expires in {{ verificationCodeExpirySeconds }}s
             </div>
 
-            <div v-if="verificationCodeExpirySeconds != 0" class="weakColor codeExpiry">
+            <div v-if="verificationCodeExpirySeconds == 0" class="weakColor codeExpiry">
               Code expired
             </div>
           </div>
 
           <div class="optionButtons">
-            <ZKButton class="buttonStyle" label="Change Number" text-color="blue" @click="changeNumber()" />
+            <ZKButton label="Change Number" text-color="blue" @click="changePhoneNumber()" />
 
-            <ZKButton class="buttonStyle"
+            <ZKButton
               :label="verificationNextCodeSeconds > 0 ? 'Resend Code in ' + verificationNextCodeSeconds + 's' : 'Resend Code'"
-              :disabled="verificationNextCodeSeconds > 0" text-color="blue" />
+              :disabled="verificationNextCodeSeconds > 0" text-color="blue" @click="clickedResendButton()" />
           </div>
 
         </template>
@@ -48,12 +48,17 @@ import StepperLayout from "src/components/onboarding/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/InfoHeader.vue";
 import { storeToRefs } from "pinia";
 import { phoneVerificationStore } from "src/stores/verification/phone";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import InputOtp from "primevue/inputotp";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useRouter } from "vue-router";
 import { usePostStore } from "src/stores/post";
+import { useBackendPhoneVerification } from "src/utils/api/phoneVerification";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { useDialog } from "src/utils/ui/dialog";
+import type { ApiV1AuthAuthenticatePost200Response } from "src/api";
 
+const { isAuthenticated } = useAuthenticationStore();
 const { verificationPhoneNumber } = storeToRefs(phoneVerificationStore());
 
 const verificationCode = ref("");
@@ -62,15 +67,105 @@ const verificationNextCodeSeconds = ref(0);
 const verificationCodeExpirySeconds = ref(0);
 
 const router = useRouter();
+const dialog = useDialog();
 
 const { loadPostData } = usePostStore();
 
-async function goToNextStep() {
-  await loadPostData(false);
-  router.push({ name: "onboarding-step4-username" });
+const { requestCode, submitCode } = useBackendPhoneVerification();
+
+onMounted(() => {
+  requestCodeClicked(false);
+});
+
+function clickedResendButton() {
+  verificationCode.value = "";
+  requestCodeClicked(true);
 }
 
-function changeNumber() {
+async function nextButtonClicked() {
+  const response = await submitCode(Number(verificationCode.value));
+  if (response) {
+    await loadPostData(false);
+    router.push({ name: "onboarding-step4-username" });
+  } else {
+    dialog.showMessage("Authentication", "Invalid code");
+  }
+}
+
+async function requestCodeClicked(isRequestingNewCode: boolean) {
+  const response = await requestCode({
+    isRequestingNewCode: isRequestingNewCode,
+    phoneNumber: verificationPhoneNumber.value,
+    defaultCallingCode: "+33"
+  });
+
+  if (response.isSuccessful) {
+    processRequestCodeResponse(response.data);
+  } else {
+    if (response.error == "already_logged_in") {
+      isAuthenticated.value = true;
+      router.push({ name: "default-home-feed" });
+    } else if (response.error == "throttled") {
+      processRequestCodeResponse(response.data);
+      dialog.showMessage(
+        "Authentication",
+        "Too many attempts. Please wait before requesting a new code"
+      );
+    } else {
+      // do nothing
+    }
+  }
+}
+
+function processRequestCodeResponse(data: ApiV1AuthAuthenticatePost200Response | null) {
+
+  if (data == null) {
+    console.log("Null data from request code response");
+    return;
+  }
+
+  {
+    const nextCodeSoonestTime = new Date(data.nextCodeSoonestTime);
+    const now = new Date();
+
+    const diff = nextCodeSoonestTime.getTime() - now.getTime();
+    const nextCodeSecondsWait = Math.round(diff / 1000);
+
+    verificationNextCodeSeconds.value = nextCodeSecondsWait;
+    decrementNextCodeTimer();
+  }
+
+  {
+    const codeExpiryTime = new Date(data.codeExpiry);
+    const now = new Date();
+
+    const diff = codeExpiryTime.getTime() - now.getTime();
+    const codeExpirySeconds = Math.round(diff / 1000);
+
+    verificationCodeExpirySeconds.value = codeExpirySeconds;
+    decrementCodeExpiryTimer();
+  }
+}
+
+function decrementCodeExpiryTimer() {
+  verificationCodeExpirySeconds.value -= 1;
+  if (verificationCodeExpirySeconds.value != 0) {
+    setTimeout(function () {
+      decrementCodeExpiryTimer();
+    }, 1000);
+  }
+}
+
+function decrementNextCodeTimer() {
+  verificationNextCodeSeconds.value -= 1;
+  if (verificationNextCodeSeconds.value != 0) {
+    setTimeout(function () {
+      decrementNextCodeTimer();
+    }, 1000);
+  }
+}
+
+function changePhoneNumber() {
   history.back();
 }
 

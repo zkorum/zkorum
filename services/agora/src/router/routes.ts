@@ -198,9 +198,9 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: "/authentication",
+    path: "/welcome",
     components: {
-      default: () => import("pages/authentication/index.vue"),
+      default: () => import("pages/welcome/index.vue"),
     },
     name: "welcome",
   },
@@ -372,64 +372,6 @@ const routes: RouteRecordRaw[] = [
         name: "onboarding-step6-preferences",
       },
     ]
-  },
-  {
-    path: "/authentication",
-    component: MainLayout,
-    props: {
-      addBottomPadding: true,
-      enableHeader: true,
-      enableFooter: false,
-      useStylelessFooter: false,
-      reducedWidth: true,
-    } as MainLayoutProps,
-    children: [
-      /*
-      {
-        path: "/login/email",
-        components: {
-          default: () => import("src/pages/authentication/login/email/index.vue"), topmenubar: DefaultMenuBar
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
-          } as DefaultMenuBarProps
-        },
-        name: "login-email"
-      },
-      {
-        path: "/login/verify-email",
-        components: {
-          default: () => import("src/pages/authentication/login/verify/index.vue"), topmenubar: DefaultMenuBar
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
-          } as DefaultMenuBarProps
-        },
-        name: "login-verify"
-      },
-    */
-      {
-        path: "/verification/successful",
-        components: {
-          default: () =>
-            import(
-              "src/pages/authentication/verification/successful/index.vue"
-            ),
-          topmenubar: DefaultMenuBar,
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: false,
-            hasSettingsButton: true,
-            hasCloseButton: false,
-            hasLoginButton: false,
-          } as DefaultMenuBarProps,
-        },
-        name: "verification-successful",
-      },
-    ],
   },
 
   // Always leave this as last one,

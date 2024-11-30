@@ -1,6 +1,6 @@
 import { useAuthenticationStore } from "src/stores/authentication";
-import { usePhoneVerification } from "src/utils/auth/email/verification";
 import { useRouter } from "vue-router";
+import { useBackendPhoneVerification } from "../api/phoneVerification";
 
 export function useSkipAuth() {
 
@@ -12,7 +12,7 @@ export function useSkipAuth() {
     verificationPhoneNumber,
     verificationDefaultCallingCode,
   } = useAuthenticationStore();
-  const phoneVerification = usePhoneVerification();
+  const phoneVerification = useBackendPhoneVerification();
 
   async function skipEverything() {
     verificationPhoneNumber.value = "+33612345678";

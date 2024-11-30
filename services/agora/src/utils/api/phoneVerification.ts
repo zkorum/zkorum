@@ -7,12 +7,12 @@ interface RequestCodeProps {
   defaultCallingCode: string;
 }
 
-export function usePhoneVerification() {
+export function useBackendPhoneVerification() {
   const { smsCode, sendSmsCode } = useBackendAuthApi();
 
   const { isAuthenticated } = useAuthenticationStore();
 
-  async function submitCode(code: number) {
+  async function submitCode(code: number): Promise<boolean> {
     if (process.env.VITE_USE_DUMMY_ACCESS == "true") {
       code = 0;
     }
@@ -20,14 +20,17 @@ export function usePhoneVerification() {
     const response = await smsCode(code);
     if (response.data?.success) {
       isAuthenticated.value = true;
+      return true;
       //TODO: cast to 200 DTO and parse data
     } else {
       // TODO: cast to expected DTO and switch the possible enum errors
       console.log(response.error);
       if (response.error == "already_logged_in") {
         console.log("User is already logged in");
+        return false;
       } else {
         console.log("Failed to submit email verification code");
+        return false;
       }
     }
   }
