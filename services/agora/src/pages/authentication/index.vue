@@ -10,11 +10,19 @@
 
 <script setup lang="ts">
 import ZKButton from "src/components/ui-library/ZKButton.vue";
+import { usePostStore } from "src/stores/post";
+import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 const { t } = useI18n();
 
 const router = useRouter();
+
+const { resetPostData } = usePostStore();
+
+onMounted(() => {
+  resetPostData();
+})
 
 function skipAuthentication() {
   router.push({ name: "default-home-feed" });

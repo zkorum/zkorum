@@ -1,5 +1,4 @@
 import { useStorage } from "@vueuse/core";
-import { usePostStore } from "./post";
 
 export function useAuthenticationStore() {
 
@@ -7,11 +6,8 @@ export function useAuthenticationStore() {
   const verificationDefaultCallingCode = useStorage("verification_default_calling_code", "");
   const isAuthenticated = useStorage("is_authenticated", false);
 
-  const { resetPostData } = usePostStore();
-
   function userLogout() {
     isAuthenticated.value = false;
-    resetPostData();
   }
 
   return {
