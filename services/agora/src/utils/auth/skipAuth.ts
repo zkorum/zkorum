@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 
 export function useSkipAuth() {
 
-  const finalRouteName = "default-home-feed";
+  const finalRouteName = "onboarding-step4-username";
 
   const router = useRouter();
   const {

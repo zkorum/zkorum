@@ -44,7 +44,7 @@
           <Tag value="New"></Tag>
         </div>
 
-        <ZKButton label="Save and Close" color="primary" @click="skipEverything" />
+        <ZKButton label="Save and Close" color="primary" @click="goToHome" />
 
       </template>
 
@@ -53,13 +53,17 @@
 </template>
 
 <script setup lang="ts">
-import { useSkipAuth } from "src/utils/auth/skipAuth";
 import StepperLayout from "src/components/onboarding/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/InfoHeader.vue";
 import Tag from "primevue/tag";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
+import { useRouter } from "vue-router";
 
-const { skipEverything } = useSkipAuth();
+const router = useRouter();
+
+function goToHome() {
+  router.push({ name: "default-home-feed" });
+}
 
 </script>
 

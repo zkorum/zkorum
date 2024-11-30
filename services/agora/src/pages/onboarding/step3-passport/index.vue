@@ -8,7 +8,7 @@
       </template>
 
       <template #body>
-        <ZKCard padding="1rem">
+        <ZKCard padding="1.5rem">
           <div class="stepContainer">
             <div class="stepFlex">
               <q-icon name="mdi-numeric-1" size="2rem" class="numberCircle" />
@@ -26,19 +26,20 @@
 
             <div class="stepFlex">
               <q-icon name="mdi-numeric-2" size="2rem" class="numberCircle" />
-              Claim your anonymous ID
+              Claim your anonymous ID on RariMe
             </div>
             <div class="stepFlex">
               <q-icon name="mdi-numeric-3" size="2rem" class="numberCircle" />
-              Come back here and click the verify button
+              Come back here and click verify
             </div>
 
-            <ZKButton label="Verify with RariMe" color="primary" @click="goToNextRoute()" />
+            <ZKButton label="Verify" color="primary" @click="clickedVerifyButton()" />
 
-            <ZKButton label="I'd rather verify with my phone number" text-color="color-text-strong"
-              @click="goToPhoneVerification()" />
           </div>
         </ZKCard>
+
+        <ZKButton label="I'd rather verify with my phone number" text-color="color-text-strong"
+          @click="goToPhoneVerification()" />
 
       </template>
 
@@ -56,6 +57,7 @@ import { useRouter } from "vue-router";
 import { ref } from "vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { usePostStore } from "src/stores/post";
+import { useSkipAuth } from "src/utils/auth/skipAuth";
 
 const description = "RariMe is a ZK-powered identity wallet that converts your passport into an anonymous digital ID, stored on your device, so you can prove that you’re a unique human without sharing any personal data with anyone.";
 
@@ -67,7 +69,10 @@ const rarimeLink = ref("");
 
 const { loadPostData } = usePostStore();
 
-async function goToNextRoute() {
+const { skipEverything } = useSkipAuth();
+
+async function clickedVerifyButton() {
+  skipEverything();
   await loadPostData(false);
   router.push({ name: "onboarding-step4-username" });
 }
