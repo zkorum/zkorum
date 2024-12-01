@@ -72,9 +72,12 @@ const { loadPostData } = usePostStore();
 const { skipEverything } = useSkipAuth();
 
 async function clickedVerifyButton() {
-  skipEverything();
-  await loadPostData(false);
-  router.push({ name: "onboarding-step4-username" });
+  const result = await skipEverything();
+  if (result) {
+    router.push({ name: "onboarding-step4-username" });
+    await loadPostData(false);
+    router.push({ name: "onboarding-step4-username" });
+  }
 }
 
 if (quasar.platform.is.android) {

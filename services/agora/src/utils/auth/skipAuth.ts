@@ -1,12 +1,8 @@
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useRouter } from "vue-router";
 import { useBackendPhoneVerification } from "../api/phoneVerification";
 
 export function useSkipAuth() {
 
-  const finalRouteName = "onboarding-step4-username";
-
-  const router = useRouter();
   const {
     isAuthenticated,
     verificationPhoneNumber,
@@ -26,15 +22,16 @@ export function useSkipAuth() {
     if (requestCodeResponse.isSuccessful) {
       await phoneVerification.submitCode(0);
       isAuthenticated.value = true;
-      router.push({ name: finalRouteName });
+      return true;
     } else {
       console.log("Failed to request code");
       if (requestCodeResponse.error == "already_logged_in") {
         console.log("Already logged in");
         isAuthenticated.value = true;
-        router.push({ name: finalRouteName });
+        return true;
       } else if (requestCodeResponse.error == "throttled") {
         console.log("Throttled please try again later");
+        return false;
       }
     }
   }
