@@ -1,5 +1,5 @@
 {
-  "id": "e4288f51-cb3b-49c4-959c-7825aba47f43",
+  "id": "3bb71ff5-9b3d-4fb0-a447-5368ddf12837",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2026,6 +2026,180 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "public.user_language_preference": {
+      "name": "user_language_preference",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "user_language_preference_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lang_code": {
+          "name": "lang_code",
+          "type": "lang_code",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "user_idx_lang": {
+          "name": "user_idx_lang",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_language_preference_user_id_user_id_fk": {
+          "name": "user_language_preference_user_id_user_id_fk",
+          "tableFrom": "user_language_preference",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_unique_language": {
+          "name": "user_unique_language",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id",
+            "lang_code"
+          ]
+        }
+      },
+      "checkConstraints": {}
+    },
+    "public.user_post_topic_preference": {
+      "name": "user_post_topic_preference",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "user_post_topic_preference_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "post_topic_options": {
+          "name": "post_topic_options",
+          "type": "post_topic_options",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "user_idx_topic": {
+          "name": "user_idx_topic",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_post_topic_preference_user_id_user_id_fk": {
+          "name": "user_post_topic_preference_user_id_user_id_fk",
+          "tableFrom": "user_post_topic_preference",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_unique_topic": {
+          "name": "user_unique_topic",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id",
+            "post_topic_options"
+          ]
+        }
+      },
+      "checkConstraints": {}
+    },
     "public.user": {
       "name": "user",
       "schema": "",
@@ -2047,6 +2221,20 @@
           "type": "varchar(23)",
           "primaryKey": false,
           "notNull": true
+        },
+        "is_anonymous": {
+          "name": "is_anonymous",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "show_flagged_content": {
+          "name": "show_flagged_content",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "post_count": {
           "name": "post_count",
@@ -2094,7 +2282,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "user_user_name_unique": {
+          "name": "user_user_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_name"
+          ]
+        }
+      },
       "checkConstraints": {}
     },
     "public.vote_content": {
@@ -2689,8 +2885,8 @@
         "other"
       ]
     },
-    "public.lang": {
-      "name": "lang",
+    "public.lang_code": {
+      "name": "lang_code",
       "schema": "public",
       "values": [
         "en",
@@ -2968,6 +3164,15 @@
         "ZA",
         "ZM",
         "ZW"
+      ]
+    },
+    "public.post_topic_options": {
+      "name": "post_topic_options",
+      "schema": "public",
+      "values": [
+        "technology",
+        "environment",
+        "politics"
       ]
     },
     "public.proof_type": {

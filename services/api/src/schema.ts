@@ -10,6 +10,7 @@ import {
     text,
     type AnyPgColumn,
     unique,
+    index,
 } from "drizzle-orm/pg-core";
 // import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_COMMENT, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 // WARNING - change this in shared.ts as well
@@ -562,13 +563,14 @@ export const phoneCountryCodeEnum = pgEnum("phone_country_code", [
 // The association between users and devices/emails can change over time.
 // A user must have at least 1 validated primary email and 1 device associated with it.
 // The "at least one" conditon is not enforced directly in the SQL model yet. It is done in the application code.
-export const languageOptions = pgEnum("lang", ["en", "es", "fr", "zh"]);
 export const userTable = pgTable("user", {
     id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
     organisationId: integer("organisation_id").references(
         () => organisationTable.id,
     ), // for now a user can belong to at most 1 organisation
-    userName: varchar("user_name", { length: MAX_LENGTH_USERNAME }).notNull(),
+    userName: varchar("user_name", { length: MAX_LENGTH_USERNAME }).notNull().unique(),
+    isAnonymous: boolean("is_anonymous").notNull().default(false),
+    showFlaggedContent: boolean("show_flagged_content").notNull().default(false),
     postCount: integer("post_count").notNull().default(0),
     commentCount: integer("comment_count").notNull().default(0),
     createdAt: timestamp("created_at", {
@@ -584,6 +586,47 @@ export const userTable = pgTable("user", {
         .defaultNow()
         .notNull(),
 });
+
+export const languageOptions = pgEnum("lang_code", ["en", "es", "fr", "zh"]);
+export const userLanguagePreferenceTable = pgTable("user_language_preference", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    userId: uuid("user_id")
+        .references(() => userTable.id)
+        .notNull(),
+    lang: languageOptions("lang_code"),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+}, (t) => {
+    return {
+        userIdx: index("user_idx_lang").on(t.userId),
+        unqPreference: unique("user_unique_language").on(t.userId, t.lang),
+    };
+});
+
+export const postTopicOptions = pgEnum("post_topic_options", ["technology", "environment", "politics"]);
+export const userPostTopicPreferenceTable = pgTable("user_post_topic_preference", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    userId: uuid("user_id")
+        .references(() => userTable.id)
+        .notNull(),
+    topic: postTopicOptions("post_topic_options"),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+}, (t) => {
+    return {
+        userIdx: index("user_idx_topic").on(t.userId),
+        unqPreference: unique("user_unique_topic").on(t.userId, t.topic),
+    };
+});
+
 
 export const organisationTable = pgTable("organisation", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
