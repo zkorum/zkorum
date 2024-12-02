@@ -2,10 +2,8 @@ import { Platform } from "quasar";
 import { z } from "zod";
 
 export function getDateString(dateObject: Date) {
-  const parsedDate = new Date(dateObject);
-  return parsedDate.toLocaleDateString("en-US", {
-    year: "numeric", month: "short",
-    day: "numeric"
+  return dateObject.toLocaleDateString("en-US", {
+    year: "numeric", month: "long", day: "numeric"
   });
 }
 

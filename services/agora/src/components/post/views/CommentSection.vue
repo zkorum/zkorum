@@ -4,7 +4,7 @@
       <CommentSortSelector @changed-algorithm="(value) => (commentSortPreference = value)" />
 
       <div v-if="commentItems.length == 0 && commentSortPreference != 'clusters'" class="noCommentMessage">
-        There are no comments in this post.
+        There are no opinions in this conservation.
       </div>
 
       <div v-if="commentItems.length > 0" class="commentListFlex">
@@ -50,7 +50,7 @@ const props = defineProps<{
 const commentSortPreference = ref("");
 
 const { fetchCommentsForPost } = useBackendCommentApi();
-const { fetchUserVotesForPostSlugId } = useBackendVoteApi();
+const { fetchUserVotesForPostSlugIds } = useBackendVoteApi();
 
 const { isAuthenticated } = useAuthenticationStore();
 
@@ -67,7 +67,7 @@ onMounted(() => {
 async function fetchPersonalLikes() {
   if (isAuthenticated.value) {
     commentSlugIdLikedMap.value.clear();
-    const response = await fetchUserVotesForPostSlugId(props.postSlugId);
+    const response = await fetchUserVotesForPostSlugIds([props.postSlugId]);
     if (response) {
       response.forEach((userVote) => {
         commentSlugIdLikedMap.value.set(

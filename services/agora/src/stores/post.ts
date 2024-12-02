@@ -155,7 +155,7 @@ export const usePostStore = defineStore("post", () => {
     const response = await fetchRecentPost(undefined, isAuthenticated.value);
     if (response != null) {
       if (response.postDataList.length > 0 && masterPostDataList.value.length > 0) {
-        if (new Date(response.postDataList[0].metadata.createdAt) != masterPostDataList.value[0].metadata.createdAt) {
+        if (new Date(response.postDataList[0].metadata.createdAt).getTime() != masterPostDataList.value[0].metadata.createdAt.getTime()) {
           return true;
         } else {
           return false;

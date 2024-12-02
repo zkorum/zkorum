@@ -67,8 +67,14 @@ export async function fetchFeed({
         userId: userId
     });
 
+    let reachedEndOfFeed = true;
+    if (posts.length == (targetLimit + 1)) {
+        posts.pop();
+        reachedEndOfFeed = false;
+    }
+
     return {
-        postDataList: posts.length == targetLimit ? posts.splice(-1) : posts,
-        reachedEndOfFeed: posts.length == targetLimit ? false : true,
+        postDataList: posts,
+        reachedEndOfFeed: reachedEndOfFeed,
     };
 }

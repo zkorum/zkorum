@@ -6,6 +6,7 @@
 import { defineConfig } from "#q-app/wrappers";
 // TODO: add env var to use TLS/SSL
 // import basicSsl from "@vitejs/plugin-basic-ssl";
+import "dotenv/config";
 
 export default defineConfig((ctx) => {
   return {

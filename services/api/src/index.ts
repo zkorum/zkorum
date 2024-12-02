@@ -32,7 +32,7 @@ import {
     postNewComment,
 } from "./service/comment.js";
 import { getUserPollResponse, submitPollResponse } from "./service/poll.js";
-import { castVoteForCommentSlugId, getUserVotesForPostSlugId } from "./service/voting.js";
+import { castVoteForCommentSlugId, getUserVotesForPostSlugIds } from "./service/voting.js";
 import { getUserComments, getUserPosts, getUserProfile } from "./service/user.js";
 
 server.register(fastifySensible);
@@ -500,11 +500,11 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
-            url: `/api/${apiVersion}/voting/fetch-user-votes-for-post-slug-id`,
+            url: `/api/${apiVersion}/voting/fetch-user-votes-for-post-slug-ids`,
             schema: {
                 body: Dto.fetchUserVotesForPostSlugIdRequest,
                 response: {
-                    200: Dto.fetchUserVotesForPostSlugIdResponse,
+                    200: Dto.fetchUserVotesForPostSlugIdsResponse,
                 },
             },
             handler: async (request) => {
@@ -515,9 +515,9 @@ server.after(() => {
                 if (!status.isLoggedIn) {
                     throw server.httpErrors.unauthorized("Device is not logged in");
                 } else {
-                    return await getUserVotesForPostSlugId({
+                    return await getUserVotesForPostSlugIds({
                         db: db,
-                        postSlugId: request.body.postSlugId,
+                        postSlugIdList: request.body.postSlugIdList,
                         userId: status.userId
                     });
                 }

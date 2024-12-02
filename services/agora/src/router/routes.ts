@@ -198,143 +198,180 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: "/authentication",
+    path: "/welcome",
     components: {
-      default: () => import("pages/authentication/index.vue"),
+      default: () => import("pages/welcome/index.vue"),
     },
     name: "welcome",
   },
   {
-    path: "/authentication",
-    component: MainLayout,
+    path: "/onboarding",
+    components: {
+      default: MainLayout,
+    },
     props: {
-      addBottomPadding: true,
-      enableHeader: true,
-      enableFooter: false,
-      useStylelessFooter: false,
-      reducedWidth: true,
-    } as MainLayoutProps,
+      default: {
+        addBottomPadding: false,
+        enableHeader: true,
+        enableFooter: false,
+        useStylelessFooter: false,
+        reducedWidth: true,
+      } as MainLayoutProps,
+    },
     children: [
-      /*
       {
-        path: "/login/email",
-        components: {
-          default: () => import("src/pages/authentication/login/email/index.vue"), topmenubar: DefaultMenuBar
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
-          } as DefaultMenuBarProps
-        },
-        name: "login-email"
-      },
-      {
-        path: "/login/verify-email",
-        components: {
-          default: () => import("src/pages/authentication/login/verify/index.vue"), topmenubar: DefaultMenuBar
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true, hasSettingsButton: true, hasCloseButton: false, hasLoginButton: false
-          } as DefaultMenuBarProps
-        },
-        name: "login-verify"
-      },
-    */
-      {
-        path: "/verification/option/passport",
+        path: "step1",
         components: {
           default: () =>
             import(
-              "src/pages/authentication/verification/option/passport/index.vue"
+              "src/pages/onboarding/step1/index.vue"
             ),
           topmenubar: DefaultMenuBar,
         },
         props: {
           topmenubar: {
             hasBackButton: true,
-            hasSettingsButton: true,
+            hasSettingsButton: false,
             hasCloseButton: false,
             hasLoginButton: false,
           } as DefaultMenuBarProps,
         },
-        name: "verification-option-passport",
+        name: "onboarding-step1",
       },
       {
-        path: "/verification/option/phone/number",
+        path: "step2",
         components: {
           default: () =>
             import(
-              "src/pages/authentication/verification/option/phone/number/index.vue"
+              "src/pages/onboarding/step2/index.vue"
             ),
           topmenubar: DefaultMenuBar,
         },
         props: {
           topmenubar: {
             hasBackButton: true,
-            hasSettingsButton: true,
+            hasSettingsButton: false,
             hasCloseButton: false,
             hasLoginButton: false,
           } as DefaultMenuBarProps,
         },
-        name: "verification-option-phone-number",
+        name: "onboarding-step2",
       },
       {
-        path: "/verification/option/phone/code",
+        path: "step3-passport",
         components: {
           default: () =>
             import(
-              "src/pages/authentication/verification/option/phone/code/index.vue"
+              "src/pages/onboarding/step3-passport/index.vue"
             ),
           topmenubar: DefaultMenuBar,
         },
         props: {
           topmenubar: {
             hasBackButton: true,
-            hasSettingsButton: true,
+            hasSettingsButton: false,
             hasCloseButton: false,
             hasLoginButton: false,
           } as DefaultMenuBarProps,
         },
-        name: "verification-option-phone-code",
+        name: "onboarding-step3-passport",
       },
       {
-        path: "/verification/options",
-        components: {
-          default: () =>
-            import("src/pages/authentication/verification/options/index.vue"),
-          topmenubar: DefaultMenuBar,
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: false,
-            hasSettingsButton: true,
-            hasCloseButton: false,
-            hasLoginButton: false,
-          } as DefaultMenuBarProps,
-        },
-        name: "verification-options",
-      },
-      {
-        path: "/verification/successful",
+        path: "step3-phone-1",
         components: {
           default: () =>
             import(
-              "src/pages/authentication/verification/successful/index.vue"
+              "src/pages/onboarding/step3-phone-1/index.vue"
             ),
           topmenubar: DefaultMenuBar,
         },
         props: {
           topmenubar: {
-            hasBackButton: false,
-            hasSettingsButton: true,
+            hasBackButton: true,
+            hasSettingsButton: false,
             hasCloseButton: false,
             hasLoginButton: false,
           } as DefaultMenuBarProps,
         },
-        name: "verification-successful",
+        name: "onboarding-step3-phone-1",
       },
-    ],
+      {
+        path: "step3-phone-2",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step3-phone-2/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step3-phone-2",
+      },
+      {
+        path: "step4-username",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step4-username/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step4-username",
+      },
+      {
+        path: "step5-experience",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step5-experience/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step5-experience",
+      },
+      {
+        path: "step6-preferences",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step6-preferences/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step6-preferences",
+      },
+    ]
   },
 
   // Always leave this as last one,

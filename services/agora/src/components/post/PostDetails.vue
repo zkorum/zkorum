@@ -5,7 +5,7 @@
       <div class="container postPadding">
         <div class="innerContainer">
           <PostMetadata :poster-user-name="extendedPostData.metadata.authorUserName"
-            :created-at="getDateString(extendedPostData.metadata.createdAt)" :is-compat-size="true"
+            :created-at="new Date(extendedPostData.metadata.createdAt)" :is-compat-size="true"
             :skeleton-mode="skeletonMode" :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime" />
 
           <div class="postDiv">
@@ -85,7 +85,6 @@ import { useRouteQuery } from "@vueuse/router";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 import Skeleton from "primevue/skeleton";
 import type { ExtendedPost } from "src/shared/types/zod";
-import { getDateString } from "src/utils/common";
 
 const props = defineProps<{
   extendedPostData: ExtendedPost;

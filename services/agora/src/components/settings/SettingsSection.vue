@@ -8,18 +8,21 @@
       <ZKCard padding="0rem">
         <div class="flexStyle">
           <div v-for="(item, index) in settingsItemList" :key="item.icon">
-            <RouterLink :to="{ name: item.routeName }">
-              <div class="menuItem" @click="item.action">
-                <div>
-                  <q-icon :name="item.icon" size="1.5rem" />
+            <ZKHoverEffect :enable-hover="true">
+              <RouterLink :to="{ name: item.routeName }">
+                <div class="menuItem" @click="item.action">
+                  <div>
+                    <q-icon :name="item.icon" size="1.5rem" />
+                  </div>
+                  <div>
+                    {{ item.label }}
+                  </div>
                 </div>
-                <div>
-                  {{ item.label }}
-                </div>
-              </div>
 
-              <q-separator v-if="index != settingsItemList.length - 1" />
-            </RouterLink>
+                <q-separator v-if="index != settingsItemList.length - 1" />
+              </RouterLink>
+            </ZKHoverEffect>
+
           </div>
         </div>
       </ZKCard>
@@ -30,6 +33,7 @@
 <script setup lang="ts">
 import { type SettingsInterface } from "src/utils/component/settings/settings";
 import ZKCard from "../ui-library/ZKCard.vue";
+import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 
 defineProps<{
   settingsItemList: SettingsInterface[];

@@ -200,7 +200,7 @@ export function useBackendAuthApi() {
           console.log("auth check had been throttled");
         } else {
           // unauthorized
-          console.group("Failed to check user login status");
+          console.log("User is unauthorized");
           console.log(status.error);
           userLogout();
         }

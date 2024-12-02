@@ -223,7 +223,7 @@ export async function verifyOtp({
                 userId: resultOtp[0].userId,
                 now,
                 sessionExpiry: loginSessionExpiry,
-                userName: "TEST USER"
+                userName: "TEST_USER"
             });
             return {
                 success: true,
@@ -332,7 +332,7 @@ export async function register({
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(userTable).values({
             userName: userName,
-            id: userId,
+            id: userId
         });
         await tx.insert(deviceTable).values({
             userId: userId,

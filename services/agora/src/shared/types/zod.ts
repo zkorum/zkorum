@@ -76,7 +76,8 @@ export const zodPollResponse = z.object({
 }).strict();
 export const zodSlugId = z.string().max(10);
 export const zodCommentCount = z.number().int().nonnegative();
-export const zodUserName = z.string().max(MAX_LENGTH_USERNAME).min(MIN_LENGTH_USERNAME);
+export const userNameRegex = new RegExp(`^[a-zA-Z0-9_]{${MIN_LENGTH_USERNAME.toString()},${MAX_LENGTH_USERNAME.toString()}}$`);
+export const zodUserName = z.string().regex(userNameRegex);
 export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,

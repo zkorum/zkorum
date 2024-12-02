@@ -21,7 +21,7 @@
             <div v-if="!skeletonMode">
               <div v-if="displayAbsoluteTime">
                 <Tag>
-                  {{ createdAt }}
+                  {{ getDateString(new Date(createdAt)) }}
                 </Tag>
               </div>
               <div v-if="!displayAbsoluteTime">
@@ -52,10 +52,11 @@ import Skeleton from "primevue/skeleton";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import Tag from "primevue/tag";
 import { formatTimeAgo } from "@vueuse/core";
+import { getDateString } from "src/utils/common";
 
 defineProps<{
   posterUserName: string;
-  createdAt: string;
+  createdAt: Date;
   skeletonMode: boolean;
   showAuthor: boolean;
   displayAbsoluteTime: boolean;

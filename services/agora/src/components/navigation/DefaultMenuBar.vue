@@ -7,7 +7,7 @@
     </div>
 
     <div class="menuButtons">
-      <RouterLink v-if="hasLoginButton && !isAuthenticated && showAuthButton" :to="{ name: 'verification-options' }">
+      <RouterLink v-if="hasLoginButton && !isAuthenticated && showAuthButton" :to="{ name: 'onboarding-step1' }">
         <ZKButton label="Log in" text-color="white" color="warning" />
       </RouterLink>
 

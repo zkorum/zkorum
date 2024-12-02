@@ -1,38 +1,29 @@
 <template>
   <div>
-    <AuthContentWrapper>
-      <template #title> Phone Verification </template>
-      <template #body>
-        <form @submit.prevent="validateNumber()">
-          <div class="container">
-            <div>A one-time password will be sent to your phone number.</div>
+    <form @submit.prevent="">
+      <StepperLayout :submit-call-back="validateNumber" :current-step="3" :total-steps="6"
+        :enable-next-button="selectedCountryCode.code.length > 0 && inputNumber.length > 0" :show-next-button="true">
 
-            <Select
-              v-model="selectedCountryCode"
-              filter
-              :virtual-scroller-options="{
-                lazy: true,
-                itemSize: 40,
-                numToleratedItems: 10,
-              }"
-              :options="countries"
-              option-label="name"
-              placeholder="Country Code"
-            >
+        <template #header>
+          <InfoHeader title="Verify with phone number" :description="description" icon-name="mdi-phone" />
+        </template>
+
+        <template #body>
+
+          <div class="container">
+            <div>You will receive a 6-digit one-time code by SMS.</div>
+
+            <Select v-model="selectedCountryCode" filter :virtual-scroller-options="{
+              lazy: true,
+              itemSize: 40,
+              numToleratedItems: 10,
+            }" :options="countries" option-label="name" placeholder="Country Code">
               <template #value="slotProps">
-                <div
-                  v-if="slotProps.value.code != ''"
-                  class="flex items-center"
-                >
-                  <img
-                    :alt="slotProps.value.label"
-                    :src="
-                      '/feed/images/communities/flags/' +
-                      slotProps.value.country +
-                      '.svg'
-                    "
-                    class="flagImg"
-                  />
+                <div v-if="slotProps.value.code != ''" class="flex items-center">
+                  <img :alt="slotProps.value.label" :src="'/feed/images/communities/flags/' +
+                    slotProps.value.country +
+                    '.svg'
+                    " class="flagImg" />
                   <div>+ {{ slotProps.value.code }}</div>
                 </div>
                 <span v-else>
@@ -41,50 +32,31 @@
               </template>
               <template #option="slotProps">
                 <div class="innerOption">
-                  <img
-                    :src="
-                      '/feed/images/communities/flags/' +
-                      slotProps.option.country +
-                      '.svg'
-                    "
-                    class="flagImg"
-                    loading="lazy"
-                  />
+                  <img :src="'/feed/images/communities/flags/' +
+                    slotProps.option.country +
+                    '.svg'
+                    " class="flagImg" loading="lazy" />
                   <div>{{ slotProps.option.name }}</div>
                 </div>
               </template>
             </Select>
 
-            <InputText
-              v-model="inputNumber"
-              type="tel"
-              placeholder="Phone number"
-              required
-            />
+            <InputText v-model="inputNumber" type="tel" placeholder="Phone number" required />
 
-            <ZKButton
-              label="Next"
-              color="primary"
-              text-color="white"
-              :disabled="
-                selectedCountryCode.code.length == 0 || inputNumber.length == 0
-              "
-              type="submit"
-            />
           </div>
-        </form>
-      </template>
-    </AuthContentWrapper>
+        </template>
+      </StepperLayout>
+    </form>
   </div>
 </template>
 
 <script setup lang="ts">
-import AuthContentWrapper from "src/components/authentication/AuthContentWrapper.vue";
+import StepperLayout from "src/components/onboarding/StepperLayout.vue";
+import InfoHeader from "src/components/onboarding/InfoHeader.vue";
 import InputText from "primevue/inputtext";
 import { ref } from "vue";
-import ZKButton from "src/components/ui-library/ZKButton.vue";
 import {
-  parsePhoneNumber,
+  parsePhoneNumberFromString,
   getCountries,
   getCountryCallingCode,
 } from "libphonenumber-js";
@@ -127,15 +99,17 @@ for (let i = 0; i < countryList.length; i++) {
   countries.value.push(countryItem);
 } // TODO: some phone numbers may not be associated with any country: https://gitlab.com/catamphetamine/libphonenumber-js/-/tree/master?ref_type=heads#non-geographic - probably add those manually in the future
 
+const description = "";
+
 function validateNumber() {
   try {
-    const phoneNumber = parsePhoneNumber(inputNumber.value, {
+    const phoneNumber = parsePhoneNumberFromString(inputNumber.value, {
       defaultCallingCode: selectedCountryCode.value.code,
     });
     if (phoneNumber.isValid()) {
       verificationNumber.value = phoneNumber.number;
       // TODO: use phoneNumber and defaultCallingCode to send the OTP on click and add both to the store in case the user wants to resend in next page
-      router.push({ name: "verification-option-phone-code" });
+      router.push({ name: "onboarding-step3-phone-2" });
     } else {
       dialog.showMessage("Phone Number", "The input phone number is invalid.");
     }
@@ -147,6 +121,7 @@ function validateNumber() {
     );
   }
 }
+
 </script>
 
 <style scoped lang="scss">
@@ -154,10 +129,6 @@ function validateNumber() {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.selectElement {
-  width: 4rem;
 }
 
 .flagImg {

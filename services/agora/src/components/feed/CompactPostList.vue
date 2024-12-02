@@ -12,7 +12,7 @@
           </div>
 
           <div>
-            Create a new post using the <q-icon name="mdi-plus-circle" /> button.
+            Create a new conservation using the <q-icon name="mdi-plus-circle" /> button.
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@
         </div>
 
         <div>
-          You have seen all the new posts.
+          You have seen all the new conservations.
         </div>
       </div>
     </div>

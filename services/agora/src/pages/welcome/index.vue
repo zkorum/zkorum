@@ -2,27 +2,27 @@
   <div class="container">
     <img src="/feed/images/onboarding/brand.webp" class="welcomeImage" />
     <div class="buttonFlex">
-      <ZKButton
-        :label="t('welcome.login')"
-        :to="{ name: 'verification-options' }"
-        color="primary"
-      />
-      <ZKButton
-        color="black"
-        label="Skip Authentication"
-        @click="skipAuthentication()"
-      />
+      <ZKButton :label="t('welcome.login')" :to="{ name: 'onboarding-step1' }" color="primary" />
+      <ZKButton color="black" label="Skip Authentication" @click="skipAuthentication()" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import ZKButton from "src/components/ui-library/ZKButton.vue";
+import { usePostStore } from "src/stores/post";
+import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 const { t } = useI18n();
 
 const router = useRouter();
+
+const { resetPostData } = usePostStore();
+
+onMounted(() => {
+  resetPostData();
+})
 
 function skipAuthentication() {
   router.push({ name: "default-home-feed" });
