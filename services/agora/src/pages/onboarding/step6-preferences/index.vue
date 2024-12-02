@@ -14,16 +14,11 @@
         </div>
 
         <div class="tagContainer">
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
+          <div v-for="lang in languageList" :key="lang" class="tagWrapper">
+            <q-btn outline no-caps :label="lang" class="tagStyle" rounded size="small" text-color="primary"
+              icon="mdi-close" />
+          </div>
+          <q-btn round outline no-caps color="secondary" icon="mdi-plus" />
         </div>
 
         <div class="headerContainer">
@@ -32,16 +27,8 @@
         </div>
 
         <div class="tagContainer">
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
-          <Tag value="New"></Tag>
+          <q-btn v-for="topic in topicList" :key="topic" outline no-caps :label="topic" class="tagStyle" rounded
+            size="small" text-color="primary" />
         </div>
 
         <ZKButton label="Save and Close" color="primary" @click="goToHome" />
@@ -55,11 +42,13 @@
 <script setup lang="ts">
 import StepperLayout from "src/components/onboarding/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/InfoHeader.vue";
-import Tag from "primevue/tag";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
+
+const languageList = ["English", "Spanish", "French", "Chinese"];
+const topicList = ["Technology", "Environment", "Politics"]
 
 function goToHome() {
   router.push({ name: "default-home-feed" });
@@ -70,6 +59,7 @@ function goToHome() {
 <style scoped lang="scss">
 .tagContainer {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -78,5 +68,19 @@ function goToHome() {
   display: flex;
   gap: 1rem;
   align-items: center;
+}
+
+.tagStyle:hover {
+  cursor: pointer;
+}
+
+.tagWrapper {
+  position: relative;
+}
+
+.closeButton {
+  position: absolute;
+  top: 0px;
+  right: 0px;
 }
 </style>
