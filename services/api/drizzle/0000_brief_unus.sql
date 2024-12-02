@@ -256,8 +256,9 @@ CREATE TABLE IF NOT EXISTS "user_post_topic_preference" (
 CREATE TABLE IF NOT EXISTS "user" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"organisation_id" integer,
+	"configured_user_name" boolean DEFAULT false NOT NULL,
 	"user_name" varchar(23) NOT NULL,
-	"is_anonymous" boolean DEFAULT false NOT NULL,
+	"is_anonymous" boolean DEFAULT true NOT NULL,
 	"show_flagged_content" boolean DEFAULT false NOT NULL,
 	"post_count" integer DEFAULT 0 NOT NULL,
 	"comment_count" integer DEFAULT 0 NOT NULL,

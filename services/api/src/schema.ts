@@ -568,8 +568,9 @@ export const userTable = pgTable("user", {
     organisationId: integer("organisation_id").references(
         () => organisationTable.id,
     ), // for now a user can belong to at most 1 organisation
+    configuredUsername: boolean("configured_user_name").notNull().default(false),
     userName: varchar("user_name", { length: MAX_LENGTH_USERNAME }).notNull().unique(),
-    isAnonymous: boolean("is_anonymous").notNull().default(false),
+    isAnonymous: boolean("is_anonymous").notNull().default(true),
     showFlaggedContent: boolean("show_flagged_content").notNull().default(false),
     postCount: integer("post_count").notNull().default(0),
     commentCount: integer("comment_count").notNull().default(0),

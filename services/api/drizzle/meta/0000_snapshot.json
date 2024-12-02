@@ -1,5 +1,5 @@
 {
-  "id": "3bb71ff5-9b3d-4fb0-a447-5368ddf12837",
+  "id": "a55396ea-3d12-422a-987b-2f00d0a6b656",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2216,6 +2216,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "configured_user_name": {
+          "name": "configured_user_name",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "user_name": {
           "name": "user_name",
           "type": "varchar(23)",
@@ -2227,7 +2234,7 @@
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": true
         },
         "show_flagged_content": {
           "name": "show_flagged_content",
