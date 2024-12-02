@@ -15,8 +15,14 @@
 
         <div class="tagContainer">
           <div v-for="lang in languageList" :key="lang" class="tagWrapper">
-            <q-btn outline no-caps :label="lang" class="tagStyle" rounded size="small" text-color="primary"
-              icon="mdi-close" />
+            <q-btn outline no-caps class="tagStyle" rounded size="small" text-color="primary">
+              <div class="tagFlexContainer">
+                <div>
+                  {{ lang }}
+                </div>
+                <q-icon name="mdi-close" />
+              </div>
+            </q-btn>
           </div>
           <q-btn round outline no-caps color="secondary" icon="mdi-plus" />
         </div>
@@ -78,9 +84,9 @@ function goToHome() {
   position: relative;
 }
 
-.closeButton {
-  position: absolute;
-  top: 0px;
-  right: 0px;
+.tagFlexContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>
