@@ -5,7 +5,7 @@ import { useBackendPostApi } from "../api/post";
 import { useUserStore } from "src/stores/user";
 import { usePostStore } from "src/stores/post";
 import { useNotify } from "./notify";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 export const useBottomSheet = () => {
   const quasar = useQuasar();
@@ -14,6 +14,7 @@ export const useBottomSheet = () => {
   const { showNotifyMessage } = useNotify();
 
   const router = useRouter();
+  const route = useRoute();
 
   const { deletePostBySlugId } = useBackendPostApi();
   const { profileData } = useUserStore();
@@ -79,7 +80,9 @@ export const useBottomSheet = () => {
           if (response) {
             showNotifyMessage("Conservation had been deleted");
             await loadPostData(false);
-            router.push({ name: "default-home-feed" });
+            if (route.name == "single-post") {
+              router.push({ name: "default-home-feed" });
+            }
           }
         }
       })
