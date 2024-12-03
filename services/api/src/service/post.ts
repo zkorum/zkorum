@@ -184,6 +184,13 @@ export async function deletePostBySlugId({
                 })
                 .where(and(eq(postTable.authorId, userId), eq(postTable.id, postDetails.id)));
 
+            await tx
+                .update(userTable)
+                .set({
+                    postCount: sql`${userTable.postCount} - 1`,
+                })
+                .where(eq(userTable.id, userId));
+            
             await tx.insert(postProofTable).values({
                 type: "deletion",
                 postId: postDetails.id,

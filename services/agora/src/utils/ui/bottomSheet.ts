@@ -17,7 +17,7 @@ export const useBottomSheet = () => {
   const route = useRoute();
 
   const { deletePostBySlugId } = useBackendPostApi();
-  const { profileData } = useUserStore();
+  const { profileData, loadUserProfile } = useUserStore();
   const { loadPostData } = usePostStore();
 
   function showCommentOptionSelector() {
@@ -80,6 +80,7 @@ export const useBottomSheet = () => {
           if (response) {
             showNotifyMessage("Conservation had been deleted");
             await loadPostData(false);
+            await loadUserProfile();
             if (route.name == "single-post") {
               router.push({ name: "default-home-feed" });
             }
