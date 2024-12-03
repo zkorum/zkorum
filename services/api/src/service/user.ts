@@ -53,8 +53,7 @@ export async function getUserComments({
       )
       .where(and(
         eq(commentTable.authorId, userId),
-        lt(commentTable.createdAt, lastCreatedAt),
-        isNotNull(postTable.currentContentId)))
+        lt(commentTable.createdAt, lastCreatedAt)))
       .orderBy(desc(commentTable.createdAt))
       .limit(10);
     
