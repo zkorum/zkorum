@@ -3,7 +3,7 @@ import { commentContentTable, commentTable, postTable, userTable } from "@/schem
 import type { FetchUserProfileResponse } from "@/shared/types/dto.js";
 import type { CommentItem, ExtendedComment, ExtendedPost } from "@/shared/types/zod.js";
 import { httpErrors } from "@fastify/sensible";
-import { and, eq, lt, desc, isNotNull } from "drizzle-orm";
+import { and, eq, lt, desc } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
 import { getPostSlugIdLastCreatedAt } from "./feed.js";
