@@ -1,6 +1,6 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import {  pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
+import {  commentTable, pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
 import { eq, sql, and } from "drizzle-orm";
 import type { CreateNewPostResponse } from "@/shared/types/dto.js";
 import { MAX_LENGTH_BODY } from "@/shared/shared.js";
@@ -172,6 +172,7 @@ export async function deletePostBySlugId({
 
     try {
         await db.transaction(async (tx) => {
+            // Delete the post
             const updatedPostIdResponse = await tx
                 .update(postTable)
                 .set({
@@ -186,6 +187,7 @@ export async function deletePostBySlugId({
 
             const postId = updatedPostIdResponse[0].postId;
             
+            // Update the user's active post count
             await tx
                 .update(userTable)
                 .set({
@@ -193,6 +195,7 @@ export async function deletePostBySlugId({
                 })
                 .where(eq(userTable.id, userId));
             
+            // Create the delete proof
             await tx.insert(postProofTable).values({
                 type: "deletion",
                 postId: postId,
@@ -200,6 +203,15 @@ export async function deletePostBySlugId({
                 proof: authHeader,
                 proofVersion: 1,
             }).returning({ proofId: postProofTable.id });
+
+            // Mark all of the comments as deleted
+            await tx
+                .update(commentTable)
+                .set({
+                    currentContentId: null,
+                })
+                .where(eq(commentTable.postId, postId));
+
         });
     } catch (err: unknown) {
         server.log.error(err);

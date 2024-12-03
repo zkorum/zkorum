@@ -45,13 +45,16 @@ export async function getUserComments({
       )
       .innerJoin(
         userTable,
-        eq(userTable.id, userId)
+        eq(userTable.id, commentTable.authorId)
       )
       .innerJoin(
         postTable,
         eq(postTable.id, commentTable.postId)
       )
-      .where(and(eq(commentTable.authorId, userId), lt(commentTable.createdAt, lastCreatedAt), isNotNull(postTable.currentContentId)))
+      .where(and(
+        eq(commentTable.authorId, userId),
+        lt(commentTable.createdAt, lastCreatedAt),
+        isNotNull(postTable.currentContentId)))
       .orderBy(desc(commentTable.createdAt))
       .limit(10);
     
