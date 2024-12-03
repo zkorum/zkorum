@@ -31,7 +31,7 @@ const router = useRouter();
 function logoutRequested() {
   backendAuth.logout();
   userLogout();
-  router.push({ name: "onboarding-step1" });
+  router.push({ name: "onboarding-step1-signup" });
 }
 
 const accountSettings: SettingsInterface[] = [

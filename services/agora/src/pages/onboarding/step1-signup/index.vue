@@ -20,7 +20,7 @@ const description = "In a world marked by increasing polarizations, Agora strive
 const router = useRouter();
 
 function goToNextRoute() {
-  router.push({ name: "onboarding-step2" });
+  router.push({ name: "onboarding-step2-signup" });
 }
 
 </script>

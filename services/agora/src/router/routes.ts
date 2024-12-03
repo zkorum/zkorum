@@ -220,11 +220,11 @@ const routes: RouteRecordRaw[] = [
     },
     children: [
       {
-        path: "step1",
+        path: "step1-login",
         components: {
           default: () =>
             import(
-              "src/pages/onboarding/step1/index.vue"
+              "src/pages/onboarding/step1-login/index.vue"
             ),
           topmenubar: DefaultMenuBar,
         },
@@ -236,14 +236,14 @@ const routes: RouteRecordRaw[] = [
             hasLoginButton: false,
           } as DefaultMenuBarProps,
         },
-        name: "onboarding-step1",
+        name: "onboarding-step1-login",
       },
       {
-        path: "step2",
+        path: "step1-signup",
         components: {
           default: () =>
             import(
-              "src/pages/onboarding/step2/index.vue"
+              "src/pages/onboarding/step1-signup/index.vue"
             ),
           topmenubar: DefaultMenuBar,
         },
@@ -255,7 +255,26 @@ const routes: RouteRecordRaw[] = [
             hasLoginButton: false,
           } as DefaultMenuBarProps,
         },
-        name: "onboarding-step2",
+        name: "onboarding-step1-signup",
+      },
+      {
+        path: "step2-signup",
+        components: {
+          default: () =>
+            import(
+              "src/pages/onboarding/step2-signup/index.vue"
+            ),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: true,
+            hasSettingsButton: false,
+            hasCloseButton: false,
+            hasLoginButton: false,
+          } as DefaultMenuBarProps,
+        },
+        name: "onboarding-step2-signup",
       },
       {
         path: "step3-passport",
