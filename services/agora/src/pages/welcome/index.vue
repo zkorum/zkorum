@@ -6,7 +6,7 @@
 
       <ZKButton label="Log In" :to="{ name: 'onboarding-step1-login' }" color="white" text-color="primary" />
 
-      <ZKButton color="black" label="Skip Authentication" @click="skipAuthentication()" />
+      <ZKButton color="secondary" label="Skip Authentication" @click="skipAuthentication()" />
     </div>
   </div>
 </template>
