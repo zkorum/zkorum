@@ -171,20 +171,21 @@ export async function deletePostBySlugId({
     db, postSlugId, userId, authHeader, didWrite }: DeletePostBySlugIdProps): Promise<void> {
 
     try {
-        const { getPostAndContentIdFromSlugId } = useCommonPost();
-        const postDetails = await getPostAndContentIdFromSlugId({
-            db: db,
-            postSlugId: postSlugId,
-        });
-
         await db.transaction(async (tx) => {
-            await tx
+            const updatedPostIdResponse = await tx
                 .update(postTable)
                 .set({
                     currentContentId: null
                 })
-                .where(and(eq(postTable.authorId, userId), eq(postTable.id, postDetails.id)));
+                .where(and(eq(postTable.authorId, userId), eq(postTable.slugId, postSlugId)))
+                .returning({ postId: postTable.id });
 
+            if (updatedPostIdResponse.length != 1) {
+                tx.rollback();
+            }
+
+            const postId = updatedPostIdResponse[0].postId;
+            
             await tx
                 .update(userTable)
                 .set({
@@ -194,7 +195,7 @@ export async function deletePostBySlugId({
             
             await tx.insert(postProofTable).values({
                 type: "deletion",
-                postId: postDetails.id,
+                postId: postId,
                 authorDid: didWrite,
                 proof: authHeader,
                 proofVersion: 1,

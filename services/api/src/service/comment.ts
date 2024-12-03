@@ -2,12 +2,13 @@ import { generateRandomSlugId } from "@/crypto.js";
 import { commentContentTable, commentTable, commentProofTable, postTable, userTable } from "@/schema.js";
 import type { CreateCommentResponse } from "@/shared/types/dto.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql, and } from "drizzle-orm";
 import type { CommentItem, SlugId } from "@/shared/types/zod.js";
 import { httpErrors, type HttpErrors } from "@fastify/sensible";
 import { useCommonPost } from "./common.js";
 import { MAX_LENGTH_COMMENT } from "@/shared/shared.js";
 import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
+import { server } from "@/app.js";
 
 interface GetCommentSlugIdLastCreatedAtProps {
     lastSlugId: string | undefined;
@@ -286,4 +287,61 @@ export async function postNewComment({
         commentSlugId: commentSlugId
     };
 
+}
+
+interface DeleteCommentBySlugIdProps {
+    db: PostgresJsDatabase;
+    commentSlugId: string;
+    userId: string;
+    authHeader: string;
+    didWrite: string;
+}
+
+export async function deleteCommentBySlugId({
+    db, commentSlugId, userId, authHeader, didWrite }: DeleteCommentBySlugIdProps): Promise<void> {
+
+    try {
+        await db.transaction(async (tx) => {
+            const updatedCommentIdResponse = await tx
+                .update(commentTable)
+                .set({
+                    currentContentId: null
+                })
+                .where(and(eq(commentTable.authorId, userId), eq(commentTable.slugId, commentSlugId)))
+                .returning({
+                    updateCommentId: commentTable.id,
+                    postId: commentTable.postId
+                });
+
+            if (updatedCommentIdResponse.length != 1) {
+                server.log.error("Invalid comment table update response length: " + updatedCommentIdResponse.length.toString());
+                tx.rollback();
+            }
+
+            const commentId = updatedCommentIdResponse[0].updateCommentId;
+            
+            await tx.insert(commentProofTable).values({
+                type: "deletion",
+                commentId: commentId,
+                authorDid: didWrite,
+                proof: authHeader,
+                proofVersion: 1,
+            });
+
+            const postId = updatedCommentIdResponse[0].postId;
+
+            await tx
+                .update(postTable)
+                .set({
+                    commentCount: sql`${postTable.commentCount} - 1`,
+                })
+                .where(eq(postTable.id, postId));
+
+        });
+    } catch (err: unknown) {
+        server.log.error(err);
+        throw httpErrors.internalServerError(
+            "Failed to delete comment by comment ID: " + commentSlugId
+        );
+    }
 }

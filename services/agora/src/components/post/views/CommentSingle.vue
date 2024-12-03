@@ -1,7 +1,10 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
-    <div class="contentLayout">
+    <div v-if="deleted" class="deletedMessage">
+      Deleted
+    </div>
+    <div v-if="!deleted" class="contentLayout">
       <div class="metadata">
         <UserAvatar :user-name="commentItem.userName" :size="40" class="avatarIcon" />
 
@@ -24,7 +27,7 @@
 
         <div class="actionBarPaddings">
           <CommentActionBar :comment-item="commentItem" :post-slug-id="postSlugId"
-            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" @deleted="deletedComment()" />
         </div>
       </div>
     </div>
@@ -36,6 +39,9 @@ import CommentActionBar from "./CommentActionBar.vue";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { formatTimeAgo } from "@vueuse/core";
 import type { CommentItem } from "src/shared/types/zod";
+import { ref } from "vue";
+
+const emit = defineEmits(["deleted"])
 
 defineProps<{
   commentItem: CommentItem;
@@ -43,6 +49,14 @@ defineProps<{
   highlight: boolean;
   commentSlugIdLikedMap: Map<string, "like" | "dislike">;
 }>();
+
+const deleted = ref(false);
+
+function deletedComment() {
+  deleted.value = true
+  emit("deleted");
+}
+
 </script>
 
 <style scoped lang="scss">
@@ -79,5 +93,10 @@ defineProps<{
   font-size: 0.8rem;
   display: flex;
   flex-direction: column;
+}
+
+.deletedMessage {
+  display: flex;
+  justify-content: center;
 }
 </style>

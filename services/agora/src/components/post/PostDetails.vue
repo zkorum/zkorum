@@ -58,7 +58,7 @@
 
         <div v-if="!compactMode" ref="commentSectionRef">
           <CommentSection :key="commentCountOffset" :post-slug-id="extendedPostData.metadata.postSlugId"
-            :initial-comment-slug-id="commentSlugId" />
+            :initial-comment-slug-id="commentSlugId" @deleted="decrementCommentCount()" />
         </div>
       </div>
     </ZKHoverEffect>
@@ -124,6 +124,10 @@ onMounted(() => {
     }, 100);
   }
 });
+
+function decrementCommentCount() {
+  commentCountOffset.value -= 1;
+}
 
 function scrollToCommentSection() {
   console.log(commentSectionRef.value);

@@ -159,6 +159,11 @@ export class Dto {
             postSlugId: zodSlugId
         })
         .strict();
+    static deleteCommentBySlugIdRequest = z
+        .object({
+            commentSlugId: zodSlugId
+        })
+        .strict();
 }
 
 export type AuthenticateRequestBody = z.infer<

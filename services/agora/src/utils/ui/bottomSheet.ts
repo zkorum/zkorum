@@ -6,6 +6,7 @@ import { useUserStore } from "src/stores/user";
 import { usePostStore } from "src/stores/post";
 import { useNotify } from "./notify";
 import { useRoute, useRouter } from "vue-router";
+import { useBackendCommentApi } from "../api/comment";
 
 export const useBottomSheet = () => {
   const quasar = useQuasar();
@@ -17,17 +18,31 @@ export const useBottomSheet = () => {
   const route = useRoute();
 
   const { deletePostBySlugId } = useBackendPostApi();
+  const { deleteCommentBySlugId } = useBackendCommentApi();
+
   const { profileData, loadUserProfile } = useUserStore();
   const { loadPostData } = usePostStore();
 
-  function showCommentOptionSelector() {
+  function showCommentOptionSelector(
+    commentSlugId: string,
+    posterUserName: string,
+    deleteCommentCallback: (deleted: boolean) => void) {
+
     const actionList = [];
 
     actionList.push({
-      label: "Report Comment",
+      label: "Report",
       icon: "mdi-flag",
       id: "report",
     });
+
+    if (profileData.value.userName == posterUserName) {
+      actionList.push({
+        label: "Delete",
+        icon: "mdi-delete",
+        id: "delete",
+      });
+    }
 
     quasar
       .bottomSheet({
@@ -35,10 +50,18 @@ export const useBottomSheet = () => {
         grid: false,
         actions: actionList,
       })
-      .onOk((action) => {
+      .onOk(async (action) => {
         console.log("Selected action: " + action.id);
         if (action.id == "report") {
           showStandardReportSelector("comment");
+        } else if (action.id == "delete") {
+          const response = await deleteCommentBySlugId(commentSlugId);
+          if (response) {
+            showNotifyMessage("Opinion deleted");
+            deleteCommentCallback(true);
+          } else {
+            deleteCommentCallback(false);
+          }
         }
       })
       .onCancel(() => {
@@ -49,7 +72,10 @@ export const useBottomSheet = () => {
       });
   }
 
-  function showPostOptionSelector(postSlugId: string, posterUserName: string) {
+  function showPostOptionSelector(
+    postSlugId: string,
+    posterUserName: string) {
+
     const actionList = [];
 
     actionList.push({
@@ -78,7 +104,7 @@ export const useBottomSheet = () => {
         } else if (action.id == "delete") {
           const response = await deletePostBySlugId(postSlugId);
           if (response) {
-            showNotifyMessage("Conservation had been deleted");
+            showNotifyMessage("Conservation deleted");
             await loadPostData(false);
             await loadUserProfile();
             if (route.name == "single-post") {

@@ -11,7 +11,7 @@
         <div v-for="commentItem in commentItems" :id="commentItem.commentSlugId" :key="commentItem.commentSlugId">
           <CommentSingle :comment-item="commentItem" :post-slug-id="postSlugId"
             :highlight="initialCommentSlugId == commentItem.commentSlugId"
-            :comment-slug-id-liked-map="commentSlugIdLikedMap" />
+            :comment-slug-id-liked-map="commentSlugIdLikedMap" @deleted="deletedComment()" />
 
           <Divider :style="{ width: '100%' }" />
         </div>
@@ -42,6 +42,8 @@ import { useBackendVoteApi } from "src/utils/api/vote";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { type CommentItem } from "src/shared/types/zod";
 
+const emit = defineEmits(["deleted"])
+
 const props = defineProps<{
   postSlugId: string;
   initialCommentSlugId: string;
@@ -63,6 +65,10 @@ fetchCommentList();
 onMounted(() => {
   fetchPersonalLikes();
 });
+
+function deletedComment() {
+  emit("deleted");
+}
 
 async function fetchPersonalLikes() {
   if (isAuthenticated.value) {

@@ -35,6 +35,8 @@ import { type CommentItem, type VotingAction } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useDialog } from "src/utils/ui/dialog";
 
+const emit = defineEmits(["deleted"])
+
 const props = defineProps<{
   commentItem: CommentItem;
   postSlugId: string;
@@ -110,7 +112,16 @@ function shareButtonClicked() {
 }
 
 function optionButtonClicked() {
-  bottomSheet.showCommentOptionSelector();
+  const deleteCommentCallback = (deleted: boolean) => {
+    if (deleted) {
+      emit("deleted");
+    }
+  }
+
+  bottomSheet.showCommentOptionSelector(
+    props.commentItem.commentSlugId,
+    props.commentItem.userName,
+    deleteCommentCallback);
 }
 
 async function castPersonalVote(
