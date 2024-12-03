@@ -70,7 +70,11 @@ export function useUserStore() {
     return { reachedEndOfFeed: userComments.length == 0 };
   }
 
-  return { loadUserProfile, loadMoreUserPosts, loadMoreUserComments, profileData };
+  function resetUserProfile() {
+    profileData.value = emptyProfile;
+  }
+
+  return { loadUserProfile, loadMoreUserPosts, loadMoreUserComments, resetUserProfile, profileData };
 
 }
 

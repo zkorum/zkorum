@@ -6,7 +6,8 @@
         <div class="innerContainer">
           <PostMetadata :poster-user-name="extendedPostData.metadata.authorUserName"
             :created-at="new Date(extendedPostData.metadata.createdAt)" :is-compat-size="true"
-            :skeleton-mode="skeletonMode" :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime" />
+            :skeleton-mode="skeletonMode" :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime"
+            :post-slug-id="extendedPostData.metadata.postSlugId" />
 
           <div class="postDiv">
             <div>

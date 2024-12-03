@@ -222,7 +222,6 @@ export async function postNewComment({
     const { id: postId, contentId: postContentId } = await useCommonPost().getPostAndContentIdFromSlugId({
         db: db,
         postSlugId: postSlugId,
-        httpErrors: httpErrors
     });
     if (postContentId == null) {
         throw httpErrors.gone("Cannot comment on a deleted post");

@@ -56,8 +56,8 @@ import { useQRCode } from "@vueuse/integrations/useQRCode.mjs";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import { usePostStore } from "src/stores/post";
 import { useSkipAuth } from "src/utils/auth/skipAuth";
+import { useAuthSetup } from "src/utils/auth/setup";
 
 const description = "RariMe is a ZK-powered identity wallet that converts your passport into an anonymous digital ID, stored on your device, so you can prove that you’re a unique human without sharing any personal data with anyone.";
 
@@ -67,15 +67,14 @@ const router = useRouter();
 
 const rarimeLink = ref("");
 
-const { loadPostData } = usePostStore();
+const { userLogin } = useAuthSetup();
 
 const { skipEverything } = useSkipAuth();
 
 async function clickedVerifyButton() {
   const result = await skipEverything();
   if (result) {
-    router.push({ name: "onboarding-step4-username" });
-    await loadPostData(false);
+    await userLogin();
     router.push({ name: "onboarding-step4-username" });
   }
 }

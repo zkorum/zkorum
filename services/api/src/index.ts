@@ -705,6 +705,33 @@ server.after(() => {
         .withTypeProvider<ZodTypeProvider>()
         .route({
             method: "POST",
+            url: `/api/${apiVersion}/post/delete`,
+            schema: {
+                body: Dto.deletePostBySlugIdRequest
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, undefined);
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const authHeader = getAuthHeader(request);
+                    await postService.deletePostBySlugId({
+                        db: db,
+                        postSlugId: request.body.postSlugId,
+                        userId: status.userId,
+                        authHeader: authHeader,
+                        didWrite: didWrite
+                    });
+                }
+        },
+    });
+    
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
             url: `/api/${apiVersion}/post/create`,
             schema: {
                 body: Dto.createNewPostRequest,
@@ -712,9 +739,9 @@ server.after(() => {
                     200: Dto.createNewPostResponse
                 }
             },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, undefined);
-                // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, undefined);
+            // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
 
             const status = await authUtilService.isLoggedIn(db, didWrite);
             if (!status.isLoggedIn) {
