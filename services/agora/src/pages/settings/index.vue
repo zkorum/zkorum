@@ -17,13 +17,13 @@
 <script setup lang="ts">
 import SettingsSection from "src/components/settings/SettingsSection.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
+import { useUserStore } from "src/stores/user";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { type SettingsInterface } from "src/utils/component/settings/settings";
 import { useRouter } from "vue-router";
 
-const { isAuthenticated } = useAuthenticationStore();
-
-const { userLogout } = useAuthenticationStore();
+const { isAuthenticated, userLogout } = useAuthenticationStore();
+const { resetUserProfile } = useUserStore();
 
 const backendAuth = useBackendAuthApi();
 const router = useRouter();
@@ -31,7 +31,8 @@ const router = useRouter();
 function logoutRequested() {
   backendAuth.logout();
   userLogout();
-  router.push({ name: "onboarding-step1" });
+  resetUserProfile();
+  router.push({ name: "onboarding-step1-signup" });
 }
 
 const accountSettings: SettingsInterface[] = [

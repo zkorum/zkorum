@@ -115,7 +115,6 @@ export async function getUserPosts({
 
     const posts: ExtendedPost[] = await fetchPostItems({
       db: db,
-      showHidden: false,
       limit: 10,
       where: whereClause,
       enableCompactBody: true,

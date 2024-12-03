@@ -59,7 +59,6 @@ export async function fetchFeed({
 
     const posts: ExtendedPost[] = await fetchPostItems({
         db: db,
-        showHidden: showHidden ?? false,
         limit: targetLimit + 1,
         where: whereClause,
         enableCompactBody: true,

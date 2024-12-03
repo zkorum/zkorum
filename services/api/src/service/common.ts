@@ -1,7 +1,6 @@
 import { postContentTable, pollTable, pollResponseContentTable, postTable, organisationTable, userTable, pollResponseTable } from "@/schema.js";
 import { toUnionUndefined } from "@/shared/shared.js";
 import type { PostMetadata, ExtendedPostPayload, PollOptionWithResult, ExtendedPost } from "@/shared/types/zod.js";
-import type { HttpErrors } from "@fastify/sensible";
 import { httpErrors } from "@fastify/sensible";
 import { eq, and, desc, SQL } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
@@ -12,7 +11,6 @@ export function useCommonPost() {
 
     interface FetchPostItemsProps {
         db: PostgresJsDatabase;
-        showHidden: boolean;
         limit: number;
         where: SQL | undefined;
         enableCompactBody: boolean;
@@ -21,7 +19,7 @@ export function useCommonPost() {
     }
 
     async function fetchPostItems({
-        db, showHidden, limit, where, enableCompactBody, fetchPollResponse, userId
+        db, limit, where, enableCompactBody, fetchPollResponse, userId
     }: FetchPostItemsProps): Promise<ExtendedPost[]> {
 
         const postItems = await db
@@ -82,8 +80,7 @@ export function useCommonPost() {
                 });
             }
 
-            const metadata: PostMetadata = showHidden
-                ? {
+            const metadata: PostMetadata = {
                     postSlugId: postItem.slugId,
                     isHidden: postItem.isHidden,
                     createdAt: postItem.createdAt,
@@ -92,15 +89,6 @@ export function useCommonPost() {
                     commentCount: postItem.commentCount,
                     authorUserName: postItem.authorName,
                     authorImagePath: toUnionUndefined(postItem.authorImagePath),
-                }
-                : {
-                    postSlugId: postItem.slugId,
-                    createdAt: postItem.createdAt,
-                    updatedAt: postItem.updatedAt,
-                    lastReactedAt: postItem.lastReactedAt,
-                    commentCount: postItem.commentCount,
-                    authorUserName: postItem.authorName,
-                    authorImagePath: toUnionUndefined(postItem.authorImagePath)
                 };
 
             let payload: ExtendedPostPayload;
@@ -207,13 +195,10 @@ export function useCommonPost() {
     interface GetPostAndContentIdFromSlugIdProps {
         db: PostgresJsDatabase;
         postSlugId: string;
-        httpErrors: HttpErrors;
     }
 
     async function getPostAndContentIdFromSlugId(
-        { db,
-            postSlugId,
-            httpErrors }: GetPostAndContentIdFromSlugIdProps): Promise<IdAndContentId> {
+        { db, postSlugId }: GetPostAndContentIdFromSlugIdProps): Promise<IdAndContentId> {
         const postTableResponse = await db
             .select({
                 id: postTable.id,
@@ -222,11 +207,11 @@ export function useCommonPost() {
             .from(postTable)
             .where(eq(postTable.slugId, postSlugId));
 
-        if (postTableResponse.length != 1) {
-            throw httpErrors.notFound("Post slugId does not exist")
+        if (postTableResponse.length == 1) {
+            return { contentId: postTableResponse[0].currentContentId, id: postTableResponse[0].id };
+        } else {
+            throw httpErrors.notFound("Post slugId does not exist, or incorrect response count from database")
         }
-
-        return { contentId: postTableResponse[0].currentContentId, id: postTableResponse[0].id };
     }
 
     return { fetchPostItems, getPostAndContentIdFromSlugId };

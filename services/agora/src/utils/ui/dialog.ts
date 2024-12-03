@@ -36,7 +36,7 @@ export const useDialog = () => {
         persistent: false,
       })
       .onOk(() => {
-        router.push({ name: "verification-options" });
+        router.push({ name: "welcome" });
       })
       .onCancel(() => {
         // console.log('>>>> Cancel')

@@ -37,7 +37,7 @@ import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { useUserStore } from "src/stores/user";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getDateString } from "src/utils/common";
 
@@ -48,6 +48,12 @@ const currentTab = ref(0);
 const route = useRoute();
 
 applyCurrentTab();
+
+const { loadUserProfile } = useUserStore();
+
+onMounted(() => {
+  loadUserProfile();
+});
 
 watch(route, () => {
   applyCurrentTab();

@@ -6,7 +6,8 @@
         <div class="innerContainer">
           <PostMetadata :poster-user-name="extendedPostData.metadata.authorUserName"
             :created-at="new Date(extendedPostData.metadata.createdAt)" :is-compat-size="true"
-            :skeleton-mode="skeletonMode" :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime" />
+            :skeleton-mode="skeletonMode" :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime"
+            :post-slug-id="extendedPostData.metadata.postSlugId" />
 
           <div class="postDiv">
             <div>
@@ -62,7 +63,7 @@
       </div>
     </ZKHoverEffect>
 
-    <FloatingBottomContainer v-if="!compactMode">
+    <FloatingBottomContainer v-if="!compactMode && isAuthenticated">
       <CommentComposer :show-controls="focusCommentElement" :post-slug-id="extendedPostData.metadata.postSlugId"
         @cancel-clicked="cancelledCommentComposor()" @submitted-comment="submittedComment()"
         @editor-focused="focusCommentElement = true" />
@@ -85,6 +86,7 @@ import { useRouteQuery } from "@vueuse/router";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 import Skeleton from "primevue/skeleton";
 import type { ExtendedPost } from "src/shared/types/zod";
+import { useAuthenticationStore } from "src/stores/authentication";
 
 const props = defineProps<{
   extendedPostData: ExtendedPost;
@@ -93,6 +95,8 @@ const props = defineProps<{
   showAuthor: boolean;
   displayAbsoluteTime: boolean;
 }>();
+
+const { isAuthenticated } = useAuthenticationStore();
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 

@@ -348,7 +348,7 @@ export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata {
      * @type {boolean}
      * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
-    'isHidden'?: boolean;
+    'isHidden': boolean;
     /**
      * 
      * @type {string}
@@ -536,6 +536,19 @@ export interface ApiV1PostCreatePostRequest {
      * @memberof ApiV1PostCreatePostRequest
      */
     'pollingOptionList'?: Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1PostDeletePostRequest
+ */
+export interface ApiV1PostDeletePostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1PostDeletePostRequest
+     */
+    'postSlugId': string;
 }
 /**
  * 
@@ -1147,6 +1160,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {ApiV1PostDeletePostRequest} apiV1PostDeletePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PostDeletePost: async (apiV1PostDeletePostRequest: ApiV1PostDeletePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1PostDeletePostRequest' is not null or undefined
+            assertParamExists('apiV1PostDeletePost', 'apiV1PostDeletePostRequest', apiV1PostDeletePostRequest)
+            const localVarPath = `/api/v1/post/delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1PostDeletePostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {ApiV1PostFetchPostBySlugIdPostRequest} apiV1PostFetchPostBySlugIdPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1499,6 +1551,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {ApiV1PostDeletePostRequest} apiV1PostDeletePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1PostDeletePost(apiV1PostDeletePostRequest: ApiV1PostDeletePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PostDeletePost(apiV1PostDeletePostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1PostDeletePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {ApiV1PostFetchPostBySlugIdPostRequest} apiV1PostFetchPostBySlugIdPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1665,6 +1729,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: any): AxiosPromise<ApiV1PostCreatePost200Response> {
             return localVarFp.apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1PostDeletePostRequest} apiV1PostDeletePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PostDeletePost(apiV1PostDeletePostRequest: ApiV1PostDeletePostRequest, options?: any): AxiosPromise<void> {
+            return localVarFp.apiV1PostDeletePost(apiV1PostDeletePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1835,6 +1908,17 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1PostCreatePost(apiV1PostCreatePostRequest: ApiV1PostCreatePostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1PostCreatePost(apiV1PostCreatePostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1PostDeletePostRequest} apiV1PostDeletePostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1PostDeletePost(apiV1PostDeletePostRequest: ApiV1PostDeletePostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1PostDeletePost(apiV1PostDeletePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

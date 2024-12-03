@@ -381,8 +381,7 @@
                                                             },
                                                             "authorUserName": {
                                                                 "type": "string",
-                                                                "maxLength": 23,
-                                                                "minLength": 3
+                                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
                                                             },
                                                             "authorImagePath": {
                                                                 "type": "string",
@@ -391,6 +390,7 @@
                                                         },
                                                         "required": [
                                                             "postSlugId",
+                                                            "isHidden",
                                                             "createdAt",
                                                             "updatedAt",
                                                             "lastReactedAt",
@@ -510,8 +510,7 @@
                                         },
                                         "userName": {
                                             "type": "string",
-                                            "maxLength": 23,
-                                            "minLength": 3
+                                            "pattern": "^[a-zA-Z0-9_]{3,23}$"
                                         }
                                     },
                                     "required": [
@@ -584,8 +583,7 @@
                                                     },
                                                     "authorUserName": {
                                                         "type": "string",
-                                                        "maxLength": 23,
-                                                        "minLength": 3
+                                                        "pattern": "^[a-zA-Z0-9_]{3,23}$"
                                                     },
                                                     "authorImagePath": {
                                                         "type": "string",
@@ -594,6 +592,7 @@
                                                 },
                                                 "required": [
                                                     "postSlugId",
+                                                    "isHidden",
                                                     "createdAt",
                                                     "updatedAt",
                                                     "lastReactedAt",
@@ -738,8 +737,7 @@
                                                             },
                                                             "authorUserName": {
                                                                 "type": "string",
-                                                                "maxLength": 23,
-                                                                "minLength": 3
+                                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
                                                             },
                                                             "authorImagePath": {
                                                                 "type": "string",
@@ -748,6 +746,7 @@
                                                         },
                                                         "required": [
                                                             "postSlugId",
+                                                            "isHidden",
                                                             "createdAt",
                                                             "updatedAt",
                                                             "lastReactedAt",
@@ -855,8 +854,7 @@
                                                     },
                                                     "userName": {
                                                         "type": "string",
-                                                        "maxLength": 23,
-                                                        "minLength": 3
+                                                        "pattern": "^[a-zA-Z0-9_]{3,23}$"
                                                     }
                                                 },
                                                 "required": [
@@ -1162,8 +1160,7 @@
                                             },
                                             "userName": {
                                                 "type": "string",
-                                                "maxLength": 23,
-                                                "minLength": 3
+                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
                                             }
                                         },
                                         "required": [
@@ -1180,6 +1177,35 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/post/delete": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "postSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    }
+                                },
+                                "required": [
+                                    "postSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
                     }
                 }
             }
@@ -1306,8 +1332,7 @@
                                                         },
                                                         "authorUserName": {
                                                             "type": "string",
-                                                            "maxLength": 23,
-                                                            "minLength": 3
+                                                            "pattern": "^[a-zA-Z0-9_]{3,23}$"
                                                         },
                                                         "authorImagePath": {
                                                             "type": "string",
@@ -1316,6 +1341,7 @@
                                                     },
                                                     "required": [
                                                         "postSlugId",
+                                                        "isHidden",
                                                         "createdAt",
                                                         "updatedAt",
                                                         "lastReactedAt",

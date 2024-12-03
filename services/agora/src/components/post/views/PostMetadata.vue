@@ -54,18 +54,19 @@ import Tag from "primevue/tag";
 import { formatTimeAgo } from "@vueuse/core";
 import { getDateString } from "src/utils/common";
 
-defineProps<{
+const props = defineProps<{
   posterUserName: string;
   createdAt: Date;
   skeletonMode: boolean;
   showAuthor: boolean;
   displayAbsoluteTime: boolean;
+  postSlugId: string;
 }>();
 
 const { showPostOptionSelector } = useBottomSheet();
 
 function clickedMoreIcon() {
-  showPostOptionSelector();
+  showPostOptionSelector(props.postSlugId, props.posterUserName);
 }
 </script>
 

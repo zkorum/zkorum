@@ -81,7 +81,7 @@ export const zodUserName = z.string().regex(userNameRegex);
 export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,
-        isHidden: z.boolean().optional(),
+        isHidden: z.boolean(),
         createdAt: z.date(),
         updatedAt: z.date(),
         lastReactedAt: z.date(),

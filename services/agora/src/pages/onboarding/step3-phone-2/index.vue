@@ -52,13 +52,11 @@ import { onMounted, ref } from "vue";
 import InputOtp from "primevue/inputotp";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useRouter } from "vue-router";
-import { usePostStore } from "src/stores/post";
 import { useBackendPhoneVerification } from "src/utils/api/phoneVerification";
-import { useAuthenticationStore } from "src/stores/authentication";
 import { useDialog } from "src/utils/ui/dialog";
 import type { ApiV1AuthAuthenticatePost200Response } from "src/api";
+import { useAuthSetup } from "src/utils/auth/setup";
 
-const { isAuthenticated } = useAuthenticationStore();
 const { verificationPhoneNumber } = storeToRefs(phoneVerificationStore());
 
 const verificationCode = ref("");
@@ -69,7 +67,7 @@ const verificationCodeExpirySeconds = ref(0);
 const router = useRouter();
 const dialog = useDialog();
 
-const { loadPostData } = usePostStore();
+const { userLogin } = useAuthSetup();
 
 const { requestCode, submitCode } = useBackendPhoneVerification();
 
@@ -85,7 +83,6 @@ function clickedResendButton() {
 async function nextButtonClicked() {
   const response = await submitCode(Number(verificationCode.value));
   if (response) {
-    await loadPostData(false);
     router.push({ name: "onboarding-step4-username" });
   } else {
     dialog.showMessage("Authentication", "Invalid code");
@@ -103,7 +100,7 @@ async function requestCodeClicked(isRequestingNewCode: boolean) {
     processRequestCodeResponse(response.data);
   } else {
     if (response.error == "already_logged_in") {
-      isAuthenticated.value = true;
+      await userLogin();
       router.push({ name: "default-home-feed" });
     } else if (response.error == "throttled") {
       processRequestCodeResponse(response.data);

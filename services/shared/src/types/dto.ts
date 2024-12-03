@@ -155,6 +155,11 @@ export class Dto {
         })
         .strict();
     static fetchUserCommentsResponse = z.array(zodExtendedCommentData);
+    static deletePostBySlugIdRequest = z
+        .object({
+            postSlugId: zodSlugId
+        })
+        .strict();
 }
 
 export type AuthenticateRequestBody = z.infer<

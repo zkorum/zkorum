@@ -2,8 +2,11 @@
   <div class="container">
     <img src="/feed/images/onboarding/brand.webp" class="welcomeImage" />
     <div class="buttonFlex">
-      <ZKButton :label="t('welcome.login')" :to="{ name: 'onboarding-step1' }" color="primary" />
-      <ZKButton color="black" label="Skip Authentication" @click="skipAuthentication()" />
+      <ZKButton label="Sign Up" :to="{ name: 'onboarding-step1-signup' }" color="primary" />
+
+      <ZKButton label="Log In" :to="{ name: 'onboarding-step1-login' }" color="white" text-color="primary" />
+
+      <ZKButton color="secondary" label="Skip Authentication" @click="skipAuthentication()" />
     </div>
   </div>
 </template>
@@ -12,9 +15,7 @@
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { usePostStore } from "src/stores/post";
 import { onMounted } from "vue";
-import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-const { t } = useI18n();
 
 const router = useRouter();
 
@@ -44,6 +45,7 @@ function isDevMode() {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  width: min(15rem, 100%);
 }
 
 .welcomeImage {

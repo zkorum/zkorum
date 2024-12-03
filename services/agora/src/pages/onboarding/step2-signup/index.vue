@@ -1,17 +1,17 @@
 <template>
   <div>
-    <StepperLayout :submit-call-back="goToNextRoute" :current-step="2" :total-steps="6" :enable-next-button="true"
-      :show-next-button="true">
+    <StepperLayout :submit-call-back="() => { }" :current-step="2" :total-steps="6" :enable-next-button="true"
+      :show-next-button="false">
 
       <template #header>
         <InfoHeader title="Agora aims to be exclusively human" :description="description" icon-name="mdi-heart" />
       </template>
 
       <template #body>
-        <ZKButton label="What is RariMe?" icon="mdi-open-in-new" color="primary" @click="openRariMeWebsite()" />
+        <ZKButton label="What is RariMe?" color="primary" @click="goToNextRoute()" />
 
-        <ZKButton label="Verify with my phone number instead" color="button-background-color"
-          text-color="color-text-strong" @click="verifyPhone()" />
+        <ZKButton label="Verify with my phone number" color="button-background-color" text-color="color-text-strong"
+          @click="verifyPhone()" />
       </template>
 
     </StepperLayout>
@@ -30,11 +30,6 @@ const description = "We ask you to prove your humanity anonymously with RariMe, 
 
 function goToNextRoute() {
   router.push({ name: "onboarding-step3-passport" });
-}
-
-
-function openRariMeWebsite() {
-  window.open("https://rarime.com/", "_blank");
 }
 
 function verifyPhone() {

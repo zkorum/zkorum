@@ -6,6 +6,7 @@ import {
   type ApiV1FeedFetchRecentPost200ResponsePostDataListInner,
   type ApiV1FeedFetchRecentPostRequest,
   type ApiV1PostCreatePostRequest,
+  type ApiV1PostDeletePostRequest,
   type ApiV1PostFetchPostBySlugIdPostRequest,
 } from "src/api";
 import { useCommonApi } from "./common";
@@ -204,11 +205,38 @@ export function useBackendPostApi() {
     return parsedList;
   }
 
+  async function deletePostBySlugId(postSlugId: string) {
+    try {
+      const params: ApiV1PostDeletePostRequest = {
+        postSlugId: postSlugId
+      };
+
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1PostDeletePost(params);
+      const encodedUcan = await buildEncodedUcan(url, options);
+      await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1PostDeletePost(params, {
+        headers: {
+          ...buildAuthorizationHeader(encodedUcan),
+        },
+      });
+      return true;
+    } catch (e) {
+      console.error(e);
+      showNotifyMessage("Failed to delete the post.");
+      return false;
+    }
+  }
+
   return {
     createNewPost,
     fetchRecentPost,
     fetchPostBySlugId,
     createInternalPostData,
     composeInternalPostList,
+    deletePostBySlugId
   };
 }

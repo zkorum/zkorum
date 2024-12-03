@@ -24,7 +24,6 @@ export async function getUserPollResponse({
     const postDetails = await useCommonPost().getPostAndContentIdFromSlugId({
       db: db,
       postSlugId: postSlugId,
-      httpErrors: httpErrors
     });
 
     if (postDetails.contentId == null) {
@@ -83,7 +82,6 @@ export async function submitPollResponse({
   const { id: postId, contentId: postContentId } = await useCommonPost().getPostAndContentIdFromSlugId({
     db: db,
     postSlugId: postSlugId,
-    httpErrors: httpErrors
   });
 
   if (postContentId == null) {

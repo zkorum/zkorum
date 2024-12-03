@@ -1,7 +1,7 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import type { CreateNewPostResponse } from "@/shared/types/dto.js";
 import { MAX_LENGTH_BODY } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
@@ -136,7 +136,6 @@ export async function fetchPostBySlugId({
         const { fetchPostItems } = useCommonPost();
         const postData = await fetchPostItems({
             db: db,
-            showHidden: true,
             limit: 1,
             where: eq(postTable.slugId, postSlugId),
             enableCompactBody: false,
@@ -155,6 +154,55 @@ export async function fetchPostBySlugId({
         server.log.error(err);
         throw httpErrors.internalServerError(
             "Failed to fetch post by slug ID: " + postSlugId
+        );
+    }
+}
+
+interface DeletePostBySlugIdProps {
+    db: PostgresDatabase;
+    postSlugId: string;
+    userId: string;
+    authHeader: string;
+    didWrite: string;
+}
+
+export async function deletePostBySlugId({
+    db, postSlugId, userId, authHeader, didWrite }: DeletePostBySlugIdProps): Promise<void> {
+
+    try {
+        const { getPostAndContentIdFromSlugId } = useCommonPost();
+        const postDetails = await getPostAndContentIdFromSlugId({
+            db: db,
+            postSlugId: postSlugId,
+        });
+
+        await db.transaction(async (tx) => {
+            await tx
+                .update(postTable)
+                .set({
+                    currentContentId: null
+                })
+                .where(and(eq(postTable.authorId, userId), eq(postTable.id, postDetails.id)));
+
+            await tx
+                .update(userTable)
+                .set({
+                    postCount: sql`${userTable.postCount} - 1`,
+                })
+                .where(eq(userTable.id, userId));
+            
+            await tx.insert(postProofTable).values({
+                type: "deletion",
+                postId: postDetails.id,
+                authorDid: didWrite,
+                proof: authHeader,
+                proofVersion: 1,
+            }).returning({ proofId: postProofTable.id });
+        });
+    } catch (err: unknown) {
+        server.log.error(err);
+        throw httpErrors.internalServerError(
+            "Failed to delete post by slug ID: " + postSlugId
         );
     }
 }
