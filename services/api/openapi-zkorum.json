@@ -496,7 +496,7 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "postCount": {
+                                        "activePostCount": {
                                             "type": "number",
                                             "minimum": 0
                                         },
@@ -510,7 +510,7 @@
                                         }
                                     },
                                     "required": [
-                                        "postCount",
+                                        "activePostCount",
                                         "createdAt",
                                         "userName"
                                     ],

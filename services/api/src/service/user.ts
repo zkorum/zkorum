@@ -146,7 +146,7 @@ export async function getUserProfile({
   try {
     const userTableResponse = await db
       .select({
-        postCount: userTable.postCount,
+        activePostCount: userTable.activePostCount,
         createdAt: userTable.createdAt,
         userName: userTable.userName
       })
@@ -159,7 +159,7 @@ export async function getUserProfile({
       );
     } else {
       return {
-        postCount: userTableResponse[0].postCount,
+        activePostCount: userTableResponse[0].activePostCount,
         createdAt: userTableResponse[0].createdAt,
         userName: userTableResponse[0].userName,
       };

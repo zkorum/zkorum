@@ -105,7 +105,8 @@ export async function createNewPost({
             await tx
                 .update(userTable)
                 .set({
-                    postCount: sql`${userTable.postCount} + 1`
+                    activePostCount: sql`${userTable.activePostCount} + 1`,
+                    totalPostCount: sql`${userTable.totalPostCount} + 1`,
                 })
                 .where(eq(userTable.id, authorId));
         });
@@ -187,7 +188,7 @@ export async function deletePostBySlugId({
             await tx
                 .update(userTable)
                 .set({
-                    postCount: sql`${userTable.postCount} - 1`,
+                    activePostCount: sql`${userTable.activePostCount} - 1`,
                 })
                 .where(eq(userTable.id, userId));
             

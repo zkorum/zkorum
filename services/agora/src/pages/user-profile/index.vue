@@ -10,7 +10,7 @@
       </div>
 
       <div class="profileMetadataBar">
-        <div>{{ profileData.postCount }} conservations <span class="dotPadding">•</span></div>
+        <div>{{ profileData.activePostCount }} conservations <span class="dotPadding">•</span></div>
         <div>{{ getDateString(new Date(profileData.createdAt)) }}</div>
       </div>
 

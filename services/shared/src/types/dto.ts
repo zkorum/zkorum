@@ -138,7 +138,7 @@ export class Dto {
         chosenOption: zodVotingAction
     }).strict();
     static fetchUserProfileResponse = z.object({
-        postCount: z.number().gte(0),
+        activePostCount: z.number().gte(0),
         createdAt: z.date(),
         userName: zodUserName,
     }).strict();

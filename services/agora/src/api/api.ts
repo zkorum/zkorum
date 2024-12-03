@@ -687,7 +687,7 @@ export interface ApiV1UserFetchUserProfilePost200Response {
      * @type {number}
      * @memberof ApiV1UserFetchUserProfilePost200Response
      */
-    'postCount': number;
+    'activePostCount': number;
     /**
      * 
      * @type {string}

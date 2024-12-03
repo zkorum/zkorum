@@ -33,7 +33,7 @@ export function useBackendUserApi() {
       });
 
       return {
-        postCount: response.data.postCount,
+        activePostCount: response.data.activePostCount,
         createdAt: new Date(response.data.createdAt),
         userName: response.data.userName,
       };

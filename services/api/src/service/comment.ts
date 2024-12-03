@@ -276,7 +276,7 @@ export async function postNewComment({
         await tx
             .update(userTable)
             .set({
-                commentCount: sql`${userTable.commentCount} + 1`
+                totalCommentCount: sql`${userTable.totalCommentCount} + 1`
             })
             .where(eq(userTable.id, userId));
 

@@ -7,7 +7,7 @@ export function useUserStore() {
   const { fetchUserProfile, fetchUserPosts, fetchUserComments } = useBackendUserApi();
 
   interface UserProfile {
-    postCount: number;
+    activePostCount: number;
     createdAt: Date;
     userName: string;
     userPostList: ExtendedPost[];
@@ -15,7 +15,7 @@ export function useUserStore() {
   }
 
   const emptyProfile: UserProfile = {
-    postCount: 0,
+    activePostCount: 0,
     createdAt: new Date(),
     userName: "",
     userPostList: [],
@@ -33,7 +33,7 @@ export function useUserStore() {
 
     if (userProfile && userPosts && userComments) {
       profileData.value = {
-        postCount: userProfile.postCount,
+        activePostCount: userProfile.activePostCount,
         createdAt: userProfile.createdAt,
         userName: userProfile.userName,
         userPostList: userPosts,
