@@ -62,7 +62,7 @@
       </div>
     </ZKHoverEffect>
 
-    <FloatingBottomContainer v-if="!compactMode">
+    <FloatingBottomContainer v-if="!compactMode && isAuthenticated">
       <CommentComposer :show-controls="focusCommentElement" :post-slug-id="extendedPostData.metadata.postSlugId"
         @cancel-clicked="cancelledCommentComposor()" @submitted-comment="submittedComment()"
         @editor-focused="focusCommentElement = true" />
@@ -85,6 +85,7 @@ import { useRouteQuery } from "@vueuse/router";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
 import Skeleton from "primevue/skeleton";
 import type { ExtendedPost } from "src/shared/types/zod";
+import { useAuthenticationStore } from "src/stores/authentication";
 
 const props = defineProps<{
   extendedPostData: ExtendedPost;
@@ -93,6 +94,8 @@ const props = defineProps<{
   showAuthor: boolean;
   displayAbsoluteTime: boolean;
 }>();
+
+const { isAuthenticated } = useAuthenticationStore();
 
 const commentSlugId = useRouteQuery("commentSlugId", "", { transform: String });
 

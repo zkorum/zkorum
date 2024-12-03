@@ -8,10 +8,10 @@
       </template>
 
       <template #body>
-        <ZKButton label="What is RariMe?" icon="mdi-open-in-new" color="primary" @click="openRariMeWebsite()" />
+        <ZKButton label="What is RariMe?" color="primary" @click="openRariMeWebsite()" />
 
-        <ZKButton label="Verify with my phone number instead" color="button-background-color"
-          text-color="color-text-strong" @click="verifyPhone()" />
+        <ZKButton label="Verify with my phone number" color="button-background-color" text-color="color-text-strong"
+          @click="verifyPhone()" />
       </template>
 
     </StepperLayout>
