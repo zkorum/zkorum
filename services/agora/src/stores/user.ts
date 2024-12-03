@@ -24,7 +24,6 @@ export function useUserStore() {
 
   const profileData = useStorage("user-profile-data", emptyProfile);
 
-
   async function loadUserProfile() {
     const [userProfile, userPosts, userComments] = await Promise.all([
       fetchUserProfile(),

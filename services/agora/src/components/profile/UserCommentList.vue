@@ -39,9 +39,9 @@
 import { useElementVisibility, useTimeAgo } from "@vueuse/core";
 import { useUserStore } from "src/stores/user";
 import ZKHoverEffect from "../ui-library/ZKHoverEffect.vue";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 
-const { profileData, loadMoreUserComments } = useUserStore();
+const { profileData, loadMoreUserComments, loadUserProfile } = useUserStore();
 
 const endOfFeed = ref(false);
 let isExpandingPosts = false;
@@ -49,8 +49,15 @@ let isExpandingPosts = false;
 const bottomOfPostDiv = ref(null);
 const targetIsVisible = useElementVisibility(bottomOfPostDiv);
 
+let isLoaded = false;
+
+onMounted(async () => {
+  await loadUserProfile();
+  isLoaded = true;
+});
+
 watch(targetIsVisible, async () => {
-  if (targetIsVisible.value && !isExpandingPosts && !endOfFeed.value) {
+  if (targetIsVisible.value && !isExpandingPosts && !endOfFeed.value && isLoaded) {
     isExpandingPosts = true;
 
     const response = await loadMoreUserComments();

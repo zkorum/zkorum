@@ -19,10 +19,10 @@
 import { useElementVisibility } from "@vueuse/core";
 import PostDetails from "src/components/post/PostDetails.vue";
 import { useUserStore } from "src/stores/user";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
-const { loadMoreUserPosts, profileData } = useUserStore();
+const { loadUserProfile, loadMoreUserPosts, profileData } = useUserStore();
 
 const router = useRouter();
 
@@ -32,8 +32,15 @@ let isExpandingPosts = false;
 const bottomOfPostDiv = ref(null);
 const targetIsVisible = useElementVisibility(bottomOfPostDiv);
 
+let isLoaded = false;
+
+onMounted(async () => {
+  await loadUserProfile();
+  isLoaded = true;
+});
+
 watch(targetIsVisible, async () => {
-  if (targetIsVisible.value && !isExpandingPosts && !endOfFeed.value) {
+  if (targetIsVisible.value && !isExpandingPosts && !endOfFeed.value && isLoaded) {
     isExpandingPosts = true;
 
     const response = await loadMoreUserPosts();
