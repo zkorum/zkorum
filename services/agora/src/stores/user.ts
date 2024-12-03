@@ -66,7 +66,6 @@ export function useUserStore() {
   }
 
   function resetUserProfile() {
-    console.log("reset user profile");
     profileData.value = emptyProfile;
   }
 
