@@ -687,12 +687,6 @@ export interface ApiV1UserFetchUserProfilePost200Response {
      * @type {number}
      * @memberof ApiV1UserFetchUserProfilePost200Response
      */
-    'commentCount': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ApiV1UserFetchUserProfilePost200Response
-     */
     'postCount': number;
     /**
      * 

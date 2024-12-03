@@ -1,6 +1,6 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import { pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
+import {  pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
 import { eq, sql, and } from "drizzle-orm";
 import type { CreateNewPostResponse } from "@/shared/types/dto.js";
 import { MAX_LENGTH_BODY } from "@/shared/shared.js";

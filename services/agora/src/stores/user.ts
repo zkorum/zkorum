@@ -7,7 +7,6 @@ export function useUserStore() {
   const { fetchUserProfile, fetchUserPosts, fetchUserComments } = useBackendUserApi();
 
   interface UserProfile {
-    commentCount: number;
     postCount: number;
     createdAt: Date;
     userName: string;
@@ -16,7 +15,6 @@ export function useUserStore() {
   }
 
   const emptyProfile: UserProfile = {
-    commentCount: 0,
     postCount: 0,
     createdAt: new Date(),
     userName: "",
@@ -28,7 +26,6 @@ export function useUserStore() {
 
 
   async function loadUserProfile() {
-
     const [userProfile, userPosts, userComments] = await Promise.all([
       fetchUserProfile(),
       fetchUserPosts(undefined),
@@ -36,7 +33,6 @@ export function useUserStore() {
 
     if (userProfile && userPosts && userComments) {
       profileData.value = {
-        commentCount: userProfile.commentCount,
         postCount: userProfile.postCount,
         createdAt: userProfile.createdAt,
         userName: userProfile.userName,
@@ -60,7 +56,7 @@ export function useUserStore() {
 
   async function loadMoreUserComments() {
     let lastCommentSlugId: undefined | string = undefined;
-    if (profileData.value.userPostList.length > 0) {
+    if (profileData.value.userCommentList.length > 0) {
       lastCommentSlugId = profileData.value.userCommentList.at(-1).commentItem.commentSlugId;
     }
 
@@ -71,6 +67,7 @@ export function useUserStore() {
   }
 
   function resetUserProfile() {
+    console.log("reset user profile");
     profileData.value = emptyProfile;
   }
 

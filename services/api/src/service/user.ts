@@ -3,7 +3,7 @@ import { commentContentTable, commentTable, postTable, userTable } from "@/schem
 import type { FetchUserProfileResponse } from "@/shared/types/dto.js";
 import type { CommentItem, ExtendedComment, ExtendedPost } from "@/shared/types/zod.js";
 import { httpErrors } from "@fastify/sensible";
-import { and, eq, lt, desc } from "drizzle-orm";
+import { and, eq, lt, desc, isNotNull } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
 import { getPostSlugIdLastCreatedAt } from "./feed.js";
@@ -51,7 +51,7 @@ export async function getUserComments({
         postTable,
         eq(postTable.id, commentTable.postId)
       )
-      .where(and(eq(commentTable.authorId, userId), lt(commentTable.createdAt, lastCreatedAt)))
+      .where(and(eq(commentTable.authorId, userId), lt(commentTable.createdAt, lastCreatedAt), isNotNull(postTable.currentContentId)))
       .orderBy(desc(commentTable.createdAt))
       .limit(10);
     
@@ -146,7 +146,6 @@ export async function getUserProfile({
   try {
     const userTableResponse = await db
       .select({
-        commentCount: userTable.commentCount,
         postCount: userTable.postCount,
         createdAt: userTable.createdAt,
         userName: userTable.userName
@@ -160,7 +159,6 @@ export async function getUserProfile({
       );
     } else {
       return {
-        commentCount: userTableResponse[0].commentCount,
         postCount: userTableResponse[0].postCount,
         createdAt: userTableResponse[0].createdAt,
         userName: userTableResponse[0].userName,

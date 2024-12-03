@@ -496,10 +496,6 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "commentCount": {
-                                            "type": "number",
-                                            "minimum": 0
-                                        },
                                         "postCount": {
                                             "type": "number",
                                             "minimum": 0
@@ -514,7 +510,6 @@
                                         }
                                     },
                                     "required": [
-                                        "commentCount",
                                         "postCount",
                                         "createdAt",
                                         "userName"

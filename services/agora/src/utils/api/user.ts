@@ -33,7 +33,6 @@ export function useBackendUserApi() {
       });
 
       return {
-        commentCount: response.data.commentCount,
         postCount: response.data.postCount,
         createdAt: new Date(response.data.createdAt),
         userName: response.data.userName,
