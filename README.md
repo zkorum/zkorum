@@ -80,3 +80,9 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md)
 ## License
 
 See [COPYING-README](COPYING-README.md)
+
+## Acknowledgements
+
+![ngi](https://ngi.eu/wp-content/uploads/2019/06/Logo-NGI_Explicit-with-baseline-rgb.png)
+
+This project has received funding from the European Union’s Horizon Europe 2020 research and innovation program through the [NGI TRUSTCHAIN](https://trustchain.ngi.eu/) program under cascade funding agreement No. 101093274 and the [NGI SARGASSO](https://ngisargasso.eu/) project under grant agreement No. 101092887.
