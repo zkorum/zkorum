@@ -36,6 +36,22 @@ const routes: RouteRecordRaw[] = [
         name: "default-home-feed",
       },
       {
+        path: "/topics",
+        components: {
+          default: () => import("pages/topics/index.vue"),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false,
+            hasSettingsButton: true,
+            hasCloseButton: false,
+            hasLoginButton: true,
+          } as DefaultMenuBarProps,
+        },
+        name: "followed-topics",
+      },
+      {
         path: "/user-profile",
         components: {
           default: () => import("pages/user-profile/index.vue"),
