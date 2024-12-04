@@ -45,13 +45,15 @@ export async function getUserComments({
       )
       .innerJoin(
         userTable,
-        eq(userTable.id, userId)
+        eq(userTable.id, commentTable.authorId)
       )
       .innerJoin(
         postTable,
         eq(postTable.id, commentTable.postId)
       )
-      .where(and(eq(commentTable.authorId, userId), lt(commentTable.createdAt, lastCreatedAt)))
+      .where(and(
+        eq(commentTable.authorId, userId),
+        lt(commentTable.createdAt, lastCreatedAt)))
       .orderBy(desc(commentTable.createdAt))
       .limit(10);
     
@@ -146,8 +148,7 @@ export async function getUserProfile({
   try {
     const userTableResponse = await db
       .select({
-        commentCount: userTable.commentCount,
-        postCount: userTable.postCount,
+        activePostCount: userTable.activePostCount,
         createdAt: userTable.createdAt,
         userName: userTable.userName
       })
@@ -160,8 +161,7 @@ export async function getUserProfile({
       );
     } else {
       return {
-        commentCount: userTableResponse[0].commentCount,
-        postCount: userTableResponse[0].postCount,
+        activePostCount: userTableResponse[0].activePostCount,
         createdAt: userTableResponse[0].createdAt,
         userName: userTableResponse[0].userName,
       };

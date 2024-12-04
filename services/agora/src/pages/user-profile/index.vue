@@ -10,8 +10,7 @@
       </div>
 
       <div class="profileMetadataBar">
-        <div>{{ profileData.postCount }} conservations <span class="dotPadding">•</span></div>
-        <div>{{ profileData.commentCount }} opinions <span class="dotPadding">•</span></div>
+        <div>{{ profileData.activePostCount }} conservations <span class="dotPadding">•</span></div>
         <div>{{ getDateString(new Date(profileData.createdAt)) }}</div>
       </div>
 
@@ -37,7 +36,7 @@ import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
 import UserAvatar from "src/components/account/UserAvatar.vue";
 import { useUserStore } from "src/stores/user";
-import { onMounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getDateString } from "src/utils/common";
 
@@ -48,12 +47,6 @@ const currentTab = ref(0);
 const route = useRoute();
 
 applyCurrentTab();
-
-const { loadUserProfile } = useUserStore();
-
-onMounted(() => {
-  loadUserProfile();
-});
 
 watch(route, () => {
   applyCurrentTab();

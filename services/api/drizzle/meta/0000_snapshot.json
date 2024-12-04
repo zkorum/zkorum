@@ -1,5 +1,5 @@
 {
-  "id": "a55396ea-3d12-422a-987b-2f00d0a6b656",
+  "id": "674dbee3-4b9b-4409-8d8b-fa9d9667dd1b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2243,15 +2243,22 @@
           "notNull": true,
           "default": false
         },
-        "post_count": {
-          "name": "post_count",
+        "active_post_count": {
+          "name": "active_post_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
         },
-        "comment_count": {
-          "name": "comment_count",
+        "total_post_count": {
+          "name": "total_post_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "total_comment_count": {
+          "name": "total_comment_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

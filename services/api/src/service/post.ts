@@ -1,6 +1,6 @@
 // Interact with a post
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import { pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
+import {  commentTable, pollTable, postContentTable, postProofTable, postTable, userTable } from "@/schema.js";
 import { eq, sql, and } from "drizzle-orm";
 import type { CreateNewPostResponse } from "@/shared/types/dto.js";
 import { MAX_LENGTH_BODY } from "@/shared/shared.js";
@@ -105,7 +105,8 @@ export async function createNewPost({
             await tx
                 .update(userTable)
                 .set({
-                    postCount: sql`${userTable.postCount} + 1`
+                    activePostCount: sql`${userTable.activePostCount} + 1`,
+                    totalPostCount: sql`${userTable.totalPostCount} + 1`,
                 })
                 .where(eq(userTable.id, authorId));
         });
@@ -170,34 +171,47 @@ export async function deletePostBySlugId({
     db, postSlugId, userId, authHeader, didWrite }: DeletePostBySlugIdProps): Promise<void> {
 
     try {
-        const { getPostAndContentIdFromSlugId } = useCommonPost();
-        const postDetails = await getPostAndContentIdFromSlugId({
-            db: db,
-            postSlugId: postSlugId,
-        });
-
         await db.transaction(async (tx) => {
-            await tx
+            // Delete the post
+            const updatedPostIdResponse = await tx
                 .update(postTable)
                 .set({
                     currentContentId: null
                 })
-                .where(and(eq(postTable.authorId, userId), eq(postTable.id, postDetails.id)));
+                .where(and(eq(postTable.authorId, userId), eq(postTable.slugId, postSlugId)))
+                .returning({ postId: postTable.id });
 
+            if (updatedPostIdResponse.length != 1) {
+                tx.rollback();
+            }
+
+            const postId = updatedPostIdResponse[0].postId;
+            
+            // Update the user's active post count
             await tx
                 .update(userTable)
                 .set({
-                    postCount: sql`${userTable.postCount} - 1`,
+                    activePostCount: sql`${userTable.activePostCount} - 1`,
                 })
                 .where(eq(userTable.id, userId));
             
+            // Create the delete proof
             await tx.insert(postProofTable).values({
                 type: "deletion",
-                postId: postDetails.id,
+                postId: postId,
                 authorDid: didWrite,
                 proof: authHeader,
                 proofVersion: 1,
             }).returning({ proofId: postProofTable.id });
+
+            // Mark all of the comments as deleted
+            await tx
+                .update(commentTable)
+                .set({
+                    currentContentId: null,
+                })
+                .where(eq(commentTable.postId, postId));
+
         });
     } catch (err: unknown) {
         server.log.error(err);

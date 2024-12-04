@@ -260,8 +260,9 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"user_name" varchar(23) NOT NULL,
 	"is_anonymous" boolean DEFAULT true NOT NULL,
 	"show_flagged_content" boolean DEFAULT false NOT NULL,
-	"post_count" integer DEFAULT 0 NOT NULL,
-	"comment_count" integer DEFAULT 0 NOT NULL,
+	"active_post_count" integer DEFAULT 0 NOT NULL,
+	"total_post_count" integer DEFAULT 0 NOT NULL,
+	"total_comment_count" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
 	CONSTRAINT "user_user_name_unique" UNIQUE("user_name")

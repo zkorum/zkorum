@@ -28,6 +28,7 @@ import {
     httpUrlToResourcePointer,
 } from "./shared/ucan/ucan.js";
 import {
+    deleteCommentBySlugId,
     fetchCommentsByPostSlugId,
     postNewComment,
 } from "./service/comment.js";
@@ -612,6 +613,33 @@ server.after(() => {
             },
         });
 
+    server
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+            method: "POST",
+            url: `/api/${apiVersion}/comment/delete`,
+            schema: {
+                body: Dto.deleteCommentBySlugIdRequest
+            },
+            handler: async (request) => {
+                const didWrite = await verifyUCAN(db, request, undefined);
+
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized("Device is not logged in");
+                } else {
+                    const authHeader = getAuthHeader(request);
+                    await deleteCommentBySlugId({
+                        db: db,
+                        commentSlugId: request.body.commentSlugId,
+                        userId: status.userId,
+                        authHeader: authHeader,
+                        didWrite: didWrite
+                    });
+                }
+            },
+        });
+    
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/comment/create`,

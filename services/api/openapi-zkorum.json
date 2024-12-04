@@ -496,11 +496,7 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "commentCount": {
-                                            "type": "number",
-                                            "minimum": 0
-                                        },
-                                        "postCount": {
+                                        "activePostCount": {
                                             "type": "number",
                                             "minimum": 0
                                         },
@@ -514,8 +510,7 @@
                                         }
                                     },
                                     "required": [
-                                        "commentCount",
-                                        "postCount",
+                                        "activePostCount",
                                         "createdAt",
                                         "userName"
                                     ],
@@ -1046,6 +1041,35 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/comment/delete": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "commentSlugId": {
+                                        "type": "string",
+                                        "maxLength": 10
+                                    }
+                                },
+                                "required": [
+                                    "commentSlugId"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
                     }
                 }
             }

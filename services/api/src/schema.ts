@@ -572,8 +572,9 @@ export const userTable = pgTable("user", {
     userName: varchar("user_name", { length: MAX_LENGTH_USERNAME }).notNull().unique(),
     isAnonymous: boolean("is_anonymous").notNull().default(true),
     showFlaggedContent: boolean("show_flagged_content").notNull().default(false),
-    postCount: integer("post_count").notNull().default(0),
-    commentCount: integer("comment_count").notNull().default(0),
+    activePostCount: integer("active_post_count").notNull().default(0), // total posts (without deleted posts)
+    totalPostCount: integer("total_post_count").notNull().default(0), // total posts created
+    totalCommentCount: integer("total_comment_count").notNull().default(0), // total comments created
     createdAt: timestamp("created_at", {
         mode: "date",
         precision: 0,
