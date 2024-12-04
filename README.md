@@ -1,4 +1,4 @@
-# Agora - Citizen Network
+# Agora Citizen Network
 
 Monorepo for [Agora](https://agoracitizen.network).
 

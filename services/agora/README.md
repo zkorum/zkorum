@@ -1,6 +1,4 @@
-# Agora (@zkorum/agora)
-
-Anonymous Space For Open Dialogues
+# Agora (@zkorum/agora-app)
 
 ## Install the dependencies
 

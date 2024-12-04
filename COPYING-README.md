@@ -1,3 +1,4 @@
+- © 2023 ZKorum SAS <hello@zkorum.com>
 - 📦 This mono-repository contains a suite of services.
 - ⚖️: The mono-repository is released under the [AGPL v3 license](./COPYING). Note that the services themselves are released under their own license.
 
@@ -13,5 +14,4 @@ Attribution information for ZKorum is contained in the [AUTHORS](AUTHORS) file.
 
 Every contributors have signed the [Fiduciary Licensing Agreement (FLA)](https://cla-assistant.io/zkorum/zkorum) with [ZKorum SAS](https://annuaire-entreprises.data.gouv.fr/entreprise/zkorum-984736173) as the Trustee.
 
-Note that ZKORUM is a registered trademark, the logos and custom icons and other assets are all right reserved ZKorum SAS 2024. 
-Only the source code is open-source, the registered trademarks cannot be used without written consent from ZKorum SAS.
+Note that ZKORUM and AGORA CITIZEN NETWORK are registered trademarks. The logos, custom icons and other assets are all rights reserved © 2023 ZKorum SAS <hello@zkorum.com>. These assets cannot be used without written consent from ZKorum SAS.
