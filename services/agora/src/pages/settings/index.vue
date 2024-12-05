@@ -20,10 +20,12 @@ import { useAuthenticationStore } from "src/stores/authentication";
 import { useUserStore } from "src/stores/user";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { type SettingsInterface } from "src/utils/component/settings/settings";
+import { useDialog } from "src/utils/ui/dialog";
 import { useRouter } from "vue-router";
 
 const { isAuthenticated, userLogout } = useAuthenticationStore();
 const { resetUserProfile } = useUserStore();
+const { showDeleteAccountDialog } = useDialog();
 
 const backendAuth = useBackendAuthApi();
 const router = useRouter();
@@ -49,6 +51,7 @@ const accountSettings: SettingsInterface[] = [
     label: "Log out",
     action: logoutRequested,
     routeName: "welcome",
+    isWarning: false
   },
 ];
 
@@ -58,12 +61,14 @@ const aboutSettings: SettingsInterface[] = [
     label: "Privacy policy",
     action: () => { },
     routeName: "privacy",
+    isWarning: false
   },
   {
     icon: "mdi-file-document",
     label: "Terms of service",
     action: () => { },
     routeName: "terms",
+    isWarning: false
   },
 ];
 
@@ -71,8 +76,9 @@ const supportSettings: SettingsInterface[] = [
   {
     icon: "mdi-delete",
     label: "Delete Account",
-    action: () => { },
+    action: showDeleteAccountDialog,
     routeName: "",
+    isWarning: true
   },
 ];
 </script>
