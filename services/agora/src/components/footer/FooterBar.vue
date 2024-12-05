@@ -16,22 +16,6 @@
       </div>
     </RouterLink>
 
-    <RouterLink :to="{ name: 'followed-topics' }">
-      <div class="iconStyle">
-        <q-icon name="mdi-book-open-blank-variant-outline" size="1.6rem" :color="route.name === 'followed-topics'
-          ? 'color-highlight'
-          : 'color-text-weak'
-          " />
-        <div :class="'text-' +
-          (route.name === 'followed-topics'
-            ? 'color-highlight'
-            : 'color-text-weak')
-          ">
-          Topics
-        </div>
-      </div>
-    </RouterLink>
-
     <div class="iconStyle" @click="accessProfile()">
       <q-icon name="mdi-account-circle" size="1.6rem" :color="route.name === 'user-profile-posts' || route.name === 'user-profile-comments' ? 'color-highlight' : 'color-text-weak'
         " />
