@@ -3,4 +3,5 @@ export interface SettingsInterface {
   label: string;
   action: () => void;
   routeName: string;
+  isWarning: boolean;
 }
