@@ -1,7 +1,7 @@
 {
-    "name": "@zkorum/zkorum-back",
+    "name": "@zkorum/agora-api",
     "version": "1.0.0",
-    "description": "ZKorum backend",
+    "description": "API for Agora Citizen Network",
     "exports": "./index.js",
     "scripts": {
         "build": "NODE_ENV=production rm -rf dist && tsc --sourceMap -p tsconfig.json",
@@ -34,8 +34,8 @@
         "survey",
         "vote"
     ],
-    "author": "Nicolas Gimenez",
-    "license": "AGPL3",
+    "author": "ZKorum SAS <hello@zkorum.com>",
+    "license": "AGPL-3.0",
     "aliases": {
         "@": "./dist"
     },

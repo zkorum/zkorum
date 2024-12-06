@@ -1,6 +1,6 @@
 # Agora Citizen Network
 
-Monorepo for [Agora](https://agoracitizen.network).
+Monorepo for [Agora Citizen Network](https://agoracitizen.network).
 
 ## Development
 
