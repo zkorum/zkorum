@@ -1,5 +1,5 @@
 {
-    "name": "@zkorum/shared",
+    "name": "@zkorum/agora-shared",
     "version": "1.0.0",
     "type": "module",
     "description": "",
@@ -12,8 +12,8 @@
         "format:write": "prettier . --write"
     },
     "keywords": [],
-    "author": "",
-    "license": "ISC",
+    "author": "ZKorum SAS <hello@zkorum.com>",
+    "license": "MPL-2.0",
     "dependencies": {
         "@docknetwork/crypto-wasm-ts": "^0.50.0",
         "cborg": "^4.0.5",

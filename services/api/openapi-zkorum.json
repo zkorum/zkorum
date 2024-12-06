@@ -1455,6 +1455,85 @@
                     }
                 }
             }
+        },
+        "/api/v1/rarimo/generate-verification-link": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "verificationLink": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    },
+                                    "required": [
+                                        "verificationLink"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/rarimo/verify-user-status-and-authenticate": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "rarimoStatus": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "verified"
+                                                    ]
+                                                },
+                                                "nullifier": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "rarimoStatus",
+                                                "nullifier"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "rarimoStatus": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "not_verified",
+                                                        "failed_verification",
+                                                        "uniqueness_check_failed"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "rarimoStatus"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "servers": [],

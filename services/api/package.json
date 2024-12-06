@@ -47,6 +47,7 @@
         "@fastify/sensible": "^6.0.1",
         "@fastify/swagger": "^9.2.0",
         "@ucans/ucans": "^0.12.0",
+        "axios": "^1.7.9",
         "cborg": "^4.0.5",
         "dotenv": "^16.4.5",
         "drizzle-orm": "^0.35.3",

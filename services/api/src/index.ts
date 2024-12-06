@@ -33,8 +33,20 @@ import {
     postNewComment,
 } from "./service/comment.js";
 import { getUserPollResponse, submitPollResponse } from "./service/poll.js";
-import { castVoteForCommentSlugId, getUserVotesForPostSlugIds } from "./service/voting.js";
-import { getUserComments, getUserPosts, getUserProfile } from "./service/user.js";
+import {
+    castVoteForCommentSlugId,
+    getUserVotesForPostSlugIds,
+} from "./service/voting.js";
+import {
+    getUserComments,
+    getUserPosts,
+    getUserProfile,
+} from "./service/user.js";
+import axios, { type AxiosInstance } from "axios";
+import {
+    generateVerificationLink,
+    verifyUserStatusAndAuthenticate,
+} from "./service/rarimo.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -69,6 +81,10 @@ const speciallyAuthorizedPhones: string[] =
           config.SPECIALLY_AUTHORIZED_PHONES.length !== 0
         ? config.SPECIALLY_AUTHORIZED_PHONES.replace(/\s/g, "").split(",")
         : [];
+
+const axiosVerificatorSvc: AxiosInstance = axios.create({
+    baseURL: config.VERIFICATOR_SVC_BASE_URL,
+});
 
 server.register(fastifySwagger, {
     openapi: {
@@ -290,8 +306,6 @@ server.after(() => {
         handler: async (request) => {
             // This endpoint is accessible without being logged in
             // this endpoint could be especially subject to attacks such as DDoS or man-in-the-middle (to associate their own DID instead of the legitimate user's ones for example)
-            // => TODO: restrict this endpoint and the "verifyOtp" endpoint to use same IP Address: the correct IP Address must part of the UCAN
-            // => TODO: allow phone number owners to report spam/attacks and to request blocking the IP Addresses that attempted access
             const didWrite = await verifyUCAN(db, request, {
                 expectedDeviceStatus: undefined,
             });
@@ -317,11 +331,11 @@ server.after(() => {
                     testCode: config.TEST_CODE,
                     authenticateRequestBody: request.body,
                     userId,
-                    minutesBeforeCodeExpiry:
-                        config.MINUTES_BEFORE_EMAIL_OTP_EXPIRY,
+                    minutesBeforeSmsCodeExpiry:
+                        config.MINUTES_BEFORE_SMS_OTP_EXPIRY,
                     didWrite,
-                    throttleMinutesInterval:
-                        config.THROTTLE_EMAIL_MINUTES_INTERVAL,
+                    throttleSmsMinutesInterval:
+                        config.THROTTLE_SMS_MINUTES_INTERVAL,
                     httpErrors: server.httpErrors,
                     // awsMailConf: awsMailConf,
                     userAgent: userAgent,
@@ -375,155 +389,147 @@ server.after(() => {
         },
     });
 
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/feed/fetch-recent`,
-            schema: {
-                body: Dto.fetchFeedRequest,
-                response: {
-                    200: Dto.fetchFeedResponse,
-                },
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/feed/fetch-recent`,
+        schema: {
+            body: Dto.fetchFeedRequest,
+            response: {
+                200: Dto.fetchFeedResponse,
             },
-            handler: async (request) => {
-                if (request.body.isAuthenticatedRequest) {
-                    const didWrite = await verifyUCAN(db, request, {
-                        expectedDeviceStatus: undefined,
-                    });
+        },
+        handler: async (request) => {
+            if (request.body.isAuthenticatedRequest) {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
 
-                    const status = await authUtilService.isLoggedIn(db, didWrite);
-                    if (!status.isLoggedIn) {
-                        throw httpErrors.unauthorized("User is not logged in");
-                    } else {
-                        return await feedService.fetchFeed({
-                            db: db,
-                            showHidden: request.body.showHidden,
-                            lastSlugId: request.body.lastSlugId,
-                            fetchPollResponse: true,
-                            userId: status.userId
-                        });
-                    }
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw server.httpErrors.unauthorized(
+                        "User is not logged in",
+                    );
                 } else {
                     return await feedService.fetchFeed({
                         db: db,
                         showHidden: request.body.showHidden,
                         lastSlugId: request.body.lastSlugId,
-                        fetchPollResponse: false
-                    });
-                }
-            },
-        });
-
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/user/fetch-user-profile`,
-            schema: {
-                response: {
-                    200: Dto.fetchUserProfileResponse,
-                },
-            },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: undefined,
-                });
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    throw server.httpErrors.unauthorized("Device is not logged in");
-                } else {
-                    return await getUserProfile({
-                        db: db,
-                        userId: status.userId
-                    });
-                }
-            },
-        });
-
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/user/fetch-user-posts`,
-            schema: {
-                body: Dto.fetchUserPostsRequest,
-                response: {
-                    200: Dto.fetchUserPostsResponse,
-                },
-            },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: undefined,
-                });
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    throw server.httpErrors.unauthorized("Device is not logged in");
-                } else {
-                    return await getUserPosts({
-                        db: db,
+                        fetchPollResponse: true,
                         userId: status.userId,
-                        lastPostSlugId: request.body.lastPostSlugId
                     });
                 }
-            },
-        });
-    
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/user/fetch-user-comments`,
-            schema: {
-                body: Dto.fetchUserCommentsRequest,
-                response: {
-                    200: Dto.fetchUserCommentsResponse,
-                },
-            },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: undefined,
+            } else {
+                return await feedService.fetchFeed({
+                    db: db,
+                    showHidden: request.body.showHidden,
+                    lastSlugId: request.body.lastSlugId,
+                    fetchPollResponse: false,
                 });
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    throw server.httpErrors.unauthorized("Device is not logged in");
-                } else {
-                    return await getUserComments({
-                        db: db,
-                        userId: status.userId,
-                        lastCommentSlugId: request.body.lastCommentSlugId
-                    });
-                }
+            }
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/user/fetch-user-profile`,
+        schema: {
+            response: {
+                200: Dto.fetchUserProfileResponse,
             },
-        });
-    
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/voting/fetch-user-votes-for-post-slug-ids`,
-            schema: {
-                body: Dto.fetchUserVotesForPostSlugIdRequest,
-                response: {
-                    200: Dto.fetchUserVotesForPostSlugIdsResponse,
-                },
-            },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, {
-                    expectedDeviceStatus: undefined,
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: undefined,
+            });
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                return await getUserProfile({
+                    db: db,
+                    userId: status.userId,
                 });
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    throw server.httpErrors.unauthorized("Device is not logged in");
-                } else {
-                    return await getUserVotesForPostSlugIds({
-                        db: db,
-                        postSlugIdList: request.body.postSlugIdList,
-                        userId: status.userId
-                    });
-                }
+            }
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/user/fetch-user-posts`,
+        schema: {
+            body: Dto.fetchUserPostsRequest,
+            response: {
+                200: Dto.fetchUserPostsResponse,
             },
-        });
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: undefined,
+            });
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                return await getUserPosts({
+                    db: db,
+                    userId: status.userId,
+                    lastPostSlugId: request.body.lastPostSlugId,
+                });
+            }
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/user/fetch-user-comments`,
+        schema: {
+            body: Dto.fetchUserCommentsRequest,
+            response: {
+                200: Dto.fetchUserCommentsResponse,
+            },
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: undefined,
+            });
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                return await getUserComments({
+                    db: db,
+                    userId: status.userId,
+                    lastCommentSlugId: request.body.lastCommentSlugId,
+                });
+            }
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/voting/fetch-user-votes-for-post-slug-ids`,
+        schema: {
+            body: Dto.fetchUserVotesForPostSlugIdRequest,
+            response: {
+                200: Dto.fetchUserVotesForPostSlugIdsResponse,
+            },
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: undefined,
+            });
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                return await getUserVotesForPostSlugIds({
+                    db: db,
+                    postSlugIdList: request.body.postSlugIdList,
+                    userId: status.userId,
+                });
+            }
+        },
+    });
 
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
@@ -585,61 +591,57 @@ server.after(() => {
         },
     });
 
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/poll/get-user-poll-response`,
-            schema: {
-                body: Dto.fetchUserPollResponseRequest,
-                response: {
-                    200: Dto.fetchUserPollResponseResponse,
-                },
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/poll/get-user-poll-response`,
+        schema: {
+            body: Dto.fetchUserPollResponseRequest,
+            response: {
+                200: Dto.fetchUserPollResponseResponse,
             },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, undefined);
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, undefined);
 
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    throw server.httpErrors.unauthorized("Device is not logged in");
-                } else {
-                    return await getUserPollResponse({
-                        db: db,
-                        postSlugIdList: request.body,
-                        authorId: status.userId,
-                        httpErrors: server.httpErrors
-                    });
-                }
-            },
-        });
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                return await getUserPollResponse({
+                    db: db,
+                    postSlugIdList: request.body,
+                    authorId: status.userId,
+                    httpErrors: server.httpErrors,
+                });
+            }
+        },
+    });
 
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/comment/delete`,
-            schema: {
-                body: Dto.deleteCommentBySlugIdRequest
-            },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, undefined);
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/comment/delete`,
+        schema: {
+            body: Dto.deleteCommentBySlugIdRequest,
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, undefined);
 
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    throw server.httpErrors.unauthorized("Device is not logged in");
-                } else {
-                    const authHeader = getAuthHeader(request);
-                    await deleteCommentBySlugId({
-                        db: db,
-                        commentSlugId: request.body.commentSlugId,
-                        userId: status.userId,
-                        authHeader: authHeader,
-                        didWrite: didWrite
-                    });
-                }
-            },
-        });
-    
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                const authHeader = getAuthHeader(request);
+                await deleteCommentBySlugId({
+                    db: db,
+                    commentSlugId: request.body.commentSlugId,
+                    userId: status.userId,
+                    authHeader: authHeader,
+                    didWrite: didWrite,
+                });
+            }
+        },
+    });
+
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/comment/create`,
@@ -726,47 +728,43 @@ server.after(() => {
                     }
                 }
                 */
-            },
-        });
-
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/post/delete`,
-            schema: {
-                body: Dto.deletePostBySlugIdRequest
-            },
-            handler: async (request) => {
-                const didWrite = await verifyUCAN(db, request, undefined);
-
-                const status = await authUtilService.isLoggedIn(db, didWrite);
-                if (!status.isLoggedIn) {
-                    throw server.httpErrors.unauthorized("Device is not logged in");
-                } else {
-                    const authHeader = getAuthHeader(request);
-                    await postService.deletePostBySlugId({
-                        db: db,
-                        postSlugId: request.body.postSlugId,
-                        userId: status.userId,
-                        authHeader: authHeader,
-                        didWrite: didWrite
-                    });
-                }
         },
     });
-    
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/post/create`,
-            schema: {
-                body: Dto.createNewPostRequest,
-                response: {
-                    200: Dto.createNewPostResponse
-                }
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/post/delete`,
+        schema: {
+            body: Dto.deletePostBySlugIdRequest,
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, undefined);
+
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                const authHeader = getAuthHeader(request);
+                await postService.deletePostBySlugId({
+                    db: db,
+                    postSlugId: request.body.postSlugId,
+                    userId: status.userId,
+                    authHeader: authHeader,
+                    didWrite: didWrite,
+                });
+            }
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/post/create`,
+        schema: {
+            body: Dto.createNewPostRequest,
+            response: {
+                200: Dto.createNewPostResponse,
             },
+        },
         handler: async (request) => {
             const didWrite = await verifyUCAN(db, request, undefined);
             // const canCreatePost = await authUtilService.canCreatePost(db, didWrite)
@@ -922,54 +920,97 @@ server.after(() => {
     //             // });
     //         },
     //     });
-    server
-        .withTypeProvider<ZodTypeProvider>()
-        .route({
-            method: "POST",
-            url: `/api/${apiVersion}/post/fetch-post-by-slug-id`,
-            schema: {
-                body: Dto.fetchPostBySlugIdRequest,
-                response: {
-                    200: Dto.fetchPostBySlugIdResponse,
-                },
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/post/fetch-post-by-slug-id`,
+        schema: {
+            body: Dto.fetchPostBySlugIdRequest,
+            response: {
+                200: Dto.fetchPostBySlugIdResponse,
             },
-            handler: async (request) => {
-                if (request.body.isAuthenticatedRequest) {
-                    const didWrite = await verifyUCAN(db, request, {
-                        expectedDeviceStatus: undefined,
-                    });
+        },
+        handler: async (request) => {
+            if (request.body.isAuthenticatedRequest) {
+                const didWrite = await verifyUCAN(db, request, {
+                    expectedDeviceStatus: undefined,
+                });
 
-                    const status = await authUtilService.isLoggedIn(db, didWrite);
-                    if (!status.isLoggedIn) {
-                        throw httpErrors.unauthorized("User is not logged in");
-                    } else {
-                        const postItem = await postService.fetchPostBySlugId({
-                            db: db,
-                            postSlugId: request.body.postSlugId,
-                            fetchPollResponse: true,
-                            userId: status.userId
-                        });
-
-                        const response: FetchPostBySlugIdResponse = {
-                            postData: postItem
-                        };
-                        return response;
-                    }
+                const status = await authUtilService.isLoggedIn(db, didWrite);
+                if (!status.isLoggedIn) {
+                    throw httpErrors.unauthorized("User is not logged in");
                 } else {
-                    const postItem =  await postService.fetchPostBySlugId({
+                    const postItem = await postService.fetchPostBySlugId({
                         db: db,
                         postSlugId: request.body.postSlugId,
-                        fetchPollResponse: false,
+                        fetchPollResponse: true,
+                        userId: status.userId,
                     });
 
                     const response: FetchPostBySlugIdResponse = {
-                        postData: postItem
+                        postData: postItem,
                     };
                     return response;
                 }
+            } else {
+                const postItem = await postService.fetchPostBySlugId({
+                    db: db,
+                    postSlugId: request.body.postSlugId,
+                    fetchPollResponse: false,
+                });
 
+                const response: FetchPostBySlugIdResponse = {
+                    postData: postItem,
+                };
+                return response;
+            }
+        },
+    });
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/rarimo/generate-verification-link`,
+        schema: {
+            response: {
+                200: Dto.generateVerificationLink200,
             },
-        });
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: undefined,
+            });
+            const verificationLink = await generateVerificationLink({
+                didWrite,
+                axiosVerificatorSvc,
+                baseEventId: config.BASE_EVENT_ID,
+            });
+            return {
+                verificationLink: verificationLink,
+            };
+        },
+    });
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/rarimo/verify-user-status-and-authenticate`,
+        schema: {
+            response: {
+                200: Dto.verifyUserStatusAndAuthenticate200,
+            },
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: undefined,
+            });
+            const userAgent = request.headers["user-agent"] ?? "Unknown device";
+            const verificationStatusAndNullifier =
+                await verifyUserStatusAndAuthenticate({
+                    db,
+                    didWrite,
+                    axiosVerificatorSvc,
+                    userAgent,
+                    httpErrors: server.httpErrors,
+                });
+            return verificationStatusAndNullifier;
+        },
+    });
 });
 
 server.ready((e) => {

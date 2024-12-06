@@ -292,15 +292,6 @@ export const countryCodeEnum = pgEnum("country_code", [
     "ZMB",
     "ZWE",
 ]); // warning: german passport has "D" instead of "DEU", so a mapping must be created
-export const ageGroupEnum = pgEnum("age_group", [
-    "8-15",
-    "16-24",
-    "25-34",
-    "35-44",
-    "45-54",
-    "55-64",
-    "65+",
-]);
 export const sexEnum = pgEnum("sex", ["F", "M", "X"]);
 
 // slight differences from the standard:
@@ -568,10 +559,16 @@ export const userTable = pgTable("user", {
     organisationId: integer("organisation_id").references(
         () => organisationTable.id,
     ), // for now a user can belong to at most 1 organisation
-    configuredUsername: boolean("configured_user_name").notNull().default(false),
-    userName: varchar("user_name", { length: MAX_LENGTH_USERNAME }).notNull().unique(),
+    configuredUsername: boolean("configured_user_name")
+        .notNull()
+        .default(false),
+    userName: varchar("user_name", { length: MAX_LENGTH_USERNAME })
+        .notNull()
+        .unique(),
     isAnonymous: boolean("is_anonymous").notNull().default(true),
-    showFlaggedContent: boolean("show_flagged_content").notNull().default(false),
+    showFlaggedContent: boolean("show_flagged_content")
+        .notNull()
+        .default(false),
     activePostCount: integer("active_post_count").notNull().default(0), // total posts (without deleted posts)
     totalPostCount: integer("total_post_count").notNull().default(0), // total posts created
     totalCommentCount: integer("total_comment_count").notNull().default(0), // total comments created
@@ -590,45 +587,56 @@ export const userTable = pgTable("user", {
 });
 
 export const languageOptions = pgEnum("lang_code", ["en", "es", "fr", "zh"]);
-export const userLanguagePreferenceTable = pgTable("user_language_preference", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    userId: uuid("user_id")
-        .references(() => userTable.id)
-        .notNull(),
-    lang: languageOptions("lang_code"),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-}, (t) => {
-    return {
-        userIdx: index("user_idx_lang").on(t.userId),
-        unqPreference: unique("user_unique_language").on(t.userId, t.lang),
-    };
-});
+export const userLanguagePreferenceTable = pgTable(
+    "user_language_preference",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        userId: uuid("user_id")
+            .references(() => userTable.id)
+            .notNull(),
+        lang: languageOptions("lang_code"),
+        createdAt: timestamp("created_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+    },
+    (t) => {
+        return {
+            userIdx: index("user_idx_lang").on(t.userId),
+            unqPreference: unique("user_unique_language").on(t.userId, t.lang),
+        };
+    },
+);
 
-export const postTopicOptions = pgEnum("post_topic_options", ["technology", "environment", "politics"]);
-export const userPostTopicPreferenceTable = pgTable("user_post_topic_preference", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    userId: uuid("user_id")
-        .references(() => userTable.id)
-        .notNull(),
-    topic: postTopicOptions("post_topic_options"),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-}, (t) => {
-    return {
-        userIdx: index("user_idx_topic").on(t.userId),
-        unqPreference: unique("user_unique_topic").on(t.userId, t.topic),
-    };
-});
-
+export const postTopicOptions = pgEnum("post_topic_options", [
+    "technology",
+    "environment",
+    "politics",
+]);
+export const userPostTopicPreferenceTable = pgTable(
+    "user_post_topic_preference",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        userId: uuid("user_id")
+            .references(() => userTable.id)
+            .notNull(),
+        topic: postTopicOptions("post_topic_options"),
+        createdAt: timestamp("created_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+    },
+    (t) => {
+        return {
+            userIdx: index("user_idx_topic").on(t.userId),
+            unqPreference: unique("user_unique_topic").on(t.userId, t.topic),
+        };
+    },
+);
 
 export const organisationTable = pgTable("organisation", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -658,7 +666,7 @@ export const passportTable = pgTable("passport", {
         .references(() => userTable.id)
         .notNull(),
     citizenship: countryCodeEnum("citizenship").notNull(), // holds TCountryCode
-    ageGroup: ageGroupEnum("age_group"),
+    nullifier: text("nullifier").notNull().unique(),
     sex: sexEnum("sex"),
     createdAt: timestamp("created_at", {
         mode: "date",

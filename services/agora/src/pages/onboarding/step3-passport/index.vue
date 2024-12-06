@@ -1,10 +1,18 @@
 <template>
   <div>
-    <StepperLayout :submit-call-back="() => { }" :current-step="3" :total-steps="6" :enable-next-button="true"
-      :show-next-button="false">
-
+    <StepperLayout
+      :submit-call-back="() => {}"
+      :current-step="3"
+      :total-steps="6"
+      :enable-next-button="true"
+      :show-next-button="false"
+    >
       <template #header>
-        <InfoHeader title="Own Your Privacy" :description="description" icon-name="mdi-wallet" />
+        <InfoHeader
+          title="Own Your Privacy"
+          :description="description"
+          icon-name="mdi-wallet"
+        />
       </template>
 
       <template #body>
@@ -16,11 +24,20 @@
             </div>
 
             <div class="innerInstructions">
-              <img v-if="!quasar.platform.is.mobile" :src="qrcode" alt="QR Code" class="qrCode" />
+              <img
+                v-if="!quasar.platform.is.mobile"
+                :src="qrcode"
+                alt="QR Code"
+                class="qrCode"
+              />
 
               <a :href="rarimeLink" target="_blank" rel="noopener noreferrer">
-                <ZKButton icon="mdi-open-in-new" label="Open RariMe" color="secondary"
-                  @click="completeVerification()" />
+                <ZKButton
+                  icon="mdi-open-in-new"
+                  label="Open RariMe"
+                  color="secondary"
+                  @click="completeVerification()"
+                />
               </a>
             </div>
 
@@ -33,16 +50,20 @@
               Come back here and click verify
             </div>
 
-            <ZKButton label="Verify" color="primary" @click="clickedVerifyButton()" />
-
+            <ZKButton
+              label="Verify"
+              color="primary"
+              @click="clickedVerifyButton()"
+            />
           </div>
         </ZKCard>
 
-        <ZKButton label="I'd rather verify with my phone number" text-color="color-text-strong"
-          @click="goToPhoneVerification()" />
-
+        <ZKButton
+          label="I'd rather verify with my phone number"
+          text-color="color-text-strong"
+          @click="goToPhoneVerification()"
+        />
       </template>
-
     </StepperLayout>
   </div>
 </template>
@@ -54,18 +75,46 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useQuasar } from "quasar";
 import { useQRCode } from "@vueuse/integrations/useQRCode.mjs";
 import { useRouter } from "vue-router";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { useSkipAuth } from "src/utils/auth/skipAuth";
 import { useAuthSetup } from "src/utils/auth/setup";
+import { DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api/api";
+import { useCommonApi } from "src/utils/api/common";
+import { api } from "src/boot/axios";
+import { buildAuthorizationHeader } from "src/utils/crypto/ucan/operation";
+import { useNotify } from "src/utils/ui/notify";
 
-const description = "RariMe is a ZK-powered identity wallet that converts your passport into an anonymous digital ID, stored on your device, so you can prove that you’re a unique human without sharing any personal data with anyone.";
+const description =
+  "RariMe is a ZK-powered identity wallet that converts your passport into an anonymous digital ID, stored on your device, so you can prove that you’re a unique human without sharing any personal data with anyone.";
 
 const quasar = useQuasar();
 
 const router = useRouter();
 
+const { buildEncodedUcan } = useCommonApi();
+const { showNotifyMessage } = useNotify();
 const rarimeLink = ref("");
+onMounted(async () => {
+  try {
+    const { url, options } =
+      await DefaultApiAxiosParamCreator().apiV1RarimoGenerateVerificationLinkPost();
+    const encodedUcan = await buildEncodedUcan(url, options);
+    const response = await DefaultApiFactory(
+      undefined,
+      undefined,
+      api
+    ).apiV1RarimoGenerateVerificationLinkPost({
+      headers: {
+        ...buildAuthorizationHeader(encodedUcan),
+      },
+    });
+    rarimeLink.value = response.data.verificationLink;
+  } catch (e) {
+    console.error(e);
+    showNotifyMessage("Failed to Rarimo verification link");
+  }
+});
 
 const { userLogin } = useAuthSetup();
 
@@ -97,7 +146,6 @@ function completeVerification() {
 function goToPhoneVerification() {
   router.push({ name: "onboarding-step3-phone-1" });
 }
-
 </script>
 
 <style scoped lang="scss">

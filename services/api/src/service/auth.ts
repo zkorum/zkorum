@@ -7,6 +7,7 @@ import {
 import {
     authAttemptPhoneTable,
     deviceTable,
+    passportTable,
     phoneTable,
     userTable,
 } from "@/schema.js";
@@ -16,7 +17,6 @@ import type {
     GetDeviceStatusResp,
     VerifyOtp200,
 } from "@/shared/types/dto.js";
-import type { HttpErrors } from "@fastify/sensible/lib/httpError.js";
 import { eq } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { base64 } from "@/shared/common/index.js";
@@ -25,6 +25,8 @@ import parsePhoneNumberFromString, {
 } from "libphonenumber-js";
 import { log } from "@/app.js";
 import { PEPPER_VERSION, toUnionUndefined } from "@/shared/shared.js";
+import type { CountryCodeEnum, SexEnum } from "@/shared/types/zod.js";
+import type { HttpErrors } from "@fastify/sensible";
 
 interface VerifyOtpProps {
     db: PostgresDatabase;
@@ -34,7 +36,7 @@ interface VerifyOtpProps {
     httpErrors: HttpErrors;
 }
 
-interface RegisterProps {
+interface RegisterWithPhoneNumberProps {
     db: PostgresDatabase;
     didWrite: string;
     lastTwoDigits: string;
@@ -45,6 +47,18 @@ interface RegisterProps {
     userAgent: string;
     userId: string;
     now: Date;
+    sessionExpiry: Date;
+    userName: string;
+}
+
+interface RegisterWithRarimoProps {
+    db: PostgresDatabase;
+    didWrite: string;
+    citizenship: CountryCodeEnum;
+    nullifier: string;
+    sex: SexEnum;
+    userAgent: string;
+    userId: string;
     sessionExpiry: Date;
     userName: string;
 }
@@ -75,10 +89,10 @@ interface AuthenticateAttemptProps {
     type: AuthenticateType;
     authenticateRequestBody: AuthenticateRequestBody;
     userId: string;
-    minutesBeforeCodeExpiry: number;
+    minutesBeforeSmsCodeExpiry: number;
     didWrite: string;
     userAgent: string;
-    throttleMinutesInterval: number;
+    throttleSmsMinutesInterval: number;
     httpErrors: HttpErrors;
     doSend: boolean;
     testCode: number;
@@ -90,11 +104,11 @@ interface UpdateAuthAttemptCodeProps {
     db: PostgresDatabase;
     type: AuthenticateType;
     userId: string;
-    minutesBeforeCodeExpiry: number;
+    minutesBeforeSmsCodeExpiry: number;
     didWrite: string;
     now: Date;
     authenticateRequestBody: AuthenticateRequestBody;
-    throttleMinutesInterval: number;
+    throttleSmsMinutesInterval: number;
     httpErrors: HttpErrors;
     doSend: boolean;
     testCode: number;
@@ -106,12 +120,12 @@ interface InsertAuthAttemptCodeProps {
     db: PostgresDatabase;
     type: AuthenticateType;
     userId: string;
-    minutesBeforeCodeExpiry: number;
+    minutesBeforeSmsCodeExpiry: number;
     didWrite: string;
     now: Date;
     userAgent: string;
     authenticateRequestBody: AuthenticateRequestBody;
-    throttleMinutesInterval: number;
+    throttleSmsMinutesInterval: number;
     httpErrors: HttpErrors;
     testCode: number;
     doUseTestCode: boolean;
@@ -208,57 +222,57 @@ export async function verifyOtp({
         const loginSessionExpiry = new Date(now);
         loginSessionExpiry.setFullYear(loginSessionExpiry.getFullYear() + 1000);
         switch (resultOtp[0].authType) {
-        case "register": {
-            await register({
-                db,
-                didWrite,
-                lastTwoDigits: resultOtp[0].lastTwoDigits,
-                countryCallingCode: resultOtp[0].countryCallingCode,
-                phoneCountryCode: toUnionUndefined(
-                    resultOtp[0].phoneCountryCode,
-                ),
-                phoneHash: resultOtp[0].phoneHash,
-                pepperVersion: resultOtp[0].pepperVersion,
-                userAgent: resultOtp[0].userAgent,
-                userId: resultOtp[0].userId,
-                now,
-                sessionExpiry: loginSessionExpiry,
-                userName: "TEST_USER"
-            });
-            return {
-                success: true,
-                userId: resultOtp[0].userId,
-                sessionExpiry: loginSessionExpiry,
-            };
-        }
-        case "login_known_device": {
-            await loginKnownDevice({
-                db,
-                didWrite,
-                now,
-                sessionExpiry: loginSessionExpiry,
-            });
-            return {
-                success: true,
-                userId: resultOtp[0].userId,
-                sessionExpiry: loginSessionExpiry,
-            };
-        }
-        case "login_new_device": {
-            await loginNewDevice({
-                db,
-                didWrite,
-                userAgent: resultOtp[0].userAgent,
-                userId: resultOtp[0].userId,
-                now,
-                sessionExpiry: loginSessionExpiry,
-            });
-            return {
-                success: true,
-                userId: resultOtp[0].userId,
-                sessionExpiry: loginSessionExpiry,
-            };
-        }
+            case "register": {
+                await registerWithPhoneNumber({
+                    db,
+                    didWrite,
+                    lastTwoDigits: resultOtp[0].lastTwoDigits,
+                    countryCallingCode: resultOtp[0].countryCallingCode,
+                    phoneCountryCode: toUnionUndefined(
+                        resultOtp[0].phoneCountryCode,
+                    ),
+                    phoneHash: resultOtp[0].phoneHash,
+                    pepperVersion: resultOtp[0].pepperVersion,
+                    userAgent: resultOtp[0].userAgent,
+                    userId: resultOtp[0].userId,
+                    now,
+                    sessionExpiry: loginSessionExpiry,
+                    userName: "TEST_USER",
+                });
+                return {
+                    success: true,
+                    userId: resultOtp[0].userId,
+                    sessionExpiry: loginSessionExpiry,
+                };
+            }
+            case "login_known_device": {
+                await loginKnownDevice({
+                    db,
+                    didWrite,
+                    now,
+                    sessionExpiry: loginSessionExpiry,
+                });
+                return {
+                    success: true,
+                    userId: resultOtp[0].userId,
+                    sessionExpiry: loginSessionExpiry,
+                };
+            }
+            case "login_new_device": {
+                await loginNewDevice({
+                    db,
+                    didWrite,
+                    userAgent: resultOtp[0].userAgent,
+                    userId: resultOtp[0].userId,
+                    now,
+                    sessionExpiry: loginSessionExpiry,
+                });
+                return {
+                    success: true,
+                    userId: resultOtp[0].userId,
+                    sessionExpiry: loginSessionExpiry,
+                };
+            }
         }
     } else {
         await updateCodeGuessAttemptAmount(
@@ -308,7 +322,7 @@ export async function updateCodeGuessAttemptAmount(
 }
 
 // WARN: we assume the OTP was verified for registering at this point
-export async function register({
+export async function registerWithPhoneNumber({
     db,
     didWrite,
     lastTwoDigits,
@@ -320,8 +334,8 @@ export async function register({
     userId,
     now,
     sessionExpiry,
-    userName
-}: RegisterProps): Promise<void> {
+    userName,
+}: RegisterWithPhoneNumberProps): Promise<void> {
     await db.transaction(async (tx) => {
         await tx
             .update(authAttemptPhoneTable)
@@ -332,7 +346,7 @@ export async function register({
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(userTable).values({
             userName: userName,
-            id: userId
+            id: userId,
         });
         await tx.insert(deviceTable).values({
             userId: userId,
@@ -347,6 +361,37 @@ export async function register({
             countryCallingCode: countryCallingCode,
             pepperVersion: pepperVersion,
             phoneHash: phoneHash,
+        });
+    });
+}
+
+export async function registerWithRarimo({
+    db,
+    didWrite,
+    citizenship,
+    nullifier,
+    sex,
+    userAgent,
+    userId,
+    sessionExpiry,
+    userName,
+}: RegisterWithRarimoProps): Promise<void> {
+    await db.transaction(async (tx) => {
+        await tx.insert(userTable).values({
+            userName: userName,
+            id: userId,
+        });
+        await tx.insert(deviceTable).values({
+            userId: userId,
+            didWrite: didWrite,
+            userAgent: userAgent,
+            sessionExpiry: sessionExpiry,
+        });
+        await tx.insert(passportTable).values({
+            userId: userId,
+            citizenship: citizenship,
+            nullifier: nullifier,
+            sex: sex,
         });
     });
 }
@@ -482,11 +527,10 @@ export async function getAuthenticateType(
     peppers: string[],
     httpErrors: HttpErrors,
 ): Promise<AuthTypeAndUserId> {
-
     const phoneHash = await generatePhoneHash({
         phoneNumber: authenticateBody.phoneNumber,
         peppers: peppers,
-        pepperVersion: PEPPER_VERSION
+        pepperVersion: PEPPER_VERSION,
     });
 
     const isPhoneNumberAvailableVal = await isPhoneNumberAvailable(
@@ -521,10 +565,10 @@ export async function authenticateAttempt({
     type,
     authenticateRequestBody,
     userId,
-    minutesBeforeCodeExpiry,
+    minutesBeforeSmsCodeExpiry,
     didWrite,
     userAgent,
-    throttleMinutesInterval,
+    throttleSmsMinutesInterval,
     httpErrors,
     testCode,
     doUseTestCode,
@@ -545,12 +589,12 @@ export async function authenticateAttempt({
             db,
             type,
             userId,
-            minutesBeforeCodeExpiry,
+            minutesBeforeSmsCodeExpiry,
             didWrite,
             now,
             userAgent,
             authenticateRequestBody,
-            throttleMinutesInterval,
+            throttleSmsMinutesInterval,
             httpErrors,
             doSend,
             doUseTestCode,
@@ -563,11 +607,11 @@ export async function authenticateAttempt({
             db,
             type,
             userId,
-            minutesBeforeCodeExpiry,
+            minutesBeforeSmsCodeExpiry,
             didWrite,
             now,
             authenticateRequestBody,
-            throttleMinutesInterval,
+            throttleSmsMinutesInterval,
             httpErrors,
             doSend,
             // awsMailConf,
@@ -579,7 +623,7 @@ export async function authenticateAttempt({
         // code hasn't expired
         const nextCodeSoonestTime = resultHasAttempted[0].lastOtpSentAt;
         nextCodeSoonestTime.setMinutes(
-            nextCodeSoonestTime.getMinutes() + throttleMinutesInterval,
+            nextCodeSoonestTime.getMinutes() + throttleSmsMinutesInterval,
         );
         return {
             codeExpiry: resultHasAttempted[0].codeExpiry,
@@ -591,11 +635,11 @@ export async function authenticateAttempt({
             db,
             type,
             userId,
-            minutesBeforeCodeExpiry,
+            minutesBeforeSmsCodeExpiry,
             didWrite,
             now,
             authenticateRequestBody,
-            throttleMinutesInterval,
+            throttleSmsMinutesInterval,
             httpErrors,
             doSend,
             // awsMailConf,
@@ -612,9 +656,9 @@ export async function authenticateAttempt({
 // }
 
 interface GeneratePhoneHashProps {
-    phoneNumber: string,
-    peppers: string[],
-    pepperVersion: number
+    phoneNumber: string;
+    peppers: string[];
+    pepperVersion: number;
 }
 
 async function generatePhoneHash({
@@ -635,12 +679,12 @@ export async function insertAuthAttemptCode({
     db,
     type,
     userId,
-    minutesBeforeCodeExpiry,
+    minutesBeforeSmsCodeExpiry,
     didWrite,
     now,
     userAgent,
     authenticateRequestBody,
-    throttleMinutesInterval,
+    throttleSmsMinutesInterval,
     httpErrors,
     testCode,
     doUseTestCode,
@@ -653,18 +697,18 @@ export async function insertAuthAttemptCode({
     const phoneHash = await generatePhoneHash({
         phoneNumber: authenticateRequestBody.phoneNumber,
         peppers: peppers,
-        pepperVersion: PEPPER_VERSION
+        pepperVersion: PEPPER_VERSION,
     });
     await throttleByPhoneHash(
         db,
         phoneHash,
-        throttleMinutesInterval,
-        minutesBeforeCodeExpiry,
+        throttleSmsMinutesInterval,
+        minutesBeforeSmsCodeExpiry,
         httpErrors,
     );
     const oneTimeCode = doUseTestCode ? testCode : generateOneTimeCode();
     const codeExpiry = new Date(now);
-    codeExpiry.setMinutes(codeExpiry.getMinutes() + minutesBeforeCodeExpiry);
+    codeExpiry.setMinutes(codeExpiry.getMinutes() + minutesBeforeSmsCodeExpiry);
     if (doSend) {
         // may throw errors and return 500 :)
         // await sendOtpPhoneNumber({
@@ -713,7 +757,7 @@ export async function insertAuthAttemptCode({
     });
     const nextCodeSoonestTime = new Date(now);
     nextCodeSoonestTime.setMinutes(
-        nextCodeSoonestTime.getMinutes() + throttleMinutesInterval,
+        nextCodeSoonestTime.getMinutes() + throttleSmsMinutesInterval,
     );
     return {
         codeExpiry: codeExpiry,
@@ -725,11 +769,11 @@ export async function updateAuthAttemptCode({
     db,
     type,
     userId,
-    minutesBeforeCodeExpiry,
+    minutesBeforeSmsCodeExpiry,
     didWrite,
     now,
     authenticateRequestBody,
-    throttleMinutesInterval,
+    throttleSmsMinutesInterval,
     httpErrors,
     doSend,
     doUseTestCode,
@@ -749,13 +793,13 @@ export async function updateAuthAttemptCode({
     await throttleByPhoneHash(
         db,
         phoneHash,
-        throttleMinutesInterval,
-        minutesBeforeCodeExpiry,
+        throttleSmsMinutesInterval,
+        minutesBeforeSmsCodeExpiry,
         httpErrors,
     );
     const oneTimeCode = doUseTestCode ? testCode : generateOneTimeCode();
     const codeExpiry = new Date(now);
-    codeExpiry.setMinutes(codeExpiry.getMinutes() + minutesBeforeCodeExpiry);
+    codeExpiry.setMinutes(codeExpiry.getMinutes() + minutesBeforeSmsCodeExpiry);
     if (doSend) {
         // await sendOtpPhoneNumber({
         //     phoneNumber: authenticateRequestBody.phoneNumber,
@@ -806,7 +850,7 @@ export async function updateAuthAttemptCode({
         .where(eq(authAttemptPhoneTable.didWrite, didWrite));
     const nextCodeSoonestTime = new Date(now);
     nextCodeSoonestTime.setMinutes(
-        nextCodeSoonestTime.getMinutes() + throttleMinutesInterval,
+        nextCodeSoonestTime.getMinutes() + throttleSmsMinutesInterval,
     );
     return {
         codeExpiry: codeExpiry,
@@ -819,7 +863,7 @@ export async function throttleByPhoneHash(
     db: PostgresDatabase,
     phoneHash: string,
     minutesInterval: number,
-    minutesBeforeCodeExpiry: number,
+    minutesBeforeSmsCodeExpiry: number,
     httpErrors: HttpErrors,
 ) {
     const now = nowZeroMs();
@@ -839,7 +883,7 @@ export async function throttleByPhoneHash(
     for (const result of results) {
         const expectedExpiryTime = new Date(result.lastOtpSentAt);
         expectedExpiryTime.setMinutes(
-            expectedExpiryTime.getMinutes() + minutesBeforeCodeExpiry,
+            expectedExpiryTime.getMinutes() + minutesBeforeSmsCodeExpiry,
         );
         if (
             result.lastOtpSentAt.getTime() >= minutesIntervalAgo.getTime() &&

@@ -598,6 +598,95 @@ export interface ApiV1PostFetchPostBySlugIdPostRequest {
 /**
  * 
  * @export
+ * @interface ApiV1RarimoGenerateVerificationLinkPost200Response
+ */
+export interface ApiV1RarimoGenerateVerificationLinkPost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1RarimoGenerateVerificationLinkPost200Response
+     */
+    'verificationLink': string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response
+ */
+export interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response
+     */
+    'rarimoStatus': ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response
+     */
+    'nullifier': string;
+}
+
+export const ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum = {
+    NotVerified: 'not_verified',
+    FailedVerification: 'failed_verification',
+    UniquenessCheckFailed: 'uniqueness_check_failed'
+} as const;
+
+export type ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum = typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum[keyof typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum];
+
+/**
+ * 
+ * @export
+ * @interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf
+ */
+export interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf
+     */
+    'rarimoStatus': ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf
+     */
+    'nullifier': string;
+}
+
+export const ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum = {
+    Verified: 'verified'
+} as const;
+
+export type ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum = typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum[keyof typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum];
+
+/**
+ * 
+ * @export
+ * @interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1
+ */
+export interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1
+     */
+    'rarimoStatus': ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum;
+}
+
+export const ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum = {
+    NotVerified: 'not_verified',
+    FailedVerification: 'failed_verification',
+    UniquenessCheckFailed: 'uniqueness_check_failed'
+} as const;
+
+export type ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum = typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum[keyof typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum];
+
+/**
+ * 
+ * @export
  * @interface ApiV1UserFetchUserCommentsPost200ResponseInner
  */
 export interface ApiV1UserFetchUserCommentsPost200ResponseInner {
@@ -1284,6 +1373,72 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1RarimoGenerateVerificationLinkPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/rarimo/generate-verification-link`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1RarimoVerifyUserStatusAndAuthenticatePost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/rarimo/verify-user-status-and-authenticate`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {ApiV1UserFetchUserCommentsPostRequest} [apiV1UserFetchUserCommentsPostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1633,6 +1788,28 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1RarimoGenerateVerificationLinkPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1RarimoGenerateVerificationLinkPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1RarimoGenerateVerificationLinkPost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1RarimoGenerateVerificationLinkPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1RarimoVerifyUserStatusAndAuthenticatePost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1RarimoVerifyUserStatusAndAuthenticatePost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1RarimoVerifyUserStatusAndAuthenticatePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {ApiV1UserFetchUserCommentsPostRequest} [apiV1UserFetchUserCommentsPostRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1814,6 +1991,22 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest: ApiV1PostFetchPostBySlugIdPostRequest, options?: any): AxiosPromise<ApiV1PostFetchPostBySlugIdPost200Response> {
             return localVarFp.apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1RarimoGenerateVerificationLinkPost(options?: any): AxiosPromise<ApiV1RarimoGenerateVerificationLinkPost200Response> {
+            return localVarFp.apiV1RarimoGenerateVerificationLinkPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1RarimoVerifyUserStatusAndAuthenticatePost(options?: any): AxiosPromise<ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response> {
+            return localVarFp.apiV1RarimoVerifyUserStatusAndAuthenticatePost(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2008,6 +2201,26 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest: ApiV1PostFetchPostBySlugIdPostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1PostFetchPostBySlugIdPost(apiV1PostFetchPostBySlugIdPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1RarimoGenerateVerificationLinkPost(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1RarimoGenerateVerificationLinkPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1RarimoVerifyUserStatusAndAuthenticatePost(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1RarimoVerifyUserStatusAndAuthenticatePost(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

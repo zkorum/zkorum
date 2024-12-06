@@ -39,13 +39,8 @@ const configSchema = z.object({
     ),
     SERVER_DID_PROD: zodDidWeb.default(`did:web:agoracitizen.network`),
     EMAIL_OTP_MAX_ATTEMPT_AMOUNT: z.number().int().min(1).max(5).default(3),
-    THROTTLE_EMAIL_MINUTES_INTERVAL: z.number().int().min(3).default(3),
-    MINUTES_BEFORE_EMAIL_OTP_EXPIRY: z
-        .number()
-        .int()
-        .min(3)
-        .max(60)
-        .default(10),
+    THROTTLE_SMS_MINUTES_INTERVAL: z.number().int().min(3).default(3),
+    MINUTES_BEFORE_SMS_OTP_EXPIRY: z.number().int().min(3).max(60).default(10),
     // AWS_ACCESS_KEY_ID: z.string().default("CHANGEME"), // only use for prod
     // AWS_SECRET_ACCESS_KEY: z.string().default("CHANGEME"),
     TEST_CODE: z.coerce.number().int().min(0).max(999999).default(0),
@@ -58,6 +53,8 @@ const configSchema = z.object({
             }),
         )
         .pipe(z.string().min(16).array().nonempty()),
+    VERIFICATOR_SVC_BASE_URL: z.string().url(),
+    BASE_EVENT_ID: z.string().min(20).default("63957849393154643868"),
 });
 
 export const config = configSchema.parse(process.env);

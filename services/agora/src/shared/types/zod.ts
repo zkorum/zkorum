@@ -57,26 +57,32 @@ export const zodDevices = z.array(zodDevice); // list of didWrite of all the dev
 export const zodPostTitle = z.string().max(MAX_LENGTH_TITLE).min(1);
 export const zodPostBody = z.string().optional(); // Cannot specify length due to HTML tags
 export const zodPollOptionTitle = z.string().max(MAX_LENGTH_OPTION).min(1);
-export const zodPollOptionWithResult = z.object({
-    optionNumber: z.number().int().min(1).max(6),
-    optionTitle: zodPollOptionTitle,
-    numResponses: z.number().int().nonnegative(),
-}).strict();
+export const zodPollOptionWithResult = z
+    .object({
+        optionNumber: z.number().int().min(1).max(6),
+        optionTitle: zodPollOptionTitle,
+        numResponses: z.number().int().nonnegative(),
+    })
+    .strict();
 export const zodPollList = z.array(zodPollOptionWithResult).optional();
 export const zodPostDataWithResult = z
     .object({
         title: zodPostTitle,
         body: zodPostBody,
-        poll: zodPollList
+        poll: zodPollList,
     })
     .strict();
-export const zodPollResponse = z.object({
-    postSlugId: z.string(),
-    optionChosen: z.number().gte(0)
-}).strict();
+export const zodPollResponse = z
+    .object({
+        postSlugId: z.string(),
+        optionChosen: z.number().gte(0),
+    })
+    .strict();
 export const zodSlugId = z.string().max(10);
 export const zodCommentCount = z.number().int().nonnegative();
-export const userNameRegex = new RegExp(`^[a-zA-Z0-9_]{${MIN_LENGTH_USERNAME.toString()},${MAX_LENGTH_USERNAME.toString()}}$`);
+export const userNameRegex = new RegExp(
+    `^[a-zA-Z0-9_]{${MIN_LENGTH_USERNAME.toString()},${MAX_LENGTH_USERNAME.toString()}}$`,
+);
 export const zodUserName = z.string().regex(userNameRegex);
 export const zodPostMetadata = z
     .object({
@@ -87,34 +93,38 @@ export const zodPostMetadata = z
         lastReactedAt: z.date(),
         commentCount: zodCommentCount,
         authorUserName: zodUserName,
-        authorImagePath: z.string().url({ message: "Invalid url" }).optional() // TODO: check if it accepts path segments for local dev
+        authorImagePath: z.string().url({ message: "Invalid url" }).optional(), // TODO: check if it accepts path segments for local dev
     })
     .strict();
 export const zodCommentContent = z.string().min(1); // Cannot specify the max length here due to the HTML tags
-export const zodCommentItem = z.object({
-    commentSlugId: zodSlugId,
-    createdAt: z.date(),
-    updatedAt: z.date(),
-    comment: zodCommentContent,
-    numLikes: z.number().int().nonnegative(),
-    numDislikes: z.number().int().nonnegative(),
-    userName: zodUserName,
-}).strict();
-export const zodUserInteraction = z.object({
-    hasVoted: z.boolean(),
-    votedIndex: z.number().int().nonnegative()
-}).strict();
+export const zodCommentItem = z
+    .object({
+        commentSlugId: zodSlugId,
+        createdAt: z.date(),
+        updatedAt: z.date(),
+        comment: zodCommentContent,
+        numLikes: z.number().int().nonnegative(),
+        numDislikes: z.number().int().nonnegative(),
+        userName: zodUserName,
+    })
+    .strict();
+export const zodUserInteraction = z
+    .object({
+        hasVoted: z.boolean(),
+        votedIndex: z.number().int().nonnegative(),
+    })
+    .strict();
 export const zodExtendedPostData = z
     .object({
         metadata: zodPostMetadata,
         payload: zodPostDataWithResult,
-        interaction: zodUserInteraction
+        interaction: zodUserInteraction,
     })
     .strict();
 export const zodExtendedCommentData = z
     .object({
         postData: zodExtendedPostData,
-        commentItem: zodCommentItem
+        commentItem: zodCommentItem,
     })
     .strict();
 export const zodVotingOption = z.enum(["like", "dislike"]);
@@ -130,6 +140,265 @@ export const languageObjectList: LanguageObject[] = [
     { lang: "fr", name: "French" },
     { lang: "zh", name: "Chinese" },
 ];
+export const zodRarimoStatusAttributes = z.enum([
+    "not_verified",
+    "verified",
+    "failed_verification",
+    "uniqueness_check_failed",
+]);
+export const zodCountryCodeEnum = z.enum([
+    "AND",
+    "ARE",
+    "AFG",
+    "ATG",
+    "AIA",
+    "ALB",
+    "ARM",
+    "AGO",
+    "ATA",
+    "ARG",
+    "ASM",
+    "AUT",
+    "AUS",
+    "ABW",
+    "ALA",
+    "AZE",
+    "BIH",
+    "BRB",
+    "BGD",
+    "BEL",
+    "BFA",
+    "BGR",
+    "BHR",
+    "BDI",
+    "BEN",
+    "BLM",
+    "BMU",
+    "BRN",
+    "BOL",
+    "BES",
+    "BRA",
+    "BHS",
+    "BTN",
+    "BVT",
+    "BWA",
+    "BLR",
+    "BLZ",
+    "CAN",
+    "CCK",
+    "COD",
+    "CAF",
+    "COG",
+    "CHE",
+    "CIV",
+    "COK",
+    "CHL",
+    "CMR",
+    "CHN",
+    "COL",
+    "CRI",
+    "CUB",
+    "CPV",
+    "CUW",
+    "CXR",
+    "CYP",
+    "CZE",
+    "DEU",
+    "DJI",
+    "DNK",
+    "DMA",
+    "DOM",
+    "DZA",
+    "ECU",
+    "EST",
+    "EGY",
+    "ESH",
+    "ERI",
+    "ESP",
+    "ETH",
+    "FIN",
+    "FJI",
+    "FLK",
+    "FSM",
+    "FRO",
+    "FRA",
+    "GAB",
+    "GBR",
+    "GRD",
+    "GEO",
+    "GUF",
+    "GGY",
+    "GHA",
+    "GIB",
+    "GRL",
+    "GMB",
+    "GIN",
+    "GLP",
+    "GNQ",
+    "GRC",
+    "SGS",
+    "GTM",
+    "GUM",
+    "GNB",
+    "GUY",
+    "HKG",
+    "HMD",
+    "HND",
+    "HRV",
+    "HTI",
+    "HUN",
+    "IDN",
+    "IRL",
+    "ISR",
+    "IMN",
+    "IND",
+    "IOT",
+    "IRQ",
+    "IRN",
+    "ISL",
+    "ITA",
+    "JEY",
+    "JAM",
+    "JOR",
+    "JPN",
+    "KEN",
+    "KGZ",
+    "KHM",
+    "KIR",
+    "COM",
+    "KNA",
+    "PRK",
+    "KOR",
+    "KWT",
+    "CYM",
+    "KAZ",
+    "LAO",
+    "LBN",
+    "LCA",
+    "LIE",
+    "LKA",
+    "LBR",
+    "LSO",
+    "LTU",
+    "LUX",
+    "LVA",
+    "LBY",
+    "MAR",
+    "MCO",
+    "MDA",
+    "MNE",
+    "MAF",
+    "MDG",
+    "MHL",
+    "MKD",
+    "MLI",
+    "MMR",
+    "MNG",
+    "MAC",
+    "MNP",
+    "MTQ",
+    "MRT",
+    "MSR",
+    "MLT",
+    "MUS",
+    "MDV",
+    "MWI",
+    "MEX",
+    "MYS",
+    "MOZ",
+    "NAM",
+    "NCL",
+    "NER",
+    "NFK",
+    "NGA",
+    "NIC",
+    "NLD",
+    "NOR",
+    "NPL",
+    "NRU",
+    "NIU",
+    "NZL",
+    "OMN",
+    "PAN",
+    "PER",
+    "PYF",
+    "PNG",
+    "PHL",
+    "PAK",
+    "POL",
+    "SPM",
+    "PCN",
+    "PRI",
+    "PSE",
+    "PRT",
+    "PLW",
+    "PRY",
+    "QAT",
+    "REU",
+    "ROU",
+    "SRB",
+    "RUS",
+    "RWA",
+    "SAU",
+    "SLB",
+    "SYC",
+    "SDN",
+    "SWE",
+    "SGP",
+    "SHN",
+    "SVN",
+    "SJM",
+    "SVK",
+    "SLE",
+    "SMR",
+    "SEN",
+    "SOM",
+    "SUR",
+    "SSD",
+    "STP",
+    "SLV",
+    "SXM",
+    "SYR",
+    "SWZ",
+    "TCA",
+    "TCD",
+    "ATF",
+    "TGO",
+    "THA",
+    "TJK",
+    "TKL",
+    "TLS",
+    "TKM",
+    "TUN",
+    "TON",
+    "TUR",
+    "TTO",
+    "TUV",
+    "TWN",
+    "TZA",
+    "UKR",
+    "UGA",
+    "UMI",
+    "USA",
+    "URY",
+    "UZB",
+    "VAT",
+    "VCT",
+    "VEN",
+    "VGB",
+    "VIR",
+    "VNM",
+    "VUT",
+    "WLF",
+    "WSM",
+    "XKX",
+    "YEM",
+    "MYT",
+    "ZAF",
+    "ZMB",
+    "ZWE",
+]);
+export const zodSexEnum = z.enum(["F", "M", "X"]);
 
 export type Device = z.infer<typeof zodDevice>;
 export type Devices = z.infer<typeof zodDevices>;
@@ -145,3 +414,6 @@ export type SlugId = z.infer<typeof zodSlugId>;
 export type VotingOption = z.infer<typeof zodVotingOption>;
 export type VotingAction = z.infer<typeof zodVotingAction>;
 export type PollList = z.infer<typeof zodPollList>;
+export type RarimoStatusAttributes = z.infer<typeof zodRarimoStatusAttributes>;
+export type CountryCodeEnum = z.infer<typeof zodCountryCodeEnum>;
+export type SexEnum = z.infer<typeof zodSexEnum>;
