@@ -1,0 +1,32 @@
+log:
+  level: debug
+  disable_sentry: true
+
+db:
+  url: "postgres://postgres:password@postgres:5432/agora?sslmode=disable"
+
+listener:
+  addr: :8000
+
+cop:
+  disabled: true
+  endpoint: "http://localhost:8000"
+  upstream: "http://localhost:8000"
+  service_name: verificator-svc
+  service_port: 80
+
+callback:
+  url: "https://staging.agoracitizen.network"
+
+verifier:
+  verification_key_path: "./proof_keys/passport.json"
+  allowed_identity_timestamp: 1715698750
+  event_id: "event_id"
+
+signature_verification:
+  pub_key: "04e29323ad356ab524fa5dbe3e490244e741b4d445ac7d2ee5f321556b3fda616bb9d2f2216fc27e099ab3019103cca872679e130629b2b90ea16cedb2b2136371"
+
+poseidonsmt_root_verifier:
+  rpc: "https://rpc.evm.mainnet.rarimo.com"
+  contract: "0xA25a197d26Cad659A8fFf7F268cA4F9e0283de03"
+  request_timeout: 10s

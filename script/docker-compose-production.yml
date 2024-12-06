@@ -36,6 +36,17 @@ services:
     expose:
       - "8080"
     restart: unless-stopped
+  verificator-svc:
+    container_name: verificator_svc
+    image: zkorum/verificator-svc:0.2.2
+    command: run service
+    environment:
+      KV_VIPER_FILE: "/config/config.yaml"
+    volumes: 
+      - ./script/rarimo/config:/config
+    expose:
+      - "8000"
+    restart: unless-stopped
   agora:
     container_name: agora_app
     image: zkorum/agora-app:0.1.0
