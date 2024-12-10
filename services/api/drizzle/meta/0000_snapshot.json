@@ -1,5 +1,5 @@
 {
-  "id": "8a0e29d3-a5b5-4324-aadf-0a5fe9b87813",
+  "id": "eb658ffe-b2f1-4996-bb92-325f33f2d172",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -905,12 +905,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "age_group": {
-          "name": "age_group",
-          "type": "age_group",
-          "typeSchema": "public",
+        "nullifier": {
+          "name": "nullifier",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "sex": {
           "name": "sex",
@@ -951,7 +950,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "passport_nullifier_unique": {
+          "name": "passport_nullifier_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nullifier"
+          ]
+        }
+      },
       "checkConstraints": {}
     },
     "public.phone": {
@@ -2729,19 +2736,6 @@
     }
   },
   "enums": {
-    "public.age_group": {
-      "name": "age_group",
-      "schema": "public",
-      "values": [
-        "8-15",
-        "16-24",
-        "25-34",
-        "35-44",
-        "45-54",
-        "55-64",
-        "65+"
-      ]
-    },
     "public.auth_type": {
       "name": "auth_type",
       "schema": "public",
