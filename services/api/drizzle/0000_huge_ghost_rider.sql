@@ -272,6 +272,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"user_name" varchar(23) NOT NULL,
 	"is_anonymous" boolean DEFAULT true NOT NULL,
 	"show_flagged_content" boolean DEFAULT false NOT NULL,
+	"is_deleted" boolean DEFAULT false NOT NULL,
 	"active_post_count" integer DEFAULT 0 NOT NULL,
 	"total_post_count" integer DEFAULT 0 NOT NULL,
 	"total_comment_count" integer DEFAULT 0 NOT NULL,

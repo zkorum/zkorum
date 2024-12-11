@@ -47,6 +47,7 @@ import {
     generateVerificationLink,
     verifyUserStatusAndAuthenticate,
 } from "./service/rarimo.js";
+import { deleteUserAccount } from "./service/account.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -1011,6 +1012,34 @@ server.after(() => {
             return verificationStatusAndNullifier;
         },
     });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/account/delete-user`,
+        schema: {
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: {
+                    isLoggedIn: undefined,
+                },
+            });
+
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                const authHeader = getAuthHeader(request);
+                await deleteUserAccount({
+                    authHeader: authHeader,
+                    db: db,
+                    didWrite: didWrite,
+                    userId: status.userId
+                });
+            }
+        },
+    });
+
 });
 
 server.ready((e) => {

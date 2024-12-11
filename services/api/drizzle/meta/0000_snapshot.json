@@ -1,5 +1,5 @@
 {
-  "id": "eb658ffe-b2f1-4996-bb92-325f33f2d172",
+  "id": "b027ecdc-2a69-4838-b975-7a8bccf0c2b5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2363,6 +2363,13 @@
         },
         "show_flagged_content": {
           "name": "show_flagged_content",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_deleted": {
+          "name": "is_deleted",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

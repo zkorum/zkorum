@@ -569,6 +569,7 @@ export const userTable = pgTable("user", {
     showFlaggedContent: boolean("show_flagged_content")
         .notNull()
         .default(false),
+    isDeleted: boolean("is_deleted").notNull().default(false),
     activePostCount: integer("active_post_count").notNull().default(0), // total posts (without deleted posts)
     totalPostCount: integer("total_post_count").notNull().default(0), // total posts created
     totalCommentCount: integer("total_comment_count").notNull().default(0), // total comments created
