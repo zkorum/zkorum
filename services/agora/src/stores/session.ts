@@ -1,14 +1,14 @@
+import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
-import { ref } from "vue";
 
 export const useSessionStore = defineStore("session", () => {
 
-  const sign = ref({
-    emailToPrefixedKey: {} as Record<string, string>,
-  });
+  const emptyMapping: Record<string, string> = {};
+
+  const sign = useStorage("phone-to-prefixed-key", emptyMapping);
 
   function setPrefixedKey(email: string, prefixedKey: string) {
-    sign.value.emailToPrefixedKey[email] = prefixedKey;
+    sign.value[email] = prefixedKey;
   }
 
   return { sign, setPrefixedKey };
