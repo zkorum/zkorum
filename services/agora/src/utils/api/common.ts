@@ -13,10 +13,10 @@ export function useCommonApi() {
 
     platform = getPlatform($q.platform);
 
-    console.log("Build UCAN for phoneNumber: " + verificationPhoneNumber.value);
+    console.log("Build UCAN for phoneNumber: " + verificationPhoneNumber);
 
     const { did, prefixedKey } = await createDidIfDoesNotExist(
-      verificationPhoneNumber.value,
+      verificationPhoneNumber,
       platform
     );
     // TODO: get DID if exist, else create it

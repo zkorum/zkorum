@@ -9,6 +9,7 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import CompactPostList from "src/components/feed/CompactPostList.vue";
 import NewPostButtonWrapper from "src/components/post/NewPostButtonWrapper.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
@@ -18,7 +19,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const dialog = useDialog();
 
-const { isAuthenticated } = useAuthenticationStore();
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 function createNewPost() {
   if (isAuthenticated.value) {

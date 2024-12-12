@@ -32,10 +32,7 @@ const router = useRouter();
 
 async function logoutCleanup() {
   userLogout();
-  setTimeout(
-    function () {
-      loadPostData(false);
-    }, 1000);
+  loadPostData(false);
   router.push({ name: "default-home-feed" });
 }
 

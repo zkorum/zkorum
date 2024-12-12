@@ -28,10 +28,11 @@ import TopMenuWrapper from "./TopMenuWrapper.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { onMounted, ref } from "vue";
 import CloseButton from "./buttons/CloseButton.vue";
+import { storeToRefs } from "pinia";
 
 defineProps<DefaultMenuBarProps>();
 
-const { isAuthenticated } = useAuthenticationStore();
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const showAuthButton = ref(false);
 

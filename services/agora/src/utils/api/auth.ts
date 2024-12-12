@@ -11,6 +11,7 @@ import { useCommonApi } from "./common";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { usePostStore } from "src/stores/post";
 import { useUserStore } from "src/stores/user";
+import { storeToRefs } from "pinia";
 
 export interface AuthenticateReturn {
   isSuccessful: boolean;
@@ -26,7 +27,8 @@ interface SendSmsCodeProps {
 
 export function useBackendAuthApi() {
   const { buildEncodedUcan } = useCommonApi();
-  const { userLogout, isAuthenticated } = useAuthenticationStore();
+  const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+  const { userLogout } = useAuthenticationStore();
   const { loadPostData } = usePostStore();
   const { loadUserProfile } = useUserStore();
 

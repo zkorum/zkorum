@@ -1,3 +1,4 @@
+import { storeToRefs } from "pinia";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendAuthApi, type AuthenticateReturn } from "src/utils/api/auth";
 
@@ -10,7 +11,7 @@ interface RequestCodeProps {
 export function useBackendPhoneVerification() {
   const { smsCode, sendSmsCode } = useBackendAuthApi();
 
-  const { isAuthenticated } = useAuthenticationStore();
+  const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
   async function submitCode(code: number): Promise<boolean> {
     if (process.env.VITE_USE_DUMMY_ACCESS == "true") {

@@ -1,5 +1,6 @@
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendPhoneVerification } from "../api/phoneVerification";
+import { storeToRefs } from "pinia";
 
 export function useSkipAuth() {
 
@@ -7,7 +8,7 @@ export function useSkipAuth() {
     isAuthenticated,
     verificationPhoneNumber,
     verificationDefaultCallingCode,
-  } = useAuthenticationStore();
+  } = storeToRefs(useAuthenticationStore());
   const phoneVerification = useBackendPhoneVerification();
 
   async function skipEverything() {
