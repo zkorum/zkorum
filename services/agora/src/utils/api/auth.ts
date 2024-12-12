@@ -28,7 +28,6 @@ interface SendSmsCodeProps {
 export function useBackendAuthApi() {
   const { buildEncodedUcan } = useCommonApi();
   const { isAuthenticated } = storeToRefs(useAuthenticationStore());
-  const { userLogout } = useAuthenticationStore();
   const { loadPostData } = usePostStore();
   const { loadUserProfile } = useUserStore();
 
@@ -204,7 +203,7 @@ export function useBackendAuthApi() {
         // unauthorized
         console.log("User is unauthorized");
         console.log(status.error);
-        userLogout();
+        isAuthenticated.value = false;
       }
     } else {
       console.log("User is authenticated");
