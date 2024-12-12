@@ -27,16 +27,17 @@ export async function deleteUserAccount({
           isDeleted: true,
           updatedAt: nowZeroMs()
         })
-        .where(eq(userTable.id, userId));
+        .where(eq(userTable.id, userId))
+        .returning({ id: userTable.id});
 
       if (updatedUserTableResponse.length != 1) {
-        server.log.error("Invalid user table update where more than one entry is being updated for user ID: " + userId);
+        server.log.error("User table update has an invalid number of affected rows: " + userId);
         tx.rollback();
       }
 
       // Delete user comments
       const userComments = await getUserComments({
-        db: db,
+        db: tx,
         userId: userId,
         lastCommentSlugId: undefined
       })
@@ -44,7 +45,7 @@ export async function deleteUserAccount({
         await deleteCommentBySlugId({
           authHeader: authHeader,
           commentSlugId: comment.commentItem.commentSlugId,
-          db: db,
+          db: tx,
           didWrite: didWrite,
           userId: userId
         });
@@ -52,22 +53,21 @@ export async function deleteUserAccount({
 
       // Delete user posts
       const userPosts = await getUserPosts({
-        db: db,
+        db: tx,
         userId: userId,
         lastPostSlugId: undefined
       });
       for (const post of userPosts) {
         await deletePostBySlugId({
           authHeader: authHeader,
-          db: db,
+          db: tx,
           didWrite: didWrite,
           postSlugId: post.metadata.postSlugId,
           userId: userId
         });
       }
 
-      await logout(db, didWrite);
-
+      await logout(tx, didWrite);
     });
   } catch (err: unknown) {
     server.log.error(err);

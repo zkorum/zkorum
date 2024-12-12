@@ -380,8 +380,16 @@
                                                                 "minimum": 0
                                                             },
                                                             "authorUserName": {
-                                                                "type": "string",
-                                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string",
+                                                                        "format": "uuid"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                                    }
+                                                                ]
                                                             },
                                                             "authorImagePath": {
                                                                 "type": "string",
@@ -505,8 +513,16 @@
                                             "format": "date-time"
                                         },
                                         "userName": {
-                                            "type": "string",
-                                            "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                            "anyOf": [
+                                                {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                {
+                                                    "type": "string",
+                                                    "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                }
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -577,8 +593,16 @@
                                                         "minimum": 0
                                                     },
                                                     "authorUserName": {
-                                                        "type": "string",
-                                                        "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string",
+                                                                "format": "uuid"
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                            }
+                                                        ]
                                                     },
                                                     "authorImagePath": {
                                                         "type": "string",
@@ -731,8 +755,16 @@
                                                                 "minimum": 0
                                                             },
                                                             "authorUserName": {
-                                                                "type": "string",
-                                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string",
+                                                                        "format": "uuid"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                                    }
+                                                                ]
                                                             },
                                                             "authorImagePath": {
                                                                 "type": "string",
@@ -848,8 +880,16 @@
                                                         "minimum": 0
                                                     },
                                                     "userName": {
-                                                        "type": "string",
-                                                        "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string",
+                                                                "format": "uuid"
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                            }
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -1183,8 +1223,16 @@
                                                 "minimum": 0
                                             },
                                             "userName": {
-                                                "type": "string",
-                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                "anyOf": [
+                                                    {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    {
+                                                        "type": "string",
+                                                        "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                    }
+                                                ]
                                             }
                                         },
                                         "required": [
@@ -1355,8 +1403,16 @@
                                                             "minimum": 0
                                                         },
                                                         "authorUserName": {
-                                                            "type": "string",
-                                                            "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string",
+                                                                    "format": "uuid"
+                                                                },
+                                                                {
+                                                                    "type": "string",
+                                                                    "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                                                }
+                                                            ]
                                                         },
                                                         "authorImagePath": {
                                                             "type": "string",
@@ -1528,6 +1584,59 @@
                                             "additionalProperties": false
                                         }
                                     ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/account/delete-user": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Default Response"
+                    }
+                }
+            }
+        },
+        "/api/v1/onboarding/is_username_in_use": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "userName": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "format": "uuid"
+                                            },
+                                            {
+                                                "type": "string",
+                                                "pattern": "^[a-zA-Z0-9_]{3,23}$"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "userName"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "boolean"
                                 }
                             }
                         }

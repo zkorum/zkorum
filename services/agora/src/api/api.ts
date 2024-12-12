@@ -388,16 +388,23 @@ export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata {
     'commentCount': number;
     /**
      * 
-     * @type {string}
+     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName}
      * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
-    'authorUserName': string;
+    'authorUserName': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName;
     /**
      * 
      * @type {string}
      * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'authorImagePath'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName
+ */
+export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName {
 }
 /**
  * 
@@ -473,6 +480,19 @@ export interface ApiV1FeedFetchRecentPostRequest {
      * @memberof ApiV1FeedFetchRecentPostRequest
      */
     'isAuthenticatedRequest': boolean;
+}
+/**
+ * 
+ * @export
+ * @interface ApiV1OnboardingIsUsernameInUsePostRequest
+ */
+export interface ApiV1OnboardingIsUsernameInUsePostRequest {
+    /**
+     * 
+     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName}
+     * @memberof ApiV1OnboardingIsUsernameInUsePostRequest
+     */
+    'userName': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName;
 }
 /**
  * 
@@ -747,10 +767,10 @@ export interface ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem {
     'numDislikes': number;
     /**
      * 
-     * @type {string}
+     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName}
      * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
      */
-    'userName': string;
+    'userName': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName;
 }
 /**
  * 
@@ -798,10 +818,10 @@ export interface ApiV1UserFetchUserProfilePost200Response {
     'createdAt': string;
     /**
      * 
-     * @type {string}
+     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName}
      * @memberof ApiV1UserFetchUserProfilePost200Response
      */
-    'userName': string;
+    'userName': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUserName;
 }
 /**
  * 
@@ -878,6 +898,39 @@ export interface ApiV1VotingFetchUserVotesForPostSlugIdsPostRequest {
  */
 export const DefaultApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AccountDeleteUserPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/account/delete-user`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * 
          * @param {ApiV1AuthAuthenticatePostRequest} apiV1AuthAuthenticatePostRequest 
@@ -1172,6 +1225,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchRecentPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiV1OnboardingIsUsernameInUsePostRequest} apiV1OnboardingIsUsernameInUsePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1OnboardingIsUsernameInUsePost: async (apiV1OnboardingIsUsernameInUsePostRequest: ApiV1OnboardingIsUsernameInUsePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1OnboardingIsUsernameInUsePostRequest' is not null or undefined
+            assertParamExists('apiV1OnboardingIsUsernameInUsePost', 'apiV1OnboardingIsUsernameInUsePostRequest', apiV1OnboardingIsUsernameInUsePostRequest)
+            const localVarPath = `/api/v1/onboarding/is_username_in_use`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1OnboardingIsUsernameInUsePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1634,6 +1726,17 @@ export const DefaultApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1AccountDeleteUserPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AccountDeleteUserPost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1AccountDeleteUserPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {ApiV1AuthAuthenticatePostRequest} apiV1AuthAuthenticatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1724,6 +1827,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchRecentPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ApiV1OnboardingIsUsernameInUsePostRequest} apiV1OnboardingIsUsernameInUsePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1OnboardingIsUsernameInUsePost(apiV1OnboardingIsUsernameInUsePostRequest: ApiV1OnboardingIsUsernameInUsePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1OnboardingIsUsernameInUsePost(apiV1OnboardingIsUsernameInUsePostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1OnboardingIsUsernameInUsePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1879,6 +1994,14 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AccountDeleteUserPost(options?: any): AxiosPromise<void> {
+            return localVarFp.apiV1AccountDeleteUserPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {ApiV1AuthAuthenticatePostRequest} apiV1AuthAuthenticatePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1946,6 +2069,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: any): AxiosPromise<ApiV1FeedFetchRecentPost200Response> {
             return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1OnboardingIsUsernameInUsePostRequest} apiV1OnboardingIsUsernameInUsePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1OnboardingIsUsernameInUsePost(apiV1OnboardingIsUsernameInUsePostRequest: ApiV1OnboardingIsUsernameInUsePostRequest, options?: any): AxiosPromise<boolean> {
+            return localVarFp.apiV1OnboardingIsUsernameInUsePost(apiV1OnboardingIsUsernameInUsePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2064,6 +2196,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
 export class DefaultApi extends BaseAPI {
     /**
      * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1AccountDeleteUserPost(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AccountDeleteUserPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {ApiV1AuthAuthenticatePostRequest} apiV1AuthAuthenticatePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -2146,6 +2288,17 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1OnboardingIsUsernameInUsePostRequest} apiV1OnboardingIsUsernameInUsePostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1OnboardingIsUsernameInUsePost(apiV1OnboardingIsUsernameInUsePostRequest: ApiV1OnboardingIsUsernameInUsePostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1OnboardingIsUsernameInUsePost(apiV1OnboardingIsUsernameInUsePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

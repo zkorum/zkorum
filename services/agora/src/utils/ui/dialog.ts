@@ -1,9 +1,12 @@
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
+import { useBackendAccountApi } from "../api/account";
 
 export const useDialog = () => {
   const quasar = useQuasar();
   const router = useRouter();
+
+  const { deleteUserAccount } = useBackendAccountApi();
 
   function showReportDialog(itemName: "post" | "comment") {
     quasar.dialog({
@@ -46,7 +49,7 @@ export const useDialog = () => {
       });
   }
 
-  function showDeleteAccountDialog() {
+  function showDeleteAccountDialog(callbackSuccess: () => void) {
     quasar.dialog({
       title: "Are you sure?",
       message: "To delete your account. Please confirm by typing DELETE into the box.",
@@ -58,9 +61,12 @@ export const useDialog = () => {
       },
       cancel: true,
       persistent: false
-    }).onOk(data => {
+    }).onOk(async (data) => {
       if (data == "DELETE") {
-        console.log("delete")
+        const isDeleted = await deleteUserAccount();
+        if (isDeleted) {
+          callbackSuccess();
+        }
       } else {
         console.log("cancel");
       }

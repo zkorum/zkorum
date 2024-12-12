@@ -114,7 +114,7 @@ export function useBackendUserApi() {
             numDislikes: responseItem.commentItem.numDislikes,
             numLikes: responseItem.commentItem.numLikes,
             updatedAt: new Date(responseItem.commentItem.updatedAt),
-            userName: responseItem.commentItem.userName,
+            userName: String(responseItem.commentItem.userName),
           },
         };
         extendedCommentList.push(extendedComment);

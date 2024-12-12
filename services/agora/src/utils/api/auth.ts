@@ -190,27 +190,27 @@ export function useBackendAuthApi() {
   }
 
   async function initializeAuthState() {
-    if (isAuthenticated.value) {
-      const status = await deviceIsLoggedIn();
-      if (!status.isSuccessful) {
-        if (status.error == "already_logged_in") {
-          console.log("user is already logged in");
-          loadAuthenticatedModules();
-        } else if (status.error == "throttled") {
-          console.log("auth check had been throttled");
-        } else {
-          // unauthorized
-          console.log("User is unauthorized");
-          console.log(status.error);
-          userLogout();
-        }
-      } else {
+    const status = await deviceIsLoggedIn();
+    if (!status.isSuccessful) {
+      if (status.error == "already_logged_in") {
+        console.log("user is already logged in");
+        isAuthenticated.value = true;
         loadAuthenticatedModules();
+      } else if (status.error == "throttled") {
+        console.log("auth check had been throttled");
+      } else {
+        // unauthorized
+        console.log("User is unauthorized");
+        console.log(status.error);
+        userLogout();
       }
+    } else {
+      console.log("User is authenticated");
+      isAuthenticated.value = true;
+      loadAuthenticatedModules();
     }
 
     loadPostData(false);
-
   }
 
   return {

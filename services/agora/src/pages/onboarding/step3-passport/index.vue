@@ -1,18 +1,9 @@
 <template>
   <div>
-    <StepperLayout
-      :submit-call-back="() => {}"
-      :current-step="3"
-      :total-steps="6"
-      :enable-next-button="true"
-      :show-next-button="false"
-    >
+    <StepperLayout :submit-call-back="() => { }" :current-step="3" :total-steps="6" :enable-next-button="true"
+      :show-next-button="false">
       <template #header>
-        <InfoHeader
-          title="Own Your Privacy"
-          :description="description"
-          icon-name="mdi-wallet"
-        />
+        <InfoHeader title="Own Your Privacy" :description="description" icon-name="mdi-wallet" />
       </template>
 
       <template #body>
@@ -24,20 +15,11 @@
             </div>
 
             <div class="innerInstructions">
-              <img
-                v-if="!quasar.platform.is.mobile"
-                :src="qrcode"
-                alt="QR Code"
-                class="qrCode"
-              />
+              <img v-if="!quasar.platform.is.mobile" :src="qrcode" alt="QR Code" class="qrCode" />
 
               <a :href="rarimeLink" target="_blank" rel="noopener noreferrer">
-                <ZKButton
-                  icon="mdi-open-in-new"
-                  label="Open RariMe"
-                  color="secondary"
-                  @click="completeVerification()"
-                />
+                <ZKButton icon="mdi-open-in-new" label="Open RariMe" color="secondary"
+                  @click="completeVerification()" />
               </a>
             </div>
 
@@ -50,19 +32,12 @@
               Come back here and click verify
             </div>
 
-            <ZKButton
-              label="Verify"
-              color="primary"
-              @click="clickedVerifyButton()"
-            />
+            <ZKButton label="Verify" color="primary" @click="clickedVerifyButton()" />
           </div>
         </ZKCard>
 
-        <ZKButton
-          label="I'd rather verify with my phone number"
-          text-color="color-text-strong"
-          @click="goToPhoneVerification()"
-        />
+        <ZKButton label="I'd rather verify with my phone number" text-color="color-text-strong"
+          @click="goToPhoneVerification()" />
       </template>
     </StepperLayout>
   </div>

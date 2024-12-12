@@ -17,35 +17,34 @@
 <script setup lang="ts">
 import SettingsSection from "src/components/settings/SettingsSection.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useUserStore } from "src/stores/user";
+import { usePostStore } from "src/stores/post";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { type SettingsInterface } from "src/utils/component/settings/settings";
 import { useDialog } from "src/utils/ui/dialog";
 import { useRouter } from "vue-router";
 
 const { isAuthenticated, userLogout } = useAuthenticationStore();
-const { resetUserProfile } = useUserStore();
 const { showDeleteAccountDialog } = useDialog();
+const { loadPostData } = usePostStore();
 
 const backendAuth = useBackendAuthApi();
 const router = useRouter();
 
-function logoutRequested() {
-  backendAuth.logout();
+async function logoutCleanup() {
   userLogout();
-  resetUserProfile();
-  router.push({ name: "onboarding-step1-signup" });
+  setTimeout(
+    function () {
+      loadPostData(false);
+    }, 1000);
+  router.push({ name: "default-home-feed" });
+}
+
+async function logoutRequested() {
+  await backendAuth.logout();
+  logoutCleanup();
 }
 
 const accountSettings: SettingsInterface[] = [
-  /*
-  {
-    icon: "mdi-passport",
-    label: "Account verification",
-    action: () => { },
-    routeName: "verification-options"
-  },
-  */
   {
     icon: "mdi-logout",
     label: "Log out",
@@ -76,11 +75,16 @@ const supportSettings: SettingsInterface[] = [
   {
     icon: "mdi-delete",
     label: "Delete Account",
-    action: showDeleteAccountDialog,
+    action: processDeleteAccount,
     routeName: "",
     isWarning: true
   },
 ];
+
+function processDeleteAccount() {
+  showDeleteAccountDialog(logoutCleanup);
+}
+
 </script>
 
 <style scoped lang="scss">

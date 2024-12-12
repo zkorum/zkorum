@@ -218,6 +218,12 @@ export class Dto {
                 .strict(),
         ],
     );
+    static isUsernameInUseRequest = z
+        .object({
+            userName: zodUserName,
+        })
+        .strict();
+    static isUsernameInUseResponse = z.boolean();
 }
 
 export type AuthenticateRequestBody = z.infer<

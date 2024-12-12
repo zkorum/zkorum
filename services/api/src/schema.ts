@@ -19,8 +19,6 @@ const MAX_LENGTH_TITLE = 130;
 const MAX_LENGTH_BODY = 260;
 const MAX_LENGTH_NAME_CREATOR = 65;
 const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
-export const MAX_LENGTH_USERNAME = 23;
-export const MIN_LENGTH_USERNAME = 3;
 
 export const bytea = customType<{
     data: string;
@@ -562,7 +560,8 @@ export const userTable = pgTable("user", {
     configuredUsername: boolean("configured_user_name")
         .notNull()
         .default(false),
-    userName: varchar("user_name", { length: MAX_LENGTH_USERNAME })
+    // UserName field is set to UUID length (36) because user need to setup username through onboarding
+    userName: varchar("user_name", { length: 36 })
         .notNull()
         .unique(),
     isAnonymous: boolean("is_anonymous").notNull().default(true),
@@ -570,6 +569,7 @@ export const userTable = pgTable("user", {
         .notNull()
         .default(false),
     isDeleted: boolean("is_deleted").notNull().default(false),
+    hasSetupUsername: boolean("has_setup_username").notNull().default(false),
     activePostCount: integer("active_post_count").notNull().default(0), // total posts (without deleted posts)
     totalPostCount: integer("total_post_count").notNull().default(0), // total posts created
     totalCommentCount: integer("total_comment_count").notNull().default(0), // total comments created

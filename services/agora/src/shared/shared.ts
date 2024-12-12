@@ -70,6 +70,12 @@ export const MIN_LENGTH_USERNAME = 3;
 
 export const PEPPER_VERSION = 0;
 
+export const POST_TAGS: Record<string, string> = {
+    "technology": "Technology",
+    "environment": "Environment",
+    "politics": "Politics"
+}
+
 // https://gist.github.com/Josantonius/b455e315bc7f790d14b136d61d9ae469
 export const LANGUAGE_CODES: Record<string, string> = {
     "aa": "Afar",
