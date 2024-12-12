@@ -21,6 +21,7 @@ import { useAuthenticationStore } from "src/stores/authentication";
 import { usePostStore } from "src/stores/post";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { type SettingsInterface } from "src/utils/component/settings/settings";
+import { getWebCryptoStore } from "src/utils/crypto/store";
 import { useDialog } from "src/utils/ui/dialog";
 import { useRouter } from "vue-router";
 
@@ -32,6 +33,8 @@ const backendAuth = useBackendAuthApi();
 const router = useRouter();
 
 async function logoutCleanup() {
+  const cryptoStore = await getWebCryptoStore();
+  cryptoStore.keystore.clearStore();
   isAuthenticated.value = false;
   await loadPostData(false);
   router.push({ name: "default-home-feed" });
