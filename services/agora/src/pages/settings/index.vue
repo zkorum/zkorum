@@ -18,6 +18,7 @@
 import { storeToRefs } from "pinia";
 import SettingsSection from "src/components/settings/SettingsSection.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
+import { usePostStore } from "src/stores/post";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { type SettingsInterface } from "src/utils/component/settings/settings";
 import { useDialog } from "src/utils/ui/dialog";
@@ -25,12 +26,14 @@ import { useRouter } from "vue-router";
 
 const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 const { showDeleteAccountDialog } = useDialog();
+const { loadPostData } = usePostStore();
 
 const backendAuth = useBackendAuthApi();
 const router = useRouter();
 
 async function logoutCleanup() {
   isAuthenticated.value = false;
+  await loadPostData(false);
   router.push({ name: "default-home-feed" });
 }
 
