@@ -1,4 +1,4 @@
-import { server } from "@/app.js";
+import { log } from "@/app.js";
 import { userTable } from "@/schema.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { eq  } from "drizzle-orm";
@@ -31,7 +31,7 @@ export async function deleteUserAccount({
         .returning({ id: userTable.id});
 
       if (updatedUserTableResponse.length != 1) {
-        server.log.error("User table update has an invalid number of affected rows: " + userId);
+        log.error("User table update has an invalid number of affected rows: " + userId);
         tx.rollback();
       }
 
@@ -70,7 +70,7 @@ export async function deleteUserAccount({
       await logout(tx, didWrite);
     });
   } catch (err: unknown) {
-    server.log.error(err);
+    log.error(err);
     throw httpErrors.internalServerError(
       "Failed to delete user account"
     );

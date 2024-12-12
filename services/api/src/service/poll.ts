@@ -3,7 +3,7 @@ import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgre
 import { useCommonPost } from "./common.js";
 import type { HttpErrors } from "@fastify/sensible";
 import { eq, sql, and } from "drizzle-orm";
-import { server } from "@/app.js";
+import { log } from "@/app.js";
 import type { FetchUserPollResponseResponse } from "@/shared/types/dto.js";
 
 interface GetUserPollResponseProps {
@@ -148,7 +148,7 @@ export async function submitPollResponse({
 
     });
   } catch (error) {
-    server.log.error(error);
+    log.error(error);
     throw httpErrors.internalServerError("Error while creating poll response entry");
   }
 }

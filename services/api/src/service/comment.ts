@@ -8,7 +8,7 @@ import { httpErrors, type HttpErrors } from "@fastify/sensible";
 import { useCommonPost } from "./common.js";
 import { MAX_LENGTH_COMMENT } from "@/shared/shared.js";
 import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
-import { server } from "@/app.js";
+import { log } from "@/app.js";
 
 interface GetCommentSlugIdLastCreatedAtProps {
     lastSlugId: string | undefined;
@@ -314,7 +314,7 @@ export async function deleteCommentBySlugId({
                 });
 
             if (updatedCommentIdResponse.length != 1) {
-                server.log.error("Invalid comment table update response length: " + updatedCommentIdResponse.length.toString());
+                log.error("Invalid comment table update response length: " + updatedCommentIdResponse.length.toString());
                 tx.rollback();
             }
 
@@ -339,7 +339,7 @@ export async function deleteCommentBySlugId({
 
         });
     } catch (err: unknown) {
-        server.log.error(err);
+        log.error(err);
         throw httpErrors.internalServerError(
             "Failed to delete comment by comment ID: " + commentSlugId
         );

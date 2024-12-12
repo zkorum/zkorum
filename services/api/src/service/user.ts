@@ -1,4 +1,4 @@
-import { server } from "@/app.js";
+import { log } from "@/app.js";
 import { commentContentTable, commentTable, postTable, userTable } from "@/schema.js";
 import type { FetchUserProfileResponse } from "@/shared/types/dto.js";
 import type { CommentItem, ExtendedComment, ExtendedPost } from "@/shared/types/zod.js";
@@ -88,7 +88,7 @@ export async function getUserComments({
     return extendedCommentList;
 
   } catch (err: unknown) {
-    server.log.error(err);
+    log.error(err);
     throw httpErrors.internalServerError(
       "Database error while fetching user comments"
     );
@@ -127,7 +127,7 @@ export async function getUserPosts({
     return posts;
 
   } catch (err: unknown) {
-    server.log.error(err);
+    log.error(err);
     throw httpErrors.internalServerError(
       "Database error while fetching user posts"
     );
@@ -168,7 +168,7 @@ export async function getUserProfile({
     }
 
   } catch (err: unknown) {
-    server.log.error(err);
+    log.error(err);
     throw httpErrors.internalServerError(
       "Database error while fetching user profile"
     );

@@ -2,7 +2,7 @@ import { commentTable, postTable, voteContentTable, voteProofTable, voteTable } 
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { eq, sql, and } from "drizzle-orm";
 import { httpErrors } from "@fastify/sensible";
-import { server } from "@/app.js";
+import { log } from "@/app.js";
 import type { VotingAction } from "@/shared/types/zod.js";
 import type { FetchUserVotesForPostSlugIdsResponse } from "@/shared/types/dto.js";
 
@@ -173,7 +173,7 @@ export async function castVoteForCommentSlugId({
     });
 
   } catch (err: unknown) {
-    server.log.error(err);
+    log.error(err);
     throw httpErrors.internalServerError(
       "Database error while casting new vote"
     );

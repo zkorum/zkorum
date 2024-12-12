@@ -5,7 +5,7 @@ import { eq, sql, and } from "drizzle-orm";
 import type { CreateNewPostResponse } from "@/shared/types/dto.js";
 import { MAX_LENGTH_BODY } from "@/shared/shared.js";
 import { generateRandomSlugId } from "@/crypto.js";
-import { server } from "@/app.js";
+import { log } from "@/app.js";
 import { useCommonPost } from "./common.js";
 import { httpErrors } from "@fastify/sensible";
 import { sanitizeHtmlBody } from "@/utils/htmlSanitization.js";
@@ -116,7 +116,7 @@ export async function createNewPost({
         };
 
     } catch (err: unknown) {
-        server.log.error(err);
+        log.error(err);
         throw httpErrors.internalServerError(
             "Database error while creating the new post"
         );
@@ -152,7 +152,7 @@ export async function fetchPostBySlugId({
             );
         }
     } catch (err: unknown) {
-        server.log.error(err);
+        log.error(err);
         throw httpErrors.internalServerError(
             "Failed to fetch post by slug ID: " + postSlugId
         );
@@ -214,7 +214,7 @@ export async function deletePostBySlugId({
 
         });
     } catch (err: unknown) {
-        server.log.error(err);
+        log.error(err);
         throw httpErrors.internalServerError(
             "Failed to delete post by slug ID: " + postSlugId
         );
