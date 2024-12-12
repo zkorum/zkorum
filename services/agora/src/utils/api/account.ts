@@ -28,6 +28,7 @@ export function useBackendAccountApi() {
           },
         }
       );
+      showNotifyMessage("Account deleted");
       return true;
     } catch (e) {
       console.error(e);
