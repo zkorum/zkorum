@@ -15,40 +15,43 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import SettingsSection from "src/components/settings/SettingsSection.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useUserStore } from "src/stores/user";
+import { usePostStore } from "src/stores/post";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { type SettingsInterface } from "src/utils/component/settings/settings";
+import { getWebCryptoStore } from "src/utils/crypto/store";
+import { useDialog } from "src/utils/ui/dialog";
 import { useRouter } from "vue-router";
 
-const { isAuthenticated, userLogout } = useAuthenticationStore();
-const { resetUserProfile } = useUserStore();
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
+const { showDeleteAccountDialog } = useDialog();
+const { loadPostData } = usePostStore();
 
 const backendAuth = useBackendAuthApi();
 const router = useRouter();
 
-function logoutRequested() {
-  backendAuth.logout();
-  userLogout();
-  resetUserProfile();
-  router.push({ name: "onboarding-step1-signup" });
+async function logoutCleanup() {
+  const cryptoStore = await getWebCryptoStore();
+  cryptoStore.keystore.clearStore();
+  isAuthenticated.value = false;
+  await loadPostData(false);
+  router.push({ name: "default-home-feed" });
+}
+
+async function logoutRequested() {
+  await backendAuth.logout();
+  logoutCleanup();
 }
 
 const accountSettings: SettingsInterface[] = [
-  /*
-  {
-    icon: "mdi-passport",
-    label: "Account verification",
-    action: () => { },
-    routeName: "verification-options"
-  },
-  */
   {
     icon: "mdi-logout",
     label: "Log out",
     action: logoutRequested,
     routeName: "welcome",
+    isWarning: false
   },
 ];
 
@@ -58,12 +61,14 @@ const aboutSettings: SettingsInterface[] = [
     label: "Privacy policy",
     action: () => { },
     routeName: "privacy",
+    isWarning: false
   },
   {
     icon: "mdi-file-document",
     label: "Terms of service",
     action: () => { },
     routeName: "terms",
+    isWarning: false
   },
 ];
 
@@ -71,10 +76,16 @@ const supportSettings: SettingsInterface[] = [
   {
     icon: "mdi-delete",
     label: "Delete Account",
-    action: () => { },
+    action: processDeleteAccount,
     routeName: "",
+    isWarning: true
   },
 ];
+
+function processDeleteAccount() {
+  showDeleteAccountDialog(logoutCleanup);
+}
+
 </script>
 
 <style scoped lang="scss">

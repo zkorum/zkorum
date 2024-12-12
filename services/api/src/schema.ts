@@ -19,8 +19,6 @@ const MAX_LENGTH_TITLE = 130;
 const MAX_LENGTH_BODY = 260;
 const MAX_LENGTH_NAME_CREATOR = 65;
 const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
-export const MAX_LENGTH_USERNAME = 23;
-export const MIN_LENGTH_USERNAME = 3;
 
 export const bytea = customType<{
     data: string;
@@ -562,13 +560,16 @@ export const userTable = pgTable("user", {
     configuredUsername: boolean("configured_user_name")
         .notNull()
         .default(false),
-    userName: varchar("user_name", { length: MAX_LENGTH_USERNAME })
+    // UserName field is set to UUID length (36) because user need to setup username through onboarding
+    userName: varchar("user_name", { length: 36 })
         .notNull()
         .unique(),
     isAnonymous: boolean("is_anonymous").notNull().default(true),
     showFlaggedContent: boolean("show_flagged_content")
         .notNull()
         .default(false),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+    hasSetupUsername: boolean("has_setup_username").notNull().default(false),
     activePostCount: integer("active_post_count").notNull().default(0), // total posts (without deleted posts)
     totalPostCount: integer("total_post_count").notNull().default(0), // total posts created
     totalCommentCount: integer("total_comment_count").notNull().default(0), // total comments created
@@ -586,57 +587,72 @@ export const userTable = pgTable("user", {
         .notNull(),
 });
 
-export const languageOptions = pgEnum("lang_code", ["en", "es", "fr", "zh"]);
-export const userLanguagePreferenceTable = pgTable(
-    "user_language_preference",
-    {
-        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-        userId: uuid("user_id")
-            .references(() => userTable.id)
-            .notNull(),
-        lang: languageOptions("lang_code"),
-        createdAt: timestamp("created_at", {
-            mode: "date",
-            precision: 0,
-        })
-            .defaultNow()
-            .notNull(),
-    },
-    (t) => {
-        return {
-            userIdx: index("user_idx_lang").on(t.userId),
-            unqPreference: unique("user_unique_language").on(t.userId, t.lang),
-        };
-    },
-);
+export const userLanguagePreferenceTable = pgTable("user_language_preference", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    userId: uuid("user_id")
+        .references(() => userTable.id)
+        .notNull(),
+    langId: integer("lang_id")
+        .references(() => userLanguageTable.id)
+        .notNull(),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+}, (t) => {
+    return {
+        userIdx: index("user_idx_lang").on(t.userId),
+        unqPreference: unique("user_unique_language").on(t.userId, t.langId),
+    };
+});
 
-export const postTopicOptions = pgEnum("post_topic_options", [
-    "technology",
-    "environment",
-    "politics",
-]);
-export const userPostTopicPreferenceTable = pgTable(
-    "user_post_topic_preference",
-    {
-        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-        userId: uuid("user_id")
-            .references(() => userTable.id)
-            .notNull(),
-        topic: postTopicOptions("post_topic_options"),
-        createdAt: timestamp("created_at", {
-            mode: "date",
-            precision: 0,
-        })
-            .defaultNow()
-            .notNull(),
-    },
-    (t) => {
-        return {
-            userIdx: index("user_idx_topic").on(t.userId),
-            unqPreference: unique("user_unique_topic").on(t.userId, t.topic),
-        };
-    },
-);
+export const userLanguageTable = pgTable("user_language", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    name: text("name"),
+    code: text("code"),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+});
+
+export const postTopicTable = pgTable("post_topic", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    name: text("name"),
+    code: text("code"),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+});
+
+export const userPostTopicPreferenceTable = pgTable("user_post_topic_preference", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    userId: uuid("user_id")
+        .references(() => userTable.id)
+        .notNull(),
+    postTagId: integer("post_tag_id")
+        .references(() => postTopicTable.id)
+        .notNull(),
+    createdAt: timestamp("created_at", {
+        mode: "date",
+        precision: 0,
+    })
+        .defaultNow()
+        .notNull(),
+}, (t) => {
+    return {
+        userIdx: index("user_idx_topic").on(t.userId),
+        unqPreference: unique("user_unique_topic").on(t.userId, t.postTagId),
+    };
+});
+
 
 export const organisationTable = pgTable("organisation", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

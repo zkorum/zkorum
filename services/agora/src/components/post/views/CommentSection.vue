@@ -41,6 +41,7 @@ import { useBackendCommentApi } from "src/utils/api/comment";
 import { useBackendVoteApi } from "src/utils/api/vote";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { type CommentItem } from "src/shared/types/zod";
+import { storeToRefs } from "pinia";
 
 const emit = defineEmits(["deleted"])
 
@@ -54,7 +55,7 @@ const commentSortPreference = ref("");
 const { fetchCommentsForPost } = useBackendCommentApi();
 const { fetchUserVotesForPostSlugIds } = useBackendVoteApi();
 
-const { isAuthenticated } = useAuthenticationStore();
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const commentItems = ref<CommentItem[]>([]);
 

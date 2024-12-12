@@ -1,4 +1,4 @@
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useStorage } from "@vueuse/core";
 import { useBackendPostApi } from "src/utils/api/post";
@@ -71,7 +71,7 @@ export interface DummyPostDataFormat extends ExtendedPost {
 
 export const usePostStore = defineStore("post", () => {
   const { fetchRecentPost, composeInternalPostList } = useBackendPostApi();
-  const { isAuthenticated } = useAuthenticationStore();
+  const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
   const dataReady = ref(false);
   const endOfFeed = ref(false);

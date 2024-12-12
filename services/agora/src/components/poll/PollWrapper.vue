@@ -44,6 +44,7 @@ import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendPollApi } from "src/utils/api/poll";
 import { useDialog } from "src/utils/ui/dialog";
 import type { UserInteraction, PollList } from "src/shared/types/zod";
+import { storeToRefs } from "pinia";
 
 const props = defineProps<{
   userResponse: UserInteraction;
@@ -58,7 +59,7 @@ const dataLoaded = ref(false);
 
 const backendPollApi = useBackendPollApi();
 const { showMessage } = useDialog();
-const { isAuthenticated } = useAuthenticationStore();
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 const { loadPostData } = usePostStore();
 
 enum DisplayModes {

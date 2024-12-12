@@ -5,17 +5,12 @@ import { SecureSigning } from "@zkorum/capacitor-secure-signing";
 import { base64Decode } from "src/shared/common/base64";
 import { getWebCryptoStore } from "../store";
 import * as DID from "./did/index";
-import { useSessionStore } from "src/stores/session";
 import * as ucans from "@ucans/ucans";
 import {
   httpMethodToAbility,
   httpPathnameToResourcePointer,
 } from "src/shared/ucan/ucan";
 import { base64 } from "src/shared/common";
-
-function getPrefixedKeyByEmail(email: string) {
-  return `com.zkorum.agora/v1/${email}/sign`;
-}
 
 interface CreateDidReturn {
   did: string;
@@ -25,11 +20,9 @@ interface CreateDidReturn {
 //
 //TODO: move the web target's code to the Capacitor plugin
 export async function createDidIfDoesNotExist(
-  email: string,
   platform: SupportedPlatform
 ): Promise<CreateDidReturn> {
-  const sessionStore = useSessionStore();
-  const prefixedKey = getPrefixedKeyByEmail(email);
+  const prefixedKey = "com.zkorum.agora/v1/sign";
 
   switch (platform) {
     case "mobile":
@@ -38,13 +31,11 @@ export async function createDidIfDoesNotExist(
       });
       const decodedPublicKey = base64Decode(publicKey);
       const didMobile = publicKeyToDid(decodedPublicKey);
-      sessionStore.setPrefixedKey(email, prefixedKey);
       return { did: didMobile, prefixedKey };
     case "web":
       const cryptoStore = await getWebCryptoStore();
       await cryptoStore.keystore.createIfDoesNotExists(prefixedKey);
       const didWeb = await DID.write(cryptoStore, prefixedKey);
-      sessionStore.setPrefixedKey(email, prefixedKey);
       return { did: didWeb, prefixedKey };
   }
 }

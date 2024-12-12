@@ -1,22 +1,19 @@
 import { type RawAxiosRequestConfig } from "axios";
 import { useQuasar } from "quasar";
-import { useAuthenticationStore } from "src/stores/authentication";
 import { getPlatform } from "src/utils/common";
 import { buildUcan, createDidIfDoesNotExist } from "../crypto/ucan/operation";
 
 export function useCommonApi() {
   const $q = useQuasar();
-  const { verificationPhoneNumber } = useAuthenticationStore();
 
   async function buildEncodedUcan(url: string, options: RawAxiosRequestConfig) {
     let platform: "mobile" | "web" = "web";
 
     platform = getPlatform($q.platform);
 
-    console.log("Build UCAN for phoneNumber: " + verificationPhoneNumber.value);
+    console.log("Build UCAN");
 
     const { did, prefixedKey } = await createDidIfDoesNotExist(
-      verificationPhoneNumber.value,
       platform
     );
     // TODO: get DID if exist, else create it

@@ -83,7 +83,7 @@ export const zodCommentCount = z.number().int().nonnegative();
 export const userNameRegex = new RegExp(
     `^[a-zA-Z0-9_]{${MIN_LENGTH_USERNAME.toString()},${MAX_LENGTH_USERNAME.toString()}}$`,
 );
-export const zodUserName = z.string().regex(userNameRegex);
+export const zodUserName = z.union([z.string().uuid(), z.string().regex(userNameRegex)]);
 export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,

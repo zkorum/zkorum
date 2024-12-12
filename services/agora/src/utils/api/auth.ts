@@ -11,6 +11,7 @@ import { useCommonApi } from "./common";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { usePostStore } from "src/stores/post";
 import { useUserStore } from "src/stores/user";
+import { storeToRefs } from "pinia";
 
 export interface AuthenticateReturn {
   isSuccessful: boolean;
@@ -26,7 +27,7 @@ interface SendSmsCodeProps {
 
 export function useBackendAuthApi() {
   const { buildEncodedUcan } = useCommonApi();
-  const { userLogout, isAuthenticated } = useAuthenticationStore();
+  const { isAuthenticated } = storeToRefs(useAuthenticationStore());
   const { loadPostData } = usePostStore();
   const { loadUserProfile } = useUserStore();
 
@@ -190,27 +191,27 @@ export function useBackendAuthApi() {
   }
 
   async function initializeAuthState() {
-    if (isAuthenticated.value) {
-      const status = await deviceIsLoggedIn();
-      if (!status.isSuccessful) {
-        if (status.error == "already_logged_in") {
-          console.log("user is already logged in");
-          loadAuthenticatedModules();
-        } else if (status.error == "throttled") {
-          console.log("auth check had been throttled");
-        } else {
-          // unauthorized
-          console.log("User is unauthorized");
-          console.log(status.error);
-          userLogout();
-        }
-      } else {
+    const status = await deviceIsLoggedIn();
+    if (!status.isSuccessful) {
+      if (status.error == "already_logged_in") {
+        console.log("user is already logged in");
+        isAuthenticated.value = true;
         loadAuthenticatedModules();
+      } else if (status.error == "throttled") {
+        console.log("auth check had been throttled");
+      } else {
+        // unauthorized
+        console.log("User is unauthorized");
+        console.log(status.error);
+        isAuthenticated.value = false;
       }
+    } else {
+      console.log("User is authenticated");
+      isAuthenticated.value = true;
+      loadAuthenticatedModules();
     }
 
     loadPostData(false);
-
   }
 
   return {

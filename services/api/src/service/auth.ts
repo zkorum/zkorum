@@ -27,6 +27,7 @@ import { log } from "@/app.js";
 import { PEPPER_VERSION, toUnionUndefined } from "@/shared/shared.js";
 import type { CountryCodeEnum, SexEnum } from "@/shared/types/zod.js";
 import type { HttpErrors } from "@fastify/sensible";
+import { v4 as uuidv4 } from 'uuid';
 
 interface VerifyOtpProps {
     db: PostgresDatabase;
@@ -48,7 +49,6 @@ interface RegisterWithPhoneNumberProps {
     userId: string;
     now: Date;
     sessionExpiry: Date;
-    userName: string;
 }
 
 interface RegisterWithRarimoProps {
@@ -237,7 +237,6 @@ export async function verifyOtp({
                     userId: resultOtp[0].userId,
                     now,
                     sessionExpiry: loginSessionExpiry,
-                    userName: "TEST_USER",
                 });
                 return {
                     success: true,
@@ -334,7 +333,6 @@ export async function registerWithPhoneNumber({
     userId,
     now,
     sessionExpiry,
-    userName,
 }: RegisterWithPhoneNumberProps): Promise<void> {
     await db.transaction(async (tx) => {
         await tx
@@ -345,7 +343,7 @@ export async function registerWithPhoneNumber({
             })
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(userTable).values({
-            userName: userName,
+            userName: uuidv4(),
             id: userId,
         });
         await tx.insert(deviceTable).values({

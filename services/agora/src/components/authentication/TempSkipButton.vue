@@ -7,13 +7,14 @@ import { useAuthenticationStore } from "src/stores/authentication";
 import { useRouter } from "vue-router";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { useBackendPhoneVerification } from "src/utils/api/phoneVerification";
+import { storeToRefs } from "pinia";
 
 const router = useRouter();
 const {
   isAuthenticated,
   verificationPhoneNumber,
   verificationDefaultCallingCode,
-} = useAuthenticationStore();
+} = storeToRefs(useAuthenticationStore());
 const phoneVerification = useBackendPhoneVerification();
 
 async function skipButton() {

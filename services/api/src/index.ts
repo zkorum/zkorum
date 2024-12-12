@@ -47,6 +47,8 @@ import {
     generateVerificationLink,
     verifyUserStatusAndAuthenticate,
 } from "./service/rarimo.js";
+import { deleteUserAccount } from "./service/account.js";
+import { checkUserNameExist } from "./service/onboarding.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -1011,6 +1013,51 @@ server.after(() => {
             return verificationStatusAndNullifier;
         },
     });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/account/delete-user`,
+        schema: {
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: {
+                    isLoggedIn: undefined,
+                },
+            });
+
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                const authHeader = getAuthHeader(request);
+                await deleteUserAccount({
+                    authHeader: authHeader,
+                    db: db,
+                    didWrite: didWrite,
+                    userId: status.userId
+                });
+            }
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/onboarding/is_username_in_use`,
+        schema: {
+            body: Dto.isUsernameInUseRequest,
+            response: {
+                200: Dto.isUsernameInUseResponse,
+            },
+        },
+        handler: async (request) => {
+            return await checkUserNameExist({
+                db: db,
+                userName: request.body.userName
+            });
+        },
+    });
+
 });
 
 server.ready((e) => {

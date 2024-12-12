@@ -34,7 +34,7 @@ export function useUserStore() {
       profileData.value = {
         activePostCount: userProfile.activePostCount,
         createdAt: userProfile.createdAt,
-        userName: userProfile.userName,
+        userName: String(userProfile.userName),
         userPostList: userPosts,
         userCommentList: userComments
       };
@@ -65,11 +65,7 @@ export function useUserStore() {
     return { reachedEndOfFeed: userComments.length == 0 };
   }
 
-  function resetUserProfile() {
-    profileData.value = emptyProfile;
-  }
-
-  return { loadUserProfile, loadMoreUserPosts, loadMoreUserComments, resetUserProfile, profileData };
+  return { loadUserProfile, loadMoreUserPosts, loadMoreUserComments, profileData };
 
 }
 

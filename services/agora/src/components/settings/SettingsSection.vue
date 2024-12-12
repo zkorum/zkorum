@@ -10,7 +10,7 @@
           <div v-for="(item, index) in settingsItemList" :key="item.icon">
             <ZKHoverEffect :enable-hover="true">
               <RouterLink :to="{ name: item.routeName }">
-                <div class="menuItem" @click="item.action">
+                <div class="menuItem" :class="{ isWarningStyle: item.isWarning }" @click="item.action">
                   <div>
                     <q-icon :name="item.icon" size="1.5rem" />
                   </div>
@@ -64,5 +64,9 @@ defineProps<{
 
 .container {
   padding-bottom: 2rem;
+}
+
+.isWarningStyle {
+  color: #b91c1c;
 }
 </style>

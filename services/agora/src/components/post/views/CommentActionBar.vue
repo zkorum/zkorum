@@ -34,6 +34,7 @@ import { computed, ref } from "vue";
 import { type CommentItem, type VotingAction } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useDialog } from "src/utils/ui/dialog";
+import { storeToRefs } from "pinia";
 
 const emit = defineEmits(["deleted"])
 
@@ -50,7 +51,7 @@ const webShare = useWebShare();
 const { showLoginConfirmationDialog } = useDialog();
 
 const { castVoteForComment } = useBackendVoteApi();
-const { isAuthenticated } = useAuthenticationStore();
+const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
 const numLikesLocal = ref(props.commentItem.numLikes);
 const numDislikesLocal = ref(props.commentItem.numDislikes);
