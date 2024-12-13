@@ -11,11 +11,14 @@
           <div class="stepContainer">
             <div class="stepFlex">
               <q-icon name="mdi-numeric-1" size="2rem" class="numberCircle" />
-              Download
-              <div v-if="quasar.platform.is.mobile">
-                <a :href="rarimeStoreLink" target="_blank" rel="noopener noreferrer">RariMe</a>
+              <div>
+                Download
+                <span v-if="quasar.platform.is.mobile">
+                  <a :href="rarimeStoreLink" target="_blank" rel="noopener noreferrer">RariMe</a>
+                </span>
+                <span v-if="!quasar.platform.is.mobile">RariMe on your phone
+                </span>
               </div>
-              <div v-else>RariMe on your phone by scanning the QR code</div>
             </div>
 
             <div class="stepFlex">
@@ -34,11 +37,25 @@
 
             <div class="innerInstructions">
               <div v-if="!quasar.platform.is.mobile">
-                <img v-if="qrcode !== undefined" :src="qrcode" alt="QR Code" class="qrCode" />
-                <q-spinner v-if="qrcode === undefined" color="primary" size="3em" class="qrCode" />
-                <div>or copy the below link on your mobile:</div>
-                <!-- make this copyable -->
-                <div>{{ verificationLink }}</div>
+                <div v-if="verificationLink.length == 0">
+                  <div v-if="verificationLinkGenerationFailed" class="verificationFailure">
+                    <q-icon name="mdi-alert-box" size="3rem" />
+                    Failed to generate verification link
+                  </div>
+                  <div v-if="!verificationLinkGenerationFailed" class="verificationLoadingSpinner">
+                    <q-spinner color="primary" size="3em" />
+                    <div :style="{ fontSize: '0.8rem' }">
+                      Loading verification link
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="verificationLink.length != 0">
+                  <img :src="qrcode" alt="QR Code" />
+                  <div>or copy the below link on your mobile:</div>
+                  <!-- make this copyable -->
+                  <div>{{ verificationLink }}</div>
+                </div>
               </div>
 
               <ZKButton v-if="quasar.platform.is.mobile" label="Verify" color="primary"
@@ -59,7 +76,7 @@ import StepperLayout from "src/components/onboarding/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/InfoHeader.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useQuasar } from "quasar";
-import { useQRCode } from "@vueuse/integrations/useQRCode.mjs";
+import { useQRCode } from "@vueuse/integrations/useQRCode"
 import { useRouter } from "vue-router";
 import { onMounted, ref } from "vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
@@ -82,11 +99,29 @@ const router = useRouter();
 const { buildEncodedUcan } = useCommonApi();
 const { showNotifyMessage } = useNotify();
 
-const isDidLoggedInIntervalId = ref(undefined);
+let isDidLoggedInIntervalId: number | undefined = undefined;
 const verificationLink = ref("");
 
+const qrcode = useQRCode("");
+
+const { userLogin } = useAuthSetup();
+
+const { skipEverything } = useSkipAuth();
+
+const rarimeStoreLink = ref("");
+
+const verificationLinkGenerationFailed = ref(false);
+
+if (quasar.platform.is.android) {
+  rarimeStoreLink.value =
+    "https://play.google.com/store/apps/details?id=com.rarilabs.rarime";
+} else if (quasar.platform.is.ios) {
+  rarimeStoreLink.value = "https://apps.apple.com/us/app/rarime/id6503300598";
+} else {
+  rarimeStoreLink.value = "https://rarime.com/";
+}
+
 onMounted(async () => {
-  isDidLoggedInIntervalId.value = setInterval(isDidLoggedIn, 2000);
   try {
     const { url, options } =
       await DefaultApiAxiosParamCreator().apiV1RarimoGenerateVerificationLinkPost();
@@ -101,18 +136,21 @@ onMounted(async () => {
       },
     });
     verificationLink.value = response.data.verificationLink;
-    qrcode.value = useQRCode(response.data.verificationLink);
+    qrcode.value = useQRCode(response.data.verificationLink).value;
+
+    isDidLoggedInIntervalId = window.setInterval(isDidLoggedIn, 2000);
   } catch (e) {
     console.error(e);
     showNotifyMessage(
       "Failed to fetch RariMe verification link: try refreshing the page"
     );
+    verificationLinkGenerationFailed.value = true;
   }
 });
 
 onUnmounted(() => {
-  if (isDidLoggedInIntervalId.value !== undefined) {
-    clearInterval(isDidLoggedInIntervalId.value);
+  if (isDidLoggedInIntervalId !== undefined) {
+    clearInterval(isDidLoggedInIntervalId);
   }
 });
 
@@ -132,29 +170,15 @@ async function isDidLoggedIn() {
     });
     if (response.data.rarimoStatus === "verified") {
       await completeVerification();
+    } else {
+      console.log(response.data.rarimoStatus);
     }
   } catch (e) {
     console.error(e);
     showNotifyMessage(
-      "Failed to verify identity proof: are you connected to internet? if yes contact Agora team"
+      "Failed to verify identity proof"
     );
   }
-}
-
-const qrcode = ref(undefined);
-const { userLogin } = useAuthSetup();
-
-const { skipEverything } = useSkipAuth();
-
-const rarimeStoreLink = ref("");
-
-if (quasar.platform.is.android) {
-  rarimeStoreLink.value =
-    "https://play.google.com/store/apps/details?id=com.rarilabs.rarime";
-} else if (quasar.platform.is.ios) {
-  rarimeStoreLink.value = "https://apps.apple.com/us/app/rarime/id6503300598";
-} else {
-  rarimeStoreLink.value = "https://rarime.com/";
 }
 
 async function clickedVerifyButton() {
@@ -166,7 +190,6 @@ async function clickedVerifyButton() {
 }
 
 async function completeVerification() {
-  clearInterval(isDidLoggedInIntervalId.value);
   showNotifyMessage("Verification successful 🎉");
   await userLogin();
   router.push({ name: "onboarding-step4-username" });
@@ -175,6 +198,7 @@ async function completeVerification() {
 function goToPhoneVerification() {
   router.push({ name: "onboarding-step3-phone-1" });
 }
+
 </script>
 
 <style scoped lang="scss">
@@ -207,5 +231,20 @@ function goToPhoneVerification() {
   border: 2px solid black;
   color: black;
   text-align: center;
+}
+
+.verificationLoadingSpinner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.verificationFailure {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  font-size: 0.8rem;
 }
 </style>
