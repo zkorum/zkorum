@@ -1,5 +1,5 @@
 {
-  "id": "fc904e2d-84bb-4465-a2ed-90c29922e6c6",
+  "id": "6bf1151d-aa5f-4670-a66d-60ee665b1313",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2339,15 +2339,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "configured_user_name": {
-          "name": "configured_user_name",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "user_name": {
-          "name": "user_name",
+        "username": {
+          "name": "username",
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true
@@ -2434,11 +2427,18 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "user_user_name_unique": {
-          "name": "user_user_name_unique",
+        "user_username_unique": {
+          "name": "user_username_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "user_name"
+            "username"
+          ]
+        },
+        "user_unique_username": {
+          "name": "user_unique_username",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
           ]
         }
       },

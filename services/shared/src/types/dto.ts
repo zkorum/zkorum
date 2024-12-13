@@ -10,7 +10,7 @@ import {
     zodPostBody,
     zodVotingOption,
     zodVotingAction,
-    zodUserName,
+    zodUsername,
     zodPollResponse,
     zodPhoneNumber,
     zodExtendedCommentData,
@@ -171,7 +171,7 @@ export class Dto {
         .object({
             activePostCount: z.number().gte(0),
             createdAt: z.date(),
-            userName: zodUserName,
+            username: zodUsername,
         })
         .strict();
     static fetchUserPostsRequest = z
@@ -201,7 +201,7 @@ export class Dto {
     });
     static isUsernameInUseRequest = z
         .object({
-            userName: zodUserName,
+            username: zodUsername,
         })
         .strict();
     static isUsernameInUseResponse = z.boolean();

@@ -267,8 +267,7 @@ CREATE TABLE IF NOT EXISTS "user_post_topic_preference" (
 CREATE TABLE IF NOT EXISTS "user" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"organisation_id" integer,
-	"configured_user_name" boolean DEFAULT false NOT NULL,
-	"user_name" varchar(36) NOT NULL,
+	"username" varchar(36) NOT NULL,
 	"is_anonymous" boolean DEFAULT true NOT NULL,
 	"show_flagged_content" boolean DEFAULT false NOT NULL,
 	"is_deleted" boolean DEFAULT false NOT NULL,
@@ -278,7 +277,8 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"total_comment_count" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
-	CONSTRAINT "user_user_name_unique" UNIQUE("user_name")
+	CONSTRAINT "user_username_unique" UNIQUE("username"),
+	CONSTRAINT "user_unique_username" UNIQUE("username")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "vote_content" (

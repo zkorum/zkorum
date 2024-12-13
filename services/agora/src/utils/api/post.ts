@@ -179,7 +179,7 @@ export function useBackendPostApi() {
     incomingPostList.forEach((item) => {
       const newPost: ExtendedPost = {
         metadata: {
-          authorUserName: String(item.metadata.authorUserName),
+          authorUsername: String(item.metadata.authorUsername),
           commentCount: item.metadata.commentCount,
           createdAt: new Date(item.metadata.createdAt),
           lastReactedAt: new Date(item.metadata.lastReactedAt),

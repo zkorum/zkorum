@@ -47,7 +47,7 @@ export async function fetchCommentsByPostSlugId(
             comment: commentContentTable.content,
             numLikes: commentTable.numLikes,
             numDislikes: commentTable.numDislikes,
-            userName: userTable.userName
+            username: userTable.username
         })
         .from(commentTable)
         .innerJoin(
@@ -76,7 +76,7 @@ export async function fetchCommentsByPostSlugId(
             numDislikes: commentResponse.numDislikes,
             numLikes: commentResponse.numLikes,
             updatedAt: commentResponse.updatedAt,
-            userName: commentResponse.userName
+            username: commentResponse.username
         };
         commentItemList.push(item);
     });

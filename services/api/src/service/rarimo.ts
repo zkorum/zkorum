@@ -3,7 +3,6 @@
 import { deviceTable, passportTable } from "@/schema.js";
 import type { VerifyUserStatusAndAuthenticate200 } from "@/shared/types/dto.js";
 import {
-    zodCountryCodeEnum,
     type RarimoStatusAttributes,
 } from "@/shared/types/zod.js";
 import { type AxiosInstance } from "axios";
@@ -208,7 +207,6 @@ export async function verifyUserStatusAndAuthenticate({
     didWrite,
     axiosVerificatorSvc,
     userAgent,
-    httpErrors,
 }: VerifyUserStatusProps): Promise<VerifyUserStatusAndAuthenticate200> {
     const verifyUserStatusUrl = `/integrations/verificator-svc/light/private/verification-status/${didWrite.toLowerCase()}`; // toLowerCase is a work-around because verificator-svc does it when inserting the userId in DB but not when selecting data from the DB! Missing toLowerCase() here would lead to a 404 error. This one here is not necessary as verificator-svc is doing it already, but as a safety measure I added this for now.
     const response =
@@ -271,7 +269,7 @@ export async function verifyUserStatusAndAuthenticate({
                 userAgent,
                 userId,
                 sessionExpiry: loginSessionExpiry,
-                userName: "TEST_USER", //TODO: generte random userName instead, while waiting for the user to choose another one during onboarding
+                username: "TEST_USER", //TODO: generte random username instead, while waiting for the user to choose another one during onboarding
             });
             break;
         }

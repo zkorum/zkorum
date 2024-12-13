@@ -79,10 +79,10 @@ export const zodPollResponse = z
     .strict();
 export const zodSlugId = z.string().max(10);
 export const zodCommentCount = z.number().int().nonnegative();
-export const userNameRegex = new RegExp(
+export const usernameRegex = new RegExp(
     `^[a-zA-Z0-9_]{${MIN_LENGTH_USERNAME.toString()},${MAX_LENGTH_USERNAME.toString()}}$`,
 );
-export const zodUserName = z.union([z.string().uuid(), z.string().regex(userNameRegex)]);
+export const zodUsername = z.union([z.string().uuid(), z.string().regex(usernameRegex)]);
 export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,
@@ -91,7 +91,7 @@ export const zodPostMetadata = z
         updatedAt: z.date(),
         lastReactedAt: z.date(),
         commentCount: zodCommentCount,
-        authorUserName: zodUserName,
+        authorUsername: zodUsername,
         authorImagePath: z.string().url({ message: "Invalid url" }).optional(), // TODO: check if it accepts path segments for local dev
     })
     .strict();
@@ -104,7 +104,7 @@ export const zodCommentItem = z
         comment: zodCommentContent,
         numLikes: z.number().int().nonnegative(),
         numDislikes: z.number().int().nonnegative(),
-        userName: zodUserName,
+        username: zodUsername,
     })
     .strict();
 export const zodUserInteraction = z

@@ -81,7 +81,7 @@ export const usePostStore = defineStore("post", () => {
       isHidden: false,
       createdAt: new Date(),
       commentCount: 0,
-      authorUserName: "",
+      authorUsername: "",
       lastReactedAt: new Date(),
       postSlugId: "",
       updatedAt: new Date(),

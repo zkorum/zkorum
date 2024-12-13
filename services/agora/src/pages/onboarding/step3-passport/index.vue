@@ -1,18 +1,9 @@
 <template>
   <div>
-    <StepperLayout
-      :submit-call-back="() => {}"
-      :current-step="3"
-      :total-steps="6"
-      :enable-next-button="true"
-      :show-next-button="false"
-    >
+    <StepperLayout :submit-call-back="() => { }" :current-step="3" :total-steps="6" :enable-next-button="true"
+      :show-next-button="false">
       <template #header>
-        <InfoHeader
-          title="Own Your Privacy"
-          :description="description"
-          icon-name="mdi-wallet"
-        />
+        <InfoHeader title="Own Your Privacy" :description="description" icon-name="mdi-wallet" />
       </template>
 
       <template #body>
@@ -22,12 +13,7 @@
               <q-icon name="mdi-numeric-1" size="2rem" class="numberCircle" />
               Download
               <div v-if="quasar.platform.is.mobile">
-                <a
-                  :href="rarimeStoreLink"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >RariMe</a
-                >
+                <a :href="rarimeStoreLink" target="_blank" rel="noopener noreferrer">RariMe</a>
               </div>
               <div v-else>RariMe on your phone by scanning the QR code</div>
             </div>
@@ -48,38 +34,21 @@
 
             <div class="innerInstructions">
               <div v-if="!quasar.platform.is.mobile">
-                <img
-                  v-if="qrcode !== undefined"
-                  :src="qrcode"
-                  alt="QR Code"
-                  class="qrCode"
-                />
-                <q-spinner
-                  v-if="qrcode === undefined"
-                  color="primary"
-                  size="3em"
-                  class="qrCode"
-                />
+                <img v-if="qrcode !== undefined" :src="qrcode" alt="QR Code" class="qrCode" />
+                <q-spinner v-if="qrcode === undefined" color="primary" size="3em" class="qrCode" />
                 <div>or copy the below link on your mobile:</div>
                 <!-- make this copyable -->
                 <div>{{ verificationLink }}</div>
               </div>
 
-              <ZKButton
-                v-if="quasar.platform.is.mobile"
-                label="Verify"
-                color="primary"
-                @click="clickedVerifyButton()"
-              />
+              <ZKButton v-if="quasar.platform.is.mobile" label="Verify" color="primary"
+                @click="clickedVerifyButton()" />
             </div>
           </div>
         </ZKCard>
 
-        <ZKButton
-          label="I'd rather verify with my phone number"
-          text-color="color-text-strong"
-          @click="goToPhoneVerification()"
-        />
+        <ZKButton label="I'd rather verify with my phone number" text-color="color-text-strong"
+          @click="goToPhoneVerification()" />
       </template>
     </StepperLayout>
   </div>

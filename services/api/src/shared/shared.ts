@@ -1,4 +1,3 @@
-/** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/
 // Copyright ts-odd team
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
@@ -70,7 +69,7 @@ export const MIN_LENGTH_USERNAME = 3;
 
 export const PEPPER_VERSION = 0;
 
-export const POST_TAGS: Record<string, string> = {
+export const POST_TOPICS: Record<string, string> = {
     "technology": "Technology",
     "environment": "Environment",
     "politics": "Politics"

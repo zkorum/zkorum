@@ -45,7 +45,7 @@ export function useCommonPost() {
                 updatedAt: postTable.updatedAt,
                 lastReactedAt: postTable.lastReactedAt,
                 commentCount: postTable.commentCount,
-                authorName: userTable.userName,
+                authorName: userTable.username,
                 authorImagePath: organisationTable.imageUrl,
             })
             .from(postTable)
@@ -87,7 +87,7 @@ export function useCommonPost() {
                     updatedAt: postItem.updatedAt,
                     lastReactedAt: postItem.lastReactedAt,
                     commentCount: postItem.commentCount,
-                    authorUserName: postItem.authorName,
+                    authorUsername: postItem.authorName,
                     authorImagePath: toUnionUndefined(postItem.authorImagePath),
                 };
 
