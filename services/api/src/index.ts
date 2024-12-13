@@ -87,12 +87,20 @@ const speciallyAuthorizedPhones: string[] =
 const axiosVerificatorSvc: AxiosInstance = axios.create({
     baseURL: config.VERIFICATOR_SVC_BASE_URL,
 });
+// axiosVerificatorSvc.interceptors.request.use((request) => {
+//     server.log.info("Starting Request", JSON.stringify(request));
+//     return request;
+// });
+// axiosVerificatorSvc.interceptors.response.use((response) => {
+//     server.log.info("Response:", JSON.stringify(response));
+//     return response;
+// });
 
 server.register(fastifySwagger, {
     openapi: {
         info: {
-            title: "Agora by ZKorum",
-            description: "Agora by ZKorum API",
+            title: "Agora Citizen Network",
+            description: "Agora API",
             version: "1.0.0",
         },
         servers: [],
@@ -1005,7 +1013,7 @@ server.after(() => {
             const verificationStatusAndNullifier =
                 await verifyUserStatusAndAuthenticate({
                     db,
-                    didWrite,
+                    didWrite: didWrite.toLowerCase(),
                     axiosVerificatorSvc,
                     userAgent,
                     httpErrors: server.httpErrors,

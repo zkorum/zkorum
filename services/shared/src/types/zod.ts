@@ -397,8 +397,6 @@ export const zodCountryCodeEnum = z.enum([
     "ZMB",
     "ZWE",
 ]);
-export const zodSexEnum = z.enum(["F", "M", "X"]);
-
 export type Device = z.infer<typeof zodDevice>;
 export type Devices = z.infer<typeof zodDevices>;
 export type ExtendedPost = z.infer<typeof zodExtendedPostData>;
@@ -415,4 +413,3 @@ export type VotingAction = z.infer<typeof zodVotingAction>;
 export type PollList = z.infer<typeof zodPollList>;
 export type RarimoStatusAttributes = z.infer<typeof zodRarimoStatusAttributes>;
 export type CountryCodeEnum = z.infer<typeof zodCountryCodeEnum>;
-export type SexEnum = z.infer<typeof zodSexEnum>;

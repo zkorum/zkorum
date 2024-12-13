@@ -199,30 +199,36 @@ export class Dto {
     static generateVerificationLink200 = z.object({
         verificationLink: z.string().url(),
     });
-    static verifyUserStatusAndAuthenticate200 = z.discriminatedUnion(
-        "rarimoStatus",
-        [
-            z
-                .object({
-                    rarimoStatus: z.literal("verified"),
-                    nullifier: z.string(),
-                })
-                .strict(),
-            z
-                .object({
-                    rarimoStatus: zodRarimoStatusAttributes.exclude([
-                        "verified",
-                    ]),
-                })
-                .strict(),
-        ],
-    );
     static isUsernameInUseRequest = z
         .object({
             userName: zodUserName,
         })
         .strict();
     static isUsernameInUseResponse = z.boolean();
+    // this generates enum with openapigenerator without the verified state...
+    // static verifyUserStatusAndAuthenticate200 = z.discriminatedUnion(
+    //     "rarimoStatus",
+    //     [
+    //         z
+    //             .object({
+    //                 rarimoStatus: z.literal("verified"),
+    //                 nullifier: z.string(),
+    //             })
+    //             .strict(),
+    //         z
+    //             .object({
+    //                 rarimoStatus: zodRarimoStatusAttributes.exclude([
+    //                     "verified",
+    //                 ]),
+    //             })
+    //             .strict(),
+    //     ],
+    // );
+    static verifyUserStatusAndAuthenticate200 = z
+        .object({
+            rarimoStatus: zodRarimoStatusAttributes,
+        })
+        .strict();
 }
 
 export type AuthenticateRequestBody = z.infer<

@@ -30,7 +30,7 @@ export function useBackendPhoneVerification() {
         console.log("User is already logged in");
         return false;
       } else {
-        console.log("Failed to submit email verification code");
+        console.log("Failed to submit phone verification code");
         return false;
       }
     }

@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Agora by ZKorum
- * Agora by ZKorum API
+ * Agora Citizen Network
+ * Agora API
  *
  * The version of the OpenAPI document: 1.0.0
  * 

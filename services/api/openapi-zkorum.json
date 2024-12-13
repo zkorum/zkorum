@@ -1,8 +1,8 @@
 {
     "openapi": "3.0.3",
     "info": {
-        "title": "Agora by ZKorum",
-        "description": "Agora by ZKorum API",
+        "title": "Agora Citizen Network",
+        "description": "Agora API",
         "version": "1.0.0"
     },
     "components": {
@@ -1546,44 +1546,22 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "rarimoStatus": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "verified"
-                                                    ]
-                                                },
-                                                "nullifier": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "rarimoStatus",
-                                                "nullifier"
-                                            ],
-                                            "additionalProperties": false
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "rarimoStatus": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "not_verified",
-                                                        "failed_verification",
-                                                        "uniqueness_check_failed"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "rarimoStatus"
-                                            ],
-                                            "additionalProperties": false
+                                    "type": "object",
+                                    "properties": {
+                                        "rarimoStatus": {
+                                            "type": "string",
+                                            "enum": [
+                                                "not_verified",
+                                                "verified",
+                                                "failed_verification",
+                                                "uniqueness_check_failed"
+                                            ]
                                         }
-                                    ]
+                                    },
+                                    "required": [
+                                        "rarimoStatus"
+                                    ],
+                                    "additionalProperties": false
                                 }
                             }
                         }

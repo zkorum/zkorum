@@ -40,6 +40,78 @@ export async function createDidIfDoesNotExist(
   }
 }
 
+// //TODO: move the web target's code to the Capacitor plugin
+// export async function createDidAndOverwriteIfAlreadyExists(
+//   key: string,
+//   platform: SupportedPlatform
+// ): Promise<CreateDidReturn> {
+//   const prefixedKey = getPrefixedKey(key);
+//
+//   switch (platform) {
+//     case "mobile":
+//       const { publicKey } =
+//         await SecureSigning.createDidAndOverwriteIfAlreadyExists({
+//           prefixedKey: prefixedKey,
+//         });
+//       const decodedPublicKey = base64Decode(publicKey);
+//       const didMobile = publicKeyToDid(decodedPublicKey);
+//       return { did: didMobile, prefixedKey };
+//     case "web":
+//       const cryptoStore = await getWebCryptoStore();
+//       await cryptoStore.keystore.createDidAndOverwriteIfAlreadyExists(
+//         prefixedKey
+//       );
+//       const didWeb = await DID.write(cryptoStore, prefixedKey);
+//       return { did: didWeb, prefixedKey };
+//   }
+// }
+//
+// //TODO: move the web target's code to the Capacitor plugin
+// export async function safeGetDid(
+//   key: string,
+//   platform: SupportedPlatform
+// ): Promise<CreateDidReturn> {
+//   const prefixedKey = getPrefixedKey(key);
+//
+//   switch (platform) {
+//     case "mobile":
+//       const { publicKey } = await SecureSigning.safeGetDid({
+//         prefixedKey: prefixedKey,
+//       });
+//       const decodedPublicKey = base64Decode(publicKey);
+//       const didMobile = publicKeyToDid(decodedPublicKey);
+//       return { did: didMobile, prefixedKey };
+//     case "web":
+//       const cryptoStore = await getWebCryptoStore();
+//       await cryptoStore.keystore.safeGetDid(prefixedKey);
+//       const didWeb = await DID.write(cryptoStore, prefixedKey);
+//       return { did: didWeb, prefixedKey };
+//   }
+// }
+//
+// //TODO: move the web target's code to the Capacitor plugin
+// export async function deleteDid(
+//   key: string,
+//   platform: SupportedPlatform
+// ): Promise<CreateDidReturn> {
+//   const prefixedKey = getPrefixedKey(key);
+//
+//   switch (platform) {
+//     case "mobile":
+//       const { publicKey } = await SecureSigning.deleteDid({
+//         prefixedKey: prefixedKey,
+//       });
+//       const decodedPublicKey = base64Decode(publicKey);
+//       const didMobile = publicKeyToDid(decodedPublicKey);
+//       return { did: didMobile, prefixedKey };
+//     case "web":
+//       const cryptoStore = await getWebCryptoStore();
+//       await cryptoStore.keystore.deleteDid(prefixedKey);
+//       const didWeb = await DID.write(cryptoStore, prefixedKey);
+//       return { did: didWeb, prefixedKey };
+//   }
+// }
+//
 interface CreateUcanProps {
   did: string;
   prefixedKey: string;

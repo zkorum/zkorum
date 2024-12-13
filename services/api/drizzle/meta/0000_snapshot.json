@@ -1,5 +1,5 @@
 {
-  "id": "d6500dcd-72d1-45c2-8445-5e2bdf712df7",
+  "id": "4339b4b3-a1ba-46be-bd3d-3204ab3f50fd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -913,10 +913,9 @@
         },
         "sex": {
           "name": "sex",
-          "type": "sex",
-          "typeSchema": "public",
+          "type": "varchar(50)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -1920,53 +1919,6 @@
       },
       "checkConstraints": {}
     },
-    "public.post_topic": {
-      "name": "post_topic",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "post_topic_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "code": {
-          "name": "code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (0)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
     "public.report_table": {
       "name": "report_table",
       "schema": "",
@@ -2107,11 +2059,12 @@
           "primaryKey": false,
           "notNull": true
         },
-        "lang_id": {
-          "name": "lang_id",
-          "type": "integer",
+        "lang_code": {
+          "name": "lang_code",
+          "type": "lang_code",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -2151,19 +2104,6 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        },
-        "user_language_preference_lang_id_user_language_id_fk": {
-          "name": "user_language_preference_lang_id_user_language_id_fk",
-          "tableFrom": "user_language_preference",
-          "tableTo": "user_language",
-          "columnsFrom": [
-            "lang_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2173,57 +2113,10 @@
           "nullsNotDistinct": false,
           "columns": [
             "user_id",
-            "lang_id"
+            "lang_code"
           ]
         }
       },
-      "checkConstraints": {}
-    },
-    "public.user_language": {
-      "name": "user_language",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "user_language_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "code": {
-          "name": "code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (0)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "checkConstraints": {}
     },
     "public.user_post_topic_preference": {
@@ -2253,11 +2146,12 @@
           "primaryKey": false,
           "notNull": true
         },
-        "post_tag_id": {
-          "name": "post_tag_id",
-          "type": "integer",
+        "post_topic_options": {
+          "name": "post_topic_options",
+          "type": "post_topic_options",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -2297,19 +2191,6 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        },
-        "user_post_topic_preference_post_tag_id_post_topic_id_fk": {
-          "name": "user_post_topic_preference_post_tag_id_post_topic_id_fk",
-          "tableFrom": "user_post_topic_preference",
-          "tableTo": "post_topic",
-          "columnsFrom": [
-            "post_tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2319,7 +2200,7 @@
           "nullsNotDistinct": false,
           "columns": [
             "user_id",
-            "post_tag_id"
+            "post_topic_options"
           ]
         }
       },
@@ -2350,7 +2231,7 @@
         },
         "user_name": {
           "name": "user_name",
-          "type": "varchar(36)",
+          "type": "varchar(23)",
           "primaryKey": false,
           "notNull": true
         },
@@ -2363,20 +2244,6 @@
         },
         "show_flagged_content": {
           "name": "show_flagged_content",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "is_deleted": {
-          "name": "is_deleted",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "has_setup_username": {
-          "name": "has_setup_username",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -3025,6 +2892,16 @@
         "other"
       ]
     },
+    "public.lang_code": {
+      "name": "lang_code",
+      "schema": "public",
+      "values": [
+        "en",
+        "es",
+        "fr",
+        "zh"
+      ]
+    },
     "public.moderation_action": {
       "name": "moderation_action",
       "schema": "public",
@@ -3294,6 +3171,15 @@
         "ZA",
         "ZM",
         "ZW"
+      ]
+    },
+    "public.post_topic_options": {
+      "name": "post_topic_options",
+      "schema": "public",
+      "values": [
+        "technology",
+        "environment",
+        "politics"
       ]
     },
     "public.proof_type": {

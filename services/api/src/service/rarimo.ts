@@ -5,7 +5,6 @@ import type { VerifyUserStatusAndAuthenticate200 } from "@/shared/types/dto.js";
 import {
     zodCountryCodeEnum,
     type RarimoStatusAttributes,
-    zodSexEnum,
 } from "@/shared/types/zod.js";
 import { type AxiosInstance } from "axios";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
@@ -18,6 +17,7 @@ import {
     registerWithRarimo,
 } from "@/service/auth.js";
 import type { HttpErrors } from "@fastify/sensible";
+import { log } from "@/app.js";
 
 interface GenerateVerificationLinkProps {
     didWrite: string;
@@ -110,10 +110,11 @@ async function getUserProof({
     didWrite,
     axiosVerificatorSvc,
 }: GetUserProofProps): Promise<GetUserProofReturn> {
-    const getUserProofUrl = `/integrations/verificator-svc/light/private/user/${didWrite}`;
+    const getUserProofUrl = `/integrations/verificator-svc/light/private/user/${didWrite.toLowerCase()}`; // toLowerCase is a work-around because verificator-svc does it when inserting the userId in DB but not when selecting data from the DB! Missing toLowerCase() here would lead to a 404 error
     const response =
         await axiosVerificatorSvc.get<UserParamsRequest>(getUserProofUrl);
     const userParamsRequest: UserParamsRequest = response.data;
+    log.info(`User params received: ${JSON.stringify(userParamsRequest.data)}`);
     return {
         nullifier: userParamsRequest.data.attributes.nullifier,
         sex: userParamsRequest.data.attributes.sex,
@@ -209,79 +210,71 @@ export async function verifyUserStatusAndAuthenticate({
     userAgent,
     httpErrors,
 }: VerifyUserStatusProps): Promise<VerifyUserStatusAndAuthenticate200> {
-    const verifyUserStatusUrl = `/integrations/verificator-svc/light/private/verification-status/${didWrite}`;
+    const verifyUserStatusUrl = `/integrations/verificator-svc/light/private/verification-status/${didWrite.toLowerCase()}`; // toLowerCase is a work-around because verificator-svc does it when inserting the userId in DB but not when selecting data from the DB! Missing toLowerCase() here would lead to a 404 error. This one here is not necessary as verificator-svc is doing it already, but as a safety measure I added this for now.
     const response =
         await axiosVerificatorSvc.get<StatusResponse>(verifyUserStatusUrl);
     const statusResponse: StatusResponse = response.data;
     const rarimoStatus = statusResponse.data.attributes.status;
-    if (rarimoStatus === "verified") {
-        // retrieve the user attributes
-        const { nationality, sex, nullifier } = await getUserProof({
-            didWrite,
-            axiosVerificatorSvc,
-        });
-        const now = nowZeroMs();
-        // verify if the nullifier is already associated with an existing user
-        const { loggedInState, userId } = await getLoggedInState({
-            db,
-            nullifier,
-            didWrite,
-            now,
-        });
-        // log-in or register depending on the state
-        const loginSessionExpiry = new Date(now);
-        loginSessionExpiry.setFullYear(loginSessionExpiry.getFullYear() + 1000);
-        switch (loggedInState) {
-            case "already_logged_in":
-                break;
-            case "not_logged_in_new_device":
-                await loginNewDevice({
-                    db,
-                    didWrite,
-                    userId,
-                    userAgent,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                break;
-            case "not_logged_in_known_device":
-                await loginKnownDevice({
-                    db,
-                    didWrite,
-                    now,
-                    sessionExpiry: loginSessionExpiry,
-                });
-                break;
-            case "not_registered": {
-                const parsedCitizenship =
-                    zodCountryCodeEnum.safeParse(nationality);
-                if (!parsedCitizenship.success) {
-                    throw httpErrors.internalServerError(
-                        `Received nationality ${nationality} is not part of expected enum`,
-                    );
-                }
-                const parsedSex = zodSexEnum.safeParse(sex);
-                if (!parsedSex.success) {
-                    throw httpErrors.internalServerError(
-                        `Received sex ${sex} is not part of expected enum`,
-                    );
-                }
-                await registerWithRarimo({
-                    db,
-                    didWrite,
-                    citizenship: parsedCitizenship.data,
-                    nullifier,
-                    sex: parsedSex.data,
-                    userAgent,
-                    userId,
-                    sessionExpiry: loginSessionExpiry,
-                    userName: "TEST_USER", //TODO: generte random userName instead, while waiting for the user to choose another one during onboarding
-                });
-                break;
-            }
-        }
-        return { rarimoStatus, nullifier };
-    } else {
+    if (rarimoStatus !== "verified") {
         return { rarimoStatus };
     }
+    // retrieve the user attributes
+    const { nationality, sex, nullifier } = await getUserProof({
+        didWrite,
+        axiosVerificatorSvc,
+    });
+    const now = nowZeroMs();
+    // verify if the nullifier is already associated with an existing user
+    const { loggedInState, userId } = await getLoggedInState({
+        db,
+        nullifier,
+        didWrite,
+        now,
+    });
+    // log-in or register depending on the state
+    const loginSessionExpiry = new Date(now);
+    loginSessionExpiry.setFullYear(loginSessionExpiry.getFullYear() + 1000);
+    switch (loggedInState) {
+        case "already_logged_in":
+            break;
+        case "not_logged_in_new_device":
+            await loginNewDevice({
+                db,
+                didWrite,
+                userId,
+                userAgent,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            break;
+        case "not_logged_in_known_device":
+            await loginKnownDevice({
+                db,
+                didWrite,
+                now,
+                sessionExpiry: loginSessionExpiry,
+            });
+            break;
+        case "not_registered": {
+            // const parsedCitizenship = zodCountryCodeEnum.safeParse(nationality);
+            // if (!parsedCitizenship.success) {
+            //     throw httpErrors.internalServerError(
+            //         `Received nationality ${nationality} is not part of expected enum`,
+            //     );
+            // }
+            await registerWithRarimo({
+                db,
+                didWrite,
+                citizenship: nationality,
+                nullifier,
+                sex: sex,
+                userAgent,
+                userId,
+                sessionExpiry: loginSessionExpiry,
+                userName: "TEST_USER", //TODO: generte random userName instead, while waiting for the user to choose another one during onboarding
+            });
+            break;
+        }
+    }
+    return { rarimoStatus };
 }

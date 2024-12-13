@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Agora by ZKorum
- * Agora by ZKorum API
+ * Agora Citizen Network
+ * Agora API
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -640,69 +640,16 @@ export interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response {
      * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response
      */
     'rarimoStatus': ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200Response
-     */
-    'nullifier': string;
 }
 
 export const ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum = {
     NotVerified: 'not_verified',
+    Verified: 'verified',
     FailedVerification: 'failed_verification',
     UniquenessCheckFailed: 'uniqueness_check_failed'
 } as const;
 
 export type ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum = typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum[keyof typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseRarimoStatusEnum];
-
-/**
- * 
- * @export
- * @interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf
- */
-export interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf
-     */
-    'rarimoStatus': ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf
-     */
-    'nullifier': string;
-}
-
-export const ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum = {
-    Verified: 'verified'
-} as const;
-
-export type ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum = typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum[keyof typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOfRarimoStatusEnum];
-
-/**
- * 
- * @export
- * @interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1
- */
-export interface ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1 {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1
-     */
-    'rarimoStatus': ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum;
-}
-
-export const ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum = {
-    NotVerified: 'not_verified',
-    FailedVerification: 'failed_verification',
-    UniquenessCheckFailed: 'uniqueness_check_failed'
-} as const;
-
-export type ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum = typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum[keyof typeof ApiV1RarimoVerifyUserStatusAndAuthenticatePost200ResponseAnyOf1RarimoStatusEnum];
 
 /**
  * 

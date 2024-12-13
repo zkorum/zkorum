@@ -25,7 +25,7 @@ import parsePhoneNumberFromString, {
 } from "libphonenumber-js";
 import { log } from "@/app.js";
 import { PEPPER_VERSION, toUnionUndefined } from "@/shared/shared.js";
-import type { CountryCodeEnum, SexEnum } from "@/shared/types/zod.js";
+import type { CountryCodeEnum } from "@/shared/types/zod.js";
 import type { HttpErrors } from "@fastify/sensible";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -54,9 +54,9 @@ interface RegisterWithPhoneNumberProps {
 interface RegisterWithRarimoProps {
     db: PostgresDatabase;
     didWrite: string;
-    citizenship: CountryCodeEnum;
+    citizenship: string;
     nullifier: string;
-    sex: SexEnum;
+    sex: string;
     userAgent: string;
     userId: string;
     sessionExpiry: Date;

@@ -13,9 +13,7 @@ export function useCommonApi() {
 
     console.log("Build UCAN");
 
-    const { did, prefixedKey } = await createDidIfDoesNotExist(
-      platform
-    );
+    const { did, prefixedKey } = await createDidIfDoesNotExist(platform);
     // TODO: get DID if exist, else create it
     // then create UCAN, then inject it below
     // if we create it, create a unique cryptographic random ID that is linked to the email address
