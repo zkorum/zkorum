@@ -1,5 +1,5 @@
 {
-  "id": "4339b4b3-a1ba-46be-bd3d-3204ab3f50fd",
+  "id": "fc904e2d-84bb-4465-a2ed-90c29922e6c6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -900,8 +900,7 @@
         },
         "citizenship": {
           "name": "citizenship",
-          "type": "country_code",
-          "typeSchema": "public",
+          "type": "varchar(10)",
           "primaryKey": false,
           "notNull": true
         },
@@ -1919,6 +1918,53 @@
       },
       "checkConstraints": {}
     },
+    "public.post_topic": {
+      "name": "post_topic",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "post_topic_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "public.report_table": {
       "name": "report_table",
       "schema": "",
@@ -2059,12 +2105,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "lang_code": {
-          "name": "lang_code",
-          "type": "lang_code",
-          "typeSchema": "public",
+        "lang_id": {
+          "name": "lang_id",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -2104,6 +2149,19 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "user_language_preference_lang_id_user_language_id_fk": {
+          "name": "user_language_preference_lang_id_user_language_id_fk",
+          "tableFrom": "user_language_preference",
+          "tableTo": "user_language",
+          "columnsFrom": [
+            "lang_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2113,10 +2171,57 @@
           "nullsNotDistinct": false,
           "columns": [
             "user_id",
-            "lang_code"
+            "lang_id"
           ]
         }
       },
+      "checkConstraints": {}
+    },
+    "public.user_language": {
+      "name": "user_language",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "user_language_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "checkConstraints": {}
     },
     "public.user_post_topic_preference": {
@@ -2146,12 +2251,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "post_topic_options": {
-          "name": "post_topic_options",
-          "type": "post_topic_options",
-          "typeSchema": "public",
+        "post_tag_id": {
+          "name": "post_tag_id",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -2191,6 +2295,19 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "user_post_topic_preference_post_tag_id_post_topic_id_fk": {
+          "name": "user_post_topic_preference_post_tag_id_post_topic_id_fk",
+          "tableFrom": "user_post_topic_preference",
+          "tableTo": "post_topic",
+          "columnsFrom": [
+            "post_tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2200,7 +2317,7 @@
           "nullsNotDistinct": false,
           "columns": [
             "user_id",
-            "post_topic_options"
+            "post_tag_id"
           ]
         }
       },
@@ -2231,7 +2348,7 @@
         },
         "user_name": {
           "name": "user_name",
-          "type": "varchar(23)",
+          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true
         },
@@ -2244,6 +2361,20 @@
         },
         "show_flagged_content": {
           "name": "show_flagged_content",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_deleted": {
+          "name": "is_deleted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "has_setup_username": {
+          "name": "has_setup_username",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -2626,262 +2757,6 @@
         "login_new_device"
       ]
     },
-    "public.country_code": {
-      "name": "country_code",
-      "schema": "public",
-      "values": [
-        "AND",
-        "ARE",
-        "AFG",
-        "ATG",
-        "AIA",
-        "ALB",
-        "ARM",
-        "AGO",
-        "ATA",
-        "ARG",
-        "ASM",
-        "AUT",
-        "AUS",
-        "ABW",
-        "ALA",
-        "AZE",
-        "BIH",
-        "BRB",
-        "BGD",
-        "BEL",
-        "BFA",
-        "BGR",
-        "BHR",
-        "BDI",
-        "BEN",
-        "BLM",
-        "BMU",
-        "BRN",
-        "BOL",
-        "BES",
-        "BRA",
-        "BHS",
-        "BTN",
-        "BVT",
-        "BWA",
-        "BLR",
-        "BLZ",
-        "CAN",
-        "CCK",
-        "COD",
-        "CAF",
-        "COG",
-        "CHE",
-        "CIV",
-        "COK",
-        "CHL",
-        "CMR",
-        "CHN",
-        "COL",
-        "CRI",
-        "CUB",
-        "CPV",
-        "CUW",
-        "CXR",
-        "CYP",
-        "CZE",
-        "DEU",
-        "DJI",
-        "DNK",
-        "DMA",
-        "DOM",
-        "DZA",
-        "ECU",
-        "EST",
-        "EGY",
-        "ESH",
-        "ERI",
-        "ESP",
-        "ETH",
-        "FIN",
-        "FJI",
-        "FLK",
-        "FSM",
-        "FRO",
-        "FRA",
-        "GAB",
-        "GBR",
-        "GRD",
-        "GEO",
-        "GUF",
-        "GGY",
-        "GHA",
-        "GIB",
-        "GRL",
-        "GMB",
-        "GIN",
-        "GLP",
-        "GNQ",
-        "GRC",
-        "SGS",
-        "GTM",
-        "GUM",
-        "GNB",
-        "GUY",
-        "HKG",
-        "HMD",
-        "HND",
-        "HRV",
-        "HTI",
-        "HUN",
-        "IDN",
-        "IRL",
-        "ISR",
-        "IMN",
-        "IND",
-        "IOT",
-        "IRQ",
-        "IRN",
-        "ISL",
-        "ITA",
-        "JEY",
-        "JAM",
-        "JOR",
-        "JPN",
-        "KEN",
-        "KGZ",
-        "KHM",
-        "KIR",
-        "COM",
-        "KNA",
-        "PRK",
-        "KOR",
-        "KWT",
-        "CYM",
-        "KAZ",
-        "LAO",
-        "LBN",
-        "LCA",
-        "LIE",
-        "LKA",
-        "LBR",
-        "LSO",
-        "LTU",
-        "LUX",
-        "LVA",
-        "LBY",
-        "MAR",
-        "MCO",
-        "MDA",
-        "MNE",
-        "MAF",
-        "MDG",
-        "MHL",
-        "MKD",
-        "MLI",
-        "MMR",
-        "MNG",
-        "MAC",
-        "MNP",
-        "MTQ",
-        "MRT",
-        "MSR",
-        "MLT",
-        "MUS",
-        "MDV",
-        "MWI",
-        "MEX",
-        "MYS",
-        "MOZ",
-        "NAM",
-        "NCL",
-        "NER",
-        "NFK",
-        "NGA",
-        "NIC",
-        "NLD",
-        "NOR",
-        "NPL",
-        "NRU",
-        "NIU",
-        "NZL",
-        "OMN",
-        "PAN",
-        "PER",
-        "PYF",
-        "PNG",
-        "PHL",
-        "PAK",
-        "POL",
-        "SPM",
-        "PCN",
-        "PRI",
-        "PSE",
-        "PRT",
-        "PLW",
-        "PRY",
-        "QAT",
-        "REU",
-        "ROU",
-        "SRB",
-        "RUS",
-        "RWA",
-        "SAU",
-        "SLB",
-        "SYC",
-        "SDN",
-        "SWE",
-        "SGP",
-        "SHN",
-        "SVN",
-        "SJM",
-        "SVK",
-        "SLE",
-        "SMR",
-        "SEN",
-        "SOM",
-        "SUR",
-        "SSD",
-        "STP",
-        "SLV",
-        "SXM",
-        "SYR",
-        "SWZ",
-        "TCA",
-        "TCD",
-        "ATF",
-        "TGO",
-        "THA",
-        "TJK",
-        "TKL",
-        "TLS",
-        "TKM",
-        "TUN",
-        "TON",
-        "TUR",
-        "TTO",
-        "TUV",
-        "TWN",
-        "TZA",
-        "UKR",
-        "UGA",
-        "UMI",
-        "USA",
-        "URY",
-        "UZB",
-        "VAT",
-        "VCT",
-        "VEN",
-        "VGB",
-        "VIR",
-        "VNM",
-        "VUT",
-        "WLF",
-        "WSM",
-        "XKX",
-        "YEM",
-        "MYT",
-        "ZAF",
-        "ZMB",
-        "ZWE"
-      ]
-    },
     "public.email_type": {
       "name": "email_type",
       "schema": "public",
@@ -2890,16 +2765,6 @@
         "backup",
         "secondary",
         "other"
-      ]
-    },
-    "public.lang_code": {
-      "name": "lang_code",
-      "schema": "public",
-      "values": [
-        "en",
-        "es",
-        "fr",
-        "zh"
       ]
     },
     "public.moderation_action": {
@@ -3171,15 +3036,6 @@
         "ZA",
         "ZM",
         "ZW"
-      ]
-    },
-    "public.post_topic_options": {
-      "name": "post_topic_options",
-      "schema": "public",
-      "values": [
-        "technology",
-        "environment",
-        "politics"
       ]
     },
     "public.proof_type": {

@@ -200,6 +200,12 @@ export class Dto {
     static generateVerificationLink200 = z.object({
         verificationLink: z.string().url(),
     });
+    static isUsernameInUseRequest = z
+        .object({
+            userName: zodUserName,
+        })
+        .strict();
+    static isUsernameInUseResponse = z.boolean();
     // this generates enum with openapigenerator without the verified state...
     // static verifyUserStatusAndAuthenticate200 = z.discriminatedUnion(
     //     "rarimoStatus",
