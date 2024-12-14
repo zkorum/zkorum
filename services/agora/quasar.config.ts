@@ -76,9 +76,9 @@ export default defineConfig((ctx) => {
       // https://github.com/quasarframework/quasar/discussions/15303#discussioncomment-5904464
       // https://vite.dev/config/
       env: {
-        VITE_USE_DUMMY_ACCESS: process.env.VITE_USE_DUMMY_ACCESS,
         VITE_API_BASE_URL: process.env.VITE_API_BASE_URL,
         VITE_BACK_DID: process.env.VITE_BACK_DID,
+        VITE_DEV_AUTHORIZED_PHONES: process.env.VITE_DEV_AUTHORIZED_PHONES
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
