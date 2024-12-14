@@ -52,7 +52,7 @@
 
                 <div v-if="verificationLink.length != 0" class="verificationProcedureBlock">
                   <img :src="qrcode" alt="QR Code" />
-                  <div>or copy the below link on your mobile:</div>
+                  <div>Or copy the below link on your mobile:</div>
                   <!-- make this copyable -->
                   <div class="longUrl">{{ verificationLink }}</div>
 
@@ -60,8 +60,13 @@
                 </div>
               </div>
 
-              <ZKButton v-if="quasar.platform.is.mobile" label="Verify" color="primary"
-                @click="clickedVerifyButton()" />
+              <div v-if="quasar.platform.is.mobile" class="verificationProcedureBlock">
+                <ZKButton label="Verify" color="primary" @click="clickedVerifyButton()" />
+                <div class="waitingVerificationText">
+                  Waiting for verification...
+                </div>
+              </div>
+
             </div>
           </div>
         </ZKCard>
@@ -251,11 +256,16 @@ function goToPhoneVerification() {
 
 .longUrl {
   word-break: break-all;
+  font-size: 0.8rem;
 }
 
 .verificationProcedureBlock {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.8rem;
+}
+
+.waitingVerificationText {
+  font-size: 0.9rem;
 }
 </style>
