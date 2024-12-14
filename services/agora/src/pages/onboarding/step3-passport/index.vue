@@ -50,11 +50,13 @@
                   </div>
                 </div>
 
-                <div v-if="verificationLink.length != 0">
+                <div v-if="verificationLink.length != 0" class="verificationProcedureBlock">
                   <img :src="qrcode" alt="QR Code" />
                   <div>or copy the below link on your mobile:</div>
                   <!-- make this copyable -->
-                  <div>{{ verificationLink }}</div>
+                  <div class="longUrl">{{ verificationLink }}</div>
+
+                  <ZKButton label="Copy" icon="mdi-content-copy" @click="copyVerificationLink()" />
                 </div>
               </div>
 
@@ -80,7 +82,6 @@ import { useQRCode } from "@vueuse/integrations/useQRCode"
 import { useRouter } from "vue-router";
 import { onMounted, ref } from "vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import { useSkipAuth } from "src/utils/auth/skipAuth";
 import { useAuthSetup } from "src/utils/auth/setup";
 import { DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api/api";
 import { useCommonApi } from "src/utils/api/common";
@@ -88,6 +89,7 @@ import { api } from "src/boot/axios";
 import { buildAuthorizationHeader } from "src/utils/crypto/ucan/operation";
 import { useNotify } from "src/utils/ui/notify";
 import { onUnmounted } from "vue";
+import { useWebShare } from "src/utils/share/WebShare";
 
 const description =
   "RariMe is a ZK-powered identity wallet that converts your passport into an anonymous digital ID, stored on your device, so you can prove that you’re a unique human without sharing any personal data with anyone.";
@@ -96,17 +98,17 @@ const quasar = useQuasar();
 
 const router = useRouter();
 
+const { share } = useWebShare();
+
 const { buildEncodedUcan } = useCommonApi();
 const { showNotifyMessage } = useNotify();
 
 let isDidLoggedInIntervalId: number | undefined = undefined;
 const verificationLink = ref("");
 
-const qrcode = useQRCode("");
+const qrcode = useQRCode(verificationLink);
 
 const { userLogin } = useAuthSetup();
-
-const { skipEverything } = useSkipAuth();
 
 const rarimeStoreLink = ref("");
 
@@ -136,7 +138,6 @@ onMounted(async () => {
       },
     });
     verificationLink.value = response.data.verificationLink;
-    qrcode.value = useQRCode(response.data.verificationLink).value;
 
     isDidLoggedInIntervalId = window.setInterval(isDidLoggedIn, 2000);
   } catch (e) {
@@ -153,6 +154,10 @@ onUnmounted(() => {
     clearInterval(isDidLoggedInIntervalId);
   }
 });
+
+function copyVerificationLink() {
+  share("Verification Link", verificationLink.value);
+}
 
 async function isDidLoggedIn() {
   try {
@@ -182,11 +187,7 @@ async function isDidLoggedIn() {
 }
 
 async function clickedVerifyButton() {
-  const result = await skipEverything();
-  if (result) {
-    await userLogin();
-    router.push({ name: "onboarding-step4-username" });
-  }
+  window.open(verificationLink.value, "_blank");
 }
 
 async function completeVerification() {
@@ -246,5 +247,15 @@ function goToPhoneVerification() {
   gap: 1rem;
   align-items: center;
   font-size: 0.8rem;
+}
+
+.longUrl {
+  word-break: break-all;
+}
+
+.verificationProcedureBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 </style>
