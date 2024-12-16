@@ -121,7 +121,7 @@ function optionButtonClicked() {
 
   bottomSheet.showCommentOptionSelector(
     props.commentItem.commentSlugId,
-    props.commentItem.userName,
+    props.commentItem.username,
     deleteCommentCallback);
 }
 

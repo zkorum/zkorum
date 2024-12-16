@@ -25,7 +25,6 @@ import parsePhoneNumberFromString, {
 } from "libphonenumber-js";
 import { log } from "@/app.js";
 import { PEPPER_VERSION, toUnionUndefined } from "@/shared/shared.js";
-import type { CountryCodeEnum } from "@/shared/types/zod.js";
 import type { HttpErrors } from "@fastify/sensible";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -60,7 +59,7 @@ interface RegisterWithRarimoProps {
     userAgent: string;
     userId: string;
     sessionExpiry: Date;
-    userName: string;
+    username: string;
 }
 
 interface LoginProps {
@@ -343,7 +342,7 @@ export async function registerWithPhoneNumber({
             })
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(userTable).values({
-            userName: uuidv4(),
+            username: uuidv4(),
             id: userId,
         });
         await tx.insert(deviceTable).values({
@@ -372,11 +371,11 @@ export async function registerWithRarimo({
     userAgent,
     userId,
     sessionExpiry,
-    userName,
+    username,
 }: RegisterWithRarimoProps): Promise<void> {
     await db.transaction(async (tx) => {
         await tx.insert(userTable).values({
-            userName: userName,
+            username: username,
             id: userId,
         });
         await tx.insert(deviceTable).values({

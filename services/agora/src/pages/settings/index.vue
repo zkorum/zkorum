@@ -50,7 +50,7 @@ const accountSettings: SettingsInterface[] = [
     icon: "mdi-logout",
     label: "Log out",
     action: logoutRequested,
-    routeName: "welcome",
+    routeName: "",
     isWarning: false
   },
 ];

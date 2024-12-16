@@ -36,9 +36,6 @@ export function useBackendAuthApi() {
     defaultCallingCode,
     isRequestingNewCode,
   }: SendSmsCodeProps): Promise<AuthenticateReturn> {
-    if (process.env.VITE_USE_DUMMY_ACCESS == "true") {
-      phoneNumber = "+33612345678";
-    }
 
     const params: ApiV1AuthAuthenticatePostRequest = {
       phoneNumber: phoneNumber,

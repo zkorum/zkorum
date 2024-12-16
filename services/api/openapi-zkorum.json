@@ -379,7 +379,7 @@
                                                                 "type": "integer",
                                                                 "minimum": 0
                                                             },
-                                                            "authorUserName": {
+                                                            "authorUsername": {
                                                                 "anyOf": [
                                                                     {
                                                                         "type": "string",
@@ -403,7 +403,7 @@
                                                             "updatedAt",
                                                             "lastReactedAt",
                                                             "commentCount",
-                                                            "authorUserName"
+                                                            "authorUsername"
                                                         ],
                                                         "additionalProperties": false
                                                     },
@@ -512,7 +512,7 @@
                                             "type": "string",
                                             "format": "date-time"
                                         },
-                                        "userName": {
+                                        "username": {
                                             "anyOf": [
                                                 {
                                                     "type": "string",
@@ -528,7 +528,7 @@
                                     "required": [
                                         "activePostCount",
                                         "createdAt",
-                                        "userName"
+                                        "username"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -592,7 +592,7 @@
                                                         "type": "integer",
                                                         "minimum": 0
                                                     },
-                                                    "authorUserName": {
+                                                    "authorUsername": {
                                                         "anyOf": [
                                                             {
                                                                 "type": "string",
@@ -616,7 +616,7 @@
                                                     "updatedAt",
                                                     "lastReactedAt",
                                                     "commentCount",
-                                                    "authorUserName"
+                                                    "authorUsername"
                                                 ],
                                                 "additionalProperties": false
                                             },
@@ -754,7 +754,7 @@
                                                                 "type": "integer",
                                                                 "minimum": 0
                                                             },
-                                                            "authorUserName": {
+                                                            "authorUsername": {
                                                                 "anyOf": [
                                                                     {
                                                                         "type": "string",
@@ -778,7 +778,7 @@
                                                             "updatedAt",
                                                             "lastReactedAt",
                                                             "commentCount",
-                                                            "authorUserName"
+                                                            "authorUsername"
                                                         ],
                                                         "additionalProperties": false
                                                     },
@@ -879,7 +879,7 @@
                                                         "type": "integer",
                                                         "minimum": 0
                                                     },
-                                                    "userName": {
+                                                    "username": {
                                                         "anyOf": [
                                                             {
                                                                 "type": "string",
@@ -899,7 +899,7 @@
                                                     "comment",
                                                     "numLikes",
                                                     "numDislikes",
-                                                    "userName"
+                                                    "username"
                                                 ],
                                                 "additionalProperties": false
                                             }
@@ -1222,7 +1222,7 @@
                                                 "type": "integer",
                                                 "minimum": 0
                                             },
-                                            "userName": {
+                                            "username": {
                                                 "anyOf": [
                                                     {
                                                         "type": "string",
@@ -1242,7 +1242,7 @@
                                             "comment",
                                             "numLikes",
                                             "numDislikes",
-                                            "userName"
+                                            "username"
                                         ],
                                         "additionalProperties": false
                                     }
@@ -1402,7 +1402,7 @@
                                                             "type": "integer",
                                                             "minimum": 0
                                                         },
-                                                        "authorUserName": {
+                                                        "authorUsername": {
                                                             "anyOf": [
                                                                 {
                                                                     "type": "string",
@@ -1426,7 +1426,7 @@
                                                         "updatedAt",
                                                         "lastReactedAt",
                                                         "commentCount",
-                                                        "authorUserName"
+                                                        "authorUsername"
                                                     ],
                                                     "additionalProperties": false
                                                 },
@@ -1586,7 +1586,7 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "userName": {
+                                    "username": {
                                         "anyOf": [
                                             {
                                                 "type": "string",
@@ -1600,7 +1600,7 @@
                                     }
                                 },
                                 "required": [
-                                    "userName"
+                                    "username"
                                 ],
                                 "additionalProperties": false
                             }

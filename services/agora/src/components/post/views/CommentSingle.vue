@@ -6,11 +6,11 @@
     </div>
     <div v-if="!deleted" class="contentLayout">
       <div class="metadata">
-        <UserAvatar :user-name="commentItem.userName" :size="40" class="avatarIcon" />
+        <UserAvatar :user-name="commentItem.username" :size="40" class="avatarIcon" />
 
         <div class="userNameTime">
           <div>
-            {{ commentItem.userName }}
+            {{ commentItem.username }}
           </div>
 
           <div>

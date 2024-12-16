@@ -12,7 +12,7 @@
 
           <div class="instructions">
             Please enter the 6-digit code that was sent to
-            <span class="phoneNumberStyle">{{ verificationPhoneNumber }}</span>.
+            <span class="phoneNumberStyle">{{ verificationPhoneNumber.phoneNumber }}</span>.
           </div>
 
           <div class="otpDiv">
@@ -92,8 +92,8 @@ async function nextButtonClicked() {
 async function requestCodeClicked(isRequestingNewCode: boolean) {
   const response = await requestCode({
     isRequestingNewCode: isRequestingNewCode,
-    phoneNumber: verificationPhoneNumber.value,
-    defaultCallingCode: "+33"
+    phoneNumber: verificationPhoneNumber.value.phoneNumber,
+    defaultCallingCode: verificationPhoneNumber.value.defaultCallingCode
   });
 
   if (response.isSuccessful) {

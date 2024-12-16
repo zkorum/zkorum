@@ -4,7 +4,7 @@
     <ZKHoverEffect :enable-hover="compactMode">
       <div class="container postPadding">
         <div class="innerContainer">
-          <PostMetadata :poster-user-name="extendedPostData.metadata.authorUserName"
+          <PostMetadata :poster-user-name="extendedPostData.metadata.authorUsername"
             :created-at="new Date(extendedPostData.metadata.createdAt)" :is-compat-size="true"
             :skeleton-mode="skeletonMode" :show-author="showAuthor" :display-absolute-time="displayAbsoluteTime"
             :post-slug-id="extendedPostData.metadata.postSlugId" />

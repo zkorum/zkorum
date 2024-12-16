@@ -35,7 +35,7 @@ export function useBackendUserApi() {
       return {
         activePostCount: response.data.activePostCount,
         createdAt: new Date(response.data.createdAt),
-        userName: response.data.userName,
+        userName: response.data.username,
       };
     } catch (e) {
       console.error(e);
@@ -114,7 +114,7 @@ export function useBackendUserApi() {
             numDislikes: responseItem.commentItem.numDislikes,
             numLikes: responseItem.commentItem.numLikes,
             updatedAt: new Date(responseItem.commentItem.updatedAt),
-            userName: String(responseItem.commentItem.userName),
+            username: String(responseItem.commentItem.username),
           },
         };
         extendedCommentList.push(extendedComment);

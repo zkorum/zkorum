@@ -14,7 +14,7 @@
             </div>
 
             <div class="commentMetadata">
-              <span :style="{ fontWeight: 'bold' }">{{ commentItem.commentItem.userName }}</span> commented
+              <span :style="{ fontWeight: 'bold' }">{{ commentItem.commentItem.username }}</span> commented
               {{ useTimeAgo(commentItem.commentItem.createdAt) }}
             </div>
 

@@ -69,7 +69,7 @@ export const MIN_LENGTH_USERNAME = 3;
 
 export const PEPPER_VERSION = 0;
 
-export const POST_TAGS: Record<string, string> = {
+export const POST_TOPICS: Record<string, string> = {
     "technology": "Technology",
     "environment": "Environment",
     "politics": "Politics"

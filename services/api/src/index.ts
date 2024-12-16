@@ -1061,7 +1061,7 @@ server.after(() => {
         handler: async (request) => {
             return await checkUserNameExist({
                 db: db,
-                userName: request.body.userName
+                username: request.body.username
             });
         },
     });

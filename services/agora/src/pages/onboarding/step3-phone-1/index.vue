@@ -43,6 +43,20 @@
 
             <InputText v-model="inputNumber" type="tel" placeholder="Phone number" required />
 
+            <div v-if="devAuthorizedNumbers.length > 0">
+              <div class="developmentSection">
+                <div>
+                  Development Numbers:
+                </div>
+
+                <div v-for="authorizedNumber in devAuthorizedNumbers" :key="authorizedNumber.fullNumber">
+                  <ZKButton color="blue" :label="authorizedNumber.fullNumber"
+                    @click=injectDevelopmentNumber(authorizedNumber) />
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </template>
       </StepperLayout>
@@ -65,6 +79,7 @@ import Select from "primevue/select";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { phoneVerificationStore } from "src/stores/verification/phone";
+import ZKButton from "src/components/ui-library/ZKButton.vue";
 
 const dialog = useDialog();
 
@@ -101,13 +116,44 @@ for (let i = 0; i < countryList.length; i++) {
 
 const description = "";
 
+interface PhoneNumber {
+  fullNumber: string;
+  countryCallingCode: string;
+}
+
+const devAuthorizedNumbers: PhoneNumber[] = [];
+checkDevAuthorizedNumbers();
+
+function injectDevelopmentNumber(phoneItem: PhoneNumber) {
+  inputNumber.value = phoneItem.fullNumber;
+  validateNumber();
+}
+
+function checkDevAuthorizedNumbers() {
+  if (process.env.VITE_DEV_AUTHORIZED_PHONES) {
+    const phoneList = process.env.VITE_DEV_AUTHORIZED_PHONES.split(",");
+    phoneList.forEach(number => {
+      const parsedNumber = parsePhoneNumberFromString(number);
+      console.log(parsedNumber.number);
+      devAuthorizedNumbers.push({
+        fullNumber: parsedNumber.number,
+        countryCallingCode: parsedNumber.countryCallingCode
+      });
+    });
+  }
+}
+
 function validateNumber() {
   try {
     const phoneNumber = parsePhoneNumberFromString(inputNumber.value, {
       defaultCallingCode: selectedCountryCode.value.code,
     });
     if (phoneNumber.isValid()) {
-      verificationNumber.value = phoneNumber.number;
+      verificationNumber.value = {
+        defaultCallingCode: phoneNumber.countryCallingCode,
+        phoneNumber: phoneNumber.number
+      };
+
       // TODO: use phoneNumber and defaultCallingCode to send the OTP on click and add both to the store in case the user wants to resend in next page
       router.push({ name: "onboarding-step3-phone-2" });
     } else {
@@ -139,5 +185,14 @@ function validateNumber() {
 .innerOption {
   display: flex;
   gap: 0rem;
+}
+
+.developmentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #fed7aa;
+  border-radius: 15px;
 }
 </style>

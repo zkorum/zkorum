@@ -35,7 +35,7 @@ export async function getUserComments({
         comment: commentContentTable.content,
         numLikes: commentTable.numLikes,
         numDislikes: commentTable.numDislikes,
-        userName: userTable.userName,
+        username: userTable.username,
         postSlugId: postTable.slugId
       })
       .from(commentTable)
@@ -67,7 +67,7 @@ export async function getUserComments({
         numDislikes: commentResponse.numDislikes,
         numLikes: commentResponse.numLikes,
         updatedAt: commentResponse.updatedAt,
-        userName: commentResponse.userName
+        username: commentResponse.username
       }
 
       const postItem = await fetchPostBySlugId({
@@ -150,7 +150,7 @@ export async function getUserProfile({
       .select({
         activePostCount: userTable.activePostCount,
         createdAt: userTable.createdAt,
-        userName: userTable.userName
+        username: userTable.username
       })
       .from(userTable)
       .where(eq(userTable.id, userId));
@@ -163,7 +163,7 @@ export async function getUserProfile({
       return {
         activePostCount: userTableResponse[0].activePostCount,
         createdAt: userTableResponse[0].createdAt,
-        userName: userTableResponse[0].userName,
+        username: userTableResponse[0].username,
       };
     }
 

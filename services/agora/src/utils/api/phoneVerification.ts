@@ -14,7 +14,7 @@ export function useBackendPhoneVerification() {
   const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
   async function submitCode(code: number): Promise<boolean> {
-    if (process.env.VITE_USE_DUMMY_ACCESS == "true") {
+    if (process.env.VITE_DEV_AUTHORIZED_PHONES) {
       code = 0;
     }
 
