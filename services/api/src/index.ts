@@ -47,8 +47,7 @@ import {
     generateVerificationLink,
     verifyUserStatusAndAuthenticate,
 } from "./service/rarimo.js";
-import { deleteUserAccount, submitUsernameChange } from "./service/account.js";
-import { checkUserNameInUse } from "./service/onboarding.js";
+import { checkUserNameInUse, deleteUserAccount, generateUnusedRandomUsername, submitUsernameChange } from "./service/account.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -1077,7 +1076,7 @@ server.after(() => {
 
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
-        url: `/api/${apiVersion}/onboarding/is_username_in_use`,
+        url: `/api/${apiVersion}/account/is-username-in-use`,
         schema: {
             body: Dto.checkUsernameInUseRequest,
             response: {
@@ -1088,6 +1087,21 @@ server.after(() => {
             return await checkUserNameInUse({
                 db: db,
                 username: request.body.username
+            });
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/account/generate-unused-random-username`,
+        schema: {
+            response: {
+                200: Dto.generateUnusedRandomUsernameResponse,
+            },
+        },
+        handler: async () => {
+            return await generateUnusedRandomUsername({
+                db: db
             });
         },
     });

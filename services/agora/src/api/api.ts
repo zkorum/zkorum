@@ -873,6 +873,78 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AccountGenerateUnusedRandomUsernamePost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/account/generate-unused-random-username`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AccountIsUsernameInUsePost: async (apiV1AccountSubmitUsernameChangePostRequest: ApiV1AccountSubmitUsernameChangePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1AccountSubmitUsernameChangePostRequest' is not null or undefined
+            assertParamExists('apiV1AccountIsUsernameInUsePost', 'apiV1AccountSubmitUsernameChangePostRequest', apiV1AccountSubmitUsernameChangePostRequest)
+            const localVarPath = `/api/v1/account/is-username-in-use`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1AccountSubmitUsernameChangePostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1204,45 +1276,6 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(apiV1FeedFetchRecentPostRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1OnboardingIsUsernameInUsePost: async (apiV1AccountSubmitUsernameChangePostRequest: ApiV1AccountSubmitUsernameChangePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1AccountSubmitUsernameChangePostRequest' is not null or undefined
-            assertParamExists('apiV1OnboardingIsUsernameInUsePost', 'apiV1AccountSubmitUsernameChangePostRequest', apiV1AccountSubmitUsernameChangePostRequest)
-            const localVarPath = `/api/v1/onboarding/is_username_in_use`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1AccountSubmitUsernameChangePostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1716,6 +1749,29 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1AccountGenerateUnusedRandomUsernamePost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AccountGenerateUnusedRandomUsernamePost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1AccountGenerateUnusedRandomUsernamePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1AccountIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest: ApiV1AccountSubmitUsernameChangePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AccountIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1AccountIsUsernameInUsePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1818,18 +1874,6 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1FeedFetchRecentPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV1OnboardingIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest: ApiV1AccountSubmitUsernameChangePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1OnboardingIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1OnboardingIsUsernameInUsePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1993,6 +2037,23 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AccountGenerateUnusedRandomUsernamePost(options?: any): AxiosPromise<string> {
+            return localVarFp.apiV1AccountGenerateUnusedRandomUsernamePost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AccountIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest: ApiV1AccountSubmitUsernameChangePostRequest, options?: any): AxiosPromise<boolean> {
+            return localVarFp.apiV1AccountIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2069,15 +2130,6 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: any): AxiosPromise<ApiV1FeedFetchRecentPost200Response> {
             return localVarFp.apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1OnboardingIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest: ApiV1AccountSubmitUsernameChangePostRequest, options?: any): AxiosPromise<boolean> {
-            return localVarFp.apiV1OnboardingIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2206,6 +2258,27 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1AccountGenerateUnusedRandomUsernamePost(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AccountGenerateUnusedRandomUsernamePost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1AccountIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest: ApiV1AccountSubmitUsernameChangePostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1AccountIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -2299,17 +2372,6 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest: ApiV1FeedFetchRecentPostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1FeedFetchRecentPost(apiV1FeedFetchRecentPostRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ApiV1AccountSubmitUsernameChangePostRequest} apiV1AccountSubmitUsernameChangePostRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public apiV1OnboardingIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest: ApiV1AccountSubmitUsernameChangePostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1OnboardingIsUsernameInUsePost(apiV1AccountSubmitUsernameChangePostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

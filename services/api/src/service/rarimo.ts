@@ -17,7 +17,7 @@ import {
 import type { HttpErrors } from "@fastify/sensible";
 import { log } from "@/app.js";
 import { generateUUID } from "@/crypto.js";
-import { generateRandomUsername } from "@/shared/services/account.js";
+import { generateUnusedRandomUsername } from "./account.js";
 
 interface GenerateVerificationLinkProps {
     didWrite: string;
@@ -270,7 +270,7 @@ export async function verifyUserStatusAndAuthenticate({
                 userAgent,
                 userId,
                 sessionExpiry: loginSessionExpiry,
-                username: generateRandomUsername(), //TODO: generte random username instead, while waiting for the user to choose another one during onboarding
+                username: await generateUnusedRandomUsername({db: db})
             });
             break;
         }

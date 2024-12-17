@@ -1551,7 +1551,7 @@
                 }
             }
         },
-        "/api/v1/onboarding/is_username_in_use": {
+        "/api/v1/account/is-username-in-use": {
             "post": {
                 "requestBody": {
                     "content": {
@@ -1580,6 +1580,22 @@
                             "application/json": {
                                 "schema": {
                                     "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/account/generate-unused-random-username": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Default Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }

@@ -211,6 +211,7 @@ export class Dto {
         .strict();
     static checkUsernameInUseResponse = z.boolean();
     static isUsernameInUseResponse = z.boolean();
+    static generateUnusedRandomUsernameResponse = z.string();
     // this generates enum with openapigenerator without the verified state...
     // static verifyUserStatusAndAuthenticate200 = z.discriminatedUnion(
     //     "rarimoStatus",

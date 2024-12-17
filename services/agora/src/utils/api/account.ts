@@ -68,8 +68,45 @@ export function useBackendAccountApi() {
     }
   }
 
+  async function isUsernameInUse(username: string): Promise<boolean | null> {
+    try {
+      const params: ApiV1AccountSubmitUsernameChangePostRequest = {
+        username: username
+      }
+
+      const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1AccountIsUsernameInUsePost(params);
+      return response.data;
+
+    } catch (e) {
+      console.error(e);
+      showNotifyMessage("Error while checking if the username is in use.");
+      return true;
+    }
+  }
+
+  async function generateUnusedRandomUsername(): Promise<string | null> {
+    try {
+      const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1AccountGenerateUnusedRandomUsernamePost();
+      return response.data;
+    } catch (e) {
+      console.error(e);
+      showNotifyMessage("Failed to generate random username");
+      return null;
+    }
+  }
+
   return {
     deleteUserAccount,
-    submitUsernameChange
+    submitUsernameChange,
+    isUsernameInUse,
+    generateUnusedRandomUsername
   };
 }
