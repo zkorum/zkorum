@@ -47,7 +47,12 @@ import {
     generateVerificationLink,
     verifyUserStatusAndAuthenticate,
 } from "./service/rarimo.js";
-import { checkUserNameInUse, deleteUserAccount, generateUnusedRandomUsername, submitUsernameChange } from "./service/account.js";
+import {
+    checkUserNameInUse,
+    deleteUserAccount,
+    generateUnusedRandomUsername,
+    submitUsernameChange,
+} from "./service/account.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -1024,8 +1029,7 @@ server.after(() => {
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/account/delete-user`,
-        schema: {
-        },
+        schema: {},
         handler: async (request) => {
             const didWrite = await verifyUCAN(db, request, {
                 expectedDeviceStatus: {
@@ -1042,7 +1046,7 @@ server.after(() => {
                     authHeader: authHeader,
                     db: db,
                     didWrite: didWrite,
-                    userId: status.userId
+                    userId: status.userId,
                 });
             }
         },
@@ -1068,7 +1072,7 @@ server.after(() => {
                 await submitUsernameChange({
                     db: db,
                     username: request.body.username,
-                    userId: status.userId
+                    userId: status.userId,
                 });
             }
         },
@@ -1086,7 +1090,7 @@ server.after(() => {
         handler: async (request) => {
             return await checkUserNameInUse({
                 db: db,
-                username: request.body.username
+                username: request.body.username,
             });
         },
     });
@@ -1101,11 +1105,10 @@ server.after(() => {
         },
         handler: async () => {
             return await generateUnusedRandomUsername({
-                db: db
+                db: db,
             });
         },
     });
-
 });
 
 server.ready((e) => {

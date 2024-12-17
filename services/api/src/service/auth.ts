@@ -342,7 +342,7 @@ export async function registerWithPhoneNumber({
             })
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(userTable).values({
-            username: await generateUnusedRandomUsername({db: db}),
+            username: await generateUnusedRandomUsername({ db: db }),
             id: userId,
         });
         await tx.insert(deviceTable).values({
