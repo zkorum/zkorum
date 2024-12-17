@@ -43,7 +43,6 @@ const userName = ref("");
 onMounted(async () => {
   await loadUserProfile();
   userName.value = profileData.value.userName;
-  nameContainsValidCharacters();
 })
 
 watch(userName, () => {
@@ -60,9 +59,15 @@ async function nameContainsValidCharacters(): Promise<boolean> {
 
     const isInUse = await isUsernameInUse(userName.value);
     if (isInUse) {
-      isValidUsername.value = false;
-      userNameInvalidMessage.value = "This username is currently in use"
-      return false;
+      if (userName.value == profileData.value.userName) {
+        isValidUsername.value = true;
+        userNameInvalidMessage.value = "";
+        return true;
+      } else {
+        isValidUsername.value = false;
+        userNameInvalidMessage.value = "This username is currently in use"
+        return false;
+      }
     } else {
       isValidUsername.value = true;
       userNameInvalidMessage.value = "";

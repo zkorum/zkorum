@@ -31,6 +31,8 @@ import { useRouter } from "vue-router";
 import { useBackendAccountApi } from "src/utils/api/account";
 import UsernameChange from "src/components/account/UsernameChange.vue";
 import { ref } from "vue";
+import { useUserStore } from "src/stores/user";
+import { useNotify } from "src/utils/ui/notify";
 
 const {
   submitUsernameChange,
@@ -41,10 +43,19 @@ const userName = ref("");
 
 const router = useRouter();
 
+const { profileData } = useUserStore();
+
+const { showNotifyMessage } = useNotify();
+
 async function goToNextRoute() {
-  const isSuccessful = await submitUsernameChange(userName.value);
-  if (isSuccessful) {
+  if (userName.value == profileData.value.userName) {
+    showNotifyMessage("Username changed");
     router.push({ name: "onboarding-step5-preferences" });
+  } else {
+    const isSuccessful = await submitUsernameChange(userName.value);
+    if (isSuccessful) {
+      router.push({ name: "onboarding-step5-preferences" });
+    }
   }
 }
 
