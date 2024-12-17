@@ -74,6 +74,7 @@ async function nameContainsValidCharacters(): Promise<boolean> {
 
 async function refreshName() {
   userName.value = await generateUnusedRandomUsername();
+  isValidUsername.value = true;
 }
 
 </script>
