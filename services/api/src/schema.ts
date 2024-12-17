@@ -19,7 +19,7 @@ const MAX_LENGTH_TITLE = 130;
 const MAX_LENGTH_BODY = 260;
 const MAX_LENGTH_NAME_CREATOR = 65;
 const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
-const MAX_LENGTH_USERNAME = 23;
+const MAX_LENGTH_USERNAME = 40;
 
 export const bytea = customType<{
     data: string;
