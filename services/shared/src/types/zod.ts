@@ -80,9 +80,21 @@ export const zodPollResponse = z
 export const zodSlugId = z.string().max(10);
 export const zodCommentCount = z.number().int().nonnegative();
 export const usernameRegex = new RegExp(
-    `^[a-zA-Z0-9_]{${MIN_LENGTH_USERNAME.toString()},${MAX_LENGTH_USERNAME.toString()}}$`,
+    `^[a-z0-9_]*$`, // {${MIN_LENGTH_USERNAME.toString()},${MAX_LENGTH_USERNAME.toString()}
 );
-export const zodUsername = z.union([z.string().uuid(), z.string().regex(usernameRegex)]);
+export const zodUsername = z.string().regex(usernameRegex, "Username may only contain lower-cased letters, numbers and \"_\"")
+    .refine((val) => /(?=.*[a-z])/.test(val) || /(?=.*[0-9])/.test(val), {
+        message: "Username must contain at least one character or number",
+    })
+    .refine((val) => !/__+/.test(val), {
+        message: "Username must not contain two consecutive underscores",
+    })
+    .refine((val) => val.length >= MIN_LENGTH_USERNAME, {
+        message: `Username must contain at least ${MIN_LENGTH_USERNAME.toString()} characters`,
+    })
+    .refine((val) => val.length <= MAX_LENGTH_USERNAME, {
+        message: `Username must cannot exceed ${MAX_LENGTH_USERNAME.toString()} characters`,
+    });
 export const zodPostMetadata = z
     .object({
         postSlugId: zodSlugId,

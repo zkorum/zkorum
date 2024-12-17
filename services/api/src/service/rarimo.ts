@@ -9,7 +9,6 @@ import { type AxiosInstance } from "axios";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { and, eq } from "drizzle-orm";
 import { nowZeroMs } from "@/shared/common/util.js";
-import { generateUUID } from "@/crypto.js";
 import {
     loginKnownDevice,
     loginNewDevice,
@@ -17,6 +16,7 @@ import {
 } from "@/service/auth.js";
 import type { HttpErrors } from "@fastify/sensible";
 import { log } from "@/app.js";
+import { generateRandomUsername } from "@/shared/services/account.js";
 
 interface GenerateVerificationLinkProps {
     didWrite: string;
@@ -180,7 +180,7 @@ async function getLoggedInState({
             ),
         );
     if (result.length === 0) {
-        return { loggedInState: "not_registered", userId: generateUUID() };
+        return { loggedInState: "not_registered", userId: generateRandomUsername() };
     } else {
         if (result[0].didWrite === null) {
             return {

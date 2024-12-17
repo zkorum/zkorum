@@ -48,7 +48,7 @@ import {
     verifyUserStatusAndAuthenticate,
 } from "./service/rarimo.js";
 import { deleteUserAccount } from "./service/account.js";
-import { checkUserNameExist } from "./service/onboarding.js";
+import { checkUserNameInUse } from "./service/onboarding.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -1053,13 +1053,13 @@ server.after(() => {
         method: "POST",
         url: `/api/${apiVersion}/onboarding/is_username_in_use`,
         schema: {
-            body: Dto.isUsernameInUseRequest,
+            body: Dto.checkUsernameInUseRequest,
             response: {
-                200: Dto.isUsernameInUseResponse,
+                200: Dto.checkUsernameInUseResponse,
             },
         },
         handler: async (request) => {
-            return await checkUserNameExist({
+            return await checkUserNameInUse({
                 db: db,
                 username: request.body.username
             });

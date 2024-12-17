@@ -65,7 +65,7 @@ export const MAX_LENGTH_BODY = 260;
 export const MAX_LENGTH_NAME_CREATOR = 65;
 export const MAX_LENGTH_COMMENT = 280; // tweet and community notes max length
 export const MAX_LENGTH_USERNAME = 23;
-export const MIN_LENGTH_USERNAME = 3;
+export const MIN_LENGTH_USERNAME = 2;
 
 export const PEPPER_VERSION = 0;
 

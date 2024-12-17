@@ -7,7 +7,7 @@ interface CheckUserNameExistProps {
   username: string;
 }
 
-export async function checkUserNameExist({
+export async function checkUserNameInUse({
   db, username
 }: CheckUserNameExistProps): Promise<boolean> {
   const userTableResponse = await db

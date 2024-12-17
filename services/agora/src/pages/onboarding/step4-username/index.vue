@@ -1,10 +1,10 @@
 <template>
   <div>
     <StepperLayout :submit-call-back="goToNextRoute" :current-step="4" :total-steps="6"
-      :enable-next-button="userName.length > 0 || checkedAnonymous" :show-next-button="true">
+      :enable-next-button="isValidUsername" :show-next-button="true">
 
       <template #header>
-        <InfoHeader title="Choose your username" :description="description" icon-name="mdi-account-circle" />
+        <InfoHeader title="Choose your username" description="" icon-name="mdi-account-circle" />
       </template>
 
       <template #body>
@@ -13,33 +13,17 @@
             How do you want to appear in Agora?
           </div>
 
-          <q-input v-model="userName" outlined :placeholder="placeholder" :disable="checkedAnonymous">
+          <q-input v-model="userName" label="Username" outlined :maxlength="MAX_LENGTH_USERNAME"
+            :error="!isValidUsername" :error-message="userNameInvalidMessage">
             <template #append>
-              <ZKButton icon="mdi-dice-6" @click="generateRandomName()" />
+              <ZKButton v-if="isValidUsername" icon="mdi-check" text-color="red" />
+              <ZKButton icon="mdi-dice-6" @click="refreshName()" />
+            </template>
+
+            <template #error>
+              {{ validationMessage }}
             </template>
           </q-input>
-
-          <div class="optionBar">
-            <div class="lightMessage">
-              Appear as `anonymous' by default
-            </div>
-
-            <ToggleSwitch v-model="checkedAnonymous" />
-
-            <ZKButton icon="mdi-information-outline" text-color="color-text-weak" @click="infoToggle" />
-            <Popover ref="infoButtonPopover">
-              <div class="popoverText">
-                <div>
-                  <b>Appear as anonymous</b>
-                </div>
-
-                We protect your privacy by default. If you would rather not show your username, this toggle ensures that
-                any posts, responses or comments are displayed as ‘anonymous’.
-              </div>
-
-            </Popover>
-
-          </div>
 
         </div>
 
@@ -52,32 +36,54 @@
 <script setup lang="ts">
 import StepperLayout from "src/components/onboarding/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/InfoHeader.vue";
-import ToggleSwitch from "primevue/toggleswitch";
 import { useRouter } from "vue-router";
 import { ref, watch } from "vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import Popover from "primevue/popover";
+import { useBackendOnboardingApi } from "src/utils/api/onboarding";
+import { generateRandomUsername } from "src/shared/services/account";
+import { MAX_LENGTH_USERNAME } from "src/shared/shared";
+import { zodUsername } from "src/shared/types/zod";
+import { ZodError } from "zod";
 
 const router = useRouter();
 
-const description = "";
+const userNameInvalidMessage = ref("");
+const isValidUsername = ref(true);
 
-const userName = ref("");
-const checkedAnonymous = ref(false);
+const { isUsernameInUse } = useBackendOnboardingApi();
 
-const infoButtonPopover = ref();
-const infoToggle = (event) => {
-  infoButtonPopover.value.toggle(event);
-}
+const validationMessage = ref("");
 
-const placeholder = ref("RandomGenerated1234");
+const userName = ref(generateRandomUsername());
 
-watch(checkedAnonymous, () => {
-  userName.value = "";
+watch(userName, () => {
+  nameContainsValidCharacters(userName.value);
 })
 
-function generateRandomName() {
-  userName.value = window.crypto.randomUUID();
+async function nameContainsValidCharacters(value: string): Promise<boolean> {
+  try {
+    zodUsername.parse(value);
+
+    const isInUse = await isUsernameInUse(value);
+    if (isInUse) {
+      isValidUsername.value = false;
+      userNameInvalidMessage.value = "The entered username is currently in use"
+      return false;
+    } else {
+      isValidUsername.value = true;
+      return true;
+    }
+  } catch (error) {
+    if (error instanceof ZodError) {
+      userNameInvalidMessage.value = error.format()._errors[0];
+    }
+    isValidUsername.value = false;
+    return false;
+  }
+}
+
+function refreshName() {
+  userName.value = generateRandomUsername();
 }
 
 function goToNextRoute() {
@@ -91,19 +97,6 @@ function goToNextRoute() {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.lightMessage {
-  color: $color-text-weak;
-  width: 15rem;
-}
-
-.optionBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
 .popoverText {

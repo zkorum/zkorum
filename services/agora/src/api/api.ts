@@ -388,23 +388,16 @@ export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata {
     'commentCount': number;
     /**
      * 
-     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername}
+     * @type {string}
      * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
-    'authorUsername': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername;
+    'authorUsername': string;
     /**
      * 
      * @type {string}
      * @memberof ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadata
      */
     'authorImagePath'?: string;
-}
-/**
- * 
- * @export
- * @interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername
- */
-export interface ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername {
 }
 /**
  * 
@@ -489,10 +482,10 @@ export interface ApiV1FeedFetchRecentPostRequest {
 export interface ApiV1OnboardingIsUsernameInUsePostRequest {
     /**
      * 
-     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername}
+     * @type {string}
      * @memberof ApiV1OnboardingIsUsernameInUsePostRequest
      */
-    'username': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername;
+    'username': string;
 }
 /**
  * 
@@ -714,10 +707,10 @@ export interface ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem {
     'numDislikes': number;
     /**
      * 
-     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername}
+     * @type {string}
      * @memberof ApiV1UserFetchUserCommentsPost200ResponseInnerCommentItem
      */
-    'username': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername;
+    'username': string;
 }
 /**
  * 
@@ -765,10 +758,10 @@ export interface ApiV1UserFetchUserProfilePost200Response {
     'createdAt': string;
     /**
      * 
-     * @type {ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername}
+     * @type {string}
      * @memberof ApiV1UserFetchUserProfilePost200Response
      */
-    'username': ApiV1FeedFetchRecentPost200ResponsePostDataListInnerMetadataAuthorUsername;
+    'username': string;
 }
 /**
  * 

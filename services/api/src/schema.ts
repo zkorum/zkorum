@@ -12,6 +12,7 @@ import {
     unique,
     index,
 } from "drizzle-orm/pg-core";
+import { MAX_LENGTH_USERNAME } from "./shared/shared.js";
 // import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_COMMENT, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 // WARNING - change this in shared.ts as well
 const MAX_LENGTH_OPTION = 30;
@@ -561,7 +562,7 @@ export const userTable = pgTable("user", {
         () => organisationTable.id,
     ), // for now a user can belong to at most 1 organisation
     // username field is set to UUID length (36) because user need to setup username through onboarding
-    username: varchar("username", { length: 36 })
+    username: varchar("username", { length: MAX_LENGTH_USERNAME })
         .notNull()
         .unique(),
     isAnonymous: boolean("is_anonymous").notNull().default(true),

@@ -26,7 +26,7 @@ import parsePhoneNumberFromString, {
 import { log } from "@/app.js";
 import { PEPPER_VERSION, toUnionUndefined } from "@/shared/shared.js";
 import type { HttpErrors } from "@fastify/sensible";
-import { v4 as uuidv4 } from 'uuid';
+import { generateRandomUsername } from "@/shared/services/account.js";
 
 interface VerifyOtpProps {
     db: PostgresDatabase;
@@ -342,7 +342,7 @@ export async function registerWithPhoneNumber({
             })
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         await tx.insert(userTable).values({
-            username: uuidv4(),
+            username: generateRandomUsername(),
             id: userId,
         });
         await tx.insert(deviceTable).values({
