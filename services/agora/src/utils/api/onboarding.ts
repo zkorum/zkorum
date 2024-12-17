@@ -1,7 +1,7 @@
 import { api } from "boot/axios";
 import {
   DefaultApiFactory,
-  type ApiV1OnboardingIsUsernameInUsePostRequest,
+  type ApiV1AccountSubmitUsernameChangePostRequest,
 } from "src/api";
 import { useNotify } from "../ui/notify";
 
@@ -11,7 +11,7 @@ export function useBackendOnboardingApi() {
 
   async function isUsernameInUse(username: string): Promise<boolean | null> {
     try {
-      const params: ApiV1OnboardingIsUsernameInUsePostRequest = {
+      const params: ApiV1AccountSubmitUsernameChangePostRequest = {
         username: username
       }
 

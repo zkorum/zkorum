@@ -16,6 +16,7 @@ import {
 } from "@/service/auth.js";
 import type { HttpErrors } from "@fastify/sensible";
 import { log } from "@/app.js";
+import { generateUUID } from "@/crypto.js";
 import { generateRandomUsername } from "@/shared/services/account.js";
 
 interface GenerateVerificationLinkProps {
@@ -180,7 +181,7 @@ async function getLoggedInState({
             ),
         );
     if (result.length === 0) {
-        return { loggedInState: "not_registered", userId: generateRandomUsername() };
+        return { loggedInState: "not_registered", userId: generateUUID() };
     } else {
         if (result[0].didWrite === null) {
             return {
@@ -269,7 +270,7 @@ export async function verifyUserStatusAndAuthenticate({
                 userAgent,
                 userId,
                 sessionExpiry: loginSessionExpiry,
-                username: "TEST_USER", //TODO: generte random username instead, while waiting for the user to choose another one during onboarding
+                username: generateRandomUsername(), //TODO: generte random username instead, while waiting for the user to choose another one during onboarding
             });
             break;
         }

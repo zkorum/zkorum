@@ -1,5 +1,5 @@
 {
-  "id": "6bf1151d-aa5f-4670-a66d-60ee665b1313",
+  "id": "fabcf010-c672-46a3-b28d-d31879774785",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2341,7 +2341,7 @@
         },
         "username": {
           "name": "username",
-          "type": "varchar(36)",
+          "type": "varchar(23)",
           "primaryKey": false,
           "notNull": true
         },
@@ -2361,13 +2361,6 @@
         },
         "is_deleted": {
           "name": "is_deleted",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "has_setup_username": {
-          "name": "has_setup_username",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

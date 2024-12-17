@@ -12,7 +12,6 @@ import {
     unique,
     index,
 } from "drizzle-orm/pg-core";
-import { MAX_LENGTH_USERNAME } from "./shared/shared.js";
 // import { MAX_LENGTH_OPTION, MAX_LENGTH_TITLE, MAX_LENGTH_COMMENT, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
 // WARNING - change this in shared.ts as well
 const MAX_LENGTH_OPTION = 30;
@@ -20,6 +19,7 @@ const MAX_LENGTH_TITLE = 130;
 const MAX_LENGTH_BODY = 260;
 const MAX_LENGTH_NAME_CREATOR = 65;
 const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
+const MAX_LENGTH_USERNAME = 23;
 
 export const bytea = customType<{
     data: string;
@@ -570,7 +570,6 @@ export const userTable = pgTable("user", {
         .notNull()
         .default(false),
     isDeleted: boolean("is_deleted").notNull().default(false),
-    hasSetupUsername: boolean("has_setup_username").notNull().default(false),
     activePostCount: integer("active_post_count").notNull().default(0), // total posts (without deleted posts)
     totalPostCount: integer("total_post_count").notNull().default(0), // total posts created
     totalCommentCount: integer("total_comment_count").notNull().default(0), // total comments created

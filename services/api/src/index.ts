@@ -47,7 +47,7 @@ import {
     generateVerificationLink,
     verifyUserStatusAndAuthenticate,
 } from "./service/rarimo.js";
-import { deleteUserAccount } from "./service/account.js";
+import { deleteUserAccount, submitUsernameChange } from "./service/account.js";
 import { checkUserNameInUse } from "./service/onboarding.js";
 
 server.register(fastifySensible);
@@ -1043,6 +1043,32 @@ server.after(() => {
                     authHeader: authHeader,
                     db: db,
                     didWrite: didWrite,
+                    userId: status.userId
+                });
+            }
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/account/submit-username-change`,
+        schema: {
+            body: Dto.submitUsernameChangeRequest,
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: {
+                    isLoggedIn: undefined,
+                },
+            });
+
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                await submitUsernameChange({
+                    db: db,
+                    username: request.body.username,
                     userId: status.userId
                 });
             }

@@ -199,6 +199,11 @@ export class Dto {
     static generateVerificationLink200 = z.object({
         verificationLink: z.string().url(),
     });
+    static submitUsernameChangeRequest = z
+        .object({
+            username: zodUsername,
+        })
+        .strict();
     static checkUsernameInUseRequest = z
         .object({
             username: zodUsername,

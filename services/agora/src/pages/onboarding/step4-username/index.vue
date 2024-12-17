@@ -44,6 +44,7 @@ import { generateRandomUsername } from "src/shared/services/account";
 import { MAX_LENGTH_USERNAME } from "src/shared/shared";
 import { zodUsername } from "src/shared/types/zod";
 import { ZodError } from "zod";
+import { useBackendAccountApi } from "src/utils/api/account";
 
 const router = useRouter();
 
@@ -51,6 +52,7 @@ const userNameInvalidMessage = ref("");
 const isValidUsername = ref(true);
 
 const { isUsernameInUse } = useBackendOnboardingApi();
+const { submitUsernameChange } = useBackendAccountApi();
 
 const validationMessage = ref("");
 
@@ -86,8 +88,13 @@ function refreshName() {
   userName.value = generateRandomUsername();
 }
 
-function goToNextRoute() {
-  router.push({ name: "onboarding-step5-experience" });
+async function goToNextRoute() {
+  const isSuccessful = await submitUsernameChange(userName.value);
+  if (isSuccessful) {
+    router.push({ name: "onboarding-step5-experience" });
+  } else {
+    userName.value = "";
+  }
 }
 
 </script>

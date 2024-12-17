@@ -8,6 +8,39 @@ import { deletePostBySlugId } from "./post.js";
 import { nowZeroMs } from "@/shared/common/util.js";
 import { logout } from "./auth.js";
 import { httpErrors } from "@fastify/sensible";
+import { checkUserNameInUse } from "./onboarding.js";
+
+interface SubmitUsernameChangeProps {
+  db: PostgresJsDatabase;
+  username: string;
+  userId: string;
+}
+
+export async function submitUsernameChange({
+  db, username, userId
+}: SubmitUsernameChangeProps) {
+
+  // Check if the username is available
+  const isInUse = await checkUserNameInUse({
+    db: db,
+    username: username
+  })
+  if (isInUse) {
+    throw httpErrors.badRequest("The requested username is already in use");
+  }
+
+  const userTableResponse = await db.update(userTable)
+    .set({
+      username: username,
+      updatedAt: nowZeroMs()
+    })
+    .where(eq(userTable.id, userId));
+  if (userTableResponse.length === 0) {
+    throw httpErrors.internalServerError(
+      "Failed to delete user account"
+    );
+  }
+}
 
 interface DeleteAccountProps {
   db: PostgresJsDatabase;

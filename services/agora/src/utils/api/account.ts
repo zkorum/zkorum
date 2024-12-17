@@ -2,6 +2,7 @@ import { api } from "boot/axios";
 import {
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
+  type ApiV1AccountSubmitUsernameChangePostRequest,
 } from "src/api";
 import { useNotify } from "../ui/notify";
 import { useCommonApi } from "./common";
@@ -11,6 +12,36 @@ export function useBackendAccountApi() {
   const { buildEncodedUcan } = useCommonApi();
 
   const { showNotifyMessage } = useNotify();
+
+  async function submitUsernameChange(username: string): Promise<boolean> {
+    try {
+      const params: ApiV1AccountSubmitUsernameChangePostRequest = {
+        username: username
+      };
+
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1AccountSubmitUsernameChangePost(params);
+      const encodedUcan = await buildEncodedUcan(url, options);
+      await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1AccountSubmitUsernameChangePost(
+        params,
+        {
+          headers: {
+            ...buildAuthorizationHeader(encodedUcan),
+          },
+        }
+      );
+      showNotifyMessage("Username changed");
+      return true;
+    } catch (e) {
+      console.error(e);
+      showNotifyMessage("Failed to change username");
+      return false;
+    }
+  }
 
   async function deleteUserAccount(): Promise<boolean> {
     try {
@@ -38,6 +69,7 @@ export function useBackendAccountApi() {
   }
 
   return {
-    deleteUserAccount
+    deleteUserAccount,
+    submitUsernameChange
   };
 }
