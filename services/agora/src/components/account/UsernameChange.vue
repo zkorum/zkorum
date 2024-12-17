@@ -27,6 +27,7 @@ import { ref, onMounted, watch } from "vue";
 import { ZodError } from "zod";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { useUserStore } from "src/stores/user";
+import { storeToRefs } from "pinia";
 
 defineProps<{
   showSubmitButton: boolean
@@ -34,7 +35,8 @@ defineProps<{
 
 const emit = defineEmits(["isValidUsername", "userName"])
 
-const { profileData, loadUserProfile } = useUserStore();
+const { profileData } = storeToRefs(useUserStore());
+const { loadUserProfile } = useUserStore();
 
 const userNameInvalidMessage = ref("");
 const isValidUsername = ref(true);
@@ -51,7 +53,7 @@ const userName = ref("");
 
 onMounted(async () => {
   await loadUserProfile();
-  userName.value = profileData.userName;
+  userName.value = profileData.value.userName;
 })
 
 watch(userName, () => {
@@ -63,7 +65,7 @@ watch(isValidUsername, () => {
 });
 
 async function submitButtonClicked() {
-  await submitUsernameChange(userName.value, profileData.userName);
+  await submitUsernameChange(userName.value, profileData.value.userName);
 }
 
 async function nameContainsValidCharacters(): Promise<boolean> {
@@ -72,7 +74,7 @@ async function nameContainsValidCharacters(): Promise<boolean> {
 
     const isInUse = await isUsernameInUse(userName.value);
     if (isInUse) {
-      if (userName.value == profileData.userName) {
+      if (userName.value == profileData.value.userName) {
         isValidUsername.value = true;
         userNameInvalidMessage.value = "";
         return true;

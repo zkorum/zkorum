@@ -13,31 +13,14 @@
 
 <script setup lang="ts">
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import { usePostStore } from "src/stores/post";
-import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-
-const { resetPostData } = usePostStore();
-
-onMounted(() => {
-  resetPostData();
-})
 
 function skipAuthentication() {
   router.push({ name: "default-home-feed" });
 }
 
-/*
-function isDevMode() {
-  if (process.env.DEV) {
-    return true;
-  } else {
-    return false;
-  }
-}
-  */
 </script>
 
 <style scoped>

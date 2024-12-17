@@ -32,6 +32,7 @@ import { useBackendAccountApi } from "src/utils/api/account";
 import UsernameChange from "src/components/account/UsernameChange.vue";
 import { ref } from "vue";
 import { useUserStore } from "src/stores/user";
+import { storeToRefs } from "pinia";
 
 const {
   submitUsernameChange,
@@ -42,10 +43,10 @@ const userName = ref("");
 
 const router = useRouter();
 
-const { profileData } = useUserStore();
+const { profileData } = storeToRefs(useUserStore());
 
 async function goToNextRoute() {
-  const isSuccessful = await submitUsernameChange(userName.value, profileData.userName);
+  const isSuccessful = await submitUsernameChange(userName.value, profileData.value.userName);
   if (isSuccessful) {
     router.push({ name: "onboarding-step5-preferences" });
   }
