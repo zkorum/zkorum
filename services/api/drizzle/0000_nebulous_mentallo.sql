@@ -276,8 +276,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"total_comment_count" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
-	CONSTRAINT "user_username_unique" UNIQUE("username"),
-	CONSTRAINT "user_unique_username" UNIQUE("username")
+	CONSTRAINT "user_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "vote_content" (

@@ -561,7 +561,6 @@ export const userTable = pgTable("user", {
     organisationId: integer("organisation_id").references(
         () => organisationTable.id,
     ), // for now a user can belong to at most 1 organisation
-    // username field is set to UUID length (36) because user need to setup username through onboarding
     username: varchar("username", { length: MAX_LENGTH_USERNAME })
         .notNull()
         .unique(),
@@ -585,10 +584,6 @@ export const userTable = pgTable("user", {
     })
         .defaultNow()
         .notNull(),
-}, (t) => {
-    return {
-        userIdx: unique("user_unique_username").on(t.username),
-    };
 });
 
 export const userLanguagePreferenceTable = pgTable("user_language_preference", {

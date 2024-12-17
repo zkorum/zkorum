@@ -1,6 +1,6 @@
 <template>
   <q-input v-model="userName" label="Username" outlined :maxlength="MAX_LENGTH_USERNAME" :error="!isValidUsername"
-    :error-message="userNameInvalidMessage" @update:model-value="nameContainsValidCharacters">
+    :error-message="userNameInvalidMessage" no-error-icon @update:model-value="nameContainsValidCharacters">
     <template #append>
       <div class="inputButtons">
         <q-icon v-if="isValidUsername" name="mdi-check" text-color="red" />

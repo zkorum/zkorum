@@ -1,5 +1,5 @@
 {
-  "id": "fabcf010-c672-46a3-b28d-d31879774785",
+  "id": "6aab1b51-9ec7-4c0a-848f-88560d209bf6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2422,13 +2422,6 @@
       "uniqueConstraints": {
         "user_username_unique": {
           "name": "user_username_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
-        },
-        "user_unique_username": {
-          "name": "user_unique_username",
           "nullsNotDistinct": false,
           "columns": [
             "username"
