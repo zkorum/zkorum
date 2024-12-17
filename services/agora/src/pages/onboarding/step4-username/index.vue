@@ -13,7 +13,7 @@
             How do you want to appear in Agora?
           </div>
 
-          <UsernameChange @is-valid-username="(value) => isValidUsername = value"
+          <UsernameChange :show-submit-button="false" @is-valid-username="(value) => isValidUsername = value"
             @user-name="(value) => userName = value" />
 
         </div>

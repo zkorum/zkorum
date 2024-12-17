@@ -47,9 +47,9 @@ async function logoutRequested() {
 
 const accountSettings: SettingsInterface[] = [
   {
-    icon: "mdi-rename",
-    label: "Change Username",
-    action: () => { router.push({ name: "onboarding-step4-username" }) },
+    icon: "mdi-account",
+    label: "Profile",
+    action: () => { router.push({ name: "settings-account-profile" }) },
     isWarning: false
   },
   {

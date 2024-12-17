@@ -13,6 +13,10 @@
       {{ validationMessage }}
     </template>
   </q-input>
+
+  <ZKButton v-if="showSubmitButton" :disable="!isValidUsername" label="Update" color="primary"
+    @click="submitButtonClicked()" />
+
 </template>
 
 <script setup lang="ts">
@@ -24,6 +28,10 @@ import { ZodError } from "zod";
 import ZKButton from "../ui-library/ZKButton.vue";
 import { useUserStore } from "src/stores/user";
 
+defineProps<{
+  showSubmitButton: boolean
+}>();
+
 const emit = defineEmits(["isValidUsername", "userName"])
 
 const { profileData, loadUserProfile } = useUserStore();
@@ -33,7 +41,8 @@ const isValidUsername = ref(true);
 
 const {
   isUsernameInUse,
-  generateUnusedRandomUsername
+  generateUnusedRandomUsername,
+  submitUsernameChange
 } = useBackendAccountApi();
 
 const validationMessage = ref("");
@@ -52,6 +61,10 @@ watch(userName, () => {
 watch(isValidUsername, () => {
   emit("isValidUsername", isValidUsername.value);
 });
+
+async function submitButtonClicked() {
+  await submitUsernameChange(userName.value, profileData.value.userName);
+}
 
 async function nameContainsValidCharacters(): Promise<boolean> {
   try {
