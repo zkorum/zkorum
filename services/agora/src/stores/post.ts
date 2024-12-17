@@ -4,6 +4,7 @@ import { useStorage } from "@vueuse/core";
 import { useBackendPostApi } from "src/utils/api/post";
 import { useAuthenticationStore } from "./authentication";
 import type { ExtendedPost } from "src/shared/types/zod";
+import { useUserStore } from "./user";
 
 export interface DummyPollOptionFormat {
   index: number;
@@ -71,6 +72,9 @@ export interface DummyPostDataFormat extends ExtendedPost {
 
 export const usePostStore = defineStore("post", () => {
   const { fetchRecentPost, composeInternalPostList } = useBackendPostApi();
+
+  const { loadUserProfile } = useUserStore();
+
   const { isAuthenticated } = storeToRefs(useAuthenticationStore());
 
   const dataReady = ref(false);
@@ -182,6 +186,7 @@ export const usePostStore = defineStore("post", () => {
   function resetPostData() {
     masterPostDataList.value = [];
     loadPostData(false);
+    loadUserProfile();
   }
 
   return {

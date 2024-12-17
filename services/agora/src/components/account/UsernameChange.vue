@@ -22,8 +22,11 @@ import { useBackendAccountApi } from "src/utils/api/account";
 import { ref, onMounted, watch } from "vue";
 import { ZodError } from "zod";
 import ZKButton from "../ui-library/ZKButton.vue";
+import { useUserStore } from "src/stores/user";
 
 const emit = defineEmits(["isValidUsername", "userName"])
+
+const { profileData, loadUserProfile } = useUserStore();
 
 const userNameInvalidMessage = ref("");
 const isValidUsername = ref(true);
@@ -38,7 +41,9 @@ const validationMessage = ref("");
 const userName = ref("");
 
 onMounted(async () => {
-  userName.value = await generateUnusedRandomUsername();
+  await loadUserProfile();
+  userName.value = profileData.value.userName;
+  nameContainsValidCharacters();
 })
 
 watch(userName, () => {
@@ -56,7 +61,7 @@ async function nameContainsValidCharacters(): Promise<boolean> {
     const isInUse = await isUsernameInUse(userName.value);
     if (isInUse) {
       isValidUsername.value = false;
-      userNameInvalidMessage.value = "The entered username is already in use"
+      userNameInvalidMessage.value = "This username is currently in use"
       return false;
     } else {
       isValidUsername.value = true;
