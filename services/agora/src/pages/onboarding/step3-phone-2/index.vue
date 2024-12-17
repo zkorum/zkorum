@@ -1,7 +1,7 @@
 <template>
   <div>
     <form class="formStyle" @submit.prevent="">
-      <StepperLayout :submit-call-back="nextButtonClicked" :current-step="3.5" :total-steps="6"
+      <StepperLayout :submit-call-back="nextButtonClicked" :current-step="3.5" :total-steps="5"
         :enable-next-button="verificationCode.length == 6" :show-next-button="true">
 
         <template #header>
