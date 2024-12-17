@@ -7,9 +7,12 @@ import {
 import { useNotify } from "../ui/notify";
 import { useCommonApi } from "./common";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
+import { usePostStore } from "src/stores/post";
 
 export function useBackendAccountApi() {
   const { buildEncodedUcan } = useCommonApi();
+
+  const { loadPostData } = usePostStore();
 
   const { showNotifyMessage } = useNotify();
 
@@ -34,6 +37,7 @@ export function useBackendAccountApi() {
           },
         }
       );
+      await loadPostData(false);
       showNotifyMessage("Username changed");
       return true;
     } catch (e) {
