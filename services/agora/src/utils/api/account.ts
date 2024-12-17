@@ -7,13 +7,24 @@ import {
 import { useNotify } from "../ui/notify";
 import { useCommonApi } from "./common";
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
+import { usePostStore } from "src/stores/post";
+import { useUserStore } from "src/stores/user";
 
 export function useBackendAccountApi() {
   const { buildEncodedUcan } = useCommonApi();
 
+  const { loadPostData } = usePostStore();
+  const { loadUserProfile } = useUserStore();
+
   const { showNotifyMessage } = useNotify();
 
-  async function submitUsernameChange(username: string): Promise<boolean> {
+  async function submitUsernameChange(username: string, profileUsername: string): Promise<boolean> {
+
+    if (username == profileUsername) {
+      showNotifyMessage("Username changed");
+      return true;
+    }
+
     try {
       const params: ApiV1AccountSubmitUsernameChangePostRequest = {
         username: username
@@ -34,11 +45,13 @@ export function useBackendAccountApi() {
           },
         }
       );
-      showNotifyMessage("Username changed");
+      await loadPostData(false);
+      await loadUserProfile();
+      showNotifyMessage("Username updated");
       return true;
     } catch (e) {
       console.error(e);
-      showNotifyMessage("Failed to change username");
+      showNotifyMessage("Failed to update username");
       return false;
     }
   }
