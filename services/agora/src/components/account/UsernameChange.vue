@@ -51,7 +51,7 @@ const userName = ref("");
 
 onMounted(async () => {
   await loadUserProfile();
-  userName.value = profileData.value.userName;
+  userName.value = profileData.userName;
 })
 
 watch(userName, () => {
@@ -63,7 +63,7 @@ watch(isValidUsername, () => {
 });
 
 async function submitButtonClicked() {
-  await submitUsernameChange(userName.value, profileData.value.userName);
+  await submitUsernameChange(userName.value, profileData.userName);
 }
 
 async function nameContainsValidCharacters(): Promise<boolean> {
@@ -72,7 +72,7 @@ async function nameContainsValidCharacters(): Promise<boolean> {
 
     const isInUse = await isUsernameInUse(userName.value);
     if (isInUse) {
-      if (userName.value == profileData.value.userName) {
+      if (userName.value == profileData.userName) {
         isValidUsername.value = true;
         userNameInvalidMessage.value = "";
         return true;

@@ -20,8 +20,10 @@ export function useBackendAccountApi() {
 
   async function submitUsernameChange(username: string, profileUsername: string): Promise<boolean> {
 
+    const NAME_UPDATE_SUCCESS_MESSAGE = "Username updated";
+
     if (username == profileUsername) {
-      showNotifyMessage("Username changed");
+      showNotifyMessage(NAME_UPDATE_SUCCESS_MESSAGE);
       return true;
     }
 
@@ -47,7 +49,7 @@ export function useBackendAccountApi() {
       );
       await loadPostData(false);
       await loadUserProfile();
-      showNotifyMessage("Username updated");
+      showNotifyMessage(NAME_UPDATE_SUCCESS_MESSAGE);
       return true;
     } catch (e) {
       console.error(e);

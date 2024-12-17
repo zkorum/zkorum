@@ -1,8 +1,9 @@
 import { useStorage } from "@vueuse/core";
 import { useBackendUserApi } from "src/utils/api/user";
 import type { ExtendedComment, ExtendedPost } from "src/shared/types/zod";
+import { defineStore } from "pinia";
 
-export function useUserStore() {
+export const useUserStore = defineStore("user", () => {
 
   const { fetchUserProfile, fetchUserPosts, fetchUserComments } = useBackendUserApi();
 
@@ -23,6 +24,10 @@ export function useUserStore() {
   };
 
   const profileData = useStorage("user-profile-data", emptyProfile);
+
+  function clearProfileData() {
+    profileData.value = emptyProfile;
+  }
 
   async function loadUserProfile() {
     const [userProfile, userPosts, userComments] = await Promise.all([
@@ -65,7 +70,7 @@ export function useUserStore() {
     return { reachedEndOfFeed: userComments.length == 0 };
   }
 
-  return { loadUserProfile, loadMoreUserPosts, loadMoreUserComments, profileData };
+  return { loadUserProfile, loadMoreUserPosts, loadMoreUserComments, clearProfileData, profileData };
 
-}
+});
 

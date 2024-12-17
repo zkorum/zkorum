@@ -45,7 +45,7 @@ const router = useRouter();
 const { profileData } = useUserStore();
 
 async function goToNextRoute() {
-  const isSuccessful = await submitUsernameChange(userName.value, profileData.value.userName);
+  const isSuccessful = await submitUsernameChange(userName.value, profileData.userName);
   if (isSuccessful) {
     router.push({ name: "onboarding-step5-preferences" });
   }
