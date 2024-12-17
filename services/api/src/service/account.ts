@@ -161,10 +161,11 @@ export async function submitUsernameChange({
       username: username,
       updatedAt: nowZeroMs()
     })
-    .where(eq(userTable.id, userId));
-  if (userTableResponse.length === 0) {
+    .where(eq(userTable.id, userId))
+    .returning({ userId: userTable.id});
+  if (userTableResponse.length != 1) {
     throw httpErrors.internalServerError(
-      "Failed to delete user account"
+      "Failed to update the user table with the new username"
     );
   }
 }
