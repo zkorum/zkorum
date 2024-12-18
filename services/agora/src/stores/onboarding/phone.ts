@@ -1,5 +1,5 @@
-import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
+import { ref } from "vue";
 
 export const phoneVerificationStore = defineStore("phoneVerification", () => {
 
@@ -13,7 +13,7 @@ export const phoneVerificationStore = defineStore("phoneVerification", () => {
     defaultCallingCode: ""
   }
 
-  const verificationPhoneNumber = useStorage("verification-phone-number", EMPTY_NUMBER);
+  const verificationPhoneNumber = ref(EMPTY_NUMBER);
 
   return { verificationPhoneNumber };
 });

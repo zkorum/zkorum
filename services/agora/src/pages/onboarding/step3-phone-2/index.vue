@@ -75,7 +75,11 @@ const { requestCode, submitCode } = useBackendPhoneVerification();
 const { onboardingMode } = onboardingFlowStore();
 
 onMounted(() => {
-  requestCodeClicked(false);
+  if (verificationPhoneNumber.value.phoneNumber == "") {
+    changePhoneNumber();
+  } else {
+    requestCodeClicked(false);
+  }
 });
 
 function clickedResendButton() {
