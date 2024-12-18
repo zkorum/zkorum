@@ -36,7 +36,7 @@ export const useBottomSheet = () => {
       id: "report",
     });
 
-    if (profileData.value.userName == posterUserName) {
+    if (profileData.userName == posterUserName) {
       actionList.push({
         label: "Delete",
         icon: "mdi-delete",
@@ -84,7 +84,7 @@ export const useBottomSheet = () => {
       id: "report",
     });
 
-    if (profileData.value.userName == posterUserName) {
+    if (profileData.userName == posterUserName) {
       actionList.push({
         label: "Delete",
         icon: "mdi-delete",

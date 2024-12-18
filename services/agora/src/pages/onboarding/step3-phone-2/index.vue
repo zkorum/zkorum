@@ -1,7 +1,7 @@
 <template>
   <div>
     <form class="formStyle" @submit.prevent="">
-      <StepperLayout :submit-call-back="nextButtonClicked" :current-step="3.5" :total-steps="6"
+      <StepperLayout :submit-call-back="nextButtonClicked" :current-step="3.5" :total-steps="5"
         :enable-next-button="verificationCode.length == 6" :show-next-button="true">
 
         <template #header>
@@ -47,7 +47,7 @@
 import StepperLayout from "src/components/onboarding/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/InfoHeader.vue";
 import { storeToRefs } from "pinia";
-import { phoneVerificationStore } from "src/stores/verification/phone";
+import { phoneVerificationStore } from "src/stores/onboarding/phone";
 import { onMounted, ref } from "vue";
 import InputOtp from "primevue/inputotp";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
@@ -56,6 +56,7 @@ import { useBackendPhoneVerification } from "src/utils/api/phoneVerification";
 import { useDialog } from "src/utils/ui/dialog";
 import type { ApiV1AuthAuthenticatePost200Response } from "src/api";
 import { useAuthSetup } from "src/utils/auth/setup";
+import { onboardingFlowStore } from "src/stores/onboarding/flow";
 
 const { verificationPhoneNumber } = storeToRefs(phoneVerificationStore());
 
@@ -71,8 +72,14 @@ const { userLogin } = useAuthSetup();
 
 const { requestCode, submitCode } = useBackendPhoneVerification();
 
+const { onboardingMode } = onboardingFlowStore();
+
 onMounted(() => {
-  requestCodeClicked(false);
+  if (verificationPhoneNumber.value.phoneNumber == "") {
+    changePhoneNumber();
+  } else {
+    requestCodeClicked(false);
+  }
 });
 
 function clickedResendButton() {
@@ -83,7 +90,11 @@ function clickedResendButton() {
 async function nextButtonClicked() {
   const response = await submitCode(Number(verificationCode.value));
   if (response) {
-    router.push({ name: "onboarding-step4-username" });
+    if (onboardingMode == "LOGIN") {
+      router.push({ name: "default-home-feed" });
+    } else {
+      router.push({ name: "onboarding-step4-username" });
+    }
   } else {
     dialog.showMessage("Authentication", "Invalid code");
   }

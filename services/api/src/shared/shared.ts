@@ -1,3 +1,4 @@
+/** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/
 // Copyright ts-odd team
 // Apache v2 License
 // Extracted from: https://github.com/oddsdk/ts-odd/tree/f90bde37416d9986d1c0afed406182a95ce7c1d7
@@ -64,8 +65,8 @@ export const MAX_LENGTH_TITLE = 130; // 140 is LinkedIn question limit
 export const MAX_LENGTH_BODY = 260;
 export const MAX_LENGTH_NAME_CREATOR = 65;
 export const MAX_LENGTH_COMMENT = 280; // tweet and community notes max length
-export const MAX_LENGTH_USERNAME = 23;
-export const MIN_LENGTH_USERNAME = 3;
+export const MAX_LENGTH_USERNAME = 40;
+export const MIN_LENGTH_USERNAME = 2;
 
 export const PEPPER_VERSION = 0;
 

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <StepperLayout :submit-call-back="() => { }" :current-step="3" :total-steps="6" :enable-next-button="true"
+    <StepperLayout :submit-call-back="() => { }" :current-step="3" :total-steps="5" :enable-next-button="true"
       :show-next-button="false">
       <template #header>
         <InfoHeader title="Own Your Privacy" :description="description" icon-name="mdi-wallet" />
@@ -95,6 +95,7 @@ import { buildAuthorizationHeader } from "src/utils/crypto/ucan/operation";
 import { useNotify } from "src/utils/ui/notify";
 import { onUnmounted } from "vue";
 import { useWebShare } from "src/utils/share/WebShare";
+import { onboardingFlowStore } from "src/stores/onboarding/flow";
 
 const description =
   "RariMe is a ZK-powered identity wallet that converts your passport into an anonymous digital ID, stored on your device, so you can prove that you’re a unique human without sharing any personal data with anyone.";
@@ -118,6 +119,8 @@ const { userLogin } = useAuthSetup();
 const rarimeStoreLink = ref("");
 
 const verificationLinkGenerationFailed = ref(false);
+
+const { onboardingMode } = onboardingFlowStore();
 
 if (quasar.platform.is.android) {
   rarimeStoreLink.value =
@@ -198,7 +201,12 @@ async function clickedVerifyButton() {
 async function completeVerification() {
   showNotifyMessage("Verification successful 🎉");
   await userLogin();
-  router.push({ name: "onboarding-step4-username" });
+
+  if (onboardingMode == "LOGIN") {
+    router.push({ name: "default-home-feed" });
+  } else {
+    router.push({ name: "onboarding-step4-username" });
+  }
 }
 
 function goToPhoneVerification() {

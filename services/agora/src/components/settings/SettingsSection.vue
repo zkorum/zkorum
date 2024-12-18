@@ -9,18 +9,16 @@
         <div class="flexStyle">
           <div v-for="(item, index) in settingsItemList" :key="item.icon">
             <ZKHoverEffect :enable-hover="true">
-              <RouterLink :to="{ name: item.routeName }">
-                <div class="menuItem" :class="{ isWarningStyle: item.isWarning }" @click="item.action">
-                  <div>
-                    <q-icon :name="item.icon" size="1.5rem" />
-                  </div>
-                  <div>
-                    {{ item.label }}
-                  </div>
+              <div class="menuItem" :class="{ isWarningStyle: item.isWarning }" @click="item.action">
+                <div>
+                  <q-icon :name="item.icon" size="1.5rem" />
                 </div>
+                <div>
+                  {{ item.label }}
+                </div>
+              </div>
 
-                <q-separator v-if="index != settingsItemList.length - 1" />
-              </RouterLink>
+              <q-separator v-if="index != settingsItemList.length - 1" />
             </ZKHoverEffect>
 
           </div>

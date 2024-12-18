@@ -9,7 +9,6 @@ import { type AxiosInstance } from "axios";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { and, eq } from "drizzle-orm";
 import { nowZeroMs } from "@/shared/common/util.js";
-import { generateUUID } from "@/crypto.js";
 import {
     loginKnownDevice,
     loginNewDevice,
@@ -17,6 +16,8 @@ import {
 } from "@/service/auth.js";
 import type { HttpErrors } from "@fastify/sensible";
 import { log } from "@/app.js";
+import { generateUUID } from "@/crypto.js";
+import { generateUnusedRandomUsername } from "./account.js";
 
 interface GenerateVerificationLinkProps {
     didWrite: string;
@@ -269,7 +270,7 @@ export async function verifyUserStatusAndAuthenticate({
                 userAgent,
                 userId,
                 sessionExpiry: loginSessionExpiry,
-                username: "TEST_USER", //TODO: generte random username instead, while waiting for the user to choose another one during onboarding
+                username: await generateUnusedRandomUsername({db: db})
             });
             break;
         }

@@ -51,11 +51,7 @@ export function useBackendAuthApi() {
         undefined,
         api
       ).apiV1AuthAuthenticatePost(
-        {
-          phoneNumber: phoneNumber,
-          defaultCallingCode: defaultCallingCode,
-          isRequestingNewCode: isRequestingNewCode,
-        },
+        params,
         {
           headers: {
             ...buildAuthorizationHeader(encodedUcan),

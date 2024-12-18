@@ -1,3 +1,4 @@
+/** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MOFIFY THIS FILE DIRECTLY! **** **/
 import { z } from "zod";
 import {
     zodExtendedPostData,
@@ -199,12 +200,19 @@ export class Dto {
     static generateVerificationLink200 = z.object({
         verificationLink: z.string().url(),
     });
-    static isUsernameInUseRequest = z
+    static submitUsernameChangeRequest = z
         .object({
             username: zodUsername,
         })
         .strict();
+    static checkUsernameInUseRequest = z
+        .object({
+            username: zodUsername,
+        })
+        .strict();
+    static checkUsernameInUseResponse = z.boolean();
     static isUsernameInUseResponse = z.boolean();
+    static generateUnusedRandomUsernameResponse = z.string();
     // this generates enum with openapigenerator without the verified state...
     // static verifyUserStatusAndAuthenticate200 = z.discriminatedUnion(
     //     "rarimoStatus",

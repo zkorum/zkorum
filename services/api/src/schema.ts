@@ -19,6 +19,7 @@ const MAX_LENGTH_TITLE = 130;
 const MAX_LENGTH_BODY = 260;
 const MAX_LENGTH_NAME_CREATOR = 65;
 const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
+const MAX_LENGTH_USERNAME = 40;
 
 export const bytea = customType<{
     data: string;
@@ -560,8 +561,7 @@ export const userTable = pgTable("user", {
     organisationId: integer("organisation_id").references(
         () => organisationTable.id,
     ), // for now a user can belong to at most 1 organisation
-    // username field is set to UUID length (36) because user need to setup username through onboarding
-    username: varchar("username", { length: 36 })
+    username: varchar("username", { length: MAX_LENGTH_USERNAME })
         .notNull()
         .unique(),
     isAnonymous: boolean("is_anonymous").notNull().default(true),
@@ -569,7 +569,6 @@ export const userTable = pgTable("user", {
         .notNull()
         .default(false),
     isDeleted: boolean("is_deleted").notNull().default(false),
-    hasSetupUsername: boolean("has_setup_username").notNull().default(false),
     activePostCount: integer("active_post_count").notNull().default(0), // total posts (without deleted posts)
     totalPostCount: integer("total_post_count").notNull().default(0), // total posts created
     totalCommentCount: integer("total_comment_count").notNull().default(0), // total comments created
@@ -585,32 +584,35 @@ export const userTable = pgTable("user", {
     })
         .defaultNow()
         .notNull(),
-}, (t) => {
-    return {
-        userIdx: unique("user_unique_username").on(t.username),
-    };
 });
 
-export const userLanguagePreferenceTable = pgTable("user_language_preference", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    userId: uuid("user_id")
-        .references(() => userTable.id)
-        .notNull(),
-    langId: integer("lang_id")
-        .references(() => userLanguageTable.id)
-        .notNull(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-}, (t) => {
-    return {
-        userIdx: index("user_idx_lang").on(t.userId),
-        unqPreference: unique("user_unique_language").on(t.userId, t.langId),
-    };
-});
+export const userLanguagePreferenceTable = pgTable(
+    "user_language_preference",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        userId: uuid("user_id")
+            .references(() => userTable.id)
+            .notNull(),
+        langId: integer("lang_id")
+            .references(() => userLanguageTable.id)
+            .notNull(),
+        createdAt: timestamp("created_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+    },
+    (t) => {
+        return {
+            userIdx: index("user_idx_lang").on(t.userId),
+            unqPreference: unique("user_unique_language").on(
+                t.userId,
+                t.langId,
+            ),
+        };
+    },
+);
 
 export const userLanguageTable = pgTable("user_language", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -636,27 +638,33 @@ export const postTopicTable = pgTable("post_topic", {
         .notNull(),
 });
 
-export const userPostTopicPreferenceTable = pgTable("user_post_topic_preference", {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    userId: uuid("user_id")
-        .references(() => userTable.id)
-        .notNull(),
-    postTagId: integer("post_tag_id")
-        .references(() => postTopicTable.id)
-        .notNull(),
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-}, (t) => {
-    return {
-        userIdx: index("user_idx_topic").on(t.userId),
-        unqPreference: unique("user_unique_topic").on(t.userId, t.postTagId),
-    };
-});
-
+export const userPostTopicPreferenceTable = pgTable(
+    "user_post_topic_preference",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        userId: uuid("user_id")
+            .references(() => userTable.id)
+            .notNull(),
+        postTagId: integer("post_tag_id")
+            .references(() => postTopicTable.id)
+            .notNull(),
+        createdAt: timestamp("created_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+    },
+    (t) => {
+        return {
+            userIdx: index("user_idx_topic").on(t.userId),
+            unqPreference: unique("user_unique_topic").on(
+                t.userId,
+                t.postTagId,
+            ),
+        };
+    },
+);
 
 export const organisationTable = pgTable("organisation", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

@@ -47,8 +47,12 @@ import {
     generateVerificationLink,
     verifyUserStatusAndAuthenticate,
 } from "./service/rarimo.js";
-import { deleteUserAccount } from "./service/account.js";
-import { checkUserNameExist } from "./service/onboarding.js";
+import {
+    checkUserNameInUse,
+    deleteUserAccount,
+    generateUnusedRandomUsername,
+    submitUsernameChange,
+} from "./service/account.js";
 
 server.register(fastifySensible);
 server.register(fastifyAuth);
@@ -1025,8 +1029,7 @@ server.after(() => {
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/account/delete-user`,
-        schema: {
-        },
+        schema: {},
         handler: async (request) => {
             const didWrite = await verifyUCAN(db, request, {
                 expectedDeviceStatus: {
@@ -1043,7 +1046,7 @@ server.after(() => {
                     authHeader: authHeader,
                     db: db,
                     didWrite: didWrite,
-                    userId: status.userId
+                    userId: status.userId,
                 });
             }
         },
@@ -1051,21 +1054,61 @@ server.after(() => {
 
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
-        url: `/api/${apiVersion}/onboarding/is_username_in_use`,
+        url: `/api/${apiVersion}/account/submit-username-change`,
         schema: {
-            body: Dto.isUsernameInUseRequest,
+            body: Dto.submitUsernameChangeRequest,
+        },
+        handler: async (request) => {
+            const didWrite = await verifyUCAN(db, request, {
+                expectedDeviceStatus: {
+                    isLoggedIn: undefined,
+                },
+            });
+
+            const status = await authUtilService.isLoggedIn(db, didWrite);
+            if (!status.isLoggedIn) {
+                throw server.httpErrors.unauthorized("Device is not logged in");
+            } else {
+                await submitUsernameChange({
+                    db: db,
+                    username: request.body.username,
+                    userId: status.userId,
+                });
+            }
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/account/is-username-in-use`,
+        schema: {
+            body: Dto.checkUsernameInUseRequest,
             response: {
-                200: Dto.isUsernameInUseResponse,
+                200: Dto.checkUsernameInUseResponse,
             },
         },
         handler: async (request) => {
-            return await checkUserNameExist({
+            return await checkUserNameInUse({
                 db: db,
-                username: request.body.username
+                username: request.body.username,
             });
         },
     });
 
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/account/generate-unused-random-username`,
+        schema: {
+            response: {
+                200: Dto.generateUnusedRandomUsernameResponse,
+            },
+        },
+        handler: async () => {
+            return await generateUnusedRandomUsername({
+                db: db,
+            });
+        },
+    });
 });
 
 server.ready((e) => {

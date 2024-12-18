@@ -135,6 +135,22 @@ const routes: RouteRecordRaw[] = [
         name: "settings-page",
       },
       {
+        path: "/settings/account/profile",
+        components: {
+          default: () => import("pages/settings/account/profile/index.vue"),
+          topmenubar: DefaultMenuBar,
+        },
+        props: {
+          topmenubar: {
+            hasBackButton: false,
+            hasSettingsButton: true,
+            hasCloseButton: true,
+            hasLoginButton: true,
+          } as DefaultMenuBarProps,
+        },
+        name: "settings-account-profile",
+      },
+      {
         path: "/legal/privacy",
         components: {
           default: () => import("pages/legal/privacy/index.vue"),
@@ -357,7 +373,7 @@ const routes: RouteRecordRaw[] = [
         components: {
           default: () =>
             import(
-              "src/pages/onboarding/step5-experience/index.vue"
+              "src/pages/onboarding/step5-preferences/index.vue"
             ),
           topmenubar: DefaultMenuBar,
         },
@@ -369,26 +385,7 @@ const routes: RouteRecordRaw[] = [
             hasLoginButton: false,
           } as DefaultMenuBarProps,
         },
-        name: "onboarding-step5-experience",
-      },
-      {
-        path: "step6-preferences",
-        components: {
-          default: () =>
-            import(
-              "src/pages/onboarding/step6-preferences/index.vue"
-            ),
-          topmenubar: DefaultMenuBar,
-        },
-        props: {
-          topmenubar: {
-            hasBackButton: true,
-            hasSettingsButton: false,
-            hasCloseButton: false,
-            hasLoginButton: false,
-          } as DefaultMenuBarProps,
-        },
-        name: "onboarding-step6-preferences",
+        name: "onboarding-step5-preferences",
       },
     ]
   },

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <StepperLayout :submit-call-back="() => { }" :current-step="1" :total-steps="6" :enable-next-button="true"
+    <StepperLayout :submit-call-back="() => { }" :current-step="1" :total-steps="5" :enable-next-button="true"
       :show-next-button="false">
 
       <template #header>
@@ -24,7 +24,7 @@ import InfoHeader from "src/components/onboarding/InfoHeader.vue";
 import { useRouter } from "vue-router";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 
-const description = "";
+const description = "Please select a log in method.";
 
 const router = useRouter();
 
