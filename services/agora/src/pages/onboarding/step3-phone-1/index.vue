@@ -78,7 +78,7 @@ import { useDialog } from "src/utils/ui/dialog";
 import Select from "primevue/select";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import { phoneVerificationStore } from "src/stores/verification/phone";
+import { phoneVerificationStore } from "src/stores/onboarding/phone";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 
 const dialog = useDialog();
@@ -99,7 +99,7 @@ interface SelectItem {
 }
 const countries = ref<SelectItem[]>([]);
 
-const { verificationPhoneNumber: verificationNumber } = storeToRefs(
+const { verificationPhoneNumber } = storeToRefs(
   phoneVerificationStore()
 );
 
@@ -149,7 +149,7 @@ function validateNumber() {
       defaultCallingCode: selectedCountryCode.value.code,
     });
     if (phoneNumber.isValid()) {
-      verificationNumber.value = {
+      verificationPhoneNumber.value = {
         defaultCallingCode: phoneNumber.countryCallingCode,
         phoneNumber: phoneNumber.number
       };
