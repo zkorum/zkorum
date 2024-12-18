@@ -24,7 +24,7 @@ import InfoHeader from "src/components/onboarding/InfoHeader.vue";
 import { useRouter } from "vue-router";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 
-const description = "";
+const description = "Please select a log in method.";
 
 const router = useRouter();
 

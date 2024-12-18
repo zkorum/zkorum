@@ -72,7 +72,7 @@ const { userLogin } = useAuthSetup();
 const { requestCode, submitCode } = useBackendPhoneVerification();
 
 onMounted(() => {
-  requestCodeClicked(false);
+  requestCodeClicked(true);
 });
 
 function clickedResendButton() {

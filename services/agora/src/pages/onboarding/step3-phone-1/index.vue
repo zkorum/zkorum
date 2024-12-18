@@ -192,7 +192,7 @@ function validateNumber() {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-  background-color: #fed7aa;
+  background-color: #f3f4f6;
   border-radius: 15px;
 }
 </style>
