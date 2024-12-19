@@ -78,6 +78,14 @@ interface LoginNewDeviceProps {
     sessionExpiry: Date;
 }
 
+interface LoginNewDeviceRarimoProps {
+    db: PostgresDatabase;
+    didWrite: string;
+    userAgent: string;
+    userId: string;
+    sessionExpiry: Date;
+}
+
 interface AuthTypeAndUserId {
     userId: string;
     type: AuthenticateType;
@@ -333,6 +341,7 @@ export async function registerWithPhoneNumber({
     now,
     sessionExpiry,
 }: RegisterWithPhoneNumberProps): Promise<void> {
+    log.info("Register with phone number");
     await db.transaction(async (tx) => {
         await tx
             .update(authAttemptPhoneTable)
@@ -373,6 +382,7 @@ export async function registerWithRarimo({
     sessionExpiry,
     username,
 }: RegisterWithRarimoProps): Promise<void> {
+    log.info("Register with Rarimo");
     await db.transaction(async (tx) => {
         await tx.insert(userTable).values({
             username: username,
@@ -402,6 +412,7 @@ export async function loginNewDevice({
     now,
     sessionExpiry,
 }: LoginNewDeviceProps) {
+    log.info("Logging-in new device with phone number");
     await db.transaction(async (tx) => {
         await tx
             .update(authAttemptPhoneTable)
@@ -419,6 +430,23 @@ export async function loginNewDevice({
     });
 }
 
+// ! WARN we assume the OTP was verified for login new device at this point
+export async function loginNewDeviceRarimo({
+    db,
+    didWrite,
+    userId,
+    userAgent,
+    sessionExpiry,
+}: LoginNewDeviceRarimoProps) {
+    log.info("Logging-in new device with Rarimo");
+    await db.insert(deviceTable).values({
+        userId: userId,
+        didWrite: didWrite,
+        userAgent: userAgent,
+        sessionExpiry: sessionExpiry,
+    });
+}
+
 // ! WARN we assume the OTP was verified and the device is already syncing
 export async function loginKnownDevice({
     db,
@@ -426,6 +454,7 @@ export async function loginKnownDevice({
     now,
     sessionExpiry,
 }: LoginProps) {
+    log.info("Logging-in known device with phone number");
     await db.transaction(async (tx) => {
         await tx
             .update(authAttemptPhoneTable)
@@ -442,6 +471,23 @@ export async function loginKnownDevice({
             })
             .where(eq(deviceTable.didWrite, didWrite));
     });
+}
+
+// ! WARN we assume the OTP was verified and the device is already syncing
+export async function loginKnownDeviceRarimo({
+    db,
+    didWrite,
+    now,
+    sessionExpiry,
+}: LoginProps) {
+    log.info("Logging-in known device with Rarimo");
+    await db
+        .update(deviceTable)
+        .set({
+            sessionExpiry: sessionExpiry,
+            updatedAt: now,
+        })
+        .where(eq(deviceTable.didWrite, didWrite));
 }
 
 // should be up to date with DB value

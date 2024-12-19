@@ -2,16 +2,14 @@
 
 import { deviceTable, passportTable } from "@/schema.js";
 import type { VerifyUserStatusAndAuthenticate200 } from "@/shared/types/dto.js";
-import {
-    type RarimoStatusAttributes,
-} from "@/shared/types/zod.js";
+import { type RarimoStatusAttributes } from "@/shared/types/zod.js";
 import { type AxiosInstance } from "axios";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { nowZeroMs } from "@/shared/common/util.js";
 import {
-    loginKnownDevice,
-    loginNewDevice,
+    loginKnownDeviceRarimo,
+    loginNewDeviceRarimo,
     registerWithRarimo,
 } from "@/service/auth.js";
 import type { HttpErrors } from "@fastify/sensible";
@@ -110,7 +108,7 @@ async function getUserProof({
     didWrite,
     axiosVerificatorSvc,
 }: GetUserProofProps): Promise<GetUserProofReturn> {
-    const getUserProofUrl = `/integrations/verificator-svc/light/private/user/${didWrite.toLowerCase()}`; // toLowerCase is a work-around because verificator-svc does it when inserting the userId in DB but not when selecting data from the DB! Missing toLowerCase() here would lead to a 404 error
+    const getUserProofUrl = `/integrations/verificator-svc/light/private/user/${didWrite}`;
     const response =
         await axiosVerificatorSvc.get<UserParamsRequest>(getUserProofUrl);
     const userParamsRequest: UserParamsRequest = response.data;
@@ -156,8 +154,8 @@ interface GetLoggedInStateReturn {
 
 type LoggedInState =
     | "not_registered"
-    | "not_logged_in_new_device"
-    | "not_logged_in_known_device"
+    | "new_device"
+    | "known_device"
     | "already_logged_in";
 
 async function getLoggedInState({
@@ -174,29 +172,29 @@ async function getLoggedInState({
         })
         .from(passportTable)
         .leftJoin(deviceTable, eq(deviceTable.userId, passportTable.userId))
-        .where(
-            and(
-                eq(passportTable.nullifier, nullifier),
-                eq(deviceTable.didWrite, didWrite),
-            ),
-        );
+        .where(eq(passportTable.nullifier, nullifier));
     if (result.length === 0) {
         return { loggedInState: "not_registered", userId: generateUUID() };
     } else {
-        if (result[0].didWrite === null) {
+        const resultsForKnownDevice = result.filter(
+            (r) => r.didWrite == didWrite,
+        );
+        if (resultsForKnownDevice.length === 0) {
             return {
-                loggedInState: "not_logged_in_new_device",
+                loggedInState: "new_device",
                 userId: result[0].userId,
             };
-        }
-        if (result[0].sessionExpiry !== null && result[0].sessionExpiry > now) {
+        } else if (
+            resultsForKnownDevice[0].sessionExpiry !== null &&
+            resultsForKnownDevice[0].sessionExpiry > now
+        ) {
             return {
                 loggedInState: "already_logged_in",
                 userId: result[0].userId,
             };
         } else {
             return {
-                loggedInState: "not_logged_in_known_device",
+                loggedInState: "known_device",
                 userId: result[0].userId,
             };
         }
@@ -209,7 +207,7 @@ export async function verifyUserStatusAndAuthenticate({
     axiosVerificatorSvc,
     userAgent,
 }: VerifyUserStatusProps): Promise<VerifyUserStatusAndAuthenticate200> {
-    const verifyUserStatusUrl = `/integrations/verificator-svc/light/private/verification-status/${didWrite.toLowerCase()}`; // toLowerCase is a work-around because verificator-svc does it when inserting the userId in DB but not when selecting data from the DB! Missing toLowerCase() here would lead to a 404 error. This one here is not necessary as verificator-svc is doing it already, but as a safety measure I added this for now.
+    const verifyUserStatusUrl = `/integrations/verificator-svc/light/private/verification-status/${didWrite}`;
     const response =
         await axiosVerificatorSvc.get<StatusResponse>(verifyUserStatusUrl);
     const statusResponse: StatusResponse = response.data;
@@ -236,18 +234,17 @@ export async function verifyUserStatusAndAuthenticate({
     switch (loggedInState) {
         case "already_logged_in":
             break;
-        case "not_logged_in_new_device":
-            await loginNewDevice({
+        case "new_device":
+            await loginNewDeviceRarimo({
                 db,
                 didWrite,
                 userId,
                 userAgent,
-                now,
                 sessionExpiry: loginSessionExpiry,
             });
             break;
-        case "not_logged_in_known_device":
-            await loginKnownDevice({
+        case "known_device":
+            await loginKnownDeviceRarimo({
                 db,
                 didWrite,
                 now,
@@ -270,7 +267,7 @@ export async function verifyUserStatusAndAuthenticate({
                 userAgent,
                 userId,
                 sessionExpiry: loginSessionExpiry,
-                username: await generateUnusedRandomUsername({db: db})
+                username: await generateUnusedRandomUsername({ db: db }),
             });
             break;
         }

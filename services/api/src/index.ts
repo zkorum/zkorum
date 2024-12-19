@@ -1017,7 +1017,7 @@ server.after(() => {
             const verificationStatusAndNullifier =
                 await verifyUserStatusAndAuthenticate({
                     db,
-                    didWrite: didWrite.toLowerCase(),
+                    didWrite: didWrite,
                     axiosVerificatorSvc,
                     userAgent,
                     httpErrors: server.httpErrors,

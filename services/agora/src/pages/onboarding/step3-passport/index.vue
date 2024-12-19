@@ -1,22 +1,43 @@
 <template>
   <div>
-    <StepperLayout :submit-call-back="() => { }" :current-step="3" :total-steps="5" :enable-next-button="true"
-      :show-next-button="false">
+    <StepperLayout
+      :submit-call-back="() => {}"
+      :current-step="3"
+      :total-steps="5"
+      :enable-next-button="true"
+      :show-next-button="false"
+    >
       <template #header>
-        <InfoHeader title="Own Your Privacy" :description="description" icon-name="mdi-wallet" />
+        <InfoHeader
+          title="Own Your Privacy"
+          :description="description"
+          icon-name="mdi-wallet"
+        />
       </template>
 
       <template #body>
-        <ZKCard padding="1.5rem">
+        <ZKCard padding="1rem">
           <div class="stepContainer">
             <div class="stepFlex">
               <q-icon name="mdi-numeric-1" size="2rem" class="numberCircle" />
               <div>
                 Download
                 <span v-if="quasar.platform.is.mobile">
-                  <a :href="rarimeStoreLink" target="_blank" rel="noopener noreferrer">RariMe</a>
+                  <a
+                    :href="rarimeStoreLink"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >RariMe</a
+                  >
                 </span>
-                <span v-if="!quasar.platform.is.mobile">RariMe on your phone
+                <span v-if="!quasar.platform.is.mobile"
+                  ><a
+                    :href="rarimeStoreLink"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >RariMe</a
+                  >
+                  on your phone
                 </span>
               </div>
             </div>
@@ -38,11 +59,17 @@
             <div class="innerInstructions">
               <div v-if="!quasar.platform.is.mobile">
                 <div v-if="verificationLink.length == 0">
-                  <div v-if="verificationLinkGenerationFailed" class="verificationFailure">
+                  <div
+                    v-if="verificationLinkGenerationFailed"
+                    class="verificationFailure"
+                  >
                     <q-icon name="mdi-alert-box" size="3rem" />
                     Failed to generate verification link
                   </div>
-                  <div v-if="!verificationLinkGenerationFailed" class="verificationLoadingSpinner">
+                  <div
+                    v-if="!verificationLinkGenerationFailed"
+                    class="verificationLoadingSpinner"
+                  >
                     <q-spinner color="primary" size="3em" />
                     <div :style="{ fontSize: '0.8rem' }">
                       Loading verification link
@@ -50,29 +77,51 @@
                   </div>
                 </div>
 
-                <div v-if="verificationLink.length != 0" class="verificationProcedureBlock">
+                <div
+                  v-if="verificationLink.length != 0"
+                  class="verificationProcedureBlock"
+                >
                   <img :src="qrcode" alt="QR Code" />
-                  <div>Or copy the below link on your mobile:</div>
+                  <div>
+                    Or open the below link on your mobile browser (Safari or
+                    Firefox):
+                  </div>
                   <!-- make this copyable -->
                   <div class="longUrl">{{ verificationLink }}</div>
 
-                  <ZKButton label="Copy" icon="mdi-content-copy" @click="copyVerificationLink()" />
+                  <ZKButton
+                    label="Copy"
+                    icon="mdi-content-copy"
+                    @click="copyVerificationLink()"
+                  />
+                  <div class="waitingVerificationText">
+                    Waiting for verification...
+                  </div>
                 </div>
               </div>
 
-              <div v-if="quasar.platform.is.mobile" class="verificationProcedureBlock">
-                <ZKButton label="Verify" color="primary" @click="clickedVerifyButton()" />
+              <div
+                v-if="quasar.platform.is.mobile"
+                class="verificationProcedureBlock"
+              >
+                <ZKButton
+                  label="Verify"
+                  color="primary"
+                  @click="clickedVerifyButton()"
+                />
                 <div class="waitingVerificationText">
                   Waiting for verification...
                 </div>
               </div>
-
             </div>
           </div>
         </ZKCard>
 
-        <ZKButton label="I'd rather verify with my phone number" text-color="color-text-strong"
-          @click="goToPhoneVerification()" />
+        <ZKButton
+          label="I'd rather verify with my phone number"
+          text-color="color-text-strong"
+          @click="goToPhoneVerification()"
+        />
       </template>
     </StepperLayout>
   </div>
@@ -83,7 +132,7 @@ import StepperLayout from "src/components/onboarding/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/InfoHeader.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useQuasar } from "quasar";
-import { useQRCode } from "@vueuse/integrations/useQRCode"
+import { useQRCode } from "@vueuse/integrations/useQRCode";
 import { useRouter } from "vue-router";
 import { onMounted, ref } from "vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
@@ -188,9 +237,7 @@ async function isDidLoggedIn() {
     }
   } catch (e) {
     console.error(e);
-    showNotifyMessage(
-      "Failed to verify identity proof"
-    );
+    showNotifyMessage("Failed to verify identity proof");
   }
 }
 
@@ -212,7 +259,6 @@ async function completeVerification() {
 function goToPhoneVerification() {
   router.push({ name: "onboarding-step3-phone-1" });
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -275,5 +321,6 @@ function goToPhoneVerification() {
 
 .waitingVerificationText {
   font-size: 0.9rem;
+  margin-top: 1.5rem;
 }
 </style>

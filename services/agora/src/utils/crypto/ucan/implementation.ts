@@ -79,7 +79,11 @@ export type Implementation = {
     publicWriteKey: (emailOrUserId: string) => Promise<Uint8Array>;
     sign: (message: Uint8Array, emailOrUserId: string) => Promise<Uint8Array>;
     createIfDoesNotExists: (emailOrUserId: string) => Promise<RSAKeyStore>;
+    createOverwriteIfAlreadyExists: (
+      prefixedKey: string
+    ) => Promise<RSAKeyStore>;
     copyKeypairs: (fromEmail: string, toUserId: string) => Promise<void>;
+    deleteKey: (prefixedKey: string) => Promise<void>;
   };
 
   misc: {

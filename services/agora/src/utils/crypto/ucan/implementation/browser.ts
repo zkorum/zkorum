@@ -56,7 +56,7 @@ export async function aesDecrypt(
   const decrypted = iv
     ? await webcrypto.subtle.decrypt({ name: alg, iv }, cryptoKey, encrypted)
     : // the keystore version prefixes the `iv` into the cipher text
-    await keystoreAES.decryptBytes(encrypted, cryptoKey, { alg });
+      await keystoreAES.decryptBytes(encrypted, cryptoKey, { alg });
 
   return new Uint8Array(decrypted);
 }
@@ -148,16 +148,16 @@ export async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
 
 // KEYSTORE
 
-function ksSymmIdentifier(_ks: RSAKeyStore, userId: string) {
-  return `${userId}:symm`;
+function ksSymmIdentifier(_ks: RSAKeyStore, prefixedKey: string) {
+  return `${prefixedKey}:symm`;
 }
 
-function ksExchangeIdentifier(_ks: RSAKeyStore, emailOrUserId: string): string {
-  return `${emailOrUserId}:exchange`;
+function ksExchangeIdentifier(_ks: RSAKeyStore, prefixedKey: string): string {
+  return `${prefixedKey}:exchange`;
 }
 
-function ksWriteIdentifier(_ks: RSAKeyStore, emailOrUserId: string): string {
-  return `${emailOrUserId}:write`;
+function ksWriteIdentifier(_ks: RSAKeyStore, prefixedKey: string): string {
+  return `${prefixedKey}:write`;
 }
 
 export function ksClearStore(ks: RSAKeyStore): Promise<void> {
@@ -167,9 +167,9 @@ export function ksClearStore(ks: RSAKeyStore): Promise<void> {
 export async function ksDecrypt(
   ks: RSAKeyStore,
   cipherText: Uint8Array,
-  emailOrUserId: string
+  prefixedKey: string
 ): Promise<Uint8Array> {
-  const exchangeKeyName = ksExchangeIdentifier(ks, emailOrUserId);
+  const exchangeKeyName = ksExchangeIdentifier(ks, prefixedKey);
   const exchangeKey = await ks.exchangeKey(exchangeKeyName);
 
   return rsaDecrypt(cipherText, exchangeKey.privateKey);
@@ -177,9 +177,9 @@ export async function ksDecrypt(
 
 export async function ksExportSymmKey(
   ks: RSAKeyStore,
-  userId: string
+  prefixedKey: string
 ): Promise<Uint8Array> {
-  const keyName = ksSymmIdentifier(ks, userId);
+  const keyName = ksSymmIdentifier(ks, prefixedKey);
   if ((await ks.keyExists(keyName)) === false) {
     throw new Error(
       `Expected a key under the name '${keyName}', but couldn't find anything`
@@ -204,41 +204,41 @@ export function ksGetUcanAlgorithm(_ks: RSAKeyStore): Promise<string> {
 export function ksImportSymmKey(
   ks: RSAKeyStore,
   key: Uint8Array,
-  userId: string
+  prefixedKey: string
 ): Promise<void> {
-  const symmKeyName = ksSymmIdentifier(ks, userId);
+  const symmKeyName = ksSymmIdentifier(ks, prefixedKey);
   return ks.importSymmKey(uint8arrays.toString(key, "base64pad"), symmKeyName);
 }
 
 export function ksSymmKeyExists(
   ks: RSAKeyStore,
-  userId: string
+  prefixedKey: string
 ): Promise<boolean> {
-  const keyName = ksSymmIdentifier(ks, userId);
+  const keyName = ksSymmIdentifier(ks, prefixedKey);
   return ks.keyExists(keyName);
 }
 
 export function ksWriteKeyExists(
   ks: RSAKeyStore,
-  emailOrUserId: string
+  prefixedKey: string
 ): Promise<boolean> {
-  const keyName = ksWriteIdentifier(ks, emailOrUserId);
+  const keyName = ksWriteIdentifier(ks, prefixedKey);
   return ks.keypairExists(keyName);
 }
 
 export function ksExchangeKeyExists(
   ks: RSAKeyStore,
-  emailOrUserId: string
+  prefixedKey: string
 ): Promise<boolean> {
-  const keyName = ksExchangeIdentifier(ks, emailOrUserId);
+  const keyName = ksExchangeIdentifier(ks, prefixedKey);
   return ks.keypairExists(keyName);
 }
 
 export async function ksPublicExchangeKey(
   ks: RSAKeyStore,
-  emailOrUserId: string
+  prefixedKey: string
 ): Promise<Uint8Array> {
-  const keypair = await ks.exchangeKey(ksExchangeIdentifier(ks, emailOrUserId));
+  const keypair = await ks.exchangeKey(ksExchangeIdentifier(ks, prefixedKey));
   const spki = await webcrypto.subtle.exportKey("spki", keypair.publicKey);
 
   return new Uint8Array(spki);
@@ -246,9 +246,9 @@ export async function ksPublicExchangeKey(
 
 export async function ksPublicWriteKey(
   ks: RSAKeyStore,
-  emailOrUserId: string
+  prefixedKey: string
 ): Promise<Uint8Array> {
-  const keypair = await ks.writeKey(ksWriteIdentifier(ks, emailOrUserId));
+  const keypair = await ks.writeKey(ksWriteIdentifier(ks, prefixedKey));
   const spki = await webcrypto.subtle.exportKey("spki", keypair.publicKey);
 
   return new Uint8Array(spki);
@@ -257,9 +257,9 @@ export async function ksPublicWriteKey(
 export async function ksSign(
   ks: RSAKeyStore,
   message: Uint8Array,
-  emailOrUserId: string
+  prefixedKey: string
 ): Promise<Uint8Array> {
-  const writeKeyName = ksWriteIdentifier(ks, emailOrUserId);
+  const writeKeyName = ksWriteIdentifier(ks, prefixedKey);
   const writeKey = await ks.writeKey(writeKeyName);
   const arrayBuffer = await rsaOperations.sign(
     message,
@@ -272,26 +272,36 @@ export async function ksSign(
 
 export async function ksCreateIfDoesNotExist(
   ks: RSAKeyStore,
-  emailOrUserId: string
+  prefixedKey: string
 ): Promise<RSAKeyStore> {
   return await ks.createIfDoesNotExist(
-    ksWriteIdentifier(ks, emailOrUserId),
-    ksExchangeIdentifier(ks, emailOrUserId)
+    ksWriteIdentifier(ks, prefixedKey),
+    ksExchangeIdentifier(ks, prefixedKey)
+  );
+}
+
+export async function ksCreateOverwriteIfAlreadyExists(
+  ks: RSAKeyStore,
+  prefixedKey: string
+): Promise<RSAKeyStore> {
+  return await ks.createOverwriteIfAlreadyExists(
+    ksWriteIdentifier(ks, prefixedKey),
+    ksExchangeIdentifier(ks, prefixedKey)
   );
 }
 
 export async function ksCopyKeypairs(
   ks: RSAKeyStore,
-  fromEmail: string,
-  toUserId: string
+  fromPrefixedKey: string,
+  toPrefixedKey: string
 ): Promise<void> {
   // NOTE: no content is deleted from the "from" key names
-  const fromWriteKeyName = ksWriteIdentifier(ks, fromEmail);
-  const toWriteKeyName = ksWriteIdentifier(ks, toUserId);
+  const fromWriteKeyName = ksWriteIdentifier(ks, fromPrefixedKey);
+  const toWriteKeyName = ksWriteIdentifier(ks, toPrefixedKey);
   await ks.copyKeypair(fromWriteKeyName, toWriteKeyName);
 
-  const fromExchangeKeyName = ksExchangeIdentifier(ks, fromEmail);
-  const toExchangeKeyName = ksExchangeIdentifier(ks, toUserId);
+  const fromExchangeKeyName = ksExchangeIdentifier(ks, fromPrefixedKey);
+  const toExchangeKeyName = ksExchangeIdentifier(ks, toPrefixedKey);
   await ks.copyKeypair(fromExchangeKeyName, toExchangeKeyName);
 }
 
@@ -388,6 +398,13 @@ export function rsaGenKey(): Promise<CryptoKeyPair> {
   );
 }
 
+export async function ksDeleteKey(
+  ks: RSAKeyStore,
+  prefixedKey: string
+): Promise<void> {
+  return await ks.deleteKey(prefixedKey);
+}
+
 // 🛳
 
 export async function implementation({
@@ -420,7 +437,10 @@ export async function implementation({
       publicWriteKey: (...args) => ksPublicWriteKey(ks, ...args),
       sign: (...args) => ksSign(ks, ...args),
       createIfDoesNotExists: (...args) => ksCreateIfDoesNotExist(ks, ...args),
+      createOverwriteIfAlreadyExists: (...args) =>
+        ksCreateOverwriteIfAlreadyExists(ks, ...args),
       copyKeypairs: (...args) => ksCopyKeypairs(ks, ...args),
+      deleteKey: (...args) => ksDeleteKey(ks, ...args),
     },
   };
 }
