@@ -92,6 +92,29 @@
           :existing-opinions="[]"
           :disabled="isSubmitButtonLoading"
         />
+        <SeedSuggestionsBox
+          v-if="isSuggestionsBoxVisible && !isNavigatingAway"
+          :suggestions="pendingSuggestions"
+          :tip="notConfidentTip"
+          :is-frozen="isSubmitButtonLoading"
+          :can-take-suggestion="canTakeSuggestion"
+          :can-generate="canGenerateSuggestions"
+          :is-generating="isGeneratingSuggestions"
+          :generate-more-label="generateMoreLabel"
+          @add="addSuggestion"
+          @discard="discardSuggestion"
+          @generate-more="generateSuggestions"
+        />
+        <ConversationControlButton
+          v-if="isAiSuggestionsEnabled && !isSuggestionsBoxVisible && !isSubmitButtonLoading"
+          :label="aiSuggestionsButtonLabel"
+          icon="pi pi-lightbulb"
+          :show-border="false"
+          icon-position="left"
+          :disabled="!canGenerateSuggestions"
+          :aria-busy="isGeneratingSuggestions"
+          @click="generateSuggestions"
+        />
       </div>
     </div>
 
@@ -123,6 +146,8 @@ import BackButton from "src/components/navigation/buttons/BackButton.vue";
 import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
 import NewConversationRouteGuard from "src/components/newConversation/NewConversationRouteGuard.vue";
+import ConversationControlButton from "src/components/newConversation/ConversationControlButton.vue";
+import SeedSuggestionsBox from "src/components/newConversation/SeedSuggestionsBox.vue";
 import SeedOpinionListEditor from "src/components/newConversation/SeedOpinionListEditor.vue";
 import {
   type SeedOpinionsTranslations,
@@ -133,6 +158,7 @@ import { useConversationDraft } from "src/composables/conversation/draft";
 import { useCreateSurveyAccess } from "src/composables/conversation/useCreateSurveyAccess";
 import type { SeedOpinionCreateFailure } from "src/composables/conversation/usePublishConversationDraft";
 import { usePublishConversationDraft } from "src/composables/conversation/usePublishConversationDraft";
+import { useSeedSuggestions } from "src/composables/conversation/useSeedSuggestions";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { validateRichTextInput } from "src/shared/richText";
 import { useAuthenticationStore } from "src/stores/authentication";
@@ -144,6 +170,7 @@ import {
   navigateBackOrReplace,
 } from "src/utils/nav/historyBack";
 import { useNotify } from "src/utils/ui/notify";
+import { processEnv } from "src/utils/processEnv";
 import { computed, nextTick, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -170,6 +197,21 @@ const isMaxDiffDraft = computed(
 
 const { previewGitHubIssues } = useMaxDiffApi();
 const { publishConversationDraft } = usePublishConversationDraft();
+
+const isAiSuggestionsEnabled = processEnv.VITE_AI_SUGGESTIONS_ENABLED === "true";
+const {
+  pendingSuggestions,
+  notConfidentTip,
+  isGenerating: isGeneratingSuggestions,
+  canGenerate: canGenerateSuggestions,
+  canTakeSuggestion,
+  generate,
+  add: addSuggestionToStatements,
+  discard: discardSuggestion,
+} = useSeedSuggestions({ conversationDraft });
+const isSuggestionsBoxVisible = computed(
+  () => pendingSuggestions.value.length > 0 || notConfidentTip.value !== undefined
+);
 
 const showLoginDialog = ref(false);
 const isSubmitButtonLoading = ref(false);
@@ -213,6 +255,38 @@ const submitButtonLabel = computed(() => {
     ? t("nextButton")
     : t("publishButton");
 });
+
+const aiSuggestionsButtonLabel = computed(() =>
+  isGeneratingSuggestions.value ? t("aiSuggestionsGenerating") : t("aiSuggestionsButton")
+);
+const generateMoreLabel = computed(() =>
+  isGeneratingSuggestions.value ? t("aiSuggestionsGenerating") : t("aiSuggestionsGenerateMore")
+);
+
+async function generateSuggestions(): Promise<void> {
+  if (isSubmitButtonLoading.value) return;
+  if (!isLoggedIn.value) {
+    showLoginDialog.value = true;
+    return;
+  }
+  const result = await generate();
+  if (result.success) return;
+  switch (result.reason) {
+    case "not_available":
+      showNotifyMessage(t("aiSuggestionsNotAvailable"));
+      break;
+    case "rate_limited":
+      showNotifyMessage(t("aiSuggestionsRateLimited"));
+      break;
+    case "failed":
+      showNotifyMessage(t("aiSuggestionsFailed"));
+      break;
+  }
+}
+
+function addSuggestion(suggestionId: string): void {
+  if (!isSubmitButtonLoading.value) addSuggestionToStatements(suggestionId);
+}
 
 onMounted(async () => {
   await nextTick();

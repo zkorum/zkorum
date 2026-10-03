@@ -507,6 +507,10 @@ export function useConversationDraft(
       emptyDraft.conversationEmailUpdateEnabledOverride;
     seedOpinions.value = [];
     conversationTypeConfig.value = projectConversationTypeConfig(emptyDraft);
+    if (store) {
+      store.conversationDraft.aiSuggestionDraftId =
+        emptyDraft.aiSuggestionDraftId;
+    }
     isPrivate.value = emptyDraft.isPrivate;
     participationMode.value = emptyDraft.participationMode;
     requiresEventTicket.value = emptyDraft.requiresEventTicket;
