@@ -9,7 +9,7 @@ describe("browser translation protection", () => {
     "utf8"
   );
 
-  it("opts the whole application out of browser page translation", () => {
+  it("blocks browser translation by default until the active page opts in", () => {
     expect(htmlTemplate).toMatch(/<html[^>]*class="[^"]*notranslate[^"]*"/);
     expect(htmlTemplate).toMatch(/<html[^>]*translate="no"/);
     expect(htmlTemplate).toContain(

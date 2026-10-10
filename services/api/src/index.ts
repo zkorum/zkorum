@@ -317,6 +317,10 @@ import {
     registerConversationEmailUpdateActionRoutes,
 } from "./service/conversationEmailUpdateAction.js";
 import { registerProjectDocumentAccessRoute } from "./service/projectDocumentAccessRoute.js";
+import {
+    isConversationIndexable,
+    registerConversationIndexingRoute,
+} from "./service/conversationIndexing.js";
 import { createConversationEmailUpdateSnsIngressService } from "./service/conversationEmailUpdateSns.js";
 import {
     CONVERSATION_EMAIL_UPDATE_SIMULATOR_TOPIC_ARN,
@@ -1898,6 +1902,14 @@ async function verifyUcanAndKnownDeviceStatus(
 }
 
 const apiVersion = "v1";
+server.register((indexingServer, _options, done) => {
+    registerConversationIndexingRoute({
+        server: indexingServer,
+        apiVersion,
+        isIndexable: (request) => isConversationIndexable({ db, ...request }),
+    });
+    done();
+});
 server.register((actionServer, _options, done) => {
     registerConversationEmailUpdateActionRoutes({
         server: actionServer,

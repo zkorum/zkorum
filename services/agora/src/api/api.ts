@@ -6188,6 +6188,12 @@ export type ApiV1ConversationImportStatusPost200ResponseOneOf2FailureReasonEnum 
 export interface ApiV1ConversationImportStatusPostRequest {
     'importSlugId': string;
 }
+export interface ApiV1ConversationIndexingPost200Response {
+    'isIndexed': boolean;
+}
+export interface ApiV1ConversationIndexingPostRequest {
+    'conversationSlugId': string;
+}
 /**
  * @type ApiV1ConversationOpenPost200Response
  */
@@ -12535,6 +12541,40 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
+         * Resolve the indexing policy for conversation HTML responses
+         * @param {ApiV1ConversationIndexingPostRequest} apiV1ConversationIndexingPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1ConversationIndexingPost: async (apiV1ConversationIndexingPostRequest: ApiV1ConversationIndexingPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1ConversationIndexingPostRequest' is not null or undefined
+            assertParamExists('apiV1ConversationIndexingPost', 'apiV1ConversationIndexingPostRequest', apiV1ConversationIndexingPostRequest)
+            const localVarPath = `/api/v1/conversation/indexing`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1ConversationIndexingPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 
          * @param {ApiV1ModerationConversationWithdrawPostRequest} apiV1ModerationConversationWithdrawPostRequest 
          * @param {*} [options] Override http request option.
@@ -16122,6 +16162,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Resolve the indexing policy for conversation HTML responses
+         * @param {ApiV1ConversationIndexingPostRequest} apiV1ConversationIndexingPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1ConversationIndexingPost(apiV1ConversationIndexingPostRequest: ApiV1ConversationIndexingPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1ConversationIndexingPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ConversationIndexingPost(apiV1ConversationIndexingPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1ConversationIndexingPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 
          * @param {ApiV1ModerationConversationWithdrawPostRequest} apiV1ModerationConversationWithdrawPostRequest 
          * @param {*} [options] Override http request option.
@@ -17697,6 +17749,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.apiV1ConversationImportStatusPost(apiV1ConversationImportStatusPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Resolve the indexing policy for conversation HTML responses
+         * @param {ApiV1ConversationIndexingPostRequest} apiV1ConversationIndexingPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1ConversationIndexingPost(apiV1ConversationIndexingPostRequest: ApiV1ConversationIndexingPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1ConversationIndexingPost200Response> {
+            return localVarFp.apiV1ConversationIndexingPost(apiV1ConversationIndexingPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 
          * @param {ApiV1ModerationConversationWithdrawPostRequest} apiV1ModerationConversationWithdrawPostRequest 
          * @param {*} [options] Override http request option.
@@ -19140,6 +19201,16 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1ConversationImportStatusPost(apiV1ConversationImportStatusPostRequest: ApiV1ConversationImportStatusPostRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1ConversationImportStatusPost(apiV1ConversationImportStatusPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Resolve the indexing policy for conversation HTML responses
+     * @param {ApiV1ConversationIndexingPostRequest} apiV1ConversationIndexingPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiV1ConversationIndexingPost(apiV1ConversationIndexingPostRequest: ApiV1ConversationIndexingPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1ConversationIndexingPost(apiV1ConversationIndexingPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
