@@ -7,6 +7,7 @@ import {
     phoneAuthModeSchema,
 } from "./shared/types/phone-auth.js";
 import { sharedConfigSchema } from "./shared-backend/config.js";
+import { createApiLogPrivacy } from "./logging/privacy.js";
 
 export type Environment = "development" | "production" | "staging" | "test";
 
@@ -415,11 +416,18 @@ function envToLogger(env: Environment) {
     }
 }
 
+const logPrivacy = createApiLogPrivacy(new URL("./", import.meta.url));
+
 export const server = Fastify({
-    logger: envToLogger(config.NODE_ENV),
+    logger: {
+        ...envToLogger(config.NODE_ENV),
+        ...logPrivacy.options,
+    },
     // Production traffic arrives from the private nginx container. Public
     // peers remain untrusted, so their forwarding headers are ignored.
     trustProxy: ["loopback", "uniquelocal"],
 });
+
+logPrivacy.registerRoutes(server);
 
 export const log = server.log;

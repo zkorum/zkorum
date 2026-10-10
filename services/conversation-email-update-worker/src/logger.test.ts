@@ -6,6 +6,37 @@ import { createStructuredLogger } from "./logger.js";
 import { normalizeError, structuredEventSchema } from "./observability.js";
 
 describe("privacy-safe structured logging", () => {
+    it("filters persistent child bindings and hostile accessors", () => {
+        const lines: string[] = [];
+        const log = createStructuredLogger({
+            environment: "production",
+            workerId: "worker-01",
+            level: "info",
+            destination: {
+                write(chunk) {
+                    lines.push(chunk);
+                },
+            },
+        });
+        const child = log.child({
+            email: "private-recipient@example.invalid",
+            token: "private-capability",
+            deliveryId: 7,
+        });
+        child.setBindings({ html: "private-message-content" });
+        child.info({ event: "worker_started", outcome: "started" });
+        expect(lines.join("")).not.toContain("private-");
+        expect(lines.join("")).toContain('"deliveryId":7');
+        const hostile = Object.defineProperty({}, "event", {
+            get() {
+                throw new Error("private-provider-message");
+            },
+        });
+        expect(() => {
+            log.error(hostile);
+        }).not.toThrow();
+        expect(lines.join("")).not.toContain("private-provider-message");
+    });
     it("logs a Drizzle cause and lane without query, connection or recipient data", () => {
         const lines: string[] = [];
         const log = createStructuredLogger({

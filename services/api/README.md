@@ -63,6 +63,13 @@ disabled, kill switch active, and simulator disabled. The API rejects simulator
 startup outside development, so production and staging must configure their
 delivery gates explicitly and cannot inherit the local simulator behavior.
 
+## Logging privacy
+
+The API uses schema-projected request/error metadata, reviewed message templates,
+and a final Pino output projection. See
+[the shared logging guide](../shared-backend/LOGGING.md) for the policy, typed
+event API, diagnostics behavior, and regression checks.
+
 ## Moderation
 
 To grant a user moderator status, set the `is_moderator` column to true in the `user` table for the selected user.

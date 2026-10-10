@@ -50,6 +50,7 @@ if [ -d "$SERVICES_DIR/conversation-email-update-worker" ]; then
         --include='/db.ts' \
         --include='/email/***' \
         --include='/logger.ts' \
+        --include='/logPrivacy.ts' \
         --include='/schema.ts' \
         --include='/valkey.ts' \
         --exclude='*' \

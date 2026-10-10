@@ -1,6 +1,7 @@
 import type { AxiosInstance } from "axios";
 import { z } from "zod";
 import { log } from "@/app.js";
+import { logApiError } from "@/logging/privacy.js";
 
 const zodReacherIsReachable = z.enum(["safe", "risky", "invalid", "unknown"]);
 export type ReacherIsReachable = z.infer<typeof zodReacherIsReachable>;
@@ -56,10 +57,15 @@ export async function checkEmailDeliverability({
             isReachable: parsed.is_reachable,
         };
     } catch (error) {
-        log.warn(
+        logApiError({
+            logger: log,
+            event: {
+                event: "email_deliverability_check_failed",
+                provider: "reacher",
+            },
             error,
-            `[Email Verification] Reacher check failed for email, proceeding without verification (fail-open)`,
-        );
+            level: "warn",
+        });
         return {
             deliverable: true,
             isReachable: null,

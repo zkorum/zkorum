@@ -93,8 +93,9 @@ process IDs. Both services must be captured by the root Make targets and must
 emit INFO events. Pino JSON, development pretty logs, Python logs, and k6 logs
 all use the same marker extractor. Logging options are validated at startup.
 
-API SQL templates are emitted at DEBUG only when `API_LOG_SQL_QUERIES=true`;
-parameter values are never emitted. SQL logging defaults off and API level
+API database-query events are emitted at DEBUG only when `API_LOG_SQL_QUERIES=true`;
+only parameter counts are emitted, not SQL statements or parameter values. Query
+logging defaults off and API level
 defaults to `info`. To measure SQL logging overhead, keep **both comparison runs
 at `API_LOG_LEVEL=debug`** and change only `API_LOG_SQL_QUERIES=false/true`.
 Otherwise framework DEBUG messages become a second variable.

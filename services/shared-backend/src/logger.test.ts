@@ -11,11 +11,13 @@ describe("DrizzleFastifyLogger", () => {
         logger.logQuery("insert into auth_attempt_email values ($1)", [123456]);
 
         expect(debug).toHaveBeenCalledWith(
-            "%s -- parameterCount=%d",
-            "insert into auth_attempt_email values ($1)",
-            1,
+            { event: "database_query", parameterCount: 1 },
+            "Database query executed",
         );
         expect(JSON.stringify(debug.mock.calls)).not.toContain("123456");
+        expect(JSON.stringify(debug.mock.calls)).not.toContain(
+            "auth_attempt_email",
+        );
     });
 });
 

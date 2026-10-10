@@ -1,5 +1,9 @@
-import pino, { type BaseLogger, type DestinationStream } from "pino";
+import pino, { type Logger, type DestinationStream } from "pino";
 import { z } from "zod";
+import {
+    projectLogFields,
+    sanitizeLogOutput,
+} from "./shared-backend/logPrivacy.js";
 import { runtimeConfig } from "./config.js";
 import {
     normalizeError,
@@ -10,6 +14,20 @@ import {
 
 const LOAD_EVENT_PREFIX = "AGORA_LOAD_EVENT ";
 const DRIZZLE_QUERY_FORMAT = "%s --";
+const bindingSchema = z.object({
+    service: z.literal(OBSERVABILITY_SERVICE).optional(),
+    environment: z
+        .enum(["development", "production", "staging", "test"])
+        .optional(),
+    workerId: z
+        .string()
+        .min(1)
+        .max(100)
+        .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/)
+        .optional(),
+    deliveryId: z.number().int().positive().optional(),
+    attemptId: z.uuid().optional(),
+});
 const loadEventSchema = z.object({
     service: z.literal(OBSERVABILITY_SERVICE),
     event: z.literal("simulator_started"),
@@ -192,7 +210,7 @@ export function createStructuredLogger({
     workerId: string;
     level: string;
     destination?: DestinationStream;
-}): BaseLogger {
+}): Logger {
     const options: pino.LoggerOptions = {
         base: {
             service: OBSERVABILITY_SERVICE,
@@ -200,66 +218,118 @@ export function createStructuredLogger({
             workerId,
         },
         level,
+        formatters: {
+            bindings(value) {
+                return projectLogFields({ value, schema: bindingSchema });
+            },
+        },
         hooks: {
+            streamWrite(line) {
+                return sanitizeLogOutput({
+                    line,
+                    project(value) {
+                        const bindings = projectLogFields({
+                            value,
+                            schema: bindingSchema,
+                        });
+                        for (const schema of structuredEventSchema.options) {
+                            const event = schema.safeParse(
+                                projectLogFields({ value, schema }),
+                            );
+                            if (event.success)
+                                return { ...bindings, ...event.data };
+                        }
+                        const message = z
+                            .object({ msg: z.string() })
+                            .safeParse(value);
+                        const marker =
+                            message.success &&
+                            message.data.msg.startsWith(LOAD_EVENT_PREFIX)
+                                ? safeLoadEvent(message.data.msg)
+                                : undefined;
+                        return marker === undefined
+                            ? {
+                                  ...bindings,
+                                  event: "unclassified_log",
+                                  outcome: "failure",
+                                  severity: "error",
+                              }
+                            : { ...bindings, msg: marker };
+                    },
+                });
+            },
             logMethod(args, method, numericLevel) {
-                const first = args.at(0);
-                if (
-                    typeof first === "string" &&
-                    first.startsWith(DRIZZLE_QUERY_FORMAT)
-                ) {
-                    return;
-                }
-                if (
-                    typeof first === "string" &&
-                    first.startsWith(LOAD_EVENT_PREFIX)
-                ) {
-                    const loadEvent = safeLoadEvent(first);
-                    method.call(
-                        this,
-                        loadEvent ?? {
-                            event: "unclassified_log",
-                            outcome: "failure",
-                            severity: "error",
-                            error: normalizeError(undefined),
-                        },
+                try {
+                    const first = args.at(0);
+                    const databaseQuery = z
+                        .object({ event: z.literal("database_query") })
+                        .safeParse(first);
+                    if (databaseQuery.success) return;
+                    if (
+                        typeof first === "string" &&
+                        first.startsWith(DRIZZLE_QUERY_FORMAT)
+                    ) {
+                        return;
+                    }
+                    if (
+                        typeof first === "string" &&
+                        first.startsWith(LOAD_EVENT_PREFIX)
+                    ) {
+                        const loadEvent = safeLoadEvent(first);
+                        method.call(
+                            this,
+                            loadEvent ?? {
+                                event: "unclassified_log",
+                                outcome: "failure",
+                                severity: "error",
+                                error: normalizeError(undefined),
+                            },
+                        );
+                        return;
+                    }
+                    const event = structuredEventSchema.safeParse(first);
+                    if (event.success) {
+                        method.call(this, event.data);
+                        return;
+                    }
+                    const errorSource = args.find(
+                        (argument): argument is Error =>
+                            argument instanceof Error,
                     );
-                    return;
-                }
-                const event = structuredEventSchema.safeParse(first);
-                if (event.success) {
-                    method.call(this, event.data);
-                    return;
-                }
-                const errorSource = args.find(
-                    (argument): argument is Error => argument instanceof Error,
-                );
-                const dependencyEvent = knownDependencyEvent({
-                    args,
-                    error: errorSource,
-                });
-                if (dependencyEvent !== undefined) {
-                    method.call(this, dependencyEvent);
-                    return;
-                }
-                const severity =
-                    numericLevel >= 50
-                        ? "error"
-                        : numericLevel >= 40
-                          ? "warning"
-                          : "info";
-                method.call(this, {
-                    event: "unclassified_log",
-                    outcome:
-                        severity === "error"
-                            ? "failure"
-                            : severity === "warning"
+                    const dependencyEvent = knownDependencyEvent({
+                        args,
+                        error: errorSource,
+                    });
+                    if (dependencyEvent !== undefined) {
+                        method.call(this, dependencyEvent);
+                        return;
+                    }
+                    const severity =
+                        numericLevel >= 50
+                            ? "error"
+                            : numericLevel >= 40
                               ? "warning"
-                              : "info",
-                    severity,
-                    ...(errorSource === undefined
-                        ? {}
-                        : { error: normalizeError(errorSource) }),
-                });
+                              : "info";
+                    method.call(this, {
+                        event: "unclassified_log",
+                        outcome:
+                            severity === "error"
+                                ? "failure"
+                                : severity === "warning"
+                                  ? "warning"
+                                  : "info",
+                        severity,
+                        ...(errorSource === undefined
+                            ? {}
+                            : { error: normalizeError(errorSource) }),
+                    });
+                } catch {
+                    method.call(this, {
+                        event: "unclassified_log",
+                        outcome: "failure",
+                        severity: "error",
+                    });
+                }
             },
         },
         redact: {
