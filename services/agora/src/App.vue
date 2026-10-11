@@ -53,6 +53,7 @@ import {
   isProjectRouteName,
 } from "./utils/router/conversationRouteContext";
 import { getSingleRouteParam } from "./utils/router/params";
+import { contentTranslationSubscriptions } from "./utils/translation/contentTranslationSubscriptions";
 import { useNotify } from "./utils/ui/notify";
 
 const { t } = useComponentI18n<AppTranslations>(appTranslations);
@@ -106,9 +107,9 @@ const realtimeProjectSlug = computed(() => {
   return getSingleRouteParam(route.params.projectSlug) || undefined;
 });
 const realtimeTopics = computed(() => {
-  const topics: string[] = [];
+  const topics = new Set(contentTranslationSubscriptions.topics.value);
   if (realtimeConversationSlugId.value !== undefined) {
-    topics.push(
+    topics.add(
       buildContentTranslationTopic({
         conversationSlugId: realtimeConversationSlugId.value,
         targetLanguageCode: languageStore.displayLanguage,
@@ -118,7 +119,7 @@ const realtimeTopics = computed(() => {
 
   const projectSlug = realtimeProjectSlug.value;
   if (projectSlug !== undefined) {
-    topics.push(
+    topics.add(
       buildProjectContentTranslationTopic({
         projectSlug,
         targetLanguageCode: languageStore.displayLanguage,
@@ -126,7 +127,7 @@ const realtimeTopics = computed(() => {
     );
   }
 
-  return topics;
+  return [...topics].sort();
 });
 
 // Initialize SSE for real-time events after auth initialization.

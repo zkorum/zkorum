@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp, type EffectScope, effectScope } from "vue";
 
 import { publishContentTranslationEvent } from "./contentTranslationEvents";
+import { contentTranslationSubscriptions } from "./contentTranslationSubscriptions";
 import { useConversationDisplayContent } from "./useConversationDisplayContent";
 import {
   type OpinionItemDisplayContentInput,
@@ -252,6 +253,44 @@ describe("statement translation completion", () => {
     expect(api.requestContentTranslation).toHaveBeenCalledTimes(2);
   });
 
+  it("ignores completion events for a different locale or source revision", async () => {
+    api.requestContentTranslation.mockResolvedValue(
+      response({ opinionSlugId: "opinion1", completed: false })
+    );
+    const flow = mountOpinion();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(api.requestContentTranslation).toHaveBeenCalledOnce();
+
+    publishContentTranslationEvent({
+      subject: subject("opinion1"),
+      targetLanguageCode: "fr",
+      status: "completed",
+      timestamp: 20,
+    });
+    publishContentTranslationEvent({
+      subject: {
+        ...subject("opinion1"),
+        sourceVersion: "00000000-0000-4000-8000-000000000002",
+      },
+      targetLanguageCode: "en",
+      status: "completed",
+      timestamp: 20,
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(api.requestContentTranslation).toHaveBeenCalledOnce();
+    expect(flow.displayedOpinion.value).toBe("Bonjour");
+
+    api.requestContentTranslation.mockResolvedValue(
+      response({ opinionSlugId: "opinion1", completed: true })
+    );
+    completion("opinion1");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(flow.displayedOpinion.value).toBe("Hello opinion1");
+    expect(api.requestContentTranslation).toHaveBeenLastCalledWith(
+      expect.objectContaining({ requestMode: "read_existing" })
+    );
+  });
+
   it("recovers a missed completion event through fallback polling", async () => {
     api.requestContentTranslation.mockResolvedValueOnce(
       response({ opinionSlugId: "opinion1", completed: false })
@@ -262,10 +301,65 @@ describe("statement translation completion", () => {
     const flow = mountOpinion();
     await vi.advanceTimersByTimeAsync(0);
     expect(flow.translationPreview.value?.translationStatus).toBe("pending");
-    await vi.advanceTimersByTimeAsync(2_000);
+    await vi.advanceTimersByTimeAsync(1_000);
     expect(flow.displayedOpinion.value).toBe("Hello opinion1");
     await vi.advanceTimersByTimeAsync(60_000);
     expect(api.requestContentTranslation).toHaveBeenCalledTimes(2);
+  });
+
+  it("displays a translation ready at three seconds without waiting until seven seconds", async () => {
+    const startedAt = performance.now();
+    api.requestContentTranslation.mockImplementation(() =>
+      Promise.resolve(
+        response({
+          opinionSlugId: "opinion1",
+          completed: performance.now() - startedAt >= 3_000,
+        })
+      )
+    );
+    const flow = mountOpinion({ pending: false });
+    flow.setTranslationMode("translated");
+    await vi.advanceTimersByTimeAsync(2_999);
+    expect(flow.translationPreview.value?.translationStatus).toBe("pending");
+    await vi.advanceTimersByTimeAsync(1);
+    expect(flow.displayedOpinion.value).toBe("Hello opinion1");
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
+    expect(api.requestContentTranslation).toHaveBeenLastCalledWith(
+      expect.objectContaining({ requestMode: "read_existing" })
+    );
+  });
+
+  it("retains one completion subscription for multiple pending statements", async () => {
+    api.requestContentTranslation.mockImplementation((params) => {
+      const { subject: current } = Dto.contentTranslationRequest.parse(params);
+      if (current.kind !== "opinion")
+        throw new Error("Expected an opinion request");
+      return Promise.resolve(
+        response({ opinionSlugId: current.opinionSlugId, completed: false })
+      );
+    });
+    const firstFlow = mountOpinion({ opinionSlugId: "opinion1" });
+    const secondFlow = mountOpinion({ opinionSlugId: "opinion2" });
+    await vi.advanceTimersByTimeAsync(0);
+    const topic = `translation:conversation:${conversationSlugId}:target:en`;
+    expect(contentTranslationSubscriptions.topics.value).toEqual([topic]);
+
+    api.requestContentTranslation.mockImplementation((params) => {
+      const { subject: current } = Dto.contentTranslationRequest.parse(params);
+      if (current.kind !== "opinion")
+        throw new Error("Expected an opinion request");
+      return Promise.resolve(
+        response({ opinionSlugId: current.opinionSlugId, completed: true })
+      );
+    });
+    completion("opinion1");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(firstFlow.displayedOpinion.value).toBe("Hello opinion1");
+    expect(contentTranslationSubscriptions.topics.value).toEqual([topic]);
+    completion("opinion2");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(secondFlow.displayedOpinion.value).toBe("Hello opinion2");
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
   });
 });
 
@@ -358,6 +452,9 @@ describe("conversation translation completion", () => {
     );
     flow.setTranslationMode("translated");
     await vi.advanceTimersByTimeAsync(0);
+    expect(contentTranslationSubscriptions.topics.value).toEqual([
+      `translation:conversation:${conversationSlugId}:target:en`,
+    ]);
     publishContentTranslationEvent({
       subject: { kind: "conversation", conversationSlugId, sourceVersion },
       targetLanguageCode: "en",
@@ -376,6 +473,7 @@ describe("conversation translation completion", () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(flow.displayedTitle.value).toBe("Hello");
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
     expect(
       api.fetchConversationContent.mock.calls.map(
         ([request]) => request.requestMode

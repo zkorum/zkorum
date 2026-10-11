@@ -111,6 +111,7 @@ import { htmlToCountedText } from "src/shared/richText";
 import type { LocalizedContentTranslationStatus } from "src/shared/types/zod";
 import { useConversationContentQuery } from "src/utils/api/contentTranslation/useContentTranslationQueries";
 import type { ContentTranslationDisplayMode } from "src/utils/translation/contentTranslation";
+import type { ContentTranslationSubscription } from "src/utils/translation/contentTranslationSubscriptions";
 import {
   isContentTranslationEventForIdentity,
   useContentTranslationRecovery,
@@ -276,6 +277,16 @@ watch(
   }
 );
 useContentTranslationRecovery({
+  subscription: computed<ContentTranslationSubscription | undefined>(() => {
+    const conversationSlugId = indexedActivitySlugId.value;
+    return conversationSlugId === undefined
+      ? undefined
+      : {
+          kind: "conversation",
+          conversationSlugId,
+          targetLanguageCode: props.languageCode,
+        };
+  }),
   canRefresh: computed(() => !requestedActivityContentQuery.isFetching.value),
   identity: requestedActivityTranslationIdentity,
   enabled: computed(

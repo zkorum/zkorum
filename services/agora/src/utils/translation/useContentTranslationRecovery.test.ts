@@ -1,8 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type EffectScope, effectScope, nextTick, ref } from "vue";
+import {
+  type EffectScope,
+  effectScope,
+  type MaybeRefOrGetter,
+  nextTick,
+  ref,
+} from "vue";
 
 import type { SSEContentTranslationUpdatedData } from "../../shared/types/sse";
 import { publishContentTranslationEvent } from "./contentTranslationEvents";
+import {
+  type ContentTranslationSubscription,
+  contentTranslationSubscriptions,
+  getContentTranslationTopic,
+} from "./contentTranslationSubscriptions";
 import {
   type ContentTranslationRefreshOutcome,
   isContentTranslationEventForIdentity,
@@ -32,13 +43,28 @@ function createEvent({
 }
 
 const scopes: EffectScope[] = [];
+const defaultSubscription = {
+  kind: "conversation",
+  conversationSlugId: "conversation",
+  targetLanguageCode: "en",
+} satisfies ContentTranslationSubscription;
 
 function mountRecovery(
-  params: Parameters<typeof useContentTranslationRecovery>[0]
+  params: Omit<
+    Parameters<typeof useContentTranslationRecovery>[0],
+    "subscription"
+  > & {
+    subscription?: MaybeRefOrGetter<ContentTranslationSubscription | undefined>;
+  }
 ) {
   const scope = effectScope();
   scopes.push(scope);
-  const recovery = scope.run(() => useContentTranslationRecovery(params));
+  const recovery = scope.run(() =>
+    useContentTranslationRecovery({
+      subscription: defaultSubscription,
+      ...params,
+    })
+  );
   if (recovery === undefined) throw new Error("Test scope did not initialize");
   return { recovery, scope };
 }
@@ -85,13 +111,11 @@ describe("useContentTranslationRecovery", () => {
     ).toBe(false);
   });
 
-  it("uses backoff polling until content settles", async () => {
+  it("polls each second for five seconds, then backs off until content settles", async () => {
     const refresh = vi
       .fn<() => Promise<ContentTranslationRefreshOutcome>>()
-      .mockResolvedValueOnce("pending")
-      .mockResolvedValueOnce("pending")
-      .mockResolvedValue("settled");
-    const { recovery } = mountRecovery({
+      .mockResolvedValue("pending");
+    mountRecovery({
       identity: "opinion-1",
       enabled: true,
       isPending: true,
@@ -100,14 +124,148 @@ describe("useContentTranslationRecovery", () => {
       onFailure: vi.fn(),
     });
 
-    expect(recovery.isActive.value).toBe(true);
-    await vi.advanceTimersByTimeAsync(2_000);
+    expect(contentTranslationSubscriptions.topics.value).toEqual([
+      getContentTranslationTopic(defaultSubscription),
+    ]);
     await vi.advanceTimersByTimeAsync(5_000);
-    await vi.advanceTimersByTimeAsync(10_000);
+    expect(refresh).toHaveBeenCalledTimes(5);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(refresh).toHaveBeenCalledTimes(6);
+    refresh.mockResolvedValueOnce("settled");
+    await vi.advanceTimersByTimeAsync(5_000);
     await vi.advanceTimersByTimeAsync(60_000);
 
-    expect(refresh).toHaveBeenCalledTimes(3);
-    expect(recovery.isActive.value).toBe(false);
+    expect(refresh).toHaveBeenCalledTimes(7);
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
+  });
+
+  it("keeps a one-second start cadence without overlapping reads when the API takes 600ms", async () => {
+    const startedAt = performance.now();
+    const requestStarts: number[] = [];
+    let activeReads = 0;
+    let maxActiveReads = 0;
+    mountRecovery({
+      identity: "opinion-1",
+      enabled: true,
+      isPending: true,
+      classifyEvent: () => "refresh",
+      refresh: async () => {
+        requestStarts.push(performance.now() - startedAt);
+        activeReads += 1;
+        maxActiveReads = Math.max(maxActiveReads, activeReads);
+        await new Promise<void>((resolve) => setTimeout(resolve, 600));
+        activeReads -= 1;
+        return requestStarts.length === 5 ? "settled" : "pending";
+      },
+      onFailure: vi.fn(),
+    });
+
+    await vi.advanceTimersByTimeAsync(5_600);
+    expect(requestStarts).toEqual([1_000, 2_000, 3_000, 4_000, 5_000]);
+    expect(maxActiveReads).toBe(1);
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
+  });
+
+  it("does not overlap slow reads or extend the fast window by their duration", async () => {
+    const first = Promise.withResolvers<ContentTranslationRefreshOutcome>();
+    const refresh = vi
+      .fn<() => Promise<ContentTranslationRefreshOutcome>>()
+      .mockReturnValueOnce(first.promise)
+      .mockResolvedValue("settled");
+    mountRecovery({
+      identity: "opinion-1",
+      enabled: true,
+      isPending: true,
+      classifyEvent: () => "refresh",
+      refresh,
+      onFailure: vi.fn(),
+    });
+
+    await vi.advanceTimersByTimeAsync(6_000);
+    expect(refresh).toHaveBeenCalledOnce();
+    first.resolve("pending");
+    await vi.advanceTimersByTimeAsync(1_999);
+    expect(refresh).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it("subscribes only while pending and follows locale, visibility, and enabled changes", async () => {
+    const subscription =
+      ref<ContentTranslationSubscription>(defaultSubscription);
+    const isPending = ref(false);
+    const enabled = ref(true);
+    const visibility = vi.spyOn(document, "visibilityState", "get");
+    const { scope } = mountRecovery({
+      subscription,
+      identity: "opinion-1",
+      enabled,
+      isPending,
+      classifyEvent: () => "refresh",
+      refresh: () => Promise.resolve("pending"),
+      onFailure: vi.fn(),
+    });
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
+
+    isPending.value = true;
+    await nextTick();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([
+      getContentTranslationTopic(subscription.value),
+    ]);
+    subscription.value = { ...defaultSubscription, targetLanguageCode: "fr" };
+    await nextTick();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([
+      getContentTranslationTopic(subscription.value),
+    ]);
+
+    visibility.mockReturnValue("hidden");
+    document.dispatchEvent(new Event("visibilitychange"));
+    await nextTick();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
+    visibility.mockReturnValue("visible");
+    document.dispatchEvent(new Event("visibilitychange"));
+    await nextTick();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([
+      getContentTranslationTopic(subscription.value),
+    ]);
+
+    enabled.value = false;
+    await nextTick();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
+    enabled.value = true;
+    await nextTick();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([
+      getContentTranslationTopic(subscription.value),
+    ]);
+    scope.stop();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
+  });
+
+  it("keeps the same subscription across equivalent objects and source revision changes", async () => {
+    const retain = vi.spyOn(contentTranslationSubscriptions, "retain");
+    const subscription =
+      ref<ContentTranslationSubscription>(defaultSubscription);
+    const identity = ref("opinion-1:revision-1");
+    mountRecovery({
+      subscription,
+      identity,
+      enabled: true,
+      isPending: true,
+      classifyEvent: () => "refresh",
+      refresh: () => Promise.resolve("pending"),
+      onFailure: vi.fn(),
+    });
+    expect(retain).toHaveBeenCalledOnce();
+
+    subscription.value = { ...defaultSubscription };
+    await nextTick();
+    expect(retain).toHaveBeenCalledOnce();
+    identity.value = "opinion-1:revision-2";
+    await nextTick();
+    expect(retain).toHaveBeenCalledOnce();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([
+      getContentTranslationTopic(defaultSubscription),
+    ]);
   });
 
   it("coalesces repeated SSE events while refreshing", async () => {
@@ -134,9 +292,9 @@ describe("useContentTranslationRecovery", () => {
     expect(refresh).toHaveBeenCalledTimes(2);
   });
 
-  it("ignores stale events and stops on a current terminal failure", () => {
+  it("ignores stale events and stops on a current terminal failure", async () => {
     const onFailure = vi.fn();
-    const { recovery } = mountRecovery({
+    mountRecovery({
       identity: "opinion-1",
       enabled: true,
       isPending: true,
@@ -154,7 +312,8 @@ describe("useContentTranslationRecovery", () => {
       createEvent({ status: "failed", timestamp: 11 })
     );
     expect(onFailure).toHaveBeenCalledOnce();
-    expect(recovery.isActive.value).toBe(false);
+    await nextTick();
+    expect(contentTranslationSubscriptions.topics.value).toEqual([]);
   });
 
   it.each([10, 9])(
@@ -294,13 +453,13 @@ describe("useContentTranslationRecovery", () => {
       onFailure: vi.fn(),
     });
 
-    await vi.advanceTimersByTimeAsync(17_000);
-    expect(refresh).toHaveBeenCalledTimes(3);
+    await vi.advanceTimersByTimeAsync(12_000);
+    expect(refresh).toHaveBeenCalledTimes(7);
     publishContentTranslationEvent(createEvent());
     await vi.advanceTimersByTimeAsync(0);
-    expect(refresh).toHaveBeenCalledTimes(4);
-    await vi.advanceTimersByTimeAsync(2_000);
-    expect(refresh).toHaveBeenCalledTimes(5);
+    expect(refresh).toHaveBeenCalledTimes(8);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(refresh).toHaveBeenCalledTimes(9);
   });
 
   it("ignores an old in-flight failure after the request identity changes", async () => {

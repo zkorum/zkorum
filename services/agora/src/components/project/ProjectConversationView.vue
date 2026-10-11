@@ -129,6 +129,7 @@ import type { ExtendedConversationDisplayData } from "src/shared/types/zod";
 import { useLanguageStore } from "src/stores/language";
 import { useProjectContentQuery } from "src/utils/api/contentTranslation/useContentTranslationQueries";
 import { getConversationLanguageSettingSourceLanguageCode } from "src/utils/translation/contentTranslation";
+import type { ContentTranslationSubscription } from "src/utils/translation/contentTranslationSubscriptions";
 import {
   getContentTranslationEventIdentity,
   isContentTranslationEventForIdentity,
@@ -255,6 +256,11 @@ watch(
   }
 );
 useContentTranslationRecovery({
+  subscription: computed<ContentTranslationSubscription>(() => ({
+    kind: "project",
+    projectSlug: props.project.slug,
+    targetLanguageCode: displayLanguage.value,
+  })),
   canRefresh: computed(() => !translatedProjectContentQuery.isFetching.value),
   identity: projectTranslationIdentity,
   enabled: translateProjectToSelectedLanguage,

@@ -1,9 +1,16 @@
 import type { SSEContentTranslationUpdatedData } from "src/shared/types/sse";
 import type { MaybeRefOrGetter } from "vue";
-import { onScopeDispose, ref, toValue, watch } from "vue";
+import { computed, onScopeDispose, ref, toValue, watch } from "vue";
 
 import { subscribeToContentTranslationEvents } from "./contentTranslationEvents";
+import {
+  type ContentTranslationSubscription,
+  contentTranslationSubscriptions,
+  getContentTranslationTopic,
+} from "./contentTranslationSubscriptions";
 
+const FAST_RECOVERY_INTERVAL_MS = 1_000;
+const FAST_RECOVERY_WINDOW_MS = 5_000;
 const RECOVERY_DELAYS_MS = [2_000, 5_000, 10_000, 30_000] as const;
 
 export type ContentTranslationRefreshOutcome = "settled" | "pending" | "failed";
@@ -71,6 +78,7 @@ export function isContentTranslationEventForIdentity({
 
 export function useContentTranslationRecovery({
   identity,
+  subscription,
   enabled,
   isPending,
   canRefresh = true,
@@ -80,6 +88,7 @@ export function useContentTranslationRecovery({
   subscribe = subscribeToContentTranslationEvents,
 }: {
   identity: MaybeRefOrGetter<string>;
+  subscription: MaybeRefOrGetter<ContentTranslationSubscription | undefined>;
   enabled: MaybeRefOrGetter<boolean>;
   isPending: MaybeRefOrGetter<boolean>;
   canRefresh?: MaybeRefOrGetter<boolean>;
@@ -98,6 +107,8 @@ export function useContentTranslationRecovery({
   );
   let contextGeneration = 0;
   let delayIndex = 0;
+  let fastRecoveryDeadline = 0;
+  let nextFastRefreshAt = 0;
   const latestEventTimestamps = new Map<string, number>();
   let refreshInFlightGeneration: number | undefined;
   let trailingRefreshGeneration: number | undefined;
@@ -126,13 +137,28 @@ export function useContentTranslationRecovery({
     ) {
       return;
     }
+    const now = performance.now();
+    const remainingFastWindow = fastRecoveryDeadline - now;
     const delay =
-      RECOVERY_DELAYS_MS[Math.min(delayIndex, RECOVERY_DELAYS_MS.length - 1)];
-    delayIndex += 1;
+      remainingFastWindow > 0
+        ? Math.max(1, Math.min(nextFastRefreshAt - now, remainingFastWindow))
+        : RECOVERY_DELAYS_MS[
+            Math.min(delayIndex, RECOVERY_DELAYS_MS.length - 1)
+          ];
+    if (remainingFastWindow <= 0) {
+      delayIndex += 1;
+    }
     recoveryTimer = setTimeout(() => {
       recoveryTimer = undefined;
       void refreshNow();
     }, delay);
+  }
+
+  function resetRecoveryDelays(): void {
+    const now = performance.now();
+    delayIndex = 0;
+    fastRecoveryDeadline = now + FAST_RECOVERY_WINDOW_MS;
+    nextFastRefreshAt = now + FAST_RECOVERY_INTERVAL_MS;
   }
 
   function start(): void {
@@ -141,7 +167,7 @@ export function useContentTranslationRecovery({
       return;
     }
     isActive.value = true;
-    delayIndex = 0;
+    resetRecoveryDelays();
     scheduleRefresh();
   }
 
@@ -162,6 +188,7 @@ export function useContentTranslationRecovery({
 
     trailingRefreshGeneration = undefined;
     refreshInFlightGeneration = activeGeneration;
+    nextFastRefreshAt = performance.now() + FAST_RECOVERY_INTERVAL_MS;
     let outcome: ContentTranslationRefreshOutcome;
     try {
       outcome = await refresh();
@@ -220,7 +247,7 @@ export function useContentTranslationRecovery({
     }
     start();
     // Completion is new evidence: a stale read must not inherit a long backoff.
-    delayIndex = 0;
+    resetRecoveryDelays();
     void refreshNow();
   });
 
@@ -231,6 +258,7 @@ export function useContentTranslationRecovery({
       return;
     }
     if (isActive.value) {
+      resetRecoveryDelays();
       void refreshNow();
     }
   }
@@ -255,6 +283,30 @@ export function useContentTranslationRecovery({
     { immediate: true }
   );
 
+  const activeSubscription = computed(() =>
+    isActive.value &&
+    isDocumentVisible.value &&
+    toValue(enabled) &&
+    toValue(isPending)
+      ? toValue(subscription)
+      : undefined
+  );
+  watch(
+    () => {
+      const current = activeSubscription.value;
+      return current === undefined
+        ? undefined
+        : getContentTranslationTopic(current);
+    },
+    (_topic, _previous, onCleanup) => {
+      const current = activeSubscription.value;
+      if (current !== undefined) {
+        onCleanup(contentTranslationSubscriptions.retain(current));
+      }
+    },
+    { immediate: true }
+  );
+
   watch(
     () => toValue(canRefresh),
     (nextCanRefresh) => {
@@ -272,5 +324,5 @@ export function useContentTranslationRecovery({
     }
   });
 
-  return { isActive, refreshNow, start, stop };
+  return { start, stop };
 }

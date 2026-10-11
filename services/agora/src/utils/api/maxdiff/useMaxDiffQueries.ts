@@ -15,6 +15,7 @@ import { updateConversationQueryCache } from "src/utils/api/post/useConversation
 import { hasPendingMaxDiffItemTranslations } from "src/utils/maxdiffTranslation";
 import { getMaxDiffLoadQueryKey } from "src/utils/query/conversationQueryKeys";
 import { useViewerQueryScope } from "src/utils/query/viewerScope";
+import type { ContentTranslationSubscription } from "src/utils/translation/contentTranslationSubscriptions";
 import {
   isContentTranslationEventForIdentity,
   useContentTranslationRecovery,
@@ -58,6 +59,11 @@ export function useMaxDiffItemsQuery({
   });
 
   useContentTranslationRecovery({
+    subscription: computed<ContentTranslationSubscription>(() => ({
+      kind: "conversation",
+      conversationSlugId: toValue(conversationSlugId),
+      targetLanguageCode: displayLanguage.value,
+    })),
     canRefresh: computed(() => !query.isFetching.value),
     identity: computed(() =>
       JSON.stringify([
