@@ -20,17 +20,12 @@
       >
         <ProjectBannerImage
           v-if="effectiveBannerImageUrl !== undefined"
+          class="project-conversation-view__banner-image"
           :src="effectiveBannerImageUrl"
           :alt="t('bannerImageAlt', { title: projectTitle })"
         />
         <div v-else class="project-conversation-view__banner-grid"></div>
-        <div
-          class="project-conversation-view__banner-controls"
-          :class="{
-            'project-conversation-view__banner-controls--without-language':
-              !hasMultipleLanguageOptions,
-          }"
-        >
+        <div class="project-conversation-view__banner-controls">
           <ProjectLanguageSelect
             v-if="hasMultipleLanguageOptions"
             v-model:selected-language="selectedLanguage"
@@ -64,26 +59,28 @@
 
       <div class="project-conversation-view__shell">
         <div class="project-conversation-view__content-grid">
-          <ProjectConversationHeaderCard
-            :project="project"
-            :project-title="projectTitle"
-            :conversation-data="conversationData"
-            :initial-display-content="initialDisplayContent"
-            :selected-language="selectedLanguage"
-            @conversation-deleted="emit('conversationDeleted')"
-          />
+          <div class="project-conversation-view__conversation">
+            <ProjectConversationHeaderCard
+              :project="project"
+              :project-title="projectTitle"
+              :conversation-data="conversationData"
+              :initial-display-content="initialDisplayContent"
+              :selected-language="selectedLanguage"
+              @conversation-deleted="emit('conversationDeleted')"
+            />
 
-          <section class="project-conversation-view__conversation-stream">
-            <slot name="conversation-actions" />
+            <section class="project-conversation-view__conversation-stream">
+              <slot name="conversation-actions" />
 
-            <div class="project-conversation-view__toolbar">
-              <slot name="conversation-toolbar" />
-            </div>
+              <div class="project-conversation-view__toolbar">
+                <slot name="conversation-toolbar" />
+              </div>
 
-            <div class="project-conversation-view__feed">
-              <slot name="conversation-feed" />
-            </div>
-          </section>
+              <div class="project-conversation-view__feed">
+                <slot name="conversation-feed" />
+              </div>
+            </section>
+          </div>
 
           <div
             class="project-conversation-view__aside"
@@ -352,6 +349,8 @@ main {
 
 .project-conversation-view__banner {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   height: clamp(12.5rem, 25vw, 17rem);
   overflow: hidden;
   background: linear-gradient(
@@ -359,6 +358,11 @@ main {
     var(--project-gradient-start),
     var(--project-gradient-end)
   );
+}
+
+.project-conversation-view__banner-image {
+  grid-area: 1 / 1;
+  align-self: start;
 }
 
 .project-conversation-view__banner::after {
@@ -400,10 +404,6 @@ main {
   &::after {
     display: none;
   }
-
-  .project-conversation-view__banner-controls {
-    padding-block-end: 0.85rem;
-  }
 }
 
 .project-conversation-view__banner--with-image
@@ -414,25 +414,24 @@ main {
 }
 
 .project-conversation-view__banner-controls {
-  position: relative;
+  // Share the image's grid cell so short artwork still makes room for controls.
+  grid-area: 1 / 1;
+  align-self: start;
   z-index: 2;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   width: min(72rem, calc(100% - 2rem));
   margin: 0 auto;
-  padding-top: 0.85rem;
-}
-
-.project-conversation-view__banner-controls--without-language {
-  justify-content: flex-end;
+  padding-block: 0.85rem;
 }
 
 .project-conversation-view__consultation-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
+  margin-inline-start: auto;
   padding: 0.48rem 0.75rem;
   border-radius: 999px;
   background: rgba($ink-base, 0.78);
@@ -441,7 +440,6 @@ main {
   font-weight: var(--font-weight-bold);
   line-height: 1;
   box-shadow: 0 0.25rem 1rem rgba(10, 7, 20, 0.14);
-  white-space: nowrap;
 }
 
 .project-conversation-view__consultation-dot {
@@ -467,22 +465,33 @@ main {
   width: 100%;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
   grid-template-areas:
-    "title ."
-    "stream aside"
+    "conversation aside"
     "footer aside";
   column-gap: clamp(1.4rem, 4vw, 2.7rem);
   row-gap: 1rem;
   align-items: start;
 }
 
-.project-conversation-view__conversation-stream,
+.project-conversation-view__conversation,
 .project-conversation-view__aside {
   min-width: 0;
+}
+
+.project-conversation-view__conversation {
+  // Keep header/feed spacing independent of the sidebar's intrinsic height.
+  grid-area: conversation;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "stream";
+  gap: 1rem;
 }
 
 .project-conversation-view__conversation-stream {
   grid-area: stream;
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 0.5rem;
 }
@@ -529,8 +538,7 @@ main {
   .project-conversation-view__content-grid {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "title"
-      "stream"
+      "conversation"
       "aside"
       "footer";
     padding-inline: 1rem;
@@ -553,8 +561,7 @@ main {
     .project-conversation-view__content-grid {
       grid-template-columns: 1fr;
       grid-template-areas:
-        "title"
-        "stream"
+        "conversation"
         "aside"
         "footer";
     }
@@ -575,7 +582,7 @@ main {
 @media (max-width: 520px) {
   .project-conversation-view__banner-controls {
     width: calc(100% - 1.2rem);
-    padding-top: 0.7rem;
+    padding-block: 0.7rem;
   }
 
   .project-conversation-view__consultation-pill {

@@ -16,6 +16,7 @@
       >
         <ProjectBannerImage
           v-if="selectedBannerImageUrl !== undefined"
+          class="project-page-view__banner-image"
           :src="selectedBannerImageUrl"
           :alt="t('bannerImageAlt', { title: displayedProjectContent.title })"
         />
@@ -23,10 +24,6 @@
         <div
           v-if="hasMultipleLanguageOptions || consultationStatus !== 'none'"
           class="project-page-view__banner-controls"
-          :class="{
-            'project-page-view__banner-controls--without-language':
-              !hasMultipleLanguageOptions,
-          }"
         >
           <ProjectLanguageSelect
             v-if="hasMultipleLanguageOptions"
@@ -352,6 +349,8 @@ main {
 
 .project-page-view__banner {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   height: clamp(12.5rem, 25vw, 17rem);
   overflow: hidden;
   background: linear-gradient(
@@ -359,6 +358,11 @@ main {
     var(--project-gradient-start),
     var(--project-gradient-end)
   );
+}
+
+.project-page-view__banner-image {
+  grid-area: 1 / 1;
+  align-self: start;
 }
 
 .project-page-view__banner-grid {
@@ -377,32 +381,27 @@ main {
 .project-page-view__banner.project-page-view__banner--with-image {
   height: auto;
   background: $app-background-color;
-
-  .project-page-view__banner-controls {
-    padding-block-end: 0.85rem;
-  }
 }
 
 .project-page-view__banner-controls {
-  position: relative;
+  // Share the image's grid cell so short artwork still makes room for controls.
+  grid-area: 1 / 1;
+  align-self: start;
   z-index: 1;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   width: min(72rem, calc(100% - 2rem));
   margin: 0 auto;
-  padding-top: 0.85rem;
-}
-
-.project-page-view__banner-controls--without-language {
-  justify-content: flex-end;
+  padding-block: 0.85rem;
 }
 
 .project-page-view__consultation-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
+  margin-inline-start: auto;
   padding: 0.48rem 0.75rem;
   border-radius: 999px;
   background: rgba($ink-base, 0.78);
@@ -411,7 +410,6 @@ main {
   font-weight: var(--font-weight-bold);
   line-height: 1;
   box-shadow: 0 0.25rem 1rem rgba(10, 7, 20, 0.14);
-  white-space: nowrap;
 }
 
 .project-page-view__consultation-dot {
@@ -639,7 +637,7 @@ h2 {
 @media (max-width: 520px) {
   .project-page-view__banner-controls {
     width: calc(100% - 1.2rem);
-    padding-top: 0.7rem;
+    padding-block: 0.7rem;
   }
 
   .project-page-view__consultation-pill {
