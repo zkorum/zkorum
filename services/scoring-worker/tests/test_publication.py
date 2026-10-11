@@ -9,8 +9,8 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
-from sqlalchemy import create_engine, func, insert, select, update
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import String, create_engine, func, insert, literal_column, select, update
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 from testcontainers.postgres import PostgresContainer
 
@@ -52,7 +52,7 @@ from scoring_worker.generated_models import (
 from scripts.backfill_display_scores import backfill_display_scores
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Generator, Sequence
 
     from sqlalchemy import Connection, Engine
 
@@ -402,11 +402,24 @@ def test_empty_publications_soft_delete_scores_without_resetting_tombstones(
         ).all()
         assert len(rows) == len(fixture.slugs)
         assert all(row.deleted_at is not None for row in rows)
-        tombstones = {row.id: row.deleted_at for row in rows}
+        ids = [row.id for row in rows]
         assert (
             session.get_one(RankingConversationConfig, fixture.config_id).current_ranking_score_id
             is None
         )
+    with ranking_db.begin() as connection:
+        connection.execute(
+            update(MaxdiffUserEntityScore)
+            .where(MaxdiffUserEntityScore.id.in_(ids))
+            .values(deleted_at=datetime(2000, 1, 1, tzinfo=UTC))
+        )
+    with Session(ranking_db) as session:
+        tombstones = {
+            row.id: row.deleted_at
+            for row in session.scalars(
+                select(MaxdiffUserEntityScore).where(MaxdiffUserEntityScore.id.in_(ids))
+            )
+        }
     append_comparison(engine=ranking_db, fixture=fixture, position=1)
     with ranking_db.connect() as connection:
         persist_scoring_batch(
@@ -552,6 +565,90 @@ def test_deleted_snapshots_do_not_choose_baseline_or_trigger_reconciliation(
         conversation_id
         for conversation_id, _ in scoring_db.reconcile_unscored_conversations(ranking_db)
     }
+
+
+def test_identical_personal_scores_do_not_rewrite_rows(ranking_db: Engine) -> None:
+    fixture = seed_ranking(ranking_db)
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    # PostgreSQL xmin reveals physical rewrites even when score values stay identical.
+    statement = select(MaxdiffUserEntityScore.id, literal_column("xmin").cast(String)).where(
+        MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id
+    )
+    with Session(ranking_db) as session:
+        original_versions = {
+            score_id: version for score_id, version in session.execute(statement).tuples()
+        }
+    append_comparison(engine=ranking_db, fixture=fixture, position=1)
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with Session(ranking_db) as session:
+        assert {
+            score_id: version for score_id, version in session.execute(statement).tuples()
+        } == original_versions
+
+
+def test_failed_publication_rolls_back_existing_scores_and_snapshot_tombstones(
+    ranking_db: Engine,
+) -> None:
+    fixture = seed_ranking(ranking_db)
+    for position in [0, 1]:
+        if position:
+            append_comparison(engine=ranking_db, fixture=fixture, position=position)
+        publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    personal_state = (
+        select(
+            MaxdiffUserEntityScore.id,
+            MaxdiffUserEntityScore.score,
+            MaxdiffUserEntityScore.display_score,
+            MaxdiffUserEntityScore.deleted_at,
+        )
+        .where(MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id)
+        .order_by(MaxdiffUserEntityScore.id)
+    )
+    snapshot_state = (
+        select(RankingConversationStatsSnapshot.id, RankingConversationStatsSnapshot.deleted_at)
+        .where(RankingConversationStatsSnapshot.conversation_id == fixture.conversation_id)
+        .order_by(RankingConversationStatsSnapshot.id)
+    )
+    with Session(ranking_db) as session:
+        previous_score_id = session.get_one(
+            RankingConversationConfig, fixture.config_id
+        ).current_ranking_score_id
+        previous_personal = list(session.execute(personal_state).tuples())
+        previous_snapshots = list(session.execute(snapshot_state).tuples())
+    with ranking_db.begin() as connection:
+        connection.execute(
+            update(RankingItem)
+            .where(RankingItem.id == fixture.item_ids[0])
+            .values(lifecycle_status=RankingItemLifecycleStatus.completed)
+        )
+        # Reject the root update after the child tombstones have been written.
+        connection.exec_driver_sql(
+            "ALTER TABLE ranking_conversation_stats_snapshot ADD CONSTRAINT "
+            "test_reject_tombstones CHECK (deleted_at IS NULL) NOT VALID"
+        )
+    try:
+        with pytest.raises(IntegrityError, match="test_reject_tombstones"):
+            publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    finally:
+        with ranking_db.begin() as connection:
+            connection.exec_driver_sql(
+                "ALTER TABLE ranking_conversation_stats_snapshot "
+                "DROP CONSTRAINT test_reject_tombstones"
+            )
+    with Session(ranking_db) as session:
+        assert (
+            session.get_one(RankingConversationConfig, fixture.config_id).current_ranking_score_id
+            == previous_score_id
+        )
+        assert list(session.execute(personal_state).tuples()) == previous_personal
+        assert list(session.execute(snapshot_state).tuples()) == previous_snapshots
+        items = session.scalars(
+            select(RankingConversationStatsItem).where(
+                RankingConversationStatsItem.conversation_id == fixture.conversation_id,
+            )
+        ).all()
+        assert len(items) == 6
+        assert all(item.deleted_at is None for item in items)
 
 
 def test_score_backups_are_json_values_not_json_encoded_strings(ranking_db: Engine) -> None:
@@ -792,7 +889,7 @@ def test_publication_holds_invalidation_lock_until_commit(
         *,
         conversation_ids: list[int],
         results: dict[int, tuple[list[ScoredEntity], dict[str, int]]],
-        user_scores: list[UserScoreEntry] | None = None,
+        user_scores: Sequence[UserScoreEntry],
     ) -> dict[int, int]:
         nonlocal blocked
         with (

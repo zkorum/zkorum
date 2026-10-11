@@ -1,5 +1,8 @@
 all: dev
 
+check-soft-deletes:
+	pnpm --dir services/api check:soft-deletes
+
 LOG_RUNNER := node scripts/dev-log-runner.mjs
 OPENAPI_GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.24.0
 LOAD_TEST_CONVERSATIONS := $(or $(CONVERSATION_SLUG_IDS),$(conversations))
