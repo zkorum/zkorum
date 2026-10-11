@@ -773,6 +773,12 @@ async function clearPreferredOpinionGroupCountForSubject({
         .where(inArray(polisConversationConfigTable.id, polisConfigIds));
 }
 
+export function getConversationContentEditPremiumFeatures(
+    features: readonly PremiumFeature[],
+): PremiumFeature[] {
+    return features.filter((feature) => feature !== "event_ticket");
+}
+
 export async function buildConversationEditPermissions({
     db,
     conversation,
@@ -792,9 +798,8 @@ export async function buildConversationEditPermissions({
         db,
         conversation,
     });
-    const contentEditPremiumFeatures = premiumFeatures.filter(
-        (feature) => feature !== "event_ticket",
-    );
+    const contentEditPremiumFeatures =
+        getConversationContentEditPremiumFeatures(premiumFeatures);
     const restrictedConversationFeatures = await getRestrictedPremiumFeatures({
         db,
         subject,

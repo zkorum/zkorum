@@ -10,7 +10,6 @@ export interface SeedOpinionsTranslations {
   addStatementShortcut: string;
   needMinimumForMaxDiff: string;
   addOpinion: string;
-  addMaxDiffItem: string;
   opinionCannotBeEmpty: string;
   opinionHtmlTooLong: string;
   opinionExceedsLimit: string;
@@ -42,7 +41,6 @@ export const seedOpinionsTranslations: Record<
     needMinimumForMaxDiff:
       "At least 2 statements are required for prioritization.",
     addOpinion: "Add Statement",
-    addMaxDiffItem: "Add Statement",
     opinionCannotBeEmpty: "Statement cannot be empty",
     opinionHtmlTooLong:
       "Statement formatting is too large. Please simplify it.",
@@ -73,7 +71,6 @@ export const seedOpinionsTranslations: Record<
       "اضغط على Shift + Enter أثناء الكتابة لبدء مقترح جديد.",
     needMinimumForMaxDiff: "مطلوب 4 مقترحات على الأقل لترتيب الأولويات.",
     addOpinion: "أضف مقترحًا",
-    addMaxDiffItem: "أضف عبارة",
     opinionCannotBeEmpty: "لا يمكن أن يكون المقترح فارغًا",
     opinionHtmlTooLong: "تنسيق المقترح كبير جدًا. يرجى تبسيطه.",
     opinionExceedsLimit: "المقترح يتجاوز حد الـ {limit} حرف ({count}/{limit})",
@@ -102,7 +99,6 @@ export const seedOpinionsTranslations: Record<
     needMinimumForMaxDiff:
       "Se requieren al menos 4 declaraciones para la priorización.",
     addOpinion: "Añadir Proposición",
-    addMaxDiffItem: "Añadir Declaración",
     opinionCannotBeEmpty: "La proposición no puede estar vacía",
     opinionHtmlTooLong:
       "El formato de la proposición es demasiado grande. Simplifíquelo.",
@@ -132,7 +128,6 @@ export const seedOpinionsTranslations: Record<
       "هنگام نوشتن، Shift + Enter را فشار دهید تا گزاره جدیدی شروع کنید.",
     needMinimumForMaxDiff: "حداقل ۲ گزاره برای اولویت‌بندی لازم است.",
     addOpinion: "افزودن گزاره",
-    addMaxDiffItem: "افزودن گزاره",
     opinionCannotBeEmpty: "گزاره نمی‌تواند خالی باشد",
     opinionHtmlTooLong:
       "قالب‌بندی گزاره بیش از حد بزرگ است. لطفاً آن را ساده‌تر کنید.",
@@ -162,7 +157,6 @@ export const seedOpinionsTranslations: Record<
       "בזמן הכתיבה, לחצו על Shift + Enter כדי להתחיל הצהרה חדשה.",
     needMinimumForMaxDiff: "נדרשות לפחות 2 הצהרות לתיעדוף.",
     addOpinion: "הוספת הצהרה",
-    addMaxDiffItem: "הוספת הצהרה",
     opinionCannotBeEmpty: "ההצהרה לא יכולה להיות ריקה",
     opinionHtmlTooLong: "עיצוב ההצהרה גדול מדי. נא לפשט אותו.",
     opinionExceedsLimit: "ההצהרה חורגת ממגבלת {limit} תווים ({count}/{limit})",
@@ -191,7 +185,6 @@ export const seedOpinionsTranslations: Record<
     needMinimumForMaxDiff:
       "Au moins 4 propositions sont requises pour la hiérarchisation.",
     addOpinion: "Ajouter une Proposition",
-    addMaxDiffItem: "Ajouter une Proposition",
     opinionCannotBeEmpty: "La proposition ne peut pas être vide",
     opinionHtmlTooLong:
       "La mise en forme de la proposition est trop volumineuse. Simplifiez-la.",
@@ -221,7 +214,6 @@ export const seedOpinionsTranslations: Record<
     addStatementShortcut: "输入时按 Shift + Enter 可开始一条新意见。",
     needMinimumForMaxDiff: "优先排序至少需要2条意见。",
     addOpinion: "添加意见",
-    addMaxDiffItem: "添加意见",
     opinionCannotBeEmpty: "意见不能为空",
     opinionHtmlTooLong: "陈述的格式内容过大。请简化格式。",
     opinionExceedsLimit: "意见超过 {limit} 字符限制 ({count}/{limit})",
@@ -248,7 +240,6 @@ export const seedOpinionsTranslations: Record<
     addStatementShortcut: "輸入時按 Shift + Enter 可開始一條新意見。",
     needMinimumForMaxDiff: "優先排序至少需要2條意見。",
     addOpinion: "添加意見",
-    addMaxDiffItem: "添加意見",
     opinionCannotBeEmpty: "意見不能為空",
     opinionHtmlTooLong: "陳述的格式內容過大。請簡化格式。",
     opinionExceedsLimit: "意見超過 {limit} 字符限制 ({count}/{limit})",
@@ -276,7 +267,6 @@ export const seedOpinionsTranslations: Record<
       "入力中に Shift + Enter を押すと、新しい意見を始められます。",
     needMinimumForMaxDiff: "優先順位付けには少なくとも2つの意見が必要です。",
     addOpinion: "意見を追加",
-    addMaxDiffItem: "意見を追加",
     opinionCannotBeEmpty: "意見を入力してください",
     opinionHtmlTooLong: "意見の書式設定が大きすぎます。簡略化してください。",
     opinionExceedsLimit:
@@ -305,7 +295,6 @@ export const seedOpinionsTranslations: Record<
       "Жазып жатканда жаңы пикирди баштоо үчүн Shift + Enter басыңыз.",
     needMinimumForMaxDiff: "Артыкчылык берүү үчүн кеминде 2 пикир керек.",
     addOpinion: "Пикир кошуу",
-    addMaxDiffItem: "Пикир кошуу",
     opinionCannotBeEmpty: "Пикир бош болушу мүмкүн эмес",
     opinionHtmlTooLong: "Пикирдин форматтоосу өтө чоң. Аны жөнөкөйлөтүңүз.",
     opinionExceedsLimit:
@@ -335,7 +324,6 @@ export const seedOpinionsTranslations: Record<
     needMinimumForMaxDiff:
       "Для приоритизации требуется как минимум 2 высказывания.",
     addOpinion: "Добавить высказывание",
-    addMaxDiffItem: "Добавить высказывание",
     opinionCannotBeEmpty: "Высказывание не может быть пустым",
     opinionHtmlTooLong:
       "Форматирование высказывания слишком объёмное. Упростите его.",

@@ -25221,7 +25221,7 @@
                                                             ]
                                                         },
                                                         "seedOpinionFailure": {
-                                                            "anyOf": [
+                                                            "oneOf": [
                                                                 {
                                                                     "type": "object",
                                                                     "properties": {

@@ -13,7 +13,7 @@ import {
     projectOrganizationOwnershipTable,
     projectTable,
 } from "@/shared-backend/schema.js";
-import { and, eq, isNull, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNull, isNotNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { httpErrors } from "@fastify/sensible";
 import { toUnionUndefined } from "@/shared/shared.js";
@@ -35,7 +35,6 @@ import type {
 } from "@/shared/types/dto.js";
 import type {
     ConversationTypeConfig,
-    DisplayedOpinionItem,
     ConversationProjectAssignment,
     PremiumFeature,
 } from "@/shared/types/zod.js";
@@ -47,6 +46,7 @@ import {
 } from "@/service/projectAccess.js";
 import {
     buildConversationEditPermissions,
+    getConversationContentEditPremiumFeatures,
     getPremiumEntitlementSubjectForConversation,
     getPremiumFeaturesInConversation,
     getRestrictedPremiumFeatures,
@@ -84,18 +84,14 @@ import {
     normalizeInheritedConversationMultilingualSettings,
     sourceLanguageToDisplayLanguage,
 } from "./translationLanguageSetting.js";
-import {
-    normalizeUserRichTextInput,
-    type NormalizedUserRichText,
-} from "./richText.js";
-import { validateSeedOpinionAdditions } from "@/shared/utils/seedOpinions.js";
+import { normalizeUserRichTextInput } from "./richText.js";
+import { getDuplicateSeedOpinionIndexes } from "@/shared/seedOpinions.js";
+import { htmlToCountedText } from "@/shared/richText.js";
 import {
     fetchConversationSeedOpinions,
-    type ConversationSeedOpinion,
+    appendConversationSeedOpinions,
+    normalizeSeedOpinionList,
 } from "./conversationSeedOpinions.js";
-import { postNewOpinion } from "./comment.js";
-import { createRankingItem } from "./rankingItem.js";
-import { lockRankingScoringConfig } from "./maxdiff.js";
 import type { RealtimeSSEManager } from "./realtimeSSE.js";
 import { projectConversationTypeConfig } from "@/shared/utils/conversationTypeConfig.js";
 import {
@@ -114,7 +110,6 @@ import {
     fetchSeedOpinionSources,
     type ConversationContentSource,
     type SurveyQuestionContentSource,
-    type RankingItemContentSource,
 } from "./contentTranslation.js";
 
 interface GetConversationForEditProps {
@@ -128,7 +123,10 @@ export async function getConversationForEdit({
     conversationSlugId,
     userId,
 }: GetConversationForEditProps): Promise<GetConversationForEditResponse> {
-    const defaultProjectOrganization = alias(organizationTable, "defaultProjectOrganization");
+    const defaultProjectOrganization = alias(
+        organizationTable,
+        "defaultProjectOrganization",
+    );
     const results = await db
         .select({
             conversationId: conversationTable.id,
@@ -177,7 +175,13 @@ export async function getConversationForEdit({
             projectTable,
             eq(projectTable.id, conversationTable.projectId),
         )
-        .leftJoin(defaultProjectOrganization, eq(defaultProjectOrganization.id, projectTable.autoProvisionedForOrganizationId))
+        .leftJoin(
+            defaultProjectOrganization,
+            eq(
+                defaultProjectOrganization.id,
+                projectTable.autoProvisionedForOrganizationId,
+            ),
+        )
         .leftJoin(
             projectContentTable,
             eq(projectContentTable.id, projectTable.currentContentId),
@@ -367,7 +371,8 @@ export async function getConversationForEdit({
         participationMode: conversation.participationMode,
         requiresEventTicket: toUnionUndefined(conversation.requiresEventTicket),
         aiLabelingEnabled: conversation.aiLabelingEnabled ?? false,
-        preferredOpinionGroupCount: conversation.preferredOpinionGroupCount ?? null,
+        preferredOpinionGroupCount:
+            conversation.preferredOpinionGroupCount ?? null,
         postAsOrganizationName: toUnionUndefined(
             conversation.autoProvisionedForUserId === null
                 ? conversation.postAsOrganizationName
@@ -401,7 +406,6 @@ export async function getConversationForEdit({
 interface UpdateConversationProps {
     db: PostgresDatabase;
     userId: string;
-    didWrite: string;
     realtimeSSEManager?: RealtimeSSEManager;
     googleCloudCredentials?: GoogleCloudCredentials;
     valkey?: Valkey;
@@ -417,7 +421,6 @@ type UpdateConversationServiceResponse =
 export async function updateConversation({
     db,
     userId,
-    didWrite,
     realtimeSSEManager,
     googleCloudCredentials,
     valkey,
@@ -447,26 +450,9 @@ export async function updateConversation({
             ? conversationTypeConfig.preferredOpinionGroupCount
             : undefined;
 
-    const normalizedSeedOpinions: NormalizedUserRichText[] = [];
-    for (const [index, html] of newSeedOpinionList.entries()) {
-        const normalization = normalizeUserRichTextInput({
-            html,
-            validationMode: "opinion",
-        });
-        if (!normalization.success) {
-            return {
-                success: false,
-                reason: "invalid_seed_opinion",
-                seedOpinionFailure: {
-                    index,
-                    reason: normalization.reason,
-                    count: normalization.count,
-                    limit: normalization.limit,
-                },
-            };
-        }
-        normalizedSeedOpinions.push(normalization.content);
-    }
+    const normalizedSeeds = normalizeSeedOpinionList(newSeedOpinionList);
+    if (!normalizedSeeds.success) return normalizedSeeds;
+    const normalizedSeedOpinions = normalizedSeeds.opinions;
 
     let sanitizedBody = conversationBody;
     let bodyPlainText = "";
@@ -497,14 +483,52 @@ export async function updateConversation({
 
     const primaryDb = getPrimaryDatabase(db);
     if (projectChange !== undefined) {
-        const source = (await primaryDb.select({ projectId: conversationTable.projectId, projectSlug: projectTable.slug, moderationAction: conversationModerationTable.moderationAction })
-            .from(conversationTable).innerJoin(projectTable, eq(projectTable.id, conversationTable.projectId))
-            .leftJoin(conversationModerationTable, and(eq(conversationModerationTable.conversationId, conversationTable.id), isNull(conversationModerationTable.deletedAt)))
-            .where(and(eq(conversationTable.slugId, conversationSlugId), isNotNull(conversationTable.currentContentId), isNull(projectTable.deletedAt)))).at(0);
-        if (source === undefined) return { success: false, reason: "not_found" };
-        if (!(await hasProjectCapability({ db: primaryDb, userId, projectId: source.projectId, capability: "conversation_edit" }))) return { success: false, reason: "not_author" };
-        if (source.moderationAction === "lock") return { success: false, reason: "conversation_locked" };
-        if (source.projectSlug !== projectChange.expectedProjectSlug) return { success: false, reason: "project_assignment_changed" };
+        const source = (
+            await primaryDb
+                .select({
+                    projectId: conversationTable.projectId,
+                    projectSlug: projectTable.slug,
+                    moderationAction:
+                        conversationModerationTable.moderationAction,
+                })
+                .from(conversationTable)
+                .innerJoin(
+                    projectTable,
+                    eq(projectTable.id, conversationTable.projectId),
+                )
+                .leftJoin(
+                    conversationModerationTable,
+                    and(
+                        eq(
+                            conversationModerationTable.conversationId,
+                            conversationTable.id,
+                        ),
+                        isNull(conversationModerationTable.deletedAt),
+                    ),
+                )
+                .where(
+                    and(
+                        eq(conversationTable.slugId, conversationSlugId),
+                        isNotNull(conversationTable.currentContentId),
+                        isNull(projectTable.deletedAt),
+                    ),
+                )
+        ).at(0);
+        if (source === undefined)
+            return { success: false, reason: "not_found" };
+        if (
+            !(await hasProjectCapability({
+                db: primaryDb,
+                userId,
+                projectId: source.projectId,
+                capability: "conversation_edit",
+            }))
+        )
+            return { success: false, reason: "not_author" };
+        if (source.moderationAction === "lock")
+            return { success: false, reason: "conversation_locked" };
+        if (source.projectSlug !== projectChange.expectedProjectSlug)
+            return { success: false, reason: "project_assignment_changed" };
     }
     // Default-project provisioning follows creation's lock order; the move itself
     // rechecks capabilities and destination state under project/conversation locks.
@@ -544,7 +568,11 @@ export async function updateConversation({
                 !(await lockConversationEmailUpdateProject({
                     db: tx,
                     projectId,
-                    lockMode: projectChange !== undefined || conversationEmailUpdateEnabledOverride !== undefined ? "no key update" : "share",
+                    lockMode:
+                        projectChange !== undefined ||
+                        conversationEmailUpdateEnabledOverride !== undefined
+                            ? "no key update"
+                            : "share",
                 }))
             )
                 return {
@@ -590,7 +618,6 @@ export async function updateConversation({
                 rankingMode: rankingConversationConfigTable.rankingMode,
                 externalSourceConfig:
                     rankingConversationConfigTable.externalSourceConfig,
-                rankingConfigId: conversationTable.rankingConfigId,
                 isImporting: conversationTable.isImporting,
                 polisConfigId: conversationTable.polisConfigId,
                 isIndexed: conversationTable.isIndexed,
@@ -654,11 +681,7 @@ export async function updateConversation({
                     isNull(conversationModerationTable.deletedAt),
                 ),
             )
-            .where(
-                and(
-                    eq(conversationTable.slugId, conversationSlugId),
-                ),
-            )
+            .where(and(eq(conversationTable.slugId, conversationSlugId)))
             .for("no key update", { of: conversationTable });
 
         if (conversationResults.length === 0) {
@@ -750,17 +773,23 @@ export async function updateConversation({
                 conversationId,
                 conversationType: conversation.conversationType,
             });
-            const seedOpinionFailure = validateSeedOpinionAdditions({
-                opinions: normalizedSeedOpinions.map((opinion) => opinion.html),
-                existingOpinions: existingOpinions.map(
-                    (opinion) => opinion.content,
+            const duplicateIndex = getDuplicateSeedOpinionIndexes({
+                opinions: normalizedSeedOpinions.map((opinion, index) => ({
+                    index,
+                    plainText: opinion.plainText,
+                })),
+                existingOpinions: existingOpinions.map((opinion) =>
+                    htmlToCountedText(opinion.content),
                 ),
             }).at(0);
-            if (seedOpinionFailure !== undefined) {
+            if (duplicateIndex !== undefined) {
                 return {
                     success: false,
                     reason: "invalid_seed_opinion",
-                    seedOpinionFailure,
+                    seedOpinionFailure: {
+                        index: duplicateIndex,
+                        reason: "duplicate",
+                    },
                 } satisfies UpdateConversationServiceResponse;
             }
         }
@@ -911,7 +940,8 @@ export async function updateConversation({
             const restrictedFeatures = await getRestrictedPremiumFeatures({
                 db: tx,
                 subject,
-                features: premiumFeatures,
+                features:
+                    getConversationContentEditPremiumFeatures(premiumFeatures),
                 mode: "edit",
                 now,
             });
@@ -1089,11 +1119,15 @@ export async function updateConversation({
             newContentPublicId = newContentResult[0].publicId;
         }
 
-        const emailOverrideUpdate = projectChanged && conversationEmailUpdateEnabledOverride !== undefined ? {
-            conversationEmailUpdateEnabledOverride,
-            conversationEmailUpdateOverrideUpdatedAt: now,
-            conversationEmailUpdateOverrideUpdatedByUserId: userId,
-        } : undefined;
+        const emailOverrideUpdate =
+            projectChanged &&
+            conversationEmailUpdateEnabledOverride !== undefined
+                ? {
+                      conversationEmailUpdateEnabledOverride,
+                      conversationEmailUpdateOverrideUpdatedAt: now,
+                      conversationEmailUpdateOverrideUpdatedByUserId: userId,
+                  }
+                : undefined;
         const conversationUpdateValues = {
             projectId: projectChanged ? destinationProjectId : undefined,
             currentContentId: newContentId,
@@ -1137,85 +1171,25 @@ export async function updateConversation({
                 );
         }
 
-        const addedSeedOpinions: ConversationSeedOpinion[] = [];
-        const addedOpinions: DisplayedOpinionItem[] = [];
-        const rankingItemSources: RankingItemContentSource[] = [];
-        if (normalizedSeedOpinions.length > 0) {
-            if (conversation.conversationType === "ranking") {
-                await lockRankingScoringConfig({ db: tx, conversationId });
-                for (const seedOpinion of normalizedSeedOpinions) {
-                    const item = await createRankingItem({
-                        db: tx,
-                        tx,
-                        conversationId,
-                        conversationSlugId,
-                        conversationContentId:
-                            newContentId ?? conversation.currentContentId,
-                        authorId: userId,
-                        title: seedOpinion.html,
-                        isSeed: true,
-                        googleCloudCredentials,
-                        useGoogleLanguageDetection:
-                            requestedDynamicTranslationEnabled,
-                    });
-                    rankingItemSources.push(item.contentSource);
-                    addedSeedOpinions.push({
-                        slugId: item.slugId,
-                        content: item.contentSource.title,
-                    });
-                }
-                if (conversation.rankingConfigId !== null) {
-                    await tx
-                        .update(rankingConversationConfigTable)
-                        .set({
-                            itemCount: sql`${rankingConversationConfigTable.itemCount} + ${addedSeedOpinions.length}`,
-                            totalItemCount: sql`${rankingConversationConfigTable.totalItemCount} + ${addedSeedOpinions.length}`,
-                        })
-                        .where(
-                            eq(
-                                rankingConversationConfigTable.id,
-                                conversation.rankingConfigId,
-                            ),
-                        );
-                }
-            } else {
-                for (const seedOpinion of normalizedSeedOpinions) {
-                    const opinion = await postNewOpinion({
-                        db: tx,
-                        tx,
-                        normalizedContent: seedOpinion,
-                        conversationSlugId,
-                        didWrite,
-                        userAgent: "Seed Opinion Creation",
-                        now,
-                        isSeed: true,
-                        googleCloudCredentials,
-                        useGoogleLanguageDetection:
-                            requestedDynamicTranslationEnabled,
-                        conversationMetadata: {
-                            conversationId,
-                            conversationContentId:
-                                newContentId ?? conversation.currentContentId,
-                            conversationAuthorId: userId,
-                            conversationIsIndexed: isIndexed,
-                            conversationParticipationMode: participationMode,
-                            conversationIsClosed: conversation.isClosed,
-                            requiresEventTicket: requiresEventTicket ?? null,
-                        },
-                    });
-                    if (!opinion.success) {
-                        throw httpErrors.internalServerError(
-                            "Failed to append seed opinion",
-                        );
-                    }
-                    addedSeedOpinions.push({
-                        slugId: opinion.opinionSlugId,
-                        content: opinion.opinionItem.opinion,
-                    });
-                    addedOpinions.push(opinion.displayedOpinionItem);
-                }
-            }
-        }
+        const { addedSeedOpinions, addedOpinions, rankingItemSources } =
+            await appendConversationSeedOpinions({
+                db: tx,
+                opinions: normalizedSeedOpinions,
+                userId,
+                googleCloudCredentials,
+                useGoogleLanguageDetection: requestedDynamicTranslationEnabled,
+                now,
+                conversation: {
+                    id: conversationId,
+                    slugId: conversationSlugId,
+                    contentId: newContentId ?? conversation.currentContentId,
+                    conversationType: conversation.conversationType,
+                    isIndexed,
+                    participationMode,
+                    isClosed: conversation.isClosed,
+                    requiresEventTicket,
+                },
+            });
 
         let surveySources: SurveyQuestionContentSource[] = [];
         let analysisRefreshScheduled = false;

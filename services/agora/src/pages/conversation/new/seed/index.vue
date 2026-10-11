@@ -124,6 +124,10 @@ import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue"
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
 import NewConversationRouteGuard from "src/components/newConversation/NewConversationRouteGuard.vue";
 import SeedOpinionListEditor from "src/components/newConversation/SeedOpinionListEditor.vue";
+import {
+  type SeedOpinionsTranslations,
+  seedOpinionsTranslations,
+} from "src/components/newConversation/SeedOpinions.i18n";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
 import { useConversationDraft } from "src/composables/conversation/draft";
 import { useCreateSurveyAccess } from "src/composables/conversation/useCreateSurveyAccess";
@@ -142,11 +146,6 @@ import {
 import { useNotify } from "src/utils/ui/notify";
 import { computed, nextTick, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-
-import {
-  type SeedOpinionsTranslations,
-  seedOpinionsTranslations,
-} from "src/components/newConversation/SeedOpinions.i18n";
 
 defineOptions({
   components: {

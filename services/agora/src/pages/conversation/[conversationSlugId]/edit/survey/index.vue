@@ -119,11 +119,8 @@
         editStore.session?.original.conversationSlugId === conversationSlugId
       "
       :conversation-slug-id="conversationSlugId"
-      :has-unsaved-changes="
-        hasUnsavedChanges ||
-        editStore.hasUnsavedChanges ||
-        editStore.session.newSeedOpinions.length > 0
-      "
+      :has-unsaved-changes="hasUnsavedChanges || editStore.hasUnsavedChanges"
+      :navigation-pending="isSaving || isDeleting"
     />
   </NewConversationLayout>
 </template>
@@ -158,7 +155,7 @@ import {
   summarizeSurveyConfigChanges,
 } from "src/utils/survey/config";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -181,7 +178,9 @@ const router = useRouter();
 const { getConversationForEdit } = useBackendPostEditApi();
 const editStore = useEditConversationStore();
 
-const conversationSlugId = getSingleRouteParam(route.params.conversationSlugId);
+const conversationSlugId = computed(() =>
+  getSingleRouteParam(route.params.conversationSlugId)
+);
 const isLoading = ref(true);
 const isSaving = ref(false);
 const isDeleting = ref(false);
@@ -202,14 +201,14 @@ const canDeleteSurvey = computed(() => {
 });
 
 const completionCountsQuery = useSurveyCompletionCountsQuery({
-  conversationSlugId: computed(() => conversationSlugId),
+  conversationSlugId,
   enabled: computed(() => !isLoading.value),
 });
 const updateSurveyConfigMutation = useSurveyConfigUpdateMutation({
-  conversationSlugId: computed(() => conversationSlugId),
+  conversationSlugId,
 });
 const deleteSurveyConfigMutation = useSurveyConfigDeleteMutation({
-  conversationSlugId: computed(() => conversationSlugId),
+  conversationSlugId,
 });
 const hasUnsavedChanges = computed(() => {
   return !areSurveyConfigsEqual({
@@ -286,40 +285,51 @@ const surveyEditorTexts = computed(() => ({
   optionSemanticChangeHint: t("optionSemanticChangeHint"),
 }));
 
-onMounted(async () => {
-  const response = await getConversationForEdit(conversationSlugId);
-
-  if (!response.success) {
-    showNotifyMessage(t("loadError"));
-    await router.replace({
-      name: "/conversation/[conversationSlugId]/edit/",
-      params: { conversationSlugId },
-      query: route.query,
-    });
-    return;
-  }
-
-  editPermissions.value = response.editPermissions;
-  if (
-    !response.editPermissions.canEditSurvey &&
-    (response.surveyConfig == null || !response.editPermissions.canDeleteSurvey)
-  ) {
-    await router.replace({
-      name: "/conversation/[conversationSlugId]/edit/",
-      params: { conversationSlugId },
-      query: route.query,
-    });
-    return;
-  }
-
-  surveyConfig.value = cloneSurveyConfig({
-    surveyConfig: response.surveyConfig ?? null,
-  });
-  originalSurveyConfig.value = cloneSurveyConfig({
-    surveyConfig: response.surveyConfig ?? null,
-  });
-  isLoading.value = false;
+let isAlive = true;
+onBeforeUnmount(() => {
+  isAlive = false;
 });
+watch(
+  conversationSlugId,
+  async (slug) => {
+    isLoading.value = true;
+    const response = await getConversationForEdit(slug);
+    if (!isAlive || slug !== conversationSlugId.value) return;
+
+    if (!response.success) {
+      showNotifyMessage(t("loadError"));
+      await router.replace({
+        name: "/conversation/[conversationSlugId]/edit/",
+        params: { conversationSlugId: slug },
+        query: route.query,
+      });
+      return;
+    }
+
+    editPermissions.value = response.editPermissions;
+    if (
+      !response.editPermissions.canEditSurvey &&
+      (response.surveyConfig == null ||
+        !response.editPermissions.canDeleteSurvey)
+    ) {
+      await router.replace({
+        name: "/conversation/[conversationSlugId]/edit/",
+        params: { conversationSlugId: slug },
+        query: route.query,
+      });
+      return;
+    }
+
+    surveyConfig.value = cloneSurveyConfig({
+      surveyConfig: response.surveyConfig ?? null,
+    });
+    originalSurveyConfig.value = cloneSurveyConfig({
+      surveyConfig: response.surveyConfig ?? null,
+    });
+    isLoading.value = false;
+  },
+  { immediate: true }
+);
 
 function clearSurveyValidationError(): void {
   surveyValidationErrorMessage.value = null;
@@ -331,7 +341,7 @@ function showSurveyValidationError(): void {
 
 async function redirectToConversation(): Promise<void> {
   const session = editStore.session;
-  if (session?.original.conversationSlugId === conversationSlugId) {
+  if (session?.original.conversationSlugId === conversationSlugId.value) {
     session.original.surveyConfig = cloneSurveyConfig({
       surveyConfig: surveyConfig.value,
     });
@@ -340,13 +350,13 @@ async function redirectToConversation(): Promise<void> {
     });
     await router.replace({
       name: "/conversation/[conversationSlugId]/edit/",
-      params: { conversationSlugId },
+      params: { conversationSlugId: conversationSlugId.value },
       query: route.query,
     });
     return;
   }
   const returnPath = getConversationEditReturnPath({
-    conversationSlugId,
+    conversationSlugId: conversationSlugId.value,
     returnTo: route.query.returnTo,
   });
   await router.replace(returnPath);

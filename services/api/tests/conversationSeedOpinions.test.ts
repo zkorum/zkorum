@@ -28,6 +28,7 @@ import {
 } from "../src/service/postEdit.js";
 import { postNewOpinion } from "../src/service/comment.js";
 import * as translations from "../src/service/contentTranslation.js";
+import * as contentLanguages from "../src/service/contentLanguageMetadata.js";
 import {
     Dto,
     type UpdateConversationRequest,
@@ -38,7 +39,6 @@ import { readDbFixtureSql } from "./dbFixture.js";
 process.env.TESTCONTAINERS_RYUK_DISABLED ??= "true";
 const OWNER = "00000000-0000-4000-8000-000000000001";
 const STRANGER = "00000000-0000-4000-8000-000000000002";
-const DID = "did:key:seed-editor-test";
 
 function firstRow<T>(rows: T[]): T {
     const row = rows.at(0);
@@ -171,7 +171,13 @@ describe("append-only conversation seed statements", () => {
         ranking = false,
         sourceManaged = false,
         closed = false,
-    }: { ranking?: boolean; sourceManaged?: boolean; closed?: boolean } = {}) {
+        absentBody = false,
+    }: {
+        ranking?: boolean;
+        sourceManaged?: boolean;
+        closed?: boolean;
+        absentBody?: boolean;
+    } = {}) {
         const config = ranking
             ? firstRow(
                   await db
@@ -213,8 +219,8 @@ describe("append-only conversation seed statements", () => {
                 .values({
                     conversationId: conversation.id,
                     title: "Original title",
-                    body: "<p>Original body</p>",
-                    bodyPlainText: "Original body",
+                    body: absentBody ? undefined : "<p>Original body</p>",
+                    bodyPlainText: absentBody ? "" : "Original body",
                 })
                 .returning(),
         );
@@ -225,7 +231,7 @@ describe("append-only conversation seed statements", () => {
         const request = Dto.updateConversationRequest.parse({
             conversationSlugId: conversation.slugId,
             conversationTitle: content.title,
-            conversationBody: content.body,
+            conversationBody: content.body ?? undefined,
             isIndexed: conversation.isIndexed,
             participationMode: conversation.participationMode,
             multilingualSetting: {
@@ -243,10 +249,101 @@ describe("append-only conversation seed statements", () => {
         return updateConversation({
             db,
             userId: OWNER,
-            didWrite: DID,
             data: request,
         });
     }
+
+    it("keeps the content version unchanged when adding seeds to a conversation without a body", async () => {
+        const { request, conversation, content } = await createConversation({
+            absentBody: true,
+        });
+        expect(
+            (await save({ ...request, newSeedOpinionList: ["A new seed"] }))
+                .success,
+        ).toBe(true);
+        expect(
+            firstRow(
+                await db
+                    .select()
+                    .from(conversationTable)
+                    .where(eq(conversationTable.id, conversation.id)),
+            ).currentContentId,
+        ).toBe(content.id);
+        expect(
+            firstRow(
+                await db
+                    .select({ count: count() })
+                    .from(conversationContentTable)
+                    .where(
+                        eq(
+                            conversationContentTable.conversationId,
+                            conversation.id,
+                        ),
+                    ),
+            ).count,
+        ).toBe(1);
+    });
+
+    it("resolves each seed language once with bounded provider concurrency", async () => {
+        const { request } = await createConversation();
+        let active = 0;
+        let maximumActive = 0;
+        const detector = vi
+            .spyOn(contentLanguages, "resolveContentLanguageMetadata")
+            .mockImplementation(async () => {
+                active += 1;
+                maximumActive = Math.max(active, maximumActive);
+                await new Promise((resolve) => setTimeout(resolve, 5));
+                active -= 1;
+                return {
+                    sourceLanguageCode: "en",
+                    sourceRawLanguageCode: "en",
+                    sourceLanguageProvider: "lingua",
+                    sourceLanguageConfidence: 1,
+                };
+            });
+        try {
+            expect(
+                (
+                    await save({
+                        ...request,
+                        newSeedOpinionList: Array.from(
+                            { length: 7 },
+                            (_, index) => `Seed ${index}`,
+                        ),
+                    })
+                ).success,
+            ).toBe(true);
+            expect(detector).toHaveBeenCalledTimes(7);
+            expect(maximumActive).toBeGreaterThan(1);
+            expect(maximumActive).toBeLessThanOrEqual(5);
+        } finally {
+            detector.mockRestore();
+        }
+    });
+
+    it("uses the same content-edit entitlement policy for displaying and adding seed statements", async () => {
+        const { request, conversation } = await createConversation();
+        await db
+            .update(conversationTable)
+            .set({ requiresEventTicket: "devconnect-2025" })
+            .where(eq(conversationTable.id, conversation.id));
+        const editable = await getConversationForEdit({
+            db,
+            userId: OWNER,
+            conversationSlugId: conversation.slugId,
+        });
+        expect(editable.success && editable.canAddSeedOpinions).toBe(true);
+        expect(
+            (
+                await save({
+                    ...request,
+                    requiresEventTicket: "devconnect-2025",
+                    newSeedOpinionList: ["Facilitator seed"],
+                })
+            ).success,
+        ).toBe(true);
+    });
 
     it("saves details without requiring new statements and rejects empty additions atomically", async () => {
         const { request, conversation } = await createConversation();
@@ -296,7 +393,6 @@ describe("append-only conversation seed statements", () => {
                 plainText: "Existing seed",
             },
             conversationSlugId: original.conversation.slugId,
-            didWrite: DID,
             userAgent: "test",
             now: new Date(),
             isSeed: true,
@@ -473,18 +569,15 @@ describe("append-only conversation seed statements", () => {
             await updateConversation({
                 db,
                 userId: STRANGER,
-                didWrite: DID,
                 data: { ...request, newSeedOpinionList: ["Unauthorized"] },
             }),
         ).toMatchObject({ success: false, reason: "not_author" });
-        await db
-            .insert(conversationModerationTable)
-            .values({
-                conversationId: conversation.id,
-                authorId: OWNER,
-                moderationAction: "lock",
-                moderationReason: "spam",
-            });
+        await db.insert(conversationModerationTable).values({
+            conversationId: conversation.id,
+            authorId: OWNER,
+            moderationAction: "lock",
+            moderationReason: "spam",
+        });
         expect(
             await save({ ...request, newSeedOpinionList: ["Locked"] }),
         ).toMatchObject({ success: false, reason: "conversation_locked" });

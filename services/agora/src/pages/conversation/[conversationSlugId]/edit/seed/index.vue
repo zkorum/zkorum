@@ -70,7 +70,7 @@
         />
       </section>
       <ZKCard
-        v-else-if="session.original.externalSourceConfig === null"
+        v-else-if="!session.original.editPermissions.canEditConversationContent"
         padding="1rem"
       >
         {{ editT("premiumEditRestrictedBanner") }}
@@ -81,6 +81,7 @@
       ref="routeGuard"
       :conversation-slug-id="conversationSlugId"
       :has-unsaved-changes="hasUnsavedChanges"
+      :navigation-pending="isSaving"
     />
   </NewConversationLayout>
 </template>
@@ -99,7 +100,12 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ZKHtmlContent from "src/components/ui-library/ZKHtmlContent.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { UpdateConversationResponse } from "src/shared/types/dto";
-import { buildEditConversationRequest, hasEditConversationDetailsChanges, useEditConversationStore } from "src/stores/editConversation";
+import { useAuthenticationStore } from "src/stores/authentication";
+import {
+  buildEditConversationRequest,
+  hasEditConversationDetailsChanges,
+  useEditConversationStore,
+} from "src/stores/editConversation";
 import { useUpdateConversationMutation } from "src/utils/api/post/useConversationMutations";
 import {
   isHistoryBackToPath,
@@ -120,8 +126,11 @@ const { t: editT } = useComponentI18n(editConversationTranslations);
 const { t: projectT } = useComponentI18n(conversationProjectEditTranslations);
 const route = useRoute();
 const router = useRouter();
-const conversationSlugId = computed(() => getSingleRouteParam(route.params.conversationSlugId));
+const conversationSlugId = computed(() =>
+  getSingleRouteParam(route.params.conversationSlugId)
+);
 const store = useEditConversationStore();
+const auth = useAuthenticationStore();
 const { session: storedSession } = storeToRefs(store);
 const session = computed(() =>
   storedSession.value?.original.conversationSlugId === conversationSlugId.value
@@ -147,20 +156,25 @@ const newSeedOpinions = computed({
 const hasUnsavedChanges = computed(
   () =>
     session.value !== undefined &&
-    (hasEditConversationDetailsChanges(session.value) || session.value.newSeedOpinions.length > 0)
+    (hasEditConversationDetailsChanges(session.value) ||
+      session.value.newSeedOpinions.length > 0)
 );
 const isSaveDisabled = computed(
   () => isSaving.value || !hasUnsavedChanges.value
 );
 
-watch(conversationSlugId, async () => {
-  if (session.value === undefined) {
-    await router.replace({
-      ...detailsRoute.value,
-      query: { ...route.query, editStep: "seed" },
-    });
-  }
-}, { immediate: true });
+watch(
+  [conversationSlugId, () => auth.userId],
+  async () => {
+    if (session.value === undefined) {
+      await router.replace({
+        ...detailsRoute.value,
+        query: { ...route.query, editStep: "seed" },
+      });
+    }
+  },
+  { immediate: true }
+);
 
 async function handleBack(event: MouseEvent): Promise<void> {
   event.preventDefault();

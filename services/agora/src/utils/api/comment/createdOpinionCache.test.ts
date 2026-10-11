@@ -67,6 +67,7 @@ describe("cacheCreatedSeedOpinions", () => {
       ["comments", "conversation", "discover", "user"],
       ["comments", "conversation", "new", "user"],
       ["comments", "conversation", "my_votes", "user"],
+      ["comments", "conversation", "new", "other-user"],
     ];
     for (const key of keys)
       queryClient.setQueryData<OpinionCache>(key, {
@@ -83,11 +84,12 @@ describe("cacheCreatedSeedOpinions", () => {
       queryClient,
       conversationSlugId: "conversation",
       opinions: [seed],
+      viewerUserId: "user",
     });
     for (const key of keys)
       expect(
         queryClient.getQueryData<OpinionCache>(key)?.pages.at(0)?.items
-      ).toEqual(key[2] === "my_votes" ? [] : [seed]);
+      ).toEqual(key[2] === "my_votes" || key[3] !== "user" ? [] : [seed]);
     expect(
       queryClient.getQueryData(["userVotes", "conversation", "user"])
     ).toBeUndefined();

@@ -5003,7 +5003,7 @@ server.after(() => {
             },
         },
         handler: async (request, reply) => {
-            const { didWrite, deviceStatus } = await verifyUcanAndKnownDeviceStatus(
+            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
                 db,
                 request,
                 {
@@ -5017,7 +5017,6 @@ server.after(() => {
             const updateResult = await postEditService.updateConversation({
                 db: db,
                 userId: deviceStatus.userId,
-                didWrite,
                 realtimeSSEManager,
                 googleCloudCredentials,
                 valkey: queueValkeyRef.current,

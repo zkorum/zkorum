@@ -27,12 +27,13 @@ import { editConversationRouteGuardTranslations } from "./EditConversationRouteG
 const props = defineProps<{
   conversationSlugId: string;
   hasUnsavedChanges: boolean;
+  navigationPending: boolean;
 }>();
 const store = useEditConversationStore();
 const { t } = useComponentI18n(editConversationRouteGuardTranslations);
 
 function allowDestination(to: RouteGuardDestination): boolean | "block" {
-  if (store.isSaving) return "block";
+  if (props.navigationPending) return "block";
   if (
     typeof to.name === "string" &&
     to.name.startsWith("/conversation/[conversationSlugId]/edit/") &&
@@ -40,16 +41,23 @@ function allowDestination(to: RouteGuardDestination): boolean | "block" {
       props.conversationSlugId
   )
     return true;
-  if (props.hasUnsavedChanges) return false;
+  if (props.hasUnsavedChanges || store.hasUnsavedChanges) return false;
   store.clear();
   return true;
 }
 
-const { showExitDialog, lockRoute, unlockRoute, proceedWithNavigation, guardNavigation } =
-  useRouteGuard(() => props.hasUnsavedChanges, allowDestination);
+const {
+  showExitDialog,
+  lockRoute,
+  unlockRoute,
+  proceedWithNavigation,
+  guardNavigation,
+} = useRouteGuard(() => props.hasUnsavedChanges, allowDestination);
 onMounted(lockRoute);
 watch(() => props.conversationSlugId, lockRoute);
-onBeforeRouteUpdate((to, from) => guardNavigation({ to, fromPath: from.fullPath }));
+onBeforeRouteUpdate((to, from) =>
+  guardNavigation({ to, fromPath: from.fullPath })
+);
 
 async function discard(): Promise<void> {
   await proceedWithNavigation(store.clear);

@@ -11,8 +11,13 @@ export function getDuplicateSeedOpinionIndexes({
     opinions: readonly { index: number; plainText: string }[];
     existingOpinions: readonly string[];
 }): number[] {
-    const existingKeys = new Set(existingOpinions.map(getSeedOpinionComparisonKey));
-    const keys = opinions.map(({ index, plainText }) => ({ index, key: getSeedOpinionComparisonKey(plainText) }));
+    const existingKeys = new Set(
+        existingOpinions.map(getSeedOpinionComparisonKey),
+    );
+    const keys = opinions.map(({ index, plainText }) => ({
+        index,
+        key: getSeedOpinionComparisonKey(plainText),
+    }));
     const counts = new Map<string, number>();
     for (const { key } of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
     return keys.flatMap(({ key, index }) =>

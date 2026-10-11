@@ -11,33 +11,64 @@ import {
     rankingConversationConfigTable,
 } from "@/shared-backend/schema.js";
 import type { GetConversationForEditResponse } from "@/shared/types/dto.js";
-import type { ConversationType, DisplayedOpinionItem, EventSlug, ParticipationMode } from "@/shared/types/zod.js";
+import type {
+    ConversationType,
+    DisplayedOpinionItem,
+    EventSlug,
+    ParticipationMode,
+} from "@/shared/types/zod.js";
 import type { GoogleCloudCredentials } from "@/shared-backend/googleCloudAuth.js";
-import { normalizeUserRichTextInput, type NormalizedUserRichText } from "./richText.js";
+import {
+    normalizeUserRichTextInput,
+    type NormalizedUserRichText,
+} from "./richText.js";
 import type { UpdateConversationResponse } from "@/shared/types/dto.js";
-import { resolveContentLanguageMetadata } from "./contentLanguageMetadata.js";
+import {
+    resolveContentLanguageMetadata,
+    type ContentLanguageMetadata,
+} from "./contentLanguageMetadata.js";
 import { postNewOpinion } from "./comment.js";
 import { createRankingItem } from "./rankingItem.js";
 import { lockRankingScoringConfig } from "./maxdiff.js";
 import type { RankingItemContentSource } from "./contentTranslation.js";
+const LANGUAGE_DETECTION_BATCH_SIZE = 5;
 
-export function normalizeSeedOpinionList(opinions: readonly string[]):
+export function normalizeSeedOpinionList(
+    opinions: readonly string[],
+):
     | { success: true; opinions: NormalizedUserRichText[] }
     | Extract<UpdateConversationResponse, { reason: "invalid_seed_opinion" }> {
     const normalized: NormalizedUserRichText[] = [];
     for (const [index, html] of opinions.entries()) {
-        const result = normalizeUserRichTextInput({ html, validationMode: "opinion" });
-        if (!result.success) return {
-            success: false,
-            reason: "invalid_seed_opinion",
-            seedOpinionFailure: { index, reason: result.reason, count: result.count, limit: result.limit },
-        };
+        const result = normalizeUserRichTextInput({
+            html,
+            validationMode: "opinion",
+        });
+        if (!result.success)
+            return {
+                success: false,
+                reason: "invalid_seed_opinion",
+                seedOpinionFailure: {
+                    index,
+                    reason: result.reason,
+                    count: result.count,
+                    limit: result.limit,
+                },
+            };
         normalized.push(result.content);
     }
     return { success: true, opinions: normalized };
 }
 
-export async function appendConversationSeedOpinions({ db, opinions, conversation, userId, googleCloudCredentials, useGoogleLanguageDetection, now }: {
+export async function appendConversationSeedOpinions({
+    db,
+    opinions,
+    conversation,
+    userId,
+    googleCloudCredentials,
+    useGoogleLanguageDetection,
+    now,
+}: {
     db: PostgresJsDatabase;
     opinions: readonly NormalizedUserRichText[];
     conversation: {
@@ -62,52 +93,111 @@ export async function appendConversationSeedOpinions({ db, opinions, conversatio
     const addedSeedOpinions: ConversationSeedOpinion[] = [];
     const addedOpinions: DisplayedOpinionItem[] = [];
     const rankingItemSources: RankingItemContentSource[] = [];
-    if (opinions.length === 0) return { addedSeedOpinions, addedOpinions, rankingItemSources };
+    if (opinions.length === 0)
+        return { addedSeedOpinions, addedOpinions, rankingItemSources };
 
     // Bound provider concurrency and resolve languages before the sequential persistence loop.
     // Prepared content is reused by both persisters instead of sanitizing/detecting it again.
-    const prepared = [];
-    for (let offset = 0; offset < opinions.length; offset += 5) {
-        const batch = await Promise.all(opinions.slice(offset, offset + 5).map(async (content) => ({
-            ...content,
-            sourceLanguageMetadata: await resolveContentLanguageMetadata({ text: content.plainText, googleCloudCredentials, useGoogleLanguageDetection }),
-        })));
+    const prepared: (NormalizedUserRichText & {
+        sourceLanguageMetadata: ContentLanguageMetadata;
+    })[] = [];
+    for (
+        let offset = 0;
+        offset < opinions.length;
+        offset += LANGUAGE_DETECTION_BATCH_SIZE
+    ) {
+        const batch = await Promise.all(
+            opinions
+                .slice(offset, offset + LANGUAGE_DETECTION_BATCH_SIZE)
+                .map(async (content) => ({
+                    ...content,
+                    sourceLanguageMetadata:
+                        await resolveContentLanguageMetadata({
+                            text: content.plainText,
+                            googleCloudCredentials,
+                            useGoogleLanguageDetection,
+                        }),
+                })),
+        );
         prepared.push(...batch);
     }
     if (conversation.conversationType === "ranking") {
         await lockRankingScoringConfig({ db, conversationId: conversation.id });
         for (const content of prepared) {
             const item = await createRankingItem({
-                db, tx: db, conversationId: conversation.id, conversationSlugId: conversation.slugId,
-                conversationContentId: conversation.contentId, authorId: userId, isSeed: true,
-                normalizedContent: { title: content.html, bodyHtml: null, bodyPlainText: null, sourceLanguageMetadata: content.sourceLanguageMetadata },
-            });
-            addedSeedOpinions.push({ slugId: item.slugId, content: item.contentSource.title });
-            rankingItemSources.push(item.contentSource);
-        }
-        await db.update(rankingConversationConfigTable).set({
-            itemCount: sql`${rankingConversationConfigTable.itemCount} + ${addedSeedOpinions.length}`,
-            totalItemCount: sql`${rankingConversationConfigTable.totalItemCount} + ${addedSeedOpinions.length}`,
-            updatedAt: now,
-        }).from(conversationTable).where(and(
-            eq(conversationTable.id, conversation.id),
-            eq(rankingConversationConfigTable.id, conversationTable.rankingConfigId),
-        ));
-    } else {
-        const author = (await db.select({ username: userTable.username }).from(userTable).where(eq(userTable.id, userId)).limit(1)).at(0);
-        if (author === undefined) throw httpErrors.notFound("Seed statement author not found");
-        for (const content of prepared) {
-            const opinion = await postNewOpinion({
-                db, tx: db, normalizedContent: content, conversationSlugId: conversation.slugId, now, isSeed: true,
-                useGoogleLanguageDetection,
-                conversationMetadata: {
-                    conversationId: conversation.id, conversationContentId: conversation.contentId,
-                    conversationAuthorId: userId, conversationAuthorUsername: author.username,
-                    conversationIsIndexed: conversation.isIndexed, conversationParticipationMode: conversation.participationMode,
-                    conversationIsClosed: conversation.isClosed, requiresEventTicket: conversation.requiresEventTicket ?? null,
+                db,
+                tx: db,
+                conversationId: conversation.id,
+                conversationSlugId: conversation.slugId,
+                conversationContentId: conversation.contentId,
+                authorId: userId,
+                isSeed: true,
+                normalizedContent: {
+                    title: content.html,
+                    bodyHtml: null,
+                    bodyPlainText: null,
+                    sourceLanguageMetadata: content.sourceLanguageMetadata,
                 },
             });
-            addedSeedOpinions.push({ slugId: opinion.opinionSlugId, content: opinion.opinionItem.opinion });
+            addedSeedOpinions.push({
+                slugId: item.slugId,
+                content: item.contentSource.title,
+            });
+            rankingItemSources.push(item.contentSource);
+        }
+        await db
+            .update(rankingConversationConfigTable)
+            .set({
+                itemCount: sql`${rankingConversationConfigTable.itemCount} + ${addedSeedOpinions.length}`,
+                totalItemCount: sql`${rankingConversationConfigTable.totalItemCount} + ${addedSeedOpinions.length}`,
+                updatedAt: now,
+            })
+            .from(conversationTable)
+            .where(
+                and(
+                    eq(conversationTable.id, conversation.id),
+                    eq(
+                        rankingConversationConfigTable.id,
+                        conversationTable.rankingConfigId,
+                    ),
+                ),
+            );
+    } else {
+        const author = (
+            await db
+                .select({ username: userTable.username })
+                .from(userTable)
+                .where(eq(userTable.id, userId))
+                .limit(1)
+        ).at(0);
+        if (author === undefined)
+            throw httpErrors.notFound("Seed statement author not found");
+        for (const content of prepared) {
+            const opinion = await postNewOpinion({
+                db,
+                tx: db,
+                normalizedContent: content,
+                conversationSlugId: conversation.slugId,
+                now,
+                isSeed: true,
+                useGoogleLanguageDetection,
+                conversationMetadata: {
+                    conversationId: conversation.id,
+                    conversationContentId: conversation.contentId,
+                    conversationAuthorId: userId,
+                    conversationAuthorUsername: author.username,
+                    conversationIsIndexed: conversation.isIndexed,
+                    conversationParticipationMode:
+                        conversation.participationMode,
+                    conversationIsClosed: conversation.isClosed,
+                    requiresEventTicket:
+                        conversation.requiresEventTicket ?? null,
+                },
+            });
+            addedSeedOpinions.push({
+                slugId: opinion.opinionSlugId,
+                content: opinion.opinionItem.opinion,
+            });
             addedOpinions.push(opinion.displayedOpinionItem);
         }
     }

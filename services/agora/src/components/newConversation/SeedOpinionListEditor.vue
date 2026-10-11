@@ -33,9 +33,7 @@
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { MAX_SEED_OPINIONS_PER_SUBMISSION } from "src/shared/seedOpinions";
 import type { SeedOpinionValidationFailure } from "src/shared/types/dto";
-import {
-  validateSeedOpinionAdditions,
-} from "src/shared/utils/seedOpinions";
+import { validateSeedOpinionAdditions } from "src/shared/utils/seedOpinions";
 import { type ComponentPublicInstance, nextTick, ref, watch } from "vue";
 
 import ConversationControlButton from "./ConversationControlButton.vue";
@@ -65,7 +63,10 @@ watch(
   () => props.modelValue,
   (contents) => {
     if (
-      contents.length === items.value.length && contents.every((content, index) => content === items.value[index]?.content)
+      contents.length === items.value.length &&
+      contents.every(
+        (content, index) => content === items.value[index]?.content
+      )
     )
       return;
     items.value = contents.map(createItem);

@@ -6861,44 +6861,36 @@ export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1ReasonEnum = {
 
 export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1ReasonEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1ReasonEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1ReasonEnum];
 
-export interface ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailure {
+/**
+ * @type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailure
+ */
+export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailure = ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf | ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1;
+
+export interface ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf {
     'index': number;
-    'reason': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureReasonEnum;
+    'reason': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOfReasonEnum;
     'count': number;
     'limit': number;
 }
 
-export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureReasonEnum = {
-    Duplicate: 'duplicate',
-} as const;
-
-export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureReasonEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureReasonEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureReasonEnum];
-
-export interface ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOf {
-    'index': number;
-    'reason': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOfReasonEnum;
-    'count': number;
-    'limit': number;
-}
-
-export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOfReasonEnum = {
+export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOfReasonEnum = {
     PlainTextEmpty: 'plain_text_empty',
     PlainTextTooLong: 'plain_text_too_long',
     HtmlTooLong: 'html_too_long',
 } as const;
 
-export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOfReasonEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOfReasonEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOfReasonEnum];
+export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOfReasonEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOfReasonEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOfReasonEnum];
 
-export interface ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOf1 {
+export interface ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1 {
     'index': number;
-    'reason': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOf1ReasonEnum;
+    'reason': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1ReasonEnum;
 }
 
-export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOf1ReasonEnum = {
+export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1ReasonEnum = {
     Duplicate: 'duplicate',
 } as const;
 
-export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOf1ReasonEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOf1ReasonEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureAnyOf1ReasonEnum];
+export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1ReasonEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1ReasonEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1ReasonEnum];
 
 export interface ApiV1ConversationUpdatePost200ResponseOneOfProjectAssignment {
     'previousProjectSlug': string;

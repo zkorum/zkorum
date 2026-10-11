@@ -37,14 +37,18 @@ export interface EditConversationSession extends EditConversationDetails {
   isSaving: boolean;
 }
 
-export function createEditConversationForm(original: EditableConversation): ConversationFormState {
+export function createEditConversationForm(
+  original: EditableConversation
+): ConversationFormState {
   return {
     title: original.conversationTitle,
     content: original.conversationBody ?? "",
     conversationTypeConfig: original.conversationTypeConfig,
     multilingualSetting: original.multilingualSetting,
     selectedProjectSlug: original.projectLanguageProject?.projectSlug,
-    inheritProjectLanguages: original.languageSettingsSource === "project_inherited" && original.projectLanguageProject !== undefined,
+    inheritProjectLanguages:
+      original.languageSettingsSource === "project_inherited" &&
+      original.projectLanguageProject !== undefined,
     isPrivate: !original.isIndexed,
     participationMode: original.participationMode,
     requiresEventTicket: original.requiresEventTicket,
@@ -54,48 +58,88 @@ export function createEditConversationForm(original: EditableConversation): Conv
   };
 }
 
-export function buildEditConversationRequest(details: EditConversationDetails): UpdateConversationRequest {
-  const { original, form, projectTarget, emailOverride, originalEmailOverride } = details;
+export function buildEditConversationRequest(
+  details: EditConversationDetails
+): UpdateConversationRequest {
+  const {
+    original,
+    form,
+    projectTarget,
+    emailOverride,
+    originalEmailOverride,
+  } = details;
   return {
     conversationSlugId: original.conversationSlugId,
-    projectChange: getConversationProjectTargetKey(projectTarget) === getConversationProjectTargetKey(original.projectTarget)
-      ? undefined : { expectedProjectSlug: original.currentProjectSlug, target: projectTarget },
+    projectChange:
+      getConversationProjectTargetKey(projectTarget) ===
+      getConversationProjectTargetKey(original.projectTarget)
+        ? undefined
+        : {
+            expectedProjectSlug: original.currentProjectSlug,
+            target: projectTarget,
+          },
     conversationTitle: form.title,
     // A seed-only update must preserve an absent body rather than create a content revision.
-    conversationBody: form.content === "" && original.conversationBody === undefined ? undefined : form.content,
+    conversationBody:
+      form.content === "" && original.conversationBody === undefined
+        ? undefined
+        : form.content,
     isIndexed: !form.isPrivate,
     participationMode: form.participationMode,
     requiresEventTicket: form.requiresEventTicket,
     multilingualSetting: {
-      dynamicTranslationEnabled: form.multilingualSetting.dynamicTranslationEnabled,
-      additionalLanguageCodes: [...form.multilingualSetting.additionalLanguageCodes].sort(),
+      dynamicTranslationEnabled:
+        form.multilingualSetting.dynamicTranslationEnabled,
+      additionalLanguageCodes: [
+        ...form.multilingualSetting.additionalLanguageCodes,
+      ].sort(),
     },
-    languageSettingsSource: form.selectedProjectSlug !== undefined && form.inheritProjectLanguages ? "project_inherited" : "conversation_override",
-    conversationTypeConfig: form.conversationTypeConfig.conversationType === "polis" ? {
-      conversationType: "polis",
-      votingPresentation: form.conversationTypeConfig.votingPresentation,
-      aiLabelingEnabled: form.aiLabelingEnabled,
-      preferredOpinionGroupCount: form.preferredOpinionGroupCount,
-    } : form.conversationTypeConfig,
-    conversationEmailUpdateEnabledOverride: getConversationUpdatesOverrideUpdate({ currentOverride: emailOverride, originalOverride: originalEmailOverride }),
+    languageSettingsSource:
+      form.selectedProjectSlug !== undefined && form.inheritProjectLanguages
+        ? "project_inherited"
+        : "conversation_override",
+    conversationTypeConfig:
+      form.conversationTypeConfig.conversationType === "polis"
+        ? {
+            conversationType: "polis",
+            votingPresentation: form.conversationTypeConfig.votingPresentation,
+            aiLabelingEnabled: form.aiLabelingEnabled,
+            preferredOpinionGroupCount: form.preferredOpinionGroupCount,
+          }
+        : form.conversationTypeConfig,
+    conversationEmailUpdateEnabledOverride:
+      getConversationUpdatesOverrideUpdate({
+        currentOverride: emailOverride,
+        originalOverride: originalEmailOverride,
+      }),
   };
 }
 
-export function hasEditConversationDetailsChanges(details: EditConversationDetails): boolean {
+export function hasEditConversationDetailsChanges(
+  details: EditConversationDetails
+): boolean {
   const baseline = buildEditConversationRequest({
     ...details,
     form: createEditConversationForm(details.original),
     projectTarget: details.original.projectTarget,
     emailOverride: details.originalEmailOverride,
   });
-  return JSON.stringify(buildEditConversationRequest(details)) !== JSON.stringify(baseline);
+  return (
+    JSON.stringify(buildEditConversationRequest(details)) !==
+    JSON.stringify(baseline)
+  );
 }
 
 export const useEditConversationStore = defineStore("editConversation", () => {
   const auth = useAuthenticationStore();
   const session = ref<EditConversationSession>();
   const isSaving = computed(() => session.value?.isSaving ?? false);
-  const hasUnsavedChanges = computed(() => session.value !== undefined && (session.value.newSeedOpinions.length > 0 || hasEditConversationDetailsChanges(session.value)));
+  const hasUnsavedChanges = computed(
+    () =>
+      session.value !== undefined &&
+      (session.value.newSeedOpinions.length > 0 ||
+        hasEditConversationDetailsChanges(session.value))
+  );
 
   function start(value: EditConversationSession): void {
     session.value = value;

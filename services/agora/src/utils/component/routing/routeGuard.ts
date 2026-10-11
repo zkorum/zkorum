@@ -21,7 +21,10 @@ export interface RouteGuardState {
 }
 
 export interface RouteGuardActions {
-  guardNavigation: (navigation: { to: RouteGuardDestination; fromPath: string }) => boolean;
+  guardNavigation: (navigation: {
+    to: RouteGuardDestination;
+    fromPath: string;
+  }) => boolean;
   lockRoute: () => void;
   unlockRoute: () => void;
   isRouteLockedCheck: () => boolean;
@@ -36,12 +39,11 @@ interface PendingNavigation {
 }
 
 export interface RouteGuardComposable
-  extends RouteGuardState,
-    RouteGuardActions {}
+  extends RouteGuardState, RouteGuardActions {}
 
 export function useRouteGuard(
   beforeUnloadShouldBlockCallback: () => boolean,
-  beforeRouteLeaveCallback: (to: RouteGuardDestination) => boolean | "block",
+  beforeRouteLeaveCallback: (to: RouteGuardDestination) => boolean | "block"
 ): RouteGuardComposable {
   const router = useRouter();
 
@@ -75,7 +77,13 @@ export function useRouteGuard(
   window.addEventListener("beforeunload", handleBeforeUnload);
 
   // Set up Vue Router guard (handles router.push / router.replace navigations)
-  function guardNavigation({ to: destination, fromPath }: { to: RouteGuardDestination; fromPath: string }): boolean {
+  function guardNavigation({
+    to: destination,
+    fromPath,
+  }: {
+    to: RouteGuardDestination;
+    fromPath: string;
+  }): boolean {
     if (!isRouteLocked.value) {
       return true;
     }
@@ -102,7 +110,9 @@ export function useRouteGuard(
     });
     return false;
   }
-  onBeforeRouteLeave((to, from) => guardNavigation({ to, fromPath: from.fullPath }));
+  onBeforeRouteLeave((to, from) =>
+    guardNavigation({ to, fromPath: from.fullPath })
+  );
 
   // Clean up on component unmount
   onUnmounted(() => {

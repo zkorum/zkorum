@@ -230,8 +230,28 @@ type CreateRankingItemProps = CreateRankingItemCommonProps &
               normalizedContent?: never;
               bodyHtml?: string | null;
           }
-        | { normalizedContent: NormalizedRankingItemContent; title?: never; bodyHtml?: never; contentSource?: never }
+        | {
+              normalizedContent: NormalizedRankingItemContent;
+              title?: never;
+              bodyHtml?: never;
+              contentSource?: never;
+          }
     );
+
+async function getNormalizedRankingItemContent(
+    props: CreateRankingItemProps,
+): Promise<NormalizedRankingItemContent> {
+    if (props.normalizedContent !== undefined) return props.normalizedContent;
+    const params = {
+        title: props.title,
+        bodyHtml: props.bodyHtml,
+        googleCloudCredentials: props.googleCloudCredentials,
+        useGoogleLanguageDetection: props.useGoogleLanguageDetection,
+    };
+    return props.contentSource === "provider"
+        ? await normalizeProviderRankingItemContent(params)
+        : await normalizeFrontendRankingItemContent(params);
+}
 
 async function createRankingItemInTx({
     tx,
@@ -303,39 +323,26 @@ async function createRankingItemInTx({
     };
 }
 
-export async function createRankingItem(props: CreateRankingItemProps): Promise<{
+export async function createRankingItem(
+    props: CreateRankingItemProps,
+): Promise<{
     slugId: string;
     itemId: number;
     contentSource: RankingItemContentSource;
 }> {
-const {
-    db,
-    tx,
-    conversationId,
-    conversationSlugId,
-    conversationContentId,
-    authorId,
-    isSeed,
-    googleCloudCredentials,
-    useGoogleLanguageDetection,
-} = props;
+    const {
+        db,
+        tx,
+        conversationId,
+        conversationSlugId,
+        conversationContentId,
+        authorId,
+        isSeed,
+    } = props;
     const slugId = generateRandomSlugId();
     const now = new Date();
 
-    const normalizedContent =
-        props.normalizedContent !== undefined ? props.normalizedContent : props.contentSource === "provider"
-            ? await normalizeProviderRankingItemContent({
-                  title: props.title,
-                  bodyHtml: props.bodyHtml,
-                  googleCloudCredentials,
-                  useGoogleLanguageDetection,
-              })
-            : await normalizeFrontendRankingItemContent({
-                  title: props.title,
-                  bodyHtml: props.bodyHtml,
-                  googleCloudCredentials,
-                  useGoogleLanguageDetection,
-              });
+    const normalizedContent = await getNormalizedRankingItemContent(props);
 
     const params = {
         slugId,

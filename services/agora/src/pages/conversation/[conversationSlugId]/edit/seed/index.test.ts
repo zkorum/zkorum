@@ -4,7 +4,11 @@ import type {
   UpdateConversationResponse,
 } from "src/shared/types/dto";
 import { Dto } from "src/shared/types/dto";
-import { useEditConversationStore } from "src/stores/editConversation";
+import { useAuthenticationStore } from "src/stores/authentication";
+import {
+  buildEditConversationRequest,
+  useEditConversationStore,
+} from "src/stores/editConversation";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   type App,
@@ -81,6 +85,13 @@ vi.mock("src/components/features/conversation/ConversationTitle.vue", () => ({
 vi.mock("src/components/newConversation/NewConversationControlBar.vue", () => ({
   default: () => null,
 }));
+vi.mock("src/components/newConversation/ConversationProjectSelect.vue", () => ({
+  default: () => null,
+}));
+vi.mock(
+  "src/components/newConversation/ConversationProjectLanguageSettings.vue",
+  () => ({ default: () => null })
+);
 vi.mock("src/components/editor/Editor.vue", async () => {
   const { defineComponent, h, ref } = await import("vue");
   return {
@@ -134,6 +145,11 @@ async function mountFlow({
 }: { newSeeds?: string[]; detailsChanged?: boolean } = {}) {
   const pinia = createPinia();
   setActivePinia(pinia);
+  useAuthenticationStore().setLoginStatus({
+    isKnown: true,
+    isLoggedIn: true,
+    userId: "00000000-0000-4000-8000-000000000001",
+  });
   const response = Dto.getConversationForEditResponse.parse({
     success: true,
     conversationSlugId: "seedtest",
@@ -212,16 +228,8 @@ async function mountFlow({
       preferredOpinionGroupCount: null,
       surveyConfig: null,
     },
-    request: Dto.updateConversationRequest.parse({
-      conversationSlugId: "seedtest",
-      conversationTitle: title,
-      conversationBody: "Original body",
-      isIndexed: true,
-      participationMode: "account_required",
-      multilingualSetting: response.multilingualSetting,
-      conversationTypeConfig: response.conversationTypeConfig,
-    }),
-    detailsChanged,
+    projectTarget: response.projectTarget,
+    isSaving: false,
     newSeedOpinions: newSeeds,
     emailConfiguration: undefined,
     emailOverride: undefined,
@@ -279,6 +287,98 @@ function clickButton(label: string): void {
 }
 
 describe("edit conversation statement step", () => {
+  it("prevents leaving or double-submitting while Save is pending", async () => {
+    const { router, store } = await mountFlow({ newSeeds: [] });
+    let finish = (_response: UpdateConversationResponse) => {};
+    mocks.save.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        })
+    );
+    clickButton("Save");
+    await vi.waitUntil(() => store.isSaving);
+    clickButton("Save");
+    await router.push("/conversation/seedtest/edit?returnTo=/");
+    expect(router.currentRoute.value.path).toBe(
+      "/conversation/seedtest/edit/seed"
+    );
+    expect(mocks.save).toHaveBeenCalledTimes(1);
+    expect(document.body.textContent).not.toContain("Discard changes");
+    finish({ success: false, reason: "not_author" });
+    await vi.waitUntil(() => !store.isSaving);
+    expect(store.hasUnsavedChanges).toBe(true);
+  });
+
+  it("clears private draft content when the authenticated user changes", async () => {
+    const { store, container } = await mountFlow();
+    mocks.getForEdit.mockResolvedValueOnce({
+      success: false,
+      reason: "not_author",
+    });
+    useAuthenticationStore().setLoginStatus({
+      isKnown: true,
+      isLoggedIn: true,
+      userId: "00000000-0000-4000-8000-000000000002",
+    });
+    expect(store.session).toBeUndefined();
+    await vi.waitUntil(
+      () => !container.textContent?.includes("An existing seed")
+    );
+    expect(store.hasUnsavedChanges).toBe(false);
+  });
+
+  it("loads a different conversation rather than reusing a stale parameter-only route", async () => {
+    const { store, router, container } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    const original = store.session?.original;
+    if (original === undefined) throw new Error("Missing edit fixture");
+    mocks.getForEdit.mockResolvedValueOnce({
+      ...original,
+      conversationSlugId: "nexttest",
+      conversationTitle: "Another conversation",
+      seedOpinions: [{ slugId: "newseed1", content: "Another existing seed" }],
+    });
+    await router.push("/conversation/nexttest/edit/seed?returnTo=/");
+    await vi.waitUntil(
+      () => container.textContent?.includes("Another existing seed") === true
+    );
+    expect(store.session?.original.conversationSlugId).toBe("nexttest");
+    expect(container.textContent).not.toContain("An existing seed");
+  });
+
+  it("preserves an absent conversation body for a seed-only save", async () => {
+    const { store } = await mountFlow({ detailsChanged: false });
+    if (store.session === undefined) throw new Error("Missing edit fixture");
+    store.session.original.conversationBody = undefined;
+    store.session.form.content = "";
+    mocks.save.mockResolvedValueOnce({ success: false, reason: "not_author" });
+    clickButton("Save");
+    await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
+    expect(
+      mocks.save.mock.calls.at(0)?.at(0)?.conversationBody
+    ).toBeUndefined();
+  });
+
+  it("does not rewrite meaningful whitespace in conversation content", async () => {
+    const { store, router, container } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    await router.push("/conversation/seedtest/edit?returnTo=/");
+    await vi.waitUntil(
+      () => container.querySelectorAll("textarea").length === 2
+    );
+    const body = container.querySelectorAll("textarea").item(1);
+    body.value = "Original  body";
+    body.dispatchEvent(new Event("input", { bubbles: true }));
+    clickButton("Next");
+    await vi.waitUntil(() => router.currentRoute.value.path.endsWith("/seed"));
+    expect(store.hasUnsavedChanges).toBe(true);
+    expect(store.session?.form.content).toBe("Original  body");
+  });
   it("loads a direct statement-step link through a fresh edit session", async () => {
     const { router, store, container } = await mountFlow({ newSeeds: [] });
     const original = store.session?.original;
@@ -327,7 +427,9 @@ describe("edit conversation statement step", () => {
     clickButton("Save");
     await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
     expect(mocks.save).toHaveBeenCalledWith({
-      ...store.session?.request,
+      ...(store.session === undefined
+        ? {}
+        : buildEditConversationRequest(store.session)),
       newSeedOpinionList: ["New seed"],
     });
     expect(store.session?.newSeedOpinions).toEqual(["New seed"]);

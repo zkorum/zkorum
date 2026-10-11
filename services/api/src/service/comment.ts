@@ -118,6 +118,7 @@ import type { GoogleCloudCredentials } from "@/shared-backend/googleCloudAuth.js
 import {
     contentLanguageMetadataUpdateValues,
     resolveContentLanguageMetadata,
+    type ContentLanguageMetadata,
 } from "./contentLanguageMetadata.js";
 import { getConversationMultilingualSetting } from "./conversationMultilingual.js";
 import {

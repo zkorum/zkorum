@@ -252,7 +252,6 @@ describe("conversation project editing", () => {
         const response = await updateConversation({
             db,
             userId,
-            didWrite: "did:key:test",
             data: request(),
         });
         expect(response).toMatchObject({
@@ -289,7 +288,6 @@ describe("conversation project editing", () => {
             await updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data,
             }),
         ).toMatchObject({
@@ -309,13 +307,11 @@ describe("conversation project editing", () => {
             updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data: request(),
             }),
             updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data: request(),
             }),
         ]);
@@ -334,7 +330,6 @@ describe("conversation project editing", () => {
             await updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data: request(),
             }),
         ).toMatchObject({ success: false, reason: "project_not_available" });
@@ -351,7 +346,6 @@ describe("conversation project editing", () => {
             await updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data: request(),
             }),
         ).toMatchObject({ success: false, reason: "conversation_locked" });
@@ -378,7 +372,6 @@ describe("conversation project editing", () => {
                 await updateConversation({
                     db,
                     userId,
-                    didWrite: "did:key:test",
                     data: request(),
                 }),
             ).toMatchObject({
@@ -408,7 +401,6 @@ describe("conversation project editing", () => {
             await updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data: request(),
             }),
         ).toMatchObject({
@@ -424,7 +416,6 @@ describe("conversation project editing", () => {
             await updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data,
             }),
         ).toMatchObject({ success: true });
@@ -509,7 +500,6 @@ describe("conversation project editing", () => {
         const response = await updateConversation({
             db,
             userId,
-            didWrite: "did:key:test",
             data,
         });
         expect(response).toMatchObject({
@@ -530,7 +520,6 @@ describe("conversation project editing", () => {
             await updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data,
             }),
         ).toMatchObject({ success: false, reason: "premium_access_required" });
@@ -546,7 +535,6 @@ describe("conversation project editing", () => {
             await updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data: request(),
             }),
         ).toMatchObject({ success: true });
@@ -585,7 +573,6 @@ describe("conversation project editing", () => {
             await updateConversation({
                 db,
                 userId,
-                didWrite: "did:key:test",
                 data: request(),
             }),
         ).toMatchObject({ success: true });
