@@ -10,7 +10,18 @@ import { z } from "zod";
 // IO has no published quote. Use the reviewed global CSV maximum as its explicit
 // conservative estimate, rather than treating it as a quoted destination rate.
 const unquotedTerritorySegmentPriceMicros = 784900;
-const segmentPriceMicros: Partial<Record<PhoneCountry, number>> = {
+const legacyNetherlandsAntillesSegmentPriceMicros = 172300;
+// These territories share the provider billing route of their numbering region.
+const territoryBillingCountries: Readonly<
+    Partial<Record<PhoneCountry, PhoneCountry>>
+> = {
+    AX: "FI",
+    IM: "GB",
+    MF: "GP",
+    SJ: "NO",
+    VA: "IT",
+};
+const segmentPriceMicros: Readonly<Partial<Record<PhoneCountry, number>>> = {
     AD: 146400,
     AE: 117600,
     AL: 116700,
@@ -18,18 +29,17 @@ const segmentPriceMicros: Partial<Record<PhoneCountry, number>> = {
     AS: 188100,
     AT: 97900,
     AU: 51500,
-    AX: 86100, // The CSV bills Aland under FI.
     BA: 511000,
     BD: 596200,
     BE: 111300,
     BG: 146600,
-    BQ: 172300, // The CSV retains the legacy AN billing group.
+    BQ: legacyNetherlandsAntillesSegmentPriceMicros,
     BR: 59900,
     BY: 252100,
     CA: 8300,
     CH: 76900,
     CM: 317000,
-    CW: 172300, // The CSV retains the legacy AN billing group.
+    CW: legacyNetherlandsAntillesSegmentPriceMicros,
     CY: 86400,
     CZ: 70600,
     DE: 112000,
@@ -51,7 +61,6 @@ const segmentPriceMicros: Partial<Record<PhoneCountry, number>> = {
     HR: 137900,
     HU: 91000,
     IE: 77900,
-    IM: 56000, // UK shared-numbering route without a separate CSV row.
     IN: 83200,
     IO: unquotedTerritorySegmentPriceMicros,
     IS: 71900,
@@ -68,7 +77,6 @@ const segmentPriceMicros: Partial<Record<PhoneCountry, number>> = {
     MC: 185600,
     MD: 147400,
     ME: 192800,
-    MF: 227400, // Shared +590 route; use the GP billing group.
     MK: 201200,
     MQ: 189700,
     MT: 68900,
@@ -88,15 +96,13 @@ const segmentPriceMicros: Partial<Record<PhoneCountry, number>> = {
     SE: 64600,
     SG: 59100,
     SI: 205100,
-    SJ: 69700, // Shared +47 numbering; use the NO billing group.
     SK: 88300,
     SM: 125600,
-    SX: 172300, // The CSV retains the legacy AN billing group.
+    SX: legacyNetherlandsAntillesSegmentPriceMicros,
     TH: 30500,
     TW: 84200,
     UA: 226800,
     US: 8300,
-    VA: 92700, // Shared +39 numbering; use the IT billing group.
     VG: 308000,
     VI: 198700,
     VN: 285200,
@@ -106,7 +112,8 @@ const segmentPriceMicros: Partial<Record<PhoneCountry, number>> = {
 export function getDefaultPhoneSmsCostCents(
     country: PhoneCountry,
 ): number | undefined {
-    const price = segmentPriceMicros[country];
+    const price =
+        segmentPriceMicros[territoryBillingCountries[country] ?? country];
     if (price === undefined) return undefined;
     // Two segments, the 5-cent Verify fee on every attempt, and 20% headroom.
     // The 15-cent floor leaves extra room on inexpensive North American routes.

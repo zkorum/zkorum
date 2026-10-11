@@ -66,6 +66,7 @@ import {
     type PhoneAuthConfig,
 } from "./app.js";
 import * as authService from "@/service/auth.js";
+import { logApiError } from "@/logging/privacy.js";
 import {
     createPhoneSmsBudget,
     type PhoneSmsBudget,
@@ -558,16 +559,23 @@ const db = await createDb({
     logQueries: config.API_LOG_SQL_QUERIES,
 });
 const alertRecipient = config.PHONE_SMS_BUDGET_ALERT_EMAIL;
-const phoneSmsCosts: Partial<Record<PhoneCountry, number>> = {};
+const phoneSmsCosts = new Map<PhoneCountry, number>();
 for (const country of phoneCountryPolicy.authenticationCountries) {
     const cost =
         config.PHONE_SMS_COST_CENTS_BY_COUNTRY[country] ??
         getDefaultPhoneSmsCostCents(country);
-    if (cost !== undefined) phoneSmsCosts[country] = cost;
+    if (cost !== undefined) phoneSmsCosts.set(country, cost);
 }
 const phoneSmsBudget = createPhoneSmsBudget({
     db,
-    log,
+    logError: (error) => {
+        logApiError({
+            logger: log,
+            level: "error",
+            event: { event: "application_error" },
+            error,
+        });
+    },
     costEstimates: phoneSmsCosts,
     sendAlert:
         alertRecipient === undefined
@@ -589,9 +597,8 @@ const phoneTurnstile = phoneTurnstileConfig.enabled
     : undefined;
 if (phoneAuth.mode !== "disabled" && phoneAuth.delivery.type === "twilio") {
     phoneSmsBudget.start();
-    server.addHook("onClose", () => {
-        phoneSmsBudget.shutdown();
-        return Promise.resolve();
+    server.addHook("onClose", async () => {
+        await phoneSmsBudget.shutdown();
     });
 }
 
@@ -611,29 +618,28 @@ async function getEffectivePhoneAuth({
         phoneNumber === undefined
             ? undefined
             : parsePhoneNumberFromString(phoneNumber)?.country;
+    const countryAuth =
+        phoneNumber === undefined
+            ? phoneAuth
+            : resolveCountryPhoneAuth({
+                  phoneAuth,
+                  country,
+                  policy: phoneCountryPolicy,
+              });
+    if (countryAuth.mode === "disabled") return countryAuth;
     const budgetMode =
-        phoneAuth.delivery.type === "twilio"
+        countryAuth.delivery.type === "twilio"
             ? await phoneSmsBudget.getMode({ forVerification, country })
             : "enabled";
-    const globalMode =
-        budgetMode === "disabled"
-            ? "disabled"
-            : phoneAuth.mode === "login_only" ||
-                budgetMode === "login_only" ||
-                phoneCountryPolicy.registrationCountries.length === 0
-              ? "login_only"
-              : "enabled";
-    const effective: authService.PhoneAuth =
-        globalMode === "disabled"
-            ? { mode: globalMode }
-            : { ...phoneAuth, mode: globalMode };
-    return phoneNumber === undefined
-        ? effective
-        : resolveCountryPhoneAuth({
-              phoneAuth: effective,
-              phoneNumber,
-              policy: phoneCountryPolicy,
-          });
+    if (budgetMode === "disabled") return { mode: "disabled" };
+    if (
+        countryAuth.mode === "login_only" ||
+        budgetMode === "login_only" ||
+        phoneCountryPolicy.registrationCountries.length === 0
+    ) {
+        return { ...countryAuth, mode: "login_only" };
+    }
+    return countryAuth;
 }
 log.info(
     "AGORA_LOAD_EVENT %s",

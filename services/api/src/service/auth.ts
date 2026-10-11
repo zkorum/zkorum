@@ -525,7 +525,6 @@ interface TwilioPhoneOtpDelivery {
                             to: string;
                         }) => Promise<{
                             status: string;
-                            toJSON: () => unknown;
                         }>;
                     };
                     verificationChecks: {
@@ -534,7 +533,6 @@ interface TwilioPhoneOtpDelivery {
                             to: string;
                         }) => Promise<{
                             status: string;
-                            toJSON: () => unknown;
                         }>;
                     };
                 };
@@ -570,7 +568,9 @@ async function applyPhoneAuthTimingProtection({
             ? 0
             : randomInt(phoneAuth.responseJitterMs + 1);
     const remainingDelay =
-        phoneAuth.minimumResponseTimeMs + jitter - (Date.now() - startedAt);
+        phoneAuth.minimumResponseTimeMs +
+        jitter -
+        (performance.now() - startedAt);
     if (remainingDelay > 0) {
         await sleep(remainingDelay);
     }
@@ -697,13 +697,6 @@ export async function createUserWithInitialLanguagePreferencesIfMissing({
     return true;
 }
 
-interface GetPhoneAuthenticationTypeByNumber {
-    db: PostgresDatabase;
-    phoneNumber: string;
-    didWrite: string;
-    peppers: string[];
-}
-
 interface GetPhoneAuthenticationTypeByHash {
     db: PostgresDatabase;
     phoneHash: string;
@@ -739,9 +732,8 @@ interface UpdateAuthAttemptCodeProps {
     now: Date;
     authenticateRequestBody: AuthenticateRequestBody;
     throttleSmsSecondsInterval: number;
-    peppers: string[];
+    phoneHash: string;
     delivery: PhoneOtpDelivery;
-    phoneAuthMode: ActivePhoneAuthMode;
 }
 
 interface InsertAuthAttemptCodeProps {
@@ -754,9 +746,8 @@ interface InsertAuthAttemptCodeProps {
     userAgent: string;
     authenticateRequestBody: AuthenticateRequestBody;
     throttleSmsSecondsInterval: number;
-    peppers: string[];
+    phoneHash: string;
     delivery: PhoneOtpDelivery;
-    phoneAuthMode: ActivePhoneAuthMode;
 }
 
 interface SendOtpPhoneNumberProps {
@@ -1071,7 +1062,7 @@ async function registerOrLoginWithPhoneNumber(
 export async function verifyPhoneOtp(
     props: VerifyOtpProps,
 ): Promise<VerifyPhoneOtp200> {
-    const startedAt = Date.now();
+    const startedAt = performance.now();
     try {
         return await verifyPhoneOtpWithoutTimingProtection(props);
     } finally {
@@ -1140,11 +1131,14 @@ async function verifyPhoneOtpWithoutTimingProtection({
     }
 
     if (
-        await isBlockedPhoneNumber({
+        resultOtp[0].isSynthetic ||
+        resultOtp[0].codeExpiry <= now ||
+        resultOtp[0].guessAttemptAmount >= maxAttempt ||
+        (await isBlockedPhoneNumber({
             db: primaryDb,
             phoneHash: submittedPhoneHash,
             pepperVersion: resultOtp[0].pepperVersion,
-        })
+        }))
     ) {
         return await handleWrongPhoneOtpGuess({
             db: primaryDb,
@@ -1155,41 +1149,13 @@ async function verifyPhoneOtpWithoutTimingProtection({
         });
     }
 
-    if (resultOtp[0].isSynthetic) {
-        if (phoneAuth.delivery.type === "twilio") {
-            await checkSyntheticOtpPhoneNumber({
-                code,
-                phoneNumber: phoneNumberObj.number,
-                delivery: phoneAuth.delivery,
-            });
-        }
-        return await handleWrongPhoneOtpGuess({
-            db: primaryDb,
-            didWrite,
-            challenge: resultOtp[0],
-            maxAttempt,
-            now,
-        });
-    }
-
-    // if we use twilio, we don't use the local code at all.
-    // will change when we migrate to another service
     if (phoneAuth.delivery.type === "twilio") {
-        const verificationCheckPromise = checkOtpPhoneNumber({
+        const approved = await checkOtpPhoneNumber({
             code,
             phoneNumber: phoneNumberObj.number,
             delivery: phoneAuth.delivery,
         });
-        let verificationCheck: Awaited<typeof verificationCheckPromise>;
-        try {
-            verificationCheck = await verificationCheckPromise;
-        } catch (error) {
-            logApiError({
-                logger: log,
-                level: "error",
-                event: { event: "application_error" },
-                error,
-            });
+        if (!approved) {
             return await handleWrongPhoneOtpGuess({
                 db: primaryDb,
                 didWrite,
@@ -1198,74 +1164,7 @@ async function verifyPhoneOtpWithoutTimingProtection({
                 now,
             });
         }
-        switch (verificationCheck.status) {
-            case "pending":
-            case "canceled":
-            case "max_attempts_reached":
-            case "deleted":
-            case "failed":
-            case "expired":
-                // Use the API's own attempt/expiry state for real and synthetic
-                // challenges; provider-specific failures must not identify accounts.
-                return await handleWrongPhoneOtpGuess({
-                    db: primaryDb,
-                    didWrite,
-                    challenge: resultOtp[0],
-                    maxAttempt,
-                    now,
-                });
-            case "approved":
-                return await finalizeVerifiedPhoneOtp({
-                    db: primaryDb,
-                    didWrite,
-                    resultOtp: {
-                        ...resultOtp[0],
-                        authType: authenticateTypeSchema.parse(
-                            resultOtp[0].authType,
-                        ),
-                    },
-                    now,
-                    maxAttempt,
-                    phoneAuthMode: phoneAuth.mode,
-                    delivery: phoneAuth.delivery,
-                    sessionLifetimeDays,
-                    currentDisplayLanguage,
-                });
-            default:
-                logApiError({
-                    logger: log,
-                    level: "warn",
-                    event: { event: "application_error" },
-                    error: new Error(
-                        "Unexpected phone verification provider status",
-                    ),
-                });
-                return await handleWrongPhoneOtpGuess({
-                    db: primaryDb,
-                    didWrite,
-                    challenge: resultOtp[0],
-                    maxAttempt,
-                    now,
-                });
-        }
-    } else if (resultOtp[0].codeExpiry <= now) {
-        return { success: false, reason: "expired_code" };
-    } else if (otpCodesEqual({ a: resultOtp[0].code, b: code })) {
-        return await finalizeVerifiedPhoneOtp({
-            db: primaryDb,
-            didWrite,
-            resultOtp: {
-                ...resultOtp[0],
-                authType: authenticateTypeSchema.parse(resultOtp[0].authType),
-            },
-            now,
-            maxAttempt,
-            phoneAuthMode: phoneAuth.mode,
-            delivery: phoneAuth.delivery,
-            sessionLifetimeDays,
-            currentDisplayLanguage,
-        });
-    } else {
+    } else if (!otpCodesEqual({ a: resultOtp[0].code, b: code })) {
         return await handleWrongPhoneOtpGuess({
             db: primaryDb,
             didWrite,
@@ -1274,6 +1173,20 @@ async function verifyPhoneOtpWithoutTimingProtection({
             now,
         });
     }
+    return await finalizeVerifiedPhoneOtp({
+        db: primaryDb,
+        didWrite,
+        resultOtp: {
+            ...resultOtp[0],
+            authType: authenticateTypeSchema.parse(resultOtp[0].authType),
+        },
+        now,
+        maxAttempt,
+        phoneAuthMode: phoneAuth.mode,
+        delivery: phoneAuth.delivery,
+        sessionLifetimeDays,
+        currentDisplayLanguage,
+    });
 }
 
 // WARN: we assume the OTP was verified and atomically claimed before entry.
@@ -1889,31 +1802,6 @@ export async function getPhoneAuthenticationTypeByHash({
     });
 }
 
-export async function getPhoneAuthenticationTypeByNumber({
-    db,
-    phoneNumber,
-    didWrite,
-    peppers,
-}: GetPhoneAuthenticationTypeByNumber): Promise<AuthResult> {
-    const phoneHash = await generatePhoneHash({
-        phoneNumber: phoneNumber,
-        peppers: peppers,
-        pepperVersion: PEPPER_VERSION,
-    });
-    const now = nowZeroMs();
-    const deviceStatus = await authUtilService.getDeviceStatus({
-        db,
-        didWrite,
-        now,
-    });
-    return getPhoneAuthenticationTypeByHash({
-        db,
-        phoneHash,
-        didWrite,
-        deviceStatus,
-    });
-}
-
 export async function getZKPAuthenticationType({
     db,
     nullifier,
@@ -1936,7 +1824,7 @@ export async function getZKPAuthenticationType({
 export async function authenticateAttempt(
     props: AuthenticateAttemptProps,
 ): Promise<AuthenticateResponse> {
-    const startedAt = Date.now();
+    const startedAt = performance.now();
     try {
         return await authenticateAttemptWithoutTimingProtection(props);
     } finally {
@@ -1978,11 +1866,21 @@ async function authenticateAttemptWithoutTimingProtection({
         ...authenticateRequestBody,
         phoneNumber: canonicalPhone.phoneNumber,
     };
-    const authResult = await getPhoneAuthenticationTypeByNumber({
-        db: primaryDb,
+    const requestedPhoneHash = await generatePhoneHash({
         phoneNumber: canonicalRequestBody.phoneNumber,
-        didWrite,
         peppers,
+        pepperVersion: PEPPER_VERSION,
+    });
+    const deviceStatus = await authUtilService.getDeviceStatus({
+        db: primaryDb,
+        didWrite,
+        now,
+    });
+    const authResult = await getPhoneAuthenticationTypeByHash({
+        db: primaryDb,
+        phoneHash: requestedPhoneHash,
+        didWrite,
+        deviceStatus,
     });
     // Never disclose credential ownership before the caller proves phone control.
     const type: AuthenticateType =
@@ -1991,11 +1889,6 @@ async function authenticateAttemptWithoutTimingProtection({
             : authResult.type;
     const userId =
         authResult.type === "merge" ? authResult.toUserId : authResult.userId;
-    const requestedPhoneHash = await generatePhoneHash({
-        phoneNumber: canonicalRequestBody.phoneNumber,
-        peppers,
-        pepperVersion: PEPPER_VERSION,
-    });
     const blocked = await isBlockedPhoneNumber({
         db: primaryDb,
         phoneHash: requestedPhoneHash,
@@ -2023,7 +1916,6 @@ async function authenticateAttemptWithoutTimingProtection({
         .from(authAttemptPhoneTable)
         .where(eq(authAttemptPhoneTable.didWrite, didWrite));
     if (resultHasAttempted.length === 0) {
-        // this is a first attempt, generate new code, insert data and send email in one transaction
         return await insertAuthAttemptCode({
             db: primaryDb,
             type,
@@ -2034,9 +1926,8 @@ async function authenticateAttemptWithoutTimingProtection({
             userAgent,
             authenticateRequestBody: canonicalRequestBody,
             throttleSmsSecondsInterval,
-            peppers,
+            phoneHash: requestedPhoneHash,
             delivery: phoneAuth.delivery,
-            phoneAuthMode: phoneAuth.mode,
         });
     }
 
@@ -2053,10 +1944,8 @@ async function authenticateAttemptWithoutTimingProtection({
             now,
             authenticateRequestBody: canonicalRequestBody,
             throttleSmsSecondsInterval,
-            // awsMailConf,
-            peppers,
+            phoneHash: requestedPhoneHash,
             delivery: phoneAuth.delivery,
-            phoneAuthMode: phoneAuth.mode,
         });
     } else if (
         currentAttempt.codeExpiry > now &&
@@ -2085,10 +1974,8 @@ async function authenticateAttemptWithoutTimingProtection({
             now,
             authenticateRequestBody: canonicalRequestBody,
             throttleSmsSecondsInterval,
-            // awsMailConf,
-            peppers,
+            phoneHash: requestedPhoneHash,
             delivery: phoneAuth.delivery,
-            phoneAuthMode: phoneAuth.mode,
         });
     }
 }
@@ -2100,13 +1987,13 @@ async function sendOtpPhoneNumber({
     pepperVersion,
     isRegistration,
     delivery,
-}: SendOtpPhoneNumberProps): Promise<boolean> {
+}: SendOtpPhoneNumberProps): Promise<void> {
     if (await isBlockedPhoneNumber({ db, phoneHash, pepperVersion })) {
-        return false;
+        return;
     }
     const country = parsePhoneNumberFromString(phoneNumber)?.country;
-    if (!(await delivery.budget.reserve({ isRegistration, country })))
-        return false;
+    if (country === undefined) return;
+    if (!(await delivery.budget.reserve({ isRegistration, country }))) return;
     const verification = await delivery.client.verify.v2
         .services(delivery.serviceSid)
         .verifications.create({
@@ -2116,7 +2003,6 @@ async function sendOtpPhoneNumber({
     if (verification.status !== "pending") {
         throw httpErrors.internalServerError("Error while sending SMS");
     }
-    return true;
 }
 
 async function sendOtpPhoneNumberWithoutDisclosingFailure(
@@ -2146,28 +2032,23 @@ async function checkOtpPhoneNumber({
     code: number;
     phoneNumber: string;
     delivery: TwilioPhoneOtpDelivery;
-}) {
-    return await delivery.client.verify.v2
-        .services(delivery.serviceSid)
-        .verificationChecks.create({
-            code: codeToString(code),
-            to: phoneNumber,
-        });
-}
-
-async function checkSyntheticOtpPhoneNumber({
-    code,
-    phoneNumber,
-    delivery,
-}: {
-    code: number;
-    phoneNumber: string;
-    delivery: TwilioPhoneOtpDelivery;
-}): Promise<void> {
+}): Promise<boolean> {
     try {
-        await checkOtpPhoneNumber({ code, phoneNumber, delivery });
-    } catch {
-        // No Twilio challenge exists for a synthetic attempt; only its latency is needed.
+        const verification = await delivery.client.verify.v2
+            .services(delivery.serviceSid)
+            .verificationChecks.create({
+                code: codeToString(code),
+                to: phoneNumber,
+            });
+        return verification.status === "approved";
+    } catch (error) {
+        logApiError({
+            logger: log,
+            level: "error",
+            event: { event: "application_error" },
+            error,
+        });
+        return false;
     }
 }
 
@@ -2505,14 +2386,9 @@ async function insertAuthAttemptCode({
     userAgent,
     authenticateRequestBody,
     throttleSmsSecondsInterval,
-    peppers,
+    phoneHash,
     delivery,
 }: InsertAuthAttemptCodeProps): Promise<AuthenticateResponse> {
-    const phoneHash = await generatePhoneHash({
-        phoneNumber: authenticateRequestBody.phoneNumber,
-        peppers: peppers,
-        pepperVersion: PEPPER_VERSION,
-    });
     const throttleUntil = await reservePhoneOtpSend({
         db,
         phoneHash,
@@ -2562,9 +2438,6 @@ async function insertAuthAttemptCode({
             success: false,
             reason: "restricted_phone_type",
         };
-    }
-    if (delivery.type === "local") {
-        console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
     const phoneCountryCode = phoneNumber.country;
     const countryCallingCode = phoneNumber.countryCallingCode;
@@ -2718,14 +2591,9 @@ async function updateAuthAttemptCode({
     now,
     authenticateRequestBody,
     throttleSmsSecondsInterval,
-    peppers,
+    phoneHash,
     delivery,
 }: UpdateAuthAttemptCodeProps): Promise<AuthenticateResponse> {
-    const phoneHash = await generatePhoneHash({
-        phoneNumber: authenticateRequestBody.phoneNumber,
-        peppers,
-        pepperVersion: PEPPER_VERSION,
-    });
     const throttleUntil = await reservePhoneOtpSend({
         db,
         phoneHash,
@@ -2777,14 +2645,6 @@ async function updateAuthAttemptCode({
         currentAttempt[0].codeExpiry.getTime() > now.getTime();
 
     if (canReuseExistingCode) {
-        if (delivery.type === "local") {
-            console.log(
-                "\n\nCode:",
-                codeToString(currentAttempt[0].code),
-                currentAttempt[0].codeExpiry,
-                "\n\n",
-            );
-        }
         await db
             .update(authAttemptPhoneTable)
             .set({
@@ -2834,9 +2694,6 @@ async function updateAuthAttemptCode({
             : generateOneTimeCode();
     const codeExpiry = new Date(now);
     codeExpiry.setMinutes(codeExpiry.getMinutes() + minutesBeforeSmsCodeExpiry);
-    if (delivery.type === "local") {
-        console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
-    }
     await db
         .update(authAttemptPhoneTable)
         .set({
@@ -3026,7 +2883,7 @@ interface GetEmailAuthTypeParams {
 /**
  * Get email authentication type, computing deviceStatus internally.
  * Used by authenticateEmailAttempt().
- * Mirrors getPhoneAuthenticationTypeByNumber().
+ * Computes device status before resolving credential ownership.
  */
 export async function getEmailAuthType({
     db,

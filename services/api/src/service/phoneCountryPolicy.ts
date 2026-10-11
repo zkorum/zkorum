@@ -1,7 +1,7 @@
-import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import {
     getCountryPhoneAuthMode,
     phonePolicyResponseSchema,
+    type PhoneCountry,
     type PhoneCountryPolicy,
     type PhonePolicyResponse,
 } from "@/shared/types/phone-country-policy.js";
@@ -12,15 +12,14 @@ import { z } from "zod";
 
 export function resolveCountryPhoneAuth({
     phoneAuth,
-    phoneNumber,
+    country,
     policy,
 }: {
     phoneAuth: PhoneAuth;
-    phoneNumber: string;
+    country: PhoneCountry | undefined;
     policy: PhoneCountryPolicy;
 }): PhoneAuth {
     if (phoneAuth.mode === "disabled") return phoneAuth;
-    const country = parsePhoneNumberFromString(phoneNumber)?.country;
     const mode = getCountryPhoneAuthMode({
         mode: phoneAuth.mode,
         country,

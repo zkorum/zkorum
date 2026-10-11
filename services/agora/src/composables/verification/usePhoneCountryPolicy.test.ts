@@ -32,6 +32,8 @@ describe("phone policy frontend", () => {
             "div",
             JSON.stringify({
               ready: policy.isReady.value,
+              enrollmentAvailable:
+                policy.availabilityForPurpose("registration").available,
               loginCountries: policy.countriesFor("login"),
               registrationCountries: policy.countriesFor("registration"),
               login: policy.availabilityFor({ purpose: "login", country: "UA" })
@@ -54,9 +56,16 @@ describe("phone policy frontend", () => {
     document.body.append(target);
     app.mount(target);
     try {
+      expect(JSON.parse(target.textContent ?? "")).toMatchObject({
+        ready: false,
+        enrollmentAvailable: false,
+        loginCountries: [],
+        registrationCountries: [],
+      });
       await vi.waitFor(() =>
         expect(JSON.parse(target.textContent ?? "")).toEqual({
           ready: true,
+          enrollmentAvailable: true,
           loginCountries: ["FR", "UA", "CW", "BQ", "IM"],
           registrationCountries: ["FR", "CW", "BQ", "IM"],
           login: true,
@@ -75,8 +84,25 @@ describe("phone policy frontend", () => {
       await vi.waitFor(() =>
         expect(JSON.parse(target.textContent ?? "")).toMatchObject({
           login: true,
+          enrollmentAvailable: false,
           registrationCountries: [],
           islandCredential: false,
+        })
+      );
+      fetchPolicy.mockResolvedValue({
+        mode: "enabled",
+        countryPolicy: {
+          authenticationCountries: ["FR", "UA", "CW", "BQ", "IM"],
+          registrationCountries: ["FR", "CW", "BQ", "IM"],
+        },
+      });
+      await client.invalidateQueries({ queryKey: ["phone-auth-policy"] });
+      await vi.waitFor(() =>
+        expect(JSON.parse(target.textContent ?? "")).toMatchObject({
+          login: true,
+          enrollmentAvailable: true,
+          registrationCountries: ["FR", "CW", "BQ", "IM"],
+          islandCredential: true,
         })
       );
     } finally {

@@ -35,10 +35,6 @@ export function getEffectivePhoneAuthMode({
   return "enabled";
 }
 
-export function pausePhoneRegistration(): void {
-  backendPhoneAuthMode.value = "login_only";
-}
-
 export function getPhoneAuthAvailability({
   mode,
   purpose,

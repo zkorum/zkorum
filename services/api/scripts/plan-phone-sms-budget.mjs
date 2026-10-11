@@ -9,6 +9,7 @@ const usage = `Usage: node scripts/plan-phone-sms-budget.mjs \\
   --estimated-cents-per-send <conservative cents> \\
   --max-hour-cents <acceptable estimated exposure> \\
   --max-day-cents <acceptable estimated exposure> \\
+  [--max-month-cents 10000] [--peak-month-sends <reviewed sends>] \\
   [--warning-percent 75]
 
 This is a read-only calculator. It does not inspect Twilio, connect to a database,
@@ -70,6 +71,8 @@ export function planPhoneSmsBudget({
     estimatedCentsPerSend,
     maxHourCents,
     maxDayCents,
+    maxMonthCents = 10000,
+    peakMonthSends,
     warningPercent = 75,
 }) {
     integer({ value: peakHourSends, name: "peak-hour-sends" });
@@ -80,6 +83,9 @@ export function planPhoneSmsBudget({
     });
     integer({ value: maxHourCents, name: "max-hour-cents" });
     integer({ value: maxDayCents, name: "max-day-cents" });
+    integer({ value: maxMonthCents, name: "max-month-cents" });
+    if (peakMonthSends !== undefined)
+        integer({ value: peakMonthSends, name: "peak-month-sends" });
     integer({ value: warningPercent, name: "warning-percent", max: 99 });
     if (peakDaySends < peakHourSends || maxDayCents < maxHourCents) {
         throw new Error(
@@ -99,6 +105,19 @@ export function planPhoneSmsBudget({
     } catch (error) {
         throw new Error(`Hourly plan: ${error.message}`, { cause: error });
     }
+
+    const monthlyFirstWarningSend = ceilingDivision({
+        numerator: BigInt(maxMonthCents) * BigInt(warningPercent),
+        denominator: BigInt(estimatedCentsPerSend) * 100n,
+    });
+    if (
+        peakMonthSends !== undefined &&
+        BigInt(peakMonthSends) >= monthlyFirstWarningSend
+    ) {
+        throw new Error(
+            `Monthly plan: reviewed demand reaches the warning at send ${monthlyFirstWarningSend}`,
+        );
+    }
     try {
         daily = planWindow({
             peakSends: peakDaySends,
@@ -117,10 +136,15 @@ export function planPhoneSmsBudget({
             estimatedCentsPerSend,
             hourlyBudgetCents: maxHourCents,
             dailyBudgetCents: maxDayCents,
+            monthlyBudgetCents: maxMonthCents,
             warningPercent,
         },
         hourly,
         daily,
+        monthly: {
+            firstWarningSend: Number(monthlyFirstWarningSend),
+            maximumSends: Math.floor(maxMonthCents / estimatedCentsPerSend),
+        },
     };
 }
 
@@ -132,7 +156,7 @@ function cliInteger({ value, name }) {
 }
 
 function printPlan({ peakHourSends, peakDaySends, plan }) {
-    const { policy, hourly, daily } = plan;
+    const { policy, hourly, daily, monthly } = plan;
     console.log(
         `Reviewed peak demand: ${peakHourSends} sends/hour, ${peakDaySends} sends/day`,
     );
@@ -152,16 +176,19 @@ function printPlan({ peakHourSends, peakDaySends, plan }) {
         "Review these values before applying; actual Twilio charges may differ.",
     );
     console.log(
-        "\n-- Review on the production writer after applying V0095. This starts disabled.",
+        `UTC calendar-month estimated ceiling: ${policy.monthlyBudgetCents} cents; reference warning at send ${monthly.firstWarningSend}, maximum ${monthly.maximumSends} sends at the supplied reference cost. Actual reservations use destination estimates or the policy floor, whichever is higher; the cent ceiling is shared across all destinations.`,
+    );
+    console.log(
+        "\n-- Optional custom policy: review on the production writer after applying V0098. No manual setup is required for defaults. This starts disabled; update the existing row instead if the API has already initialized one.",
     );
     console.log(`INSERT INTO phone_sms_budget_policy (
     id, sending_enabled, hourly_send_limit, daily_send_limit,
-    estimated_cents_per_send, hourly_budget_cents, daily_budget_cents,
+    estimated_cents_per_send, hourly_budget_cents, daily_budget_cents, monthly_budget_cents,
     warning_percent
 ) VALUES (
     1, false, ${policy.hourlySendLimit}, ${policy.dailySendLimit},
     ${policy.estimatedCentsPerSend}, ${policy.hourlyBudgetCents},
-    ${policy.dailyBudgetCents}, ${policy.warningPercent}
+    ${policy.dailyBudgetCents}, ${policy.monthlyBudgetCents}, ${policy.warningPercent}
 );`);
 }
 
@@ -173,6 +200,8 @@ async function main() {
             "estimated-cents-per-send": { type: "string" },
             "max-hour-cents": { type: "string" },
             "max-day-cents": { type: "string" },
+            "max-month-cents": { type: "string" },
+            "peak-month-sends": { type: "string" },
             "warning-percent": { type: "string" },
             help: { type: "boolean" },
         },
@@ -204,6 +233,20 @@ async function main() {
             value: values["max-day-cents"],
             name: "max-day-cents",
         }),
+        maxMonthCents:
+            values["max-month-cents"] === undefined
+                ? 10000
+                : cliInteger({
+                      value: values["max-month-cents"],
+                      name: "max-month-cents",
+                  }),
+        peakMonthSends:
+            values["peak-month-sends"] === undefined
+                ? undefined
+                : cliInteger({
+                      value: values["peak-month-sends"],
+                      name: "peak-month-sends",
+                  }),
         warningPercent:
             values["warning-percent"] === undefined
                 ? 75

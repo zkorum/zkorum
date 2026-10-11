@@ -17,7 +17,7 @@ export async function isBlockedPhoneNumber({
     pepperVersion: number;
 }): Promise<boolean> {
     const writer = getPrimaryDatabase(db);
-    const blocked = await writer
+    const blocked = writer
         .select({ phoneHash: blockedPhoneNumberTable.phoneHash })
         .from(blockedPhoneNumberTable)
         .where(
@@ -26,11 +26,9 @@ export async function isBlockedPhoneNumber({
                 eq(blockedPhoneNumberTable.pepperVersion, pepperVersion),
                 isNull(blockedPhoneNumberTable.revokedAt),
             ),
-        )
-        .limit(1);
-    if (blocked.length !== 0) return true;
-    const restrictedOwner = await writer
-        .select({ id: phoneTable.id })
+        );
+    const restrictedOwner = writer
+        .select({ phoneHash: phoneTable.phoneHash })
         .from(phoneTable)
         .innerJoin(userTable, eq(userTable.id, phoneTable.userId))
         .where(
@@ -43,7 +41,7 @@ export async function isBlockedPhoneNumber({
                     isNotNull(userTable.authRestrictedAt),
                 ),
             ),
-        )
-        .limit(1);
-    return restrictedOwner.length !== 0;
+        );
+    const denied = await blocked.unionAll(restrictedOwner).limit(1);
+    return denied.length !== 0;
 }

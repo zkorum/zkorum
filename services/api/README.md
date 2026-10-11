@@ -63,6 +63,137 @@ disabled, kill switch active, and simulator disabled. The API rejects simulator
 startup outside development, so production and staging must configure their
 delivery gates explicitly and cannot inherit the local simulator behavior.
 
+## Phone country policy
+
+`PHONE_AUTH_MODE` is a global upper bound. `disabled` stops phone authentication;
+`login_only` permits eligible existing credentials only. With global `enabled`,
+new phone enrollment is still limited by `PHONE_REGISTRATION_ALLOWED_COUNTRIES`.
+This includes attaching a new phone to an existing email/Rarimo account.
+
+The backend derives the country from the submitted international number, not the
+client's selected country or its calling-code hint. It enforces the policy on
+initiation, resends, and completion; an older OTP cannot bypass a newly closed
+registration policy. Guest participation can still merge into an eligible existing
+phone account after proof of control. Phone blocks and account restrictions remain
+authoritative, including before delivery.
+
+`PHONE_AUTH_ALLOWED_COUNTRIES` and `PHONE_REGISTRATION_ALLOWED_COUNTRIES` accept
+comma-separated ISO country codes and are validated at startup. The canonical
+country defaults live in
+[`phone-country-policy.ts`](../shared/src/types/phone-country-policy.ts).
+
+The registration list must be a subset of the authentication list. An explicitly
+empty registration list closes enrollment everywhere. Authentication-only
+destinations stay login-only when global registration reopens. All destinations
+outside the authentication list are disabled. These are reviewed deployment
+settings, not rules dynamically inferred from account counts.
+
+Twilio Geo Permissions must allow SMS **with Fraud Guard** for all authentication
+destinations, including login-only ones. Disable other SMS destinations and unused
+Voice verification. Safe List exceptions can bypass Twilio Geo/Fraud Guard rules;
+the API's country policy is independently enforced.
+
+`POST /api/v1/auth/phone/policy` accepts `{}` and exposes only the global mode and
+country rules. It does not accept a phone number or disclose accounts, quotas, or
+spending. The frontend caches these rules and filters login versus enrollment
+country pickers. Build with `VITE_PHONE_AUTH_MODE=enabled` to let the backend control
+registration availability at runtime; a frontend build set to `login_only` remains
+an additional presentation restriction and must be rebuilt to reopen enrollment.
+
+Both active modes use response padding (default 2 seconds plus up to 500 ms jitter),
+synthetic challenges for ineligible destinations/accounts, detached delivery, and
+matching API-controlled wrong-guess/expiry handling. `THROTTLE_SMS_SECONDS_INTERVAL`
+defaults to 30 seconds, shared by destination across requesting devices.
+
+## Phone SMS budget defaults
+
+After the migrations, a missing `phone_sms_budget_policy` is initialized automatically
+and shared by all API instances. No manual policy insert is needed for new defaults:
+
+| Setting                             | Default                                                        |
+| ----------------------------------- | -------------------------------------------------------------- |
+| Monthly estimated-spend ceiling     | **US$100** (`10000` cents)                                     |
+| Warning / new-enrollment pause      | **75%** (US$75 for the default policy)                         |
+| Reservation cost                    | Conservative destination estimate, with a 15-cent policy floor |
+| Hourly/daily send and spending caps | Unset (`NULL`); optional operator limits                       |
+| Monthly period                      | UTC calendar month, resetting at 00:00 UTC on the first        |
+
+Normal bursts can use remaining monthly capacity. Optional burst limits are global
+rolling-hour/24-hour caps. Every send/resend reserves capacity under a writer-side
+database lock before calling Twilio; failed/uncertain deliveries retain their debit.
+Existing login can use the allowance after a warning until its next reservation
+would exceed a hard cap. Already-issued login OTPs remain verifiable during a budget
+pause. Enrollment is rechecked against the writer policy after provider approval.
+
+Automatic registration pauses expire at the next UTC month boundary and recheck
+usage. Manual pauses with no `registration_pause_expires_at`, static global
+restrictions, country login-only rules, and account/phone blocks do not expire with
+the monthly reset. Clear both pause fields when deliberately reopening a manual pause.
+
+Destination estimates are source-controlled in `src/service/phoneSmsPricing.ts` using
+the October 2026 [Twilio SMS price CSV](https://assets.cdn.prod.twilio.com/pricing-csv/SMSPricing.csv).
+They reserve **two segments**, the US$0.05 successful-Verify fee on every attempt,
+and **20% headroom**, rounding up to whole cents. A 15-cent floor gives inexpensive
+routes extra room. There are no live pricing calls in the authentication path.
+
+`PHONE_SMS_COST_CENTS_BY_COUNTRY` accepts reviewed JSON integer-cent overrides, e.g.
+`{"FR":30}`. Adding a destination without a built-in rate requires an explicit cost
+override. Reservations use the greater of the destination estimate and the persisted
+`estimated_cents_per_send` floor, preserving more conservative operator settings.
+Past reservations keep their original estimates when pricing changes.
+
+This limits **estimated application spending**, not the exact invoice. Reconcile
+actual Verify prices, message segments, additional fees, taxes, and any earlier
+unbudgeted/underestimated usage before reducing estimates. The read-only planner is
+optional for custom burst/forecast limits; its default monthly ceiling is US$100.
+
+Defaults only affect missing policies. Existing configured limits and shutdowns are
+preserved. V0098.1's legacy backfill assigns US$30 to previously enabled zero-default
+policies; V0099 changes the default for newly created policies to US$100. To adopt
+the approved US$100 limit on an existing row, run this deliberate writer update:
+
+```sql
+UPDATE phone_sms_budget_policy
+SET monthly_budget_cents = 10000, warning_percent = 75, updated_at = clock_timestamp()
+WHERE id = 1;
+```
+
+This does not clear pauses or enable a disabled policy. `PHONE_SMS_BUDGET_ALERT_EMAIL`
+enables retryable SES alerts; ensure the configured region/sender can deliver to it.
+
+### Production rollout
+
+1. Build and pull updated **api** and **agora** images. Previously built images do not
+   include the country policy or revised pricing.
+2. Stop old API/import notification writers before running unrestricted Flyway
+   migration (`docker compose -f docker-compose-production.yml stop api import-worker`).
+   Otherwise use the staged notification-constraint rollout described in PR #1270.
+3. Run the usual production-writer `pnpm db:migrate`, including V0097, V0098,
+   V0098.1 and V0099. Retain the existing peppers and cloud/provider credentials.
+4. Start the updated services with `PHONE_AUTH_MODE=disabled` while applying the
+   reviewed incident restrictions. Use the normal `update-agora.sh` deployment helper.
+5. Run the operator importer from `services/api` with production writer settings:
+   `NODE_ENV=production pnpm exec tsx scripts/import-blocked-phones.ts /private/path/reviewed.json --apply`.
+   The private file is an operator artifact, not a repository file. The standalone
+   importer does not inherit Compose environment values; load your operator env file
+   with `tsx --env-file=...` or provide the normal writer/AWS settings in the shell.
+6. Set Twilio SMS Geo Permissions to **Monitor all traffic for blocking fraud** for
+   the configured authentication countries. Keep other destinations disabled and
+   preserve eligible existing-user access while restricting the reviewed incident
+   credentials individually.
+7. Inspect any existing budget row and apply the US$100 update above if desired.
+   Re-enable `sending_enabled` only if its existing shutdown is ready to be lifted.
+8. Deploy/restart the API with `PHONE_AUTH_MODE=login_only`, production Turnstile
+   enforcement for `agoracitizen.app`, and the alert recipient. New policies initialize
+   at US$100; existing settings remain authoritative. Verify login, resend, and alerts.
+9. When ready for new phone enrollment, set only the API's global mode to `enabled`
+   (and rebuild a frontend that was explicitly capped at `login_only`). Country
+   registration restrictions remain in force.
+
+Keep populated incident files private and preserve the frontend asset volume during
+updates. The checked-in Compose file is a deployment example; use your actual image
+tags, production secret injection, and existing SES/database/Valkey infrastructure.
+
 ## Logging privacy
 
 The API uses schema-projected request/error metadata, reviewed message templates,

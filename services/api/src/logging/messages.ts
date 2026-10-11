@@ -21,7 +21,6 @@ export const logMessageTemplates: readonly LogMessageTemplate[] = [
     { parts: ["[Email] Email sent successfully"] },
     { parts: ["[Phone Turnstile] Siteverify failed"] },
     { parts: ["[Phone Turnstile] Siteverify returned an error"] },
-    { parts: ["[Phone SMS Budget] Monitoring failed"] },
     { parts: ["[Zupass] Register with Zupass"] },
     { parts: ["[Zupass] Logging-in new device with Zupass"] },
     { parts: ["[Zupass] Proof data is not an object"] },

@@ -16,6 +16,7 @@ import {
     resolveCountryPhoneAuth,
 } from "../src/service/phoneCountryPolicy.js";
 import type { PhoneAuth } from "../src/service/auth.js";
+import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 
 const policy = phoneCountryPolicySchema.parse({
     authenticationCountries: defaultPhoneAuthenticationCountries,
@@ -51,7 +52,7 @@ describe("phone country policy", () => {
     ])("resolves the actual destination %s as %s", (phoneNumber, expected) => {
         const result = resolveCountryPhoneAuth({
             phoneAuth: enabled,
-            phoneNumber,
+            country: parsePhoneNumberFromString(phoneNumber)?.country,
             policy,
         });
         expect(result.mode).toBe(expected);
@@ -121,14 +122,14 @@ describe("phone country policy", () => {
         expect(
             resolveCountryPhoneAuth({
                 phoneAuth: { ...enabled, mode: "login_only" },
-                phoneNumber: "+33612345678",
+                country: "FR",
                 policy,
             }).mode,
         ).toBe("login_only");
         expect(
             resolveCountryPhoneAuth({
                 phoneAuth: { mode: "disabled" },
-                phoneNumber: "+33612345678",
+                country: "FR",
                 policy,
             }).mode,
         ).toBe("disabled");
@@ -139,7 +140,7 @@ describe("phone country policy", () => {
         expect(
             resolveCountryPhoneAuth({
                 phoneAuth: enabled,
-                phoneNumber: "+14165552671",
+                country: parsePhoneNumberFromString("+14165552671")?.country,
                 policy: usOnly,
             }).mode,
         ).toBe("disabled");
@@ -179,7 +180,7 @@ describe("phone country policy", () => {
         expect(
             resolveCountryPhoneAuth({
                 phoneAuth: enabled,
-                phoneNumber: "+14155552671",
+                country: "US",
                 policy: closed,
             }).mode,
         ).toBe("login_only");

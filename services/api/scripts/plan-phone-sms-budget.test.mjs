@@ -17,6 +17,7 @@ test("keeps reviewed demand below both warning thresholds", () => {
         estimatedCentsPerSend: 12,
         hourlyBudgetCents: 1000,
         dailyBudgetCents: 3000,
+        monthlyBudgetCents: 10000,
         warningPercent: 75,
     });
     assert.equal(plan.hourly.firstWarningSend, 41);
@@ -97,4 +98,27 @@ test("CLI has no side effects and emits a disabled policy insert only for feasib
     assert.equal(bad.status, 1);
     assert.match(bad.stderr, /Hourly plan:/);
     assert.doesNotMatch(bad.stdout, /INSERT INTO/);
+});
+
+test("enforces an explicitly reviewed monthly forecast and emits the monthly ceiling", () => {
+    const values = {
+        peakHourSends: 2,
+        peakDaySends: 4,
+        estimatedCentsPerSend: 100,
+        maxHourCents: 500,
+        maxDayCents: 1000,
+        maxMonthCents: 3000,
+    };
+    const plan = planPhoneSmsBudget({ ...values, peakMonthSends: 20 });
+    assert.equal(plan.policy.monthlyBudgetCents, 3000);
+    assert.equal(plan.monthly.firstWarningSend, 23);
+    assert.equal(plan.monthly.maximumSends, 30);
+    assert.throws(
+        () => planPhoneSmsBudget({ ...values, peakMonthSends: 23 }),
+        /Monthly plan:/,
+    );
+    assert.throws(
+        () => planPhoneSmsBudget({ ...values, maxMonthCents: 0 }),
+        /max-month-cents/,
+    );
 });

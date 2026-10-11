@@ -88,11 +88,10 @@ import {
   type PhoneAuthAvailability,
   type PhoneAuthPurpose,
   type PhoneAuthUnavailableReason,
-  usePhoneAuthAvailability,
 } from "src/utils/auth/phoneAuthMode";
 import { processEnv } from "src/utils/processEnv";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, onUnmounted, ref, watch, watchEffect } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKInputOtp from "../ui-library/ZKInputOtp.vue";
@@ -123,8 +122,20 @@ const { t: tPhoneAvailability } =
 
 const phoneStore = phoneVerificationStore();
 const { verificationPhoneNumber, pendingOtpData } = storeToRefs(phoneStore);
-const modeAvailability = usePhoneAuthAvailability(() => props.purpose);
 const countryPolicy = usePhoneCountryPolicy();
+const parsedPhoneNumber = computed(() =>
+  parsePhoneNumberFromString(
+    verificationPhoneNumber.value.internationalPhoneNumber
+  )
+);
+const policyAvailability = computed(() =>
+  verificationPhoneNumber.value.internationalPhoneNumber === ""
+    ? countryPolicy.availabilityForPurpose(props.purpose)
+    : countryPolicy.availabilityFor({
+        purpose: props.purpose,
+        country: parsedPhoneNumber.value?.country,
+      })
+);
 const responseUnavailableReason = ref<"registration_unavailable">();
 const phoneAuthAvailability = computed<PhoneAuthAvailability>(() => {
   if (!countryPolicy.isReady.value)
@@ -135,19 +146,14 @@ const phoneAuthAvailability = computed<PhoneAuthAvailability>(() => {
       reason: responseUnavailableReason.value,
     };
   }
-  if (
-    countryPolicy.isReady.value &&
-    verificationPhoneNumber.value.internationalPhoneNumber !== ""
-  ) {
-    return countryPolicy.availabilityFor({
-      purpose: props.purpose,
-      country: parsePhoneNumberFromString(
-        verificationPhoneNumber.value.internationalPhoneNumber
-      )?.country,
-    });
-  }
-  return modeAvailability.value;
+  return policyAvailability.value;
 });
+watch(
+  () => policyAvailability.value.available,
+  (available) => {
+    if (available) responseUnavailableReason.value = undefined;
+  }
+);
 
 const {
   verificationCode,
@@ -179,28 +185,11 @@ onUnmounted(() => {
 const isSubmitButtonLoading = requestGate.isBusy;
 const isInteractionLocked = computed(() => requestGate.isBusy.value);
 
-const formattedPhoneNumber = ref("");
-
-watchEffect(() => {
-  const phoneNumber = verificationPhoneNumber.value.internationalPhoneNumber;
-  if (!phoneNumber) {
-    formattedPhoneNumber.value = "";
-    return;
-  }
-
-  formattedPhoneNumber.value = phoneNumber;
-
-  void (async () => {
-    try {
-      const { parsePhoneNumberFromString } =
-        await import("libphonenumber-js/max");
-      const parsed = parsePhoneNumberFromString(phoneNumber);
-      formattedPhoneNumber.value = parsed?.formatInternational() || phoneNumber;
-    } catch (e) {
-      console.warn("Failed to load phone formatter", e);
-    }
-  })();
-});
+const formattedPhoneNumber = computed(
+  () =>
+    parsedPhoneNumber.value?.formatInternational() ??
+    verificationPhoneNumber.value.internationalPhoneNumber
+);
 
 let isInitialized = false;
 watch(
@@ -322,7 +311,7 @@ async function nextButtonClicked() {
             showPhoneAuthUnavailable("technical_unavailable");
             break;
           case "phone_registration_unavailable":
-            handlePhoneRegistrationUnavailable();
+            await handlePhoneRegistrationUnavailable();
             break;
         }
       }
@@ -407,10 +396,12 @@ function showPhoneAuthUnavailable(reason: PhoneAuthUnavailableReason) {
   }
 }
 
-function handlePhoneRegistrationUnavailable(): void {
-  void countryPolicy.refresh();
+async function handlePhoneRegistrationUnavailable(): Promise<void> {
   responseUnavailableReason.value = "registration_unavailable";
-  requestGate.terminate();
+  const result = await countryPolicy.refresh();
+  if (result.isSuccess && policyAvailability.value.available) {
+    responseUnavailableReason.value = undefined;
+  }
 }
 
 function ensurePhoneAuthAvailable(): boolean {

@@ -6,7 +6,6 @@ import {
 } from "@/shared-backend/schema.js";
 import {
     and,
-    count,
     eq,
     getTableColumns,
     gte,
@@ -14,12 +13,12 @@ import {
     lt,
     lte,
     sql,
-    sum,
 } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { PhoneCountry } from "@/shared/types/phone-country-policy.js";
+import type { PhoneAuthMode } from "@/shared/types/phone-auth.js";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -33,16 +32,16 @@ function getNextPhoneSmsMonthStart(now: Date): Date {
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 }
 
-type BudgetMode = "enabled" | "login_only" | "disabled";
 type AlertKind = "warning" | "hard_limit";
 
-interface Usage {
-    hourlySends: number;
-    dailySends: number;
-    hourlyCents: bigint;
-    dailyCents: bigint;
-    monthlyCents: bigint;
-}
+const usageSchema = z.object({
+    hourlySends: z.coerce.number().int().nonnegative(),
+    dailySends: z.coerce.number().int().nonnegative(),
+    hourlyCents: z.coerce.bigint().nonnegative(),
+    dailyCents: z.coerce.bigint().nonnegative(),
+    monthlyCents: z.coerce.bigint().nonnegative(),
+});
+type Usage = z.infer<typeof usageSchema>;
 
 type Policy = typeof phoneSmsBudgetPolicyTable.$inferSelect;
 type TimedPolicy = Policy & { dbNow: Date };
@@ -117,39 +116,30 @@ async function getUsage({
     const hourAgo = new Date(now.getTime() - HOUR_MS);
     const dayAgo = new Date(now.getTime() - DAY_MS);
     const monthStart = getPhoneSmsMonthStart(now);
-    const hourly = await db
+    const earliest = new Date(Math.min(dayAgo.getTime(), monthStart.getTime()));
+    const reservedAt = phoneSmsBudgetReservationTable.reservedAt;
+    const estimatedCents = phoneSmsBudgetReservationTable.estimatedCents;
+    const encodedHourAgo = sql.param(hourAgo, reservedAt);
+    const encodedDayAgo = sql.param(dayAgo, reservedAt);
+    const encodedMonthStart = sql.param(monthStart, reservedAt);
+    // PostgreSQL FILTER has no Drizzle helper. Keep all windows in one aggregate
+    // over the reservation table so they share one snapshot and one round trip.
+    const rows = await db
         .select({
-            sends: count(),
-            cents: sum(phoneSmsBudgetReservationTable.estimatedCents),
+            hourlySends: sql`count(*) FILTER (WHERE ${reservedAt} >= ${encodedHourAgo})`,
+            dailySends: sql`count(*) FILTER (WHERE ${reservedAt} >= ${encodedDayAgo})`,
+            hourlyCents: sql`coalesce(sum(${estimatedCents}) FILTER (WHERE ${reservedAt} >= ${encodedHourAgo}), 0)`,
+            dailyCents: sql`coalesce(sum(${estimatedCents}) FILTER (WHERE ${reservedAt} >= ${encodedDayAgo}), 0)`,
+            monthlyCents: sql`coalesce(sum(${estimatedCents}) FILTER (WHERE ${reservedAt} >= ${encodedMonthStart}), 0)`,
         })
-        .from(phoneSmsBudgetReservationTable)
-        .where(gte(phoneSmsBudgetReservationTable.reservedAt, hourAgo));
-    const daily = await db
-        .select({
-            sends: count(),
-            cents: sum(phoneSmsBudgetReservationTable.estimatedCents),
-        })
-        .from(phoneSmsBudgetReservationTable)
-        .where(gte(phoneSmsBudgetReservationTable.reservedAt, dayAgo));
-    const monthly = await db
-        .select({ cents: sum(phoneSmsBudgetReservationTable.estimatedCents) })
         .from(phoneSmsBudgetReservationTable)
         .where(
             and(
-                gte(phoneSmsBudgetReservationTable.reservedAt, monthStart),
-                lt(
-                    phoneSmsBudgetReservationTable.reservedAt,
-                    getNextPhoneSmsMonthStart(now),
-                ),
+                gte(reservedAt, earliest),
+                lt(reservedAt, getNextPhoneSmsMonthStart(now)),
             ),
         );
-    return {
-        hourlySends: hourly[0]?.sends ?? 0,
-        dailySends: daily[0]?.sends ?? 0,
-        hourlyCents: BigInt(hourly[0]?.cents ?? 0),
-        dailyCents: BigInt(daily[0]?.cents ?? 0),
-        monthlyCents: BigInt(monthly[0]?.cents ?? 0),
-    };
+    return usageSchema.parse(rows.at(0));
 }
 
 async function queueAlert({
@@ -206,36 +196,37 @@ async function pauseRegistration({
 export function createPhoneSmsBudget({
     db,
     sendAlert,
-    log,
-    costEstimates = {},
+    logError,
+    costEstimates,
 }: {
     db: PostgresJsDatabase;
     sendAlert?: (message: { subject: string; text: string }) => Promise<void>;
-    log: Pick<Console, "error">;
-    costEstimates?: Partial<Record<PhoneCountry, number>>;
+    logError: (error: unknown) => void;
+    costEstimates: ReadonlyMap<PhoneCountry, number>;
 }) {
     const primaryDb = getPrimaryDatabase(db);
-    const costs = Object.values(costEstimates);
-    const minimumEstimate = (policy: Policy): number =>
-        costs.length === 0
-            ? policy.estimatedCentsPerSend
-            : Math.max(policy.estimatedCentsPerSend, Math.min(...costs));
+    const destinationCosts = new Map(costEstimates);
+    const costs = [...destinationCosts.values()];
+    const cheapestCost = costs.length === 0 ? undefined : Math.min(...costs);
+    const minimumEstimate = (policy: Policy): number | undefined =>
+        cheapestCost === undefined
+            ? undefined
+            : Math.max(policy.estimatedCentsPerSend, cheapestCost);
     const estimateFor = ({
         policy,
         country,
     }: {
         policy: Policy;
-        country: PhoneCountry | undefined;
-    }): number =>
-        country === undefined
-            ? policy.estimatedCentsPerSend
-            : Math.max(
-                  policy.estimatedCentsPerSend,
-                  costEstimates[country] ?? policy.estimatedCentsPerSend,
-              );
+        country: PhoneCountry;
+    }): number | undefined => {
+        const cost = destinationCosts.get(country);
+        return cost === undefined
+            ? undefined
+            : Math.max(policy.estimatedCentsPerSend, cost);
+    };
     let monitorTimer: NodeJS.Timeout | undefined;
     let draining = false;
-    let monitoring = false;
+    let monitorTask: Promise<void> | undefined;
     // Drizzle has no clock_timestamp() helper. Map the writer's clock alongside
     // each real policy/alert row so reservations and alerts share its time base.
     const dbClock = sql`clock_timestamp()`.mapWith((value) =>
@@ -305,7 +296,7 @@ export function createPhoneSmsBudget({
     }: {
         policy: Policy;
         forVerification: boolean;
-    }): BudgetMode | undefined => {
+    }): PhoneAuthMode | undefined => {
         if (
             forVerification &&
             (!policy.sendingEnabled || policy.registrationPausedAt !== null)
@@ -325,10 +316,12 @@ export function createPhoneSmsBudget({
         policy: Policy;
         usage: Usage;
         forVerification: boolean;
-        estimatedCents: number;
-    }): BudgetMode => {
+        estimatedCents: number | undefined;
+    }): PhoneAuthMode => {
         const immediate = immediateMode({ policy, forVerification });
         if (immediate !== undefined) return immediate;
+        if (estimatedCents === undefined)
+            return forVerification ? "login_only" : "disabled";
         if (
             !forVerification &&
             exceedsBudget({ policy, usage, nextSend: true, estimatedCents })
@@ -347,7 +340,7 @@ export function createPhoneSmsBudget({
     }: {
         forVerification?: boolean;
         country?: PhoneCountry;
-    } = {}): Promise<BudgetMode> => {
+    } = {}): Promise<PhoneAuthMode> => {
         return await primaryDb.transaction(async (tx) => {
             const policy = await readPolicy({ db: tx, forUpdate: true });
             if (policy === undefined) return "disabled";
@@ -355,6 +348,7 @@ export function createPhoneSmsBudget({
             if (immediate !== undefined) return immediate;
 
             const usage = await getUsage({ db: tx, now: policy.dbNow });
+            const minimumCents = minimumEstimate(policy);
             if (
                 policy.registrationPausedAt === null &&
                 crossesWarning({ policy, usage })
@@ -363,11 +357,12 @@ export function createPhoneSmsBudget({
             }
             if (
                 policy.sendingEnabled &&
+                minimumCents !== undefined &&
                 exceedsBudget({
                     policy,
                     usage,
                     nextSend: true,
-                    estimatedCents: minimumEstimate(policy),
+                    estimatedCents: minimumCents,
                 })
             ) {
                 await queueAlert({
@@ -382,7 +377,7 @@ export function createPhoneSmsBudget({
                 forVerification,
                 estimatedCents:
                     country === undefined
-                        ? minimumEstimate(policy)
+                        ? minimumCents
                         : estimateFor({ policy, country }),
             });
         });
@@ -394,7 +389,7 @@ export function createPhoneSmsBudget({
     }: {
         forVerification?: boolean;
         country?: PhoneCountry;
-    } = {}): Promise<BudgetMode> => {
+    } = {}): Promise<PhoneAuthMode> => {
         const policy = await readPolicy({ db: primaryDb, forUpdate: false });
         if (
             policy === undefined ||
@@ -428,14 +423,16 @@ export function createPhoneSmsBudget({
         country,
     }: {
         isRegistration: boolean;
-        country?: PhoneCountry;
+        country: PhoneCountry;
     }): Promise<boolean> => {
         return await primaryDb.transaction(async (tx) => {
             const policy = await readPolicy({ db: tx, forUpdate: true });
             if (policy?.sendingEnabled !== true) return false;
+            const estimatedCents = estimateFor({ policy, country });
+            if (estimatedCents === undefined) return false;
             const timestamp = policy.dbNow;
             const usage = await getUsage({ db: tx, now: timestamp });
-            const estimatedCents = estimateFor({ policy, country });
+            const minimumCents = minimumEstimate(policy);
             const warningReached = crossesWarning({ policy, usage });
             if (warningReached && policy.registrationPausedAt === null) {
                 await pauseRegistration({ db: tx, now: timestamp });
@@ -450,11 +447,12 @@ export function createPhoneSmsBudget({
                 exceedsBudget({ policy, usage, nextSend: true, estimatedCents })
             ) {
                 if (
+                    minimumCents !== undefined &&
                     exceedsBudget({
                         policy,
                         usage,
                         nextSend: true,
-                        estimatedCents: minimumEstimate(policy),
+                        estimatedCents: minimumCents,
                     })
                 ) {
                     await queueAlert({
@@ -485,11 +483,12 @@ export function createPhoneSmsBudget({
                 await pauseRegistration({ db: tx, now: timestamp });
             }
             if (
+                minimumCents !== undefined &&
                 exceedsBudget({
                     policy,
                     usage: after,
                     nextSend: true,
-                    estimatedCents: minimumEstimate(policy),
+                    estimatedCents: minimumCents,
                 })
             ) {
                 await queueAlert({
@@ -508,7 +507,11 @@ export function createPhoneSmsBudget({
         db: PostgresJsDatabase;
     }): Promise<boolean> => {
         const policy = await readPolicy({ db: writer, forUpdate: true });
-        if (policy?.sendingEnabled !== true || policy.monthlyBudgetCents === 0)
+        if (
+            policy?.sendingEnabled !== true ||
+            policy.monthlyBudgetCents === 0 ||
+            cheapestCost === undefined
+        )
             return false;
         const usage = await getUsage({ db: writer, now: policy.dbNow });
         if (
@@ -590,10 +593,7 @@ export function createPhoneSmsBudget({
                             ),
                         );
                 } catch (error) {
-                    log.error(
-                        error,
-                        "[Phone SMS Budget] Alert delivery failed; will retry",
-                    );
+                    logError(error);
                     const delayMs = Math.min(
                         60 * 60 * 1000,
                         60_000 * 2 ** Math.min(alert.attemptCount, 6),
@@ -623,28 +623,27 @@ export function createPhoneSmsBudget({
     const start = (): void => {
         if (monitorTimer !== undefined) return;
         const monitor = async (): Promise<void> => {
-            if (monitoring) return;
-            monitoring = true;
             try {
                 await reconcilePolicy();
                 await drainAlerts();
+            } catch (error) {
+                logError(error);
             } finally {
-                monitoring = false;
+                monitorTask = undefined;
             }
         };
         const runMonitor = (): void => {
-            void monitor().catch((error: unknown) => {
-                log.error(error, "[Phone SMS Budget] Monitoring failed");
-            });
+            monitorTask ??= monitor();
         };
         runMonitor();
         monitorTimer = setInterval(runMonitor, 60_000);
         monitorTimer.unref();
     };
 
-    const shutdown = (): void => {
+    const shutdown = async (): Promise<void> => {
         if (monitorTimer !== undefined) clearInterval(monitorTimer);
         monitorTimer = undefined;
+        await monitorTask;
     };
 
     return {

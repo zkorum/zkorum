@@ -7,6 +7,7 @@ import { useAuthPhoneApi } from "src/utils/api/auth-phone";
 import {
   getEffectivePhoneAuthMode,
   getPhoneAuthAvailability,
+  type PhoneAuthAvailability,
   type PhoneAuthPurpose,
   updateBackendPhoneAuthMode,
 } from "src/utils/auth/phoneAuthMode";
@@ -28,16 +29,23 @@ export function usePhoneCountryPolicy() {
     },
     { immediate: true }
   );
+  const effectiveMode = computed(() =>
+    getEffectivePhoneAuthMode({
+      configuredMode: processEnv.VITE_PHONE_AUTH_MODE ?? "enabled",
+      backendMode: query.data.value?.mode ?? "disabled",
+    })
+  );
+
+  function availabilityForPurpose(
+    purpose: PhoneAuthPurpose
+  ): PhoneAuthAvailability {
+    return getPhoneAuthAvailability({ mode: effectiveMode.value, purpose });
+  }
 
   function countriesFor(purpose: PhoneAuthPurpose): PhoneCountry[] {
     const policy = query.data.value;
     if (policy === undefined) return [];
-    const mode = getEffectivePhoneAuthMode({
-      configuredMode: processEnv.VITE_PHONE_AUTH_MODE ?? "enabled",
-      backendMode: policy.mode,
-    });
-    if (mode === "disabled" || (purpose !== "login" && mode === "login_only"))
-      return [];
+    if (!availabilityForPurpose(purpose).available) return [];
     return purpose === "login"
       ? policy.countryPolicy.authenticationCountries
       : policy.countryPolicy.registrationCountries;
@@ -49,17 +57,13 @@ export function usePhoneCountryPolicy() {
   }: {
     purpose: PhoneAuthPurpose;
     country: PhoneCountry | undefined;
-  }) {
+  }): PhoneAuthAvailability {
     const policy = query.data.value;
     if (policy === undefined)
       return getPhoneAuthAvailability({ mode: "disabled", purpose });
-    const mode = getEffectivePhoneAuthMode({
-      configuredMode: processEnv.VITE_PHONE_AUTH_MODE ?? "enabled",
-      backendMode: policy.mode,
-    });
     return getPhoneAuthAvailability({
       mode: getCountryPhoneAuthMode({
-        mode,
+        mode: effectiveMode.value,
         country,
         policy: policy.countryPolicy,
       }),
@@ -70,8 +74,8 @@ export function usePhoneCountryPolicy() {
   return {
     isReady: computed(() => query.data.value !== undefined),
     isPending: query.isPending,
-    isError: query.isError,
     countriesFor,
+    availabilityForPurpose,
     availabilityFor,
     refresh: query.refetch,
   };

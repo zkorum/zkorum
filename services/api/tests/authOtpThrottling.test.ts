@@ -14,6 +14,7 @@ import {
 } from "vitest";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import type { PhoneAuth } from "../src/service/auth.js";
+import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { resolveCountryPhoneAuth } from "../src/service/phoneCountryPolicy.js";
 import {
     defaultPhoneAuthenticationCountries,
@@ -265,7 +266,7 @@ describe("OTP destination throttling", () => {
         await createGuestDevice(unknownDid);
         const countryAuth = resolveCountryPhoneAuth({
             phoneAuth: enabledPhoneAuth,
-            phoneNumber,
+            country,
             policy: countryPolicy,
         });
         const authenticate = async ({
@@ -353,7 +354,7 @@ describe("OTP destination throttling", () => {
         const phoneNumber = "+380501234567";
         const countryAuth = resolveCountryPhoneAuth({
             phoneAuth: enabledPhoneAuth,
-            phoneNumber,
+            country: parsePhoneNumberFromString(phoneNumber)?.country,
             policy: countryPolicy,
         });
         expect(
@@ -425,7 +426,7 @@ describe("OTP destination throttling", () => {
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         const countryAuth = resolveCountryPhoneAuth({
             phoneAuth: enabledPhoneAuth,
-            phoneNumber,
+            country: parsePhoneNumberFromString(phoneNumber)?.country,
             policy: countryPolicy,
         });
         expect(
@@ -445,6 +446,87 @@ describe("OTP destination throttling", () => {
         ).toEqual({ success: false, reason: "phone_registration_unavailable" });
         expect(await db.select().from(phoneTable)).toHaveLength(0);
     });
+
+    it.each(["synthetic", "expired", "exhausted"])(
+        "never calls the provider for a %s challenge even when it would approve the code",
+        async (state) => {
+            const didWrite = "did:test:synthetic:no-provider";
+            const phoneNumber = "+14155552683";
+            await createGuestDevice(didWrite);
+            const check = vi.fn(async () => ({ status: "approved" }));
+            const send = vi.fn(async () => ({ status: "pending" }));
+            const phoneAuth = {
+                mode: state === "synthetic" ? "login_only" : "enabled",
+                minimumResponseTimeMs: 0,
+                responseJitterMs: 0,
+                delivery: {
+                    type: "twilio",
+                    serviceSid: "VA-test",
+                    budget: {
+                        reserve: async () => true,
+                        canRegister: async () => true,
+                    },
+                    client: {
+                        verify: {
+                            v2: {
+                                services: () => ({
+                                    verifications: { create: send },
+                                    verificationChecks: { create: check },
+                                }),
+                            },
+                        },
+                    },
+                },
+            } satisfies PhoneAuth;
+            await authService.authenticateAttempt({
+                db,
+                authenticateRequestBody: {
+                    phoneNumber,
+                    defaultCallingCode: "1",
+                    isRequestingNewCode: false,
+                },
+                minutesBeforeSmsCodeExpiry: 10,
+                didWrite,
+                userAgent: "test",
+                throttleSmsSecondsInterval: 5,
+                phoneAuth: state === "synthetic" ? phoneAuth : enabledPhoneAuth,
+                peppers: [TEST_PEPPER],
+                now: currentNow,
+            });
+            if (state === "expired") {
+                await db
+                    .update(authAttemptPhoneTable)
+                    .set({ codeExpiry: currentNow });
+            } else if (state === "exhausted") {
+                await db
+                    .update(authAttemptPhoneTable)
+                    .set({ guessAttemptAmount: 3 });
+            }
+            const [attempt] = await db.select().from(authAttemptPhoneTable);
+            expect(attempt.isSynthetic).toBe(state === "synthetic");
+            expect(
+                await authService.verifyPhoneOtp({
+                    db,
+                    maxAttempt: 3,
+                    didWrite,
+                    code: attempt.code,
+                    phoneNumber,
+                    defaultCallingCode: "1",
+                    phoneAuth,
+                    peppers: [TEST_PEPPER],
+                    sessionLifetimeDays: 90,
+                    currentDisplayLanguage: "en",
+                    now: currentNow,
+                }),
+            ).toEqual({
+                success: false,
+                reason: state === "synthetic" ? "wrong_guess" : "expired_code",
+            });
+            expect(check).not.toHaveBeenCalled();
+            expect(send).not.toHaveBeenCalled();
+            expect(await db.select().from(phoneTable)).toHaveLength(0);
+        },
+    );
 
     it("rechecks the writer budget after provider approval before creating a phone credential", async () => {
         const didWrite = "did:test:country:late-budget-pause";

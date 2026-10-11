@@ -24,6 +24,7 @@ import {
 } from "../src/shared-backend/schema.js";
 import { readDbFixtureSql } from "./dbFixture.js";
 import { z } from "zod";
+import type { PhoneCountry } from "../src/shared/types/phone-country-policy.js";
 
 describe("global phone SMS budget", () => {
     let container: StartedTestContainer;
@@ -65,7 +66,7 @@ describe("global phone SMS budget", () => {
             await tx.delete(phoneSmsBudgetReservationTable);
             await tx.delete(phoneSmsBudgetPolicyTable);
         });
-        sendAlert.mockClear();
+        sendAlert.mockReset();
     });
 
     async function configure({ hourlyLimit = 2, dailyLimit = 3 } = {}) {
@@ -83,11 +84,17 @@ describe("global phone SMS budget", () => {
     }
 
     function budget() {
-        return createPhoneSmsBudget({
+        const gate = createPhoneSmsBudget({
             db,
             sendAlert,
-            log: { error: vi.fn() },
+            logError: vi.fn(),
+            costEstimates: new Map<PhoneCountry, number>([["US", 10]]),
         });
+        return {
+            ...gate,
+            reserve: ({ isRegistration }: { isRegistration: boolean }) =>
+                gate.reserve({ isRegistration, country: "US" }),
+        };
     }
 
     it("creates an enabled monthly policy without manual budget configuration", async () => {
@@ -188,9 +195,12 @@ describe("global phone SMS budget", () => {
         const gate = createPhoneSmsBudget({
             db,
             sendAlert,
-            log: { error: vi.fn() },
+            logError: vi.fn(),
+            costEstimates: new Map<PhoneCountry, number>([["US", 10]]),
         });
-        expect(await gate.reserve({ isRegistration: false })).toBe(true);
+        expect(
+            await gate.reserve({ isRegistration: false, country: "US" }),
+        ).toBe(true);
         const [reservation] = await db
             .select()
             .from(phoneSmsBudgetReservationTable);
@@ -362,8 +372,14 @@ describe("global phone SMS budget", () => {
 
     it("alerts on a newly exhausted hard limit even when registration was already paused", async () => {
         await configure({ hourlyLimit: 10, dailyLimit: 20 });
-        const gate = createPhoneSmsBudget({ db, log: { error: vi.fn() } });
-        expect(await gate.reserve({ isRegistration: false })).toBe(true);
+        const gate = createPhoneSmsBudget({
+            db,
+            logError: vi.fn(),
+            costEstimates: new Map<PhoneCountry, number>([["US", 10]]),
+        });
+        expect(
+            await gate.reserve({ isRegistration: false, country: "US" }),
+        ).toBe(true);
         await db
             .update(phoneSmsBudgetPolicyTable)
             .set({
@@ -383,7 +399,7 @@ describe("global phone SMS budget", () => {
                 ).toEqual(["hard_limit"]);
             });
         } finally {
-            gate.shutdown();
+            await gate.shutdown();
         }
         expect(await db.select().from(phoneSmsBudgetAlertTable)).toHaveLength(
             1,
@@ -637,13 +653,19 @@ describe("global phone SMS budget", () => {
             .set({ monthlyBudgetCents: 30 });
         const first = createPhoneSmsBudget({
             db,
-            costEstimates: { FR: 10, KG: 20 },
-            log: { error: vi.fn() },
+            costEstimates: new Map<PhoneCountry, number>([
+                ["FR", 10],
+                ["KG", 20],
+            ]),
+            logError: vi.fn(),
         });
         const second = createPhoneSmsBudget({
             db,
-            costEstimates: { FR: 10, KG: 20 },
-            log: { error: vi.fn() },
+            costEstimates: new Map<PhoneCountry, number>([
+                ["FR", 10],
+                ["KG", 20],
+            ]),
+            logError: vi.fn(),
         });
         expect(
             await first.reserve({ isRegistration: false, country: "KG" }),
@@ -669,8 +691,8 @@ describe("global phone SMS budget", () => {
         expect(await first.getMode()).toBe("disabled");
         const cheaper = createPhoneSmsBudget({
             db,
-            costEstimates: { FR: 1 },
-            log: { error: vi.fn() },
+            costEstimates: new Map<PhoneCountry, number>([["FR", 1]]),
+            logError: vi.fn(),
         });
         expect(
             await cheaper.reserve({ isRegistration: false, country: "FR" }),
@@ -682,6 +704,121 @@ describe("global phone SMS budget", () => {
         ).toBe(false);
     });
 
+    it("refuses unpriced destinations instead of admitting them at the policy floor", async () => {
+        await configure({ hourlyLimit: 100, dailyLimit: 100 });
+        const gate = createPhoneSmsBudget({
+            db,
+            costEstimates: new Map<PhoneCountry, number>([["FR", 26]]),
+            logError: vi.fn(),
+        });
+        expect(await gate.getMode({ country: "KG" })).toBe("disabled");
+        expect(
+            await gate.getMode({ country: "KG", forVerification: true }),
+        ).toBe("login_only");
+        expect(
+            await gate.reserve({ isRegistration: false, country: "KG" }),
+        ).toBe(false);
+        expect(
+            await db.select().from(phoneSmsBudgetReservationTable),
+        ).toHaveLength(0);
+        expect(
+            await gate.reserve({ isRegistration: false, country: "FR" }),
+        ).toBe(true);
+        expect(
+            await db.select().from(phoneSmsBudgetReservationTable),
+        ).toMatchObject([{ estimatedCents: 26 }]);
+    });
+
+    it("keeps an empty pricing configuration closed for sending and new enrollment", async () => {
+        const gate = createPhoneSmsBudget({
+            db,
+            costEstimates: new Map<PhoneCountry, number>(),
+            logError: vi.fn(),
+        });
+        expect(await gate.getMode()).toBe("disabled");
+        expect(await gate.getMode({ forVerification: true })).toBe(
+            "login_only",
+        );
+        expect(
+            await gate.reserve({ isRegistration: false, country: "US" }),
+        ).toBe(false);
+        expect(
+            await db.transaction(
+                async (tx) => await gate.canRegister({ db: tx }),
+            ),
+        ).toBe(false);
+        expect(
+            await db.select().from(phoneSmsBudgetReservationTable),
+        ).toHaveLength(0);
+    });
+
+    it("snapshots destination estimates so caller mutation cannot underprice sends", async () => {
+        await configure({ hourlyLimit: 100, dailyLimit: 100 });
+        const costs = new Map<PhoneCountry, number>([["FR", 26]]);
+        const gate = createPhoneSmsBudget({
+            db,
+            costEstimates: costs,
+            logError: vi.fn(),
+        });
+        costs.set("FR", 1);
+        expect(
+            await gate.reserve({ isRegistration: false, country: "FR" }),
+        ).toBe(true);
+        expect(
+            await db.select().from(phoneSmsBudgetReservationTable),
+        ).toMatchObject([{ estimatedCents: 26 }]);
+    });
+
+    it("excludes next-month reservations from current monthly and rolling windows", async () => {
+        await configure();
+        await db.insert(phoneSmsBudgetReservationTable).values({
+            id: crypto.randomUUID(),
+            estimatedCents: 3000,
+            reservedAt: sql`date_trunc('month', clock_timestamp() AT TIME ZONE 'UTC') + interval '1 month'`,
+        });
+        expect(await budget().getMode()).toBe("enabled");
+        expect(await budget().reserve({ isRegistration: false })).toBe(true);
+    });
+
+    it("waits for an in-flight alert delivery during shutdown", async () => {
+        let releaseDelivery = () => {};
+        const blockedDelivery = new Promise<void>((resolve) => {
+            releaseDelivery = resolve;
+        });
+        let deliveryStarted = false;
+        sendAlert.mockImplementation(async () => {
+            deliveryStarted = true;
+            await blockedDelivery;
+        });
+        await configure();
+        const gate = budget();
+        await gate.reserve({ isRegistration: false });
+        await gate.reserve({ isRegistration: false });
+        gate.start();
+        try {
+            await vi.waitFor(() => expect(deliveryStarted).toBe(true));
+            let stopped = false;
+            const stop = async () => {
+                await gate.shutdown();
+                stopped = true;
+            };
+            const stopping = stop();
+            await Promise.resolve();
+            expect(stopped).toBe(false);
+            releaseDelivery();
+            await stopping;
+            expect(stopped).toBe(true);
+            expect(
+                (await db.select().from(phoneSmsBudgetAlertTable)).every(
+                    (alert) => alert.sentAt !== null,
+                ),
+            ).toBe(true);
+        } finally {
+            releaseDelivery();
+            await gate.shutdown();
+        }
+    });
+
     it("preserves a higher operator estimate as the destination reservation floor", async () => {
         await configure({ hourlyLimit: 100, dailyLimit: 100 });
         await db
@@ -689,8 +826,8 @@ describe("global phone SMS budget", () => {
             .set({ estimatedCentsPerSend: 50 });
         const gate = createPhoneSmsBudget({
             db,
-            costEstimates: { FR: 26 },
-            log: { error: vi.fn() },
+            costEstimates: new Map<PhoneCountry, number>([["FR", 26]]),
+            logError: vi.fn(),
         });
         expect(
             await gate.reserve({ isRegistration: false, country: "FR" }),
