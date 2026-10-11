@@ -40,6 +40,7 @@ import { getContentTranslationQueryKey } from "src/utils/api/contentTranslation/
 import { useInvalidateExportQueries } from "src/utils/api/conversationExport/useConversationExportQueries";
 import { getErrorLogContext } from "src/utils/api/errorLog";
 import { applyConversationProjectAssignment } from "src/utils/api/post/conversationProjectCache";
+import { useBackendPostEditApi } from "src/utils/api/post/postEdit";
 import { retainConversationRankingStatsUpdate } from "src/utils/api/post/rankingStatsUpdate";
 import {
   applyConversationRankingStatsUpdate,
@@ -302,6 +303,7 @@ export function useRealtimeSSE({
   const queryClient = useQueryClient();
   const exportQueries = useInvalidateExportQueries();
   const viewerScope = useViewerQueryScope();
+  const { refreshConversationMetadata } = useBackendPostEditApi();
   const {
     fetchAnalysisFrameManifest,
     fetchAnalysisFrameGroups,
@@ -1277,6 +1279,12 @@ export function useRealtimeSSE({
               conversationSlugId: data.conversationSlugId,
               assignment: data.settings.projectAssignment,
               refreshConversation: true,
+              viewerScope: viewerScope.value,
+              refreshMetadata: () =>
+                refreshConversationMetadata({
+                  conversationSlugId: data.conversationSlugId,
+                  authenticated: viewerScope.value.userId !== undefined,
+                }),
               isCurrent: () =>
                 latestSettingsEventTimestampByConversationSlugId.get(
                   data.conversationSlugId

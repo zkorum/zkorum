@@ -72,6 +72,7 @@
           </q-item>
         </q-list>
       </div>
+      <slot name="actions" />
     </ZKBottomDialogContainer>
   </q-dialog>
 </template>
@@ -154,6 +155,7 @@ function isLanguageSelected(
 function isLanguageOptionDisabled(
   languageCode: SupportedDisplayLanguageCodes
 ): boolean {
+  if (!props.canEditLanguages && !isLanguageSelected(languageCode)) return true;
   return (
     multilingualSetting.value.additionalLanguageCodes.length >= 2 &&
     !multilingualSetting.value.additionalLanguageCodes.includes(languageCode)
@@ -161,7 +163,10 @@ function isLanguageOptionDisabled(
 }
 
 function selectLanguage(languageCode: SupportedDisplayLanguageCodes): void {
-  if (!props.canEditLanguages || isLanguageOptionDisabled(languageCode)) {
+  if (
+    (!props.canEditLanguages && !isLanguageSelected(languageCode)) ||
+    isLanguageOptionDisabled(languageCode)
+  ) {
     return;
   }
 

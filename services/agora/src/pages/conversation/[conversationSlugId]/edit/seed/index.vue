@@ -93,6 +93,7 @@ import ConversationTitle from "src/components/features/conversation/Conversation
 import BackButton from "src/components/navigation/buttons/BackButton.vue";
 import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
 import { conversationProjectEditTranslations } from "src/components/newConversation/conversationProjectEdit.i18n";
+import { createConversationUpdatesSettingsTranslations } from "src/components/newConversation/CreateConversationUpdatesSettings.i18n";
 import EditConversationRouteGuard from "src/components/newConversation/EditConversationRouteGuard.vue";
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
 import SeedOpinionListEditor from "src/components/newConversation/SeedOpinionListEditor.vue";
@@ -124,6 +125,9 @@ defineOptions({ components: { PrimeButton: Button } });
 const { t } = useComponentI18n(editSeedOpinionsTranslations);
 const { t: editT } = useComponentI18n(editConversationTranslations);
 const { t: projectT } = useComponentI18n(conversationProjectEditTranslations);
+const { t: updatesT } = useComponentI18n(
+  createConversationUpdatesSettingsTranslations
+);
 const route = useRoute();
 const router = useRouter();
 const conversationSlugId = computed(() =>
@@ -224,8 +228,14 @@ function showSaveFailure(
       showNotifyMessage(editT("premiumAccessRequiredError"));
       return;
     case "feature_not_available":
+      showNotifyMessage(projectT("emailUpdatesUnavailableError"));
+      return;
     case "missing_participant_contact_email":
+      showNotifyMessage(updatesT("missingContact"));
+      return;
     case "active_delivery_conflict":
+      showNotifyMessage(projectT("activeDeliveryError"));
+      return;
     case "seed_opinions_not_allowed":
     case "plain_text_too_long":
     case "html_too_long":

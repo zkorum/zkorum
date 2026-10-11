@@ -5594,6 +5594,7 @@ export type ApiV1ConversationFetchRecentPost200ResponseFeedItemListInnerConversa
 
 export interface ApiV1ConversationFetchRecentPost200ResponseFeedItemListInnerConversationDataMetadataOneOf {
     'conversationSlugId': string;
+    'currentProjectSlug'?: string;
     'conversationViewSnapshotId'?: number;
     'createdAt': string;
     'updatedAt'?: string;
@@ -5653,6 +5654,7 @@ export type ApiV1ConversationFetchRecentPost200ResponseFeedItemListInnerConversa
 
 export interface ApiV1ConversationFetchRecentPost200ResponseFeedItemListInnerConversationDataMetadataOneOf1 {
     'conversationSlugId': string;
+    'currentProjectSlug'?: string;
     'conversationViewSnapshotId'?: number;
     'createdAt': string;
     'updatedAt'?: string;
@@ -6459,11 +6461,21 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectLanguageProjec
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInner {
     'target': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOf;
     'title': string;
+    'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerPremiumFeaturesEnum>;
     'defaultLanguageCode': ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerDefaultLanguageCodeEnum;
     'languageSettings': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerLanguageSettings;
     'emailUpdates': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerEmailUpdates;
 }
 
+export const ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerPremiumFeaturesEnum = {
+    Survey: 'survey',
+    EventTicket: 'event_ticket',
+    AnalysisVariants: 'analysis_variants',
+    DynamicTranslation: 'dynamic_translation',
+    ConversationEmailUpdate: 'conversation_email_update',
+} as const;
+
+export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerPremiumFeaturesEnum = typeof ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerPremiumFeaturesEnum[keyof typeof ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerPremiumFeaturesEnum];
 export const ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerDefaultLanguageCodeEnum = {
     En: 'en',
     Es: 'es',
@@ -6483,11 +6495,21 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerDe
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf {
     'target': ApiV1ConversationEmailUpdateActionManageOptOutPostRequestTargetOneOf;
     'title': string;
+    'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfPremiumFeaturesEnum>;
     'defaultLanguageCode': ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfDefaultLanguageCodeEnum;
     'languageSettings': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerLanguageSettings;
     'emailUpdates': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerEmailUpdates;
 }
 
+export const ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfPremiumFeaturesEnum = {
+    Survey: 'survey',
+    EventTicket: 'event_ticket',
+    AnalysisVariants: 'analysis_variants',
+    DynamicTranslation: 'dynamic_translation',
+    ConversationEmailUpdate: 'conversation_email_update',
+} as const;
+
+export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfPremiumFeaturesEnum = typeof ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfPremiumFeaturesEnum[keyof typeof ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfPremiumFeaturesEnum];
 export const ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfDefaultLanguageCodeEnum = {
     En: 'en',
     Es: 'es',
@@ -6507,8 +6529,20 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAn
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1 {
     'target': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOf;
     'title': string;
+    'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1PremiumFeaturesEnum>;
     'emailUpdates': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerEmailUpdates;
 }
+
+export const ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1PremiumFeaturesEnum = {
+    Survey: 'survey',
+    EventTicket: 'event_ticket',
+    AnalysisVariants: 'analysis_variants',
+    DynamicTranslation: 'dynamic_translation',
+    ConversationEmailUpdate: 'conversation_email_update',
+} as const;
+
+export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1PremiumFeaturesEnum = typeof ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1PremiumFeaturesEnum[keyof typeof ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1PremiumFeaturesEnum];
+
 /**
  * @type ApiV1ConversationGetForEditPost200ResponseOneOfProjectTarget
  */
@@ -8494,6 +8528,7 @@ export interface ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInn
     'defaultLanguageCode': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerDefaultLanguageCodeEnum;
     'languageSettings': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerLanguageSettings;
     'emailUpdates': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerEmailUpdates;
+    'canUseDynamicTranslation': boolean;
 }
 
 export const ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerDefaultLanguageCodeEnum = {

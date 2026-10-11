@@ -32,15 +32,21 @@
       <div class="prototype-panel">
         <ConversationProjectSelect
           :options="projectOptions"
-          :selected-value="selectedProjectSlug ?? 'no_project'"
-          :selected-label="undefined"
-          @select="selectProject"
+          :model-value="
+            selectedProjectSlug === undefined
+              ? { kind: 'no_project', organizationSlug: 'demo-org' }
+              : { kind: 'project', projectSlug: selectedProjectSlug }
+          "
+          :fallback-label="undefined"
+          @update:model-value="selectProject"
         />
         <ConversationProjectLanguageSettings
+          v-if="languageProject !== undefined"
           v-model:inherit-project-languages="inheritProjectLanguages"
           v-model:override-multilingual-setting="overrideMultilingualSetting"
           :project="languageProject"
           :detected-language-code="undefined"
+          :can-use-dynamic-translation="true"
         />
       </div>
 
@@ -67,10 +73,13 @@
 import Button from "primevue/button";
 import Card from "primevue/card";
 import ConversationProjectLanguageSettings from "src/components/newConversation/ConversationProjectLanguageSettings.vue";
-import ConversationProjectSelect from "src/components/newConversation/ConversationProjectSelect.vue";
+import ConversationProjectSelect, {
+  type ConversationProjectSelectOption,
+} from "src/components/newConversation/ConversationProjectSelect.vue";
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 import type {
   ConversationMultilingualSetting,
+  ConversationProjectTarget,
   ProjectLanguageSettings,
 } from "src/shared/types/zod";
 import { computed, ref } from "vue";
@@ -192,16 +201,16 @@ const languageProject = computed(() =>
         languageSettings: selectedProject.value.languageSettings,
       }
 );
-const projectOptions = computed(() => [
-  { value: "no_project", title: undefined, noProject: true, target: undefined },
-  ...actualProjects.value.map((project) => ({
-    value: project.slug,
+const projectOptions = computed<ConversationProjectSelectOption[]>(() => [
+  { kind: "no_project", organizationSlug: "demo-org", title: undefined },
+  ...actualProjects.value.map<ConversationProjectSelectOption>((project) => ({
+    kind: "project",
+    projectSlug: project.slug,
     title: project.title,
-    noProject: false,
-    target: project.slug,
   })),
 ]);
-function selectProject(slug: string | undefined): void {
+function selectProject(target: ConversationProjectTarget): void {
+  const slug = target.kind === "project" ? target.projectSlug : undefined;
   selectedProjectSlug.value = slug;
   inheritProjectLanguages.value = slug !== undefined;
 }

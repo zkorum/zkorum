@@ -1,6 +1,9 @@
 import { defineStore, storeToRefs } from "pinia";
 import type { FetchFeedResponse } from "src/shared/types/dto";
-import type { ConversationProjectAssignment } from "src/shared/types/zod";
+import type {
+  ConversationProjectAssignment,
+  ExtendedConversation,
+} from "src/shared/types/zod";
 import { getConversationProjectContextFromAssignment } from "src/shared/utils/conversationProject";
 import { useBackendPostApi } from "src/utils/api/post/post";
 import { computed, ref } from "vue";
@@ -40,9 +43,11 @@ export const useHomeFeedStore = defineStore("homeFeed", () => {
   function applyProjectAssignment({
     conversationSlugId,
     assignment,
+    freshConversation,
   }: {
     conversationSlugId: string;
     assignment: ConversationProjectAssignment;
+    freshConversation?: Pick<ExtendedConversation, "metadata" | "interaction">;
   }): void {
     const update = (item: HomeFeedItem): HomeFeedItem =>
       item.conversationData.metadata.conversationSlugId === conversationSlugId
@@ -50,11 +55,16 @@ export const useHomeFeedStore = defineStore("homeFeed", () => {
             ...item,
             conversationData: {
               ...item.conversationData,
-              metadata: {
+              interaction:
+                freshConversation?.interaction ??
+                item.conversationData.interaction,
+              metadata: freshConversation?.metadata ?? {
                 ...item.conversationData.metadata,
+                currentProjectSlug: assignment.projectSlug,
                 projectContext: getConversationProjectContextFromAssignment({
                   assignment,
                   conversationSlugId,
+                  currentContext: item.conversationData.metadata.projectContext,
                 }),
               },
             },

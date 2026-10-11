@@ -720,6 +720,72 @@ export async function getConversationCreateProjectOptions({
         };
     }
     const projectIds = availableProjectRows.map((project) => project.projectId);
+    const dynamicTranslationProjectIds =
+        projectIds.length === 0
+            ? []
+            : await db
+                  .selectDistinct({
+                      projectId: projectOrganizationOwnershipTable.projectId,
+                  })
+                  .from(projectOrganizationOwnershipTable)
+                  .innerJoin(
+                      organizationTable,
+                      and(
+                          eq(
+                              organizationTable.id,
+                              projectOrganizationOwnershipTable.organizationId,
+                          ),
+                          isNull(organizationTable.deletedAt),
+                      ),
+                  )
+                  .innerJoin(
+                      organizationMembershipTable,
+                      and(
+                          eq(
+                              organizationMembershipTable.organizationId,
+                              organizationTable.id,
+                          ),
+                          eq(organizationMembershipTable.userId, userId),
+                          isNull(organizationMembershipTable.deletedAt),
+                      ),
+                  )
+                  .innerJoin(
+                      premiumFeatureEntitlementTable,
+                      and(
+                          eq(
+                              premiumFeatureEntitlementTable.organizationId,
+                              organizationTable.id,
+                          ),
+                          eq(
+                              premiumFeatureEntitlementTable.feature,
+                              "dynamic_translation",
+                          ),
+                          lte(
+                              premiumFeatureEntitlementTable.startsAt,
+                              new Date(),
+                          ),
+                          isNull(premiumFeatureEntitlementTable.revokedAt),
+                          or(
+                              isNull(premiumFeatureEntitlementTable.expiresAt),
+                              gt(
+                                  premiumFeatureEntitlementTable.expiresAt,
+                                  new Date(),
+                              ),
+                          ),
+                      ),
+                  )
+                  .where(
+                      and(
+                          inArray(
+                              projectOrganizationOwnershipTable.projectId,
+                              projectIds,
+                          ),
+                          isNull(projectOrganizationOwnershipTable.deletedAt),
+                      ),
+                  );
+    const canUseDynamicTranslation = new Set(
+        dynamicTranslationProjectIds.map((row) => row.projectId),
+    );
     const targetLanguageRows =
         projectIds.length === 0
             ? []
@@ -766,6 +832,9 @@ export async function getConversationCreateProjectOptions({
                 noProject?.conversationEmailUpdateDefaultEnabled,
         }),
         projectList: availableProjectRows.map((project) => ({
+            canUseDynamicTranslation: canUseDynamicTranslation.has(
+                project.projectId,
+            ),
             projectSlug: project.projectSlug,
             projectTitle: project.projectTitle,
             defaultLanguageCode:

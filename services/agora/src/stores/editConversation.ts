@@ -95,7 +95,7 @@ export function buildEditConversationRequest(
       ].sort(),
     },
     languageSettingsSource:
-      form.selectedProjectSlug !== undefined && form.inheritProjectLanguages
+      projectTarget.kind === "project" && form.inheritProjectLanguages
         ? "project_inherited"
         : "conversation_override",
     conversationTypeConfig:

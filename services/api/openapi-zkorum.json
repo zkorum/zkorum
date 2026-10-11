@@ -2982,6 +2982,11 @@
                                                                                 "type": "string",
                                                                                 "maxLength": 10
                                                                             },
+                                                                            "currentProjectSlug": {
+                                                                                "type": "string",
+                                                                                "maxLength": 65,
+                                                                                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                                                                            },
                                                                             "conversationViewSnapshotId": {
                                                                                 "type": "integer",
                                                                                 "exclusiveMinimum": true,
@@ -3749,6 +3754,11 @@
                                                                             "conversationSlugId": {
                                                                                 "type": "string",
                                                                                 "maxLength": 10
+                                                                            },
+                                                                            "currentProjectSlug": {
+                                                                                "type": "string",
+                                                                                "maxLength": 65,
+                                                                                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
                                                                             },
                                                                             "conversationViewSnapshotId": {
                                                                                 "type": "integer",
@@ -4992,6 +5002,9 @@
                                                                     "scopeDefaultEnabled"
                                                                 ],
                                                                 "additionalProperties": false
+                                                            },
+                                                            "canUseDynamicTranslation": {
+                                                                "type": "boolean"
                                                             }
                                                         },
                                                         "required": [
@@ -4999,7 +5012,8 @@
                                                             "projectTitle",
                                                             "defaultLanguageCode",
                                                             "languageSettings",
-                                                            "emailUpdates"
+                                                            "emailUpdates",
+                                                            "canUseDynamicTranslation"
                                                         ],
                                                         "additionalProperties": false
                                                     }
@@ -8751,6 +8765,11 @@
                                                                 "type": "string",
                                                                 "maxLength": 10
                                                             },
+                                                            "currentProjectSlug": {
+                                                                "type": "string",
+                                                                "maxLength": 65,
+                                                                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                                                            },
                                                             "conversationViewSnapshotId": {
                                                                 "type": "integer",
                                                                 "exclusiveMinimum": true,
@@ -9518,6 +9537,11 @@
                                                             "conversationSlugId": {
                                                                 "type": "string",
                                                                 "maxLength": 10
+                                                            },
+                                                            "currentProjectSlug": {
+                                                                "type": "string",
+                                                                "maxLength": 65,
+                                                                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
                                                             },
                                                             "conversationViewSnapshotId": {
                                                                 "type": "integer",
@@ -10430,6 +10454,11 @@
                                                                         "type": "string",
                                                                         "maxLength": 10
                                                                     },
+                                                                    "currentProjectSlug": {
+                                                                        "type": "string",
+                                                                        "maxLength": 65,
+                                                                        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                                                                    },
                                                                     "conversationViewSnapshotId": {
                                                                         "type": "integer",
                                                                         "exclusiveMinimum": true,
@@ -11197,6 +11226,11 @@
                                                                     "conversationSlugId": {
                                                                         "type": "string",
                                                                         "maxLength": 10
+                                                                    },
+                                                                    "currentProjectSlug": {
+                                                                        "type": "string",
+                                                                        "maxLength": 65,
+                                                                        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
                                                                     },
                                                                     "conversationViewSnapshotId": {
                                                                         "type": "integer",
@@ -21005,6 +21039,11 @@
                                                                             "type": "string",
                                                                             "maxLength": 10
                                                                         },
+                                                                        "currentProjectSlug": {
+                                                                            "type": "string",
+                                                                            "maxLength": 65,
+                                                                            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                                                                        },
                                                                         "conversationViewSnapshotId": {
                                                                             "type": "integer",
                                                                             "exclusiveMinimum": true,
@@ -21772,6 +21811,11 @@
                                                                         "conversationSlugId": {
                                                                             "type": "string",
                                                                             "maxLength": 10
+                                                                        },
+                                                                        "currentProjectSlug": {
+                                                                            "type": "string",
+                                                                            "maxLength": 65,
+                                                                            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
                                                                         },
                                                                         "conversationViewSnapshotId": {
                                                                             "type": "integer",
@@ -23583,6 +23627,19 @@
                                                                         "minLength": 1,
                                                                         "maxLength": 150
                                                                     },
+                                                                    "premiumFeatures": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string",
+                                                                            "enum": [
+                                                                                "survey",
+                                                                                "event_ticket",
+                                                                                "analysis_variants",
+                                                                                "dynamic_translation",
+                                                                                "conversation_email_update"
+                                                                            ]
+                                                                        }
+                                                                    },
                                                                     "defaultLanguageCode": {
                                                                         "type": "string",
                                                                         "enum": [
@@ -23656,6 +23713,7 @@
                                                                 "required": [
                                                                     "target",
                                                                     "title",
+                                                                    "premiumFeatures",
                                                                     "defaultLanguageCode",
                                                                     "languageSettings",
                                                                     "emailUpdates"
@@ -23690,6 +23748,19 @@
                                                                         "type": "string",
                                                                         "minLength": 1
                                                                     },
+                                                                    "premiumFeatures": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string",
+                                                                            "enum": [
+                                                                                "survey",
+                                                                                "event_ticket",
+                                                                                "analysis_variants",
+                                                                                "dynamic_translation",
+                                                                                "conversation_email_update"
+                                                                            ]
+                                                                        }
+                                                                    },
                                                                     "emailUpdates": {
                                                                         "type": "object",
                                                                         "properties": {
@@ -23714,6 +23785,7 @@
                                                                 "required": [
                                                                     "target",
                                                                     "title",
+                                                                    "premiumFeatures",
                                                                     "emailUpdates"
                                                                 ],
                                                                 "additionalProperties": false

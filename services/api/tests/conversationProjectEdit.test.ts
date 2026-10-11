@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
@@ -43,6 +43,7 @@ import {
     realtimeEventOutboxTable,
     userTable,
     premiumFeatureEntitlementTable,
+    projectContactTable,
 } from "../src/shared-backend/schema.js";
 import { getConversationProjectOptions } from "../src/service/conversationProject.js";
 import { updateConversation } from "../src/service/postEdit.js";
@@ -128,7 +129,7 @@ describe("conversation project editing", () => {
 
     beforeEach(async () => {
         await db.execute(
-            sql`TRUNCATE conversation_project_assignment, conversation_email_update_conversation, conversation_email_update_delivery, conversation_email_update, conversation_content, conversation_moderation, conversation_translation_target_language, conversation, polis_conversation_config, project_content, project_translation_target_language, project_organization_ownership, project, premium_feature_entitlement, organization_membership_all_project_capability, organization_membership, organization, "user", realtime_event_outbox_topic, realtime_event_outbox RESTART IDENTITY CASCADE`,
+            sql`TRUNCATE conversation_project_assignment, conversation_email_update_conversation, conversation_email_update_delivery, conversation_email_update, conversation_content, conversation_moderation, conversation_translation_target_language, conversation, polis_conversation_config, project_content, project_contact, project_translation_target_language, project_organization_ownership, project, premium_feature_entitlement, organization_membership_all_project_capability, organization_membership, organization, "user", realtime_event_outbox_topic, realtime_event_outbox RESTART IDENTITY CASCADE`,
         );
         await db
             .insert(userTable)
@@ -456,12 +457,10 @@ describe("conversation project editing", () => {
             .returning({ id: organizationMembershipTable.id });
         if (membership === undefined)
             throw new Error("Missing additional membership fixture");
-        await db
-            .insert(projectOrganizationOwnershipTable)
-            .values({
-                projectId: destinationProjectId,
-                organizationId: owner.id,
-            });
+        await db.insert(projectOrganizationOwnershipTable).values({
+            projectId: destinationProjectId,
+            organizationId: owner.id,
+        });
         await db
             .insert(organizationMembershipAllProjectCapabilityTable)
             .values([
@@ -474,13 +473,11 @@ describe("conversation project editing", () => {
                     capability: "conversation_email_update",
                 },
             ]);
-        await db
-            .insert(premiumFeatureEntitlementTable)
-            .values({
-                organizationId: owner.id,
-                feature: "conversation_email_update",
-                startsAt: new Date(Date.now() - 60_000),
-            });
+        await db.insert(premiumFeatureEntitlementTable).values({
+            organizationId: owner.id,
+            feature: "conversation_email_update",
+            startsAt: new Date(Date.now() - 60_000),
+        });
         const options = await getConversationProjectOptions({ db, userId });
         expect(
             options.find(
@@ -489,6 +486,246 @@ describe("conversation project editing", () => {
                     option.target.projectSlug === "destination",
             )?.emailUpdates.canConfigure,
         ).toBe(true);
+    });
+
+    it("does not provision destination defaults for an unauthorized source editor", async () => {
+        await db
+            .update(organizationMembershipAllProjectCapabilityTable)
+            .set({ deletedAt: new Date(), revokedByUserId: userId })
+            .where(
+                eq(
+                    organizationMembershipAllProjectCapabilityTable.capability,
+                    "conversation_edit",
+                ),
+            );
+        const [organization] = await db
+            .insert(organizationTable)
+            .values({
+                slug: "other-owner",
+                displayName: "Other",
+                directoryVisibility: "listed",
+                defaultLanguageCode: "en",
+                isFullImagePath: false,
+            })
+            .returning({ id: organizationTable.id });
+        if (organization === undefined)
+            throw new Error("Missing organization fixture");
+        const [membership] = await db
+            .insert(organizationMembershipTable)
+            .values({ organizationId: organization.id, userId })
+            .returning({ id: organizationMembershipTable.id });
+        if (membership === undefined)
+            throw new Error("Missing membership fixture");
+        await db
+            .insert(organizationMembershipAllProjectCapabilityTable)
+            .values([
+                {
+                    organizationMembershipId: membership.id,
+                    capability: "conversation_create",
+                },
+                {
+                    organizationMembershipId: membership.id,
+                    capability: "conversation_edit",
+                },
+            ]);
+        const data = request();
+        data.projectChange = {
+            expectedProjectSlug: "source",
+            target: { kind: "no_project", organizationSlug: "other-owner" },
+        };
+        expect(
+            await updateConversation({
+                db,
+                userId,
+                data,
+            }),
+        ).toMatchObject({ success: false, reason: "not_author" });
+        expect(
+            await db
+                .select()
+                .from(projectTable)
+                .where(
+                    eq(
+                        projectTable.autoProvisionedForOrganizationId,
+                        organization.id,
+                    ),
+                ),
+        ).toHaveLength(0);
+    });
+
+    it("loads destination options in a bounded number of queries", async () => {
+        const rows = await db
+            .insert(projectTable)
+            .values(
+                Array.from(
+                    { length: 12 },
+                    (_, index) =>
+                        ({
+                            slug: `project-${index}`,
+                            title: `Project ${index}`,
+                            directoryVisibility: "listed",
+                        }) satisfies typeof projectTable.$inferInsert,
+                ),
+            )
+            .returning({ id: projectTable.id });
+        await db
+            .insert(projectOrganizationOwnershipTable)
+            .values(
+                rows.map((row) => ({ projectId: row.id, organizationId: 1 })),
+            );
+        const selects = vi.spyOn(db, "select");
+        const options = await getConversationProjectOptions({ db, userId });
+        expect(
+            options.filter((option) => option.target.kind === "project"),
+        ).toHaveLength(14);
+        expect(selects).toHaveBeenCalledTimes(5);
+        selects.mockRestore();
+    });
+
+    it("allows turning off inherited/explicit Email Updates while moving to a scope without the feature", async () => {
+        await db
+            .update(conversationTable)
+            .set({ conversationEmailUpdateEnabledOverride: true })
+            .where(eq(conversationTable.id, conversationId));
+        const data = request();
+        data.conversationEmailUpdateEnabledOverride = false;
+        expect(
+            await updateConversation({
+                db,
+                userId,
+                data,
+            }),
+        ).toMatchObject({ success: true });
+        expect(
+            (await db.select().from(conversationTable)).at(0)
+                ?.conversationEmailUpdateEnabledOverride,
+        ).toBe(false);
+    });
+
+    it("preserves an unchanged analysis preference when ordinary settings are saved after entitlement expiry", async () => {
+        await db
+            .update(polisConversationConfigTable)
+            .set({ preferredOpinionGroupCount: 3 });
+        const data = request();
+        data.projectChange = undefined;
+        if (data.conversationTypeConfig.conversationType === "polis")
+            data.conversationTypeConfig.preferredOpinionGroupCount = 3;
+        expect(
+            await updateConversation({
+                db,
+                userId,
+                data,
+            }),
+        ).toMatchObject({ success: true });
+        expect(
+            (await db.select().from(polisConversationConfigTable)).at(0)
+                ?.preferredOpinionGroupCount,
+        ).toBe(3);
+    });
+
+    it("does not upgrade shared authorization locks during concurrent Email Update-enabled moves", async () => {
+        const otherProjects = await db
+            .insert(projectTable)
+            .values([
+                {
+                    slug: "other-source",
+                    title: "Other source",
+                    directoryVisibility: "listed",
+                },
+                {
+                    slug: "other-destination",
+                    title: "Other destination",
+                    directoryVisibility: "listed",
+                },
+            ])
+            .returning({ id: projectTable.id });
+        const [otherSource, otherDestination] = otherProjects;
+        if (otherSource === undefined || otherDestination === undefined)
+            throw new Error("Missing project fixtures");
+        await db.insert(projectOrganizationOwnershipTable).values(
+            otherProjects.map((project) => ({
+                projectId: project.id,
+                organizationId: 1,
+            })),
+        );
+        const [config] = await db
+            .insert(polisConversationConfigTable)
+            .values({})
+            .returning({ id: polisConversationConfigTable.id });
+        if (config === undefined) throw new Error("Missing config fixture");
+        const [otherConversation] = await db
+            .insert(conversationTable)
+            .values({
+                slugId: "conv5678",
+                projectId: otherSource.id,
+                polisConfigId: config.id,
+            })
+            .returning({ id: conversationTable.id });
+        if (otherConversation === undefined)
+            throw new Error("Missing conversation fixture");
+        const [content] = await db
+            .insert(conversationContentTable)
+            .values({
+                conversationId: otherConversation.id,
+                title: "Conversation",
+            })
+            .returning({ id: conversationContentTable.id });
+        if (content === undefined) throw new Error("Missing content fixture");
+        await db
+            .update(conversationTable)
+            .set({ currentContentId: content.id })
+            .where(eq(conversationTable.id, otherConversation.id));
+        await db.insert(premiumFeatureEntitlementTable).values({
+            organizationId: 1,
+            feature: "conversation_email_update",
+            startsAt: new Date(Date.now() - 60_000),
+        });
+        await db
+            .insert(organizationMembershipAllProjectCapabilityTable)
+            .values({
+                organizationMembershipId: membershipId,
+                capability: "conversation_email_update",
+            });
+        await db
+            .update(projectTable)
+            .set({ conversationEmailUpdateDefaultEnabled: true })
+            .where(
+                inArray(projectTable.id, [
+                    destinationProjectId,
+                    otherDestination.id,
+                ]),
+            );
+        await db.insert(projectContactTable).values([
+            {
+                projectId: destinationProjectId,
+                firstName: "Contact",
+                email: "contact@example.com",
+            },
+            {
+                projectId: otherDestination.id,
+                firstName: "Contact",
+                email: "contact@example.com",
+            },
+        ]);
+        const second = request();
+        second.conversationSlugId = "conv5678";
+        second.projectChange = {
+            expectedProjectSlug: "other-source",
+            target: { kind: "project", projectSlug: "other-destination" },
+        };
+        const results = await Promise.all([
+            updateConversation({
+                db,
+                userId,
+                data: request(),
+            }),
+            updateConversation({
+                db,
+                userId,
+                data: second,
+            }),
+        ]);
+        expect(results.every((result) => result.success)).toBe(true);
     });
 
     it("resolves No Project to the selected organization's default", async () => {

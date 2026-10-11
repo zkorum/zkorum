@@ -15,10 +15,18 @@ export function getConversationProjectTargetKey(
 export function getConversationProjectContextFromAssignment({
     assignment,
     conversationSlugId,
+    currentContext,
 }: {
     assignment: ConversationProjectAssignment;
     conversationSlugId: string;
+    currentContext?: ConversationProjectContext;
 }): ConversationProjectContext | undefined {
+    if (
+        assignment.target.kind === "project" &&
+        currentContext?.projectSlug === assignment.projectSlug &&
+        currentContext.originalProjectTitle === assignment.projectTitle
+    )
+        return currentContext;
     return assignment.target.kind === "project"
         ? {
               projectSlug: assignment.projectSlug,

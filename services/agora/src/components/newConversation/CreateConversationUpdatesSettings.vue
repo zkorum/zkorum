@@ -44,12 +44,14 @@ import ZKBottomDialogContainer from "src/components/ui-library/ZKBottomDialogCon
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { computed, ref } from "vue";
 
+import { conversationProjectEditTranslations } from "./conversationProjectEdit.i18n";
 import {
   type CreateConversationUpdatesSettingsTranslations,
   createConversationUpdatesSettingsTranslations,
 } from "./CreateConversationUpdatesSettings.i18n";
 import {
-  canSelectConversationUpdatesSetting,
+  canSelectConversationUpdatesSettingWithAccess,
+  type ConversationUpdatesSettingAccess,
   shouldShowConversationUpdatesSettings,
 } from "./createConversationUpdatesSettingsLogic";
 
@@ -57,7 +59,7 @@ const props = defineProps<{
   scopeKind: "project" | "no-project";
   projectTitle: string | undefined;
   scopeDefaultEnabled: boolean;
-  canConfigure: boolean;
+  access: ConversationUpdatesSettingAccess;
   hasParticipantContactEmail: boolean;
   mode: "create" | "edit";
 }>();
@@ -76,13 +78,23 @@ const showDialog = ref(false);
 const { t } = useComponentI18n<CreateConversationUpdatesSettingsTranslations>(
   createConversationUpdatesSettingsTranslations
 );
+const { t: tProjectEdit } = useComponentI18n(
+  conversationProjectEditTranslations
+);
+const unavailableDescription = computed(() =>
+  props.access === "configure"
+    ? t("missingContact")
+    : tProjectEdit("emailUpdatesUnavailableError")
+);
 
-const shouldShow = computed(() =>
-  shouldShowConversationUpdatesSettings({
-    canConfigure: props.canConfigure,
-    hasParticipantContactEmail: props.hasParticipantContactEmail,
-    mode: props.mode,
-  })
+const shouldShow = computed(
+  () =>
+    props.access === "disable_only" ||
+    shouldShowConversationUpdatesSettings({
+      canConfigure: props.access === "configure",
+      hasParticipantContactEmail: props.hasParticipantContactEmail,
+      mode: props.mode,
+    })
 );
 const displayEnabled = computed(
   () => override.value ?? props.scopeDefaultEnabled
@@ -112,30 +124,24 @@ const settingOptions = computed<readonly SettingOption[]>(() => {
     defaultValue,
     scopeLabel,
   });
-  const inheritEnabled = canSelectConversationUpdatesSetting({
-    hasParticipantContactEmail: props.hasParticipantContactEmail,
-    scopeDefaultEnabled: props.scopeDefaultEnabled,
-    value: undefined,
-  });
-  const onEnabled = canSelectConversationUpdatesSetting({
-    hasParticipantContactEmail: props.hasParticipantContactEmail,
-    scopeDefaultEnabled: props.scopeDefaultEnabled,
-    value: true,
-  });
+  const inheritEnabled = canSelectSetting(undefined);
+  const onEnabled = canSelectSetting(true);
   return [
     {
       id: "inherit",
       title: t("useDefault", { source: defaultSource }),
       description: inheritEnabled
         ? t("inheritsDescription", { defaultValue, scopeLabel })
-        : t("missingContact"),
+        : unavailableDescription.value,
       value: undefined,
       enabled: inheritEnabled,
     },
     {
       id: "on",
       title: t("on"),
-      description: onEnabled ? overrideDescription : t("missingContact"),
+      description: onEnabled
+        ? overrideDescription
+        : unavailableDescription.value,
       value: true,
       enabled: onEnabled,
     },
@@ -144,25 +150,21 @@ const settingOptions = computed<readonly SettingOption[]>(() => {
       title: t("off"),
       description: overrideDescription,
       value: false,
-      enabled: canSelectConversationUpdatesSetting({
-        hasParticipantContactEmail: props.hasParticipantContactEmail,
-        scopeDefaultEnabled: props.scopeDefaultEnabled,
-        value: false,
-      }),
+      enabled: canSelectSetting(false),
     },
   ];
 });
 
+function canSelectSetting(value: boolean | undefined): boolean {
+  return canSelectConversationUpdatesSettingWithAccess({
+    access: props.access,
+    hasParticipantContactEmail: props.hasParticipantContactEmail,
+    scopeDefaultEnabled: props.scopeDefaultEnabled,
+    value,
+  });
+}
 function selectSetting(value: boolean | undefined): void {
-  if (
-    !canSelectConversationUpdatesSetting({
-      hasParticipantContactEmail: props.hasParticipantContactEmail,
-      scopeDefaultEnabled: props.scopeDefaultEnabled,
-      value,
-    })
-  ) {
-    return;
-  }
+  if (!canSelectSetting(value)) return;
   override.value = value;
   showDialog.value = false;
 }

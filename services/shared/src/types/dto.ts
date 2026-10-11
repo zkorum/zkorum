@@ -448,15 +448,16 @@ const zodConversationCreateProjectOptionWithEmailUpdates =
     zodConversationCreateProjectOption
         .extend({
             emailUpdates: zodConversationCreateEmailUpdateConfiguration,
+            canUseDynamicTranslation: z.boolean(),
         })
         .strict();
 
 const zodConversationProjectOption = z.union([
     z
         .object({
-        target: zodConversationProjectTarget.options[0],
-        title: zodProjectTitle,
-        premiumFeatures: z.array(zodPremiumFeature),
+            target: zodConversationProjectTarget.options[0],
+            title: zodProjectTitle,
+            premiumFeatures: z.array(zodPremiumFeature),
             defaultLanguageCode: ZodSupportedDisplayLanguageCodes,
             languageSettings: zodProjectLanguageSettings,
             emailUpdates: zodConversationCreateEmailUpdateConfiguration,
@@ -464,9 +465,9 @@ const zodConversationProjectOption = z.union([
         .strict(),
     z
         .object({
-        target: zodConversationProjectTarget.options[1],
-        title: z.string().trim().min(1),
-        premiumFeatures: z.array(zodPremiumFeature),
+            target: zodConversationProjectTarget.options[1],
+            title: z.string().trim().min(1),
+            premiumFeatures: z.array(zodPremiumFeature),
             emailUpdates: zodConversationCreateEmailUpdateConfiguration,
         })
         .strict(),

@@ -59,20 +59,26 @@ export const useUserStore = defineStore("user", () => {
   function applyProjectAssignment({
     conversationSlugId,
     assignment,
+    freshConversation,
   }: {
     conversationSlugId: string;
     assignment: ConversationProjectAssignment;
+    freshConversation?: Pick<ExtendedConversation, "metadata" | "interaction">;
   }): void {
     profileData.value.userPostList = profileData.value.userPostList.map(
       (conversation) =>
         conversation.metadata.conversationSlugId === conversationSlugId
           ? {
               ...conversation,
-              metadata: {
+              interaction:
+                freshConversation?.interaction ?? conversation.interaction,
+              metadata: freshConversation?.metadata ?? {
                 ...conversation.metadata,
+                currentProjectSlug: assignment.projectSlug,
                 projectContext: getConversationProjectContextFromAssignment({
                   assignment,
                   conversationSlugId,
+                  currentContext: conversation.metadata.projectContext,
                 }),
               },
             }

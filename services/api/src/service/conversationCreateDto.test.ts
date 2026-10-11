@@ -51,6 +51,7 @@ describe("conversation creation DTO", () => {
             projectList: [
                 {
                     projectSlug: "public-plan",
+                    canUseDynamicTranslation: false,
                     projectTitle: "Public Plan",
                     defaultLanguageCode: "en",
                     languageSettings: {

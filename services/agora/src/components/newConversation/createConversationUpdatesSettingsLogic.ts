@@ -1,3 +1,30 @@
+export type ConversationUpdatesSettingAccess =
+  | "configure"
+  | "disable_only"
+  | "none";
+
+export function canSelectConversationUpdatesSettingWithAccess({
+  access,
+  hasParticipantContactEmail,
+  scopeDefaultEnabled,
+  value,
+}: {
+  access: ConversationUpdatesSettingAccess;
+  hasParticipantContactEmail: boolean;
+  scopeDefaultEnabled: boolean;
+  value: boolean | undefined;
+}): boolean {
+  return (
+    (access === "configure" ||
+      (access === "disable_only" && !(value ?? scopeDefaultEnabled))) &&
+    canSelectConversationUpdatesSetting({
+      hasParticipantContactEmail,
+      scopeDefaultEnabled,
+      value,
+    })
+  );
+}
+
 export function shouldShowConversationUpdatesSettings({
   canConfigure,
   hasParticipantContactEmail,

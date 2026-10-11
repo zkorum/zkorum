@@ -14,6 +14,72 @@ vi.mock("src/stores/user", () => ({
 vi.mock("./post", () => ({ useBackendPostApi: vi.fn() }));
 
 import { applyConversationProjectAssignment } from "./conversationProjectCache";
+import type { ConversationDetailData } from "./useConversationQuery";
+
+function freshConversation(currentProjectSlug: string): ConversationDetailData {
+  return {
+    metadata: {
+      conversationSlugId: "conv1234",
+      currentProjectSlug,
+      createdAt: new Date(),
+      lastReactedAt: new Date(),
+      opinionCount: 0,
+      voteCount: 0,
+      participantCount: 0,
+      totalOpinionCount: 0,
+      totalVoteCount: 0,
+      totalParticipantCount: 0,
+      moderatedOpinionCount: 0,
+      hiddenOpinionCount: 0,
+      authorUsername: "New owner",
+      organization: { name: "New owner", slug: "new-owner", description: "" },
+      participationMode: "account_required",
+      conversationType: "polis",
+      votingPresentation: "list",
+      isIndexed: true,
+      aiLabelingEnabled: false,
+      preferredOpinionGroupCount: null,
+      isClosed: false,
+      isEdited: false,
+      moderation: { status: "unmoderated" },
+      externalSourceConfig: null,
+      contentLanguageMetadata: {
+        detectedDisplayLanguageCode: null,
+        detectedSourceLanguageCode: null,
+        detectedRawLanguageCode: null,
+        detectionConfidence: null,
+        autoDetectionStatus: "not_attempted",
+      },
+      languageSetting: {
+        mode: "auto",
+        languageCode: null,
+        detectedLanguageCode: null,
+        detectedSourceLanguageCode: null,
+        detectedRawLanguageCode: null,
+        detectionConfidence: null,
+        autoDetectionStatus: "not_attempted",
+      },
+      multilingualSetting: {
+        additionalLanguageCodes: [],
+        dynamicTranslationEnabled: false,
+      },
+      projectContext: {
+        projectSlug: currentProjectSlug,
+        originalProjectTitle: "Destination",
+        conversationSlugId: "conv1234",
+      },
+    },
+    interaction: {
+      hasVoted: false,
+      votedIndex: 0,
+      conversationCapabilities: {
+        canEdit: true,
+        canDelete: false,
+        canManageIntegrations: false,
+      },
+    },
+  };
+}
 
 const cachedMetadata = z.object({
   projectContext: zodConversationProjectContext.optional(),
@@ -24,6 +90,90 @@ const cachedDetail = z.object({
 });
 
 describe("conversation project cache updates", () => {
+  it("refreshes ownership and capabilities only from the confirmed destination", async () => {
+    const queryClient = new QueryClient();
+    const key = ["conversation", "conv1234"];
+    queryClient.setQueryData(key, {
+      metadata: { authorUsername: "Old owner" },
+    });
+    const fresh = freshConversation("destination");
+    await applyConversationProjectAssignment({
+      queryClient,
+      conversationSlugId: "conv1234",
+      assignment: {
+        previousProjectSlug: "source",
+        projectSlug: "destination",
+        projectTitle: "Destination",
+        target: { kind: "project", projectSlug: "destination" },
+      },
+      refreshMetadata: () => Promise.resolve(fresh),
+    });
+    expect(queryClient.getQueryData(key)).toMatchObject({
+      metadata: {
+        authorUsername: "New owner",
+        currentProjectSlug: "destination",
+      },
+      interaction: { conversationCapabilities: { canDelete: false } },
+    });
+    expect(stores.profile).toHaveBeenCalledWith(
+      expect.objectContaining({ freshConversation: fresh })
+    );
+    queryClient.clear();
+  });
+  it("does not copy ownership from an outdated source response", async () => {
+    const queryClient = new QueryClient();
+    const key = ["conversation", "conv1234"];
+    queryClient.setQueryData(key, {
+      metadata: { authorUsername: "Cached owner" },
+    });
+    await applyConversationProjectAssignment({
+      queryClient,
+      conversationSlugId: "conv1234",
+      assignment: {
+        previousProjectSlug: "source",
+        projectSlug: "destination",
+        projectTitle: "Destination",
+        target: { kind: "project", projectSlug: "destination" },
+      },
+      refreshMetadata: () => Promise.resolve(freshConversation("source")),
+    });
+    expect(queryClient.getQueryData(key)).toMatchObject({
+      metadata: {
+        authorUsername: "Cached owner",
+        currentProjectSlug: "destination",
+      },
+    });
+    queryClient.clear();
+  });
+  it("preserves a fresh translated project title when projecting the same scope", async () => {
+    const queryClient = new QueryClient();
+    const key = ["conversation", "conv1234"];
+    queryClient.setQueryData(key, {
+      metadata: {
+        projectContext: {
+          projectSlug: "destination",
+          originalProjectTitle: "Destination",
+          translatedProjectTitle: "Destination traduite",
+          conversationSlugId: "conv1234",
+        },
+      },
+    });
+    await applyConversationProjectAssignment({
+      queryClient,
+      conversationSlugId: "conv1234",
+      assignment: {
+        previousProjectSlug: "source",
+        projectSlug: "destination",
+        projectTitle: "Destination",
+        target: { kind: "project", projectSlug: "destination" },
+      },
+    });
+    expect(
+      cachedLegacy.parse(queryClient.getQueryData(key)).metadata.projectContext
+        ?.translatedProjectTitle
+    ).toBe("Destination traduite");
+    queryClient.clear();
+  });
   it("keeps the committed scope after an immediate stale replica refresh", async () => {
     const queryClient = new QueryClient();
     const key = ["conversation", "conv1234"];
@@ -38,7 +188,10 @@ describe("conversation project cache updates", () => {
     vi.spyOn(queryClient, "invalidateQueries").mockImplementation((filters) => {
       const resolvedFilters =
         typeof filters === "function" ? filters() : filters;
-      if (resolvedFilters?.queryKey?.[0] === "conversation")
+      if (
+        resolvedFilters?.queryKey?.[0] === "conversation" &&
+        resolvedFilters.refetchType !== "none"
+      )
         queryClient.setQueryData(key, { metadata: oldMetadata });
       return Promise.resolve();
     });
@@ -135,14 +288,18 @@ describe("conversation project cache updates", () => {
     expect(
       queryClient.getQueryState(["projectPage", "unrelated"])?.isInvalidated
     ).toBe(false);
-    expect(stores.feed).toHaveBeenCalledWith({
-      conversationSlugId: "conv1234",
-      assignment,
-    });
-    expect(stores.profile).toHaveBeenCalledWith({
-      conversationSlugId: "conv1234",
-      assignment,
-    });
+    expect(stores.feed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationSlugId: "conv1234",
+        assignment,
+      })
+    );
+    expect(stores.profile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationSlugId: "conv1234",
+        assignment,
+      })
+    );
     queryClient.clear();
   });
 

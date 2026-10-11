@@ -5,6 +5,10 @@ export interface ConversationProjectEditTranslations {
   projectPermissionError: string;
   projectChangedError: string;
   detachLanguagesError: string;
+  primaryLanguageOnly: string;
+  chooseCustomLanguagesDescription: string;
+  emailUpdatesUnavailableError: string;
+  activeDeliveryError: string;
 }
 
 export const conversationProjectEditTranslations: Record<
@@ -12,6 +16,13 @@ export const conversationProjectEditTranslations: Record<
   ConversationProjectEditTranslations
 > = {
   en: {
+    primaryLanguageOnly: "Use the primary language only",
+    chooseCustomLanguagesDescription:
+      "The inherited settings exceed the custom language limit. Choose up to two additional languages, or use the primary language only.",
+    emailUpdatesUnavailableError:
+      "Email Updates cannot be enabled here. Turn them off or choose another project.",
+    activeDeliveryError:
+      "An Email Update is being delivered. Try saving again after delivery finishes.",
     projectUnavailableError:
       "This project is no longer available. Choose another project.",
     projectPermissionError:
@@ -22,6 +33,13 @@ export const conversationProjectEditTranslations: Record<
       "Before choosing No project, switch to custom languages and choose up to two additional languages.",
   },
   fr: {
+    primaryLanguageOnly: "Utiliser uniquement la langue principale",
+    chooseCustomLanguagesDescription:
+      "Les paramètres hérités dépassent la limite des langues personnalisées. Choisissez au maximum deux langues supplémentaires, ou utilisez uniquement la langue principale.",
+    emailUpdatesUnavailableError:
+      "Les mises à jour par e-mail ne peuvent pas être activées ici. Désactivez-les ou choisissez un autre projet.",
+    activeDeliveryError:
+      "Une mise à jour par e-mail est en cours d’envoi. Réessayez d’enregistrer une fois l’envoi terminé.",
     projectUnavailableError:
       "Ce projet n’est plus disponible. Choisissez un autre projet.",
     projectPermissionError:
@@ -32,6 +50,13 @@ export const conversationProjectEditTranslations: Record<
       "Avant de choisir Aucun projet, personnalisez les langues et choisissez au maximum deux langues supplémentaires.",
   },
   es: {
+    primaryLanguageOnly: "Usar solo el idioma principal",
+    chooseCustomLanguagesDescription:
+      "La configuración heredada supera el límite de idiomas personalizados. Elija hasta dos idiomas adicionales o use solo el idioma principal.",
+    emailUpdatesUnavailableError:
+      "No se pueden activar actualizaciones por correo aquí. Desactívelas o elija otro proyecto.",
+    activeDeliveryError:
+      "Se está enviando una actualización por correo. Intente guardar de nuevo cuando termine el envío.",
     projectUnavailableError:
       "Este proyecto ya no está disponible. Elija otro proyecto.",
     projectPermissionError:
@@ -42,6 +67,12 @@ export const conversationProjectEditTranslations: Record<
       "Antes de elegir Sin proyecto, personalice los idiomas y elija hasta dos idiomas adicionales.",
   },
   "zh-Hans": {
+    primaryLanguageOnly: "仅使用主要语言",
+    chooseCustomLanguagesDescription:
+      "继承的设置超过了自定义语言数量限制。请选择最多两种附加语言，或仅使用主要语言。",
+    emailUpdatesUnavailableError:
+      "无法在此启用电子邮件更新。请关闭更新或选择其他项目。",
+    activeDeliveryError: "正在发送电子邮件更新。请在发送完成后再次保存。",
     projectUnavailableError: "此项目已不可用。请选择其他项目。",
     projectPermissionError: "您需要在目标项目中创建和编辑对话的权限。",
     projectChangedError:
@@ -50,6 +81,12 @@ export const conversationProjectEditTranslations: Record<
       "选择无项目前，请切换到自定义语言，并选择最多两种附加语言。",
   },
   "zh-Hant": {
+    primaryLanguageOnly: "僅使用主要語言",
+    chooseCustomLanguagesDescription:
+      "繼承的設定超過自訂語言數量限制。請選擇最多兩種附加語言，或僅使用主要語言。",
+    emailUpdatesUnavailableError:
+      "無法在此啟用電子郵件更新。請關閉更新或選擇其他專案。",
+    activeDeliveryError: "正在傳送電子郵件更新。請在傳送完成後再次儲存。",
     projectUnavailableError: "此專案已無法使用。請選擇其他專案。",
     projectPermissionError: "您需要在目標專案中建立和編輯對話的權限。",
     projectChangedError:
@@ -58,6 +95,13 @@ export const conversationProjectEditTranslations: Record<
       "選擇無專案前，請切換至自訂語言，並選擇最多兩種附加語言。",
   },
   ja: {
+    primaryLanguageOnly: "主要言語のみ使用する",
+    chooseCustomLanguagesDescription:
+      "継承した設定はカスタム言語数の上限を超えています。追加言語を最大2つ選択するか、主要言語のみ使用してください。",
+    emailUpdatesUnavailableError:
+      "ここではメール更新を有効にできません。無効にするか、別のプロジェクトを選択してください。",
+    activeDeliveryError:
+      "メール更新を送信中です。送信完了後にもう一度保存してください。",
     projectUnavailableError:
       "このプロジェクトは利用できません。別のプロジェクトを選択してください。",
     projectPermissionError:
@@ -68,6 +112,13 @@ export const conversationProjectEditTranslations: Record<
       "プロジェクトなしを選ぶ前に言語をカスタマイズし、追加言語を最大2つ選択してください。",
   },
   ar: {
+    primaryLanguageOnly: "استخدام اللغة الأساسية فقط",
+    chooseCustomLanguagesDescription:
+      "تتجاوز الإعدادات الموروثة حد اللغات المخصصة. اختر لغتين إضافيتين كحد أقصى أو استخدم اللغة الأساسية فقط.",
+    emailUpdatesUnavailableError:
+      "لا يمكن تفعيل تحديثات البريد الإلكتروني هنا. عطّلها أو اختر مشروعًا آخر.",
+    activeDeliveryError:
+      "يجري إرسال تحديث بالبريد الإلكتروني. حاول الحفظ مرة أخرى بعد اكتمال الإرسال.",
     projectUnavailableError: "لم يعد هذا المشروع متاحًا. اختر مشروعًا آخر.",
     projectPermissionError:
       "تحتاج إلى إذن لإنشاء المحادثات وتعديلها في المشروع الوجهة.",
@@ -77,6 +128,13 @@ export const conversationProjectEditTranslations: Record<
       "قبل اختيار بدون مشروع، خصّص اللغات واختر لغتين إضافيتين كحد أقصى.",
   },
   fa: {
+    primaryLanguageOnly: "فقط از زبان اصلی استفاده شود",
+    chooseCustomLanguagesDescription:
+      "تنظیمات به‌ارث‌رسیده از محدودیت زبان‌های سفارشی بیشتر است. حداکثر دو زبان اضافی انتخاب کنید یا فقط از زبان اصلی استفاده کنید.",
+    emailUpdatesUnavailableError:
+      "فعال‌کردن به‌روزرسانی ایمیلی در اینجا ممکن نیست. آن را خاموش کنید یا پروژه دیگری انتخاب کنید.",
+    activeDeliveryError:
+      "یک به‌روزرسانی ایمیلی در حال ارسال است. پس از پایان ارسال دوباره ذخیره کنید.",
     projectUnavailableError:
       "این پروژه دیگر در دسترس نیست. پروژه دیگری انتخاب کنید.",
     projectPermissionError:
@@ -87,6 +145,13 @@ export const conversationProjectEditTranslations: Record<
       "پیش از انتخاب بدون پروژه، زبان‌ها را سفارشی کنید و حداکثر دو زبان اضافی انتخاب کنید.",
   },
   he: {
+    primaryLanguageOnly: "שימוש בשפה הראשית בלבד",
+    chooseCustomLanguagesDescription:
+      "ההגדרות שעברו בירושה חורגות ממגבלת השפות המותאמות. בחרו עד שתי שפות נוספות או השתמשו בשפה הראשית בלבד.",
+    emailUpdatesUnavailableError:
+      "לא ניתן להפעיל עדכונים בדוא״ל כאן. כבו אותם או בחרו פרויקט אחר.",
+    activeDeliveryError:
+      "עדכון בדוא״ל נשלח כעת. נסו לשמור שוב לאחר השלמת השליחה.",
     projectUnavailableError: "הפרויקט הזה אינו זמין עוד. בחרו פרויקט אחר.",
     projectPermissionError: "נדרשת הרשאה ליצור ולערוך שיחות בפרויקט היעד.",
     projectChangedError:
@@ -95,6 +160,13 @@ export const conversationProjectEditTranslations: Record<
       "לפני בחירה ללא פרויקט, התאימו את השפות ובחרו עד שתי שפות נוספות.",
   },
   ky: {
+    primaryLanguageOnly: "Негизги тилди гана колдонуу",
+    chooseCustomLanguagesDescription:
+      "Мурасталган жөндөөлөр жеке тилдердин чегинен ашат. Экиден ашпаган кошумча тилди тандаңыз же негизги тилди гана колдонуңуз.",
+    emailUpdatesUnavailableError:
+      "Бул жерде электрондук кат жаңыртууларын күйгүзүү мүмкүн эмес. Аларды өчүрүңүз же башка долбоорду тандаңыз.",
+    activeDeliveryError:
+      "Электрондук кат жаңыртуусу жөнөтүлүп жатат. Жөнөтүү бүткөндөн кийин кайра сактап көрүңүз.",
     projectUnavailableError:
       "Бул долбоор мындан ары жеткиликтүү эмес. Башка долбоорду тандаңыз.",
     projectPermissionError:
@@ -105,6 +177,13 @@ export const conversationProjectEditTranslations: Record<
       "Долбоор жок дегенди тандоодон мурун тилдерди ыңгайлаштырып, экиден ашпаган кошумча тилди тандаңыз.",
   },
   ru: {
+    primaryLanguageOnly: "Использовать только основной язык",
+    chooseCustomLanguagesDescription:
+      "Унаследованные настройки превышают лимит пользовательских языков. Выберите не более двух дополнительных языков или используйте только основной язык.",
+    emailUpdatesUnavailableError:
+      "Здесь нельзя включить обновления по электронной почте. Отключите их или выберите другой проект.",
+    activeDeliveryError:
+      "Обновление по электронной почте отправляется. Попробуйте сохранить снова после завершения отправки.",
     projectUnavailableError:
       "Этот проект больше недоступен. Выберите другой проект.",
     projectPermissionError:

@@ -65,26 +65,31 @@
               projectTarget !== undefined && projectSelectOptions.length > 0
             "
             :options="projectSelectOptions"
-            :selected-value="getConversationProjectTargetKey(projectTarget)"
-            :selected-label="currentProjectLanguageProject?.projectTitle"
-            @select="selectProject"
+            :model-value="projectTarget"
+            :fallback-label="currentProjectLanguageProject?.projectTitle"
+            @update:model-value="selectProject"
           />
           <ConversationProjectLanguageSettings
             v-if="currentProjectLanguageProject !== undefined"
             v-model:inherit-project-languages="inheritProjectLanguages"
             v-model:override-multilingual-setting="multilingualSetting"
             :project="currentProjectLanguageProject"
+            :can-use-dynamic-translation="canUseDynamicTranslation"
             :detected-language-code="visibleDetectedLanguageCode"
           />
           <CreateConversationUpdatesSettings
             :model-value="conversationUpdatesOverride"
             :scope-kind="
-              selectedProjectSlug === undefined ? 'no-project' : 'project'
+              projectTarget?.kind === 'project' ? 'project' : 'no-project'
             "
             :project-title="currentProjectLanguageProject?.projectTitle"
             :scope-default-enabled="conversationUpdatesScopeDefault"
-            :can-configure="
+            :access="
               selectedEmailUpdatesConfiguration?.canConfigure === true
+                ? 'configure'
+                : hasProjectChange
+                  ? 'disable_only'
+                  : 'none'
             "
             :has-participant-contact-email="
               selectedEmailUpdatesConfiguration?.hasParticipantContactEmail ===
@@ -180,8 +185,11 @@ import {
   type ConversationProjectEditTranslations,
   conversationProjectEditTranslations,
 } from "src/components/newConversation/conversationProjectEdit.i18n";
+import { getProjectLanguageOverride } from "src/components/newConversation/conversationProjectLanguage";
 import ConversationProjectLanguageSettings from "src/components/newConversation/ConversationProjectLanguageSettings.vue";
-import ConversationProjectSelect from "src/components/newConversation/ConversationProjectSelect.vue";
+import ConversationProjectSelect, {
+  type ConversationProjectSelectOption,
+} from "src/components/newConversation/ConversationProjectSelect.vue";
 import ConversationUpdatesPartialEmailReachDialog from "src/components/newConversation/ConversationUpdatesPartialEmailReachDialog.vue";
 import {
   areConversationUpdatesReachStatesEqual,
@@ -196,6 +204,7 @@ import CreateConversationUpdatesSettings from "src/components/newConversation/Cr
 import EditConversationRouteGuard from "src/components/newConversation/EditConversationRouteGuard.vue";
 import NewConversationControlBar from "src/components/newConversation/NewConversationControlBar.vue";
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
+import { seedOpinionsTranslations } from "src/components/newConversation/SeedOpinions.i18n";
 import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import SpaLink from "src/components/ui-library/SpaLink.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
@@ -204,35 +213,35 @@ import {
   type ValidationErrorField,
 } from "src/composables/conversation/draft";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import { seedOpinionsTranslations } from "src/components/newConversation/SeedOpinions.i18n";
 import {
   MAX_LENGTH_CONVERSATION_BODY,
   MAX_LENGTH_CONVERSATION_TITLE,
 } from "src/shared/shared";
+import type { GetConversationForEditResponse } from "src/shared/types/dto";
 import type {
-  ConversationLanguageSettingsSource,
-  GetConversationForEditResponse,
-} from "src/shared/types/dto";
-import type {
-  ContentLanguageMetadataOutput,
   ConversationProjectTarget,
   ParticipationMode,
 } from "src/shared/types/zod";
 import { getConversationProjectTargetKey } from "src/shared/utils/conversationProject";
+import { useAuthenticationStore } from "src/stores/authentication";
 import {
-  createEditConversationForm,
   type ConversationUpdatesConfiguration,
+  createEditConversationForm,
   type EditConversationDetails,
   hasEditConversationDetailsChanges,
   useEditConversationStore,
 } from "src/stores/editConversation";
-import { useAuthenticationStore } from "src/stores/authentication";
 import { useBackendConversationEmailUpdatesApi } from "src/utils/api/conversationUpdates/conversationEmailUpdates";
 import { useBackendPostEditApi } from "src/utils/api/post/postEdit";
 import { getSingleRouteParam } from "src/utils/router/params";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
-import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
+import {
+  onBeforeRouteLeave,
+  onBeforeRouteUpdate,
+  useRoute,
+  useRouter,
+} from "vue-router";
 
 import {
   type EditConversationTranslations,
@@ -261,7 +270,9 @@ const editStore = useEditConversationStore();
 const auth = useAuthenticationStore();
 const { t: seedT } = useComponentI18n(seedOpinionsTranslations);
 
-const conversationSlugId = computed(() => getSingleRouteParam(route.params.conversationSlugId));
+const conversationSlugId = computed(() =>
+  getSingleRouteParam(route.params.conversationSlugId)
+);
 
 const seedRoute = computed(() => ({
   name: "/conversation/[conversationSlugId]/edit/seed/" as const,
@@ -291,33 +302,42 @@ const hasProjectChange = computed(
 const projectSelectOptions = computed(() => {
   const conversation = loadedConversation.value;
   if (conversation === undefined) return [];
-  const options: {
-    value: string;
-    title: string | undefined;
-    noProject: boolean;
-    target: ConversationProjectTarget;
-  }[] = conversation.projectOptions.map((option) => ({
-    value: getConversationProjectTargetKey(option.target),
-    title: option.title,
-    noProject: option.target.kind === "no_project",
-    target: option.target,
-  }));
+  const options: ConversationProjectSelectOption[] =
+    conversation.projectOptions.map((option) => ({
+      ...option.target,
+      title: option.title,
+    }));
   const currentValue = getConversationProjectTargetKey(
     conversation.projectTarget
   );
-  if (!options.some((option) => option.value === currentValue))
-    options.unshift({
-      value: currentValue,
-      title:
-        conversation.projectLanguageProject?.projectTitle ??
-        conversation.postAsOrganizationName,
-      noProject: conversation.projectTarget.kind === "no_project",
-      target: conversation.projectTarget,
-    });
+  if (
+    !options.some(
+      (option) => getConversationProjectTargetKey(option) === currentValue
+    )
+  )
+    options.unshift(
+      conversation.projectTarget.kind === "project"
+        ? {
+            ...conversation.projectTarget,
+            title:
+              conversation.projectLanguageProject?.projectTitle ??
+              conversation.currentProjectSlug,
+          }
+        : {
+            ...conversation.projectTarget,
+            title: conversation.postAsOrganizationName,
+          }
+    );
   return options;
 });
-const editPermissions = computed(() => loadedConversation.value?.editPermissions);
-const hasLoadedSession = computed(() => isDataLoaded.value && editStore.session?.original.conversationSlugId === conversationSlugId.value);
+const editPermissions = computed(
+  () => loadedConversation.value?.editPermissions
+);
+const hasLoadedSession = computed(
+  () =>
+    isDataLoaded.value &&
+    editStore.session?.original.conversationSlugId === conversationSlugId.value
+);
 
 const titleInputRef = ref<HTMLDivElement>();
 
@@ -334,7 +354,10 @@ const isSurveyFeatureAllowed = computed(() => {
   );
 });
 const canEditConversationContent = computed(() => {
-  return !editStore.isSaving && editPermissions.value?.canEditConversationContent === true;
+  return (
+    !editStore.isSaving &&
+    editPermissions.value?.canEditConversationContent === true
+  );
 });
 const canAddEventTicket = computed(() => {
   return editPermissions.value?.canAddEventTicket ?? true;
@@ -346,9 +369,21 @@ const canRemoveEventTicket = computed(() => {
   return editPermissions.value?.canRemoveEventTicket ?? true;
 });
 const canUseAnalysisVariantsPreference = computed(() => {
+  if (hasProjectChange.value)
+    return (
+      selectedProjectOption.value?.premiumFeatures.includes(
+        "analysis_variants"
+      ) ?? false
+    );
   return editPermissions.value?.canUseAnalysisVariantsPreference ?? false;
 });
 const canUseDynamicTranslation = computed(() => {
+  if (hasProjectChange.value)
+    return (
+      selectedProjectOption.value?.premiumFeatures.includes(
+        "dynamic_translation"
+      ) ?? false
+    );
   return editPermissions.value?.canUseDynamicTranslation ?? false;
 });
 const showPremiumEditRestrictedBanner = computed(() => {
@@ -357,7 +392,11 @@ const showPremiumEditRestrictedBanner = computed(() => {
 
 const hasUnsavedChanges = computed(() => {
   const details = getLiveDetails();
-  return hasLoadedSession.value && details !== undefined && hasEditConversationDetailsChanges(details);
+  return (
+    hasLoadedSession.value &&
+    details !== undefined &&
+    hasEditConversationDetailsChanges(details)
+  );
 });
 
 // Use conversation draft composable (no store sync for edit page)
@@ -543,22 +582,15 @@ function selectProject(target: ConversationProjectTarget): void {
     inheritProjectLanguages.value &&
     currentProjectLanguageProject.value !== undefined
   ) {
-    const project = currentProjectLanguageProject.value;
-    const languages = [
-      ...new Set([
-        project.defaultLanguageCode,
-        ...project.languageSettings.targetLanguageCodes,
-      ]),
-    ].filter((code) => code !== visibleDetectedLanguageCode.value);
-    if (languages.length > 2) {
+    const override = getProjectLanguageOverride({
+      project: currentProjectLanguageProject.value,
+      detectedLanguageCode: visibleDetectedLanguageCode.value,
+    });
+    if (!override.success) {
       showNotifyMessage(tProjectEdit("detachLanguagesError"));
       return;
     }
-    multilingualSetting.value = {
-      additionalLanguageCodes: languages,
-      dynamicTranslationEnabled:
-        project.languageSettings.dynamicTranslationEnabled,
-    };
+    multilingualSetting.value = override.data;
   }
   projectTarget.value = target;
   selectedProjectSlug.value =
@@ -583,22 +615,35 @@ const canShowStoredAutoDetection = computed(() => {
 });
 
 const visibleDetectedLanguageCode = computed(() =>
-  canShowStoredAutoDetection.value ? loadedConversation.value?.contentLanguageMetadata.detectedDisplayLanguageCode : undefined
+  canShowStoredAutoDetection.value
+    ? loadedConversation.value?.contentLanguageMetadata
+        .detectedDisplayLanguageCode
+    : undefined
 );
 const visibleDetectedSourceLanguageCode = computed(() =>
   canShowStoredAutoDetection.value
-    ? loadedConversation.value?.contentLanguageMetadata.detectedSourceLanguageCode
+    ? loadedConversation.value?.contentLanguageMetadata
+        .detectedSourceLanguageCode
     : undefined
 );
 const visibleDetectedRawLanguageCode = computed(() =>
-  canShowStoredAutoDetection.value ? loadedConversation.value?.contentLanguageMetadata.detectedRawLanguageCode : undefined
+  canShowStoredAutoDetection.value
+    ? loadedConversation.value?.contentLanguageMetadata.detectedRawLanguageCode
+    : undefined
 );
 const visibleAutoDetectionStatus = computed(() =>
-  canShowStoredAutoDetection.value ? loadedConversation.value?.contentLanguageMetadata.autoDetectionStatus : undefined
+  canShowStoredAutoDetection.value
+    ? loadedConversation.value?.contentLanguageMetadata.autoDetectionStatus
+    : undefined
 );
 
 const isNextButtonDisabled = computed(() => {
-  return !hasLoadedSession.value || editStore.isSaving || isTitleOverLimit.value || isBodyOverLimit.value;
+  return (
+    !hasLoadedSession.value ||
+    editStore.isSaving ||
+    isTitleOverLimit.value ||
+    isBodyOverLimit.value
+  );
 });
 
 async function scrollToTitleInput() {
@@ -708,7 +753,8 @@ async function onNext(event: MouseEvent): Promise<void> {
 function persistDetails(): void {
   const details = getLiveDetails();
   const session = editStore.session;
-  if (!hasLoadedSession.value || details === undefined || session === undefined) return;
+  if (!hasLoadedSession.value || details === undefined || session === undefined)
+    return;
   session.form = getDraftSnapshot();
   session.projectTarget = details.projectTarget;
   session.emailConfiguration = details.emailConfiguration;
@@ -736,7 +782,9 @@ function applyConversationUpdatesConfiguration(
   conversationUpdatesOverride.value = configuration.setting === "enabled";
 }
 
-async function loadConversationUpdatesConfiguration(slug: string): Promise<ConversationUpdatesConfiguration | undefined> {
+async function loadConversationUpdatesConfiguration(
+  slug: string
+): Promise<ConversationUpdatesConfiguration | undefined> {
   try {
     const response = await conversationEmailUpdatesApi.getConfiguration({
       target: "conversation",
@@ -756,7 +804,9 @@ async function loadConversationUpdatesConfiguration(slug: string): Promise<Conve
 }
 
 let isAlive = true;
-onBeforeUnmount(() => { isAlive = false; });
+onBeforeUnmount(() => {
+  isAlive = false;
+});
 
 async function loadConversation(): Promise<void> {
   const slug = conversationSlugId.value;
@@ -789,9 +839,14 @@ async function loadConversation(): Promise<void> {
         ? editStore.session
         : undefined;
     const response =
-      savedSession?.original ??
-      (await getConversationForEdit(slug));
-    if (!isAlive || slug !== conversationSlugId.value || userId !== auth.userId || !auth.isLoggedIn) return;
+      savedSession?.original ?? (await getConversationForEdit(slug));
+    if (
+      !isAlive ||
+      slug !== conversationSlugId.value ||
+      userId !== auth.userId ||
+      !auth.isLoggedIn
+    )
+      return;
 
     if (!response.success) {
       loadError.value = true;
@@ -814,8 +869,7 @@ async function loadConversation(): Promise<void> {
     }
 
     loadedConversation.value = response;
-    projectTarget.value =
-      savedSession?.projectTarget ?? response.projectTarget;
+    projectTarget.value = savedSession?.projectTarget ?? response.projectTarget;
     postAs.value = {
       postAsOrganization: response.postAsOrganizationSlug !== undefined,
       organizationName: response.postAsOrganizationSlug ?? "",
@@ -833,9 +887,17 @@ async function loadConversation(): Promise<void> {
         savedSession.originalEmailOverride;
     } else {
       const configuration = await loadConversationUpdatesConfiguration(slug);
-      if (!isAlive || slug !== conversationSlugId.value || userId !== auth.userId || !auth.isLoggedIn) return;
-      if (configuration !== undefined) applyConversationUpdatesConfiguration(configuration);
-      originalConversationUpdatesOverride.value = conversationUpdatesOverride.value;
+      if (
+        !isAlive ||
+        slug !== conversationSlugId.value ||
+        userId !== auth.userId ||
+        !auth.isLoggedIn
+      )
+        return;
+      if (configuration !== undefined)
+        applyConversationUpdatesConfiguration(configuration);
+      originalConversationUpdatesOverride.value =
+        conversationUpdatesOverride.value;
       editStore.start({
         original: response,
         form: getDraftSnapshot(),
@@ -860,14 +922,21 @@ async function loadConversation(): Promise<void> {
       await router.replace({ ...seedRoute.value, query });
     }
   } catch (error) {
-    if (!isAlive || slug !== conversationSlugId.value || userId !== auth.userId) return;
+    if (!isAlive || slug !== conversationSlugId.value || userId !== auth.userId)
+      return;
     console.error("Error loading conversation for edit:", error);
     loadError.value = true;
     errorTitle.value = t("loadingErrorTitle");
     errorMessage.value = t("loadingErrorMessage");
   }
 }
-watch([conversationSlugId, () => auth.userId, () => auth.isLoggedIn], () => { void loadConversation(); }, { immediate: true });
+watch(
+  [conversationSlugId, () => auth.userId, () => auth.isLoggedIn],
+  () => {
+    void loadConversation();
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped lang="scss">

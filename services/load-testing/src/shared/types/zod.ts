@@ -1249,11 +1249,19 @@ const zodSurveyChoiceAnswer = zodSurveyChoiceAnswerDraftBase
     .superRefine((answer, ctx) => {
         const selectedOptionSlugIds = new Set(answer.optionSlugIds);
         if (selectedOptionSlugIds.size !== answer.optionSlugIds.length) {
-            ctx.addIssue({ code: "custom", path: ["optionSlugIds"], message: "Choice selections must be unique" });
+            ctx.addIssue({
+                code: "custom",
+                path: ["optionSlugIds"],
+                message: "Choice selections must be unique",
+            });
         }
         for (const optionSlugId of Object.keys(answer.optionTextValues ?? {})) {
             if (!selectedOptionSlugIds.has(optionSlugId)) {
-                ctx.addIssue({ code: "custom", path: ["optionTextValues", optionSlugId], message: "Text must belong to a selected option" });
+                ctx.addIssue({
+                    code: "custom",
+                    path: ["optionTextValues", optionSlugId],
+                    message: "Text must belong to a selected option",
+                });
             }
         }
     });
@@ -1343,6 +1351,7 @@ export const zodConversationProjectContext = z
 const zodConversationMetadataBase = z
     .object({
         conversationSlugId: zodSlugId,
+        currentProjectSlug: zodProjectSlug.optional(),
         conversationViewSnapshotId: z.number().int().positive().optional(),
         createdAt: zodDateTimeFlexible,
         updatedAt: zodDateTimeFlexible.optional(),
@@ -1395,6 +1404,7 @@ const zodConversationMetadataWithIdBase = z
     .object({
         conversationId: z.number().int().nonnegative(),
         conversationSlugId: zodSlugId,
+        currentProjectSlug: zodProjectSlug.optional(),
         conversationViewSnapshotId: z.number().int().positive().optional(),
         createdAt: z.date(),
         updatedAt: z.date().optional(),

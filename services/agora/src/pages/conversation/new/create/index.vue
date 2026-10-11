@@ -49,15 +49,18 @@
           <ConversationProjectSelect
             v-if="conversationCreateProjectOptions.length > 0"
             :options="projectSelectOptions"
-            :selected-value="selectedProjectSlug ?? 'no_project'"
-            :selected-label="undefined"
-            @select="selectProject"
+            :model-value="selectedProjectTarget"
+            :fallback-label="undefined"
+            @update:model-value="selectProject"
           />
           <ConversationProjectLanguageSettings
             v-if="selectedProjectOption !== undefined"
             v-model:inherit-project-languages="inheritProjectLanguages"
             v-model:override-multilingual-setting="multilingualSetting"
             :project="selectedProjectOption"
+            :can-use-dynamic-translation="
+              selectedProjectOption.canUseDynamicTranslation
+            "
             :detected-language-code="undefined"
           />
           <CreateConversationUpdatesSettings
@@ -73,7 +76,11 @@
             :scope-default-enabled="
               selectedEmailUpdatesConfiguration.scopeDefaultEnabled
             "
-            :can-configure="selectedEmailUpdatesConfiguration.canConfigure"
+            :access="
+              selectedEmailUpdatesConfiguration.canConfigure
+                ? 'configure'
+                : 'none'
+            "
             :has-participant-contact-email="
               selectedEmailUpdatesConfiguration.hasParticipantContactEmail
             "
@@ -211,7 +218,9 @@ import ActiveImportBanner from "src/components/conversation/import/ActiveImportB
 import BackButton from "src/components/navigation/buttons/BackButton.vue";
 import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
 import ConversationProjectLanguageSettings from "src/components/newConversation/ConversationProjectLanguageSettings.vue";
-import ConversationProjectSelect from "src/components/newConversation/ConversationProjectSelect.vue";
+import ConversationProjectSelect, {
+  type ConversationProjectSelectOption,
+} from "src/components/newConversation/ConversationProjectSelect.vue";
 import ConversationUpdatesPartialEmailReachDialog from "src/components/newConversation/ConversationUpdatesPartialEmailReachDialog.vue";
 import {
   areConversationUpdatesReachStatesEqual,
@@ -240,6 +249,7 @@ import {
   MAX_LENGTH_CONVERSATION_TITLE,
 } from "src/shared/shared";
 import type { GetConversationCreateProjectOptionsResponse } from "src/shared/types/dto";
+import type { ConversationProjectTarget } from "src/shared/types/zod";
 import type { ParticipationMode } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
@@ -355,14 +365,24 @@ const conversationCreateProjectOptions = ref<ConversationCreateProjectOption[]>(
   []
 );
 const noProjectEmailUpdates = ref<ConversationCreateEmailUpdates>();
-const projectSelectOptions = computed(() => [
-  { value: "no_project", title: undefined, noProject: true, target: undefined },
-  ...conversationCreateProjectOptions.value.map((project) => ({
-    value: project.projectSlug,
-    title: project.projectTitle,
-    noProject: false,
-    target: project.projectSlug,
-  })),
+const selectedProjectTarget = computed<ConversationProjectTarget>(() =>
+  selectedProjectSlug.value === undefined
+    ? { kind: "no_project", organizationSlug: postAs.value.organizationName }
+    : { kind: "project", projectSlug: selectedProjectSlug.value }
+);
+const projectSelectOptions = computed<ConversationProjectSelectOption[]>(() => [
+  {
+    kind: "no_project",
+    organizationSlug: postAs.value.organizationName,
+    title: undefined,
+  },
+  ...conversationCreateProjectOptions.value.map<ConversationProjectSelectOption>(
+    (project) => ({
+      kind: "project",
+      projectSlug: project.projectSlug,
+      title: project.projectTitle,
+    })
+  ),
 ]);
 const selectedProjectOption = computed(() =>
   conversationCreateProjectOptions.value.find(
@@ -438,7 +458,9 @@ function applyEmailVerificationDefault(
   applyContextEmailVerificationDefault = false;
 }
 
-function selectProject(projectSlug: string | undefined): void {
+function selectProject(target: ConversationProjectTarget): void {
+  const projectSlug =
+    target.kind === "project" ? target.projectSlug : undefined;
   updateProjectWithReachWarning(projectSlug);
   inheritProjectLanguages.value = projectSlug !== undefined;
 }

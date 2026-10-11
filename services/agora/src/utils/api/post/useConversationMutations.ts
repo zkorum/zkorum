@@ -12,6 +12,7 @@ import {
   conversationMutationsTranslations,
 } from "src/utils/api/post/useConversationMutations.i18n";
 import { updateConversationQueryCache } from "src/utils/api/post/useConversationQuery";
+import { useViewerQueryScope } from "src/utils/query/viewerScope";
 import { useNotify } from "src/utils/ui/notify";
 
 export function useCloseConversationMutation() {
@@ -173,7 +174,9 @@ export function useOpenConversationMutation() {
 export function useUpdateConversationMutation() {
   const auth = useAuthenticationStore();
   const queryClient = useQueryClient();
-  const { updateConversation } = useBackendPostEditApi();
+  const { updateConversation, refreshConversationMetadata } =
+    useBackendPostEditApi();
+  const viewerScope = useViewerQueryScope();
 
   return useMutation({
     mutationFn: (data: UpdateConversationRequest) => updateConversation(data),
@@ -265,10 +268,17 @@ export function useUpdateConversationMutation() {
         });
         if (data.projectAssignment !== undefined) {
           // Keep the committed scope authoritative over an immediate replica refresh.
-          await applyConversationProjectAssignment({
+          void applyConversationProjectAssignment({
             queryClient,
             conversationSlugId: variables.conversationSlugId,
             assignment: data.projectAssignment,
+            viewerScope: viewerScope.value,
+            isCurrent: () => auth.userId === context?.viewerUserId,
+            refreshMetadata: () =>
+              refreshConversationMetadata({
+                conversationSlugId: variables.conversationSlugId,
+                authenticated: auth.isGuestOrLoggedIn,
+              }),
           });
         }
         void queryClient.invalidateQueries({

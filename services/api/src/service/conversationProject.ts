@@ -13,91 +13,276 @@ import {
     userTable,
 } from "@/shared-backend/schema.js";
 import type { GetConversationForEditResponse } from "@/shared/types/dto.js";
-import type { ConversationProjectTarget, PremiumFeature } from "@/shared/types/zod.js";
+import type {
+    ConversationProjectTarget,
+    PremiumFeature,
+} from "@/shared/types/zod.js";
 import type { SupportedDisplayLanguageCodes } from "@/shared/languages.js";
 import { getOrCreateDefaultProjectForOrganization } from "./projectAccess.js";
 import type { AllProjectCapability } from "./projectAccessLogic.js";
 import { getImplicitDefaultDisplayLanguage } from "./projectLanguage.js";
 import { sourceLanguageToDisplayLanguage } from "./translationLanguageSetting.js";
 
-type ProjectOption = Extract<GetConversationForEditResponse, { success: true }>["projectOptions"][number];
+type ProjectOption = Extract<
+    GetConversationForEditResponse,
+    { success: true }
+>["projectOptions"][number];
 
-async function getDestinationOrganizations({ db, userId }: { db: PostgresJsDatabase; userId: string }) {
-    const rows = await db.select({
-        id: organizationTable.id,
-        slug: organizationTable.slug,
-        title: organizationTable.displayName,
-        capability: organizationMembershipAllProjectCapabilityTable.capability,
-    }).from(organizationTable)
-        .innerJoin(organizationMembershipTable, eq(organizationMembershipTable.organizationId, organizationTable.id))
-        .innerJoin(userTable, and(eq(userTable.id, organizationMembershipTable.userId), eq(userTable.isDeleted, false)))
-        .leftJoin(organizationMembershipAllProjectCapabilityTable, and(eq(organizationMembershipAllProjectCapabilityTable.organizationMembershipId, organizationMembershipTable.id), isNull(organizationMembershipAllProjectCapabilityTable.deletedAt), inArray(organizationMembershipAllProjectCapabilityTable.capability, ["conversation_create", "conversation_edit", "conversation_email_update"])))
-        .where(and(
-            eq(organizationMembershipTable.userId, userId), isNull(organizationTable.deletedAt),
-            isNull(organizationMembershipTable.deletedAt),
-        ));
-    const organizations = new Map<number, Omit<(typeof rows)[number], "capability"> & { capabilities: Set<AllProjectCapability> }>();
+async function getDestinationOrganizations({
+    db,
+    userId,
+}: {
+    db: PostgresJsDatabase;
+    userId: string;
+}) {
+    const rows = await db
+        .select({
+            id: organizationTable.id,
+            slug: organizationTable.slug,
+            title: organizationTable.displayName,
+            capability:
+                organizationMembershipAllProjectCapabilityTable.capability,
+        })
+        .from(organizationTable)
+        .innerJoin(
+            organizationMembershipTable,
+            eq(
+                organizationMembershipTable.organizationId,
+                organizationTable.id,
+            ),
+        )
+        .innerJoin(
+            userTable,
+            and(
+                eq(userTable.id, organizationMembershipTable.userId),
+                eq(userTable.isDeleted, false),
+            ),
+        )
+        .leftJoin(
+            organizationMembershipAllProjectCapabilityTable,
+            and(
+                eq(
+                    organizationMembershipAllProjectCapabilityTable.organizationMembershipId,
+                    organizationMembershipTable.id,
+                ),
+                isNull(
+                    organizationMembershipAllProjectCapabilityTable.deletedAt,
+                ),
+                inArray(
+                    organizationMembershipAllProjectCapabilityTable.capability,
+                    [
+                        "conversation_create",
+                        "conversation_edit",
+                        "conversation_email_update",
+                    ],
+                ),
+            ),
+        )
+        .where(
+            and(
+                eq(organizationMembershipTable.userId, userId),
+                isNull(organizationTable.deletedAt),
+                isNull(organizationMembershipTable.deletedAt),
+            ),
+        );
+    const organizations = new Map<
+        number,
+        Omit<(typeof rows)[number], "capability"> & {
+            capabilities: Set<AllProjectCapability>;
+        }
+    >();
     for (const { capability, ...row } of rows) {
-        const organization = organizations.get(row.id) ?? { ...row, capabilities: new Set<AllProjectCapability>() };
+        const organization = organizations.get(row.id) ?? {
+            ...row,
+            capabilities: new Set<AllProjectCapability>(),
+        };
         if (capability !== null) organization.capabilities.add(capability);
         organizations.set(row.id, organization);
     }
     return organizations;
 }
 
-export async function getConversationProjectOptions({ db, userId }: { db: PostgresJsDatabase; userId: string }): Promise<ProjectOption[]> {
+export async function getConversationProjectOptions({
+    db,
+    userId,
+}: {
+    db: PostgresJsDatabase;
+    userId: string;
+}): Promise<ProjectOption[]> {
     const organizations = await getDestinationOrganizations({ db, userId });
     const organizationIds = [...organizations.keys()];
     if (organizationIds.length === 0) return [];
     const now = new Date();
     const [entitlements, defaults, projects] = await Promise.all([
-        db.select({ organizationId: premiumFeatureEntitlementTable.organizationId, feature: premiumFeatureEntitlementTable.feature }).from(premiumFeatureEntitlementTable).where(and(
-            inArray(premiumFeatureEntitlementTable.organizationId, organizationIds),
-            isNull(premiumFeatureEntitlementTable.revokedAt), lte(premiumFeatureEntitlementTable.startsAt, now),
-            or(isNull(premiumFeatureEntitlementTable.expiresAt), gt(premiumFeatureEntitlementTable.expiresAt, now)),
-        )),
-        db.select({
-            organizationId: projectTable.autoProvisionedForOrganizationId,
-            projectId: projectTable.id,
-            enabled: projectTable.conversationEmailUpdateDefaultEnabled,
-            email: projectContactTable.email,
-        }).from(projectTable).leftJoin(projectContactTable, and(eq(projectContactTable.projectId, projectTable.id), isNull(projectContactTable.deletedAt)))
-            .where(and(inArray(projectTable.autoProvisionedForOrganizationId, organizationIds), isNull(projectTable.deletedAt))),
-        db.select({
-            id: projectTable.id, slug: projectTable.slug, title: projectTable.title,
-            defaultOrganizationId: projectTable.autoProvisionedForOrganizationId,
-            organizationId: projectOrganizationOwnershipTable.organizationId,
-            sourceLanguageCode: projectContentTable.sourceLanguageCode,
-            dynamicTranslationEnabled: projectTable.dynamicTranslationEnabled,
-            enabled: projectTable.conversationEmailUpdateDefaultEnabled,
-            email: projectContactTable.email,
-        }).from(projectTable)
-            .innerJoin(projectOrganizationOwnershipTable, and(eq(projectOrganizationOwnershipTable.projectId, projectTable.id), isNull(projectOrganizationOwnershipTable.deletedAt)))
-            .leftJoin(projectContentTable, eq(projectContentTable.id, projectTable.currentContentId))
-            .leftJoin(projectContactTable, and(eq(projectContactTable.projectId, projectTable.id), isNull(projectContactTable.deletedAt)))
-            .where(and(inArray(projectOrganizationOwnershipTable.organizationId, organizationIds), or(eq(projectTable.directoryVisibility, "listed"), isNotNull(projectTable.autoProvisionedForOrganizationId)), isNull(projectTable.deletedAt))),
+        db
+            .select({
+                organizationId: premiumFeatureEntitlementTable.organizationId,
+                feature: premiumFeatureEntitlementTable.feature,
+            })
+            .from(premiumFeatureEntitlementTable)
+            .where(
+                and(
+                    inArray(
+                        premiumFeatureEntitlementTable.organizationId,
+                        organizationIds,
+                    ),
+                    isNull(premiumFeatureEntitlementTable.revokedAt),
+                    lte(premiumFeatureEntitlementTable.startsAt, now),
+                    or(
+                        isNull(premiumFeatureEntitlementTable.expiresAt),
+                        gt(premiumFeatureEntitlementTable.expiresAt, now),
+                    ),
+                ),
+            ),
+        db
+            .select({
+                organizationId: projectTable.autoProvisionedForOrganizationId,
+                projectId: projectTable.id,
+                enabled: projectTable.conversationEmailUpdateDefaultEnabled,
+                email: projectContactTable.email,
+            })
+            .from(projectTable)
+            .leftJoin(
+                projectContactTable,
+                and(
+                    eq(projectContactTable.projectId, projectTable.id),
+                    isNull(projectContactTable.deletedAt),
+                ),
+            )
+            .where(
+                and(
+                    inArray(
+                        projectTable.autoProvisionedForOrganizationId,
+                        organizationIds,
+                    ),
+                    isNull(projectTable.deletedAt),
+                ),
+            ),
+        db
+            .select({
+                id: projectTable.id,
+                slug: projectTable.slug,
+                title: projectTable.title,
+                defaultOrganizationId:
+                    projectTable.autoProvisionedForOrganizationId,
+                organizationId:
+                    projectOrganizationOwnershipTable.organizationId,
+                sourceLanguageCode: projectContentTable.sourceLanguageCode,
+                dynamicTranslationEnabled:
+                    projectTable.dynamicTranslationEnabled,
+                enabled: projectTable.conversationEmailUpdateDefaultEnabled,
+                email: projectContactTable.email,
+            })
+            .from(projectTable)
+            .innerJoin(
+                projectOrganizationOwnershipTable,
+                and(
+                    eq(
+                        projectOrganizationOwnershipTable.projectId,
+                        projectTable.id,
+                    ),
+                    isNull(projectOrganizationOwnershipTable.deletedAt),
+                ),
+            )
+            .leftJoin(
+                projectContentTable,
+                eq(projectContentTable.id, projectTable.currentContentId),
+            )
+            .leftJoin(
+                projectContactTable,
+                and(
+                    eq(projectContactTable.projectId, projectTable.id),
+                    isNull(projectContactTable.deletedAt),
+                ),
+            )
+            .where(
+                and(
+                    inArray(
+                        projectOrganizationOwnershipTable.organizationId,
+                        organizationIds,
+                    ),
+                    or(
+                        eq(projectTable.directoryVisibility, "listed"),
+                        isNotNull(
+                            projectTable.autoProvisionedForOrganizationId,
+                        ),
+                    ),
+                    isNull(projectTable.deletedAt),
+                ),
+            ),
     ]);
     const featuresByOrganization = new Map<number, Set<PremiumFeature>>();
     for (const row of entitlements) {
-        const features = featuresByOrganization.get(row.organizationId) ?? new Set<PremiumFeature>();
+        const features =
+            featuresByOrganization.get(row.organizationId) ??
+            new Set<PremiumFeature>();
         features.add(row.feature);
         featuresByOrganization.set(row.organizationId, features);
     }
-    const defaultsByOrganization = new Map(defaults.map((row) => [row.organizationId, row]));
-    const projectsById = new Map<number, { project: (typeof projects)[number]; capabilities: Set<AllProjectCapability>; premiumFeatures: Set<PremiumFeature>; canConfigureEmailUpdates: boolean }>();
+    const defaultsByOrganization = new Map(
+        defaults.map((row) => [row.organizationId, row]),
+    );
+    const projectsById = new Map<
+        number,
+        {
+            project: (typeof projects)[number];
+            capabilities: Set<AllProjectCapability>;
+            premiumFeatures: Set<PremiumFeature>;
+            canConfigureEmailUpdates: boolean;
+        }
+    >();
     for (const project of projects) {
         const owner = organizations.get(project.organizationId);
         if (owner === undefined) continue;
-        const entry = projectsById.get(project.id) ?? { project, capabilities: new Set<AllProjectCapability>(), premiumFeatures: new Set<PremiumFeature>(), canConfigureEmailUpdates: false };
-        for (const capability of owner.capabilities) entry.capabilities.add(capability);
-        for (const feature of featuresByOrganization.get(owner.id) ?? []) entry.premiumFeatures.add(feature);
-        entry.canConfigureEmailUpdates ||= owner.capabilities.has("conversation_email_update") && featuresByOrganization.get(owner.id)?.has("conversation_email_update") === true;
+        const entry = projectsById.get(project.id) ?? {
+            project,
+            capabilities: new Set<AllProjectCapability>(),
+            premiumFeatures: new Set<PremiumFeature>(),
+            canConfigureEmailUpdates: false,
+        };
+        for (const capability of owner.capabilities)
+            entry.capabilities.add(capability);
+        for (const feature of featuresByOrganization.get(owner.id) ?? [])
+            entry.premiumFeatures.add(feature);
+        entry.canConfigureEmailUpdates ||=
+            owner.capabilities.has("conversation_email_update") &&
+            featuresByOrganization
+                .get(owner.id)
+                ?.has("conversation_email_update") === true;
         projectsById.set(project.id, entry);
     }
-    const destinations = [...projectsById.values()].filter((entry) => entry.project.defaultOrganizationId === null && entry.capabilities.has("conversation_create") && entry.capabilities.has("conversation_edit"));
-    const languageRows = destinations.length === 0 ? [] : await db.select({ projectId: projectTranslationTargetLanguageTable.projectId, languageCode: projectTranslationTargetLanguageTable.languageCode })
-        .from(projectTranslationTargetLanguageTable).where(and(inArray(projectTranslationTargetLanguageTable.projectId, destinations.map((entry) => entry.project.id)), isNull(projectTranslationTargetLanguageTable.deletedAt)));
-    const languagesByProject = new Map<number, SupportedDisplayLanguageCodes[]>();
+    const destinations = [...projectsById.values()].filter(
+        (entry) =>
+            entry.project.defaultOrganizationId === null &&
+            entry.capabilities.has("conversation_create") &&
+            entry.capabilities.has("conversation_edit"),
+    );
+    const languageRows =
+        destinations.length === 0
+            ? []
+            : await db
+                  .select({
+                      projectId:
+                          projectTranslationTargetLanguageTable.projectId,
+                      languageCode:
+                          projectTranslationTargetLanguageTable.languageCode,
+                  })
+                  .from(projectTranslationTargetLanguageTable)
+                  .where(
+                      and(
+                          inArray(
+                              projectTranslationTargetLanguageTable.projectId,
+                              destinations.map((entry) => entry.project.id),
+                          ),
+                          isNull(
+                              projectTranslationTargetLanguageTable.deletedAt,
+                          ),
+                      ),
+                  );
+    const languagesByProject = new Map<
+        number,
+        SupportedDisplayLanguageCodes[]
+    >();
     for (const row of languageRows) {
         const languages = languagesByProject.get(row.projectId) ?? [];
         languages.push(row.languageCode);
@@ -105,33 +290,103 @@ export async function getConversationProjectOptions({ db, userId }: { db: Postgr
     }
     const options: ProjectOption[] = [];
     for (const organization of organizations.values()) {
-        if (!organization.capabilities.has("conversation_create") || !organization.capabilities.has("conversation_edit")) continue;
+        if (
+            !organization.capabilities.has("conversation_create") ||
+            !organization.capabilities.has("conversation_edit")
+        )
+            continue;
         const scope = defaultsByOrganization.get(organization.id);
-        const scopeProject = scope === undefined ? undefined : projectsById.get(scope.projectId);
-        options.push({ target: { kind: "no_project", organizationSlug: organization.slug }, title: organization.title, premiumFeatures: [...(scopeProject?.premiumFeatures ?? featuresByOrganization.get(organization.id) ?? [])], emailUpdates: {
-            canConfigure: scopeProject?.canConfigureEmailUpdates ?? (organization.capabilities.has("conversation_email_update") && featuresByOrganization.get(organization.id)?.has("conversation_email_update") === true),
-            hasParticipantContactEmail: scope?.email != null,
-            scopeDefaultEnabled: scope?.enabled ?? false,
-        } });
+        const scopeProject =
+            scope === undefined ? undefined : projectsById.get(scope.projectId);
+        options.push({
+            target: { kind: "no_project", organizationSlug: organization.slug },
+            title: organization.title,
+            premiumFeatures: [
+                ...(scopeProject?.premiumFeatures ??
+                    featuresByOrganization.get(organization.id) ??
+                    []),
+            ],
+            emailUpdates: {
+                canConfigure:
+                    scopeProject?.canConfigureEmailUpdates ??
+                    (organization.capabilities.has(
+                        "conversation_email_update",
+                    ) &&
+                        featuresByOrganization
+                            .get(organization.id)
+                            ?.has("conversation_email_update") === true),
+                hasParticipantContactEmail: scope?.email != null,
+                scopeDefaultEnabled: scope?.enabled ?? false,
+            },
+        });
     }
-    for (const { project, canConfigureEmailUpdates, premiumFeatures } of destinations) {
-        options.push({ target: { kind: "project", projectSlug: project.slug }, title: project.title,
+    for (const {
+        project,
+        canConfigureEmailUpdates,
+        premiumFeatures,
+    } of destinations) {
+        options.push({
+            target: { kind: "project", projectSlug: project.slug },
+            title: project.title,
             premiumFeatures: [...premiumFeatures],
-            defaultLanguageCode: sourceLanguageToDisplayLanguage({ sourceLanguageCode: project.sourceLanguageCode }) ?? getImplicitDefaultDisplayLanguage(),
-            languageSettings: { dynamicTranslationEnabled: project.dynamicTranslationEnabled, targetLanguageCodes: languagesByProject.get(project.id) ?? [] },
-            emailUpdates: { canConfigure: canConfigureEmailUpdates, hasParticipantContactEmail: project.email !== null, scopeDefaultEnabled: project.enabled },
+            defaultLanguageCode:
+                sourceLanguageToDisplayLanguage({
+                    sourceLanguageCode: project.sourceLanguageCode,
+                }) ?? getImplicitDefaultDisplayLanguage(),
+            languageSettings: {
+                dynamicTranslationEnabled: project.dynamicTranslationEnabled,
+                targetLanguageCodes: languagesByProject.get(project.id) ?? [],
+            },
+            emailUpdates: {
+                canConfigure: canConfigureEmailUpdates,
+                hasParticipantContactEmail: project.email !== null,
+                scopeDefaultEnabled: project.enabled,
+            },
         });
     }
     return options;
 }
 
-export async function resolveConversationProjectTarget({ db, userId, target }: { db: PostgresJsDatabase; userId: string; target: ConversationProjectTarget }): Promise<{ projectId: number; projectSlug: string; projectTitle: string } | undefined> {
+export async function resolveConversationProjectTarget({
+    db,
+    userId,
+    target,
+}: {
+    db: PostgresJsDatabase;
+    userId: string;
+    target: ConversationProjectTarget;
+}): Promise<
+    { projectId: number; projectSlug: string; projectTitle: string } | undefined
+> {
     if (target.kind === "project") {
-        return (await db.select({ projectId: projectTable.id, projectSlug: projectTable.slug, projectTitle: projectTable.title }).from(projectTable)
-            .where(and(eq(projectTable.slug, target.projectSlug), eq(projectTable.directoryVisibility, "listed"), isNull(projectTable.autoProvisionedForOrganizationId), isNull(projectTable.deletedAt)))).at(0);
+        return (
+            await db
+                .select({
+                    projectId: projectTable.id,
+                    projectSlug: projectTable.slug,
+                    projectTitle: projectTable.title,
+                })
+                .from(projectTable)
+                .where(
+                    and(
+                        eq(projectTable.slug, target.projectSlug),
+                        eq(projectTable.directoryVisibility, "listed"),
+                        isNull(projectTable.autoProvisionedForOrganizationId),
+                        isNull(projectTable.deletedAt),
+                    ),
+                )
+        ).at(0);
     }
     const organizations = await getDestinationOrganizations({ db, userId });
-    const organization = [...organizations.values()].find((row) => row.slug === target.organizationSlug && row.capabilities.has("conversation_create") && row.capabilities.has("conversation_edit"));
+    const organization = [...organizations.values()].find(
+        (row) =>
+            row.slug === target.organizationSlug &&
+            row.capabilities.has("conversation_create") &&
+            row.capabilities.has("conversation_edit"),
+    );
     if (organization === undefined) return undefined;
-    return await getOrCreateDefaultProjectForOrganization({ db, organizationId: organization.id });
+    return await getOrCreateDefaultProjectForOrganization({
+        db,
+        organizationId: organization.id,
+    });
 }

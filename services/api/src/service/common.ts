@@ -9,6 +9,7 @@ import {
     rankingConversationConfigTable,
     conversationImportSourceTable,
     projectOrganizationOwnershipTable,
+    projectTable,
 } from "@/shared-backend/schema.js";
 import { getProjectCapabilitiesById } from "./projectAccess.js";
 import { toUnionUndefined } from "@/shared/shared.js";
@@ -236,6 +237,7 @@ export function useCommonPost() {
                 // metadata
                 conversationId: conversationTable.id,
                 projectId: conversationTable.projectId,
+                currentProjectSlug: projectTable.slug,
                 slugId: conversationTable.slugId,
                 createdAt: conversationTable.createdAt,
                 updatedAt: conversationTable.updatedAt,
@@ -284,6 +286,10 @@ export function useCommonPost() {
                 moderationUpdatedAt: conversationModerationTable.updatedAt,
             })
             .from(conversationTable)
+            .innerJoin(
+                projectTable,
+                eq(projectTable.id, conversationTable.projectId),
+            )
             .innerJoin(
                 conversationContentTable,
                 eq(
@@ -459,6 +465,7 @@ export function useCommonPost() {
             });
             const metadataBase = {
                 conversationSlugId: postItem.slugId,
+                currentProjectSlug: postItem.currentProjectSlug,
                 conversationViewSnapshotId:
                     displayCounts.conversationViewSnapshotId,
                 moderation: moderationProperties,
@@ -629,20 +636,18 @@ export function useCommonPost() {
                     db: db,
                     userId: personalizedUserId,
                 });
-                postItemMap.forEach(
-                    (postItem, conversationSlugId, map) => {
-                        if (
-                            mutedUserItems.some(
-                                (muteItem) =>
-                                    muteItem.username ===
-                                    postItem.conversationData.metadata
-                                        .authorUsername,
-                            )
-                        ) {
-                            map.delete(conversationSlugId);
-                        }
-                    },
-                );
+                postItemMap.forEach((postItem, conversationSlugId, map) => {
+                    if (
+                        mutedUserItems.some(
+                            (muteItem) =>
+                                muteItem.username ===
+                                postItem.conversationData.metadata
+                                    .authorUsername,
+                        )
+                    ) {
+                        map.delete(conversationSlugId);
+                    }
+                });
             }
         }
 

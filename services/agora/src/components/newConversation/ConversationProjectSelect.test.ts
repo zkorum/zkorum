@@ -54,7 +54,9 @@ vi.mock("src/components/ui-library/ZKSelect.vue", () => ({
   }),
 }));
 
-import ConversationProjectSelect from "./ConversationProjectSelect.vue";
+import ConversationProjectSelect, {
+  type ConversationProjectSelectOption,
+} from "./ConversationProjectSelect.vue";
 
 let app: App | undefined;
 afterEach(() => {
@@ -65,12 +67,11 @@ afterEach(() => {
 
 describe("ConversationProjectSelect", () => {
   it("never emits a selection when options load, reorder, or disappear", async () => {
-    const options = ref([
+    const options = ref<ConversationProjectSelectOption[]>([
       {
-        value: "current",
+        kind: "project",
+        projectSlug: "current",
         title: "Current",
-        noProject: false,
-        target: "current",
       },
     ]);
     const select = vi.fn();
@@ -80,18 +81,18 @@ describe("ConversationProjectSelect", () => {
       defineComponent({
         setup() {
           return () =>
-            h(ConversationProjectSelect<string>, {
+            h(ConversationProjectSelect, {
               options: options.value,
-              selectedValue: "current",
-              selectedLabel: "Current",
-              onSelect: select,
+              modelValue: { kind: "project", projectSlug: "current" },
+              fallbackLabel: "Current",
+              "onUpdate:modelValue": select,
             });
         },
       })
     );
     app.mount(host);
     options.value = [
-      { value: "other", title: "Other", noProject: false, target: "other" },
+      { kind: "project", projectSlug: "other", title: "Other" },
       ...options.value,
     ];
     await nextTick();
@@ -105,18 +106,17 @@ describe("ConversationProjectSelect", () => {
     const select = vi.fn();
     const host = document.createElement("div");
     document.body.append(host);
-    app = createApp(ConversationProjectSelect<string>, {
+    app = createApp(ConversationProjectSelect, {
       options: [
         {
-          value: "other",
+          kind: "project",
+          projectSlug: "other",
           title: "Other",
-          noProject: false,
-          target: "typed-target",
         },
       ],
-      selectedValue: "current",
-      selectedLabel: "Current",
-      onSelect: select,
+      modelValue: { kind: "project", projectSlug: "current" },
+      fallbackLabel: "Current",
+      "onUpdate:modelValue": select,
     });
     app.component(
       "QDialog",
@@ -129,8 +129,13 @@ describe("ConversationProjectSelect", () => {
     app.mount(host);
     host.querySelector<HTMLButtonElement>('[data-value="invalid"]')?.click();
     expect(select).not.toHaveBeenCalled();
-    host.querySelector<HTMLButtonElement>('[data-value="other"]')?.click();
+    host
+      .querySelector<HTMLButtonElement>('[data-value="project:other"]')
+      ?.click();
     await nextTick();
-    expect(select).toHaveBeenCalledExactlyOnceWith("typed-target");
+    expect(select).toHaveBeenCalledExactlyOnceWith({
+      kind: "project",
+      projectSlug: "other",
+    });
   });
 });

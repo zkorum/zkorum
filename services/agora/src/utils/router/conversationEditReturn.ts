@@ -39,10 +39,14 @@ export function getConversationEditReturnPath({
   }
 
   const returnUrl = new URL(returnTo, "https://agora.local");
+  if (returnUrl.origin !== "https://agora.local")
+    return getDefaultConversationPath(conversationSlugId);
   const pathSegments = returnUrl.pathname.split("/");
 
   const isProjectRoute =
-    pathSegments[1] === "project" && pathSegments[3] === "conversation";
+    pathSegments[1] === "project" &&
+    pathSegments[3] === "conversation" &&
+    getDecodedPathSegment(pathSegments[2]) !== null;
   if (pathSegments[1] !== "conversation" && !isProjectRoute) {
     return getDefaultConversationPath(conversationSlugId);
   }
