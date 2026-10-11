@@ -1,7 +1,7 @@
 import pino, { type Logger, type DestinationStream } from "pino";
 import { z } from "zod";
 import {
-    projectLogFields,
+    createLogFieldProjector,
     sanitizeLogOutput,
 } from "./shared-backend/logPrivacy.js";
 import { runtimeConfig } from "./config.js";
@@ -13,7 +13,6 @@ import {
 } from "./observability.js";
 
 const LOAD_EVENT_PREFIX = "AGORA_LOAD_EVENT ";
-const DRIZZLE_QUERY_FORMAT = "%s --";
 const bindingSchema = z.object({
     service: z.literal(OBSERVABILITY_SERVICE).optional(),
     environment: z
@@ -41,6 +40,31 @@ const loadEventSchema = z.object({
     ]),
 });
 
+const projectBindings = createLogFieldProjector(bindingSchema);
+const projectMessage = createLogFieldProjector(z.object({ msg: z.string() }));
+const projectDiscriminator = createLogFieldProjector(
+    z.object({ event: z.string().max(100) }),
+);
+const eventProjectors = new Map<
+    string,
+    (value: unknown) => Record<string, unknown>
+>();
+for (const schema of structuredEventSchema.options) {
+    eventProjectors.set(
+        schema.shape.event.value,
+        createLogFieldProjector(schema),
+    );
+}
+
+function projectStructuredEvent(value: unknown): StructuredEvent | undefined {
+    const name = projectDiscriminator(value).event;
+    if (typeof name !== "string") return undefined;
+    const project = eventProjectors.get(name);
+    if (project === undefined) return undefined;
+    const result = structuredEventSchema.safeParse(project(value));
+    return result.success ? result.data : undefined;
+}
+
 function safeLoadEvent(value: string): string | undefined {
     try {
         const parsed: unknown = JSON.parse(
@@ -66,10 +90,9 @@ function knownDependencyEvent({
     args: readonly unknown[];
     error: Error | undefined;
 }): StructuredEvent | undefined {
-    const messages = args.filter(
+    const message = args.find(
         (argument): argument is string => typeof argument === "string",
     );
-    const message = messages.at(0);
     if (message === undefined) return undefined;
 
     const verified =
@@ -219,33 +242,22 @@ export function createStructuredLogger({
         },
         level,
         formatters: {
-            bindings(value) {
-                return projectLogFields({ value, schema: bindingSchema });
-            },
+            bindings: projectBindings,
         },
         hooks: {
             streamWrite(line) {
                 return sanitizeLogOutput({
                     line,
                     project(value) {
-                        const bindings = projectLogFields({
-                            value,
-                            schema: bindingSchema,
-                        });
-                        for (const schema of structuredEventSchema.options) {
-                            const event = schema.safeParse(
-                                projectLogFields({ value, schema }),
-                            );
-                            if (event.success)
-                                return { ...bindings, ...event.data };
-                        }
-                        const message = z
-                            .object({ msg: z.string() })
-                            .safeParse(value);
+                        const bindings = projectBindings(value);
+                        const event = projectStructuredEvent(value);
+                        if (event !== undefined)
+                            return { ...bindings, ...event };
+                        const message = projectMessage(value).msg;
                         const marker =
-                            message.success &&
-                            message.data.msg.startsWith(LOAD_EVENT_PREFIX)
-                                ? safeLoadEvent(message.data.msg)
+                            typeof message === "string" &&
+                            message.startsWith(LOAD_EVENT_PREFIX)
+                                ? safeLoadEvent(message)
                                 : undefined;
                         return marker === undefined
                             ? {
@@ -261,16 +273,8 @@ export function createStructuredLogger({
             logMethod(args, method, numericLevel) {
                 try {
                     const first = args.at(0);
-                    const databaseQuery = z
-                        .object({ event: z.literal("database_query") })
-                        .safeParse(first);
-                    if (databaseQuery.success) return;
-                    if (
-                        typeof first === "string" &&
-                        first.startsWith(DRIZZLE_QUERY_FORMAT)
-                    ) {
+                    if (projectDiscriminator(first).event === "database_query")
                         return;
-                    }
                     if (
                         typeof first === "string" &&
                         first.startsWith(LOAD_EVENT_PREFIX)

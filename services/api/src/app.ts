@@ -6,8 +6,18 @@ import {
     activePhoneAuthModeSchema,
     phoneAuthModeSchema,
 } from "./shared/types/phone-auth.js";
+import {
+    phoneCountrySchema,
+    phoneCountryPolicySchema,
+    defaultPhoneAuthenticationCountries,
+    defaultPhoneRegistrationCountries,
+} from "./shared/types/phone-country-policy.js";
 import { sharedConfigSchema } from "./shared-backend/config.js";
 import { createApiLogPrivacy } from "./logging/privacy.js";
+import {
+    getDefaultPhoneSmsCostCents,
+    phoneSmsCostOverridesSchema,
+} from "./service/phoneSmsPricing.js";
 
 export type Environment = "development" | "production" | "staging" | "test";
 
@@ -21,6 +31,15 @@ const environmentBoolean = (defaultValue: boolean) =>
 const turnstileHostnamesSchema = z
     .array(z.string().regex(/^[A-Za-z0-9][A-Za-z0-9.-]*$/))
     .nonempty();
+
+const countryListSchema = z
+    .string()
+    .transform((value) =>
+        value.trim() === ""
+            ? []
+            : value.split(",").map((country) => country.trim()),
+    )
+    .pipe(z.array(phoneCountrySchema));
 
 const baseConfigSchema = sharedConfigSchema.extend({
     API_LOG_LEVEL: z
@@ -58,9 +77,36 @@ const baseConfigSchema = sharedConfigSchema.extend({
         .min(5)
         .max(100)
         .default(10),
-    THROTTLE_SMS_SECONDS_INTERVAL: z.number().int().min(5).default(10),
-    MINUTES_BEFORE_SMS_OTP_EXPIRY: z.number().int().min(3).max(60).default(10),
+    THROTTLE_SMS_SECONDS_INTERVAL: z.coerce.number().int().min(30).default(30),
+    MINUTES_BEFORE_SMS_OTP_EXPIRY: z.coerce
+        .number()
+        .int()
+        .min(3)
+        .max(60)
+        .default(10),
     PHONE_AUTH_MODE: phoneAuthModeSchema.default("enabled"),
+    PHONE_AUTH_ALLOWED_COUNTRIES: countryListSchema.prefault(
+        defaultPhoneAuthenticationCountries.join(","),
+    ),
+    PHONE_REGISTRATION_ALLOWED_COUNTRIES: countryListSchema.prefault(
+        defaultPhoneRegistrationCountries.join(","),
+    ),
+    PHONE_SMS_COST_CENTS_BY_COUNTRY: z
+        .string()
+        .default("{}")
+        .transform((value, ctx) => {
+            try {
+                const parsed: unknown = JSON.parse(value);
+                return parsed;
+            } catch {
+                ctx.addIssue({
+                    code: "custom",
+                    message: "SMS cost overrides must be a JSON object",
+                });
+                return z.NEVER;
+            }
+        })
+        .pipe(phoneSmsCostOverridesSchema),
     PHONE_LOGIN_ONLY_RESPONSE_MIN_MS: z.coerce
         .number()
         .int()
@@ -243,6 +289,19 @@ const baseConfigSchema = sharedConfigSchema.extend({
 });
 
 const configSchema = baseConfigSchema.superRefine((value, ctx) => {
+    for (const country of value.PHONE_AUTH_ALLOWED_COUNTRIES) {
+        if (
+            value.PHONE_SMS_COST_CENTS_BY_COUNTRY[country] === undefined &&
+            getDefaultPhoneSmsCostCents(country) === undefined
+        ) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["PHONE_SMS_COST_CENTS_BY_COUNTRY", country],
+                message:
+                    "Every supported SMS destination needs a reviewed cost estimate",
+            });
+        }
+    }
     const hasTwilioAccountSid = value.TWILIO_ACCOUNT_SID !== undefined;
     const hasTwilioAuthToken = value.TWILIO_AUTH_TOKEN !== undefined;
     const hasTwilioServiceSid = value.TWILIO_SERVICE_SID !== undefined;
@@ -323,6 +382,10 @@ const configSchema = baseConfigSchema.superRefine((value, ctx) => {
 });
 
 export const config = configSchema.parse(process.env);
+export const phoneCountryPolicy = phoneCountryPolicySchema.parse({
+    authenticationCountries: config.PHONE_AUTH_ALLOWED_COUNTRIES,
+    registrationCountries: config.PHONE_REGISTRATION_ALLOWED_COUNTRIES,
+});
 const phoneTurnstileConfigSchema = z.discriminatedUnion("enabled", [
     z.object({ enabled: z.literal(false) }),
     z.object({

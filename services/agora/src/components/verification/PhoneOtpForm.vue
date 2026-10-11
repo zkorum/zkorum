@@ -1,7 +1,13 @@
 <template>
   <div>
+    <div
+      v-if="countryPolicy.isPending.value"
+      class="row justify-center q-pa-md"
+    >
+      <q-spinner />
+    </div>
     <PhoneAuthUnavailableNotice
-      v-if="!phoneAuthAvailability.available"
+      v-else-if="!phoneAuthAvailability.available"
       :reason="phoneAuthAvailability.reason"
     />
 
@@ -64,6 +70,7 @@
 </template>
 
 <script setup lang="ts">
+import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { storeToRefs } from "pinia";
 import {
   type PhoneAuthUnavailableNoticeTranslations,
@@ -72,12 +79,12 @@ import {
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { createRequestGate } from "src/composables/verification/createRequestGate";
 import { useOtpTimers } from "src/composables/verification/useOtpTimers";
+import { usePhoneCountryPolicy } from "src/composables/verification/usePhoneCountryPolicy";
 import { useVerificationComplete } from "src/composables/verification/useVerificationComplete";
 import { authenticate200, verifyPhoneOtp200 } from "src/shared/types/dto-auth";
 import { phoneVerificationStore } from "src/stores/onboarding/phone";
 import { useAuthPhoneApi } from "src/utils/api/auth-phone";
 import {
-  pausePhoneRegistration,
   type PhoneAuthAvailability,
   type PhoneAuthPurpose,
   type PhoneAuthUnavailableReason,
@@ -117,13 +124,27 @@ const { t: tPhoneAvailability } =
 const phoneStore = phoneVerificationStore();
 const { verificationPhoneNumber, pendingOtpData } = storeToRefs(phoneStore);
 const modeAvailability = usePhoneAuthAvailability(() => props.purpose);
+const countryPolicy = usePhoneCountryPolicy();
 const responseUnavailableReason = ref<"registration_unavailable">();
 const phoneAuthAvailability = computed<PhoneAuthAvailability>(() => {
+  if (!countryPolicy.isReady.value)
+    return { available: false, reason: "technical_unavailable" };
   if (responseUnavailableReason.value !== undefined) {
     return {
       available: false,
       reason: responseUnavailableReason.value,
     };
+  }
+  if (
+    countryPolicy.isReady.value &&
+    verificationPhoneNumber.value.internationalPhoneNumber !== ""
+  ) {
+    return countryPolicy.availabilityFor({
+      purpose: props.purpose,
+      country: parsePhoneNumberFromString(
+        verificationPhoneNumber.value.internationalPhoneNumber
+      )?.country,
+    });
   }
   return modeAvailability.value;
 });
@@ -387,7 +408,7 @@ function showPhoneAuthUnavailable(reason: PhoneAuthUnavailableReason) {
 }
 
 function handlePhoneRegistrationUnavailable(): void {
-  pausePhoneRegistration();
+  void countryPolicy.refresh();
   responseUnavailableReason.value = "registration_unavailable";
   requestGate.terminate();
 }

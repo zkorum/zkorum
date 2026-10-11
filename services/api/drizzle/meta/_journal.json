@@ -680,6 +680,55 @@
       "when": 1791126499705,
       "tag": "0096_black_shooting_star",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1791555871506,
+      "tag": "0097_outgoing_lifeguard",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1791556851037,
+      "tag": "0098_smiling_ironclad",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1791644226304,
+      "tag": "0099_nasty_namora",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1791649477322,
+      "tag": "0100_strange_wildside",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1791649793990,
+      "tag": "0101_special_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1791652246176,
+      "tag": "0102_supreme_blonde_phantom",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1791652255185,
+      "tag": "0103_secret_nitro",
+      "breakpoints": true
     }
   ]
 }

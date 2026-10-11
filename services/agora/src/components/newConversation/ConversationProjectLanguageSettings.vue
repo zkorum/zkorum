@@ -3,32 +3,12 @@
     <ConversationControlButton
       v-if="selectedProject !== undefined"
       :label="languageControlLabel"
-      :icon="showProjectLanguageDialog ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+      :icon="
+        showProjectLanguageDialog ? 'pi pi-chevron-up' : 'pi pi-chevron-down'
+      "
       @click="openProjectLanguageSettings"
     />
-
-    <ConversationControlButton
-      v-if="props.allowProjectSelection && actualProjects.length > 0"
-      :label="projectControlLabel"
-      :icon="showProjectDialog ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-      @click="showProjectDialog = true"
-    />
   </div>
-
-  <q-dialog v-model="showProjectDialog" position="bottom">
-    <ZKBottomDialogContainer
-      :title="tProject('projectLabel')"
-      :subtitle="tProject('projectSelectionDescription')"
-    >
-      <ZKSelect
-        :model-value="projectSelectValue"
-        searchable
-        :label="tProject('projectLabel')"
-        :options="projectOptions"
-        @update:model-value="setProjectSelectValue"
-      />
-    </ZKBottomDialogContainer>
-  </q-dialog>
 
   <q-dialog v-model="showProjectLanguageDialog" position="bottom">
     <ZKBottomDialogContainer
@@ -39,7 +19,7 @@
         <ConversationLanguageSettingsRow
           v-if="selectedProject !== undefined"
           :title="tProject('inheritProjectLanguagesTitle')"
-          :value="selectedProject.title"
+          :value="selectedProject.projectTitle"
           :description="tProject('inheritProjectLanguagesDescription')"
           :icon="undefined"
           :disabled="false"
@@ -53,7 +33,9 @@
           </template>
         </ConversationLanguageSettingsRow>
 
-        <template v-if="selectedProject !== undefined && inheritProjectLanguages">
+        <template
+          v-if="selectedProject !== undefined && inheritProjectLanguages"
+        >
           <ConversationLanguageSettingsRow
             :title="tLanguage('languagesTitle')"
             :value="projectLanguageDetails"
@@ -72,7 +54,9 @@
           >
             <template #actions>
               <q-toggle
-                :model-value="selectedProject.languageSettings.dynamicTranslationEnabled"
+                :model-value="
+                  selectedProject.languageSettings.dynamicTranslationEnabled
+                "
                 @update:model-value="startDynamicTranslationOverride"
               />
             </template>
@@ -99,7 +83,9 @@
           >
             <template #actions>
               <q-toggle
-                :model-value="overrideMultilingualSetting.dynamicTranslationEnabled"
+                :model-value="
+                  overrideMultilingualSetting.dynamicTranslationEnabled
+                "
                 @update:model-value="setOverrideDynamicTranslation"
               />
             </template>
@@ -139,60 +125,42 @@ import {
   newConversationControlBarTranslations,
 } from "src/components/newConversation/NewConversationControlBar.i18n";
 import ZKBottomDialogContainer from "src/components/ui-library/ZKBottomDialogContainer.vue";
-import ZKSelect from "src/components/ui-library/ZKSelect.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { type SupportedDisplayLanguageCodes } from "src/shared/languages";
+import type { GetConversationForEditResponse } from "src/shared/types/dto";
 import type {
   ConversationMultilingualSetting,
   ProjectLanguageSettings,
 } from "src/shared/types/zod";
 import { setConversationDynamicTranslation } from "src/utils/translation/conversationMultilingualSetting";
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 
 import {
   formatCompactLanguageSummary,
   formatLanguageControlLabel,
 } from "./conversationLanguageControlLabel";
 
-export interface CreateConversationProjectLanguageProject {
-  slug: string;
-  title: string;
-  directoryVisible?: boolean;
-  deletedAt?: string | null;
-  defaultLanguageCode: SupportedDisplayLanguageCodes;
-  languageSettings: ProjectLanguageSettings;
-}
-
-interface ProjectOption {
-  label: string;
-  value: string;
-}
-
-const props = withDefaults(
-  defineProps<{
-    projectList: CreateConversationProjectLanguageProject[];
-    allowProjectSelection?: boolean;
-    detectedLanguageCode?: SupportedDisplayLanguageCodes | null;
-  }>(),
-  { allowProjectSelection: true, detectedLanguageCode: undefined }
-);
-const emit = defineEmits<{
-  automaticProjectSelection: [];
+type ConversationProjectLanguageProject = NonNullable<
+  Extract<
+    GetConversationForEditResponse,
+    { success: true }
+  >["projectLanguageProject"]
+>;
+const props = defineProps<{
+  project: ConversationProjectLanguageProject | undefined;
+  detectedLanguageCode: SupportedDisplayLanguageCodes | null | undefined;
 }>();
-
-const selectedProjectSlug = defineModel<string | undefined>(
-  "selectedProjectSlug",
-  { required: true }
+const inheritProjectLanguages = defineModel<boolean>(
+  "inheritProjectLanguages",
+  {
+    required: true,
+  }
 );
-const inheritProjectLanguages = defineModel<boolean>("inheritProjectLanguages", {
-  required: true,
-});
 const overrideMultilingualSetting =
   defineModel<ConversationMultilingualSetting>("overrideMultilingualSetting", {
     required: true,
   });
 
-const noProjectValue = "__no_project__";
 const $q = useQuasar();
 const { t: tLanguage } =
   useComponentI18n<ConversationLanguageSettingDialogTranslations>(
@@ -206,56 +174,9 @@ const { t: tControl } = useComponentI18n<NewConversationControlBarTranslations>(
   newConversationControlBarTranslations
 );
 const showProjectLanguageDialog = ref(false);
-const showProjectDialog = ref(false);
 const showOverrideLanguagePicker = ref(false);
 const returnToProjectLanguageDialog = ref(false);
-const hasInitializedProjectSelection = ref(false);
-
-const actualProjects = computed(() =>
-  props.projectList.filter(
-    (project) => project.directoryVisible !== false && project.deletedAt == null
-  )
-);
-
-const projectOptions = computed<ProjectOption[]>(() => [
-  { label: tProject("noProjectLabel"), value: noProjectValue },
-  ...actualProjects.value.map((project) => ({
-    label: project.title,
-    value: project.slug,
-  })),
-]);
-
-const selectedProject = computed(() =>
-  actualProjects.value.find((project) => project.slug === selectedProjectSlug.value)
-);
-
-const projectSelectValue = computed(() => selectedProjectSlug.value ?? noProjectValue);
-
-function setProjectSelectValue(value: string | string[] | null): void {
-  const selectedValue = Array.isArray(value) ? value[0] : value;
-  if (
-    selectedValue === noProjectValue &&
-    !hasInitializedProjectSelection.value &&
-    actualProjects.value.length > 0
-  ) {
-    return;
-  }
-
-  hasInitializedProjectSelection.value = true;
-  const nextProjectSlug =
-    selectedValue === null || selectedValue === noProjectValue
-      ? undefined
-      : selectedValue;
-  selectedProjectSlug.value = nextProjectSlug;
-  inheritProjectLanguages.value = nextProjectSlug !== undefined;
-  showProjectDialog.value = false;
-}
-
-function selectProjectAutomatically(projectSlug: string | undefined): void {
-  emit("automaticProjectSelection");
-  selectedProjectSlug.value = projectSlug;
-  inheritProjectLanguages.value = projectSlug !== undefined;
-}
+const selectedProject = computed(() => props.project);
 
 const forwardIcon = computed(() =>
   $q.lang.rtl ? "mdi-chevron-left" : "mdi-chevron-right"
@@ -338,13 +259,6 @@ const languageControlSummary = computed(() => {
   return `${tProject("overrideSummaryPrefix")}: ${overrideLanguageSummary.value}`;
 });
 
-const projectControlLabel = computed(() => {
-  const project = selectedProject.value;
-  return project === undefined
-    ? tProject("noProjectLabel")
-    : project.title;
-});
-
 const languageControlLabel = computed(() =>
   formatLanguageControlLabel({
     languagesLabel: tControl("languagesLabel"),
@@ -364,46 +278,6 @@ const languagePickerMultilingualSetting = computed({
     overrideMultilingualSetting.value = nextSetting;
   },
 });
-
-watch(
-  () => props.projectList,
-  () => {
-    hasInitializedProjectSelection.value = false;
-  }
-);
-
-watch(
-  actualProjects,
-  (projects) => {
-    if (!props.allowProjectSelection) {
-      hasInitializedProjectSelection.value = true;
-      return;
-    }
-
-    if (projects.length === 0) {
-      selectedProjectSlug.value = undefined;
-      inheritProjectLanguages.value = false;
-      hasInitializedProjectSelection.value = false;
-      return;
-    }
-
-    const selectedProjectStillExists = projects.some(
-      (project) => project.slug === selectedProjectSlug.value
-    );
-    if (selectedProjectSlug.value !== undefined && !selectedProjectStillExists) {
-      const nextProjectSlug = projects[0]?.slug;
-      selectProjectAutomatically(nextProjectSlug);
-      return;
-    }
-
-    if (!hasInitializedProjectSelection.value) {
-      const nextProjectSlug = projects[0]?.slug;
-      selectProjectAutomatically(nextProjectSlug);
-      hasInitializedProjectSelection.value = true;
-    }
-  },
-  { immediate: true }
-);
 
 function openProjectLanguageSettings(): void {
   if (selectedProject.value === undefined) {
@@ -455,9 +329,8 @@ function copySelectedProjectSettingsToOverride(): void {
     return;
   }
 
-  overrideMultilingualSetting.value = projectLanguageSettingsToOverride(
-    project
-  );
+  overrideMultilingualSetting.value =
+    projectLanguageSettingsToOverride(project);
 }
 
 function formatProjectLanguageSettingsSummary({
@@ -506,7 +379,7 @@ function getInheritedProjectLanguageCodes({
 function projectLanguageSettingsToOverride({
   defaultLanguageCode,
   languageSettings,
-}: CreateConversationProjectLanguageProject): ConversationMultilingualSetting {
+}: ConversationProjectLanguageProject): ConversationMultilingualSetting {
   const detectedLanguageCode = props.detectedLanguageCode;
   const additionalLanguageCodes = getInheritedProjectLanguageCodes({
     defaultLanguageCode,
@@ -520,7 +393,6 @@ function projectLanguageSettingsToOverride({
     dynamicTranslationEnabled: languageSettings.dynamicTranslationEnabled,
   };
 }
-
 </script>
 
 <style scoped lang="scss">

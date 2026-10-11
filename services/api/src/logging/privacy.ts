@@ -103,14 +103,9 @@ export function createApiLogPrivacy(sourceRoot: URL) {
     return { options: privacy.options, registerRoutes };
 }
 
-export const apiErrorEventSchema = z.discriminatedUnion("event", [
-    z.object({
-        event: z.literal("email_deliverability_check_failed"),
-        provider: z.literal("reacher"),
-    }),
-    z.object({ event: z.literal("application_error") }),
-]);
-export type ApiErrorEvent = z.infer<typeof apiErrorEventSchema>;
+type ApiErrorEvent =
+    | { event: "email_deliverability_check_failed"; provider: "reacher" }
+    | { event: "application_error" };
 
 export function logApiError({
     logger,

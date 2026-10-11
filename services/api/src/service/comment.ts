@@ -129,6 +129,7 @@ import type { OpinionContentSource } from "./contentTranslation.js";
 import { translationSourceMatchesCurrentSource } from "@/shared-backend/translate.js";
 import * as conversationContentService from "./conversationContent.js";
 import { getProjectLanguageSettings } from "./projectAccess.js";
+import { getOpinionManagementCapabilities } from "./opinionPermissions.js";
 import {
     getConversationOverrideTranslationTargetLanguagePolicy,
     getProjectTranslationTargetLanguagePolicy,
@@ -775,6 +776,7 @@ export async function fetchOpinionsByPostId({
                     : routingAnalysisSnapshotOpinionTable.routingPriority,
             opinionContentId: opinionContentTable.id,
             contentPublicId: opinionContentTable.publicId,
+            isEdited: opinionContentTable.isEdited,
             createdAt: opinionTable.createdAt,
             updatedAt: opinionTable.updatedAt,
             comment: opinionContentTable.content,
@@ -905,6 +907,11 @@ export async function fetchOpinionsByPostId({
         DisplayedOpinionItem
     >();
     const cursorsByOpinionSlugId = new Map<string, OpinionPageCursor>();
+    const managementBySlugId = await getOpinionManagementCapabilities({
+        db,
+        opinionSlugIds: results.map((opinion) => opinion.commentSlugId),
+        userId: personalizationUserId,
+    });
     for (const opinionResponse of results) {
         let cursorForOpinion: OpinionPageCursor;
         if (filterTarget === "my_votes") {
@@ -966,6 +973,8 @@ export async function fetchOpinionsByPostId({
             username: opinionResponse.username,
             moderation: moderationProperties,
             isSeed: opinionResponse.isSeed,
+            isEdited: opinionResponse.isEdited,
+            management: managementBySlugId.get(opinionResponse.commentSlugId),
             displayContent: conversationContentService.toOpinionDisplayContent({
                 content: buildLocalizedOpinionContent({
                     source: {
@@ -1228,6 +1237,7 @@ export async function fetchOpinionsByOpinionSlugIdList({
             contentPublicId: opinionContentTable.publicId,
             commentSlugId: opinionTable.slugId,
             createdAt: opinionTable.createdAt,
+            isEdited: opinionContentTable.isEdited,
             updatedAt: opinionTable.updatedAt,
             comment: opinionContentTable.content,
             sourceLanguageCode: opinionContentTable.sourceLanguageCode,
@@ -1324,6 +1334,11 @@ export async function fetchOpinionsByOpinionSlugIdList({
         );
 
     const opinionItemList: DisplayedOpinionItem[] = [];
+    const managementBySlugId = await getOpinionManagementCapabilities({
+        db,
+        opinionSlugIds: results.map((opinion) => opinion.commentSlugId),
+        userId: displayContentViewerPreferences.viewerUserId,
+    });
     const inheritedPolicyByProjectId = new Map<
         number,
         TranslationTargetLanguagePolicy
@@ -1402,6 +1417,8 @@ export async function fetchOpinionsByOpinionSlugIdList({
             username: commentResponse.username,
             moderation: moderationProperties,
             isSeed: commentResponse.isSeed,
+            isEdited: commentResponse.isEdited,
+            management: managementBySlugId.get(commentResponse.commentSlugId),
             displayContent: conversationContentService.toOpinionDisplayContent({
                 content: buildLocalizedOpinionContent({
                     source: {
@@ -1483,6 +1500,7 @@ interface SnapshotAnalysisOpinionRow {
     createdAt: Date;
     updatedAt: Date;
     opinion: string;
+    isEdited: boolean;
     sourceLanguageCode: SupportedSpokenLanguageCodes | null;
     sourceRawLanguageCode: string | null;
     sourceLanguageProvider: LanguageDetectionProvider | null;
@@ -1614,8 +1632,9 @@ function getSnapshotAnalysisOpinionSelectFields() {
         contentPublicId: opinionContentTable.publicId,
         opinionSlugId: opinionTable.slugId,
         createdAt: opinionTable.createdAt,
-        updatedAt: opinionTable.updatedAt,
+        updatedAt: opinionContentTable.createdAt,
         opinion: opinionContentTable.content,
+        isEdited: opinionContentTable.isEdited,
         sourceLanguageCode: opinionContentTable.sourceLanguageCode,
         sourceRawLanguageCode: opinionContentTable.sourceRawLanguageCode,
         sourceLanguageProvider: opinionContentTable.sourceLanguageProvider,
@@ -2161,6 +2180,7 @@ async function buildAnalysisOpinionsByIdFromRows({
             updatedAt: row.updatedAt,
             username: row.username,
             isSeed: row.isSeed,
+            isEdited: row.isEdited,
             clustersStats: clustersStatsByOpinionId.get(row.opinionId) ?? [],
             groupAwareConsensusAgree: row.groupAwareConsensusAgree ?? 0,
             groupAwareConsensusDisagree: row.groupAwareConsensusDisagree ?? 0,
@@ -3365,8 +3385,6 @@ interface PostNewOpinionBaseProps {
     db: PostgresJsDatabase;
     tx?: PostgresJsDatabase;
     conversationSlugId: string;
-    didWrite: string;
-    userAgent: string;
     now: Date;
     isSeed: boolean;
     googleCloudCredentials?: GoogleCloudCredentials;
@@ -3378,7 +3396,7 @@ interface PostNewOpinionBaseProps {
 
 type PostNewOpinionContentProps =
     | {
-          normalizedContent: NormalizedUserRichText;
+          normalizedContent: NormalizedUserRichText & { sourceLanguageMetadata?: ContentLanguageMetadata };
           commentBody?: never;
       }
     | {
@@ -3387,6 +3405,8 @@ type PostNewOpinionContentProps =
       };
 
 interface PostNewOpinionWithConversationMetadataProps {
+    didWrite?: string;
+    userAgent?: string;
     currentDisplayLanguage?: never;
     conversationMetadata: {
         conversationId: number;
@@ -3401,6 +3421,8 @@ interface PostNewOpinionWithConversationMetadataProps {
 }
 
 interface PostNewOpinionWithParticipationCheckProps {
+    didWrite: string;
+    userAgent: string;
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
     conversationMetadata?: undefined;
 }
@@ -3412,6 +3434,14 @@ type PostNewOpinionProps = PostNewOpinionBaseProps &
         | PostNewOpinionWithParticipationCheckProps
     );
 
+export function postNewOpinion(
+    props: PostNewOpinionBaseProps & PostNewOpinionWithConversationMetadataProps & {
+        isSeed: true;
+        normalizedContent: NormalizedUserRichText & { sourceLanguageMetadata?: ContentLanguageMetadata };
+        commentBody?: never;
+    },
+): Promise<Extract<CreateCommentResponse, { success: true }>>;
+export function postNewOpinion(props: PostNewOpinionProps): Promise<CreateCommentResponse>;
 export async function postNewOpinion(
     props: PostNewOpinionProps,
 ): Promise<CreateCommentResponse> {
@@ -3419,8 +3449,6 @@ export async function postNewOpinion(
         db,
         tx,
         conversationSlugId,
-        didWrite,
-        userAgent,
         now,
         isSeed,
         googleCloudCredentials,
@@ -3482,8 +3510,8 @@ export async function postNewOpinion(
                       await checkConversationParticipation({
                           db,
                           conversationSlugId,
-                          didWrite,
-                          userAgent,
+                           didWrite: props.didWrite,
+                           userAgent: props.userAgent,
                           now,
                           currentDisplayLanguage: props.currentDisplayLanguage,
                       });
@@ -3512,7 +3540,7 @@ export async function postNewOpinion(
                 conversationId: participationContext.conversationId,
             })
         ).dynamicTranslationEnabled;
-    const languageMetadata = await resolveContentLanguageMetadata({
+    const languageMetadata = props.normalizedContent?.sourceLanguageMetadata ?? await resolveContentLanguageMetadata({
         text: contentPlainText,
         googleCloudCredentials,
         useGoogleLanguageDetection: resolvedUseGoogleLanguageDetection,
@@ -3610,9 +3638,11 @@ export async function postNewOpinion(
             username: participantUsername,
             moderation: { status: "unmoderated" },
             isSeed,
+            isEdited: false,
         };
         const displayedOpinionItem: DisplayedOpinionItem = {
             ...opinionItem,
+            management: { canEdit: true, canDelete: true },
             displayContent: {
                 sourceVersion: opinionContentPublicId,
                 status: "available",
@@ -3664,7 +3694,7 @@ export async function postNewOpinion(
             );
         }
 
-        voteBuffer.add({
+        await voteBuffer.add({
             vote: {
                 userId: participationContext.participantId,
                 opinionId,
@@ -3744,14 +3774,10 @@ export async function deleteOpinionBySlugId({
             .select({
                 opinionId: opinionTable.id,
                 conversationId: opinionTable.conversationId,
+                authorId: opinionTable.authorId,
             })
             .from(opinionTable)
-            .where(
-                and(
-                    eq(opinionTable.authorId, userId),
-                    eq(opinionTable.slugId, opinionSlugId),
-                ),
-            )
+            .where(and(eq(opinionTable.slugId, opinionSlugId)))
             .for("update")
             .limit(1);
 
@@ -3760,6 +3786,14 @@ export async function deleteOpinionBySlugId({
         }
 
         const opinion = opinionRows[0];
+        const capabilities = await getOpinionManagementCapabilities({
+            db: tx,
+            opinionSlugIds: [opinionSlugId],
+            userId,
+            lockAuthorization: true,
+        });
+        if (capabilities.get(opinionSlugId)?.canDelete !== true)
+            throw httpErrors.forbidden("Missing statement deletion permission");
         const moderationRows = await tx
             .select({ moderationId: opinionModerationTable.id })
             .from(opinionModerationTable)
@@ -3823,7 +3857,7 @@ export async function deleteOpinionBySlugId({
             .set({
                 totalOpinionCount: sql`total_opinion_count - 1`,
             })
-            .where(eq(userTable.id, userId));
+            .where(eq(userTable.id, opinion.authorId));
     });
 }
 

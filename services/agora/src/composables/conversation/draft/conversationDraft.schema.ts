@@ -6,7 +6,7 @@
  * - newConversationDrafts store (persistence validation)
  */
 
-import { MAX_LENGTH_TITLE } from "src/shared/shared";
+import { MAX_LENGTH_CONVERSATION_TITLE } from "src/shared/shared";
 import {
   zodConversationMultilingualSetting,
   zodEventSlug,
@@ -32,7 +32,7 @@ export const zodTitleValidation = z
   .string()
   .trim()
   .min(1)
-  .max(MAX_LENGTH_TITLE);
+  .max(MAX_LENGTH_CONVERSATION_TITLE);
 
 /**
  * Zod schema for Polis URL validation (runtime validation)
@@ -90,7 +90,7 @@ export const zodConversationImportSettings = z.object({
 
 const zodConversationDraftBase = z.object({
   // Basic content
-  title: z.string().max(MAX_LENGTH_TITLE),
+  title: z.string().max(MAX_LENGTH_CONVERSATION_TITLE),
   content: z.string(), // Body length validation happens in validateHtmlStringCharacterCount
   multilingualSetting: zodConversationMultilingualSetting.default({
     additionalLanguageCodes: [],

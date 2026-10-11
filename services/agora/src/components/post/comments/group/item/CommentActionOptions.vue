@@ -65,7 +65,7 @@ import ZKIcon from "src/components/ui-library/ZKIcon.vue";
 import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
 import { useShareActions } from "src/composables/share/useShareActions";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import type { OpinionItem } from "src/shared/types/zod";
+import type { DisplayedOpinionItem, OpinionItem } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import type { ContentAction } from "src/utils/actions/core/types";
 import { useContentActions } from "src/utils/actions/definitions/content-actions";
@@ -76,7 +76,7 @@ import {
   getOpinionShareUrl,
 } from "src/utils/router/conversationRouteContext";
 import { useNotify } from "src/utils/ui/notify";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -90,11 +90,14 @@ const props = defineProps<{
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
   conversationRouteContext: ConversationRouteContext;
+  editableOpinion: DisplayedOpinionItem | undefined;
+  editingOpinionSlugId: string | undefined;
 }>();
 
 const emit = defineEmits<{
   deleted: [];
   mutedComment: [];
+  editOpinion: [opinion: DisplayedOpinionItem];
 }>();
 
 const { isLoggedIn } = storeToRefs(useAuthenticationStore());
@@ -196,28 +199,50 @@ function deleteCommentCallback() {
 
 function optionButtonClicked() {
   // Show comment actions using the new system
-  commentActions.showCommentActions(
-    props.commentItem.opinionSlugId,
-    props.commentItem.username,
-    props.conversationAuthorUsername,
-    props.conversationOrganizationName,
-    {
+  commentActions.showCommentActions({
+    targetId: props.commentItem.opinionSlugId,
+    targetAuthor: props.commentItem.username,
+    conversationAuthorUsername: props.conversationAuthorUsername,
+    conversationOrganizationName: props.conversationOrganizationName,
+    callbacks: {
       deleteCommentCallback,
       reportCommentCallback: reportContentCallback,
       openUserReportsCallback,
       muteUserCallback,
       moderateCommentCallback,
       shareOpinionCallback,
-    }
-  );
+      canEdit:
+        props.editableOpinion?.management?.canEdit === true &&
+        props.editingOpinionSlugId === undefined,
+      canDelete: props.commentItem.management?.canDelete === true,
+      editCommentCallback: () => {
+        if (props.editableOpinion !== undefined)
+          emit("editOpinion", props.editableOpinion);
+      },
+    },
+  });
 }
 
 /**
  * Handle action selection
  */
 async function handleActionSelected(action: ContentAction) {
+  if (
+    action.id === "edit" &&
+    props.editableOpinion?.management?.canEdit !== true
+  ) {
+    commentActions.closeDialog();
+    return;
+  }
   await commentActions.executeAction(action);
 }
+
+watch(
+  () => props.commentItem.management,
+  () => {
+    if (commentActions.dialogState.value.isVisible) optionButtonClicked();
+  }
+);
 
 /**
  * Handle share action selection

@@ -1,6 +1,10 @@
 import { getPrimaryDatabase } from "@/shared-backend/db.js";
-import { blockedPhoneNumberTable } from "@/shared-backend/schema.js";
-import { and, eq, isNull } from "drizzle-orm";
+import {
+    blockedPhoneNumberTable,
+    phoneTable,
+    userTable,
+} from "@/shared-backend/schema.js";
+import { and, eq, isNull, isNotNull, or } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
 export async function isBlockedPhoneNumber({
@@ -12,7 +16,8 @@ export async function isBlockedPhoneNumber({
     phoneHash: string;
     pepperVersion: number;
 }): Promise<boolean> {
-    const blocked = await getPrimaryDatabase(db)
+    const writer = getPrimaryDatabase(db);
+    const blocked = await writer
         .select({ phoneHash: blockedPhoneNumberTable.phoneHash })
         .from(blockedPhoneNumberTable)
         .where(
@@ -23,5 +28,22 @@ export async function isBlockedPhoneNumber({
             ),
         )
         .limit(1);
-    return blocked.length !== 0;
+    if (blocked.length !== 0) return true;
+    const restrictedOwner = await writer
+        .select({ id: phoneTable.id })
+        .from(phoneTable)
+        .innerJoin(userTable, eq(userTable.id, phoneTable.userId))
+        .where(
+            and(
+                eq(phoneTable.phoneHash, phoneHash),
+                eq(phoneTable.pepperVersion, pepperVersion),
+                eq(phoneTable.isDeleted, false),
+                or(
+                    eq(userTable.isDeleted, true),
+                    isNotNull(userTable.authRestrictedAt),
+                ),
+            ),
+        )
+        .limit(1);
+    return restrictedOwner.length !== 0;
 }

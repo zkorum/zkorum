@@ -44,7 +44,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "Social media regulation is complex and depends on various factors and cultural contexts",
     keepBriefTitle: "Keep it brief",
-    keepBriefDescription: "Aim for 280 characters or less",
+    keepBriefDescription: "Aim for {maxLength} characters or less",
     keepBriefExampleGood: "Public transit should be free for students",
     keepBriefExampleBad:
       "I think that municipal transportation systems should consider implementing reduced-cost or zero-cost fare policies for individuals enrolled in educational programs because...",
@@ -76,7 +76,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "تنظيم وسائل التواصل الاجتماعي معقد ويعتمد على عوامل وسياقات ثقافية مختلفة",
     keepBriefTitle: "كن موجزاً",
-    keepBriefDescription: "استهدف 280 حرفاً أو أقل",
+    keepBriefDescription: "استهدف {maxLength} حرفاً أو أقل",
     keepBriefExampleGood: "يجب أن تكون وسائل النقل العام مجانية للطلاب",
     keepBriefExampleBad:
       "أعتقد أن أنظمة النقل البلدية يجب أن تنظر في تنفيذ سياسات أجرة مخفضة التكلفة أو معدومة التكلفة للأفراد المسجلين في البرامج التعليمية لأن...",
@@ -110,7 +110,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "La regulación de las redes sociales es compleja y depende de varios factores y contextos culturales",
     keepBriefTitle: "Sea breve",
-    keepBriefDescription: "Apunte a 280 caracteres o menos",
+    keepBriefDescription: "Apunte a {maxLength} caracteres o menos",
     keepBriefExampleGood:
       "El transporte público debería ser gratuito para estudiantes",
     keepBriefExampleBad:
@@ -146,7 +146,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "تنظیم رسانه‌های اجتماعی پیچیده است و به عوامل و بافت‌های فرهنگی مختلف بستگی دارد",
     keepBriefTitle: "مختصر باشید",
-    keepBriefDescription: "هدف ۲۸۰ کاراکتر یا کمتر",
+    keepBriefDescription: "هدف {maxLength} کاراکتر یا کمتر",
     keepBriefExampleGood: "حمل‌ونقل عمومی باید برای دانشجویان رایگان باشد",
     keepBriefExampleBad:
       "من فکر می‌کنم سیستم‌های حمل‌ونقل شهری باید سیاست‌های کرایه با هزینه کاهش‌یافته یا صفر را برای افراد ثبت‌نام‌شده در برنامه‌های آموزشی در نظر بگیرند زیرا...",
@@ -181,7 +181,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "La réglementation des médias sociaux est complexe et dépend de divers facteurs et contextes culturels",
     keepBriefTitle: "Soyez bref",
-    keepBriefDescription: "Visez 280 caractères ou moins",
+    keepBriefDescription: "Visez {maxLength} caractères ou moins",
     keepBriefExampleGood:
       "Les transports publics devraient être gratuits pour les étudiants",
     keepBriefExampleBad:
@@ -213,7 +213,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleGood: "社交媒体公司应该对其平台上的错误信息负责",
     easyVoteExampleBad: "社交媒体监管很复杂，取决于各种因素和文化背景",
     keepBriefTitle: "保持简短",
-    keepBriefDescription: "目标在280个字符以内",
+    keepBriefDescription: "目标在{maxLength}个字符以内",
     keepBriefExampleGood: "公共交通应该对学生免费",
     keepBriefExampleBad:
       "我认为市政交通系统应该考虑对在教育项目中注册的个人实施降低成本或零成本的票价政策，因为...",
@@ -238,7 +238,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleGood: "社群媒體公司應該對其平台上的錯誤資訊負責",
     easyVoteExampleBad: "社群媒體監管很複雜，取決於各種因素和文化背景",
     keepBriefTitle: "保持簡短",
-    keepBriefDescription: "目標在280個字元以內",
+    keepBriefDescription: "目標在{maxLength}個字元以內",
     keepBriefExampleGood: "公共交通應該對學生免費",
     keepBriefExampleBad:
       "我認為市政交通系統應該考慮對在教育項目中註冊的個人實施降低成本或零成本的票價政策，因為...",
@@ -267,7 +267,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "רגולציית מדיה חברתית מורכבת ותלויה בגורמים ובהקשרים תרבותיים שונים",
     keepBriefTitle: "היו תמציתיים",
-    keepBriefDescription: "כוונו ל-280 תווים או פחות",
+    keepBriefDescription: "כוונו ל-{maxLength} תווים או פחות",
     keepBriefExampleGood: "תחבורה ציבורית צריכה להיות חינם לסטודנטים",
     keepBriefExampleBad:
       "אני חושב שמערכות תחבורה עירוניות צריכות לשקול יישום מדיניות תעריפים מופחתים או ללא עלות עבור אנשים הרשומים בתוכניות חינוכיות כי...",
@@ -298,7 +298,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "ソーシャルメディアの規制は複雑で、さまざまな要因や文化的背景に依存します",
     keepBriefTitle: "簡潔に保つ",
-    keepBriefDescription: "280文字以内を目指す",
+    keepBriefDescription: "{maxLength}文字以内を目指す",
     keepBriefExampleGood: "公共交通機関は学生に無料であるべきです",
     keepBriefExampleBad:
       "市営交通システムは、教育プログラムに登録している個人のために、コストを削減またはゼロにする運賃政策の実施を検討すべきだと思います。なぜなら...",
@@ -331,7 +331,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "Социалдык тармактарды жөнгө салуу татаал жана ар кандай факторлорго жана маданий контексттерге көз каранды",
     keepBriefTitle: "Кыска болуңуз",
-    keepBriefDescription: "280 белгиден аз болууга аракет кылыңыз",
+    keepBriefDescription: "{maxLength} белгиден аз болууга аракет кылыңыз",
     keepBriefExampleGood:
       "Коомдук транспорт студенттер үчүн акысыз болушу керек",
     keepBriefExampleBad:
@@ -367,7 +367,7 @@ export const opinionWritingGuidelinesDialogTranslations: Record<
     easyVoteExampleBad:
       "Регулирование социальных сетей сложно и зависит от различных факторов и культурного контекста",
     keepBriefTitle: "Будьте кратким",
-    keepBriefDescription: "Стремитесь к 280 символам или менее",
+    keepBriefDescription: "Стремитесь к {maxLength} символам или менее",
     keepBriefExampleGood:
       "Общественный транспорт должен быть бесплатным для студентов",
     keepBriefExampleBad:

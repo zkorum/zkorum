@@ -20,6 +20,15 @@ function votedSession() {
 }
 
 describe("atomic Polis session state", () => {
+  it("refreshes edited content without advancing a preserved statement and binds votes to the displayed version", () => {
+    const session = usePolisVotingSession();
+    session.acceptQueryResult({ status: "ready", opinion: statement, remainingCount: 1 });
+    session.preserveCurrent();
+    const edited: DisplayedOpinionItem = { ...statement, opinion: "Edited statement", isEdited: true, displayContent: { ...statement.displayContent, sourceVersion: "edited-source" } };
+    session.acceptQueryResult({ status: "ready", opinion: edited, remainingCount: 1 });
+    expect(session.currentOpinion.value?.opinion).toBe("Edited statement");
+    expect(session.prepareVote({ opinionSlugId: statement.opinionSlugId, voteAction: "agree", previousVote: undefined })?.params.sourceVersion).toBe("edited-source");
+  });
   it("records cancellation as an undoable action without advancing away from the statement", () => {
     const session = usePolisVotingSession();
     session.acceptQueryResult({ status: "ready", opinion: statement, remainingCount: 1 });

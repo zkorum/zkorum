@@ -2,12 +2,13 @@
   <div v-if="isSeed" class="seed-identity-container">
     <UserAvatar user-identity="seed" :size="36" />
     <div class="seed-label">{{ t("seedOpinion") }}</div>
+    <span v-if="isEdited">• {{ identityT("edited") }}</span>
   </div>
   <UserIdentityCard
     v-else
     :author-verified="authorVerified"
     :created-at="createdAt"
-    :is-edited="false"
+    :is-edited="isEdited"
     :user-identity="userIdentity"
     :show-verified-text="showVerifiedText"
     :organization-image-url="organizationImageUrl"
@@ -17,6 +18,7 @@
 
 <script setup lang="ts">
 import UserAvatar from "src/components/account/UserAvatar.vue";
+import { userIdentityCardTranslations } from "src/components/features/user/UserIdentityCard.i18n";
 import UserIdentityCard from "src/components/features/user/UserIdentityCard.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 
@@ -32,11 +34,13 @@ defineProps<{
   showVerifiedText: boolean;
   organizationImageUrl: string;
   isSeed: boolean;
+  isEdited: boolean;
 }>();
 
 const { t } = useComponentI18n<OpinionIdentityCardTranslations>(
   opinionIdentityCardTranslations
 );
+const { t: identityT } = useComponentI18n(userIdentityCardTranslations);
 </script>
 
 <style lang="scss" scoped>

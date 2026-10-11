@@ -16,24 +16,30 @@
           class="sticky-below-header sticky-action-bar"
           :style="{ '--header-height': headerHeight + 'px' }"
         >
-        <PostActionBar
-          v-model="currentTab"
-          :compact-mode="false"
-          :opinion-count="displayedActionBarStats.opinionCount"
-          :participant-count="displayedActionBarStats.participantCount"
-          :vote-count="displayedActionBarStats.voteCount"
-          :total-participant-count="displayedActionBarStats.totalParticipantCount"
-          :total-vote-count="displayedActionBarStats.totalVoteCount"
-          :is-loading="isActionBarLoading"
-          :conversation-slug-id="loadedConversationData.metadata.conversationSlugId"
-          :conversation-title="displayedConversationTitle"
-          :author-username="loadedConversationData.metadata.authorUsername"
-          :on-same-tab-click="() => handleSameTabActionBarClick()"
-          :conversation-type-config="loadedConversationData.metadata"
-          :has-survey="loadedConversationData.interaction.surveyGate?.hasSurvey === true"
-          :enable-route-navigation="true"
-          :conversation-route-context="conversationRouteContext"
-        />
+          <PostActionBar
+            v-model="currentTab"
+            :compact-mode="false"
+            :opinion-count="displayedActionBarStats.opinionCount"
+            :participant-count="displayedActionBarStats.participantCount"
+            :vote-count="displayedActionBarStats.voteCount"
+            :total-participant-count="
+              displayedActionBarStats.totalParticipantCount
+            "
+            :total-vote-count="displayedActionBarStats.totalVoteCount"
+            :is-loading="isActionBarLoading"
+            :conversation-slug-id="
+              loadedConversationData.metadata.conversationSlugId
+            "
+            :conversation-title="displayedConversationTitle"
+            :author-username="loadedConversationData.metadata.authorUsername"
+            :on-same-tab-click="() => handleSameTabActionBarClick()"
+            :conversation-type-config="loadedConversationData.metadata"
+            :has-survey="
+              loadedConversationData.interaction.surveyGate?.hasSurvey === true
+            "
+            :enable-route-navigation="true"
+            :conversation-route-context="conversationRouteContext"
+          />
         </div>
 
         <!-- Child routes: only tab-specific content -->
@@ -50,21 +56,27 @@
                 :navigate-to-discover-tab="navigateToDiscoverTab"
                 :conversation-scroll-context="conversationScrollContext"
                 :conversation-route-context="conversationRouteContext"
+                :editing-opinion="undefined"
                 @update:comment-filter="
-                  (filter: CommentFilterOptions) => { commentFilter = filter }
+                  (filter: CommentFilterOptions) => {
+                    commentFilter = filter;
+                  }
                 "
               />
             </KeepAlive>
           </router-view>
         </div>
 
-        <FloatingBottomContainer
-          v-if="!isMaxDiffConversation"
-        >
+        <FloatingBottomContainer v-if="!isMaxDiffConversation">
           <CommentComposer
+            :editing-opinion="undefined"
             :post-slug-id="loadedConversationData.metadata.conversationSlugId"
-            :participation-mode="loadedConversationData.metadata.participationMode"
-            :requires-event-ticket="loadedConversationData.metadata.requiresEventTicket"
+            :participation-mode="
+              loadedConversationData.metadata.participationMode
+            "
+            :requires-event-ticket="
+              loadedConversationData.metadata.requiresEventTicket
+            "
             :survey-gate="loadedConversationData.interaction.surveyGate"
             :is-composer-disabled="isVotingDisabled"
             @submitted-comment="handleSubmittedComment"
@@ -93,8 +105,12 @@ import type { ConversationRouteContext } from "src/utils/router/conversationRout
 import { useConversationDisplayContent } from "src/utils/translation/useConversationDisplayContent";
 import { computed, ref } from "vue";
 
-const embedLayoutRef = ref<{ containerElement: HTMLElement | null } | null>(null);
-const scrollContainer = computed(() => embedLayoutRef.value?.containerElement ?? null);
+const embedLayoutRef = ref<{ containerElement: HTMLElement | null } | null>(
+  null
+);
+const scrollContainer = computed(
+  () => embedLayoutRef.value?.containerElement ?? null
+);
 const conversationRouteContext: ConversationRouteContext = { kind: "embed" };
 
 const { sentinelElement, headerHeight } = useStickyObserver();
@@ -129,10 +145,11 @@ const {
   scrollContainer,
 });
 
-const { displayedTitle: displayedConversationTitle } = useConversationDisplayContent({
-  conversationData,
-  initialDisplayContent: conversationDisplayContent,
-});
+const { displayedTitle: displayedConversationTitle } =
+  useConversationDisplayContent({
+    conversationData,
+    initialDisplayContent: conversationDisplayContent,
+  });
 
 const {
   actionBarStats,

@@ -284,14 +284,14 @@ describe("rich-text normalization", () => {
     it("reports the visible count and limit for oversized statements", () => {
         expect(
             validateRichTextInput({
-                htmlString: `<p>${"a".repeat(281)}</p>`,
+                htmlString: `<p>${"a".repeat(351)}</p>`,
                 mode: "opinion",
             }),
         ).toEqual({
             success: false,
             reason: "plain_text_too_long",
-            count: 281,
-            limit: 280,
+            count: 351,
+            limit: 350,
         });
     });
 
@@ -413,8 +413,8 @@ describe("rich-text normalization", () => {
                     reason: "plain_text_too_long",
                     target: "seed_opinion",
                     index: 2,
-                    count: 281,
-                    limit: 280,
+                    count: 351,
+                    limit: 350,
                 },
             }),
         ).toEqual({
@@ -423,8 +423,8 @@ describe("rich-text normalization", () => {
                 reason: "plain_text_too_long",
                 target: "seed_opinion",
                 index: 2,
-                count: 281,
-                limit: 280,
+                count: 351,
+                limit: 350,
             },
         });
         expect(() =>

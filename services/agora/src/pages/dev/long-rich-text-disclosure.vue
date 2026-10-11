@@ -107,6 +107,7 @@
 
           <div class="comments-section">
             <CommentItem
+              :editing-opinion-slug-id="undefined"
               v-for="statement in displayedStatements"
               :key="statement.opinionSlugId"
               :show-vote-results="true"

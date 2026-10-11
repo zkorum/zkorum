@@ -14,6 +14,13 @@ import {
 } from "vitest";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import type { PhoneAuth } from "../src/service/auth.js";
+import { resolveCountryPhoneAuth } from "../src/service/phoneCountryPolicy.js";
+import {
+    defaultPhoneAuthenticationCountries,
+    defaultPhoneRegistrationCountries,
+    type PhoneCountry,
+} from "../src/shared/types/phone-country-policy.js";
+import type { SupportedCountryCallingCode } from "../src/shared/types/zod.js";
 
 import { readDbFixtureSql } from "./dbFixture.js";
 
@@ -57,6 +64,8 @@ let currentNow = new Date("2026-01-01T00:00:00.000Z");
 
 const enabledPhoneAuth = {
     mode: "enabled",
+    minimumResponseTimeMs: 0,
+    responseJitterMs: 0,
     delivery: {
         type: "local",
         testCode: 0,
@@ -125,6 +134,14 @@ describe("OTP destination throttling", () => {
         await sqlClient.unsafe(`
             TRUNCATE TABLE
                 "realtime_event_outbox",
+                "event_ticket",
+                "user_spoken_languages",
+                "opinion",
+                "followed_topic",
+                "organization_membership",
+                "vote",
+                "conversation",
+                "project_organization_ownership",
                 "otp_email_destination_state",
                 "otp_phone_destination_state",
                 "notification",
@@ -173,6 +190,472 @@ describe("OTP destination throttling", () => {
     function getWrongCode(actualCode: number): number {
         return actualCode === 111111 ? 222222 : 111111;
     }
+
+    const countryPolicy = {
+        authenticationCountries: defaultPhoneAuthenticationCountries,
+        registrationCountries: defaultPhoneRegistrationCountries,
+    };
+
+    it.each<{
+        country: PhoneCountry;
+        phoneNumber: string;
+        unknownNumber: string;
+        countryCallingCode: SupportedCountryCallingCode;
+    }>([
+        {
+            country: "UA",
+            phoneNumber: "+380501234567",
+            unknownNumber: "+380501234568",
+            countryCallingCode: "380",
+        },
+        {
+            country: "AR",
+            phoneNumber: "+5491112345678",
+            unknownNumber: "+5491112345679",
+            countryCallingCode: "54",
+        },
+        {
+            country: "IN",
+            phoneNumber: "+919876543210",
+            unknownNumber: "+919876543211",
+            countryCallingCode: "91",
+        },
+        {
+            country: "TH",
+            phoneNumber: "+66812345678",
+            unknownNumber: "+66812345679",
+            countryCallingCode: "66",
+        },
+    ])("keeps $country login-only", async (destination) => {
+        const { country, phoneNumber, unknownNumber, countryCallingCode } =
+            destination;
+        const ownerDid = `did:test:country:${country}:owner`;
+        const { userId: owner } = await createGuestDevice(ownerDid);
+        await authService.authenticateAttempt({
+            db,
+            authenticateRequestBody: {
+                phoneNumber,
+                defaultCallingCode: countryCallingCode,
+                isRequestingNewCode: false,
+            },
+            minutesBeforeSmsCodeExpiry: 10,
+            didWrite: ownerDid,
+            userAgent: "test",
+            throttleSmsSecondsInterval: 5,
+            phoneAuth: enabledPhoneAuth,
+            peppers: [TEST_PEPPER],
+            now: currentNow,
+        });
+        const [seed] = await db
+            .select()
+            .from(authAttemptPhoneTable)
+            .where(eq(authAttemptPhoneTable.didWrite, ownerDid));
+        await db.insert(phoneTable).values({
+            userId: owner,
+            phoneHash: seed.phoneHash,
+            pepperVersion: seed.pepperVersion,
+            countryCallingCode,
+            phoneCountryCode: country,
+            lastTwoDigits: seed.lastTwoDigits,
+        });
+        setCurrentNow("2026-01-01T00:00:06.000Z");
+        const loginDid = `did:test:country:${country}:login`;
+        const unknownDid = `did:test:country:${country}:unknown`;
+        await createGuestDevice(loginDid);
+        await createGuestDevice(unknownDid);
+        const countryAuth = resolveCountryPhoneAuth({
+            phoneAuth: enabledPhoneAuth,
+            phoneNumber,
+            policy: countryPolicy,
+        });
+        const authenticate = async ({
+            number,
+            didWrite,
+        }: {
+            number: string;
+            didWrite: string;
+        }) =>
+            await authService.authenticateAttempt({
+                db,
+                authenticateRequestBody: {
+                    phoneNumber: number,
+                    defaultCallingCode: countryCallingCode,
+                    isRequestingNewCode: false,
+                },
+                minutesBeforeSmsCodeExpiry: 10,
+                didWrite,
+                userAgent: "test",
+                throttleSmsSecondsInterval: 5,
+                phoneAuth: countryAuth,
+                peppers: [TEST_PEPPER],
+                now: currentNow,
+            });
+        expect(
+            await authenticate({ number: phoneNumber, didWrite: loginDid }),
+        ).toEqual(
+            await authenticate({ number: unknownNumber, didWrite: unknownDid }),
+        );
+        const [real] = await db
+            .select()
+            .from(authAttemptPhoneTable)
+            .where(eq(authAttemptPhoneTable.didWrite, loginDid));
+        const [synthetic] = await db
+            .select()
+            .from(authAttemptPhoneTable)
+            .where(eq(authAttemptPhoneTable.didWrite, unknownDid));
+        expect(real.isSynthetic).toBe(false);
+        expect(synthetic.isSynthetic).toBe(true);
+        expect(real.type).toBe("merge");
+        const denied = await authService.verifyPhoneOtp({
+            db,
+            maxAttempt: 3,
+            didWrite: unknownDid,
+            code: synthetic.code,
+            phoneNumber: unknownNumber,
+            defaultCallingCode: countryCallingCode,
+            phoneAuth: countryAuth,
+            peppers: [TEST_PEPPER],
+            sessionLifetimeDays: 90,
+            currentDisplayLanguage: "en",
+            now: currentNow,
+        });
+        expect(denied).toEqual({ success: false, reason: "wrong_guess" });
+        const allowed = await authService.verifyPhoneOtp({
+            db,
+            maxAttempt: 3,
+            didWrite: loginDid,
+            code: real.code,
+            phoneNumber,
+            defaultCallingCode: countryCallingCode,
+            phoneAuth: countryAuth,
+            peppers: [TEST_PEPPER],
+            sessionLifetimeDays: 90,
+            currentDisplayLanguage: "en",
+            now: currentNow,
+        });
+        expect(allowed).toEqual({
+            success: true,
+            accountMerged: true,
+            userId: owner,
+        });
+        expect(await db.select().from(phoneTable)).toHaveLength(1);
+    });
+
+    it("does not let an existing email account enroll a new Ukrainian phone", async () => {
+        const didWrite = "did:test:country:email-enrollment";
+        const { userId } = await createGuestDevice(didWrite);
+        await db.insert(emailTable).values({
+            userId,
+            email: "country-policy@example.com",
+            type: "primary",
+            emailReachability: null,
+        });
+        const phoneNumber = "+380501234567";
+        const countryAuth = resolveCountryPhoneAuth({
+            phoneAuth: enabledPhoneAuth,
+            phoneNumber,
+            policy: countryPolicy,
+        });
+        expect(
+            (
+                await authService.authenticateAttempt({
+                    db,
+                    authenticateRequestBody: {
+                        phoneNumber,
+                        defaultCallingCode: "380",
+                        isRequestingNewCode: false,
+                    },
+                    minutesBeforeSmsCodeExpiry: 10,
+                    didWrite,
+                    userAgent: "test",
+                    throttleSmsSecondsInterval: 5,
+                    phoneAuth: countryAuth,
+                    peppers: [TEST_PEPPER],
+                    now: currentNow,
+                })
+            ).success,
+        ).toBe(true);
+        const [attempt] = await db
+            .select()
+            .from(authAttemptPhoneTable)
+            .where(eq(authAttemptPhoneTable.didWrite, didWrite));
+        expect(attempt.isSynthetic).toBe(true);
+        expect(
+            (
+                await authService.verifyPhoneOtp({
+                    db,
+                    maxAttempt: 3,
+                    didWrite,
+                    code: attempt.code,
+                    phoneNumber,
+                    defaultCallingCode: "380",
+                    phoneAuth: countryAuth,
+                    peppers: [TEST_PEPPER],
+                    sessionLifetimeDays: 90,
+                    currentDisplayLanguage: "en",
+                    now: currentNow,
+                })
+            ).success,
+        ).toBe(false);
+        expect(await db.select().from(phoneTable)).toHaveLength(0);
+    });
+
+    it("rechecks country restrictions when completing a previously issued registration OTP", async () => {
+        const didWrite = "did:test:country:policy-change";
+        await createGuestDevice(didWrite);
+        const phoneNumber = "+380501234567";
+        await authService.authenticateAttempt({
+            db,
+            authenticateRequestBody: {
+                phoneNumber,
+                defaultCallingCode: "380",
+                isRequestingNewCode: false,
+            },
+            minutesBeforeSmsCodeExpiry: 10,
+            didWrite,
+            userAgent: "test",
+            throttleSmsSecondsInterval: 5,
+            phoneAuth: enabledPhoneAuth,
+            peppers: [TEST_PEPPER],
+            now: currentNow,
+        });
+        const [attempt] = await db
+            .select()
+            .from(authAttemptPhoneTable)
+            .where(eq(authAttemptPhoneTable.didWrite, didWrite));
+        const countryAuth = resolveCountryPhoneAuth({
+            phoneAuth: enabledPhoneAuth,
+            phoneNumber,
+            policy: countryPolicy,
+        });
+        expect(
+            await authService.verifyPhoneOtp({
+                db,
+                maxAttempt: 3,
+                didWrite,
+                code: attempt.code,
+                phoneNumber,
+                defaultCallingCode: "380",
+                phoneAuth: countryAuth,
+                peppers: [TEST_PEPPER],
+                sessionLifetimeDays: 90,
+                currentDisplayLanguage: "en",
+                now: currentNow,
+            }),
+        ).toEqual({ success: false, reason: "phone_registration_unavailable" });
+        expect(await db.select().from(phoneTable)).toHaveLength(0);
+    });
+
+    it("rechecks the writer budget after provider approval before creating a phone credential", async () => {
+        const didWrite = "did:test:country:late-budget-pause";
+        await createGuestDevice(didWrite);
+        let registrationAllowed = true;
+        const canRegister = vi.fn(async () => registrationAllowed);
+        const phoneAuth = {
+            mode: "enabled",
+            minimumResponseTimeMs: 0,
+            responseJitterMs: 0,
+            delivery: {
+                type: "twilio",
+                serviceSid: "VA-test",
+                budget: { reserve: async () => true, canRegister },
+                client: {
+                    verify: {
+                        v2: {
+                            services: () => ({
+                                verifications: {
+                                    create: async () => ({
+                                        status: "pending",
+                                        toJSON: () => ({}),
+                                    }),
+                                },
+                                verificationChecks: {
+                                    create: async () => {
+                                        registrationAllowed = false;
+                                        return {
+                                            status: "approved",
+                                            toJSON: () => ({}),
+                                        };
+                                    },
+                                },
+                            }),
+                        },
+                    },
+                },
+            },
+        } satisfies PhoneAuth;
+        const phoneNumber = "+33612345678";
+        await authService.authenticateAttempt({
+            db,
+            authenticateRequestBody: {
+                phoneNumber,
+                defaultCallingCode: "33",
+                isRequestingNewCode: false,
+            },
+            minutesBeforeSmsCodeExpiry: 10,
+            didWrite,
+            userAgent: "test",
+            throttleSmsSecondsInterval: 5,
+            phoneAuth,
+            peppers: [TEST_PEPPER],
+            now: currentNow,
+        });
+        expect(
+            await authService.verifyPhoneOtp({
+                db,
+                maxAttempt: 3,
+                didWrite,
+                code: 123456,
+                phoneNumber,
+                defaultCallingCode: "33",
+                phoneAuth,
+                peppers: [TEST_PEPPER],
+                sessionLifetimeDays: 90,
+                currentDisplayLanguage: "en",
+                now: currentNow,
+            }),
+        ).toEqual({ success: false, reason: "phone_registration_unavailable" });
+        expect(canRegister).toHaveBeenCalledOnce();
+        expect(await db.select().from(phoneTable)).toHaveLength(0);
+    });
+
+    it.each([
+        "pending",
+        "canceled",
+        "deleted",
+        "failed",
+        "expired",
+        "max_attempts_reached",
+    ])(
+        "does not distinguish real and synthetic challenges using provider status %s",
+        async (status) => {
+            const knownNumber = "+14155552678";
+            const unknownNumber = "+14155552679";
+            const knownDid = "did:test:status:known";
+            const unknownDid = "did:test:status:unknown";
+            const owner = await createGuestDevice("did:test:status:owner");
+            await createGuestDevice(knownDid);
+            await createGuestDevice(unknownDid);
+            const phoneAuth = {
+                mode: "login_only",
+                minimumResponseTimeMs: 0,
+                responseJitterMs: 0,
+                delivery: {
+                    type: "twilio",
+                    serviceSid: "VA-test",
+                    budget: {
+                        reserve: async () => true,
+                        canRegister: async () => true,
+                    },
+                    client: {
+                        verify: {
+                            v2: {
+                                services: () => ({
+                                    verifications: {
+                                        create: async () => ({
+                                            status: "pending",
+                                            toJSON: () => ({}),
+                                        }),
+                                    },
+                                    verificationChecks: {
+                                        create: async () => ({
+                                            status,
+                                            toJSON: () => ({}),
+                                        }),
+                                    },
+                                }),
+                            },
+                        },
+                    },
+                },
+            } satisfies PhoneAuth;
+            const authenticate = async ({
+                phoneNumber,
+                didWrite,
+            }: {
+                phoneNumber: string;
+                didWrite: string;
+            }) =>
+                await authService.authenticateAttempt({
+                    db,
+                    authenticateRequestBody: {
+                        phoneNumber,
+                        defaultCallingCode: "1",
+                        isRequestingNewCode: false,
+                    },
+                    minutesBeforeSmsCodeExpiry: 10,
+                    didWrite,
+                    userAgent: "test",
+                    throttleSmsSecondsInterval: 5,
+                    phoneAuth,
+                    peppers: [TEST_PEPPER],
+                    now: currentNow,
+                });
+            await authenticate({
+                phoneNumber: knownNumber,
+                didWrite: "did:test:status:owner",
+            });
+            const [seed] = await db
+                .select()
+                .from(authAttemptPhoneTable)
+                .where(
+                    eq(authAttemptPhoneTable.didWrite, "did:test:status:owner"),
+                );
+            await db.insert(phoneTable).values({
+                userId: owner.userId,
+                phoneHash: seed.phoneHash,
+                pepperVersion: seed.pepperVersion,
+                countryCallingCode: "1",
+                phoneCountryCode: "US",
+                lastTwoDigits: 78,
+            });
+            setCurrentNow("2026-01-01T00:00:06.000Z");
+            expect(
+                await authenticate({
+                    phoneNumber: knownNumber,
+                    didWrite: knownDid,
+                }),
+            ).toEqual(
+                await authenticate({
+                    phoneNumber: unknownNumber,
+                    didWrite: unknownDid,
+                }),
+            );
+            const verify = async ({
+                phoneNumber,
+                didWrite,
+            }: {
+                phoneNumber: string;
+                didWrite: string;
+            }) =>
+                await authService.verifyPhoneOtp({
+                    db,
+                    maxAttempt: 3,
+                    didWrite,
+                    code: 123456,
+                    phoneNumber,
+                    defaultCallingCode: "1",
+                    phoneAuth,
+                    peppers: [TEST_PEPPER],
+                    sessionLifetimeDays: 90,
+                    currentDisplayLanguage: "en",
+                    now: currentNow,
+                });
+            for (let guess = 0; guess < 4; guess += 1) {
+                expect(
+                    await verify({
+                        phoneNumber: knownNumber,
+                        didWrite: knownDid,
+                    }),
+                ).toEqual(
+                    await verify({
+                        phoneNumber: unknownNumber,
+                        didWrite: unknownDid,
+                    }),
+                );
+            }
+        },
+    );
 
     function createAxiosReacherSpy() {
         const axiosReacher = axios.create();
@@ -578,7 +1061,7 @@ describe("OTP destination throttling", () => {
         });
     }, 30000);
 
-    it("increments Twilio exhaustion backoff once per challenge", async () => {
+    it("conceals Twilio exhaustion and atomically applies the same API guess limit", async () => {
         const didWrite = "did:test:phone:twilio-exhausted";
         const phoneNumber = "+14155552680";
         let verificationCheckCount = 0;
@@ -588,10 +1071,15 @@ describe("OTP destination throttling", () => {
         });
         const twilioPhoneAuth = {
             mode: "enabled",
+            minimumResponseTimeMs: 0,
+            responseJitterMs: 0,
             delivery: {
                 type: "twilio",
                 serviceSid: "VA-test",
-                budget: { reserve: async () => true },
+                budget: {
+                    reserve: async () => true,
+                    canRegister: async () => true,
+                },
                 client: {
                     verify: {
                         v2: {
@@ -661,7 +1149,10 @@ describe("OTP destination throttling", () => {
         if (responses[0].success) {
             throw new Error("Expected exhausted Twilio challenge");
         }
-        expect(responses[0].reason).toBe("too_many_wrong_guess");
+        expect(responses[0].reason).toBe("wrong_guess");
+
+        const lastGuess = await verify();
+        expect(lastGuess.success).toBe(false);
 
         const [destinationState] = await db
             .select()
@@ -673,6 +1164,7 @@ describe("OTP destination throttling", () => {
             .from(authAttemptPhoneTable)
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
         expect(attempt.codeExpiry.getTime()).toBe(currentNow.getTime());
+        expect(attempt.guessAttemptAmount).toBe(3);
     }, 30000);
 
     it("atomically counts concurrent wrong email guesses", async () => {
@@ -834,6 +1326,8 @@ describe("OTP destination throttling", () => {
         const canonicalPhoneNumber = "+14155552678";
         const phoneAuth = {
             mode: "enabled",
+            minimumResponseTimeMs: 0,
+            responseJitterMs: 0,
             delivery: {
                 type: "local",
                 testCode: 654321,
@@ -1591,16 +2085,123 @@ describe("OTP destination throttling", () => {
         ).toHaveLength(1);
     }, 30000);
 
+    it("conceals account-only restrictions and does not send SMS to the restricted owner", async () => {
+        const phoneNumber = "+14155552680";
+        const seedDid = "did:test:restricted:owner";
+        const owner = await createGuestDevice(seedDid);
+        await authService.authenticateAttempt({
+            db,
+            authenticateRequestBody: {
+                phoneNumber,
+                defaultCallingCode: "1",
+                isRequestingNewCode: false,
+            },
+            minutesBeforeSmsCodeExpiry: 10,
+            didWrite: seedDid,
+            userAgent: "test",
+            throttleSmsSecondsInterval: 5,
+            phoneAuth: enabledPhoneAuth,
+            peppers: [TEST_PEPPER],
+            now: currentNow,
+        });
+        const [seed] = await db
+            .select()
+            .from(authAttemptPhoneTable)
+            .where(eq(authAttemptPhoneTable.didWrite, seedDid));
+        await db.insert(phoneTable).values({
+            userId: owner.userId,
+            phoneHash: seed.phoneHash,
+            pepperVersion: seed.pepperVersion,
+            countryCallingCode: "1",
+            phoneCountryCode: "US",
+            lastTwoDigits: 80,
+        });
+        await db
+            .update(userTable)
+            .set({
+                authRestrictedAt: currentNow,
+                authRestrictionReason: "operator restriction",
+            })
+            .where(eq(userTable.id, owner.userId));
+        setCurrentNow("2026-01-01T00:00:06.000Z");
+        const didWrite = "did:test:restricted:caller";
+        await createGuestDevice(didWrite);
+        const reserve = vi.fn(async () => true);
+        const create = vi.fn(async () => ({
+            status: "pending",
+            toJSON: () => ({}),
+        }));
+        const phoneAuth = {
+            mode: "enabled",
+            minimumResponseTimeMs: 0,
+            responseJitterMs: 0,
+            delivery: {
+                type: "twilio",
+                serviceSid: "VA-test",
+                budget: { reserve, canRegister: async () => true },
+                client: {
+                    verify: {
+                        v2: {
+                            services: () => ({
+                                verifications: { create },
+                                verificationChecks: {
+                                    create: async () => ({
+                                        status: "pending",
+                                        toJSON: () => ({}),
+                                    }),
+                                },
+                            }),
+                        },
+                    },
+                },
+            },
+        } satisfies PhoneAuth;
+        expect(
+            (
+                await authService.authenticateAttempt({
+                    db,
+                    authenticateRequestBody: {
+                        phoneNumber,
+                        defaultCallingCode: "1",
+                        isRequestingNewCode: false,
+                    },
+                    minutesBeforeSmsCodeExpiry: 10,
+                    didWrite,
+                    userAgent: "test",
+                    throttleSmsSecondsInterval: 5,
+                    phoneAuth,
+                    peppers: [TEST_PEPPER],
+                    now: currentNow,
+                })
+            ).success,
+        ).toBe(true);
+        expect(
+            (
+                await db
+                    .select()
+                    .from(authAttemptPhoneTable)
+                    .where(eq(authAttemptPhoneTable.didWrite, didWrite))
+            )[0]?.isSynthetic,
+        ).toBe(true);
+        expect(reserve).not.toHaveBeenCalled();
+        expect(create).not.toHaveBeenCalled();
+    });
+
     it("refuses a real Twilio send when the shared SMS budget denies admission", async () => {
         const didWrite = "did:test:phone:budget-exhausted";
         await createGuestDevice(didWrite);
         const reserve = vi.fn(async () => false);
-        const create = vi.fn(async () => ({ status: "pending", toJSON: () => ({}) }));
+        const create = vi.fn(async () => ({
+            status: "pending",
+            toJSON: () => ({}),
+        }));
         const phoneAuth = {
             mode: "enabled",
+            minimumResponseTimeMs: 0,
+            responseJitterMs: 0,
             delivery: {
                 type: "twilio",
-                budget: { reserve },
+                budget: { reserve, canRegister: async () => true },
                 serviceSid: "VA-test",
                 client: {
                     verify: {
@@ -1608,7 +2209,10 @@ describe("OTP destination throttling", () => {
                             services: () => ({
                                 verifications: { create },
                                 verificationChecks: {
-                                    create: async () => ({ status: "pending", toJSON: () => ({}) }),
+                                    create: async () => ({
+                                        status: "pending",
+                                        toJSON: () => ({}),
+                                    }),
                                 },
                             }),
                         },
@@ -1632,10 +2236,15 @@ describe("OTP destination throttling", () => {
             peppers: [TEST_PEPPER],
             now: currentNow,
         });
-        expect(result).toEqual({ success: false, reason: "phone_auth_unavailable" });
-        expect(reserve).toHaveBeenCalledWith({ isRegistration: true });
+        expect(result.success).toBe(true);
+        await vi.waitFor(() =>
+            expect(reserve).toHaveBeenCalledWith({
+                isRegistration: true,
+                country: "US",
+            }),
+        );
         expect(create).not.toHaveBeenCalled();
-        expect(await db.select().from(authAttemptPhoneTable)).toHaveLength(0);
+        expect(await db.select().from(authAttemptPhoneTable)).toHaveLength(1);
     }, 30000);
 
     it("refuses to accept an OTP after its number has been blocked", async () => {
@@ -1992,7 +2601,10 @@ describe("OTP destination throttling", () => {
             delivery: {
                 type: "twilio",
                 serviceSid: "VA-test",
-                budget: { reserve: async () => true },
+                budget: {
+                    reserve: async () => true,
+                    canRegister: async () => true,
+                },
                 client: {
                     verify: {
                         v2: {

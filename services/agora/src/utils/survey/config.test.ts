@@ -1,7 +1,12 @@
 import type { SurveyConfig } from "src/shared/types/zod";
 import { describe, expect, it } from "vitest";
 
-import { buildSurveyConfigForSave } from "./config";
+import {
+  areSurveyConfigsEqual,
+  buildSurveyConfigForSave,
+  cloneSurveyConfig,
+  summarizeSurveyConfigChanges,
+} from "./config";
 
 function createChoiceSurveyConfig(): SurveyConfig {
   return {
@@ -29,6 +34,71 @@ function createChoiceSurveyConfig(): SurveyConfig {
 }
 
 describe("buildSurveyConfigForSave", () => {
+  it.each([1, 3])(
+    "saves optional-text edits to an existing %i-question survey without changing identities or selection limits",
+    (questionCount) => {
+      const original = createChoiceSurveyConfig();
+      const [template] = original.questions;
+      if (template.questionType !== "choice")
+        throw new Error("Expected fixture choice question");
+      original.questions = Array.from(
+        { length: questionCount },
+        (_, index) => ({
+          ...template,
+          questionSlugId: `question${index}`,
+          displayOrder: index,
+          constraints: {
+            type: "choice",
+            minSelections: 1,
+            maxSelections: index === 0 ? 1 : 2,
+          },
+          options: template.options.map((option, optionIndex) => ({
+            ...option,
+            optionSlugId: `option${index}${optionIndex}`,
+          })),
+        })
+      );
+      const edited = cloneSurveyConfig({ surveyConfig: original });
+      if (edited === null) throw new Error("Expected fixture config");
+      for (const question of edited.questions) {
+        if (question.questionType === "choice")
+          question.options[1].allowsText = true;
+      }
+
+      expect(areSurveyConfigsEqual({ left: original, right: edited })).toBe(
+        false
+      );
+      expect(
+        summarizeSurveyConfigChanges({
+          previousSurveyConfig: original,
+          nextSurveyConfig: edited,
+        })
+      ).toMatchObject({
+        addedQuestionCount: 0,
+        removedQuestionCount: 0,
+        addedOptionCount: 0,
+        removedOptionCount: 0,
+        updatedOptionCount: questionCount,
+      });
+      const result = buildSurveyConfigForSave({ surveyConfig: edited });
+      expect(result).toMatchObject({ success: true, surveyConfig: edited });
+      expect(edited.questions.map((question) => question.constraints)).toEqual(
+        original.questions.map((question) => question.constraints)
+      );
+    }
+  );
+
+  it("treats legacy options without the setting as equivalent to disabled text fields", () => {
+    const original = createChoiceSurveyConfig();
+    const edited = cloneSurveyConfig({ surveyConfig: original });
+    if (edited === null) throw new Error("Expected fixture config");
+    for (const question of edited.questions) {
+      if (question.questionType === "choice") {
+        for (const option of question.options) option.allowsText = false;
+      }
+    }
+    expect(areSurveyConfigsEqual({ left: original, right: edited })).toBe(true);
+  });
   it("rejects an added empty question instead of dropping the survey", () => {
     const surveyConfig = createChoiceSurveyConfig();
     surveyConfig.questions[0].questionText = "";

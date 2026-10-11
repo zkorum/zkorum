@@ -1019,6 +1019,12 @@ async function fetchRankingItemSource({
                                         rankingConversationStatsSnapshotTable.conversationId,
                                         conversationTable.id,
                                     ),
+                                    isNull(
+                                        rankingConversationStatsItemTable.deletedAt,
+                                    ),
+                                    isNull(
+                                        rankingConversationStatsSnapshotTable.deletedAt,
+                                    ),
                                     or(
                                         exists(
                                             db
@@ -1039,6 +1045,7 @@ async function fetchRankingItemSource({
                                             SELECT baseline.id
                                             FROM ranking_conversation_stats_snapshot baseline
                                             WHERE baseline.conversation_id = ${conversationTable.id}
+                                              AND baseline.deleted_at IS NULL
                                             ORDER BY baseline.created_at, baseline.id
                                             LIMIT 1
                                         )`,
@@ -1714,6 +1721,30 @@ export async function scheduleEagerContentTranslationForConversation({
     now,
     log,
 }: ScheduleEagerContentTranslationParams): Promise<void> {
+    const workIds = await createEagerContentTranslationWorkForConversation({
+        db,
+        conversationSlugId,
+        now,
+        log,
+    });
+    await enqueueEagerContentTranslationWork({
+        valkey,
+        queueScript,
+        workIds,
+        now,
+        log,
+    });
+}
+
+export async function createEagerContentTranslationWorkForConversation({
+    db,
+    conversationSlugId,
+    now,
+    log,
+}: Pick<
+    ScheduleEagerContentTranslationParams,
+    "db" | "conversationSlugId" | "now" | "log"
+>): Promise<number[]> {
     const conversationSource = await fetchConversationSource({
         db,
         conversationSlugId,
@@ -1723,7 +1754,7 @@ export async function scheduleEagerContentTranslationForConversation({
             { conversationSlugId },
             "[ContentTranslation] Skipped eager scheduling: conversation source not found",
         );
-        return;
+        return [];
     }
     const targetLanguagePolicy =
         await resolveConversationTranslationTargetLanguagePolicy({
@@ -1741,24 +1772,16 @@ export async function scheduleEagerContentTranslationForConversation({
         conversationSlugId,
     });
 
-    const workIds =
-        await createEagerContentTranslationWorkForConversationSources({
-            db,
-            conversationSource,
-            targetLanguagePolicy,
-            surveySources,
-            seedOpinionSources,
-            rankingItemSources: [],
-            now,
-            log,
-            checkExistingTranslations: true,
-        });
-    await enqueueEagerContentTranslationWork({
-        valkey,
-        queueScript,
-        workIds,
+    return await createEagerContentTranslationWorkForConversationSources({
+        db,
+        conversationSource,
+        targetLanguagePolicy,
+        surveySources,
+        seedOpinionSources,
+        rankingItemSources: [],
         now,
         log,
+        checkExistingTranslations: true,
     });
 }
 

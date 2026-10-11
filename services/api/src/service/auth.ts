@@ -70,10 +70,9 @@ import { randomInt } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";
 import { isBlockedPhoneNumber } from "./blockedPhoneNumber.js";
 import type { PhoneSmsBudget } from "./phoneSmsBudget.js";
+import { logApiError } from "@/logging/privacy.js";
 
 const OTP_DESTINATION_STREAK_RESET_MS = 24 * 60 * 60 * 1000;
-const OTP_MIN_BACKOFF_SECONDS = 30;
-const OTP_MAX_BACKOFF_SECONDS = 60 * 60;
 
 interface OtpDestinationStateRecord {
     lastOtpSentAt: Date;
@@ -149,26 +148,6 @@ function getOtpDestinationThrottleUntil({
         return null;
     }
     return throttleUntil;
-}
-
-function getOtpDestinationBackoffUntil({
-    now,
-    consecutiveFailedVerifyAttempts,
-    throttleSecondsInterval,
-}: {
-    now: Date;
-    consecutiveFailedVerifyAttempts: number;
-    throttleSecondsInterval: number;
-}): Date {
-    const delaySeconds = Math.min(
-        OTP_MAX_BACKOFF_SECONDS,
-        Math.max(throttleSecondsInterval, OTP_MIN_BACKOFF_SECONDS) *
-            2 ** Math.max(consecutiveFailedVerifyAttempts - 1, 0),
-    );
-    return buildNextCodeSoonestTime({
-        now,
-        throttleSecondsInterval: delaySeconds,
-    });
 }
 
 function buildPhoneAuthenticateThrottledResponse(
@@ -255,6 +234,7 @@ async function finalizeVerifiedPhoneOtp({
     now,
     maxAttempt,
     phoneAuthMode,
+    delivery,
     sessionLifetimeDays,
     currentDisplayLanguage,
 }: {
@@ -275,10 +255,19 @@ async function finalizeVerifiedPhoneOtp({
     now: Date;
     maxAttempt: number;
     phoneAuthMode: ActivePhoneAuthMode;
+    delivery: PhoneOtpDelivery;
     sessionLifetimeDays: number;
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
 }): Promise<VerifyPhoneOtp200> {
     return await db.transaction(async (tx) => {
+        if (
+            resultOtp.authType === "register" &&
+            (phoneAuthMode !== "enabled" ||
+                (delivery.type === "twilio" &&
+                    !(await delivery.budget.canRegister({ db: tx }))))
+        ) {
+            return { success: false, reason: "phone_registration_unavailable" };
+        }
         const claimedChallenge = await tx
             .update(authAttemptPhoneTable)
             .set({ codeExpiry: now, updatedAt: now })
@@ -559,22 +548,21 @@ export type PhoneOtpDelivery = LocalPhoneOtpDelivery | TwilioPhoneOtpDelivery;
 
 export type PhoneAuth =
     | { mode: "disabled" }
-    | { mode: "enabled"; delivery: PhoneOtpDelivery }
     | {
-          mode: "login_only";
+          mode: ActivePhoneAuthMode;
           delivery: PhoneOtpDelivery;
           minimumResponseTimeMs: number;
           responseJitterMs: number;
       };
 
-async function applyLoginOnlyTimingProtection({
+async function applyPhoneAuthTimingProtection({
     phoneAuth,
     startedAt,
 }: {
     phoneAuth: PhoneAuth;
     startedAt: number;
 }): Promise<void> {
-    if (phoneAuth.mode !== "login_only") {
+    if (phoneAuth.mode === "disabled") {
         return;
     }
     const jitter =
@@ -1087,7 +1075,7 @@ export async function verifyPhoneOtp(
     try {
         return await verifyPhoneOtpWithoutTimingProtection(props);
     } finally {
-        await applyLoginOnlyTimingProtection({
+        await applyPhoneAuthTimingProtection({
             phoneAuth: props.phoneAuth,
             startedAt,
         });
@@ -1158,7 +1146,13 @@ async function verifyPhoneOtpWithoutTimingProtection({
             pepperVersion: resultOtp[0].pepperVersion,
         })
     ) {
-        return { success: false, reason: "wrong_guess" };
+        return await handleWrongPhoneOtpGuess({
+            db: primaryDb,
+            didWrite,
+            challenge: resultOtp[0],
+            maxAttempt,
+            now,
+        });
     }
 
     if (resultOtp[0].isSynthetic) {
@@ -1190,13 +1184,12 @@ async function verifyPhoneOtpWithoutTimingProtection({
         try {
             verificationCheck = await verificationCheckPromise;
         } catch (error) {
-            if (phoneAuth.mode === "enabled") {
-                throw error;
-            }
-            log.error(
+            logApiError({
+                logger: log,
+                level: "error",
+                event: { event: "application_error" },
                 error,
-                "[Phone] Concealed login-only Twilio verification failure",
-            );
+            });
             return await handleWrongPhoneOtpGuess({
                 db: primaryDb,
                 didWrite,
@@ -1207,6 +1200,13 @@ async function verifyPhoneOtpWithoutTimingProtection({
         }
         switch (verificationCheck.status) {
             case "pending":
+            case "canceled":
+            case "max_attempts_reached":
+            case "deleted":
+            case "failed":
+            case "expired":
+                // Use the API's own attempt/expiry state for real and synthetic
+                // challenges; provider-specific failures must not identify accounts.
                 return await handleWrongPhoneOtpGuess({
                     db: primaryDb,
                     didWrite,
@@ -1214,59 +1214,6 @@ async function verifyPhoneOtpWithoutTimingProtection({
                     maxAttempt,
                     now,
                 });
-            case "canceled":
-                if (phoneAuth.mode === "login_only") {
-                    return await handleWrongPhoneOtpGuess({
-                        db: primaryDb,
-                        didWrite,
-                        challenge: resultOtp[0],
-                        maxAttempt,
-                        now,
-                    });
-                }
-                throw httpErrors.badRequest(
-                    "This phone number verification was canceled",
-                );
-            case "max_attempts_reached":
-                return buildTooManyWrongGuessResponse(
-                    await claimTwilioExhaustedPhoneOtpChallenge({
-                        db: primaryDb,
-                        didWrite,
-                        challenge: resultOtp[0],
-                        now,
-                        throttleSecondsInterval:
-                            config.THROTTLE_SMS_SECONDS_INTERVAL,
-                    }),
-                );
-            case "deleted":
-                if (phoneAuth.mode === "login_only") {
-                    return await handleWrongPhoneOtpGuess({
-                        db: primaryDb,
-                        didWrite,
-                        challenge: resultOtp[0],
-                        maxAttempt,
-                        now,
-                    });
-                }
-                throw httpErrors.badRequest(
-                    "This phone number verification was deleted",
-                );
-            case "failed":
-                log.error(`Unexpected "failed" status received by Twilio`);
-                if (phoneAuth.mode === "login_only") {
-                    return await handleWrongPhoneOtpGuess({
-                        db: primaryDb,
-                        didWrite,
-                        challenge: resultOtp[0],
-                        maxAttempt,
-                        now,
-                    });
-                }
-                throw httpErrors.internalServerError(
-                    "Unexpected error from phone number verification",
-                );
-            case "expired":
-                return { success: false, reason: "expired_code" };
             case "approved":
                 return await finalizeVerifiedPhoneOtp({
                     db: primaryDb,
@@ -1280,18 +1227,26 @@ async function verifyPhoneOtpWithoutTimingProtection({
                     now,
                     maxAttempt,
                     phoneAuthMode: phoneAuth.mode,
+                    delivery: phoneAuth.delivery,
                     sessionLifetimeDays,
                     currentDisplayLanguage,
                 });
             default:
-                log.error(
-                    `Unexpected status received by Twilio: ${JSON.stringify(
-                        verificationCheck.toJSON(),
-                    )}`,
-                );
-                throw httpErrors.internalServerError(
-                    "Unexpected error from phone number verification",
-                );
+                logApiError({
+                    logger: log,
+                    level: "warn",
+                    event: { event: "application_error" },
+                    error: new Error(
+                        "Unexpected phone verification provider status",
+                    ),
+                });
+                return await handleWrongPhoneOtpGuess({
+                    db: primaryDb,
+                    didWrite,
+                    challenge: resultOtp[0],
+                    maxAttempt,
+                    now,
+                });
         }
     } else if (resultOtp[0].codeExpiry <= now) {
         return { success: false, reason: "expired_code" };
@@ -1306,6 +1261,7 @@ async function verifyPhoneOtpWithoutTimingProtection({
             now,
             maxAttempt,
             phoneAuthMode: phoneAuth.mode,
+            delivery: phoneAuth.delivery,
             sessionLifetimeDays,
             currentDisplayLanguage,
         });
@@ -1984,7 +1940,7 @@ export async function authenticateAttempt(
     try {
         return await authenticateAttemptWithoutTimingProtection(props);
     } finally {
-        await applyLoginOnlyTimingProtection({
+        await applyPhoneAuthTimingProtection({
             phoneAuth: props.phoneAuth,
             startedAt,
         });
@@ -2148,7 +2104,9 @@ async function sendOtpPhoneNumber({
     if (await isBlockedPhoneNumber({ db, phoneHash, pepperVersion })) {
         return false;
     }
-    if (!(await delivery.budget.reserve({ isRegistration }))) return false;
+    const country = parsePhoneNumberFromString(phoneNumber)?.country;
+    if (!(await delivery.budget.reserve({ isRegistration, country })))
+        return false;
     const verification = await delivery.client.verify.v2
         .services(delivery.serviceSid)
         .verifications.create({
@@ -2156,11 +2114,6 @@ async function sendOtpPhoneNumber({
             to: phoneNumber,
         });
     if (verification.status !== "pending") {
-        log.error(
-            `Error while sending SMS with Twilio: ${JSON.stringify(
-                verification.toJSON(),
-            )} `,
-        );
         throw httpErrors.internalServerError("Error while sending SMS");
     }
     return true;
@@ -2172,10 +2125,12 @@ async function sendOtpPhoneNumberWithoutDisclosingFailure(
     try {
         await sendOtpPhoneNumber(props);
     } catch (error) {
-        log.error(
+        logApiError({
+            logger: log,
+            level: "error",
+            event: { event: "application_error" },
             error,
-            "[Phone] Login-only OTP delivery failed after the authentication response was detached",
-        );
+        });
     }
 }
 
@@ -2328,46 +2283,6 @@ async function getEmailOtpDestinationState({
         .where(eq(otpEmailDestinationStateTable.email, canonicalEmail))
         .limit(1);
     return result[0] ?? null;
-}
-
-async function persistPhoneOtpDestinationState({
-    db,
-    phoneHash,
-    lastOtpSentAt,
-    consecutiveFailedVerifyAttempts,
-    wrongGuessAttemptAmount,
-    backoffUntil,
-    now,
-}: {
-    db: PostgresDatabase;
-    phoneHash: string;
-    lastOtpSentAt: Date;
-    consecutiveFailedVerifyAttempts: number;
-    wrongGuessAttemptAmount: number;
-    backoffUntil: Date | null;
-    now: Date;
-}) {
-    await db
-        .insert(otpPhoneDestinationStateTable)
-        .values({
-            phoneHash,
-            lastOtpSentAt,
-            consecutiveFailedVerifyAttempts,
-            wrongGuessAttemptAmount,
-            backoffUntil,
-            createdAt: now,
-            updatedAt: now,
-        })
-        .onConflictDoUpdate({
-            target: otpPhoneDestinationStateTable.phoneHash,
-            set: {
-                lastOtpSentAt,
-                consecutiveFailedVerifyAttempts,
-                wrongGuessAttemptAmount,
-                backoffUntil,
-                updatedAt: now,
-            },
-        });
 }
 
 async function reservePhoneOtpSend({
@@ -2540,108 +2455,6 @@ async function reserveEmailOtpSend({
     );
 }
 
-async function incrementPhoneOtpDestinationBackoff({
-    db,
-    phoneHash,
-    now,
-    throttleSecondsInterval,
-}: {
-    db: PostgresDatabase;
-    phoneHash: string;
-    now: Date;
-    throttleSecondsInterval: number;
-}): Promise<Date> {
-    const rows = await db
-        .select({
-            lastOtpSentAt: otpPhoneDestinationStateTable.lastOtpSentAt,
-            consecutiveFailedVerifyAttempts:
-                otpPhoneDestinationStateTable.consecutiveFailedVerifyAttempts,
-            backoffUntil: otpPhoneDestinationStateTable.backoffUntil,
-            updatedAt: otpPhoneDestinationStateTable.updatedAt,
-        })
-        .from(otpPhoneDestinationStateTable)
-        .where(eq(otpPhoneDestinationStateTable.phoneHash, phoneHash))
-        .for("update");
-    const state = getEffectiveOtpDestinationState({
-        state: rows[0] ?? null,
-        now,
-    });
-    const consecutiveFailedVerifyAttempts =
-        (state?.consecutiveFailedVerifyAttempts ?? 0) + 1;
-    const backoffUntil = getOtpDestinationBackoffUntil({
-        now,
-        consecutiveFailedVerifyAttempts,
-        throttleSecondsInterval,
-    });
-    await persistPhoneOtpDestinationState({
-        db,
-        phoneHash,
-        lastOtpSentAt: state?.lastOtpSentAt ?? now,
-        consecutiveFailedVerifyAttempts,
-        wrongGuessAttemptAmount: 0,
-        backoffUntil,
-        now,
-    });
-    return backoffUntil;
-}
-
-async function claimTwilioExhaustedPhoneOtpChallenge({
-    db,
-    didWrite,
-    challenge,
-    now,
-    throttleSecondsInterval,
-}: {
-    db: PostgresDatabase;
-    didWrite: string;
-    challenge: {
-        phoneHash: string;
-        code: number;
-        codeExpiry: Date;
-    };
-    now: Date;
-    throttleSecondsInterval: number;
-}): Promise<Date> {
-    return await db.transaction(async (tx) => {
-        const claimed = await tx
-            .update(authAttemptPhoneTable)
-            .set({ codeExpiry: now, updatedAt: now })
-            .where(
-                and(
-                    eq(authAttemptPhoneTable.didWrite, didWrite),
-                    eq(authAttemptPhoneTable.phoneHash, challenge.phoneHash),
-                    eq(authAttemptPhoneTable.code, challenge.code),
-                    eq(authAttemptPhoneTable.codeExpiry, challenge.codeExpiry),
-                    gt(authAttemptPhoneTable.codeExpiry, now),
-                ),
-            )
-            .returning({ didWrite: authAttemptPhoneTable.didWrite });
-        if (claimed.length > 0) {
-            return await incrementPhoneOtpDestinationBackoff({
-                db: tx,
-                phoneHash: challenge.phoneHash,
-                now,
-                throttleSecondsInterval,
-            });
-        }
-
-        const state = getEffectiveOtpDestinationState({
-            state: await getPhoneOtpDestinationState({
-                db: tx,
-                phoneHash: challenge.phoneHash,
-            }),
-            now,
-        });
-        return (
-            getOtpDestinationThrottleUntil({
-                state,
-                now,
-                throttleSecondsInterval,
-            }) ?? buildNextCodeSoonestTime({ now, throttleSecondsInterval })
-        );
-    });
-}
-
 async function resetPhoneOtpDestinationState({
     db,
     phoneHash,
@@ -2694,7 +2507,6 @@ async function insertAuthAttemptCode({
     throttleSmsSecondsInterval,
     peppers,
     delivery,
-    phoneAuthMode,
 }: InsertAuthAttemptCodeProps): Promise<AuthenticateResponse> {
     const phoneHash = await generatePhoneHash({
         phoneNumber: authenticateRequestBody.phoneNumber,
@@ -2751,29 +2563,10 @@ async function insertAuthAttemptCode({
             reason: "restricted_phone_type",
         };
     }
-    if (delivery.type === "twilio" && phoneAuthMode === "enabled") {
-        const sent = await sendOtpPhoneNumber({
-            db,
-            phoneNumber: phoneNumber.number,
-            phoneHash,
-            pepperVersion: PEPPER_VERSION,
-            isRegistration: type === "register",
-            delivery,
-        });
-        if (!sent) return { success: false, reason: "phone_auth_unavailable" };
-    } else if (delivery.type === "local") {
+    if (delivery.type === "local") {
         console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
-    if (
-        phoneNumber.country === undefined &&
-        phoneNumber.getPossibleCountries.length === 0
-    ) {
-        log.warn("Cannot infer phone country code from phone number");
-    }
-    const phoneCountryCode =
-        (phoneNumber.country ?? phoneNumber.getPossibleCountries().length !== 0)
-            ? phoneNumber.getPossibleCountries()[0]
-            : undefined;
+    const phoneCountryCode = phoneNumber.country;
     const countryCallingCode = phoneNumber.countryCallingCode;
     const lastTwoDigits = phoneNumber.number.slice(-2);
     await db.insert(authAttemptPhoneTable).values({
@@ -2790,7 +2583,7 @@ async function insertAuthAttemptCode({
         codeExpiry: codeExpiry,
         lastOtpSentAt: now,
     });
-    if (delivery.type === "twilio" && phoneAuthMode === "login_only") {
+    if (delivery.type === "twilio") {
         dispatchOtpPhoneNumber({
             db,
             phoneNumber: phoneNumber.number,
@@ -2927,7 +2720,6 @@ async function updateAuthAttemptCode({
     throttleSmsSecondsInterval,
     peppers,
     delivery,
-    phoneAuthMode,
 }: UpdateAuthAttemptCodeProps): Promise<AuthenticateResponse> {
     const phoneHash = await generatePhoneHash({
         phoneNumber: authenticateRequestBody.phoneNumber,
@@ -2976,16 +2768,7 @@ async function updateAuthAttemptCode({
             reason: "restricted_phone_type",
         };
     }
-    if (
-        phoneNumber.country === undefined &&
-        phoneNumber.getPossibleCountries.length === 0
-    ) {
-        log.warn("Cannot infer phone country code from phone number");
-    }
-    const phoneCountryCode =
-        (phoneNumber.country ?? phoneNumber.getPossibleCountries().length !== 0)
-            ? phoneNumber.getPossibleCountries()[0]
-            : undefined;
+    const phoneCountryCode = phoneNumber.country;
     const countryCallingCode = phoneNumber.countryCallingCode;
     const lastTwoDigits = phoneNumber.number.slice(-2);
     const canReuseExistingCode =
@@ -2994,17 +2777,7 @@ async function updateAuthAttemptCode({
         currentAttempt[0].codeExpiry.getTime() > now.getTime();
 
     if (canReuseExistingCode) {
-        if (delivery.type === "twilio" && phoneAuthMode === "enabled") {
-            const sent = await sendOtpPhoneNumber({
-                db,
-                phoneNumber: phoneNumber.number,
-                phoneHash,
-                pepperVersion: PEPPER_VERSION,
-                isRegistration: type === "register",
-                delivery,
-            });
-            if (!sent) return { success: false, reason: "phone_auth_unavailable" };
-        } else if (delivery.type === "local") {
+        if (delivery.type === "local") {
             console.log(
                 "\n\nCode:",
                 codeToString(currentAttempt[0].code),
@@ -3031,7 +2804,7 @@ async function updateAuthAttemptCode({
                 updatedAt: now,
             })
             .where(eq(authAttemptPhoneTable.didWrite, didWrite));
-        if (delivery.type === "twilio" && phoneAuthMode === "login_only") {
+        if (delivery.type === "twilio") {
             dispatchOtpPhoneNumber({
                 db,
                 phoneNumber: phoneNumber.number,
@@ -3061,17 +2834,7 @@ async function updateAuthAttemptCode({
             : generateOneTimeCode();
     const codeExpiry = new Date(now);
     codeExpiry.setMinutes(codeExpiry.getMinutes() + minutesBeforeSmsCodeExpiry);
-    if (delivery.type === "twilio" && phoneAuthMode === "enabled") {
-        const sent = await sendOtpPhoneNumber({
-            db,
-            phoneNumber: phoneNumber.number,
-            phoneHash,
-            pepperVersion: PEPPER_VERSION,
-            isRegistration: type === "register",
-            delivery,
-        });
-        if (!sent) return { success: false, reason: "phone_auth_unavailable" };
-    } else if (delivery.type === "local") {
+    if (delivery.type === "local") {
         console.log("\n\nCode:", codeToString(oneTimeCode), codeExpiry, "\n\n");
     }
     await db
@@ -3092,7 +2855,7 @@ async function updateAuthAttemptCode({
             updatedAt: now,
         })
         .where(eq(authAttemptPhoneTable.didWrite, didWrite));
-    if (delivery.type === "twilio" && phoneAuthMode === "login_only") {
+    if (delivery.type === "twilio") {
         dispatchOtpPhoneNumber({
             db,
             phoneNumber: phoneNumber.number,

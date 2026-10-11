@@ -10,6 +10,10 @@ import {
   type VerifyPhoneOtp200,
   verifyPhoneOtp200,
 } from "src/shared/types/dto-auth";
+import {
+  type PhonePolicyResponse,
+  phonePolicyResponseSchema,
+} from "src/shared/types/phone-country-policy";
 import type { SupportedCountryCallingCode } from "src/shared/types/zod";
 import { processEnv } from "src/utils/processEnv";
 
@@ -41,6 +45,15 @@ export function useAuthPhoneApi() {
     createAxiosErrorResponse,
     createRawAxiosRequestConfig,
   } = useCommonApi();
+
+  async function fetchPhonePolicy(): Promise<PhonePolicyResponse> {
+    const response = await DefaultApiFactory(
+      undefined,
+      undefined,
+      api
+    ).apiV1AuthPhonePolicyPost({});
+    return phonePolicyResponseSchema.parse(response.data);
+  }
 
   type SendSmsCodeSuccessResponse = AxiosSuccessResponse<AuthenticateResponse>;
 
@@ -130,5 +143,6 @@ export function useAuthPhoneApi() {
   return {
     sendSmsCode,
     verifyPhoneOtp,
+    fetchPhonePolicy,
   };
 }

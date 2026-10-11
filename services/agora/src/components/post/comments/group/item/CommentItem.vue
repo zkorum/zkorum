@@ -10,21 +10,35 @@
           :show-verified-text="false"
           organization-image-url=""
           :is-seed="commentItem.isSeed"
+          :is-edited="commentItem.isEdited ?? false"
         />
 
         <CommentActionOptions
-          v-if="props.conversationRouteContext.kind !== 'embed'"
+          v-if="
+            props.conversationRouteContext.kind !== 'embed' &&
+            editingOpinionSlugId !== commentItem.opinionSlugId
+          "
           :comment-item="commentItem"
           :post-slug-id="postSlugId"
           :conversation-author-username="conversationAuthorUsername"
           :conversation-organization-name="conversationOrganizationName"
           :conversation-route-context="props.conversationRouteContext"
+          :editable-opinion="commentItem"
+          :editing-opinion-slug-id="editingOpinionSlugId"
+          @edit-opinion="emit('editOpinion', $event)"
           @deleted="deletedComment()"
           @muted-comment="mutedComment()"
         />
       </div>
 
       <div class="comment-content">
+        <div
+          v-if="editingOpinionSlugId === commentItem.opinionSlugId"
+          class="editing-label"
+          role="status"
+        >
+          {{ editT("editing") }}
+        </div>
         <ContentTranslationControl
           v-if="contentTranslation?.isAvailable === true"
           :model-value="contentTranslation.mode"
@@ -54,13 +68,17 @@
         <div class="comment-actions">
           <CommentActionBar
             :comment-item="commentItem"
+            :source-version="commentItem.displayContent.sourceVersion"
             :post-slug-id="postSlugId"
             :voting-utilities="votingUtilities"
             :participation-mode="participationMode"
             :requires-event-ticket="props.requiresEventTicket"
             :survey-gate="props.surveyGate"
             :on-view-analysis="props.onViewAnalysis"
-            :is-voting-disabled="props.isVotingDisabled"
+            :is-voting-disabled="
+              props.isVotingDisabled ||
+              editingOpinionSlugId === commentItem.opinionSlugId
+            "
             :show-vote-results="props.showVoteResults"
           />
         </div>
@@ -73,10 +91,11 @@
 import OpinionIdentityCard from "src/components/post/comments/OpinionIdentityCard.vue";
 import ContentTranslationControl from "src/components/translation/ContentTranslationControl.vue";
 import type { OpinionVotingUtilities } from "src/composables/opinion/types";
+import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type {
+  DisplayedOpinionItem,
   EventSlug,
   LocalizedContentTranslationStatus,
-  OpinionItem,
   ParticipationMode,
   SurveyGateSummary,
 } from "src/shared/types/zod";
@@ -85,6 +104,7 @@ import type { ContentTranslationDisplayMode } from "src/utils/translation/conten
 import { computed } from "vue";
 
 import ZKHtmlContent from "../../../../ui-library/ZKHtmlContent.vue";
+import { opinionEditingTranslations } from "../../opinionEditing.i18n";
 import CommentActionBar from "./CommentActionBar.vue";
 import CommentActionOptions from "./CommentActionOptions.vue";
 import CommentModeration from "./CommentModeration.vue";
@@ -99,7 +119,8 @@ interface CommentContentTranslationPreview {
 }
 
 const props = defineProps<{
-  commentItem: OpinionItem;
+  commentItem: DisplayedOpinionItem;
+  editingOpinionSlugId: string | undefined;
   postSlugId: string;
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
@@ -116,16 +137,18 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: [opinionSlugId: string];
+  editOpinion: [opinion: DisplayedOpinionItem];
   mutedComment: [];
   "update:contentTranslationMode": [mode: ContentTranslationDisplayMode];
 }>();
 
 const displayedOpinion = computed(() => {
-  if (props.contentTranslation?.mode === "translated") {
+  if (props.contentTranslation?.mode === "translated" && props.contentTranslation.translationStatus === "completed") {
     return props.contentTranslation.translatedOpinion;
   }
   return props.commentItem.opinion;
 });
+const { t: editT } = useComponentI18n(opinionEditingTranslations);
 
 function deletedComment() {
   emit("deleted", props.commentItem.opinionSlugId);
@@ -161,6 +184,11 @@ function mutedComment() {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+.editing-label {
+  color: $primary;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .comment-content :deep(p) {

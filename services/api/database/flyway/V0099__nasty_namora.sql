@@ -1,0 +1,1 @@
+ALTER TABLE "phone_sms_budget_policy" ALTER COLUMN "monthly_budget_cents" SET DEFAULT 10000;

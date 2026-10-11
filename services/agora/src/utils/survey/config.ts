@@ -104,7 +104,10 @@ export function normalizeChoiceSurveyQuestionConstraints({
 export function isSingleSelectionChoiceQuestion({
   question,
 }: {
-  question: Pick<SurveyQuestionConfig | SurveyQuestionFormItem, "questionType" | "constraints">;
+  question: Pick<
+    SurveyQuestionConfig | SurveyQuestionFormItem,
+    "questionType" | "constraints"
+  >;
 }): boolean {
   return (
     question.questionType === "choice" &&
@@ -128,7 +131,10 @@ export function createIntegerSurveyQuestionConstraints(): Extract<
 export function isIntegerFreeTextQuestion({
   question,
 }: {
-  question: Pick<SurveyQuestionConfig | SurveyQuestionFormItem, "questionType" | "constraints">;
+  question: Pick<
+    SurveyQuestionConfig | SurveyQuestionFormItem,
+    "questionType" | "constraints"
+  >;
 }): boolean {
   return (
     question.questionType === "free_text" &&
@@ -177,10 +183,14 @@ export function normalizeSurveyConfig({
     return null;
   }
 
-  const normalizedQuestions = surveyConfig.questions.map((question, questionIndex) => {
+  const normalizedQuestions = surveyConfig.questions.map(
+    (question, questionIndex) => {
       const questionBase = {
         questionSlugId: question.questionSlugId,
-        questionText: question.questionText.slice(0, MAX_LENGTH_SURVEY_QUESTION),
+        questionText: question.questionText.slice(
+          0,
+          MAX_LENGTH_SURVEY_QUESTION
+        ),
         isRequired: question.isRequired,
         displayOrder: questionIndex,
         textChangeIsSemantic: question.textChangeIsSemantic,
@@ -208,10 +218,14 @@ export function normalizeSurveyConfig({
                   type: "free_text",
                   inputMode: "rich_text",
                   minPlainTextLength: richTextConstraints?.minPlainTextLength,
-                  maxPlainTextLength: richTextConstraints?.maxPlainTextLength ?? 300,
+                  maxPlainTextLength:
+                    richTextConstraints?.maxPlainTextLength ?? 300,
                   maxHtmlLength: richTextConstraints?.maxHtmlLength ?? 3000,
                 },
-        } satisfies Extract<SurveyQuestionConfig, { questionType: "free_text" }>;
+        } satisfies Extract<
+          SurveyQuestionConfig,
+          { questionType: "free_text" }
+        >;
 
         return freeTextQuestion;
       }
@@ -233,7 +247,7 @@ export function normalizeSurveyConfig({
               }),
             ];
 
-        const choiceQuestion = {
+      const choiceQuestion = {
         ...questionBase,
         questionType: "choice",
         choiceDisplay: question.choiceDisplay,
@@ -248,7 +262,8 @@ export function normalizeSurveyConfig({
       } satisfies Extract<SurveyQuestionConfig, { questionType: "choice" }>;
 
       return choiceQuestion;
-    });
+    }
+  );
 
   if (normalizedQuestions.length === 0) {
     return null;
@@ -365,6 +380,7 @@ function areSurveyQuestionOptionsEqual({
     return (
       option.optionSlugId === otherOption.optionSlugId &&
       option.optionText === otherOption.optionText &&
+      (option.allowsText === true) === (otherOption.allowsText === true) &&
       option.displayOrder === otherOption.displayOrder &&
       option.textChangeIsSemantic === otherOption.textChangeIsSemantic
     );
@@ -533,7 +549,9 @@ function getOptionKey({
   questionKey: string;
   fallbackIndex: number;
 }): string {
-  return option.optionSlugId ?? `${questionKey}-new-option-${String(fallbackIndex)}`;
+  return (
+    option.optionSlugId ?? `${questionKey}-new-option-${String(fallbackIndex)}`
+  );
 }
 
 export function summarizeSurveyConfigChanges({
@@ -548,12 +566,18 @@ export function summarizeSurveyConfigChanges({
 
   const previousByKey = new Map(
     previousQuestions.map((question, index) => {
-      return [getQuestionKey({ question, fallbackIndex: index }), question] as const;
+      return [
+        getQuestionKey({ question, fallbackIndex: index }),
+        question,
+      ] as const;
     })
   );
   const nextByKey = new Map(
     nextQuestions.map((question, index) => {
-      return [getQuestionKey({ question, fallbackIndex: index }), question] as const;
+      return [
+        getQuestionKey({ question, fallbackIndex: index }),
+        question,
+      ] as const;
     })
   );
 
@@ -593,7 +617,9 @@ export function summarizeSurveyConfigChanges({
       updatedQuestionCount += 1;
     }
 
-    const previousOptions = getSurveyQuestionOptions({ question: previousQuestion });
+    const previousOptions = getSurveyQuestionOptions({
+      question: previousQuestion,
+    });
     const nextOptions = getSurveyQuestionOptions({ question: nextQuestion });
 
     const previousOptionsByKey = new Map(
@@ -623,6 +649,8 @@ export function summarizeSurveyConfigChanges({
 
       if (
         previousOption.optionText !== nextOption.optionText ||
+        (previousOption.allowsText === true) !==
+          (nextOption.allowsText === true) ||
         previousOption.textChangeIsSemantic !== nextOption.textChangeIsSemantic
       ) {
         updatedOptionCount += 1;

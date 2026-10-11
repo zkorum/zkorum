@@ -7,11 +7,14 @@ export interface UserVote {
 }
 
 export interface OpinionVoteParams {
+  sourceVersion?: string;
   opinionSlugId: string;
   voteAction: VotingAction;
 }
 
 export interface OpinionVotingUtilities {
   userVotes: readonly UserVote[];
-  castVote: (params: OpinionVoteParams) => Promise<CastVoteResponse | undefined>;
+  castVote: (
+    params: OpinionVoteParams
+  ) => Promise<CastVoteResponse | undefined>;
 }

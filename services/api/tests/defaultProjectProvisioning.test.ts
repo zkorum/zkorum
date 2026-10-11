@@ -116,7 +116,11 @@ describe("default project provisioning", () => {
                 autoProvisionedForOrganizationId: organizationId,
                 deletedAt: NOW,
             })
-            .returning({ id: projectTable.id });
+            .returning({
+                id: projectTable.id,
+                slug: projectTable.slug,
+                title: projectTable.title,
+            });
         const project = projects.at(0);
         if (project === undefined) {
             throw new Error("Failed to seed deleted project");
@@ -132,7 +136,11 @@ describe("default project provisioning", () => {
             organizationId,
         });
 
-        expect(result).toEqual({ projectId: project.id });
+        expect(result).toEqual({
+            projectId: project.id,
+            projectSlug: project.slug,
+            projectTitle: project.title,
+        });
         const reactivatedProjects = await db
             .select()
             .from(projectTable)

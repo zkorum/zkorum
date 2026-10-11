@@ -1,7 +1,13 @@
 <template>
   <div class="one-at-a-time">
     <VotingSessionToolbar
-      :progress="{ kind: 'count', label: remainingCount === undefined ? '' : t('remaining', { count: formatAmount(remainingCount) }) }"
+      :progress="{
+        kind: 'count',
+        label:
+          remainingCount === undefined
+            ? ''
+            : t('remaining', { count: formatAmount(remainingCount) }),
+      }"
       :can-undo="canUndo"
       :is-busy="isSubmittingVote"
       :is-disabled="props.isVotingDisabled"
@@ -14,7 +20,8 @@
       :post-slug-id="props.postSlugId"
       :conversation-author-username="props.conversationAuthorUsername"
       :conversation-organization-name="props.conversationOrganizationName"
-      :highlighted-opinion="null"
+      :highlighted-opinion="editingOpinion ?? null"
+      :editing-opinion-slug-id="editingOpinion?.opinionSlugId"
       :voting-utilities="{ userVotes, castVote }"
       :participation-mode="props.participationMode"
       :requires-event-ticket="props.requiresEventTicket"
@@ -23,6 +30,7 @@
       :is-voting-disabled="props.isVotingDisabled || isSubmittingVote"
       :show-vote-results="false"
       :conversation-route-context="props.conversationRouteContext"
+      @edit-opinion="emit('editOpinion', $event)"
       @muted-comment="handleMutedOpinion"
       @deleted="handleDeletedOpinion"
     />
@@ -69,13 +77,7 @@ import { useBackendVoteApi } from "src/utils/api/vote";
 import { formatAmount } from "src/utils/common";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import { useNotify } from "src/utils/ui/notify";
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onUnmounted,
-  watch,
-} from "vue";
+import { computed, onActivated, onDeactivated, onUnmounted, watch } from "vue";
 
 import CommentGroup from "./group/CommentGroup.vue";
 import {
@@ -85,6 +87,7 @@ import {
 
 const props = defineProps<{
   postSlugId: string;
+  editingOpinion: DisplayedOpinionItem | undefined;
   order: "discover" | "new";
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
@@ -95,19 +98,27 @@ const props = defineProps<{
   isVotingDisabled: boolean;
   conversationRouteContext: ConversationRouteContext;
 }>();
+const emit = defineEmits<{ editOpinion: [opinion: DisplayedOpinionItem] }>();
 
 const { t } = useComponentI18n<OneAtATimeTranslations>(oneAtATimeTranslations);
 const { showNotifyMessage } = useNotify();
 const queryClient = useQueryClient();
 const actionGuard = useVotingActionGuard();
 const session = usePolisVotingSession();
-const { currentOpinion, remainingCount, excludedOpinionSlugIds, isAdvancing, canUndo } = session;
-const { shouldOpenParticipationModal, openParticipationOnboarding } = useParticipationGate({
-  conversationSlugId: computed(() => props.postSlugId),
-  participationMode: computed(() => props.participationMode),
-  requiresEventTicket: computed(() => props.requiresEventTicket),
-  surveyGate: computed(() => props.surveyGate),
-});
+const {
+  currentOpinion,
+  remainingCount,
+  excludedOpinionSlugIds,
+  isAdvancing,
+  canUndo,
+} = session;
+const { shouldOpenParticipationModal, openParticipationOnboarding } =
+  useParticipationGate({
+    conversationSlugId: computed(() => props.postSlugId),
+    participationMode: computed(() => props.participationMode),
+    requiresEventTicket: computed(() => props.requiresEventTicket),
+    surveyGate: computed(() => props.surveyGate),
+  });
 const { fetchUserVotesForPostSlugIds } = useBackendVoteApi();
 const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
 const authStore = useAuthenticationStore();
@@ -122,9 +133,13 @@ const reconciliation = useVoteReconciliation({
   captureSession: actionGuard.capture,
   confirm: async ({ signal, isCurrent }) => {
     const captured = session.capturePendingWrites();
-    const votes = await fetchUserVotesForPostSlugIds({ conversationSlugIdList: [props.postSlugId], signal });
+    const votes = await fetchUserVotesForPostSlugIds({
+      conversationSlugIdList: [props.postSlugId],
+      signal,
+    });
     if (!isCurrent() || isSubmittingVote.value) return;
-    if (session.confirmPendingWrites({ votes, captured })) await query.refetch();
+    if (session.confirmPendingWrites({ votes, captured }))
+      await query.refetch();
   },
 });
 const query = useQuery({
@@ -145,7 +160,9 @@ const query = useQuery({
       signal,
     }),
   staleTime: 0,
-  enabled: computed(() => !isSubmittingVote.value),
+  enabled: computed(
+    () => !isSubmittingVote.value && props.editingOpinion === undefined
+  ),
   retry: false,
 });
 const {
@@ -160,7 +177,8 @@ const {
 watch(
   [query.data, query.isFetching, isSubmittingVote],
   ([data, isFetching, isPending]) => {
-    if (data === undefined || isFetching || isPending || query.isError.value) return;
+    if (data === undefined || isFetching || isPending || query.isError.value)
+      return;
     session.acceptQueryResult(data);
   },
   { immediate: true }
@@ -175,7 +193,11 @@ watch(
 watch(
   userId,
   (newUserId, oldUserId) => {
-    if (oldUserId === undefined && newUserId !== undefined && authStore.isGuest) {
+    if (
+      oldUserId === undefined &&
+      newUserId !== undefined &&
+      authStore.isGuest
+    ) {
       session.preserveCurrent();
       return;
     }
@@ -201,8 +223,14 @@ watch(
 async function castVote({ opinionSlugId, voteAction }: OpinionVoteParams) {
   return await actionGuard.run(async (isCurrent) => {
     if (props.isVotingDisabled) return undefined;
-    const previousVote = userVotes.value.find(vote => vote.opinionSlugId === opinionSlugId)?.votingAction;
-    const vote = session.prepareVote({ opinionSlugId, voteAction, previousVote });
+    const previousVote = userVotes.value.find(
+      (vote) => vote.opinionSlugId === opinionSlugId
+    )?.votingAction;
+    const vote = session.prepareVote({
+      opinionSlugId,
+      voteAction,
+      previousVote,
+    });
     if (vote === undefined) return undefined;
     const response = await submitVote(vote.params);
     if (!isCurrent()) return undefined;
@@ -226,7 +254,9 @@ async function undoVote(): Promise<void> {
       const undo = session.prepareUndo();
       if (undo === undefined) return;
       try {
-        await queryClient.cancelQueries({ queryKey: ["nextUnansweredOpinion", props.postSlugId] });
+        await queryClient.cancelQueries({
+          queryKey: ["nextUnansweredOpinion", props.postSlugId],
+        });
         if (!isCurrent()) return;
         const response = await submitVote(undo.params);
         if (!isCurrent()) return;
@@ -252,9 +282,13 @@ function resetSession(): void {
   reconciliation.restart();
 }
 
-watch([() => props.postSlugId, () => props.order], resetSession, { flush: "sync" });
+watch([() => props.postSlugId, () => props.order], resetSession, {
+  flush: "sync",
+});
 
-async function refresh({ preserveCurrent = false }: { preserveCurrent?: boolean } = {}): Promise<void> {
+async function refresh({
+  preserveCurrent = false,
+}: { preserveCurrent?: boolean } = {}): Promise<void> {
   if (isSubmittingVote.value) return;
   session.refresh({ preserveCurrent });
   reconciliation.restart();
@@ -262,20 +296,23 @@ async function refresh({ preserveCurrent = false }: { preserveCurrent?: boolean 
   if (!session.hasPendingWrites.value) await fetchUserVotingData();
 }
 
-function discardOpinions(matches: (opinion: DisplayedOpinionItem) => boolean): void {
+function discardOpinions(
+  matches: (opinion: DisplayedOpinionItem) => boolean
+): void {
   actionGuard.invalidate();
   session.discard(matches);
   reconciliation.restart();
 }
 
 async function handleDeletedOpinion(opinionSlugId: string): Promise<void> {
-  discardOpinions(opinion => opinion.opinionSlugId === opinionSlugId);
+  discardOpinions((opinion) => opinion.opinionSlugId === opinionSlugId);
   await refresh();
 }
 
 async function handleMutedOpinion(): Promise<void> {
   const username = currentOpinion.value?.username;
-  if (username !== undefined) discardOpinions(opinion => opinion.username === username);
+  if (username !== undefined)
+    discardOpinions((opinion) => opinion.username === username);
   await refresh();
 }
 
@@ -286,6 +323,11 @@ async function acknowledgeCreatedOpinion(opinionSlugId: string): Promise<void> {
   });
   session.excludeCreatedOpinion(opinionSlugId);
   await query.refetch();
+}
+
+async function acknowledgeEditedOpinion(opinion: DisplayedOpinionItem): Promise<void> {
+  session.updateCurrentOpinion(opinion);
+  await refresh({ preserveCurrent: true });
 }
 
 onActivated(() => {
@@ -304,6 +346,7 @@ onUnmounted(() => {
 defineExpose({
   refresh,
   acknowledgeCreatedOpinion,
+  acknowledgeEditedOpinion,
   isLoading: computed(() => query.isPending.value || isAdvancing.value),
 });
 </script>

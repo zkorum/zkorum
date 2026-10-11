@@ -25,6 +25,7 @@
       class="commentItemBackground"
       :class="{
         highlightCommentItem: isHighlightedComment(commentItem),
+        editingCommentItem: editingOpinionSlugId === commentItem.opinionSlugId,
       }"
       @keydown="handleKeyNavigation($event, index)"
     >
@@ -57,6 +58,8 @@
         :is-voting-disabled="props.isVotingDisabled"
         :show-vote-results="props.showVoteResults"
         :conversation-route-context="props.conversationRouteContext"
+        :editing-opinion-slug-id="editingOpinionSlugId"
+        @edit-opinion="emit('editOpinion', $event)"
         @deleted="deletedComment(commentItem.opinionSlugId)"
         @muted-comment="mutedComment()"
       />
@@ -90,6 +93,7 @@ import TranslatedCommentItem from "./item/TranslatedCommentItem.vue";
 
 const props = defineProps<{
   commentItemList: DisplayedOpinionItem[];
+  editingOpinionSlugId: string | undefined;
   postSlugId: string;
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
@@ -106,6 +110,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: [opinionSlugId: string];
+  editOpinion: [opinion: DisplayedOpinionItem];
   mutedComment: [];
   ticketVerified: [
     payload: { userIdChanged: boolean; needsCacheRefresh: boolean },
@@ -149,7 +154,10 @@ const finalCommentList = computed((): DisplayedOpinionItem[] => {
  * Checks if the given comment is the highlighted one
  */
 function isHighlightedComment(commentItem: OpinionItem): boolean {
-  return props.highlightedOpinion?.opinionSlugId === commentItem.opinionSlugId;
+  return (
+    props.highlightedOpinion?.opinionSlugId === commentItem.opinionSlugId ||
+    props.editingOpinionSlugId === commentItem.opinionSlugId
+  );
 }
 
 /**
@@ -249,6 +257,9 @@ function mutedComment(): void {
   border-style: solid;
   border-color: $primary;
   border-width: 2px;
+}
+.editingCommentItem {
+  background-color: rgba($primary, 0.04);
 }
 
 // Screen reader only content - visually hidden but accessible to screen readers

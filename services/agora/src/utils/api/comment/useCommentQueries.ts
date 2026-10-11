@@ -21,6 +21,7 @@ import type {
   AnalysisFreshnessRequest,
   FetchCommentStatsResponse,
 } from "src/shared/types/dto";
+import type { Dto } from "src/shared/types/dto";
 import type { AnalysisView, OpinionItem } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLanguageStore } from "src/stores/language";
@@ -29,8 +30,12 @@ import {
   buildAnalysisFreshnessRequest,
   LIVE_ANALYSIS_CATCH_UP_INTERVAL_MS,
 } from "src/utils/analysis/analysisFreshness";
-import { useViewerQueryScope,type ViewerQueryScope } from "src/utils/query/viewerScope";
+import {
+  useViewerQueryScope,
+  type ViewerQueryScope,
+} from "src/utils/query/viewerScope";
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
+import type { z } from "zod";
 
 import { useNotify } from "../../ui/notify";
 import { getErrorMessage } from "../common";
@@ -45,8 +50,16 @@ import {
   useBackendCommentApi,
 } from "./comment";
 import { cacheCreatedOpinion } from "./createdOpinionCache";
-import { type OpinionCache, removeCachedOpinion } from "./opinionCache";
-import { initialOpinionPageRequest, type OpinionPageRequest, type OpinionPageResult } from "./opinionPageBoundary";
+import {
+  mapCachedOpinions,
+  type OpinionCache,
+  removeCachedOpinion,
+} from "./opinionCache";
+import {
+  initialOpinionPageRequest,
+  type OpinionPageRequest,
+  type OpinionPageResult,
+} from "./opinionPageBoundary";
 import {
   type UseCommentQueriesTranslations,
   useCommentQueriesTranslations,
@@ -66,10 +79,7 @@ export function usePagedCommentsQuery({
   return useInfiniteQuery<
     OpinionPageResult,
     Error,
-    InfiniteData<
-      OpinionPageResult,
-      OpinionPageRequest
-    >,
+    InfiniteData<OpinionPageResult, OpinionPageRequest>,
     readonly unknown[],
     OpinionPageRequest
   >({
@@ -87,7 +97,12 @@ export function usePagedCommentsQuery({
         signal,
       }),
     enabled: computed(() => toValue(conversationSlugId) !== ""),
-    initialPageParam: computed(() => initialOpinionPageRequest({ conversationSlugId: toValue(conversationSlugId), filter: toValue(filter) })),
+    initialPageParam: computed(() =>
+      initialOpinionPageRequest({
+        conversationSlugId: toValue(conversationSlugId),
+        filter: toValue(filter),
+      })
+    ),
     getNextPageParam: (lastPage) => lastPage.nextRequest,
     staleTime: 30_000,
     retry: false,
@@ -1013,6 +1028,45 @@ export function useDeleteCommentMutation() {
       }
     },
     retry: false, // Disable auto-retry
+  });
+}
+
+export function useEditOpinionMutation(conversationSlugId: string) {
+  const { editOpinion } = useBackendCommentApi();
+  const queryClient = useQueryClient();
+  const userStore = useUserStore();
+  const { markCommentsAsStale, markAnalysisAsStale } =
+    useInvalidateCommentQueries();
+  return useMutation({
+    mutationFn: (request: z.infer<typeof Dto.editOpinionRequest>) =>
+      editOpinion(request),
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: ["comments", conversationSlugId],
+      });
+    },
+    onSuccess: (result) => {
+      if (!result.success) return;
+      const opinion = result.displayedOpinionItem;
+      queryClient.setQueriesData<OpinionCache>(
+        { queryKey: ["comments", conversationSlugId] },
+        (cache) =>
+          mapCachedOpinions({
+            cache,
+            mapOpinion: (current) =>
+              current.opinionSlugId === opinion.opinionSlugId
+                ? opinion
+                : current,
+          })
+      );
+      for (const item of userStore.profileData.userCommentList) {
+        if (item.opinionItem.opinionSlugId === opinion.opinionSlugId)
+          item.opinionItem = opinion;
+      }
+      void markCommentsAsStale(conversationSlugId);
+      markAnalysisAsStale(conversationSlugId);
+    },
+    retry: false,
   });
 }
 

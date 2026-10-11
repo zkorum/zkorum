@@ -5,7 +5,7 @@ import { z } from "zod";
 import {
     createLogPrivacy,
     logContextSchema,
-    projectLogFields,
+    createLogFieldProjector,
     toLogError,
 } from "./logPrivacy.js";
 
@@ -232,15 +232,24 @@ describe("log privacy", () => {
 
     it("omits malformed fields individually while retaining usable context", () => {
         expect(
-            projectLogFields({
-                value: {
-                    count: 3,
-                    durationMs: Infinity,
-                    userId: privateValues.at(0),
-                    token: privateValues.at(2),
-                },
-                schema: logContextSchema,
+            createLogFieldProjector(logContextSchema)({
+                count: 3,
+                durationMs: Infinity,
+                userId: privateValues.at(0),
+                token: privateValues.at(2),
             }),
         ).toEqual({ count: 3 });
+    });
+
+    it("reuses a compiled projector without retaining previous record values", () => {
+        const project = createLogFieldProjector(logContextSchema);
+        expect(project({ count: 4, reqId: "req-1" })).toEqual({
+            count: 4,
+            reqId: "req-1",
+        });
+        expect(project({ count: 2 })).toEqual({ count: 2 });
+        expect(
+            project({ count: undefined, email: privateValues.at(0) }),
+        ).toEqual({});
     });
 });

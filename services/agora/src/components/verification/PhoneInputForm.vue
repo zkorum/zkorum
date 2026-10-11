@@ -5,12 +5,23 @@
       :reason="phoneAuthAvailability.reason"
     />
 
+    <PhoneAuthUnavailableNotice
+      v-else-if="countryPolicy.isError.value && !countryPolicy.isReady.value"
+      reason="technical_unavailable"
+    />
+    <div
+      v-else-if="!countryPolicy.isReady.value"
+      class="row justify-center q-pa-md"
+    >
+      <q-spinner />
+    </div>
     <template v-else>
       <div>{{ t("smsDescription") }}</div>
 
       <ZKPhoneNumberInput
         v-model="phoneData.phoneNumber"
         v-model:country-code="phoneData.countryCode"
+        :allowed-countries="allowedCountries"
         :success="phoneData.isValid"
         :error="phoneData.hasError"
         show-code-in-list
@@ -67,6 +78,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import type { MazInputPhoneNumberData } from "maz-ui/components/MazInputPhoneNumber";
 import { storeToRefs } from "pinia";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { usePhoneCountryPolicy } from "src/composables/verification/usePhoneCountryPolicy";
 import { zodSupportedCountryCallingCode } from "src/shared/types/zod";
 import { isPhoneNumberTypeSupported } from "src/shared-app-api/phone";
 import { phoneVerificationStore } from "src/stores/onboarding/phone";
@@ -75,7 +87,7 @@ import {
   usePhoneAuthAvailability,
 } from "src/utils/auth/phoneAuthMode";
 import { processEnv } from "src/utils/processEnv";
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 
 import ZKGradientButton from "../ui-library/ZKGradientButton.vue";
 import ZKPhoneNumberInput from "../ui-library/ZKPhoneNumberInput.vue";
@@ -108,6 +120,10 @@ const phoneData = reactive({
 
 const { verificationPhoneNumber } = storeToRefs(phoneVerificationStore());
 const phoneAuthAvailability = usePhoneAuthAvailability(() => props.purpose);
+const countryPolicy = usePhoneCountryPolicy();
+const allowedCountries = computed(() =>
+  countryPolicy.countriesFor(props.purpose)
+);
 const turnstileWidget = ref<InstanceType<typeof PhoneTurnstile>>();
 
 interface PhoneNumber {
@@ -149,6 +165,14 @@ function setError(message: string) {
   phoneData.errorMessage = message;
 }
 
+function countryUnavailableMessage(country: CountryCode | undefined): string {
+  return props.purpose !== "login" &&
+    country !== undefined &&
+    countryPolicy.countriesFor("login").includes(country)
+    ? t("countryRegistrationUnavailable")
+    : t("countryNotSupported");
+}
+
 function validateFromMazResults(results: MazInputPhoneNumberData) {
   if (!results.isValid || !results.countryCallingCode) {
     phoneData.isValid = false;
@@ -162,6 +186,20 @@ function validateFromMazResults(results: MazInputPhoneNumberData) {
     phoneData.isValid = false;
     phoneData.hasError = true;
     phoneData.errorMessage = t("countryNotSupported");
+    return;
+  }
+
+  const country =
+    results.e164 === undefined
+      ? undefined
+      : parsePhoneNumberFromString(results.e164)?.country;
+  if (
+    !countryPolicy.availabilityFor({ purpose: props.purpose, country })
+      .available
+  ) {
+    phoneData.isValid = false;
+    phoneData.hasError = true;
+    phoneData.errorMessage = countryUnavailableMessage(country);
     return;
   }
 
@@ -220,6 +258,20 @@ function submit(): boolean {
   );
   if (!callingCode.success) {
     setError(t("countryNotSupported"));
+    return false;
+  }
+
+  if (
+    !countryPolicy.availabilityFor({
+      purpose: props.purpose,
+      country: parsePhoneNumberFromString(results.e164)?.country,
+    }).available
+  ) {
+    setError(
+      countryUnavailableMessage(
+        parsePhoneNumberFromString(results.e164)?.country
+      )
+    );
     return false;
   }
 

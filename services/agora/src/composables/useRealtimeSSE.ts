@@ -3,6 +3,7 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import {
   type AnySSEEvent,
   type FetchCommentStatsResponse,
+  type FetchNextUnansweredOpinionResponse,
   type FetchProjectPageResponse,
   type SSEContentTranslationUpdatedData,
   type SSEConversationAnalysisUpdatedData,
@@ -26,6 +27,7 @@ import {
   mapCachedOpinions,
   type OpinionCache,
 } from "src/utils/api/comment/opinionCache";
+import { applyOpinionContentUpdate } from "src/utils/api/comment/opinionContentUpdate";
 import { fetchAnalysisDataWithCache } from "src/utils/api/comment/useCommentQueries";
 import { useCommonApi } from "src/utils/api/common";
 import {
@@ -37,6 +39,7 @@ import { isProjectTranslatedContentQueryKey } from "src/utils/api/contentTransla
 import { getContentTranslationQueryKey } from "src/utils/api/contentTranslation/useContentTranslationQueries";
 import { useInvalidateExportQueries } from "src/utils/api/conversationExport/useConversationExportQueries";
 import { getErrorLogContext } from "src/utils/api/errorLog";
+import { applyConversationProjectAssignment } from "src/utils/api/post/conversationProjectCache";
 import { retainConversationRankingStatsUpdate } from "src/utils/api/post/rankingStatsUpdate";
 import {
   applyConversationRankingStatsUpdate,
@@ -46,7 +49,10 @@ import {
 import { isLiveSurveyResultsQueryKey } from "src/utils/api/survey/surveyQueryKeys";
 import { buildAuthorizationHeader } from "src/utils/crypto/ucan/operation";
 import { processEnv } from "src/utils/processEnv";
-import { isQueryForViewerScope, useViewerQueryScope } from "src/utils/query/viewerScope";
+import {
+  isQueryForViewerScope,
+  useViewerQueryScope,
+} from "src/utils/query/viewerScope";
 import { abortIgnoringAbortError } from "src/utils/sse/abort";
 import {
   getExponentialBackoffDelayMs,
@@ -801,6 +807,17 @@ export function useRealtimeSSE({
           event: { event: frame.event, data: result.data },
         };
       }
+      case "opinion_updated": {
+        const result = zodSSEEventDataByType.opinion_updated.safeParse(rawData);
+        if (!result.success) {
+          logInvalidSSEPayload({ event: frame.event, error: result.error });
+          return undefined;
+        }
+        return {
+          id: frame.id,
+          event: { event: frame.event, data: result.data },
+        };
+      }
       case "conversation_survey_updated": {
         const result =
           zodSSEEventDataByType.conversation_survey_updated.safeParse(rawData);
@@ -1089,6 +1106,40 @@ export function useRealtimeSSE({
           });
           break;
         }
+        case "opinion_updated": {
+          const data = sseEvent.data;
+          queryClient.setQueriesData<OpinionCache>(
+            { queryKey: ["comments", data.conversationSlugId] },
+            (cache) =>
+              mapCachedOpinions({
+                cache,
+                mapOpinion: (opinion) =>
+                  applyOpinionContentUpdate({ opinion, event: data }),
+              })
+          );
+          queryClient.setQueriesData<FetchNextUnansweredOpinionResponse>(
+            { queryKey: ["nextUnansweredOpinion", data.conversationSlugId] },
+            (current) =>
+              current?.status === "ready"
+                ? {
+                    ...current,
+                    opinion: applyOpinionContentUpdate({
+                      opinion: current.opinion,
+                      event: data,
+                    }),
+                  }
+                : current
+          );
+          void queryClient.invalidateQueries({
+            queryKey: ["comments", data.conversationSlugId],
+            refetchType: "none",
+          });
+          void queryClient.invalidateQueries({
+            queryKey: ["nextUnansweredOpinion", data.conversationSlugId],
+            refetchType: "none",
+          });
+          break;
+        }
         case "conversation_comment_stats_updated": {
           updateCommentStatsFromEvent(sseEvent.data);
           break;
@@ -1220,16 +1271,37 @@ export function useRealtimeSSE({
             data.conversationSlugId,
             data.timestamp
           );
+          if (data.settings.projectAssignment !== undefined) {
+            void applyConversationProjectAssignment({
+              queryClient,
+              conversationSlugId: data.conversationSlugId,
+              assignment: data.settings.projectAssignment,
+              refreshConversation: true,
+              isCurrent: () =>
+                latestSettingsEventTimestampByConversationSlugId.get(
+                  data.conversationSlugId
+                ) === data.timestamp,
+            });
+          }
 
-          const previousConversation = queryClient.getQueriesData<
-            ExtendedConversation | ConversationDetail
-          >({ queryKey: ["conversation", data.conversationSlugId] })
-            .find(([queryKey, conversation]) => conversation !== undefined && isQueryForViewerScope({ queryKey, viewerScope: viewerScope.value }))?.[1];
-          const previousMetadata = previousConversation === undefined
-            ? undefined
-            : "conversationData" in previousConversation
-              ? previousConversation.conversationData.metadata
-              : previousConversation.metadata;
+          const previousConversation = queryClient
+            .getQueriesData<
+              ExtendedConversation | ConversationDetail
+            >({ queryKey: ["conversation", data.conversationSlugId] })
+            .find(
+              ([queryKey, conversation]) =>
+                conversation !== undefined &&
+                isQueryForViewerScope({
+                  queryKey,
+                  viewerScope: viewerScope.value,
+                })
+            )?.[1];
+          const previousMetadata =
+            previousConversation === undefined
+              ? undefined
+              : "conversationData" in previousConversation
+                ? previousConversation.conversationData.metadata
+                : previousConversation.metadata;
           const preferredOpinionGroupCountChanged =
             previousMetadata === undefined ||
             previousMetadata.preferredOpinionGroupCount !==
@@ -1742,18 +1814,13 @@ export function useRealtimeSSE({
       queryClient.getQueryData<Array<{ opinionSlugId: string }>>([
         "userVotes",
         data.conversationSlugId,
+        authStore.userId,
       ]) ?? [];
     const votedOpinionSlugIds = new Set(
       userVotes.map((vote) => vote.opinionSlugId)
     );
-    if (votedOpinionSlugIds.size === 0) {
-      return;
-    }
-
     const liveCountsByOpinionSlugId = new Map(
-      data.opinionVoteCounts
-        .filter((counts) => votedOpinionSlugIds.has(counts.opinionSlugId))
-        .map((counts) => [counts.opinionSlugId, counts])
+      data.opinionVoteCounts.map((counts) => [counts.opinionSlugId, counts])
     );
     if (liveCountsByOpinionSlugId.size === 0) {
       return;
@@ -1782,8 +1849,26 @@ export function useRealtimeSSE({
               return opinion;
             }
 
+            const management =
+              opinion.management === undefined
+                ? undefined
+                : {
+                    ...opinion.management,
+                    canEdit:
+                      opinion.management.canDelete &&
+                      liveCounts.numAgrees +
+                        liveCounts.numDisagrees +
+                        liveCounts.numPasses <=
+                        (opinion.isSeed
+                          ? 0
+                          : votedOpinionSlugIds.has(opinion.opinionSlugId)
+                            ? 1
+                            : 0),
+                  };
+
             return {
               ...opinion,
+              management,
               numParticipants: liveCounts.numParticipants,
               numAgrees: liveCounts.numAgrees,
               numDisagrees: liveCounts.numDisagrees,

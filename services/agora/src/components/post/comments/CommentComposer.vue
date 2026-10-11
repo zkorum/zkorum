@@ -1,8 +1,15 @@
 <template>
   <div v-if="!hideComposerForRoute" ref="target">
-    <div class="container borderStyle" :class="{ focused: innerFocus }">
+    <div
+      class="container borderStyle"
+      :class="{ focused: innerFocus, editing: editingOpinion !== undefined }"
+    >
+      <div v-if="editingOpinion" class="editing-header" role="status">
+        {{ editT("editing") }}
+      </div>
       <Editor
         v-if="isEditorMounted"
+        :key="editingOpinion?.displayContent.sourceVersion ?? 'creation'"
         ref="editorRef"
         v-model="opinionBody"
         v-model:plain-text="opinionPlainText"
@@ -10,12 +17,13 @@
         :min-height="innerFocus ? '6rem' : '2rem'"
         :show-toolbar="innerFocus"
         :single-line="false"
-        :disabled="false"
+        :disabled="editMutation.isPending.value"
         :max-length="MAX_LENGTH_OPINION"
         :show-character-count="innerFocus"
         @update:character-count="onCharacterCountUpdate"
         @update:is-over-limit="(v: boolean) => (isOverLimit = v)"
         @manually-focused="editorFocused()"
+        @ready="onEditorReady"
       />
 
       <div v-if="validationWarning" class="validation-warning">
@@ -39,6 +47,27 @@
         </ZKButton>
 
         <PrimeButton
+          v-if="editingOpinion"
+          :label="editT('cancel')"
+          severity="secondary"
+          outlined
+          :disabled="editMutation.isPending.value"
+          @click="cancelEdit"
+        />
+        <PrimeButton
+          v-if="editingOpinion"
+          :label="editT('save')"
+          :disabled="
+            !isEditDirty ||
+            isOverLimit ||
+            !hasVisibleOpinionText ||
+            editMutation.isPending.value
+          "
+          :loading="editMutation.isPending.value"
+          @click="saveEdit"
+        />
+        <PrimeButton
+          v-else
           :label="t('postButton')"
           severity="primary"
           :disabled="
@@ -54,11 +83,26 @@
     </div>
 
     <ExitRoutePrompt
+      v-if="editingOpinion === undefined"
       v-model="showExitDialog"
       :title="t('exitPromptTitle')"
       :description="t('exitPromptDescription')"
       :save-draft="saveDraft"
       :no-save-draft="noSaveDraft"
+    />
+    <ZKConfirmDialog
+      v-else
+      v-model="showExitDialog"
+      :title="editT('discard')"
+      :message="editT('discardDescription')"
+      :actions="{
+        cancel: {
+          label: editT('keepEditing'),
+          appearance: 'secondary-outlined',
+        },
+        confirm: { label: editT('cancel'), appearance: 'danger' },
+      }"
+      @confirm="discardEditAndLeave"
     />
 
     <PreParticipationIntentionDialog
@@ -81,6 +125,7 @@ import Button from "primevue/button";
 import PreParticipationIntentionDialog from "src/components/authentication/intention/PreParticipationIntentionDialog.vue";
 import ExitRoutePrompt from "src/components/routeGuard/ExitRoutePrompt.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
+import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
 import ZKIcon from "src/components/ui-library/ZKIcon.vue";
 import type { SubmittedCommentData } from "src/composables/conversation/useConversationParentState";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
@@ -88,6 +133,7 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useIdleMount } from "src/composables/ui/useIdleMount";
 import { hasVisiblePlainText, MAX_LENGTH_OPINION } from "src/shared/shared";
 import type {
+  DisplayedOpinionItem,
   EventSlug,
   ParticipationMode,
   SurveyGateSummary,
@@ -95,7 +141,10 @@ import type {
 import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { useNewOpinionDraftsStore } from "src/stores/newOpinionDrafts";
 import { useUserStore } from "src/stores/user";
-import { useCreateCommentMutation } from "src/utils/api/comment/useCommentQueries";
+import {
+  useCreateCommentMutation,
+  useEditOpinionMutation,
+} from "src/utils/api/comment/useCommentQueries";
 import { useInvalidateConversationQuery } from "src/utils/api/post/useConversationQuery";
 import {
   type RouteGuardDestination,
@@ -124,6 +173,7 @@ import {
   type CommentComposerTranslations,
   commentComposerTranslations,
 } from "./CommentComposer.i18n";
+import { opinionEditingTranslations } from "./opinionEditing.i18n";
 import OpinionWritingGuidelinesDialog from "./OpinionWritingGuidelinesDialog.vue";
 
 defineOptions({
@@ -133,6 +183,7 @@ defineOptions({
 });
 
 const props = defineProps<{
+  editingOpinion: DisplayedOpinionItem | undefined;
   postSlugId: string;
   participationMode: ParticipationMode;
   requiresEventTicket?: EventSlug;
@@ -142,6 +193,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  editCancelled: [];
+  editedOpinion: [opinion: DisplayedOpinionItem];
   submittedComment: [data: SubmittedCommentData];
   ticketVerified: [
     payload: { userIdChanged: boolean; needsCacheRefresh: boolean },
@@ -200,7 +253,7 @@ const draftAutoSaveRouteNames = [
 const route = useRoute();
 
 // Defer Editor mounting until browser is idle to improve initial page load performance
-const { isMounted: isEditorMounted } = useIdleMount({});
+const { isMounted: isEditorMounted, mount: mountEditor } = useIdleMount({});
 
 const dummyInput = ref<HTMLInputElement>();
 
@@ -212,6 +265,8 @@ const { createNewOpinionIntention, clearNewOpinionIntention } =
   useLoginIntentionStore();
 
 const createCommentMutation = useCreateCommentMutation();
+const editMutation = useEditOpinionMutation(props.postSlugId);
+const { t: editT } = useComponentI18n(opinionEditingTranslations);
 
 const { showNotifyMessage } = useNotify();
 const { needsAuth: isAuthBlocked, shouldOpenParticipationModal } =
@@ -244,7 +299,7 @@ const innerFocus = ref(false);
 
 const target = useTemplateRef<HTMLElement>("target");
 onClickOutside(target, () => {
-  innerFocus.value = false;
+  if (props.editingOpinion === undefined) innerFocus.value = false;
 });
 
 const newOpinionIntention = clearNewOpinionIntention();
@@ -254,6 +309,14 @@ if (newOpinionIntention.enabled) {
 
 const opinionBody = ref(newOpinionIntention.opinionBody);
 const opinionPlainText = ref("");
+let creationDraft = "";
+const editBaseline = ref<string>();
+const isEditDirty = computed(
+  () =>
+    props.editingOpinion !== undefined &&
+    editBaseline.value !== undefined &&
+    opinionBody.value !== editBaseline.value
+);
 const hasVisibleOpinionText = computed(() =>
   hasVisiblePlainText(opinionPlainText.value)
 );
@@ -262,7 +325,78 @@ const showLoginDialog = ref(false);
 const showGuidelinesDialog = ref(false);
 
 // Template ref for Editor component
-const editorRef = ref<{ focus: () => void }>();
+const editorRef = ref<{ focus: () => void; focusEnd: () => void }>();
+
+watch(
+  () => props.editingOpinion,
+  (opinion, previous) => {
+    if (opinion !== undefined) {
+      if (previous === undefined) {
+        creationDraft = opinionBody.value;
+        if (hasVisibleOpinionText.value)
+          saveOpinionDraft(props.postSlugId, creationDraft);
+      }
+      editBaseline.value = undefined;
+      opinionBody.value = opinion.opinion;
+      innerFocus.value = true;
+      mountEditor();
+      lockRoute();
+    } else if (previous !== undefined) {
+      opinionBody.value = creationDraft;
+      editBaseline.value = undefined;
+      innerFocus.value = false;
+      lockRoute();
+    }
+  }
+);
+
+function onEditorReady(serializedContent: string): void {
+  if (props.editingOpinion === undefined) return;
+  opinionBody.value = serializedContent;
+  editBaseline.value = serializedContent;
+  void nextTick(() => editorRef.value?.focusEnd());
+}
+
+function cancelEdit(): void {
+  emit("editCancelled");
+}
+
+async function discardEditAndLeave(): Promise<void> {
+  await proceedWithNavigation(cancelEdit);
+}
+
+async function saveEdit(): Promise<void> {
+  const opinion = props.editingOpinion;
+  if (
+    opinion === undefined ||
+    !isEditDirty.value ||
+    editMutation.isPending.value
+  )
+    return;
+  try {
+    const result = await editMutation.mutateAsync({
+      opinionSlugId: opinion.opinionSlugId,
+      sourceVersion: opinion.displayContent.sourceVersion,
+      opinionBody: opinionBody.value,
+    });
+    if (
+      props.editingOpinion?.displayContent.sourceVersion !==
+      opinion.displayContent.sourceVersion
+    )
+      return;
+    if (result.success) emit("editedOpinion", result.displayedOpinionItem);
+    else
+      showNotifyMessage(
+        result.reason === "has_votes"
+          ? editT("hasVotes")
+          : result.reason === "version_conflict"
+            ? editT("changed")
+            : editT("failed")
+      );
+  } catch {
+    showNotifyMessage(editT("failed"));
+  }
+}
 
 // Handle guidelines dialog close - restore focus to editor
 function handleGuidelinesDialogClose() {
@@ -279,7 +413,7 @@ watch(showGuidelinesDialog, (isOpen, wasOpen) => {
 });
 
 watch(characterCount, (count) => {
-  if (count === 0) {
+  if (count === 0 && props.editingOpinion === undefined) {
     deleteOpinionDraft(props.postSlugId);
   }
 });
@@ -345,7 +479,13 @@ const {
   showExitDialog,
   proceedWithNavigation,
   isRouteLockedCheck,
-} = useRouteGuard(() => characterCount.value > 0, onBeforeRouteLeaveCallback);
+} = useRouteGuard(
+  () =>
+    props.editingOpinion !== undefined
+      ? isEditDirty.value
+      : characterCount.value > 0,
+  onBeforeRouteLeaveCallback
+);
 
 const { y: yScroll } = useWindowScroll();
 
@@ -367,7 +507,7 @@ onMounted(() => {
 });
 
 watch(yScroll, () => {
-  if (disableAutocollapse === false) {
+  if (disableAutocollapse === false && props.editingOpinion === undefined) {
     innerFocus.value = false;
     dummyInput.value?.focus();
   }
@@ -439,6 +579,12 @@ defineExpose({
 });
 
 function onBeforeRouteLeaveCallback(to: RouteGuardDestination): boolean {
+  if (props.editingOpinion !== undefined) {
+    if (isSameConversationTabRoute(to)) return true;
+    if (isEditDirty.value || editMutation.isPending.value) return false;
+    cancelEdit();
+    return true;
+  }
   if (characterCount.value === 0) {
     deleteOpinionDraft(props.postSlugId);
     return true;
@@ -587,6 +733,20 @@ async function submitPostClicked() {
     border-color: rgba(255, 255, 255, 0.6);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   }
+}
+.borderStyle.editing {
+  border-color: $primary;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+}
+.editing-header {
+  color: $primary;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+}
+.editing :deep(.editor-wrapper) {
+  max-height: min(14rem, 35vh);
+  overflow-y: auto;
 }
 
 .dummyInputStyle {

@@ -6,6 +6,7 @@
     :comment-filter="commentFilter"
     :on-view-analysis="onViewAnalysis"
     :conversation-route-context="conversationRouteContext"
+    :editing-opinion="undefined"
     @update:comment-filter="
       (filter: CommentFilterOptions) => emit('update:commentFilter', filter)
     "

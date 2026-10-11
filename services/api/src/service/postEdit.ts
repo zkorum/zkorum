@@ -13,7 +13,8 @@ import {
     projectOrganizationOwnershipTable,
     projectTable,
 } from "@/shared-backend/schema.js";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, isNotNull, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { httpErrors } from "@fastify/sensible";
 import { toUnionUndefined } from "@/shared/shared.js";
 import type { GoogleCloudCredentials } from "@/shared-backend/googleCloudAuth.js";
@@ -32,9 +33,16 @@ import type {
     UpdateConversationRequest,
     UpdateConversationResponse,
 } from "@/shared/types/dto.js";
-import type { ConversationTypeConfig } from "@/shared/types/zod.js";
+import type {
+    ConversationTypeConfig,
+    DisplayedOpinionItem,
+    ConversationProjectAssignment,
+    PremiumFeature,
+} from "@/shared/types/zod.js";
+import { zodExternalSourceConfig } from "@/shared/types/zod.js";
 import {
     getProjectLanguageSettings,
+    getProjectCapabilitiesById,
     hasProjectCapability,
 } from "@/service/projectAccess.js";
 import {
@@ -76,15 +84,37 @@ import {
     normalizeInheritedConversationMultilingualSettings,
     sourceLanguageToDisplayLanguage,
 } from "./translationLanguageSetting.js";
-import { normalizeUserRichTextInput } from "./richText.js";
+import {
+    normalizeUserRichTextInput,
+    type NormalizedUserRichText,
+} from "./richText.js";
+import { validateSeedOpinionAdditions } from "@/shared/utils/seedOpinions.js";
+import {
+    fetchConversationSeedOpinions,
+    type ConversationSeedOpinion,
+} from "./conversationSeedOpinions.js";
+import { postNewOpinion } from "./comment.js";
+import { createRankingItem } from "./rankingItem.js";
+import { lockRankingScoringConfig } from "./maxdiff.js";
+import type { RealtimeSSEManager } from "./realtimeSSE.js";
 import { projectConversationTypeConfig } from "@/shared/utils/conversationTypeConfig.js";
-import { updateConversationEmailUpdateOverrideInTransaction } from "./conversationEmailUpdate.js";
+import {
+    updateConversationEmailUpdateOverrideInTransaction,
+    hasActiveDelivery,
+    validateConversationEmailUpdateProjectMove,
+} from "./conversationEmailUpdate.js";
+import { lockConversationEmailUpdateProject } from "./conversationEmailUpdateProjectLock.js";
+import {
+    getConversationProjectOptions,
+    resolveConversationProjectTarget,
+} from "./conversationProject.js";
 import {
     createEagerContentTranslationWorkForKnownConversation,
     fetchCurrentSurveyQuestionSources,
     fetchSeedOpinionSources,
     type ConversationContentSource,
     type SurveyQuestionContentSource,
+    type RankingItemContentSource,
 } from "./contentTranslation.js";
 
 interface GetConversationForEditProps {
@@ -98,6 +128,7 @@ export async function getConversationForEdit({
     conversationSlugId,
     userId,
 }: GetConversationForEditProps): Promise<GetConversationForEditResponse> {
+    const defaultProjectOrganization = alias(organizationTable, "defaultProjectOrganization");
     const results = await db
         .select({
             conversationId: conversationTable.id,
@@ -105,7 +136,9 @@ export async function getConversationForEdit({
             projectId: conversationTable.projectId,
             projectSlug: projectTable.slug,
             projectTitle: projectTable.title,
-            projectDirectoryVisibility: projectTable.directoryVisibility,
+            defaultProjectOrganizationId:
+                projectTable.autoProvisionedForOrganizationId,
+            defaultProjectOrganizationSlug: defaultProjectOrganization.slug,
             projectSourceLanguageCode: projectContentTable.sourceLanguageCode,
             conversationTitle: conversationContentTable.title,
             conversationBody: conversationContentTable.body,
@@ -118,6 +151,9 @@ export async function getConversationForEdit({
             participationMode: conversationTable.participationMode,
             conversationType: conversationTable.conversationType,
             rankingMode: rankingConversationConfigTable.rankingMode,
+            externalSourceConfig:
+                rankingConversationConfigTable.externalSourceConfig,
+            isImporting: conversationTable.isImporting,
             requiresEventTicket: conversationTable.requiresEventTicket,
             aiLabelingEnabled: polisConversationConfigTable.aiLabelingEnabled,
             votingPresentation: polisConversationConfigTable.votingPresentation,
@@ -141,6 +177,7 @@ export async function getConversationForEdit({
             projectTable,
             eq(projectTable.id, conversationTable.projectId),
         )
+        .leftJoin(defaultProjectOrganization, eq(defaultProjectOrganization.id, projectTable.autoProvisionedForOrganizationId))
         .leftJoin(
             projectContentTable,
             eq(projectContentTable.id, projectTable.currentContentId),
@@ -190,6 +227,7 @@ export async function getConversationForEdit({
             and(
                 eq(conversationTable.slugId, conversationSlugId),
                 isNull(organizationTable.deletedAt),
+                isNull(projectTable.deletedAt),
             ),
         );
 
@@ -211,6 +249,9 @@ export async function getConversationForEdit({
 
     // Check if conversation is locked
     const isLocked = conversation.moderationAction === "lock";
+    const externalSourceConfig = zodExternalSourceConfig
+        .nullable()
+        .parse(conversation.externalSourceConfig);
 
     const surveyConfig = await getSurveyConfigForConversation({
         db,
@@ -225,7 +266,7 @@ export async function getConversationForEdit({
         projectId: conversation.projectId,
     });
     const projectLanguageProject =
-        conversation.projectDirectoryVisibility === "listed"
+        conversation.defaultProjectOrganizationId === null
             ? {
                   projectSlug: conversation.projectSlug,
                   projectTitle: conversation.projectTitle,
@@ -243,6 +284,17 @@ export async function getConversationForEdit({
                   },
               }
             : undefined;
+    const projectTarget: Extract<
+        GetConversationForEditResponse,
+        { success: true }
+    >["projectTarget"] =
+        conversation.defaultProjectOrganizationSlug === null
+            ? { kind: "project", projectSlug: conversation.projectSlug }
+            : {
+                  kind: "no_project",
+                  organizationSlug: conversation.defaultProjectOrganizationSlug,
+              };
+    const projectOptions = await getConversationProjectOptions({ db, userId });
     const editMultilingualSetting =
         conversation.languageSettingsSource === "conversation_override"
             ? getManualMultilingualSettingsFromEffectiveTargets({
@@ -308,14 +360,14 @@ export async function getConversationForEdit({
         multilingualSetting: editMultilingualSetting,
         languageSettingsSource: conversation.languageSettingsSource,
         projectLanguageProject,
+        currentProjectSlug: conversation.projectSlug,
+        projectTarget,
+        projectOptions,
         isIndexed: conversation.isIndexed,
         participationMode: conversation.participationMode,
         requiresEventTicket: toUnionUndefined(conversation.requiresEventTicket),
         aiLabelingEnabled: conversation.aiLabelingEnabled ?? false,
-        preferredOpinionGroupCount:
-            editPermissions.canUseAnalysisVariantsPreference
-                ? (conversation.preferredOpinionGroupCount ?? null)
-                : null,
+        preferredOpinionGroupCount: conversation.preferredOpinionGroupCount ?? null,
         postAsOrganizationName: toUnionUndefined(
             conversation.autoProvisionedForUserId === null
                 ? conversation.postAsOrganizationName
@@ -331,12 +383,26 @@ export async function getConversationForEdit({
         updatedAt: conversation.updatedAt,
         isLocked,
         editPermissions,
+        seedOpinions: await fetchConversationSeedOpinions({
+            db,
+            conversationId: conversation.conversationId,
+            conversationType: conversation.conversationType,
+            externalSourceManaged: externalSourceConfig !== null,
+        }),
+        canAddSeedOpinions:
+            editPermissions.canEditConversationContent &&
+            !isLocked &&
+            !conversation.isImporting &&
+            externalSourceConfig === null,
+        externalSourceConfig,
     };
 }
 
 interface UpdateConversationProps {
     db: PostgresDatabase;
     userId: string;
+    didWrite: string;
+    realtimeSSEManager?: RealtimeSSEManager;
     googleCloudCredentials?: GoogleCloudCredentials;
     valkey?: Valkey;
     data: UpdateConversationRequest;
@@ -351,6 +417,8 @@ type UpdateConversationServiceResponse =
 export async function updateConversation({
     db,
     userId,
+    didWrite,
+    realtimeSSEManager,
     googleCloudCredentials,
     valkey,
     data,
@@ -367,11 +435,38 @@ export async function updateConversation({
         conversationTypeConfig,
         surveyConfig,
         conversationEmailUpdateEnabledOverride,
+        newSeedOpinionList = [],
+        projectChange,
     } = data;
-    const aiLabelingEnabled = conversationTypeConfig.conversationType === "polis"
-        ? conversationTypeConfig.aiLabelingEnabled : undefined;
-    const preferredOpinionGroupCount = conversationTypeConfig.conversationType === "polis"
-        ? conversationTypeConfig.preferredOpinionGroupCount : undefined;
+    const aiLabelingEnabled =
+        conversationTypeConfig.conversationType === "polis"
+            ? conversationTypeConfig.aiLabelingEnabled
+            : undefined;
+    const preferredOpinionGroupCount =
+        conversationTypeConfig.conversationType === "polis"
+            ? conversationTypeConfig.preferredOpinionGroupCount
+            : undefined;
+
+    const normalizedSeedOpinions: NormalizedUserRichText[] = [];
+    for (const [index, html] of newSeedOpinionList.entries()) {
+        const normalization = normalizeUserRichTextInput({
+            html,
+            validationMode: "opinion",
+        });
+        if (!normalization.success) {
+            return {
+                success: false,
+                reason: "invalid_seed_opinion",
+                seedOpinionFailure: {
+                    index,
+                    reason: normalization.reason,
+                    count: normalization.count,
+                    limit: normalization.limit,
+                },
+            };
+        }
+        normalizedSeedOpinions.push(normalization.content);
+    }
 
     let sanitizedBody = conversationBody;
     let bodyPlainText = "";
@@ -400,17 +495,103 @@ export async function updateConversation({
         }
     }
 
-    const result = await getPrimaryDatabase(db).transaction(async (tx) => {
+    const primaryDb = getPrimaryDatabase(db);
+    if (projectChange !== undefined) {
+        const source = (await primaryDb.select({ projectId: conversationTable.projectId, projectSlug: projectTable.slug, moderationAction: conversationModerationTable.moderationAction })
+            .from(conversationTable).innerJoin(projectTable, eq(projectTable.id, conversationTable.projectId))
+            .leftJoin(conversationModerationTable, and(eq(conversationModerationTable.conversationId, conversationTable.id), isNull(conversationModerationTable.deletedAt)))
+            .where(and(eq(conversationTable.slugId, conversationSlugId), isNotNull(conversationTable.currentContentId), isNull(projectTable.deletedAt)))).at(0);
+        if (source === undefined) return { success: false, reason: "not_found" };
+        if (!(await hasProjectCapability({ db: primaryDb, userId, projectId: source.projectId, capability: "conversation_edit" }))) return { success: false, reason: "not_author" };
+        if (source.moderationAction === "lock") return { success: false, reason: "conversation_locked" };
+        if (source.projectSlug !== projectChange.expectedProjectSlug) return { success: false, reason: "project_assignment_changed" };
+    }
+    // Default-project provisioning follows creation's lock order; the move itself
+    // rechecks capabilities and destination state under project/conversation locks.
+    const destination =
+        projectChange === undefined
+            ? undefined
+            : await resolveConversationProjectTarget({
+                  db: primaryDb,
+                  userId,
+                  target: projectChange.target,
+              });
+    if (projectChange !== undefined && destination === undefined)
+        return { success: false, reason: "project_not_available" };
+    const result = await primaryDb.transaction(async (tx) => {
         const now = new Date();
+        const initialConversation = (
+            await tx
+                .select({
+                    id: conversationTable.id,
+                    projectId: conversationTable.projectId,
+                })
+                .from(conversationTable)
+                .where(eq(conversationTable.slugId, conversationSlugId))
+        ).at(0);
+        if (initialConversation === undefined)
+            return {
+                success: false,
+                reason: "not_found",
+            } satisfies UpdateConversationServiceResponse;
+        const destinationProjectId =
+            destination?.projectId ?? initialConversation.projectId;
+        const projectIds = [
+            ...new Set([initialConversation.projectId, destinationProjectId]),
+        ].sort((a, b) => a - b);
+        for (const projectId of projectIds) {
+            if (
+                !(await lockConversationEmailUpdateProject({
+                    db: tx,
+                    projectId,
+                    lockMode: projectChange !== undefined || conversationEmailUpdateEnabledOverride !== undefined ? "no key update" : "share",
+                }))
+            )
+                return {
+                    success: false,
+                    reason: "project_not_available",
+                } satisfies UpdateConversationServiceResponse;
+        }
+        const lockedDestination =
+            destination === undefined
+                ? undefined
+                : (
+                      await tx
+                          .select({
+                              projectId: projectTable.id,
+                              projectSlug: projectTable.slug,
+                              projectTitle: projectTable.title,
+                              visibility: projectTable.directoryVisibility,
+                          })
+                          .from(projectTable)
+                          .where(eq(projectTable.id, destination.projectId))
+                  ).at(0);
+        if (
+            projectChange !== undefined &&
+            (lockedDestination === undefined ||
+                (projectChange.target.kind === "project" &&
+                    (lockedDestination.projectSlug !==
+                        projectChange.target.projectSlug ||
+                        lockedDestination.visibility !== "listed")))
+        ) {
+            return {
+                success: false,
+                reason: "project_not_available",
+            } satisfies UpdateConversationServiceResponse;
+        }
         // Get conversation and check authorization
         const conversationResults = await tx
             .select({
                 conversationId: conversationTable.id,
                 projectId: conversationTable.projectId,
-                organizationName: organizationTable.displayName,
+                projectSlug: projectTable.slug,
                 currentContentId: conversationTable.currentContentId,
                 conversationType: conversationTable.conversationType,
                 rankingMode: rankingConversationConfigTable.rankingMode,
+                externalSourceConfig:
+                    rankingConversationConfigTable.externalSourceConfig,
+                rankingConfigId: conversationTable.rankingConfigId,
+                isImporting: conversationTable.isImporting,
                 polisConfigId: conversationTable.polisConfigId,
                 isIndexed: conversationTable.isIndexed,
                 participationMode: conversationTable.participationMode,
@@ -438,28 +619,15 @@ export async function updateConversation({
                 moderationAction: conversationModerationTable.moderationAction,
             })
             .from(conversationTable)
+            .innerJoin(
+                projectTable,
+                eq(projectTable.id, conversationTable.projectId),
+            )
             .leftJoin(
                 conversationContentTable,
                 eq(
                     conversationContentTable.id,
                     conversationTable.currentContentId,
-                ),
-            )
-            .innerJoin(
-                projectOrganizationOwnershipTable,
-                and(
-                    eq(
-                        projectOrganizationOwnershipTable.projectId,
-                        conversationTable.projectId,
-                    ),
-                    isNull(projectOrganizationOwnershipTable.deletedAt),
-                ),
-            )
-            .innerJoin(
-                organizationTable,
-                eq(
-                    projectOrganizationOwnershipTable.organizationId,
-                    organizationTable.id,
                 ),
             )
             .leftJoin(
@@ -489,9 +657,9 @@ export async function updateConversation({
             .where(
                 and(
                     eq(conversationTable.slugId, conversationSlugId),
-                    isNull(organizationTable.deletedAt),
                 ),
-            );
+            )
+            .for("no key update", { of: conversationTable });
 
         if (conversationResults.length === 0) {
             return { success: false, reason: "not_found" } as const;
@@ -499,14 +667,54 @@ export async function updateConversation({
 
         const conversation = conversationResults[0];
 
-        const canUpdateConversation = await hasProjectCapability({
+        if (
+            conversation.projectId !== initialConversation.projectId ||
+            (projectChange !== undefined &&
+                projectChange.expectedProjectSlug !== conversation.projectSlug)
+        ) {
+            return {
+                success: false,
+                reason: "project_assignment_changed",
+            } satisfies UpdateConversationServiceResponse;
+        }
+        const projectChanged = destinationProjectId !== conversation.projectId;
+        const capabilities = await getProjectCapabilitiesById({
             db: tx,
             userId,
-            projectId: conversation.projectId,
-            capability: "conversation_edit",
+            projectIds,
+            requestedCapabilities: ["conversation_edit", "conversation_create"],
+            lockAuthorization: true,
         });
+
+        const canUpdateConversation =
+            capabilities
+                .get(conversation.projectId)
+                ?.has("conversation_edit") === true;
         if (!canUpdateConversation) {
             return { success: false, reason: "not_author" } as const;
+        }
+        if (
+            projectChanged &&
+            (!capabilities
+                .get(destinationProjectId)
+                ?.has("conversation_create") ||
+                !capabilities
+                    .get(destinationProjectId)
+                    ?.has("conversation_edit"))
+        ) {
+            return {
+                success: false,
+                reason: "missing_project_capability",
+            } satisfies UpdateConversationServiceResponse;
+        }
+        if (projectChanged) {
+            for (const projectId of projectIds) {
+                if (await hasActiveDelivery({ db: tx, projectId }))
+                    return {
+                        success: false,
+                        reason: "active_delivery_conflict",
+                    } satisfies UpdateConversationServiceResponse;
+            }
         }
 
         // Check if conversation is locked
@@ -527,6 +735,35 @@ export async function updateConversation({
         }
 
         const conversationId = conversation.conversationId;
+        if (normalizedSeedOpinions.length > 0) {
+            if (
+                conversation.isImporting ||
+                conversation.externalSourceConfig !== null
+            ) {
+                return {
+                    success: false,
+                    reason: "seed_opinions_not_allowed",
+                } satisfies UpdateConversationServiceResponse;
+            }
+            const existingOpinions = await fetchConversationSeedOpinions({
+                db: tx,
+                conversationId,
+                conversationType: conversation.conversationType,
+            });
+            const seedOpinionFailure = validateSeedOpinionAdditions({
+                opinions: normalizedSeedOpinions.map((opinion) => opinion.html),
+                existingOpinions: existingOpinions.map(
+                    (opinion) => opinion.content,
+                ),
+            }).at(0);
+            if (seedOpinionFailure !== undefined) {
+                return {
+                    success: false,
+                    reason: "invalid_seed_opinion",
+                    seedOpinionFailure,
+                } satisfies UpdateConversationServiceResponse;
+            }
+        }
         const surveyAnalysisRefreshContext = buildSurveyAnalysisRefreshContext({
             conversationId,
             slugId: data.conversationSlugId,
@@ -553,7 +790,7 @@ export async function updateConversation({
             languageSettingsSource === "project_inherited"
                 ? await getProjectLanguageSettings({
                       db: tx,
-                      projectId: conversation.projectId,
+                      projectId: destinationProjectId,
                   })
                 : undefined;
         const requestedMultilingualSetting =
@@ -569,7 +806,7 @@ export async function updateConversation({
                       languageSettings: inheritedProjectLanguageSettings,
                   });
         const subject = getPremiumEntitlementSubjectForConversation({
-            conversation: { projectId: conversation.projectId, userId },
+            conversation: { projectId: destinationProjectId, userId },
         });
         const restrictedDynamicTranslationFeatures =
             await getRestrictedPremiumFeatures({
@@ -581,6 +818,39 @@ export async function updateConversation({
             });
         const canUseDynamicTranslation =
             restrictedDynamicTranslationFeatures.length === 0;
+        if (projectChanged) {
+            const resultingPremiumFeatures: PremiumFeature[] = [];
+            if (effectiveSurveyConfig !== null)
+                resultingPremiumFeatures.push("survey");
+            if (requiresEventTicket !== undefined)
+                resultingPremiumFeatures.push("event_ticket");
+            const resultingPreferredGroupCount =
+                preferredOpinionGroupCount === undefined
+                    ? conversation.currentPreferredOpinionGroupCount
+                    : preferredOpinionGroupCount;
+            if (resultingPreferredGroupCount !== null)
+                resultingPremiumFeatures.push("analysis_variants");
+            const restrictedFeatures = await getRestrictedPremiumFeatures({
+                db: tx,
+                subject,
+                features: resultingPremiumFeatures,
+                mode: "creation",
+                now,
+            });
+            if (restrictedFeatures.length > 0)
+                return {
+                    success: false,
+                    reason: "premium_access_required",
+                } satisfies UpdateConversationServiceResponse;
+            if (
+                projectChange?.target.kind === "no_project" &&
+                languageSettingsSource === "project_inherited"
+            )
+                return {
+                    success: false,
+                    reason: "invalid_access_settings",
+                } satisfies UpdateConversationServiceResponse;
+        }
         if (
             restrictedDynamicTranslationFeatures.length > 0 &&
             (premiumMultilingualSetting.dynamicTranslationEnabled ||
@@ -627,7 +897,10 @@ export async function updateConversation({
                 return blockSourceLanguageMetadataPromise;
             };
 
-        if (contentChanged) {
+        if (
+            !projectChanged &&
+            (contentChanged || normalizedSeedOpinions.length > 0)
+        ) {
             const premiumFeatures = await getPremiumFeaturesInConversation({
                 db: tx,
                 conversation: {
@@ -723,6 +996,7 @@ export async function updateConversation({
                 ? conversationTypeConfig.votingPresentation
                 : "list";
         const conversationSettingsChanged =
+            projectChanged ||
             isIndexed !== conversation.isIndexed ||
             participationMode !== conversation.participationMode ||
             (requiresEventTicket ?? null) !==
@@ -736,7 +1010,8 @@ export async function updateConversation({
 
         if (
             preferredOpinionGroupCount !== undefined &&
-            preferredOpinionGroupCount !== null
+            preferredOpinionGroupCount !== null &&
+            (projectChanged || preferredOpinionGroupCountChanged)
         ) {
             const restrictedFeatures = await getRestrictedPremiumFeatures({
                 db: tx,
@@ -753,7 +1028,22 @@ export async function updateConversation({
             }
         }
 
-        if (conversationEmailUpdateEnabledOverride !== undefined) {
+        if (projectChanged) {
+            const emailUpdateResult =
+                await validateConversationEmailUpdateProjectMove({
+                    db: tx,
+                    userId,
+                    conversationSlugId,
+                    projectId: destinationProjectId,
+                    enabledOverride: conversationEmailUpdateEnabledOverride,
+                    now,
+                });
+            if (!emailUpdateResult.success) return emailUpdateResult;
+        }
+        if (
+            !projectChanged &&
+            conversationEmailUpdateEnabledOverride !== undefined
+        ) {
             const emailUpdateResult =
                 await updateConversationEmailUpdateOverrideInTransaction({
                     db: tx,
@@ -799,26 +1089,22 @@ export async function updateConversation({
             newContentPublicId = newContentResult[0].publicId;
         }
 
-        const conversationUpdateValues: {
-            currentContentId?: number;
-            isIndexed: boolean;
-            participationMode: typeof participationMode;
-            requiresEventTicket: typeof requiresEventTicket | null;
-            languageSettingsSource: typeof languageSettingsSource;
-            updatedAt: Date;
-            isEdited?: boolean;
-        } = {
-            isIndexed: isIndexed,
-            participationMode: participationMode,
+        const emailOverrideUpdate = projectChanged && conversationEmailUpdateEnabledOverride !== undefined ? {
+            conversationEmailUpdateEnabledOverride,
+            conversationEmailUpdateOverrideUpdatedAt: now,
+            conversationEmailUpdateOverrideUpdatedByUserId: userId,
+        } : undefined;
+        const conversationUpdateValues = {
+            projectId: projectChanged ? destinationProjectId : undefined,
+            currentContentId: newContentId,
+            isEdited: newContentId === undefined ? undefined : true,
+            isIndexed,
+            participationMode,
             requiresEventTicket: requiresEventTicket ?? null,
             languageSettingsSource,
-            updatedAt: new Date(),
-        };
-
-        if (newContentId !== undefined) {
-            conversationUpdateValues.currentContentId = newContentId;
-            conversationUpdateValues.isEdited = true;
-        }
+            updatedAt: now,
+            ...emailOverrideUpdate,
+        } satisfies Partial<typeof conversationTable.$inferInsert>;
 
         // Update conversation with new content and settings
         await tx
@@ -849,6 +1135,86 @@ export async function updateConversation({
                         conversation.polisConfigId,
                     ),
                 );
+        }
+
+        const addedSeedOpinions: ConversationSeedOpinion[] = [];
+        const addedOpinions: DisplayedOpinionItem[] = [];
+        const rankingItemSources: RankingItemContentSource[] = [];
+        if (normalizedSeedOpinions.length > 0) {
+            if (conversation.conversationType === "ranking") {
+                await lockRankingScoringConfig({ db: tx, conversationId });
+                for (const seedOpinion of normalizedSeedOpinions) {
+                    const item = await createRankingItem({
+                        db: tx,
+                        tx,
+                        conversationId,
+                        conversationSlugId,
+                        conversationContentId:
+                            newContentId ?? conversation.currentContentId,
+                        authorId: userId,
+                        title: seedOpinion.html,
+                        isSeed: true,
+                        googleCloudCredentials,
+                        useGoogleLanguageDetection:
+                            requestedDynamicTranslationEnabled,
+                    });
+                    rankingItemSources.push(item.contentSource);
+                    addedSeedOpinions.push({
+                        slugId: item.slugId,
+                        content: item.contentSource.title,
+                    });
+                }
+                if (conversation.rankingConfigId !== null) {
+                    await tx
+                        .update(rankingConversationConfigTable)
+                        .set({
+                            itemCount: sql`${rankingConversationConfigTable.itemCount} + ${addedSeedOpinions.length}`,
+                            totalItemCount: sql`${rankingConversationConfigTable.totalItemCount} + ${addedSeedOpinions.length}`,
+                        })
+                        .where(
+                            eq(
+                                rankingConversationConfigTable.id,
+                                conversation.rankingConfigId,
+                            ),
+                        );
+                }
+            } else {
+                for (const seedOpinion of normalizedSeedOpinions) {
+                    const opinion = await postNewOpinion({
+                        db: tx,
+                        tx,
+                        normalizedContent: seedOpinion,
+                        conversationSlugId,
+                        didWrite,
+                        userAgent: "Seed Opinion Creation",
+                        now,
+                        isSeed: true,
+                        googleCloudCredentials,
+                        useGoogleLanguageDetection:
+                            requestedDynamicTranslationEnabled,
+                        conversationMetadata: {
+                            conversationId,
+                            conversationContentId:
+                                newContentId ?? conversation.currentContentId,
+                            conversationAuthorId: userId,
+                            conversationIsIndexed: isIndexed,
+                            conversationParticipationMode: participationMode,
+                            conversationIsClosed: conversation.isClosed,
+                            requiresEventTicket: requiresEventTicket ?? null,
+                        },
+                    });
+                    if (!opinion.success) {
+                        throw httpErrors.internalServerError(
+                            "Failed to append seed opinion",
+                        );
+                    }
+                    addedSeedOpinions.push({
+                        slugId: opinion.opinionSlugId,
+                        content: opinion.opinionItem.opinion,
+                    });
+                    addedOpinions.push(opinion.displayedOpinionItem);
+                }
+            }
         }
 
         let surveySources: SurveyQuestionContentSource[] = [];
@@ -969,14 +1335,29 @@ export async function updateConversation({
             now,
         });
 
-        if (contentChanged || surveyConfig !== undefined) {
+        if (
+            contentChanged ||
+            surveyConfig !== undefined ||
+            addedSeedOpinions.length > 0
+        ) {
             await createConversationViewSnapshotsFromCurrentState({
                 db: tx,
                 conversationId,
-                viewReason: contentChanged
-                    ? "conversation_content_updated"
-                    : "survey_refreshed",
+                viewReason:
+                    contentChanged || addedSeedOpinions.length > 0
+                        ? "conversation_content_updated"
+                        : "survey_refreshed",
+                emitCommentStatsRealtimeEvent:
+                    addedSeedOpinions.length > 0 &&
+                    conversation.conversationType === "polis",
             });
+        }
+        if (addedSeedOpinions.length > 0) {
+            analysisRefreshScheduled =
+                (await scheduleConversationAnalysisForSurveyChange({
+                    db: tx,
+                    conversation: surveyAnalysisRefreshContext,
+                })) || analysisRefreshScheduled;
         }
 
         if (
@@ -998,7 +1379,7 @@ export async function updateConversation({
         const conversationSource: ConversationContentSource = {
             conversationId,
             conversationSlugId: data.conversationSlugId,
-            projectId: conversation.projectId,
+            projectId: destinationProjectId,
             languageSettingsSource,
             dynamicTranslationEnabled:
                 targetLanguagePolicy.dynamicTranslationEnabled,
@@ -1031,26 +1412,45 @@ export async function updateConversation({
                 targetLanguagePolicy,
                 surveySources,
                 seedOpinionSources,
-                rankingItemSources: [],
+                rankingItemSources,
                 now,
                 log,
             });
 
+        const projectAssignment: ConversationProjectAssignment | undefined =
+            projectChanged &&
+            lockedDestination !== undefined &&
+            projectChange !== undefined
+                ? {
+                      previousProjectSlug: conversation.projectSlug,
+                      projectSlug: lockedDestination.projectSlug,
+                      projectTitle: lockedDestination.projectTitle,
+                      target: projectChange.target,
+                  }
+                : undefined;
+        const conversationSettings = {
+            isIndexed,
+            participationMode,
+            requiresEventTicket: requiresEventTicket ?? null,
+            aiLabelingEnabled: updatedAiLabelingEnabled,
+            presentation: projectConversationTypeConfig(conversationTypeConfig),
+            preferredOpinionGroupCount: updatedPreferredOpinionGroupCount,
+            isClosed: conversation.isClosed,
+            projectAssignment,
+        };
+        if (conversationSettingsChanged) {
+            await queueConversationSettingsUpdatedEvent({
+                db: tx,
+                conversationSlugId,
+                settings: conversationSettings,
+            });
+        }
         return {
             success: true,
             eagerContentTranslationWorkIds,
-            conversationId,
-            conversationSlugId,
-            didUpdateConversationSettings: conversationSettingsChanged,
-            conversationSettings: {
-                isIndexed,
-                participationMode,
-                requiresEventTicket: requiresEventTicket ?? null,
-                aiLabelingEnabled: updatedAiLabelingEnabled,
-                presentation: projectConversationTypeConfig(conversationTypeConfig),
-                preferredOpinionGroupCount: updatedPreferredOpinionGroupCount,
-                isClosed: conversation.isClosed,
-            },
+            projectAssignment,
+            addedSeedOpinions,
+            addedOpinions,
             analysisRefreshScheduled,
             surveyAnalysisRefreshContext,
         } as const;
@@ -1067,16 +1467,25 @@ export async function updateConversation({
         });
     }
 
-    if (result.didUpdateConversationSettings) {
-        await queueConversationSettingsUpdatedEvent({
-            db,
-            conversationSlugId: result.conversationSlugId,
-            settings: result.conversationSettings,
+    for (const opinion of result.addedOpinions) {
+        realtimeSSEManager?.broadcastToConversationSubscribersExcept({
+            conversationSlugId,
+            id: undefined,
+            event: "new_opinion",
+            data: {
+                conversationSlugId,
+                opinionSlugId: opinion.opinionSlugId,
+                timestamp: Date.now(),
+            },
+            excludeUserId: userId,
         });
     }
 
     return {
         success: true,
         eagerContentTranslationWorkIds: result.eagerContentTranslationWorkIds,
+        projectAssignment: result.projectAssignment,
+        addedSeedOpinions: result.addedSeedOpinions,
+        addedOpinions: result.addedOpinions,
     };
 }

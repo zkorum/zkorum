@@ -4,7 +4,11 @@ import {
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
 } from "src/api";
-import { type CastVoteResponse, Dto, type FetchUserVotesForPostSlugIdsResponse } from "src/shared/types/dto";
+import {
+  type CastVoteResponse,
+  Dto,
+  type FetchUserVotesForPostSlugIdsResponse,
+} from "src/shared/types/dto";
 import { type VotingAction } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 
@@ -21,23 +25,27 @@ export function useBackendVoteApi() {
     votingAction,
     returnIsUserClustered,
     isCurrent,
+    sourceVersion,
   }: {
     opinionSlugId: string;
     votingAction: VotingAction;
     returnIsUserClustered: boolean;
     isCurrent: () => boolean;
+    sourceVersion: string | undefined;
   }): Promise<CastVoteResponse> {
     const params: ApiV1VoteCastPostRequest = {
       opinionSlugId,
       chosenOption: votingAction,
       returnIsUserClustered,
+      sourceVersion,
     };
 
     const { url, options: requestOptions } =
       await DefaultApiAxiosParamCreator().apiV1VoteCastPost(params);
     const encodedUcan = await buildEncodedUcan(url, requestOptions);
     // Signing can outlive the session during logout or an account switch.
-    if (!isCurrent()) throw new DOMException("Voting session changed", "AbortError");
+    if (!isCurrent())
+      throw new DOMException("Voting session changed", "AbortError");
     const response = await DefaultApiFactory(
       undefined,
       undefined,
@@ -77,7 +85,10 @@ export function useBackendVoteApi() {
       undefined,
       undefined,
       api
-    ).apiV1UserVoteGetByConversationsPost(params, createRawAxiosRequestConfig({ encodedUcan, signal }));
+    ).apiV1UserVoteGetByConversationsPost(
+      params,
+      createRawAxiosRequestConfig({ encodedUcan, signal })
+    );
 
     return Dto.getUserVotesByConversationsResponse.parse(response.data);
   }

@@ -1,6 +1,6 @@
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 
-export interface ConversationReviewTranslations {
+export interface SeedOpinionsTranslations {
   nextButton: string;
   publishButton: string;
   addSeedOpinions: string;
@@ -12,6 +12,7 @@ export interface ConversationReviewTranslations {
   addOpinion: string;
   addMaxDiffItem: string;
   opinionCannotBeEmpty: string;
+  opinionHtmlTooLong: string;
   opinionExceedsLimit: string;
   opinionDuplicate: string;
   errorCreatingConversation: string;
@@ -23,9 +24,9 @@ export interface ConversationReviewTranslations {
   githubPreviewRetry: string;
 }
 
-export const conversationReviewTranslations: Record<
+export const seedOpinionsTranslations: Record<
   SupportedDisplayLanguageCodes,
-  ConversationReviewTranslations
+  SeedOpinionsTranslations
 > = {
   en: {
     nextButton: "Next",
@@ -43,6 +44,8 @@ export const conversationReviewTranslations: Record<
     addOpinion: "Add Statement",
     addMaxDiffItem: "Add Statement",
     opinionCannotBeEmpty: "Statement cannot be empty",
+    opinionHtmlTooLong:
+      "Statement formatting is too large. Please simplify it.",
     opinionExceedsLimit:
       "Statement exceeds {limit} character limit ({count}/{limit})",
     opinionDuplicate: "This statement is a duplicate",
@@ -72,6 +75,7 @@ export const conversationReviewTranslations: Record<
     addOpinion: "أضف مقترحًا",
     addMaxDiffItem: "أضف عبارة",
     opinionCannotBeEmpty: "لا يمكن أن يكون المقترح فارغًا",
+    opinionHtmlTooLong: "تنسيق المقترح كبير جدًا. يرجى تبسيطه.",
     opinionExceedsLimit: "المقترح يتجاوز حد الـ {limit} حرف ({count}/{limit})",
     opinionDuplicate: "هذا المقترح مكرر",
     errorCreatingConversation: "خطأ أثناء محاولة إنشاء محادثة جديدة",
@@ -100,6 +104,8 @@ export const conversationReviewTranslations: Record<
     addOpinion: "Añadir Proposición",
     addMaxDiffItem: "Añadir Declaración",
     opinionCannotBeEmpty: "La proposición no puede estar vacía",
+    opinionHtmlTooLong:
+      "El formato de la proposición es demasiado grande. Simplifíquelo.",
     opinionExceedsLimit:
       "La proposición excede el límite de {limit} caracteres ({count}/{limit})",
     opinionDuplicate: "Esta proposición es un duplicado",
@@ -128,6 +134,8 @@ export const conversationReviewTranslations: Record<
     addOpinion: "افزودن گزاره",
     addMaxDiffItem: "افزودن گزاره",
     opinionCannotBeEmpty: "گزاره نمی‌تواند خالی باشد",
+    opinionHtmlTooLong:
+      "قالب‌بندی گزاره بیش از حد بزرگ است. لطفاً آن را ساده‌تر کنید.",
     opinionExceedsLimit:
       "گزاره از محدودیت {limit} کاراکتر فراتر رفته است ({count}/{limit})",
     opinionDuplicate: "این گزاره تکراری است",
@@ -156,6 +164,7 @@ export const conversationReviewTranslations: Record<
     addOpinion: "הוספת הצהרה",
     addMaxDiffItem: "הוספת הצהרה",
     opinionCannotBeEmpty: "ההצהרה לא יכולה להיות ריקה",
+    opinionHtmlTooLong: "עיצוב ההצהרה גדול מדי. נא לפשט אותו.",
     opinionExceedsLimit: "ההצהרה חורגת ממגבלת {limit} תווים ({count}/{limit})",
     opinionDuplicate: "הצהרה זו כפולה",
     errorCreatingConversation: "שגיאה בעת ניסיון ליצור שיחה חדשה",
@@ -184,6 +193,8 @@ export const conversationReviewTranslations: Record<
     addOpinion: "Ajouter une Proposition",
     addMaxDiffItem: "Ajouter une Proposition",
     opinionCannotBeEmpty: "La proposition ne peut pas être vide",
+    opinionHtmlTooLong:
+      "La mise en forme de la proposition est trop volumineuse. Simplifiez-la.",
     opinionExceedsLimit:
       "La proposition dépasse la limite de {limit} caractères ({count}/{limit})",
     opinionDuplicate: "Cette proposition est un doublon",
@@ -212,6 +223,7 @@ export const conversationReviewTranslations: Record<
     addOpinion: "添加意见",
     addMaxDiffItem: "添加意见",
     opinionCannotBeEmpty: "意见不能为空",
+    opinionHtmlTooLong: "陈述的格式内容过大。请简化格式。",
     opinionExceedsLimit: "意见超过 {limit} 字符限制 ({count}/{limit})",
     opinionDuplicate: "意见重复",
     errorCreatingConversation: "创建新对话时出错",
@@ -238,6 +250,7 @@ export const conversationReviewTranslations: Record<
     addOpinion: "添加意見",
     addMaxDiffItem: "添加意見",
     opinionCannotBeEmpty: "意見不能為空",
+    opinionHtmlTooLong: "陳述的格式內容過大。請簡化格式。",
     opinionExceedsLimit: "意見超過 {limit} 字符限制 ({count}/{limit})",
     opinionDuplicate: "意見重複",
     errorCreatingConversation: "創建新對話時出錯",
@@ -265,6 +278,7 @@ export const conversationReviewTranslations: Record<
     addOpinion: "意見を追加",
     addMaxDiffItem: "意見を追加",
     opinionCannotBeEmpty: "意見を入力してください",
+    opinionHtmlTooLong: "意見の書式設定が大きすぎます。簡略化してください。",
     opinionExceedsLimit:
       "意見が {limit} 文字制限を超えています ({count}/{limit})",
     opinionDuplicate: "この意見は重複しています",
@@ -293,6 +307,7 @@ export const conversationReviewTranslations: Record<
     addOpinion: "Пикир кошуу",
     addMaxDiffItem: "Пикир кошуу",
     opinionCannotBeEmpty: "Пикир бош болушу мүмкүн эмес",
+    opinionHtmlTooLong: "Пикирдин форматтоосу өтө чоң. Аны жөнөкөйлөтүңүз.",
     opinionExceedsLimit:
       "Пикир {limit} белги чегинен ашып кетти ({count}/{limit})",
     opinionDuplicate: "Бул пикир кайталанган",
@@ -322,6 +337,8 @@ export const conversationReviewTranslations: Record<
     addOpinion: "Добавить высказывание",
     addMaxDiffItem: "Добавить высказывание",
     opinionCannotBeEmpty: "Высказывание не может быть пустым",
+    opinionHtmlTooLong:
+      "Форматирование высказывания слишком объёмное. Упростите его.",
     opinionExceedsLimit:
       "Высказывание превышает лимит в {limit} символов ({count}/{limit})",
     opinionDuplicate: "Это высказывание дублируется",

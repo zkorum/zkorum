@@ -23,6 +23,7 @@ import {
     exists,
     inArray,
     isNotNull,
+    isNull,
     sql,
 } from "drizzle-orm";
 import {
@@ -317,7 +318,12 @@ export async function loadMaxdiffResult({
             score: maxdiffUserEntityScoreTable.displayScore,
         })
         .from(maxdiffUserEntityScoreTable)
-        .where(eq(maxdiffUserEntityScoreTable.maxdiffResultId, row.id))
+        .where(
+            and(
+                eq(maxdiffUserEntityScoreTable.maxdiffResultId, row.id),
+                isNull(maxdiffUserEntityScoreTable.deletedAt),
+            ),
+        )
         .orderBy(desc(maxdiffUserEntityScoreTable.score));
 
     const displayScores = scoreRows.flatMap((score) =>
@@ -357,9 +363,12 @@ async function resolveRankingReadDatabase({
         .select({ id: rankingConversationStatsSnapshotTable.id })
         .from(rankingConversationStatsSnapshotTable)
         .where(
-            eq(
-                rankingConversationStatsSnapshotTable.conversationId,
-                conversationId,
+            and(
+                eq(
+                    rankingConversationStatsSnapshotTable.conversationId,
+                    conversationId,
+                ),
+                isNull(rankingConversationStatsSnapshotTable.deletedAt),
             ),
         )
         .orderBy(
@@ -376,9 +385,12 @@ async function resolveRankingReadDatabase({
         .select({ id: rankingConversationStatsSnapshotTable.id })
         .from(rankingConversationStatsSnapshotTable)
         .where(
-            eq(
-                rankingConversationStatsSnapshotTable.conversationId,
-                conversationId,
+            and(
+                eq(
+                    rankingConversationStatsSnapshotTable.conversationId,
+                    conversationId,
+                ),
+                isNull(rankingConversationStatsSnapshotTable.deletedAt),
             ),
         )
         .orderBy(
@@ -420,9 +432,12 @@ async function getHistoricalMaxdiffResults({
             .select({ id: rankingConversationStatsSnapshotTable.id })
             .from(rankingConversationStatsSnapshotTable)
             .where(
-                eq(
-                    rankingConversationStatsSnapshotTable.conversationId,
-                    conversationId,
+                and(
+                    eq(
+                        rankingConversationStatsSnapshotTable.conversationId,
+                        conversationId,
+                    ),
+                    isNull(rankingConversationStatsSnapshotTable.deletedAt),
                 ),
             )
             .orderBy(
@@ -459,6 +474,7 @@ async function getHistoricalMaxdiffResults({
                         rankingConversationStatsSnapshotTable.conversationId,
                         conversationId,
                     ),
+                    isNull(rankingConversationStatsSnapshotTable.deletedAt),
                 ),
             )
             .limit(1);
@@ -535,9 +551,13 @@ async function getHistoricalMaxdiffResults({
             ),
         )
         .where(
-            eq(
-                rankingConversationStatsItemTable.statsSnapshotId,
-                rankingStatsSnapshotId,
+            and(
+                eq(
+                    rankingConversationStatsItemTable.statsSnapshotId,
+                    rankingStatsSnapshotId,
+                ),
+                isNull(rankingConversationStatsItemTable.deletedAt),
+                isNull(rankingConversationStatsSnapshotTable.deletedAt),
             ),
         );
     const sources = itemRows.map((row) => ({
@@ -916,9 +936,12 @@ export async function fetchRankingStatsCheckpoints({
         .select()
         .from(rankingConversationStatsSnapshotTable)
         .where(
-            eq(
-                rankingConversationStatsSnapshotTable.conversationId,
-                metadata.id,
+            and(
+                eq(
+                    rankingConversationStatsSnapshotTable.conversationId,
+                    metadata.id,
+                ),
+                isNull(rankingConversationStatsSnapshotTable.deletedAt),
             ),
         )
         .orderBy(
@@ -944,9 +967,12 @@ export async function fetchRankingStatsCheckpoints({
             ),
         )
         .where(
-            eq(
-                rankingConversationStatsSnapshotTable.conversationId,
-                metadata.id,
+            and(
+                eq(
+                    rankingConversationStatsSnapshotTable.conversationId,
+                    metadata.id,
+                ),
+                isNull(rankingConversationStatsSnapshotTable.deletedAt),
             ),
         )
         .orderBy(

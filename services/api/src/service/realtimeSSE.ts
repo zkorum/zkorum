@@ -113,6 +113,11 @@ export function parseRealtimeSubscriptionRequest(
 type ConversationSubscriptionEvent =
     | {
           id: number | undefined;
+          event: "opinion_updated";
+          data: SSEEventDataByType["opinion_updated"];
+      }
+    | {
+          id: number | undefined;
           event: "conversation_analysis_updated";
           data: SSEEventDataByType["conversation_analysis_updated"];
       }

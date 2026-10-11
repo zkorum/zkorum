@@ -20,6 +20,7 @@
             :show-verified-text="false"
             organization-image-url=""
             :is-seed="opinionItem.isSeed"
+            :is-edited="opinionItem.isEdited ?? false"
           />
 
           <div class="opinion-text">

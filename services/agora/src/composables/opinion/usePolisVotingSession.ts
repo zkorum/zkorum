@@ -56,7 +56,7 @@ export function usePolisVotingSession() {
   function acceptQueryResult(data: FetchNextUnansweredOpinionResponse): void {
     const previous = state.value;
     const current = previous.preserveCurrent && previous.current !== undefined
-      ? previous.current
+      ? { ...previous.current, opinion: data.status === "ready" && data.opinion.opinionSlugId === previous.current.opinion.opinionSlugId ? data.opinion : previous.current.opinion }
       : data.status === "ready" ? { opinion: data.opinion, vote: undefined } : undefined;
     state.value = {
       ...previous,
@@ -75,7 +75,7 @@ export function usePolisVotingSession() {
     if (current?.opinion.opinionSlugId !== opinionSlugId) return undefined;
     const actionGeneration = generation;
     const after = voteAction === "cancel" ? undefined : voteAction;
-    const params: OpinionVoteParams = { opinionSlugId, voteAction };
+    const params: OpinionVoteParams = { opinionSlugId, voteAction, sourceVersion: current.opinion.displayContent.sourceVersion };
     return {
       params,
       confirm: () => {
@@ -121,7 +121,7 @@ export function usePolisVotingSession() {
       remaining: adjustRemaining({ count: previous.remaining, before: entry.after, after: entry.before }),
       exclusions: previous.exclusions.filter(existing => existing !== id),
     };
-    const params: OpinionVoteParams = { opinionSlugId: id, voteAction: entry.before ?? "cancel" };
+    const params: OpinionVoteParams = { opinionSlugId: id, voteAction: entry.before ?? "cancel", sourceVersion: entry.opinion.displayContent.sourceVersion };
     return {
       params,
       rollback: () => {
@@ -175,6 +175,11 @@ export function usePolisVotingSession() {
     state.value = { ...state.value, preserveCurrent: state.value.current !== undefined };
   }
 
+  function updateCurrentOpinion(opinion: DisplayedOpinionItem): void {
+    const current = state.value.current;
+    if (current?.opinion.opinionSlugId === opinion.opinionSlugId) state.value = { ...state.value, current: { ...current, opinion } };
+  }
+
   function discard(matches: (opinion: DisplayedOpinionItem) => boolean): void {
     generation += 1;
     const previous = state.value;
@@ -204,7 +209,7 @@ export function usePolisVotingSession() {
     canUndo: computed(() => state.value.history.length > 0),
     hasPendingWrites: computed(() => state.value.pending.size > 0),
     isAdvancing: computed(() => state.value.advancing),
-    acceptQueryResult, prepareVote, prepareUndo, capturePendingWrites,
+    acceptQueryResult, updateCurrentOpinion, prepareVote, prepareUndo, capturePendingWrites,
     confirmPendingWrites, refresh, excludeCreatedOpinion, preserveCurrent, discard, reset,
     finishLoading: () => { state.value = { ...state.value, advancing: false }; },
   };

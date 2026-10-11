@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import {
     conversationTable,
@@ -77,9 +77,12 @@ export async function fetchConversationDisplayCountsByConversationId({
         )
         .from(rankingConversationStatsSnapshotTable)
         .where(
-            inArray(
-                rankingConversationStatsSnapshotTable.conversationId,
-                uniqueConversationIds,
+            and(
+                inArray(
+                    rankingConversationStatsSnapshotTable.conversationId,
+                    uniqueConversationIds,
+                ),
+                isNull(rankingConversationStatsSnapshotTable.deletedAt),
             ),
         )
         .orderBy(
@@ -172,7 +175,10 @@ export async function fetchConversationDisplayCountsByConversationId({
                       ),
                 voteCount: hasProcessedRankingCounts
                     ? row.rankingVoteCount
-                    : Math.max(row.rankingVoteCount, row.snapshotVoteCount ?? 0),
+                    : Math.max(
+                          row.rankingVoteCount,
+                          row.snapshotVoteCount ?? 0,
+                      ),
                 totalVoteCount: hasProcessedRankingCounts
                     ? row.rankingTotalVoteCount
                     : Math.max(

@@ -211,7 +211,6 @@ interface CreateRankingItemCommonProps {
     conversationSlugId: string;
     conversationContentId: number;
     authorId: string;
-    title: string;
     isSeed: boolean;
     googleCloudCredentials?: GoogleCloudCredentials;
     useGoogleLanguageDetection?: boolean;
@@ -221,12 +220,17 @@ type CreateRankingItemProps = CreateRankingItemCommonProps &
     (
         | {
               contentSource?: "frontend";
+              title: string;
+              normalizedContent?: never;
               bodyHtml?: string | null;
           }
         | {
               contentSource: "provider";
+              title: string;
+              normalizedContent?: never;
               bodyHtml?: string | null;
           }
+        | { normalizedContent: NormalizedRankingItemContent; title?: never; bodyHtml?: never; contentSource?: never }
     );
 
 async function createRankingItemInTx({
@@ -299,38 +303,36 @@ async function createRankingItemInTx({
     };
 }
 
-export async function createRankingItem({
+export async function createRankingItem(props: CreateRankingItemProps): Promise<{
+    slugId: string;
+    itemId: number;
+    contentSource: RankingItemContentSource;
+}> {
+const {
     db,
     tx,
     conversationId,
     conversationSlugId,
     conversationContentId,
     authorId,
-    title,
-    bodyHtml,
-    contentSource = "frontend",
     isSeed,
     googleCloudCredentials,
     useGoogleLanguageDetection,
-}: CreateRankingItemProps): Promise<{
-    slugId: string;
-    itemId: number;
-    contentSource: RankingItemContentSource;
-}> {
+} = props;
     const slugId = generateRandomSlugId();
     const now = new Date();
 
     const normalizedContent =
-        contentSource === "provider"
+        props.normalizedContent !== undefined ? props.normalizedContent : props.contentSource === "provider"
             ? await normalizeProviderRankingItemContent({
-                  title,
-                  bodyHtml,
+                  title: props.title,
+                  bodyHtml: props.bodyHtml,
                   googleCloudCredentials,
                   useGoogleLanguageDetection,
               })
             : await normalizeFrontendRankingItemContent({
-                  title,
-                  bodyHtml,
+                  title: props.title,
+                  bodyHtml: props.bodyHtml,
                   googleCloudCredentials,
                   useGoogleLanguageDetection,
               });

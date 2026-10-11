@@ -35,6 +35,7 @@ from scoring_worker.generated_models import (
     MaxdiffUserEntityScore,
     Project,
     RankingConversationConfig,
+    RankingConversationStatsCheckpoint,
     RankingConversationStatsItem,
     RankingConversationStatsSnapshot,
     RankingItem,
@@ -43,6 +44,7 @@ from scoring_worker.generated_models import (
     RankingMode,
     RankingScore,
     RankingScoreEntity,
+    RankingStatsCheckpointReasonEnum,
     RealtimeEventOutbox,
     SurveyConfig,
     User,
@@ -310,6 +312,246 @@ def test_new_participant_does_not_invalidate_captured_votes(ranking_db: Engine) 
         config = session.get_one(RankingConversationConfig, fixture.config_id)
         assert config.participant_count == 1
         assert config.vote_count == 1
+
+
+def test_personal_scores_update_in_place_and_reactivate_without_deleting(
+    ranking_db: Engine,
+) -> None:
+    fixture = seed_ranking(ranking_db)
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with Session(ranking_db) as session:
+        original_ids = {
+            row.entity_slug_id: row.id
+            for row in session.scalars(
+                select(MaxdiffUserEntityScore).where(
+                    MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id
+                )
+            )
+        }
+    with ranking_db.begin() as connection:
+        connection.execute(
+            update(MaxdiffUserEntityScore)
+            .where(MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id)
+            .values(score=42, display_score=0.9)
+        )
+        connection.execute(
+            update(RankingItem)
+            .where(RankingItem.id == fixture.item_ids[0])
+            .values(lifecycle_status=RankingItemLifecycleStatus.completed)
+        )
+    inputs = capture(engine=ranking_db, fixtures=[fixture])
+    assert publish(engine=ranking_db, inputs=inputs)[fixture.conversation_id].status == "published"
+    with Session(ranking_db) as session:
+        rows = session.scalars(
+            select(MaxdiffUserEntityScore).where(
+                MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id
+            )
+        ).all()
+        assert {row.entity_slug_id: row.id for row in rows} == original_ids
+        for row in rows:
+            if row.entity_slug_id == fixture.slugs[0]:
+                assert row.deleted_at is not None
+                assert row.score == 42
+            else:
+                assert row.deleted_at is None
+                assert row.score != 42
+    assert publish(engine=ranking_db, inputs=inputs)[fixture.conversation_id].status == "superseded"
+    with ranking_db.begin() as connection:
+        connection.execute(
+            update(RankingItem)
+            .where(RankingItem.id == fixture.item_ids[0])
+            .values(lifecycle_status=RankingItemLifecycleStatus.active)
+        )
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with Session(ranking_db) as session:
+        rows = session.scalars(
+            select(MaxdiffUserEntityScore).where(
+                MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id
+            )
+        ).all()
+        assert {row.entity_slug_id: row.id for row in rows} == original_ids
+        assert all(row.deleted_at is None and row.score != 42 for row in rows)
+
+
+def test_empty_publications_soft_delete_scores_without_resetting_tombstones(
+    ranking_db: Engine,
+) -> None:
+    fixture = seed_ranking(ranking_db)
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with ranking_db.begin() as connection:
+        connection.execute(
+            update(RankingItem)
+            .where(RankingItem.id.in_(fixture.item_ids[1:]))
+            .values(lifecycle_status=RankingItemLifecycleStatus.completed)
+        )
+    inputs = capture(engine=ranking_db, fixtures=[fixture])
+    with ranking_db.connect() as connection:
+        publications = persist_scoring_batch(
+            connection,
+            inputs=inputs,
+            scoring_results={},
+            user_scores=[],
+            conversation_ids_to_clear=[fixture.conversation_id],
+        )
+    assert publications[fixture.conversation_id].status == "published"
+    with Session(ranking_db) as session:
+        rows = session.scalars(
+            select(MaxdiffUserEntityScore).where(
+                MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id
+            )
+        ).all()
+        assert len(rows) == len(fixture.slugs)
+        assert all(row.deleted_at is not None for row in rows)
+        tombstones = {row.id: row.deleted_at for row in rows}
+        assert (
+            session.get_one(RankingConversationConfig, fixture.config_id).current_ranking_score_id
+            is None
+        )
+    append_comparison(engine=ranking_db, fixture=fixture, position=1)
+    with ranking_db.connect() as connection:
+        persist_scoring_batch(
+            connection,
+            inputs=capture(engine=ranking_db, fixtures=[fixture]),
+            scoring_results={},
+            user_scores=[],
+            conversation_ids_to_clear=[fixture.conversation_id],
+        )
+    with Session(ranking_db) as session:
+        assert {
+            row.id: row.deleted_at
+            for row in session.scalars(
+                select(MaxdiffUserEntityScore).where(
+                    MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id
+                )
+            )
+        } == tombstones
+
+
+def test_snapshot_pruning_retains_tombstones_and_protects_published_roots(
+    ranking_db: Engine,
+) -> None:
+    fixture = seed_ranking(ranking_db)
+    for position in range(3):
+        if position:
+            append_comparison(engine=ranking_db, fixture=fixture, position=position)
+        publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with Session(ranking_db) as session, session.begin():
+        snapshots = session.scalars(
+            select(RankingConversationStatsSnapshot)
+            .where(RankingConversationStatsSnapshot.conversation_id == fixture.conversation_id)
+            .order_by(RankingConversationStatsSnapshot.id)
+        ).all()
+        assert len(snapshots) == 3
+        baseline, obsolete, checkpoint = snapshots
+        assert baseline.deleted_at is None
+        assert obsolete.deleted_at is not None
+        assert checkpoint.deleted_at is None
+        obsolete_id, deleted_at = obsolete.id, obsolete.deleted_at
+        for snapshot in snapshots:
+            items = session.scalars(
+                select(RankingConversationStatsItem).where(
+                    RankingConversationStatsItem.stats_snapshot_id == snapshot.id
+                )
+            ).all()
+            assert len(items) == len(fixture.slugs)
+            assert all(item.deleted_at == snapshot.deleted_at for item in items)
+        session.add(
+            RankingConversationStatsCheckpoint(
+                stats_snapshot_id=checkpoint.id,
+                conversation_id=fixture.conversation_id,
+                reason=RankingStatsCheckpointReasonEnum.conversation_closed,
+                created_at=datetime.now(tz=UTC),
+            )
+        )
+    append_comparison(engine=ranking_db, fixture=fixture, position=3)
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with Session(ranking_db) as session:
+        snapshots = session.scalars(
+            select(RankingConversationStatsSnapshot)
+            .where(RankingConversationStatsSnapshot.conversation_id == fixture.conversation_id)
+            .order_by(RankingConversationStatsSnapshot.id)
+        ).all()
+        assert len(snapshots) == 4
+        assert (
+            session.get_one(RankingConversationStatsSnapshot, obsolete_id).deleted_at == deleted_at
+        )
+        assert [snapshot.deleted_at is None for snapshot in snapshots] == [True, False, True, True]
+    assert fixture.conversation_id not in {
+        conversation_id
+        for conversation_id, _ in scoring_db.reconcile_unscored_conversations(ranking_db)
+    }
+
+
+@pytest.mark.parametrize("removed_input", ["comparison", "participant"])
+def test_removed_participation_leaves_only_inactive_personal_scores(
+    ranking_db: Engine, removed_input: str
+) -> None:
+    fixture = seed_ranking(ranking_db)
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with ranking_db.begin() as connection:
+        if removed_input == "comparison":
+            connection.execute(
+                update(MaxdiffComparison)
+                .where(MaxdiffComparison.maxdiff_result_id == fixture.result_id)
+                .values(deleted_at=datetime.now(tz=UTC))
+            )
+        else:
+            connection.execute(
+                update(User).where(User.id == fixture.user_id).values(is_deleted=True)
+            )
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with Session(ranking_db) as session:
+        rows = session.scalars(
+            select(MaxdiffUserEntityScore).where(
+                MaxdiffUserEntityScore.maxdiff_result_id == fixture.result_id
+            )
+        ).all()
+        assert len(rows) == len(fixture.slugs)
+        assert all(row.deleted_at is not None for row in rows)
+
+
+def test_deleted_snapshots_do_not_choose_baseline_or_trigger_reconciliation(
+    ranking_db: Engine,
+) -> None:
+    fixture = seed_ranking(ranking_db)
+    publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with ranking_db.begin() as connection:
+        connection.execute(
+            insert(RankingConversationStatsSnapshot),
+            [
+                {
+                    "conversation_id": fixture.conversation_id,
+                    "item_count": 0,
+                    "total_item_count": 0,
+                    "vote_count": 0,
+                    "total_vote_count": 0,
+                    "participant_count": 0,
+                    "total_participant_count": 0,
+                    "scoring_input_revision": 0,
+                    "is_closed": True,
+                    "created_at": datetime(year, 1, 1, tzinfo=UTC),
+                    "deleted_at": datetime.now(tz=UTC),
+                }
+                for year in [2000, 2100]
+            ],
+        )
+    for position in [1, 2]:
+        append_comparison(engine=ranking_db, fixture=fixture, position=position)
+        publish(engine=ranking_db, inputs=capture(engine=ranking_db, fixtures=[fixture]))
+    with Session(ranking_db) as session:
+        active = session.scalars(
+            select(RankingConversationStatsSnapshot)
+            .where(
+                RankingConversationStatsSnapshot.conversation_id == fixture.conversation_id,
+                RankingConversationStatsSnapshot.deleted_at.is_(None),
+            )
+            .order_by(RankingConversationStatsSnapshot.id)
+        ).all()
+        assert [snapshot.vote_count for snapshot in active] == [1, 3]
+    assert fixture.conversation_id not in {
+        conversation_id
+        for conversation_id, _ in scoring_db.reconcile_unscored_conversations(ranking_db)
+    }
 
 
 def test_score_backups_are_json_values_not_json_encoded_strings(ranking_db: Engine) -> None:

@@ -396,7 +396,7 @@ class ConversationContent(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     public_id: Mapped[uuid_pkg.UUID] = mapped_column(Uuid)
     conversation_id: Mapped[int] = mapped_column(Integer)
-    title: Mapped[str] = mapped_column(String(140))
+    title: Mapped[str] = mapped_column(String(150))
     body: Mapped[str | None] = mapped_column(Text, nullable=True)
     body_plain_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_language_code: Mapped[SpokenLanguageCode | None] = mapped_column(
@@ -615,6 +615,8 @@ class OpinionContent(Base):
     opinion_id: Mapped[int] = mapped_column(Integer)
     conversation_content_id: Mapped[int] = mapped_column(Integer)
     content: Mapped[str] = mapped_column(Text)
+    is_edited: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    edited_by_user_id: Mapped[uuid_pkg.UUID | None] = mapped_column(Uuid, nullable=True)
     content_plain_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_language_code: Mapped[SpokenLanguageCode | None] = mapped_column(
         SaEnum(
@@ -787,7 +789,7 @@ class Project(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     slug: Mapped[str] = mapped_column(String(65))
-    title: Mapped[str] = mapped_column(String(140))
+    title: Mapped[str] = mapped_column(String(150))
     directory_visibility: Mapped[DirectoryVisibility] = mapped_column(
         SaEnum(
             DirectoryVisibility,

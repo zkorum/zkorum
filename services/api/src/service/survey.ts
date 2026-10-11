@@ -1,5 +1,14 @@
 import { httpErrors } from "@fastify/sensible";
-import { and, asc, eq, inArray, isNotNull, isNull, or } from "drizzle-orm";
+import {
+    and,
+    asc,
+    eq,
+    inArray,
+    isNotNull,
+    isNull,
+    notInArray,
+    or,
+} from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { generateRandomSlugId } from "@/crypto.js";
 import {
@@ -46,6 +55,16 @@ import {
     hasVisiblePlainText,
     PUBLIC_AGGREGATE_SUPPRESSION_THRESHOLD,
 } from "@/shared/shared.js";
+import {
+    getSurveyOptionText,
+    isSurveyOptionTextWithinLimit,
+    normalizeSurveyOptionText,
+    normalizeSurveyOptionTextValues,
+} from "@/shared/surveyChoiceText.js";
+import {
+    groupSurveyAnswerOptionRows,
+    loadSurveyAnswerOptionRows,
+} from "./surveyAnswerOptions.js";
 import {
     zodSurveyQuestionConstraints,
     type AnalysisView,
@@ -442,6 +461,7 @@ export interface ActiveSurveyOptionRecord {
     currentContentId?: number | null;
     displayOrder: number;
     optionText: string;
+    allowsText: boolean;
     sourceLanguageCode?: string | null;
     sourceLanguageConfidence?: number | null;
 }
@@ -476,6 +496,7 @@ export interface StoredSurveyAnswer {
     textValueHtml: string | null;
     textValuePlainText: string | null;
     optionSlugIds: string[];
+    optionTextValues?: Record<string, string>;
 }
 
 function getStoredSurveyAnswerPlainText(
@@ -556,6 +577,54 @@ export interface SurveyParticipantState {
     answersByQuestionId: Map<number, StoredSurveyAnswer>;
 }
 
+async function loadSurveyAnswers({
+    db,
+    surveyResponseId,
+}: {
+    db: PostgresJsDatabase;
+    surveyResponseId: number;
+}): Promise<Map<number, StoredSurveyAnswer>> {
+    const answerRows = await db
+        .select({
+            answerId: surveyAnswerTable.id,
+            surveyQuestionId: surveyAnswerTable.surveyQuestionId,
+            answeredQuestionSemanticVersion:
+                surveyAnswerTable.answeredQuestionSemanticVersion,
+            textValueHtml: surveyAnswerTable.textValueHtml,
+            textValuePlainText: surveyAnswerTable.textValuePlainText,
+        })
+        .from(surveyAnswerTable)
+        .where(
+            and(
+                eq(surveyAnswerTable.surveyResponseId, surveyResponseId),
+                isNull(surveyAnswerTable.deletedAt),
+            ),
+        );
+    const optionsByAnswerId = groupSurveyAnswerOptionRows(
+        await loadSurveyAnswerOptionRows({
+            db,
+            answerIds: answerRows.map((answer) => answer.answerId),
+            includeText: true,
+        }),
+    );
+    return new Map(
+        answerRows.map((answer) => [
+            answer.surveyQuestionId,
+            {
+                answerId: answer.answerId,
+                answeredQuestionSemanticVersion:
+                    answer.answeredQuestionSemanticVersion,
+                textValueHtml: answer.textValueHtml,
+                textValuePlainText: answer.textValuePlainText,
+                optionSlugIds:
+                    optionsByAnswerId.get(answer.answerId)?.optionSlugIds ?? [],
+                optionTextValues: optionsByAnswerId.get(answer.answerId)
+                    ?.optionTextValues,
+            },
+        ]),
+    );
+}
+
 function normalizeSurveyConfigInput({
     surveyConfig,
 }: {
@@ -610,6 +679,7 @@ export function surveyQuestionToConfig({
                     optionSlugId: option.slugId,
                     optionText: option.optionText,
                     displayOrder: option.displayOrder,
+                    allowsText: option.allowsText,
                 })),
             };
     }
@@ -642,6 +712,9 @@ function storedSurveyAnswerToAnswerDraft({
             return {
                 questionType: question.questionType,
                 optionSlugIds: storedAnswer.optionSlugIds,
+                ...(storedAnswer.optionTextValues === undefined
+                    ? {}
+                    : { optionTextValues: storedAnswer.optionTextValues }),
             };
     }
 }
@@ -784,6 +857,17 @@ export function validateSurveyAnswer({
                 }
             }
 
+            for (const [optionSlugId, textValue] of Object.entries(
+                answer.optionTextValues ?? {},
+            )) {
+                if (
+                    !uniqueOptionSlugIds.has(optionSlugId) ||
+                    !isSurveyOptionTextWithinLimit(textValue)
+                ) {
+                    return false;
+                }
+            }
+
             const { minSelections, maxSelections } = question.constraints;
             if (answer.optionSlugIds.length < minSelections) {
                 return false;
@@ -799,15 +883,90 @@ export function validateSurveyAnswer({
     }
 }
 
+type SurveyAnswerForStorage =
+    | Extract<SurveyAnswerDraft, { questionType: "free_text" }>
+    | {
+          questionType: "choice";
+          selectedOptions: readonly {
+              id: number;
+              slugId: string;
+              textValuePlainText: string | undefined;
+          }[];
+      };
+
 function normalizeSurveyAnswerForStorage({
     question,
     answer,
+    storedAnswer,
 }: {
     question: ActiveSurveyQuestionRecord;
     answer: SurveyAnswerSubmission;
-}): SurveyAnswerDraft {
+    storedAnswer: StoredSurveyAnswer | undefined;
+}): SurveyAnswerForStorage {
     if (answer.questionType !== "free_text") {
-        return answer;
+        const submittedTextValues = answer.optionTextValues;
+        const retainedTextValues: Record<string, string> = {};
+        if (submittedTextValues !== undefined) {
+            const selectedOptionSlugIds = new Set(answer.optionSlugIds);
+            const optionsBySlugId = new Map(
+                question.options.map((option) => [option.slugId, option]),
+            );
+            for (const [optionSlugId, textValue] of Object.entries(
+                submittedTextValues,
+            )) {
+                const normalizedText = normalizeSurveyOptionText(textValue);
+                const option = optionsBySlugId.get(optionSlugId);
+                if (
+                    !selectedOptionSlugIds.has(optionSlugId) ||
+                    option === undefined
+                ) {
+                    throw httpErrors.badRequest(
+                        "Survey option text must belong to a selected option",
+                    );
+                }
+                if (
+                    normalizedText !== undefined &&
+                    !option.allowsText &&
+                    normalizedText !==
+                        getSurveyOptionText({
+                            values: storedAnswer?.optionTextValues,
+                            optionSlugId,
+                        })
+                ) {
+                    throw httpErrors.badRequest(
+                        "Survey option does not allow text input",
+                    );
+                }
+            }
+        } else {
+            // Older clients omit this field; retain text for selections they keep.
+            for (const optionSlugId of answer.optionSlugIds) {
+                const storedText = getSurveyOptionText({
+                    values: storedAnswer?.optionTextValues,
+                    optionSlugId,
+                });
+                if (storedText !== undefined) {
+                    retainedTextValues[optionSlugId] = storedText;
+                }
+            }
+        }
+        const optionTextValues = normalizeSurveyOptionTextValues(
+            submittedTextValues ?? retainedTextValues,
+        );
+        const selectedOptionSlugIds = new Set(answer.optionSlugIds);
+        return {
+            questionType: "choice",
+            selectedOptions: question.options
+                .filter((option) => selectedOptionSlugIds.has(option.slugId))
+                .map((option) => ({
+                    id: option.id,
+                    slugId: option.slugId,
+                    textValuePlainText: getSurveyOptionText({
+                        values: optionTextValues,
+                        optionSlugId: option.slugId,
+                    }),
+                })),
+        };
     }
 
     if (
@@ -1227,6 +1386,7 @@ export async function getActiveSurveyConfigRecord({
                           surveyQuestionOptionTable.currentContentId,
                       displayOrder: surveyQuestionOptionTable.displayOrder,
                       optionText: surveyQuestionOptionContentTable.optionText,
+                      allowsText: surveyQuestionOptionTable.allowsText,
                       sourceLanguageCode:
                           surveyQuestionOptionContentTable.sourceLanguageCode,
                       sourceLanguageConfidence:
@@ -1261,6 +1421,7 @@ export async function getActiveSurveyConfigRecord({
             currentContentId: option.currentContentId,
             displayOrder: option.displayOrder,
             optionText: option.optionText,
+            allowsText: option.allowsText,
             sourceLanguageCode: option.sourceLanguageCode,
             sourceLanguageConfidence: option.sourceLanguageConfidence,
         });
@@ -1349,78 +1510,13 @@ export async function loadSurveyParticipantState({
         };
     }
 
-    const answerRows = await db
-        .select({
-            answerId: surveyAnswerTable.id,
-            surveyQuestionId: surveyAnswerTable.surveyQuestionId,
-            answeredQuestionSemanticVersion:
-                surveyAnswerTable.answeredQuestionSemanticVersion,
-            textValueHtml: surveyAnswerTable.textValueHtml,
-            textValuePlainText: surveyAnswerTable.textValuePlainText,
-        })
-        .from(surveyAnswerTable)
-        .where(
-            and(
-                eq(surveyAnswerTable.surveyResponseId, response.id),
-                isNull(surveyAnswerTable.deletedAt),
-            ),
-        );
-
-    const answerIds = answerRows.map((answer) => answer.answerId);
-    const answerOptionRows =
-        answerIds.length === 0
-            ? []
-            : await db
-                  .select({
-                      surveyAnswerId: surveyAnswerOptionTable.surveyAnswerId,
-                      optionSlugId: surveyQuestionOptionTable.slugId,
-                  })
-                  .from(surveyAnswerOptionTable)
-                  .innerJoin(
-                      surveyQuestionOptionTable,
-                      eq(
-                          surveyAnswerOptionTable.surveyQuestionOptionId,
-                          surveyQuestionOptionTable.id,
-                      ),
-                  )
-                  .where(
-                      and(
-                          inArray(
-                              surveyAnswerOptionTable.surveyAnswerId,
-                              answerIds,
-                          ),
-                          isNull(surveyAnswerOptionTable.deletedAt),
-                      ),
-                  )
-                  .orderBy(
-                      asc(surveyAnswerOptionTable.surveyAnswerId),
-                      asc(surveyQuestionOptionTable.displayOrder),
-                  );
-
-    const optionSlugIdsByAnswerId = new Map<number, string[]>();
-    for (const answerOption of answerOptionRows) {
-        const optionSlugIds =
-            optionSlugIdsByAnswerId.get(answerOption.surveyAnswerId) ?? [];
-        optionSlugIds.push(answerOption.optionSlugId);
-        optionSlugIdsByAnswerId.set(answerOption.surveyAnswerId, optionSlugIds);
-    }
-
-    const answersByQuestionId = new Map<number, StoredSurveyAnswer>();
-    for (const answer of answerRows) {
-        answersByQuestionId.set(answer.surveyQuestionId, {
-            answerId: answer.answerId,
-            answeredQuestionSemanticVersion:
-                answer.answeredQuestionSemanticVersion,
-            textValueHtml: answer.textValueHtml,
-            textValuePlainText: answer.textValuePlainText,
-            optionSlugIds: optionSlugIdsByAnswerId.get(answer.answerId) ?? [],
-        });
-    }
-
     return {
         activeSurveyConfig,
         response,
-        answersByQuestionId,
+        answersByQuestionId: await loadSurveyAnswers({
+            db,
+            surveyResponseId: response.id,
+        }),
     };
 }
 
@@ -1542,6 +1638,7 @@ async function insertSurveyQuestion({
                 surveyQuestionId,
                 currentContentId: null,
                 displayOrder: option.displayOrder,
+                allowsText: option.allowsText ?? false,
                 createdAt: now,
                 updatedAt: now,
             })
@@ -1810,6 +1907,7 @@ async function replaceSurveyConfigById({
                         surveyQuestionId: existingQuestion.id,
                         currentContentId: null,
                         displayOrder: option.displayOrder,
+                        allowsText: option.allowsText ?? false,
                         createdAt: now,
                         updatedAt: now,
                     })
@@ -1849,6 +1947,7 @@ async function replaceSurveyConfigById({
                         surveyQuestionId: existingQuestion.id,
                         currentContentId: null,
                         displayOrder: option.displayOrder,
+                        allowsText: option.allowsText ?? false,
                         createdAt: now,
                         updatedAt: now,
                     })
@@ -1873,6 +1972,8 @@ async function replaceSurveyConfigById({
                 continue;
             }
 
+            const nextAllowsText =
+                option.allowsText ?? existingOption.allowsText;
             if (existingOption.optionText !== option.optionText) {
                 if (option.textChangeIsSemantic === true) {
                     semanticChanged = true;
@@ -1896,13 +1997,21 @@ async function replaceSurveyConfigById({
                     .set({
                         currentContentId: insertedOptionContent[0].id,
                         displayOrder: option.displayOrder,
+                        allowsText: nextAllowsText,
                         updatedAt: now,
                     })
                     .where(eq(surveyQuestionOptionTable.id, existingOption.id));
-            } else if (existingOption.displayOrder !== option.displayOrder) {
+            } else if (
+                existingOption.displayOrder !== option.displayOrder ||
+                existingOption.allowsText !== nextAllowsText
+            ) {
                 await db
                     .update(surveyQuestionOptionTable)
-                    .set({ displayOrder: option.displayOrder, updatedAt: now })
+                    .set({
+                        displayOrder: option.displayOrder,
+                        allowsText: nextAllowsText,
+                        updatedAt: now,
+                    })
                     .where(eq(surveyQuestionOptionTable.id, existingOption.id));
             } else {
                 await db
@@ -2695,6 +2804,158 @@ export async function fetchSurveyCompletionCounts({
     };
 }
 
+async function persistSurveyAnswer({
+    db,
+    conversationId,
+    surveyResponseId,
+    question,
+    previousAnswer,
+    answer,
+    now,
+}: {
+    db: PostgresJsDatabase;
+    conversationId: number;
+    surveyResponseId: number;
+    question: ActiveSurveyQuestionRecord;
+    previousAnswer: StoredSurveyAnswer | undefined;
+    answer: SurveyAnswerForStorage | null;
+    now: Date;
+}): Promise<StoredSurveyAnswer | undefined> {
+    const selectedOptions =
+        answer?.questionType === "choice" ? answer.selectedOptions : [];
+    const selectedSlugIds = new Set(
+        selectedOptions.map((option) => option.slugId),
+    );
+    if (
+        previousAnswer?.optionSlugIds.some(
+            (slugId) => !selectedSlugIds.has(slugId),
+        )
+    ) {
+        const selectedIds = selectedOptions.map((option) => option.id);
+        await db
+            .update(surveyAnswerOptionTable)
+            .set({ deletedAt: now })
+            .where(
+                and(
+                    eq(
+                        surveyAnswerOptionTable.surveyAnswerId,
+                        previousAnswer.answerId,
+                    ),
+                    isNull(surveyAnswerOptionTable.deletedAt),
+                    selectedIds.length === 0
+                        ? undefined
+                        : notInArray(
+                              surveyAnswerOptionTable.surveyQuestionOptionId,
+                              selectedIds,
+                          ),
+                ),
+            );
+    }
+    if (answer === null && question.isRequired) {
+        if (previousAnswer !== undefined) {
+            await db
+                .update(surveyAnswerTable)
+                .set({ deletedAt: now, updatedAt: now })
+                .where(eq(surveyAnswerTable.id, previousAnswer.answerId));
+        }
+        return undefined;
+    }
+
+    const textValueHtml =
+        answer?.questionType === "free_text" ? answer.textValueHtml : null;
+    const textValuePlainText =
+        answer?.questionType === "free_text" ? answer.textValuePlainText : null;
+    const currentValues = {
+        answeredQuestionSemanticVersion: question.currentSemanticVersion,
+        textValueHtml,
+        textValuePlainText,
+        updatedAt: now,
+    };
+    const savedAnswerRows = await db
+        .insert(surveyAnswerTable)
+        .values({
+            ...currentValues,
+            surveyResponseId,
+            conversationId,
+            surveyQuestionId: question.id,
+            createdAt: now,
+        })
+        .onConflictDoUpdate({
+            target: [
+                surveyAnswerTable.surveyResponseId,
+                surveyAnswerTable.surveyQuestionId,
+            ],
+            targetWhere: isNull(surveyAnswerTable.deletedAt),
+            set: currentValues,
+        })
+        .returning({ id: surveyAnswerTable.id });
+    const savedAnswer = savedAnswerRows.at(0);
+    if (savedAnswer === undefined)
+        throw httpErrors.internalServerError(
+            "Survey answer could not be saved",
+        );
+
+    const previousSelectedSlugIds = new Set(
+        previousAnswer?.optionSlugIds ?? [],
+    );
+    const addedOptions = selectedOptions.filter(
+        (option) => !previousSelectedSlugIds.has(option.slugId),
+    );
+    if (addedOptions.length > 0) {
+        await db.insert(surveyAnswerOptionTable).values(
+            addedOptions.map((option) => ({
+                surveyAnswerId: savedAnswer.id,
+                surveyQuestionId: question.id,
+                surveyQuestionOptionId: option.id,
+                textValuePlainText: option.textValuePlainText ?? null,
+            })),
+        );
+    }
+    for (const option of selectedOptions) {
+        if (
+            previousSelectedSlugIds.has(option.slugId) &&
+            option.textValuePlainText !==
+                getSurveyOptionText({
+                    values: previousAnswer?.optionTextValues,
+                    optionSlugId: option.slugId,
+                })
+        ) {
+            await db
+                .update(surveyAnswerOptionTable)
+                .set({ textValuePlainText: option.textValuePlainText ?? null })
+                .where(
+                    and(
+                        eq(
+                            surveyAnswerOptionTable.surveyAnswerId,
+                            savedAnswer.id,
+                        ),
+                        eq(
+                            surveyAnswerOptionTable.surveyQuestionOptionId,
+                            option.id,
+                        ),
+                        isNull(surveyAnswerOptionTable.deletedAt),
+                    ),
+                );
+        }
+    }
+    const optionTextEntries: (readonly [string, string])[] = [];
+    for (const option of selectedOptions) {
+        if (option.textValuePlainText !== undefined)
+            optionTextEntries.push([option.slugId, option.textValuePlainText]);
+    }
+    return {
+        answerId: savedAnswer.id,
+        answeredQuestionSemanticVersion: question.currentSemanticVersion,
+        textValueHtml,
+        textValuePlainText,
+        optionSlugIds: selectedOptions.map((option) => option.slugId),
+        optionTextValues:
+            optionTextEntries.length === 0
+                ? undefined
+                : Object.fromEntries<string>(optionTextEntries),
+    };
+}
+
 export async function saveSurveyAnswer({
     db,
     conversationSlugId,
@@ -2747,325 +3008,185 @@ export async function saveSurveyAnswer({
         rankingMode: participationCheck.rankingMode,
     });
 
-    const previousSurveyState = await loadSurveyParticipantState({
-        db,
-        conversationId: conversation.conversationId,
-        participantId,
-    });
-    const previousSurveyGate = deriveSurveyGate({
-        surveyState: previousSurveyState,
-        participantId,
-    });
-    const shouldResetWithdrawnResponse =
-        previousSurveyState.response?.withdrawnAt !== null &&
-        previousSurveyState.response?.withdrawnAt !== undefined;
-    const activeSurveyConfig = previousSurveyState.activeSurveyConfig;
-    if (activeSurveyConfig === undefined) {
-        throw httpErrors.notFound("Survey not found");
-    }
-
-    const storedQuestion = activeSurveyConfig.questions.find(
-        (currentQuestion) => currentQuestion.slugId === questionSlugId,
-    );
-    if (storedQuestion === undefined) {
-        throw httpErrors.notFound("Survey question not found");
-    }
-    const question = getParticipantSurveyQuestion({
-        question: storedQuestion,
-        surveyIsOptional: activeSurveyConfig.isOptional,
-    });
-
-    const normalizedAnswer =
-        answer === null
-            ? null
-            : normalizeSurveyAnswerForStorage({ question, answer });
-
-    if (
-        normalizedAnswer !== null &&
-        !validateSurveyAnswer({ question, answer: normalizedAnswer })
-    ) {
-        throw httpErrors.badRequest("Invalid survey answer payload");
-    }
-
-    const loadNextSurveyTransition = async ({
-        db: transactionDb,
-    }: {
-        db: PostgresJsDatabase;
-    }): Promise<{
-        nextSurveyState: SurveyParticipantState;
-        nextSurveyGate: SurveyGateDetails;
-        analysisRefreshScheduled: boolean;
-    }> => {
-        const nextSurveyState = await loadSurveyParticipantState({
-            db: transactionDb,
-            conversationId: conversation.conversationId,
-            participantId,
-        });
-        const nextSurveyGate = deriveSurveyGate({
-            surveyState: nextSurveyState,
-            participantId,
-        });
-        const justCompleted =
-            previousSurveyGate.status !== "complete_valid" &&
-            nextSurveyGate.status === "complete_valid";
-
-        if (justCompleted && nextSurveyState.response !== undefined) {
-            await transactionDb
-                .update(surveyResponseTable)
-                .set({ completedAt: now, updatedAt: now })
-                .where(eq(surveyResponseTable.id, nextSurveyState.response.id));
-        }
-
-        await queueConversationSurveyUpdatedEvent({
-            db: transactionDb,
-            conversationSlugId,
-            configChanged: false,
-        });
-
-        const analysisRefreshScheduled =
-            shouldRecomputeAnalysisForSurveyTransition({
-                previousSurveyGateStatus: previousSurveyGate.status,
-                nextSurveyGateStatus: nextSurveyGate.status,
-                isOptional: activeSurveyConfig.isOptional,
-            })
-                ? await scheduleConversationAnalysisForParticipantSurveyTransition(
-                      {
-                          db: transactionDb,
-                          conversation,
-                          participantId,
-                          previousSurveyGateStatus: previousSurveyGate.status,
-                          nextSurveyGateStatus: nextSurveyGate.status,
-                      },
-                  )
-                : false;
-
-        return { nextSurveyState, nextSurveyGate, analysisRefreshScheduled };
-    };
-
     const surveyTransition = await db.transaction(async (tx) => {
-        const surveyResponseRows = await tx
-            .select({
-                id: surveyResponseTable.id,
+        // The upsert locks the response even when two first answers arrive together.
+        const responseRows = await tx
+            .insert(surveyResponseTable)
+            .values({
+                participantId,
+                conversationId: conversation.conversationId,
+                createdAt: now,
+                updatedAt: now,
             })
-            .from(surveyResponseTable)
-            .where(
-                and(
-                    eq(
-                        surveyResponseTable.conversationId,
-                        conversation.conversationId,
-                    ),
-                    eq(surveyResponseTable.participantId, participantId),
-                ),
-            )
-            .limit(1);
+            .onConflictDoUpdate({
+                target: [
+                    surveyResponseTable.conversationId,
+                    surveyResponseTable.participantId,
+                ],
+                set: { updatedAt: now },
+            })
+            .returning({
+                id: surveyResponseTable.id,
+                createdAt: surveyResponseTable.createdAt,
+                updatedAt: surveyResponseTable.updatedAt,
+                completedAt: surveyResponseTable.completedAt,
+                withdrawnAt: surveyResponseTable.withdrawnAt,
+            });
+        const response = responseRows.at(0);
+        if (response === undefined)
+            throw httpErrors.internalServerError(
+                "Survey response could not be saved",
+            );
+        const activeSurveyConfig = await getActiveSurveyConfigRecord({
+            db: tx,
+            conversationId: conversation.conversationId,
+        });
+        if (activeSurveyConfig === undefined)
+            throw httpErrors.notFound("Survey not found");
+        const shouldResetWithdrawnResponse = response.withdrawnAt !== null;
+        const previousSurveyState: SurveyParticipantState = {
+            activeSurveyConfig,
+            response,
+            answersByQuestionId: shouldResetWithdrawnResponse
+                ? new Map<number, StoredSurveyAnswer>()
+                : await loadSurveyAnswers({
+                      db: tx,
+                      surveyResponseId: response.id,
+                  }),
+        };
+        const previousSurveyGate = deriveSurveyGate({
+            surveyState: previousSurveyState,
+            participantId,
+        });
 
-        let surveyResponseId = surveyResponseRows.at(0)?.id;
-        if (surveyResponseId === undefined) {
-            const insertedSurveyResponse = await tx
-                .insert(surveyResponseTable)
-                .values({
-                    participantId,
-                    conversationId: conversation.conversationId,
-                    completedAt: null,
+        const storedQuestion = activeSurveyConfig.questions.find(
+            (currentQuestion) => currentQuestion.slugId === questionSlugId,
+        );
+        if (storedQuestion === undefined) {
+            throw httpErrors.notFound("Survey question not found");
+        }
+        const question = getParticipantSurveyQuestion({
+            question: storedQuestion,
+            surveyIsOptional: activeSurveyConfig.isOptional,
+        });
+
+        if (
+            answer?.questionType === "choice" &&
+            !validateSurveyAnswer({ question, answer })
+        ) {
+            throw httpErrors.badRequest("Invalid survey answer payload");
+        }
+        const normalizedAnswer =
+            answer === null
+                ? null
+                : normalizeSurveyAnswerForStorage({
+                      question,
+                      answer,
+                      storedAnswer: previousSurveyState.answersByQuestionId.get(
+                          question.id,
+                      ),
+                  });
+
+        if (
+            normalizedAnswer?.questionType === "free_text" &&
+            !validateSurveyAnswer({ question, answer: normalizedAnswer })
+        ) {
+            throw httpErrors.badRequest("Invalid survey answer payload");
+        }
+
+        const finalizeSurveyAnswerSave = async (
+            answersByQuestionId: Map<number, StoredSurveyAnswer>,
+        ) => {
+            const nextSurveyState: SurveyParticipantState = {
+                activeSurveyConfig,
+                response: {
+                    ...response,
                     withdrawnAt: null,
-                    createdAt: now,
-                    updatedAt: now,
-                })
-                .returning({ id: surveyResponseTable.id });
-            surveyResponseId = insertedSurveyResponse[0].id;
-        } else {
-            if (shouldResetWithdrawnResponse) {
-                await softDeleteSurveyResponseAnswers({
-                    db: tx,
-                    surveyResponseId,
-                    now,
-                });
+                    completedAt: shouldResetWithdrawnResponse
+                        ? null
+                        : response.completedAt,
+                },
+                answersByQuestionId,
+            };
+            const nextSurveyGate = deriveSurveyGate({
+                surveyState: nextSurveyState,
+                participantId,
+            });
+            const justCompleted =
+                previousSurveyGate.status !== "complete_valid" &&
+                nextSurveyGate.status === "complete_valid";
+
+            if (justCompleted) {
+                await tx
+                    .update(surveyResponseTable)
+                    .set({ completedAt: now, updatedAt: now })
+                    .where(eq(surveyResponseTable.id, response.id));
             }
 
-            const responseUpdate = shouldResetWithdrawnResponse
-                ? {
-                      withdrawnAt: null,
-                      completedAt: null,
-                      updatedAt: now,
-                  }
-                : {
-                      withdrawnAt: null,
-                      updatedAt: now,
-                  };
+            await queueConversationSurveyUpdatedEvent({
+                db: tx,
+                conversationSlugId,
+                configChanged: false,
+            });
 
+            const analysisRefreshScheduled =
+                shouldRecomputeAnalysisForSurveyTransition({
+                    previousSurveyGateStatus: previousSurveyGate.status,
+                    nextSurveyGateStatus: nextSurveyGate.status,
+                    isOptional: activeSurveyConfig.isOptional,
+                })
+                    ? await scheduleConversationAnalysisForParticipantSurveyTransition(
+                          {
+                              db: tx,
+                              conversation,
+                              participantId,
+                              previousSurveyGateStatus:
+                                  previousSurveyGate.status,
+                              nextSurveyGateStatus: nextSurveyGate.status,
+                          },
+                      )
+                    : false;
+
+            return {
+                nextSurveyGate,
+                analysisRefreshScheduled,
+                justCompleted,
+            };
+        };
+
+        if (shouldResetWithdrawnResponse) {
+            await softDeleteSurveyResponseAnswers({
+                db: tx,
+                surveyResponseId: response.id,
+                now,
+            });
             await tx
                 .update(surveyResponseTable)
-                .set(responseUpdate)
-                .where(eq(surveyResponseTable.id, surveyResponseId));
+                .set({ withdrawnAt: null, completedAt: null })
+                .where(eq(surveyResponseTable.id, response.id));
         }
-
-        const existingAnswerRows = await tx
-            .select({ id: surveyAnswerTable.id })
-            .from(surveyAnswerTable)
-            .where(
-                and(
-                    eq(surveyAnswerTable.surveyResponseId, surveyResponseId),
-                    eq(surveyAnswerTable.surveyQuestionId, question.id),
-                    isNull(surveyAnswerTable.deletedAt),
-                ),
-            )
-            .limit(1);
-        const existingAnswerId = existingAnswerRows.at(0)?.id;
-
-        if (normalizedAnswer === null) {
-            if (question.isRequired) {
-                if (existingAnswerId !== undefined) {
-                    await tx
-                        .update(surveyAnswerOptionTable)
-                        .set({ deletedAt: now })
-                        .where(
-                            and(
-                                eq(
-                                    surveyAnswerOptionTable.surveyAnswerId,
-                                    existingAnswerId,
-                                ),
-                                isNull(surveyAnswerOptionTable.deletedAt),
-                            ),
-                        );
-                    await tx
-                        .update(surveyAnswerTable)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(eq(surveyAnswerTable.id, existingAnswerId));
-                }
-                return await loadNextSurveyTransition({ db: tx });
-            }
-
-            let surveyAnswerId = existingAnswerId;
-            if (surveyAnswerId === undefined) {
-                const insertedAnswer = await tx
-                    .insert(surveyAnswerTable)
-                    .values({
-                        surveyResponseId,
-                        conversationId: conversation.conversationId,
-                        surveyQuestionId: question.id,
-                        answeredQuestionSemanticVersion:
-                            question.currentSemanticVersion,
-                        textValueHtml: null,
-                        textValuePlainText: null,
-                        deletedAt: null,
-                        createdAt: now,
-                        updatedAt: now,
-                    })
-                    .returning({ id: surveyAnswerTable.id });
-                surveyAnswerId = insertedAnswer[0].id;
-            } else {
-                await tx
-                    .update(surveyAnswerTable)
-                    .set({
-                        answeredQuestionSemanticVersion:
-                            question.currentSemanticVersion,
-                        textValueHtml: null,
-                        textValuePlainText: null,
-                        deletedAt: null,
-                        updatedAt: now,
-                    })
-                    .where(eq(surveyAnswerTable.id, surveyAnswerId));
-            }
-
-            await tx
-                .update(surveyAnswerOptionTable)
-                .set({ deletedAt: now })
-                .where(
-                    and(
-                        eq(
-                            surveyAnswerOptionTable.surveyAnswerId,
-                            surveyAnswerId,
-                        ),
-                        isNull(surveyAnswerOptionTable.deletedAt),
-                    ),
-                );
-            return await loadNextSurveyTransition({ db: tx });
-        }
-
-        const textValueHtml =
-            normalizedAnswer.questionType === "free_text"
-                ? normalizedAnswer.textValueHtml
-                : null;
-        const textValuePlainText =
-            normalizedAnswer.questionType === "free_text"
-                ? normalizedAnswer.textValuePlainText
-                : null;
-        let surveyAnswerId = existingAnswerId;
-        if (surveyAnswerId === undefined) {
-            const insertedAnswer = await tx
-                .insert(surveyAnswerTable)
-                .values({
-                    surveyResponseId,
-                    conversationId: conversation.conversationId,
-                    surveyQuestionId: question.id,
-                    answeredQuestionSemanticVersion:
-                        question.currentSemanticVersion,
-                    textValueHtml,
-                    textValuePlainText,
-                    deletedAt: null,
-                    createdAt: now,
-                    updatedAt: now,
-                })
-                .returning({ id: surveyAnswerTable.id });
-            surveyAnswerId = insertedAnswer[0].id;
-        } else {
-            await tx
-                .update(surveyAnswerTable)
-                .set({
-                    answeredQuestionSemanticVersion:
-                        question.currentSemanticVersion,
-                    textValueHtml,
-                    textValuePlainText,
-                    deletedAt: null,
-                    updatedAt: now,
-                })
-                .where(eq(surveyAnswerTable.id, surveyAnswerId));
-            await tx
-                .update(surveyAnswerOptionTable)
-                .set({ deletedAt: now })
-                .where(
-                    and(
-                        eq(
-                            surveyAnswerOptionTable.surveyAnswerId,
-                            surveyAnswerId,
-                        ),
-                        isNull(surveyAnswerOptionTable.deletedAt),
-                    ),
-                );
-        }
-
-        if (normalizedAnswer.questionType !== "free_text") {
-            const optionIdsBySlugId = new Map(
-                question.options.map((option) => [option.slugId, option.id]),
-            );
-            if (normalizedAnswer.optionSlugIds.length > 0) {
-                await tx.insert(surveyAnswerOptionTable).values(
-                    normalizedAnswer.optionSlugIds.map((optionSlugId) => {
-                        const surveyQuestionOptionId =
-                            optionIdsBySlugId.get(optionSlugId);
-                        if (surveyQuestionOptionId === undefined) {
-                            throw httpErrors.badRequest(
-                                "Survey option not found",
-                            );
-                        }
-                        return {
-                            surveyAnswerId,
-                            surveyQuestionId: question.id,
-                            surveyQuestionOptionId,
-                            deletedAt: null,
-                        };
-                    }),
-                );
-            }
-        }
-
-        return await loadNextSurveyTransition({ db: tx });
+        const savedAnswer = await persistSurveyAnswer({
+            db: tx,
+            conversationId: conversation.conversationId,
+            surveyResponseId: response.id,
+            question,
+            previousAnswer: previousSurveyState.answersByQuestionId.get(
+                question.id,
+            ),
+            answer: normalizedAnswer,
+            now,
+        });
+        const nextAnswersByQuestionId = new Map(
+            previousSurveyState.answersByQuestionId,
+        );
+        if (savedAnswer === undefined)
+            nextAnswersByQuestionId.delete(question.id);
+        else nextAnswersByQuestionId.set(question.id, savedAnswer);
+        return await finalizeSurveyAnswerSave(nextAnswersByQuestionId);
     });
 
-    const { nextSurveyGate, analysisRefreshScheduled } = surveyTransition;
-    const justCompleted =
-        previousSurveyGate.status !== "complete_valid" &&
-        nextSurveyGate.status === "complete_valid";
+    const { nextSurveyGate, analysisRefreshScheduled, justCompleted } =
+        surveyTransition;
 
     if (analysisRefreshScheduled) {
         await wakeScheduledConversationAnalysisForSurveyChange({

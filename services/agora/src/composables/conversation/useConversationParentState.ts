@@ -22,7 +22,15 @@ import {
   getConversationPath,
 } from "src/utils/router/conversationRouteContext";
 import { getSingleRouteParam } from "src/utils/router/params";
-import { computed, type MaybeRef, provide, type Ref, ref, unref, watch } from "vue";
+import {
+  computed,
+  type MaybeRef,
+  provide,
+  type Ref,
+  ref,
+  unref,
+  watch,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { RouteNamedMap } from "vue-router/auto-routes";
 
@@ -41,6 +49,7 @@ export interface ConversationParentConfig {
 }
 
 export interface SubmittedCommentData {
+  kind?: "created" | "edited";
   displayedOpinionItem: DisplayedOpinionItem;
   needsCacheRefresh: boolean;
 }
@@ -80,8 +89,10 @@ export function useConversationParentState({
 
   // Use TanStack Query for conversation data
   const conversationQuery = useConversationQuery({
-    conversationSlugId: computed(
-      () => getSingleRouteParam("postSlugId" in route.params ? route.params.postSlugId : undefined)
+    conversationSlugId: computed(() =>
+      getSingleRouteParam(
+        "postSlugId" in route.params ? route.params.postSlugId : undefined
+      )
     ),
     enabled: computed(() => isAuthInitialized.value),
   });
@@ -128,10 +139,8 @@ export function useConversationParentState({
   });
 
   const { invalidateUserVotes } = useInvalidateVoteQueries();
-  const {
-    invalidateComments,
-    markAnalysisAsStale,
-  } = useInvalidateCommentQueries();
+  const { invalidateComments, markAnalysisAsStale } =
+    useInvalidateCommentQueries();
 
   // Child tab refresh: the active child route registers its own refresh handler
   const childRefreshHandler = ref<ChildRefreshHandler | undefined>();
@@ -158,6 +167,24 @@ export function useConversationParentState({
   );
 
   const currentTab = ref<"comment" | "analysis">("comment");
+  const editingOpinion = ref<DisplayedOpinionItem>();
+  function beginEditOpinion(opinion: DisplayedOpinionItem): void {
+    if (editingOpinion.value === undefined) editingOpinion.value = opinion;
+  }
+  function finishEditOpinion(): void {
+    editingOpinion.value = undefined;
+  }
+  async function handleEditedOpinion(
+    opinion: DisplayedOpinionItem
+  ): Promise<void> {
+    finishEditOpinion();
+    await handleSubmittedComment({
+      displayedOpinionItem: opinion,
+      needsCacheRefresh: false,
+      kind: "edited",
+    });
+  }
+  watch(() => authStore.userId, finishEditOpinion);
   const isCurrentTabLoading = ref(false);
   const moderationHistoryTrigger = ref(0);
 
@@ -202,12 +229,21 @@ export function useConversationParentState({
   // restoring the saved position and let scrollToActionBar handle it instead.
   const pendingScrollOverride = ref(false);
 
-  function scrollToActionBar({ behavior }: { behavior?: ScrollBehavior } = {}): void {
+  function scrollToActionBar({
+    behavior,
+  }: { behavior?: ScrollBehavior } = {}): void {
     const el = actionBarElement.value;
     if (!el) return;
     const container = scrollContainer?.value;
-    const elTop = getElementScrollTop({ element: el, scrollContainer: container });
-    scrollTo({ top: elTop - getHeaderHeight(), behavior, scrollContainer: container });
+    const elTop = getElementScrollTop({
+      element: el,
+      scrollContainer: container,
+    });
+    scrollTo({
+      top: elTop - getHeaderHeight(),
+      behavior,
+      scrollContainer: container,
+    });
   }
 
   // Filter state: owned here, displayed in PostActionBar slot, synced with child route via props
@@ -225,9 +261,7 @@ export function useConversationParentState({
     isCurrentTabLoading.value = loading;
   });
   provide("scrollToActionBar", scrollToActionBar);
-  provide("getScrollPosition", () =>
-    getCurrentScrollPosition(),
-  );
+  provide("getScrollPosition", () => getCurrentScrollPosition());
   provide(
     "scrollToPosition",
     ({ top, behavior }: { top: number; behavior?: ScrollBehavior }) =>
@@ -235,11 +269,13 @@ export function useConversationParentState({
         top,
         behavior,
         scrollContainer: scrollContainerRef.value,
-      }),
+      })
   );
 
   // Navigation functions for banner actions (parameterized by route prefix)
-  function navigateToAnalysis({ initialTab }: { initialTab?: ShortcutItem } = {}) {
+  function navigateToAnalysis({
+    initialTab,
+  }: { initialTab?: ShortcutItem } = {}) {
     const data = conversationData.value;
     if (data === undefined) return;
 
@@ -404,6 +440,10 @@ export function useConversationParentState({
     loadedConversationData,
     loadedConversationDisplayContent,
     currentTab,
+    editingOpinion,
+    beginEditOpinion,
+    finishEditOpinion,
+    handleEditedOpinion,
     isCurrentTabLoading,
     moderationHistoryTrigger,
     commentFilter,

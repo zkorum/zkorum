@@ -9,7 +9,7 @@ export async function lockConversationEmailUpdateProject({
 }: {
     db: PostgresJsDatabase;
     projectId: number;
-    lockMode?: "update" | "no key update";
+    lockMode?: "update" | "no key update" | "share";
 }): Promise<boolean> {
     const rows = await db
         .select({ id: projectTable.id })

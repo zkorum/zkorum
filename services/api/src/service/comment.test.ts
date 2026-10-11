@@ -29,6 +29,7 @@ function snapshotOpinionRow(
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
         updatedAt: new Date("2026-01-01T00:00:00.000Z"),
         opinion: "SECRET ORIGINAL",
+        isEdited: false,
         sourceLanguageCode: "en",
         sourceRawLanguageCode: "en",
         sourceLanguageProvider: "lingua",

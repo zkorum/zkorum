@@ -127,7 +127,7 @@ function generateLengthConstantsSection({
     sharedTs,
 }: SharedTypesSources): PythonSharedSection {
     const constants = [
-        "MAX_LENGTH_TITLE",
+        "MAX_LENGTH_CONVERSATION_TITLE",
         "MAX_LENGTH_BODY_HTML",
         "MAX_LENGTH_CONVERSATION_BODY",
         "MAX_LENGTH_CONVERSATION_BODY_HTML",

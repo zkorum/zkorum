@@ -29,23 +29,28 @@ import {
     ZodSupportedSpokenLanguageCodes,
 } from "@/shared/languages.js";
 import { projectOrganizationAttributionRoleValues } from "@/shared/types/project.js";
-import { MAX_PROJECT_DOCUMENT_FILE_SIZE, PROJECT_DOCUMENT_CONTENT_TYPES } from "@/shared/projectDocument.js";
+import {
+    MAX_PROJECT_DOCUMENT_FILE_SIZE,
+    PROJECT_DOCUMENT_CONTENT_TYPES,
+} from "@/shared/projectDocument.js";
 import type { EmailBranding } from "@/shared/branding/emailBranding.js";
-// import { MAX_LENGTH_TITLE, MAX_LENGTH_OPINION, MAX_LENGTH_BODY } from "./shared/shared.js"; // unfortunately it breaks drizzle generate... :o TODO: find a way
-// WARNING: when you modify these limits, change this in shared.ts as well
-const MAX_LENGTH_TITLE = 140;
-const MAX_LENGTH_BODY = 1000;
-const MAX_BYTES_RICH_TEXT_HTML = 16_384;
-// const MAX_LENGTH_OPINION = 280;
-const MAX_LENGTH_SURVEY_QUESTION = 500;
-const MAX_LENGTH_SURVEY_OPTION = 200;
-const MAX_LENGTH_NAME_CREATOR = 65;
-const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
-const MAX_LENGTH_USERNAME = 20;
-const MAX_LENGTH_USER_REPORT_EXPLANATION = 260;
+import {
+    MAX_LENGTH_TITLE,
+    MAX_LENGTH_CONVERSATION_TITLE,
+    MAX_LENGTH_BODY,
+    MAX_BYTES_RICH_TEXT_HTML,
+    MAX_LENGTH_SURVEY_QUESTION,
+    MAX_LENGTH_SURVEY_OPTION,
+    MAX_BYTES_SURVEY_OPTION_TEXT,
+    MAX_LENGTH_NAME_CREATOR,
+    MAX_LENGTH_DESCRIPTION_CREATOR,
+    MAX_LENGTH_USERNAME,
+    MAX_LENGTH_USER_REPORT_EXPLANATION,
+    MAX_BYTES_CONVERSATION_EMAIL_UPDATE_HTML,
+    MAX_LENGTH_CONVERSATION_EMAIL_UPDATE,
+} from "@/shared/shared.js";
+
 const MAX_LENGTH_CONVERSATION_EMAIL_UPDATE_SUBJECT = 140;
-const MAX_BYTES_CONVERSATION_EMAIL_UPDATE_HTML = 16_384;
-const MAX_LENGTH_CONVERSATION_EMAIL_UPDATE_PLAIN_TEXT = 10_000;
 
 // Drizzle's variadic and()/or() return SQL | undefined because zero arguments are allowed.
 // These schema helpers require at least two conditions, so index/check definitions stay typed as SQL.
@@ -1037,47 +1042,51 @@ export const conversationViewSnapshotReasonEnum = pgEnum(
 // A user must have at least 1 validated primary email and 1 device associated with it.
 // The "at least one" conditon is not enforced directly in the SQL model yet. It is done in the application code.
 /** @service scoring-worker, shared-analysis-worker, import-worker, content-translation-worker */
-export const userTable = pgTable("user", {
-    id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
-    polisParticipantId: serial("polis_participant_id"), // temporary work-around until reddwarf supports string ids
-    username: varchar("username", { length: MAX_LENGTH_USERNAME })
-        .notNull()
-        .unique(),
-    isSiteModerator: boolean("is_site_moderator").notNull().default(false),
-    isSiteOrgAdmin: boolean("is_site_org_admin").notNull().default(false),
-    isImported: boolean("is_imported").notNull().default(false),
-    isDeleted: boolean("is_deleted").notNull().default(false),
-    deletedAt: timestamp("deleted_at", { mode: "date", precision: 0 }), // Track when soft-delete occurred (hard-deleted after 15 days)
-    authRestrictedAt: timestamp("auth_restricted_at", {
-        mode: "date",
-        precision: 0,
-    }),
-    authRestrictionReason: text("auth_restriction_reason"),
-    activeConversationCount: integer("active_conversation_count")
-        .notNull()
-        .default(0), // total conversations (without deleted conversations)
-    totalConversationCount: integer("total_conversation_count")
-        .notNull()
-        .default(0), // total conversations created
-    totalOpinionCount: integer("total_opinion_count").notNull().default(0), // total opinions created
-    createdAt: timestamp("created_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-    updatedAt: timestamp("updated_at", {
-        mode: "date",
-        precision: 0,
-    })
-        .defaultNow()
-        .notNull(),
-}, (table) => [
-    check(
-        "user_auth_restriction_reason_check",
-        sql`(${table.authRestrictedAt} IS NULL) = (${table.authRestrictionReason} IS NULL)`,
-    ),
-]);
+export const userTable = pgTable(
+    "user",
+    {
+        id: uuid("id").primaryKey(), // enforce the same key for the user in the frontend across email changes
+        polisParticipantId: serial("polis_participant_id"), // temporary work-around until reddwarf supports string ids
+        username: varchar("username", { length: MAX_LENGTH_USERNAME })
+            .notNull()
+            .unique(),
+        isSiteModerator: boolean("is_site_moderator").notNull().default(false),
+        isSiteOrgAdmin: boolean("is_site_org_admin").notNull().default(false),
+        isImported: boolean("is_imported").notNull().default(false),
+        isDeleted: boolean("is_deleted").notNull().default(false),
+        deletedAt: timestamp("deleted_at", { mode: "date", precision: 0 }), // Track when soft-delete occurred (hard-deleted after 15 days)
+        authRestrictedAt: timestamp("auth_restricted_at", {
+            mode: "date",
+            precision: 0,
+        }),
+        authRestrictionReason: text("auth_restriction_reason"),
+        activeConversationCount: integer("active_conversation_count")
+            .notNull()
+            .default(0), // total conversations (without deleted conversations)
+        totalConversationCount: integer("total_conversation_count")
+            .notNull()
+            .default(0), // total conversations created
+        totalOpinionCount: integer("total_opinion_count").notNull().default(0), // total opinions created
+        createdAt: timestamp("created_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+        updatedAt: timestamp("updated_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .defaultNow()
+            .notNull(),
+    },
+    (table) => [
+        check(
+            "user_auth_restriction_reason_check",
+            sql`(${table.authRestrictedAt} IS NULL) = (${table.authRestrictionReason} IS NULL)`,
+        ),
+    ],
+);
 
 export const organizationMembershipTable = pgTable(
     "organization_membership",
@@ -1537,7 +1546,9 @@ export const projectDocumentFileTable = pgTable(
         objectKey: text("object_key").notNull().unique(),
         originalFileName: text("original_file_name").notNull(),
         contentType: projectDocumentContentTypeEnum("content_type").notNull(),
-        htmlScriptsEnabled: boolean("html_scripts_enabled").notNull().default(false),
+        htmlScriptsEnabled: boolean("html_scripts_enabled")
+            .notNull()
+            .default(false),
         byteSize: integer("byte_size").notNull(),
         createdAt: timestamp("created_at", {
             mode: "date",
@@ -2101,13 +2112,20 @@ export const phoneSmsBudgetPolicyTable = pgTable(
     {
         id: integer("id").primaryKey(),
         sendingEnabled: boolean("sending_enabled").notNull().default(false),
-        hourlySendLimit: integer("hourly_send_limit").notNull(),
-        dailySendLimit: integer("daily_send_limit").notNull(),
+        hourlySendLimit: integer("hourly_send_limit"),
+        dailySendLimit: integer("daily_send_limit"),
         estimatedCentsPerSend: integer("estimated_cents_per_send").notNull(),
-        hourlyBudgetCents: integer("hourly_budget_cents").notNull(),
-        dailyBudgetCents: integer("daily_budget_cents").notNull(),
+        hourlyBudgetCents: integer("hourly_budget_cents"),
+        dailyBudgetCents: integer("daily_budget_cents"),
+        monthlyBudgetCents: integer("monthly_budget_cents")
+            .notNull()
+            .default(10000),
         warningPercent: integer("warning_percent").notNull().default(75),
         registrationPausedAt: timestamp("registration_paused_at", {
+            mode: "date",
+            precision: 3,
+        }),
+        registrationPauseExpiresAt: timestamp("registration_pause_expires_at", {
             mode: "date",
             precision: 3,
         }),
@@ -2119,11 +2137,19 @@ export const phoneSmsBudgetPolicyTable = pgTable(
         check("phone_sms_budget_single_policy_check", sql`${table.id} = 1`),
         check(
             "phone_sms_budget_positive_limits_check",
-            sql`${table.hourlySendLimit} > 0 AND ${table.dailySendLimit} >= ${table.hourlySendLimit} AND ${table.estimatedCentsPerSend} > 0 AND ${table.hourlyBudgetCents} > 0 AND ${table.dailyBudgetCents} >= ${table.hourlyBudgetCents}`,
+            sql`(${table.hourlySendLimit} IS NULL OR ${table.hourlySendLimit} > 0) AND (${table.dailySendLimit} IS NULL OR ${table.dailySendLimit} > 0) AND (${table.hourlySendLimit} IS NULL OR ${table.dailySendLimit} IS NULL OR ${table.dailySendLimit} >= ${table.hourlySendLimit}) AND ${table.estimatedCentsPerSend} > 0 AND (${table.hourlyBudgetCents} IS NULL OR ${table.hourlyBudgetCents} > 0) AND (${table.dailyBudgetCents} IS NULL OR ${table.dailyBudgetCents} > 0) AND (${table.hourlyBudgetCents} IS NULL OR ${table.dailyBudgetCents} IS NULL OR ${table.dailyBudgetCents} >= ${table.hourlyBudgetCents})`,
         ),
         check(
             "phone_sms_budget_warning_percent_check",
             sql`${table.warningPercent} BETWEEN 1 AND 99`,
+        ),
+        check(
+            "phone_sms_budget_monthly_limit_check",
+            sql`${table.monthlyBudgetCents} >= 0`,
+        ),
+        check(
+            "phone_sms_budget_pause_expiry_check",
+            sql`${table.registrationPauseExpiresAt} IS NULL OR (${table.registrationPausedAt} IS NOT NULL AND ${table.registrationPauseExpiresAt} > ${table.registrationPausedAt})`,
         ),
     ],
 );
@@ -2134,8 +2160,10 @@ export const phoneSmsBudgetReservationTable = pgTable(
     {
         id: uuid("id").primaryKey(),
         estimatedCents: integer("estimated_cents").notNull(),
-        reservedAt: timestamp("reserved_at", { mode: "date", precision: 3 })
-            .notNull(),
+        reservedAt: timestamp("reserved_at", {
+            mode: "date",
+            precision: 3,
+        }).notNull(),
     },
     (table) => [
         index("phone_sms_budget_reservation_time_idx").on(table.reservedAt),
@@ -2463,7 +2491,9 @@ export const conversationContentTable = pgTable(
         conversationId: integer("conversation_id")
             .references(() => conversationTable.id)
             .notNull(),
-        title: varchar("title", { length: MAX_LENGTH_TITLE }).notNull(),
+        title: varchar("title", {
+            length: MAX_LENGTH_CONVERSATION_TITLE,
+        }).notNull(),
         body: text("body"),
         bodyPlainText: text("body_plain_text"),
         sourceLanguageCode: spokenLanguageCodeEnum("source_language_code"),
@@ -2690,6 +2720,32 @@ export const conversationTable = pgTable(
             "conversation_email_update_override_audit_check",
             sql`(${table.conversationEmailUpdateOverrideUpdatedAt} IS NULL) = (${table.conversationEmailUpdateOverrideUpdatedByUserId} IS NULL)`,
         ),
+    ],
+);
+
+/**
+ * Persistent project/conversation associations keep historical snapshots scoped
+ * after the current project changes. Returning to a project reuses its association.
+ * @service api
+ */
+export const conversationProjectAssignmentTable = pgTable(
+    "conversation_project_assignment",
+    {
+        conversationId: integer("conversation_id")
+            .notNull()
+            .references(() => conversationTable.id),
+        projectId: integer("project_id")
+            .notNull()
+            .references(() => projectTable.id),
+        firstAssignedAt: timestamp("first_assigned_at", {
+            mode: "date",
+            precision: 0,
+        })
+            .notNull()
+            .defaultNow(),
+    },
+    (table) => [
+        primaryKey({ columns: [table.projectId, table.conversationId] }),
     ],
 );
 
@@ -3197,6 +3253,7 @@ export const surveyQuestionOptionTable = pgTable(
             .references((): AnyPgColumn => surveyQuestionOptionContentTable.id)
             .unique(),
         displayOrder: smallint("display_order").notNull(),
+        allowsText: boolean("allows_text").notNull().default(false),
         createdAt: timestamp("created_at", {
             mode: "date",
             precision: 0,
@@ -3424,12 +3481,17 @@ export const surveyAnswerOptionTable = pgTable(
         surveyQuestionOptionId: integer("survey_question_option_id")
             .notNull()
             .references(() => surveyQuestionOptionTable.id),
+        textValuePlainText: text("text_value_plain_text"),
         deletedAt: timestamp("deleted_at", {
             mode: "date",
             precision: 0,
         }),
     },
     (table) => [
+        check(
+            "survey_answer_option_text_byte_length_check",
+            sql`octet_length(${table.textValuePlainText}) <= ${sql.raw(String(MAX_BYTES_SURVEY_OPTION_TEXT))}`,
+        ),
         uniqueIndex("survey_answer_option_answer_option_active_uidx")
             .on(table.surveyAnswerId, table.surveyQuestionOptionId)
             .where(sql`${table.deletedAt} IS NULL`),
@@ -3530,6 +3592,10 @@ export const opinionContentTable = pgTable(
             .references(() => conversationContentTable.id)
             .notNull(), // used to cascade delete all opinionContent when deleting a conversation(content)
         content: text("content").notNull(),
+        isEdited: boolean("is_edited").notNull().default(false),
+        editedByUserId: uuid("edited_by_user_id").references(
+            () => userTable.id,
+        ),
         contentPlainText: text("content_plain_text"),
         sourceLanguageCode: spokenLanguageCodeEnum("source_language_code"),
         sourceRawLanguageCode: varchar("source_raw_language_code", {
@@ -3547,6 +3613,10 @@ export const opinionContentTable = pgTable(
             .notNull(),
     },
     (table) => [
+        check(
+            "opinion_content_edit_attribution_check",
+            sql`${table.isEdited} = (${table.editedByUserId} IS NOT NULL)`,
+        ),
         check(
             "opinion_content_content_byte_length_check",
             sql`octet_length(${table.content}) <= ${sql.raw(String(MAX_BYTES_RICH_TEXT_HTML))}`,
@@ -4107,7 +4177,10 @@ export const notificationOpinionVoteTable = pgTable(
         unique("notification_opinion_vote_notification_unique").on(
             t.notificationId,
         ),
-        check("notification_opinion_vote_positive_count", sql`${t.numVotes} >= 1`),
+        check(
+            "notification_opinion_vote_positive_count",
+            sql`${t.numVotes} >= 1`,
+        ),
     ],
 );
 
@@ -4135,7 +4208,9 @@ export const notificationNewOpinionTable = pgTable(
             .notNull(),
     },
     (t) => [
-        unique("notification_new_opinion_notification_unique").on(t.notificationId),
+        unique("notification_new_opinion_notification_unique").on(
+            t.notificationId,
+        ),
     ],
 );
 
@@ -4162,7 +4237,9 @@ export const notificationExportTable = pgTable(
             .defaultNow()
             .notNull(),
     },
-    (t) => [unique("notification_export_notification_unique").on(t.notificationId)],
+    (t) => [
+        unique("notification_export_notification_unique").on(t.notificationId),
+    ],
 );
 
 /** @service import-worker */
@@ -4186,7 +4263,9 @@ export const notificationImportTable = pgTable(
             .defaultNow()
             .notNull(),
     },
-    (t) => [unique("notification_import_notification_unique").on(t.notificationId)],
+    (t) => [
+        unique("notification_import_notification_unique").on(t.notificationId),
+    ],
 );
 
 /** @service import-worker */
@@ -5168,7 +5247,7 @@ export const realtimeEventOutboxTable = pgTable(
         index("realtime_event_outbox_conversation_replay_idx")
             .using("btree", sql`(${t.payload}->>'conversationSlugId')`, t.id)
             .where(
-                sql`${t.eventType} IN ('conversation_analysis_updated', 'conversation_settings_updated', 'conversation_survey_updated')`,
+                sql`${t.eventType} IN ('conversation_analysis_updated', 'conversation_settings_updated', 'conversation_survey_updated', 'opinion_updated')`,
             ),
         index("realtime_event_outbox_ranking_replay_idx")
             .using("btree", sql`(${t.payload}->>'conversationSlugId')`, t.id)
@@ -5746,6 +5825,7 @@ export const rankingConversationStatsSnapshotTable = pgTable(
         })
             .defaultNow()
             .notNull(),
+        deletedAt: timestamp("deleted_at", { mode: "date", precision: 0 }),
     },
     (table) => [
         foreignKey({
@@ -5760,12 +5840,17 @@ export const rankingConversationStatsSnapshotTable = pgTable(
             table.id,
             table.conversationId,
         ),
-        index("ranking_conversation_stats_snapshot_latest_idx").using(
-            "btree",
-            table.conversationId,
-            sql`${table.createdAt} DESC`,
-            sql`${table.id} DESC`,
-        ),
+        index("ranking_conversation_stats_snapshot_latest_idx")
+            .using(
+                "btree",
+                table.conversationId,
+                sql`${table.createdAt} DESC`,
+                sql`${table.id} DESC`,
+            )
+            .where(sql`${table.deletedAt} IS NULL`),
+        index("ranking_stats_snapshot_deleted_idx")
+            .on(table.deletedAt, table.id)
+            .where(sql`${table.deletedAt} IS NOT NULL`),
         check(
             "ranking_conversation_stats_snapshot_counts_check",
             sql`${table.itemCount} >= 0 AND ${table.itemCount} <= ${table.totalItemCount} AND ${table.voteCount} >= 0 AND ${table.voteCount} <= ${table.totalVoteCount} AND ${table.participantCount} >= 0 AND ${table.participantCount} <= ${table.totalParticipantCount} AND ${table.scoringInputRevision} >= 0`,
@@ -5788,6 +5873,7 @@ export const rankingConversationStatsItemTable = pgTable(
         rank: integer("rank"),
         participantCount: integer("participant_count").notNull(),
         externalUrl: text("external_url"),
+        deletedAt: timestamp("deleted_at", { mode: "date", precision: 0 }),
     },
     (table) => [
         foreignKey({
@@ -5818,6 +5904,9 @@ export const rankingConversationStatsItemTable = pgTable(
             table.statsSnapshotId,
             table.rankingItemId,
         ),
+        index("ranking_stats_item_deleted_idx")
+            .on(table.deletedAt, table.id)
+            .where(sql`${table.deletedAt} IS NOT NULL`),
         check(
             "ranking_stats_item_score_rank_check",
             sql`((${table.score} IS NULL AND ${table.rank} IS NULL) OR (${table.score} IS NOT NULL AND ${table.rank} IS NOT NULL AND ${table.score} >= 0 AND ${table.score} <= 1 AND ${table.rank} > 0))`,
@@ -5950,6 +6039,7 @@ export const maxdiffUserEntityScoreTable = pgTable(
         displayScore: real("display_score"),
         uncertaintyLeft: real("uncertainty_left").notNull(),
         uncertaintyRight: real("uncertainty_right").notNull(),
+        deletedAt: timestamp("deleted_at", { mode: "date", precision: 0 }),
     },
     (t) => [
         unique().on(t.maxdiffResultId, t.entitySlugId),
@@ -5957,11 +6047,12 @@ export const maxdiffUserEntityScoreTable = pgTable(
             "maxdiff_user_entity_score_display_score_check",
             sql`${t.displayScore} IS NULL OR (${t.displayScore} >= 0 AND ${t.displayScore} <= 1)`,
         ),
-        index("maxdiff_user_entity_score_result_score_idx").using(
-            "btree",
-            t.maxdiffResultId,
-            sql`${t.score} DESC`,
-        ),
+        index("maxdiff_user_entity_score_result_score_idx")
+            .using("btree", t.maxdiffResultId, sql`${t.score} DESC`)
+            .where(sql`${t.deletedAt} IS NULL`),
+        index("maxdiff_user_entity_score_deleted_idx")
+            .on(t.deletedAt, t.id)
+            .where(sql`${t.deletedAt} IS NOT NULL`),
     ],
 );
 
@@ -6324,7 +6415,7 @@ export const conversationEmailUpdateTable = pgTable(
         ),
         check(
             "conversation_email_update_body_plain_text_check",
-            sql`length(btrim(${table.bodyPlainText})) > 0 AND length(${table.bodyPlainText}) <= ${sql.raw(String(MAX_LENGTH_CONVERSATION_EMAIL_UPDATE_PLAIN_TEXT))}`,
+            sql`length(btrim(${table.bodyPlainText})) > 0 AND length(${table.bodyPlainText}) <= ${sql.raw(String(MAX_LENGTH_CONVERSATION_EMAIL_UPDATE))}`,
         ),
         check(
             "conversation_email_update_reply_to_email_canonical_check",
@@ -6345,7 +6436,7 @@ export const conversationEmailUpdateConversationTable = pgTable(
         projectId: integer("project_id").notNull(),
         conversationId: integer("conversation_id").notNull(),
         conversationTitleSnapshot: varchar("conversation_title_snapshot", {
-            length: MAX_LENGTH_TITLE,
+            length: MAX_LENGTH_CONVERSATION_TITLE,
         }).notNull(),
         conversationUrlSnapshot: text("conversation_url_snapshot"),
         createdAt: timestamp("created_at", { mode: "date", precision: 0 })
@@ -6364,7 +6455,10 @@ export const conversationEmailUpdateConversationTable = pgTable(
         }),
         foreignKey({
             columns: [table.projectId, table.conversationId],
-            foreignColumns: [conversationTable.projectId, conversationTable.id],
+            foreignColumns: [
+                conversationProjectAssignmentTable.projectId,
+                conversationProjectAssignmentTable.conversationId,
+            ],
             name: "email_update_scope_conversation_project_fk",
         }),
         index("conversation_email_update_scope_conversation_idx").on(

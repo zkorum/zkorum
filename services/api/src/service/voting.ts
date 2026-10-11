@@ -1,6 +1,7 @@
 import {
     conversationTable,
     opinionTable,
+    opinionContentTable,
     voteContentTable,
     voteTable,
 } from "@/shared-backend/schema.js";
@@ -24,6 +25,7 @@ import { useCommonComment, useCommonPost } from "./common.js";
 import { isUserInSelectedOpinionGroup } from "./opinionGroupAnalysis.js";
 import { checkConversationParticipation } from "./participationGate.js";
 import type { VoteBuffer } from "./voteBuffer.js";
+import { getPrimaryDatabase } from "@/shared-backend/db.js";
 
 interface GetCommentMetadataFromCommentSlugIdProps {
     db: PostgresJsDatabase;
@@ -78,6 +80,7 @@ interface CastVoteForOpinionSlugIdProps {
     now: Date;
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
     returnIsUserClustered?: boolean;
+    sourceVersion?: string;
 }
 
 interface CastVoteForOpinionSlugIdFromUserIdProps {
@@ -90,6 +93,7 @@ interface CastVoteForOpinionSlugIdFromUserIdProps {
     optionalConversationSlugId?: string;
     optionalConversationId?: number;
     optionalConversationContentId?: number | null;
+    contentMetadata?: GetCommentMetadataFromCommentSlugIdReturn;
 }
 
 /**
@@ -108,6 +112,7 @@ export async function castVoteForOpinionSlugIdFromUserId({
     optionalConversationId,
     optionalConversationSlugId,
     optionalConversationContentId,
+    contentMetadata,
 }: CastVoteForOpinionSlugIdFromUserIdProps): Promise<boolean> {
     // Get conversation metadata if not provided
     let conversationId: number;
@@ -157,13 +162,15 @@ export async function castVoteForOpinionSlugIdFromUserId({
     }
 
     // Get opinion metadata (commentId and contentId)
-    const commentData = await getCommentMetadataFromCommentSlugId({
-        db: db,
-        commentSlugId: opinionSlugId,
-    });
+    const commentData =
+        contentMetadata ??
+        (await getCommentMetadataFromCommentSlugId({
+            db: db,
+            commentSlugId: opinionSlugId,
+        }));
 
     // Add to buffer (returns immediately, vote writes happen in 1 second)
-    voteBuffer.add({
+    await voteBuffer.add({
         vote: {
             userId: userId,
             opinionId: commentData.commentId,
@@ -477,6 +484,7 @@ export async function castVoteForOpinionSlugId({
     now,
     currentDisplayLanguage,
     returnIsUserClustered,
+    sourceVersion,
 }: CastVoteForOpinionSlugIdProps): Promise<CastVoteResponse> {
     const { conversationSlugId, conversationId } =
         await useCommonComment().getOpinionMetadataFromOpinionSlugId({
@@ -495,6 +503,29 @@ export async function castVoteForOpinionSlugId({
         return participationCheck;
     }
 
+    const contentRows = await getPrimaryDatabase(db)
+        .select({
+            commentId: opinionTable.id,
+            contentId: opinionContentTable.id,
+            userId: opinionTable.authorId,
+            sourceVersion: opinionContentTable.publicId,
+        })
+        .from(opinionTable)
+        .innerJoin(
+            opinionContentTable,
+            eq(opinionContentTable.id, opinionTable.currentContentId),
+        )
+        .where(eq(opinionTable.slugId, opinionSlugId))
+        .limit(1);
+    const content = contentRows.at(0);
+    if (
+        content === undefined ||
+        (votingAction !== "cancel" &&
+            sourceVersion !== undefined &&
+            sourceVersion !== content.sourceVersion)
+    )
+        return { success: false, reason: "statement_changed" };
+
     await castVoteForOpinionSlugIdFromUserId({
         db,
         voteBuffer,
@@ -505,6 +536,7 @@ export async function castVoteForOpinionSlugId({
         optionalConversationId: conversationId,
         optionalConversationSlugId: conversationSlugId,
         optionalConversationContentId: participationCheck.conversationContentId,
+        contentMetadata: content,
     });
 
     // Only run clustering check if frontend requests it

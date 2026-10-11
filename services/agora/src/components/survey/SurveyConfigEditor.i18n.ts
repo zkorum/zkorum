@@ -12,6 +12,7 @@ interface EmphasizedMessageParts {
 }
 
 export interface SurveyConfigEditorTranslations {
+  allowOptionalTextLabel: string;
   publicAggregateSuppressionLabel: ({
     maxHiddenResponses,
   }: Pick<SuppressionThresholdParams, "maxHiddenResponses">) => string;
@@ -31,6 +32,7 @@ export const surveyConfigEditorTranslations: Record<
   SurveyConfigEditorTranslations
 > = {
   en: {
+    allowOptionalTextLabel: "Allow optional text with this option",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `Hide public results when any option has 1-${String(maxHiddenResponses)} counted responses`,
     publicAggregateSuppressionSummary:
@@ -55,6 +57,7 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "Enable",
   },
   ar: {
+    allowOptionalTextLabel: "السماح بنص اختياري مع هذا الخيار",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `إخفاء النتائج العامة عندما يضم أي خيار 1-${String(maxHiddenResponses)} إجابات محتسبة`,
     publicAggregateSuppressionSummary:
@@ -78,6 +81,7 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "تفعيل",
   },
   es: {
+    allowOptionalTextLabel: "Permitir texto opcional con esta opción",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `Ocultar resultados públicos cuando alguna opción tenga 1-${String(maxHiddenResponses)} respuestas contabilizadas`,
     publicAggregateSuppressionSummary:
@@ -105,6 +109,7 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "Activar",
   },
   fa: {
+    allowOptionalTextLabel: "اجازهٔ افزودن متن اختیاری به این گزینه",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `پنهان کردن نتایج عمومی وقتی هر گزینه 1-${String(maxHiddenResponses)} پاسخِ شمرده‌شده دارد`,
     publicAggregateSuppressionSummary:
@@ -129,6 +134,8 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "فعال کردن",
   },
   fr: {
+    allowOptionalTextLabel:
+      "Autoriser une précision facultative pour cette option",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `Masquer les résultats publics lorsqu'une option compte 1 à ${String(maxHiddenResponses)} réponses comptabilisées`,
     publicAggregateSuppressionSummary:
@@ -156,6 +163,7 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "Activer",
   },
   he: {
+    allowOptionalTextLabel: "אפשרו טקסט אופציונלי לצד אפשרות זו",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `הסתרת תוצאות ציבוריות כאשר לאפשרות כלשהי יש 1-${String(maxHiddenResponses)} תשובות שנספרו`,
     publicAggregateSuppressionSummary:
@@ -179,6 +187,7 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "הפעלה",
   },
   ja: {
+    allowOptionalTextLabel: "この選択肢に任意の補足入力を追加する",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `いずれかの選択肢に1〜${String(maxHiddenResponses)}件の集計対象回答がある場合、公開結果を非表示にする`,
     publicAggregateSuppressionSummary:
@@ -204,6 +213,8 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "有効にする",
   },
   ky: {
+    allowOptionalTextLabel:
+      "Бул вариантка кошумча текст жазууга уруксат берүү (милдеттүү эмес)",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `Кайсы бир вариантта 1-${String(maxHiddenResponses)} эсептелген жооп болсо, коомдук жыйынтыктарды жашыруу`,
     publicAggregateSuppressionSummary:
@@ -230,6 +241,8 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "Күйгүзүү",
   },
   ru: {
+    allowOptionalTextLabel:
+      "Разрешить необязательное пояснение к этому варианту",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `Скрывать публичные результаты, если у любого варианта есть 1–${String(maxHiddenResponses)} учтённых ответа`,
     publicAggregateSuppressionSummary:
@@ -256,6 +269,7 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "Включить",
   },
   "zh-Hans": {
+    allowOptionalTextLabel: "允许为此选项填写补充文字（选填）",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `当任一选项有 1-${String(maxHiddenResponses)} 个计入回答时隐藏公开结果`,
     publicAggregateSuppressionSummary:
@@ -279,6 +293,7 @@ export const surveyConfigEditorTranslations: Record<
     publicAggregateSuppressionConfirmButtonLabel: "启用",
   },
   "zh-Hant": {
+    allowOptionalTextLabel: "允許為此選項填寫補充文字（選填）",
     publicAggregateSuppressionLabel: ({ maxHiddenResponses }) =>
       `當任一選項有 1-${String(maxHiddenResponses)} 個計入回答時隱藏公開結果`,
     publicAggregateSuppressionSummary:

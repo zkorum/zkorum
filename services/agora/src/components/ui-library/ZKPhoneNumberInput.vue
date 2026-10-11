@@ -13,6 +13,7 @@
     <MazInputPhoneNumber
       :model-value="phoneNumber ?? undefined"
       :country-code="countryCode ?? undefined"
+      :only-countries="allowedCountries"
       :success="success"
       :error="error"
       :show-code-in-list="showCodeInList"
@@ -21,11 +22,23 @@
       :auto-format="autoFormat"
       :validation-error="validationError"
       :aria-describedby="ariaDescribedby"
-      :phone-input-attributes="{ name: 'phone', autocomplete: 'tel', inputmode: 'numeric', type: 'tel' }"
-      @update:model-value="(v: string | null | undefined) => (phoneNumber = v ?? null)"
-      @update:country-code="(v: CountryCode | null | undefined) => (countryCode = v ?? null)"
+      :phone-input-attributes="{
+        name: 'phone',
+        autocomplete: 'tel',
+        inputmode: 'numeric',
+        type: 'tel',
+      }"
+      @update:model-value="
+        (v: string | null | undefined) => (phoneNumber = v ?? null)
+      "
+      @update:country-code="
+        (v: CountryCode | null | undefined) => (countryCode = v ?? null)
+      "
       @data="(results: MazInputPhoneNumberData) => props.onUpdate(results)"
-      @country-code="(value: CountryCode | null | undefined) => props.onCountryCode(value ?? null)"
+      @country-code="
+        (value: CountryCode | null | undefined) =>
+          props.onCountryCode(value ?? null)
+      "
     />
   </div>
 </template>
@@ -39,6 +52,7 @@ import MazInputPhoneNumber from "maz-ui/components/MazInputPhoneNumber";
 
 const props = withDefaults(
   defineProps<{
+    allowedCountries: CountryCode[];
     success?: boolean;
     error?: boolean;
     showCodeInList?: boolean;
@@ -61,7 +75,7 @@ const props = withDefaults(
     validationError: false,
     ariaDescribedby: undefined,
     onKeydownEnter: undefined,
-  },
+  }
 );
 
 const phoneNumber = defineModel<string | null>({ required: true });

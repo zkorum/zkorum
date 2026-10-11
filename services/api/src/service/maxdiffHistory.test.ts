@@ -3,6 +3,8 @@ import { readFile, readdir } from "node:fs/promises";
 import { and, eq, isNull } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import pino from "pino";
+import { Script } from "@valkey/valkey-glide";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -15,6 +17,7 @@ import {
     maxdiffUserEntityScoreTable,
     projectTable,
     rankingConversationConfigTable,
+    rankingConversationStatsCheckpointTable,
     rankingConversationStatsSnapshotTable,
     rankingConversationStatsItemTable,
     rankingItemTable,
@@ -30,9 +33,13 @@ import {
     loadMaxdiffResult,
     getMaxdiffResults,
     computeItemSnapshot,
+    fetchRankingStatsCheckpoints,
 } from "./maxdiff.js";
 import { fetchRankingItems } from "./rankingItem.js";
 import type { RankingItemDisplayPreferences } from "./rankingItemDisplay.js";
+import { fetchConversationDisplayCountsByConversationId } from "./conversationDisplayCounts.js";
+import { requestContentTranslation } from "./contentTranslation.js";
+import { ENQUEUE_CONTENT_TRANSLATION_WORK_SCRIPT } from "@/shared-backend/contentTranslationQueue.js";
 
 process.env.TESTCONTAINERS_RYUK_DISABLED ??= "true";
 
@@ -286,7 +293,7 @@ describe("incremental MaxDiff history with revision triggers", () => {
         ).toEqual({ a: 1, b: 2, c: 2, d: 2 });
     });
 
-    it("returns stored personal display scores without stretching their range", async () => {
+    it("returns stored personal display scores without exposing tombstones or stretching their range", async () => {
         const { resultId } = await fixture();
         await save({ resultId, comparisons: [first] });
         const [result] = await db
@@ -304,6 +311,15 @@ describe("incremental MaxDiff history with revision triggers", () => {
                 displayScore: 0.5886,
                 uncertaintyLeft: 1,
                 uncertaintyRight: 1,
+            },
+            {
+                maxdiffResultId: resultId,
+                entitySlugId: "c",
+                score: 42,
+                displayScore: 0.99,
+                uncertaintyLeft: 1,
+                uncertaintyRight: 1,
+                deletedAt: new Date(),
             },
             {
                 maxdiffResultId: resultId,
@@ -503,6 +519,164 @@ describe("incremental MaxDiff history with revision triggers", () => {
         });
         expect(fetched.items[0].snapshotScore).toBeCloseTo(0.6, 5);
     });
+
+    it("ignores retained deleted snapshots in display metadata and checkpoint reads", async () => {
+        const { request, owner, snapshot } = await scoringFixture();
+        const [deletedSnapshot] = await db
+            .insert(rankingConversationStatsSnapshotTable)
+            .values({
+                conversationId: owner.conversationId,
+                itemCount: 0,
+                totalItemCount: 0,
+                voteCount: 0,
+                totalVoteCount: 0,
+                participantCount: 0,
+                totalParticipantCount: 0,
+                scoringInputRevision: 0,
+                isClosed: true,
+                createdAt: new Date("2030-01-01T00:00:00Z"),
+                deletedAt: new Date(),
+            })
+            .returning({ id: rankingConversationStatsSnapshotTable.id });
+        await db.insert(rankingConversationStatsCheckpointTable).values({
+            conversationId: owner.conversationId,
+            statsSnapshotId: deletedSnapshot.id,
+            reason: "conversation_closed",
+        });
+        const counts = await fetchConversationDisplayCountsByConversationId({
+            db,
+            conversationIds: [owner.conversationId],
+        });
+        expect(counts.get(owner.conversationId)?.rankingStatsSnapshotId).toBe(
+            snapshot.id,
+        );
+        const checkpoints = await fetchRankingStatsCheckpoints({
+            db,
+            conversationSlugId: request.conversationSlugId,
+            requestedRankingStatsSnapshotId: undefined,
+        });
+        expect(checkpoints.map((row) => row.rankingStatsSnapshotId)).toEqual([
+            snapshot.id,
+        ]);
+        await expect(
+            getMaxdiffResults({
+                ...request,
+                rankingStatsSnapshotId: deletedSnapshot.id,
+            }),
+        ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it("filters retained deleted item rows and rejects deleted baseline snapshots", async () => {
+        const { request, items, snapshot } = await scoringFixture();
+        await db
+            .update(rankingConversationStatsItemTable)
+            .set({ deletedAt: new Date() })
+            .where(
+                and(
+                    eq(
+                        rankingConversationStatsItemTable.statsSnapshotId,
+                        snapshot.id,
+                    ),
+                    eq(
+                        rankingConversationStatsItemTable.rankingItemId,
+                        items[0].id,
+                    ),
+                ),
+            );
+        const historical = await getMaxdiffResults({
+            ...request,
+            rankingStatsSnapshotId: snapshot.id,
+        });
+        expect(historical.rankings.map((row) => row.itemSlugId)).toEqual([
+            items[1].slugId,
+        ]);
+        await db
+            .update(rankingConversationStatsSnapshotTable)
+            .set({ deletedAt: new Date() })
+            .where(eq(rankingConversationStatsSnapshotTable.id, snapshot.id));
+        await expect(
+            getMaxdiffResults({
+                ...request,
+                rankingStatsSnapshotId: snapshot.id,
+            }),
+        ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it.each(["snapshot", "item"])(
+        "does not authorize historical translations through a deleted %s",
+        async (deletedKind) => {
+            const { request, items, snapshot } = await scoringFixture();
+            const [historicalContent] = await db
+                .select()
+                .from(rankingItemContentTable)
+                .where(eq(rankingItemContentTable.id, items[0].contentId));
+            const [newContent] = await db
+                .insert(rankingItemContentTable)
+                .values({
+                    rankingItemId: items[0].id,
+                    conversationContentId:
+                        historicalContent.conversationContentId,
+                    title: "Updated item",
+                })
+                .returning({ id: rankingItemContentTable.id });
+            await db
+                .update(rankingItemTable)
+                .set({ currentContentId: newContent.id })
+                .where(eq(rankingItemTable.id, items[0].id));
+            const queueScript = new Script(
+                ENQUEUE_CONTENT_TRANSLATION_WORK_SCRIPT,
+            );
+            const params = {
+                db,
+                valkey: undefined,
+                queueScript,
+                targetLanguageCode: "en",
+                requestMode: "read_existing",
+                requesterIsSiteModerator: false,
+                now: new Date(),
+                log: pino({ enabled: false }),
+                beforeQueueTranslationWork: () =>
+                    Promise.reject(
+                        new Error(
+                            "A read-existing request must not queue translation work",
+                        ),
+                    ),
+                subject: {
+                    kind: "ranking_item",
+                    conversationSlugId: request.conversationSlugId,
+                    itemSlugId: items[0].slugId,
+                    sourceVersion: historicalContent.publicId,
+                },
+            } satisfies Parameters<typeof requestContentTranslation>[0];
+            try {
+                expect(await requestContentTranslation(params)).toBeDefined();
+                if (deletedKind === "snapshot") {
+                    await db
+                        .update(rankingConversationStatsSnapshotTable)
+                        .set({ deletedAt: new Date() })
+                        .where(
+                            eq(
+                                rankingConversationStatsSnapshotTable.id,
+                                snapshot.id,
+                            ),
+                        );
+                } else {
+                    await db
+                        .update(rankingConversationStatsItemTable)
+                        .set({ deletedAt: new Date() })
+                        .where(
+                            eq(
+                                rankingConversationStatsItemTable.statsSnapshotId,
+                                snapshot.id,
+                            ),
+                        );
+                }
+                expect(await requestContentTranslation(params)).toBeUndefined();
+            } finally {
+                queueScript.release();
+            }
+        },
+    );
 
     it("preserves live raw-score ranks and counts when display values are missing", async () => {
         const { request, scoring } = await scoringFixture();

@@ -124,6 +124,7 @@ import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavig
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
 import { htmlToCountedText } from "src/shared/richText";
+import { getSurveyOptionText } from "src/shared/surveyChoiceText";
 import type {
   ParticipationBlockedReason,
   SurveyQuestionFormItem,
@@ -317,7 +318,18 @@ function getQuestionAnswerPreview({
         ])
       );
       const selectedOptionTexts = currentAnswer.optionSlugIds
-        .map((optionSlugId) => optionTextBySlugId.get(optionSlugId))
+        .map((optionSlugId) => {
+          const optionText = optionTextBySlugId.get(optionSlugId);
+          const textValue = getSurveyOptionText({
+            values: currentAnswer.optionTextValues,
+            optionSlugId,
+          });
+          return optionText === undefined
+            ? undefined
+            : textValue === undefined || textValue.length === 0
+              ? optionText
+              : `${optionText} — ${textValue}`;
+        })
         .filter((optionText): optionText is string => optionText !== undefined);
 
       return selectedOptionTexts.length > 0

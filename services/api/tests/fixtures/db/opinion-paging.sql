@@ -87,7 +87,7 @@ CREATE TABLE "conversation_content" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "conversation_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"public_id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"conversation_id" integer NOT NULL,
-	"title" varchar(140) NOT NULL,
+	"title" varchar(150) NOT NULL,
 	"body" text,
 	"body_plain_text" text,
 	"source_language_code" "spoken_language_code",
@@ -160,6 +160,8 @@ CREATE TABLE "opinion_content" (
 	"opinion_id" integer NOT NULL,
 	"conversation_content_id" integer NOT NULL,
 	"content" text NOT NULL,
+	"is_edited" boolean DEFAULT false NOT NULL,
+	"edited_by_user_id" uuid,
 	"content_plain_text" text,
 	"source_language_code" "spoken_language_code",
 	"source_raw_language_code" varchar(35),
@@ -167,6 +169,7 @@ CREATE TABLE "opinion_content" (
 	"source_language_confidence" real,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	CONSTRAINT "opinion_content_public_id_unique" UNIQUE("public_id"),
+	CONSTRAINT "opinion_content_edit_attribution_check" CHECK ("opinion_content"."is_edited" = ("opinion_content"."edited_by_user_id" IS NOT NULL)),
 	CONSTRAINT "opinion_content_content_byte_length_check" CHECK (octet_length("opinion_content"."content") <= 16384),
 	CONSTRAINT "opinion_content_source_metadata_check" CHECK ((("opinion_content"."source_language_provider" IS NULL AND "opinion_content"."source_raw_language_code" IS NULL) OR ("opinion_content"."source_language_provider" IS NOT NULL AND "opinion_content"."source_raw_language_code" IS NOT NULL)))
 );

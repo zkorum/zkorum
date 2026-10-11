@@ -1,5 +1,6 @@
 /** **** WARNING: GENERATED FROM SHARED DIRECTORY, DO NOT MODIFY THIS FILE DIRECTLY! **** **/
 import { z } from "zod";
+import { MAX_SEED_OPINIONS_PER_SUBMISSION } from "../seedOpinions.js";
 import { zodEmailBranding } from "../branding/emailBranding.js";
 import {
     conversationEmailExampleConversations,
@@ -95,12 +96,17 @@ import {
     zodSurveyQuestionResultDisplayContent,
     zodProjectOrganizationAttributionRole,
     zodProjectSlug,
+    zodConversationProjectTarget,
+    zodConversationProjectAssignment,
     zodHttpsUrl,
     createZodDisplayedContent,
 } from "./zod.js";
 import { zodEmail } from "./zod-email.js";
 import { zodPolisVoteRecord } from "./polis.js";
-import { PROJECT_DOCUMENT_AUDIENCES, PROJECT_DOCUMENT_CONTENT_TYPES } from "../projectDocument.js";
+import {
+    PROJECT_DOCUMENT_AUDIENCES,
+    PROJECT_DOCUMENT_CONTENT_TYPES,
+} from "../projectDocument.js";
 import {
     ZodSupportedSpokenLanguageCodes,
     ZodSupportedDisplayLanguageCodes,
@@ -445,6 +451,25 @@ const zodConversationCreateProjectOptionWithEmailUpdates =
             emailUpdates: zodConversationCreateEmailUpdateConfiguration,
         })
         .strict();
+
+const zodConversationProjectOption = z.union([
+    z
+        .object({
+            target: zodConversationProjectTarget.options[0],
+            title: zodProjectTitle,
+            defaultLanguageCode: ZodSupportedDisplayLanguageCodes,
+            languageSettings: zodProjectLanguageSettings,
+            emailUpdates: zodConversationCreateEmailUpdateConfiguration,
+        })
+        .strict(),
+    z
+        .object({
+            target: zodConversationProjectTarget.options[1],
+            title: z.string().trim().min(1),
+            emailUpdates: zodConversationCreateEmailUpdateConfiguration,
+        })
+        .strict(),
+]);
 const zodProjectContentLocalizationInput = z
     .object({
         languageCode: ZodSupportedDisplayLanguageCodes,
@@ -1483,7 +1508,9 @@ export class Dto {
             isIndexed: z.boolean(),
             participationMode: zodParticipationMode,
             multilingualSetting: zodConversationMultilingualSetting,
-            seedOpinionList: z.array(zodOpinionContentInput).max(50),
+            seedOpinionList: z
+                .array(zodOpinionContentInput)
+                .max(MAX_SEED_OPINIONS_PER_SUBMISSION),
             requiresEventTicket: zodEventSlug.optional(),
             conversationEmailUpdateEnabledOverride: z.boolean().optional(),
         })
@@ -1785,6 +1812,12 @@ export class Dto {
             conversationSlugId: zodSlugId,
         })
         .strict();
+    static conversationSeedOpinion = z
+        .object({
+            slugId: zodSlugId,
+            content: z.string(),
+        })
+        .strict();
     static getConversationForEditResponse = z.discriminatedUnion("success", [
         z
             .object({
@@ -1799,6 +1832,9 @@ export class Dto {
                 languageSettingsSource: zodConversationLanguageSettingsSource,
                 projectLanguageProject:
                     zodConversationCreateProjectOption.optional(),
+                currentProjectSlug: zodProjectSlug,
+                projectTarget: zodConversationProjectTarget,
+                projectOptions: z.array(zodConversationProjectOption),
                 isIndexed: z.boolean(),
                 participationMode: zodParticipationMode,
                 requiresEventTicket: zodEventSlug.optional(),
@@ -1811,6 +1847,9 @@ export class Dto {
                 updatedAt: zodDateTimeFlexible,
                 isLocked: z.boolean(),
                 editPermissions: zodConversationEditPermissions,
+                seedOpinions: z.array(Dto.conversationSeedOpinion),
+                canAddSeedOpinions: z.boolean(),
+                externalSourceConfig: zodExternalSourceConfig.nullable(),
             })
             .strict(),
         z
@@ -1820,16 +1859,29 @@ export class Dto {
             })
             .strict(),
     ]);
-    static updateConversationTypeConfig = z.discriminatedUnion("conversationType", [
-        zodPolisConversationTypeConfig.extend({
-            aiLabelingEnabled: z.boolean().optional(),
-            preferredOpinionGroupCount: zodPreferredOpinionGroupCount.optional(),
-        }).strict(),
-        zodRankingConversationTypeConfig,
-    ]);
+    static updateConversationTypeConfig = z.discriminatedUnion(
+        "conversationType",
+        [
+            zodPolisConversationTypeConfig
+                .extend({
+                    aiLabelingEnabled: z.boolean().optional(),
+                    preferredOpinionGroupCount:
+                        zodPreferredOpinionGroupCount.optional(),
+                })
+                .strict(),
+            zodRankingConversationTypeConfig,
+        ],
+    );
     static updateConversationRequest = z
         .object({
             conversationSlugId: zodSlugId,
+            projectChange: z
+                .object({
+                    expectedProjectSlug: zodProjectSlug,
+                    target: zodConversationProjectTarget,
+                })
+                .strict()
+                .optional(),
             conversationTitle: zodConversationTitle,
             conversationBody: zodConversationBodyInput,
             isIndexed: z.boolean(),
@@ -1842,37 +1894,75 @@ export class Dto {
             requiresEventTicket: zodEventSlug.optional(),
             conversationTypeConfig: Dto.updateConversationTypeConfig,
             surveyConfig: zodSurveyConfigInput.nullable().optional(),
+            newSeedOpinionList: z
+                .array(zodOpinionContentInput)
+                .max(MAX_SEED_OPINIONS_PER_SUBMISSION)
+                .optional(),
             conversationEmailUpdateEnabledOverride: z
                 .boolean()
                 .nullable()
                 .optional(),
         })
         .strict();
+    static seedOpinionValidationFailure = z.discriminatedUnion("reason", [
+        z
+            .object({
+                index: z.number().int().nonnegative(),
+                reason: zodRichTextValidationFailureReason,
+                count: z.number().nonnegative(),
+                limit: z.number().nonnegative(),
+            })
+            .strict(),
+        z
+            .object({
+                index: z.number().int().nonnegative(),
+                reason: z.literal("duplicate"),
+            })
+            .strict(),
+    ]);
     static updateConversationResponse = z.discriminatedUnion("success", [
         z
             .object({
                 success: z.literal(true),
+                projectAssignment: zodConversationProjectAssignment.optional(),
+                addedSeedOpinions: z
+                    .array(Dto.conversationSeedOpinion)
+                    .optional(),
+                addedOpinions: z.array(zodDisplayedOpinionItem).optional(),
             })
             .strict(),
-        z
-            .object({
-                success: z.literal(false),
-                reason: z.union([
-                    z.enum([
-                        "not_found",
-                        "not_author",
-                        "conversation_locked",
-                        "invalid_access_settings",
-                        "premium_access_expired",
-                        "premium_access_required",
-                        "feature_not_available",
-                        "missing_participant_contact_email",
-                        "active_delivery_conflict",
+        z.discriminatedUnion("reason", [
+            z
+                .object({
+                    success: z.literal(false),
+                    reason: z.union([
+                        z.enum([
+                            "not_found",
+                            "not_author",
+                            "conversation_locked",
+                            "invalid_access_settings",
+                            "premium_access_expired",
+                            "premium_access_required",
+                            "feature_not_available",
+                            "missing_participant_contact_email",
+                            "active_delivery_conflict",
+                            "project_not_available",
+                            "missing_project_capability",
+                            "project_assignment_changed",
+                            "seed_opinions_not_allowed",
+                        ]),
+                        zodRichTextSizeValidationFailureReason,
                     ]),
-                    zodRichTextSizeValidationFailureReason,
-                ]),
-            })
-            .strict(),
+                })
+                .strict(),
+            z
+                .object({
+                    success: z.literal(false),
+                    reason: z.literal("invalid_seed_opinion"),
+                    seedOpinionFailure: Dto.seedOpinionValidationFailure,
+                })
+                .strict(),
+        ]),
     ]);
 
     static checkPremiumFeatureAccessRequest = z
@@ -2066,6 +2156,36 @@ export class Dto {
             })
             .strict(),
     ]);
+    static editOpinionRequest = z
+        .object({
+            opinionSlugId: zodSlugId,
+            sourceVersion: z.uuid(),
+            opinionBody: zodOpinionContentInput,
+        })
+        .strict();
+    static editOpinionResponse = z.discriminatedUnion("success", [
+        z
+            .object({
+                success: z.literal(true),
+                displayedOpinionItem: zodDisplayedOpinionItem,
+            })
+            .strict(),
+        z
+            .object({
+                success: z.literal(false),
+                reason: z.union([
+                    z.enum([
+                        "not_allowed",
+                        "not_found",
+                        "has_votes",
+                        "version_conflict",
+                        "conversation_locked",
+                    ]),
+                    zodRichTextValidationFailureReason,
+                ]),
+            })
+            .strict(),
+    ]);
     static getUserVotesByConversationsRequest = z
         .object({
             conversationSlugIdList: z.array(z.string()),
@@ -2082,6 +2202,7 @@ export class Dto {
     static castVoteRequest = z
         .object({
             opinionSlugId: z.string(),
+            sourceVersion: z.uuid().optional(),
             chosenOption: zodVotingAction,
             returnIsUserClustered: z.boolean().optional(),
         })
@@ -2096,7 +2217,10 @@ export class Dto {
         z
             .object({
                 success: z.literal(false),
-                reason: zodParticipationBlockedReason,
+                reason: z.union([
+                    zodParticipationBlockedReason,
+                    z.literal("statement_changed"),
+                ]),
             })
             .strict(),
     ]);
@@ -2664,6 +2788,8 @@ export class Dto {
         .strict();
     static conversationCreateProjectOption =
         zodConversationCreateProjectOptionWithEmailUpdates;
+    static conversationProjectTarget = zodConversationProjectTarget;
+    static conversationProjectOption = zodConversationProjectOption;
     static getConversationCreateProjectOptionsResponse = z.discriminatedUnion(
         "success",
         [
@@ -4387,6 +4513,9 @@ export type UpdateConversationRequest = z.infer<
 >;
 export type UpdateConversationResponse = z.infer<
     typeof Dto.updateConversationResponse
+>;
+export type SeedOpinionValidationFailure = z.infer<
+    typeof Dto.seedOpinionValidationFailure
 >;
 export type CheckPremiumFeatureAccessRequest = z.infer<
     typeof Dto.checkPremiumFeatureAccessRequest

@@ -110,7 +110,9 @@
                     :on-view-analysis="onViewAnalysis"
                     :navigate-to-discover-tab="navigateToDiscoverTab"
                     :conversation-route-context="normalConversationRouteContext"
+                    :editing-opinion="editingOpinion"
                     v-bind="analysisRouteProps"
+                    @edit-opinion="beginEditOpinion"
                     @analysis-live-pause-stats="setAnalysisLivePauseStats"
                     @update:comment-filter="
                       (filter: CommentFilterOptions) => {
@@ -125,6 +127,7 @@
             <FloatingBottomContainer v-if="!isMaxDiffConversation">
               <CommentComposer
                 ref="commentComposerRef"
+                :editing-opinion="editingOpinion"
                 :post-slug-id="
                   loadedConversationData.metadata.conversationSlugId
                 "
@@ -136,6 +139,8 @@
                 "
                 :survey-gate="loadedConversationData.interaction.surveyGate"
                 :is-composer-disabled="isVotingDisabled"
+                @edit-cancelled="finishEditOpinion"
+                @edited-opinion="handleEditedOpinion"
                 @submitted-comment="handleSubmittedComment"
               />
             </FloatingBottomContainer>
@@ -240,6 +245,10 @@ const {
   loadedConversationData,
   loadedConversationDisplayContent,
   currentTab,
+  editingOpinion,
+  beginEditOpinion,
+  finishEditOpinion,
+  handleEditedOpinion,
   isCurrentTabLoading,
   moderationHistoryTrigger,
   commentFilter,

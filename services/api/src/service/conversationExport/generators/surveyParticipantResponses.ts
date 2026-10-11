@@ -14,7 +14,10 @@ export const surveyParticipantResponsesGenerator: CsvGenerator = {
     fileType: "survey_participant_responses",
     minimumAccessLevel: "owner",
     async generate(params: GeneratorParams): Promise<CsvGeneratorResult> {
-        const context = await loadSurveyExportContext(params);
+        const context = await loadSurveyExportContext({
+            ...params,
+            includeOptionText: true,
+        });
         const rows = buildSurveyParticipantResponseRows({
             context,
             participantMap: params.participantMap,
@@ -22,6 +25,7 @@ export const surveyParticipantResponsesGenerator: CsvGenerator = {
         const csvBuffer = await buildCsvBuffer({
             headers: surveyParticipantResponseHeaders,
             rows,
+            escapeFormulaFields: ["answer-text-plain"],
         });
 
         return {

@@ -72,7 +72,7 @@ const errorSummarySchema = z.object({
     statusCode: z.number().int().min(100).max(599).optional(),
     frames: z.array(frameSchema).max(12),
 });
-export const logErrorSchema = errorSummarySchema.extend({
+const logErrorSchema = errorSummarySchema.extend({
     causes: z.array(errorSummarySchema).max(4),
 });
 export type LogError = z.infer<typeof logErrorSchema>;
@@ -146,7 +146,6 @@ export const logContextSchema = z.object({
         ])
         .optional(),
 });
-export type LogContext = z.infer<typeof logContextSchema>;
 
 function ownValue({ value, key }: { value: unknown; key: string }): unknown {
     if (typeof value !== "object" || value === null) return undefined;
@@ -157,25 +156,36 @@ function ownValue({ value, key }: { value: unknown; key: string }): unknown {
     return result;
 }
 
-export function projectLogFields({
-    value,
-    schema,
-}: {
-    value: unknown;
-    schema: { readonly shape: Readonly<Record<string, z.ZodType>> };
-}): Record<string, unknown> {
-    const output: Record<string, unknown> = {};
-    try {
-        for (const [key, field] of Object.entries(schema.shape)) {
-            const parsed = field.safeParse(ownValue({ value, key }));
-            if (parsed.success && parsed.data !== undefined)
-                output[key] = parsed.data;
+export function createLogFieldProjector(schema: {
+    readonly shape: Readonly<Record<string, z.ZodType>>;
+}): (value: unknown) => Record<string, unknown> {
+    const fields = Object.entries(schema.shape);
+    return (value) => {
+        const output: Record<string, unknown> = {};
+        try {
+            for (const [key, field] of fields) {
+                const source = ownValue({ value, key });
+                if (source === undefined) continue;
+                const parsed = field.safeParse(source);
+                if (parsed.success && parsed.data !== undefined)
+                    output[key] = parsed.data;
+            }
+            return output;
+        } catch {
+            return { event: "log_sanitization_failed" };
         }
-        return output;
-    } catch {
-        return { event: "log_sanitization_failed" };
-    }
+    };
 }
+
+const projectContext = createLogFieldProjector(logContextSchema);
+const projectError = createLogFieldProjector(logErrorSchema);
+const statusCodeSchema = z.number().int().min(100).max(599);
+const projectRequest = createLogFieldProjector(
+    z.object({ method: z.string(), route: z.string() }),
+);
+const projectResponse = createLogFieldProjector(
+    z.object({ statusCode: statusCodeSchema }),
+);
 
 const envelopeSchema = z.object({
     level: z.union([
@@ -278,12 +288,6 @@ function stackFrames({
                 : location;
             const localPath = relative(root, file);
             if (isAbsolute(localPath) || localPath.startsWith("..")) continue;
-            if (
-                !/^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_.-]+\.(?:[cm]?[jt]s|vue)$/.test(
-                    localPath,
-                )
-            )
-                continue;
             const parsed = frameSchema.safeParse({
                 file: localPath,
                 line: Number(match?.at(2)),
@@ -315,29 +319,31 @@ export function toLogError({
         const summarize = (
             value: unknown,
         ): z.infer<typeof errorSummarySchema> => {
-            const type = errorTypeSchema.safeParse(
-                ownValue({ value, key: "name" }),
-            );
-            const code = errorCodeSchema.safeParse(
-                ownValue({ value, key: "code" }),
-            );
-            const status = z
-                .number()
-                .int()
-                .min(100)
-                .max(599)
-                .safeParse(
-                    ownValue({ value, key: "status" }) ??
-                        ownValue({ value, key: "statusCode" }),
-                );
+            const name = ownValue({ value, key: "name" });
+            const codeValue = ownValue({ value, key: "code" });
+            const statusValue =
+                ownValue({ value, key: "status" }) ??
+                ownValue({ value, key: "statusCode" });
+            const type =
+                name === undefined
+                    ? undefined
+                    : errorTypeSchema.safeParse(name);
+            const code =
+                codeValue === undefined
+                    ? undefined
+                    : errorCodeSchema.safeParse(codeValue);
+            const status =
+                statusValue === undefined
+                    ? undefined
+                    : statusCodeSchema.safeParse(statusValue);
             return {
-                type: type.success
+                type: type?.success
                     ? type.data
                     : (nativeErrorKinds.find(({ matches }) => matches(value))
                           ?.type ?? "Error"),
                 message: "Error details omitted",
-                code: code.success ? code.data : undefined,
-                statusCode: status.success ? status.data : undefined,
+                code: code?.success ? code.data : undefined,
+                statusCode: status?.success ? status.data : undefined,
                 frames: stackFrames({
                     stack: errorStack(value),
                     sourceRoot,
@@ -361,26 +367,31 @@ export function toLogError({
     }
 }
 
+interface CompiledMessageTemplate {
+    prefix: string;
+    suffix: string;
+    middle: readonly string[];
+    output: string;
+}
+
 function matchesTemplate({
     message,
-    parts,
+    template,
 }: {
     message: string;
-    parts: LogMessageTemplate["parts"];
+    template: CompiledMessageTemplate;
 }): boolean {
-    const first = parts.at(0);
-    const last = parts.at(-1);
-    if (first === undefined || last === undefined) return false;
-    if (parts.length === 1) return message === first;
-    if (!parts.some((part) => part.trim().length >= 8)) return false;
-    if (!message.startsWith(first)) return false;
-    let position = first.length;
-    for (const part of parts.slice(1, -1)) {
+    if (!message.startsWith(template.prefix)) return false;
+    let position = template.prefix.length;
+    for (const part of template.middle) {
         const next = message.indexOf(part, position);
         if (next === -1) return false;
         position = next + part.length;
     }
-    return message.endsWith(last) && position <= message.length - last.length;
+    return (
+        message.endsWith(template.suffix) &&
+        position <= message.length - template.suffix.length
+    );
 }
 
 export function createLogPrivacy({
@@ -394,6 +405,31 @@ export function createLogPrivacy({
     serializeRequest?: (value: unknown) => LogRequestMetadata;
     loadEventSchema?: z.ZodType;
 }) {
+    const approvedMessages = new Set<string>([
+        "Application event",
+        "Log details omitted",
+    ]);
+    const templates: CompiledMessageTemplate[] = [];
+    for (const { parts } of messageTemplates) {
+        if (parts.length === 1) {
+            approvedMessages.add(parts[0]);
+            continue;
+        }
+        const suffix = parts.at(-1);
+        if (
+            suffix === undefined ||
+            !parts.some((part) => part.trim().length >= 8)
+        )
+            continue;
+        const output = parts.join("[value]");
+        approvedMessages.add(output);
+        templates.push({
+            prefix: parts[0],
+            suffix,
+            middle: parts.slice(1, -1),
+            output,
+        });
+    }
     const loadPrefix = "AGORA_LOAD_EVENT ";
     const safeLoadMessage = (value: unknown): string | undefined => {
         if (
@@ -421,19 +457,25 @@ export function createLogPrivacy({
                 "Application event"
             );
         }
-        const template = messageTemplates.find(({ parts }) =>
-            matchesTemplate({ message: value, parts }),
+        if (approvedMessages.has(value)) return value;
+        const template = templates.find((template) =>
+            matchesTemplate({ message: value, template }),
         );
-        return template === undefined
-            ? "Application event"
-            : template.parts.join("[value]");
+        return template === undefined ? "Application event" : template.output;
+    };
+    const safeError = (error: unknown): LogError => {
+        if (
+            ownValue({ value: error, key: "message" }) ===
+            "Error details omitted"
+        ) {
+            const parsed = logErrorSchema.safeParse(projectError(error));
+            if (parsed.success) return parsed.data;
+        }
+        return toLogError({ error, sourceRoot });
     };
     const fields = (value: unknown): Record<string, unknown> => {
         try {
-            const output = projectLogFields({
-                value,
-                schema: logContextSchema,
-            });
+            const output = projectContext(value);
             const request = ownValue({ value, key: "req" });
             if (request !== undefined && serializeRequest !== undefined) {
                 output.req = serializeRequest(request);
@@ -444,18 +486,12 @@ export function createLogPrivacy({
                 response !== null &&
                 "statusCode" in response
             ) {
-                const status = z
-                    .number()
-                    .int()
-                    .min(100)
-                    .max(599)
-                    .safeParse(response.statusCode);
+                const status = statusCodeSchema.safeParse(response.statusCode);
                 if (status.success) output.res = { statusCode: status.data };
             }
             for (const key of ["err", "error"]) {
                 const error = ownValue({ value, key });
-                if (error !== undefined)
-                    output.err = toLogError({ error, sourceRoot });
+                if (error !== undefined) output.err = safeError(error);
             }
             return output;
         } catch {
@@ -471,10 +507,6 @@ export function createLogPrivacy({
                     line,
                     project(value) {
                         const output = fields(value);
-                        const error = logErrorSchema.safeParse(
-                            ownValue({ value, key: "err" }),
-                        );
-                        if (error.success) output.err = error.data;
                         output.msg = safeMessage(
                             ownValue({ value, key: "msg" }),
                         );
@@ -517,16 +549,10 @@ export function createLogPrivacy({
             // Avoid reinterpreting an already-projected error as a raw exception.
             err(error: unknown) {
                 try {
-                    const parsed = logErrorSchema.safeParse(
-                        projectLogFields({
-                            value: error,
-                            schema: logErrorSchema,
-                        }),
-                    );
-                    const summary = parsed.success
-                        ? parsed.data
-                        : toLogError({ error, sourceRoot });
-                    return { ...summary, stack: "Stack details omitted" };
+                    return {
+                        ...safeError(error),
+                        stack: "Stack details omitted",
+                    };
                 } catch {
                     return {
                         ...toLogError({ error: undefined, sourceRoot }),
@@ -534,19 +560,8 @@ export function createLogPrivacy({
                     };
                 }
             },
-            req: (request: unknown) =>
-                projectLogFields({
-                    value: request,
-                    schema: z.object({ method: z.string(), route: z.string() }),
-                }),
-            res: (response: unknown) =>
-                projectLogFields({
-                    value: response,
-                    schema: z.object({
-                        statusCode: z.number().int().min(100).max(599),
-                    }),
-                }),
-            msg: safeMessage,
+            req: projectRequest,
+            res: projectResponse,
         },
         redact: {
             paths: [
@@ -574,5 +589,5 @@ export function createLogPrivacy({
             remove: true,
         },
     } satisfies LoggerOptions;
-    return { options, fields, safeMessage };
+    return { options };
 }
