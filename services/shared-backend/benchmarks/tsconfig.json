@@ -1,0 +1,13 @@
+{
+    "extends": "../tsconfig.json",
+    "include": ["logPrivacy.ts"],
+    "compilerOptions": {
+        "noEmit": true,
+        "declaration": false,
+        "lib": ["ES2023", "DOM"],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["../../conversation-email-update-worker/src/*"]
+        }
+    }
+}

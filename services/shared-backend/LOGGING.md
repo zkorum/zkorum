@@ -6,7 +6,7 @@ canonical source, not generated service copies.
 
 ## Rule for new logs
 
-Use the configured privacy-aware logger and schema-derived events (`logApiError`
+Use the configured privacy-aware logger and typed events (`logApiError`
 in the API; structured events in the email-update worker). Supply only approved
 structured metadata and reviewed static messages. Add new fields/messages to the
 explicit policy rather than embedding runtime text or creating an unrestricted
@@ -14,7 +14,7 @@ logger. Preserve the privacy hooks on child loggers and test the emitted output.
 
 ## Processing model
 
-1. **Project metadata:** `projectLogFields` reads only explicitly declared data
+1. **Project metadata:** `createLogFieldProjector` compiles a reusable schema projector that reads only explicitly declared data
    properties and parses each field through its Zod schema. Unknown fields,
    invalid values, accessors, and arbitrary nested content are omitted. A malformed
    field does not discard valid neighboring fields.
@@ -55,7 +55,7 @@ UUIDs, conversation identifiers, and generated request IDs for correlation.
 field is not proof that its collection is needed for every event; select the
 minimum context required at the call site.
 
-For new error events, use `logApiError` and its schema-derived discriminated union:
+For new error events, use `logApiError` and its typed discriminated-union input:
 
 ```typescript
 logApiError({
@@ -124,6 +124,36 @@ pnpm exec vitest run src/logging/privacy.test.ts src/shared-backend/logPrivacy.t
 # From services/conversation-email-update-worker
 pnpm typecheck
 pnpm exec vitest run src/logger.test.ts src/observability.test.ts
+```
+
+## Performance
+
+Schema projectors and message templates are compiled once, absent fields are
+skipped, and worker events are selected by discriminator. Unused exports,
+redundant error/message processing, and the obsolete SQL-format branch were
+removed. The final output privacy guard remains enabled.
+
+Local measurements against `cfa48e4e` on Node 24.14.1 / Apple M3 Max:
+
+| Path                       | p50 µs/log before → after | Sampled allocated B/log before → after |
+| -------------------------- | ------------------------: | -------------------------------------: |
+| API metadata               |              17.60 → 3.37 |                         27,541 → 5,089 |
+| API request                |             121.72 → 6.77 |                       313,184 → 13,353 |
+| API error                  |             76.30 → 11.34 |                       177,338 → 22,840 |
+| Worker late-position event |             903.05 → 4.21 |                        567,938 → 9,628 |
+
+The counting-sink benchmark uses 2,000 warm-up operations and 10,000 timed
+operations in 250-operation batches. Percentiles describe batch-mean time per
+log, not HTTP or individual-log tail latency. Allocations are separately sampled
+over 5,000 operations with Node's heap profiler, including objects collected by
+GC; they are statistical estimates. Disk/network/pretty-output costs are excluded.
+The final parse/project/stringify guard costs about 2.24 µs per sparse metadata
+log; the harness's no-write-hook variant is an unsafe diagnostic, not a deployment
+option.
+
+```bash
+# From services/api
+NODE_ENV=test node --expose-gc --import tsx ../shared-backend/benchmarks/logPrivacy.ts
 ```
 
 References: [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html),
