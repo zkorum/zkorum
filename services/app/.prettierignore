@@ -6,3 +6,5 @@ static/
 test-results/
 playwright-report/
 pnpm-lock.yaml
+project.inlang/*
+!project.inlang/settings.json

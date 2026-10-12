@@ -522,11 +522,21 @@ Uses Paraglide.js v2 with URL-based locale routing:
 - `/fr` → French
 - `/es` → Spanish
 - `/ar` → Arabic
+- `/fa` → Persian
+- `/he` → Hebrew
 - `/ja` → Japanese
+- `/ky` → Kyrgyz
+- `/ru` → Russian
 - `/zh-hans` → Simplified Chinese
 - `/zh-hant` → Traditional Chinese
 
 Translation files are in `messages/*.json`. The compiler generates type-safe message functions.
+
+The landing page supports the same 11 UI languages as `services/agora`, defined by `ZodSupportedDisplayLanguageCodes` in `services/shared/src/languages.ts`. Chinese locale codes use lowercase URL prefixes here (`zh-hans`, `zh-hant`) and title-case script subtags in the Quasar app (`zh-Hans`, `zh-Hant`). The much larger spoken-language list describes content languages, not available UI translations.
+
+`project.inlang/settings.json` is the landing locale source of truth. The server injects its generated locale list into `app.html`, and the language switcher and FAQ use the same generated types. Localized URLs take precedence over stored/device preferences. Arabic, Persian, and Hebrew pages also render with `dir="rtl"` on the server, including when JavaScript is disabled.
+
+Localization tests check parity with the Quasar UI languages, message keys and placeholders, translated resource availability, and copied English paragraphs. Browser tests exercise the FAQ, case-study navigation, and mobile layout in every language.
 
 ## Environment Variables
 

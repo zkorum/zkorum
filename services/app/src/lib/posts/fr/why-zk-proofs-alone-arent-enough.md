@@ -1,6 +1,6 @@
 ---
-title: "Pourquoi les preuves zero-knowledge seules ne suffisent pas a proteger la vie privee"
-description: "Les preuves zero-knowledge protegent la preuve elle-meme, mais les plateformes civiques doivent aussi proteger l'identite, les metadonnees, les wallets, les appareils et l'infrastructure open source."
+title: "Pourquoi les preuves à divulgation nulle de connaissance seules ne suffisent pas à protéger la vie privée"
+description: "Les preuves à divulgation nulle de connaissance protègent la preuve elle-même, mais les plateformes civiques doivent aussi protéger l'identité, les métadonnées, les portefeuilles, les appareils et l'infrastructure open source."
 author: "Nicolas Gimenez"
 date: "2024-09-01"
 type: "tech"
@@ -8,154 +8,154 @@ thumbnail: "https://lh7-us.googleusercontent.com/docs/AHkbwyK44xfmb0zN95CAfiTWJ5
 image: "https://lh7-us.googleusercontent.com/docs/AHkbwyK44xfmb0zN95CAfiTWJ5ULJ_-8DpfWRTy8r23dsV6kahSE4C4X-cZ8W4Ed-n2MT0jfWuolbqR77m1-rt_yXV4xcoojPDahscs3bQ=w1200-h630-p"
 ---
 
-Les [preuves zero-knowledge](https://en.wikipedia.org/wiki/Zero-knowledge_proof) sont souvent presentees comme une reponse complete a la protection de la vie privee. Dans les technologies civiques, la promesse est particulierement forte : une personne peut prouver qu'elle est eligible pour participer, qu'elle est unique, qu'elle a plus d'un certain age ou qu'elle reside dans une juridiction, sans reveler tout le contenu de son document d'identite.
+Les [preuves à divulgation nulle de connaissance](https://en.wikipedia.org/wiki/Zero-knowledge_proof), ou preuves zero-knowledge (ZKP), sont souvent présentées comme une réponse complète à la protection de la vie privée. Dans les technologies civiques, la promesse est particulièrement forte : une personne peut prouver qu'elle est éligible pour participer, qu'elle est unique, qu'elle a plus d'un certain âge ou qu'elle réside dans une juridiction, sans révéler tout le contenu de son document d'identité.
 
-Cette promesse est reelle. Elle est aussi plus limitee qu'elle n'en a l'air.
+Cette promesse est réelle. Elle est aussi plus limitée qu'elle n'en a l'air.
 
-Une preuve zero-knowledge protege une preuve. Elle ne protege pas automatiquement l'adresse IP, l'empreinte du navigateur, le numero de telephone, l'adresse e-mail, l'implementation du wallet, l'appareil, le systeme d'exploitation, ni les nombreux horodatages et signaux comportementaux crees autour de la preuve. Si ces couches ne sont pas concues avec soin, un verificateur peut encore apprendre qui est l'utilisateur.
+Une preuve à divulgation nulle de connaissance protège une preuve. Elle ne protège pas automatiquement l'adresse IP, l'empreinte du navigateur, le numéro de téléphone, l'adresse e-mail, l'implémentation du portefeuille numérique, l'appareil, le système d'exploitation, ni les nombreux horodatages et signaux comportementaux créés autour de la preuve. Si ces couches ne sont pas conçues avec soin, un vérificateur peut encore apprendre qui est l'utilisateur.
 
-Cet article adapte une [presentation](https://docs.google.com/presentation/d/e/2PACX-1vRKRJW4-ZUHso3o-KzzwemuezH7ifLENCpvJCr9552PlRHzOtyxetsLM-4ghHDwCA/pub?start=false&loop=false&delayms=3000) donnee a [NGI TrustChain](https://trustchain.ngi.eu/) en septembre 2024. L'idee centrale est simple : les preuves zero-knowledge sont une brique importante pour la participation civique privee, mais la vie privee est une propriete de toute la pile technique.
+Cet article adapte une [présentation](https://docs.google.com/presentation/d/e/2PACX-1vRKRJW4-ZUHso3o-KzzwemuezH7ifLENCpvJCr9552PlRHzOtyxetsLM-4ghHDwCA/pub?start=false&loop=false&delayms=3000) donnée à [NGI TrustChain](https://trustchain.ngi.eu/) en septembre 2024. L'idée centrale est simple : les ZKP sont une brique importante pour une participation civique respectueuse de la vie privée, mais la vie privée est une propriété de toute la pile technique.
 
-## Pourquoi l'identite entre dans les plateformes civiques
+## Pourquoi l'identité entre dans les plateformes civiques
 
-Tous les espaces en ligne n'ont pas besoin de verification d'identite. Il existe de tres bons cas d'usage pour des communautes purement pseudonymes, ou les utilisateurs participent avec des pseudonymes persistants et de la reputation plutot qu'avec des justificatifs formels.
+Tous les espaces en ligne n'ont pas besoin de vérification d'identité. Il existe de très bons cas d'usage pour des communautés purement pseudonymes, où les utilisateurs participent avec des pseudonymes persistants et de la réputation plutôt qu'avec des justificatifs formels.
 
-Les plateformes de participation civique font face a un probleme different. Si l'objectif est de recueillir une contribution publique significative, de resister au spam, de reduire la propagande computationnelle ou de soutenir des processus une personne, une voix, le systeme a besoin d'une forme de resistance aux attaques Sybil. En pratique, il peut devoir savoir qu'un participant est une personne reelle, appartient a une communaute pertinente ou respecte une regle d'eligibilite civique.
+Les plateformes de participation civique font face à un problème différent. Si l'objectif est de recueillir une contribution publique significative, de résister au spam, de réduire la propagande computationnelle ou de soutenir des processus « une personne, une voix », le système a besoin d'une forme de résistance aux attaques Sybil. En pratique, il peut devoir savoir qu'un participant est une personne réelle, appartient à une communauté pertinente ou respecte une règle d'éligibilité civique.
 
 Plusieurs approches existent, chacune avec ses compromis :
 
-- Les systemes biometriques peuvent fournir l'unicite, mais ils creent de graves risques de vie privee et de securite.
-- Les systemes de graphe social peuvent aider dans certains contextes, mais ils restent difficiles a passer a l'echelle et offrent souvent de faibles garanties de confidentialite.
-- Les approches hybrides de web of trust peuvent fonctionner pour certaines communautes, mais fournissent generalement une unicite plus faible.
+- Les systèmes biométriques peuvent fournir l'unicité, mais ils créent de graves risques pour la vie privée et la sécurité.
+- Les systèmes de graphe social peuvent aider dans certains contextes, mais ils restent difficiles à passer à l'échelle et offrent souvent de faibles garanties de confidentialité.
+- Les approches hybrides de réseau de confiance peuvent fonctionner pour certaines communautés, mais fournissent généralement une unicité plus faible.
 - Les justificatifs institutionnels ou gouvernementaux peuvent apporter de fortes garanties, mais ils ne doivent pas devenir une couche de surveillance.
 
-C'est ici que l'identite auto-souveraine et les preuves zero-knowledge deviennent attractives. Elles suggerent une facon de verifier l'eligibilite sans demander aux utilisateurs de reveler plus de donnees personnelles que necessaire.
+C'est ici que l'identité auto-souveraine et les ZKP deviennent attractives. Elles suggèrent une façon de vérifier l'éligibilité sans demander aux utilisateurs de révéler plus de données personnelles que nécessaire.
 
-## Ce que les preuves zero-knowledge font bien
+## Ce que les preuves à divulgation nulle de connaissance font bien
 
-Dans un flux de justificatif simplifie, trois parties interviennent :
+Dans un parcours simplifié d'utilisation d'un justificatif, trois parties interviennent :
 
-- L'emetteur confirme quelque chose a propos d'une personne et emet un justificatif.
-- Le titulaire conserve ce justificatif et decide quand l'utiliser.
-- Le verificateur controle une preuve derivee de ce justificatif.
+- L'émetteur confirme quelque chose à propos d'une personne et émet un justificatif.
+- Le titulaire conserve ce justificatif et décide quand l'utiliser.
+- Le vérificateur contrôle une preuve dérivée de ce justificatif.
 
-Les techniques zero-knowledge peuvent permettre au titulaire de prouver une affirmation precise sans reveler le justificatif sous-jacent. Par exemple, un utilisateur peut prouver qu'il a plus de 18 ans sans reveler sa date de naissance, ou prouver qu'il a recu un justificatif d'un emetteur de confiance sans reveler tout son contenu.
+Les techniques à divulgation nulle de connaissance peuvent permettre au titulaire de prouver une affirmation précise sans révéler le justificatif sous-jacent. Par exemple, un utilisateur peut prouver qu'il a plus de 18 ans sans révéler sa date de naissance, ou prouver qu'il a reçu un justificatif d'un émetteur de confiance sans révéler tout son contenu.
 
-Plusieurs approches techniques soutiennent ce modele. Les justificatifs BBS+ permettent la divulgation selective et les preuves non liables. D'autres approches utilisent des justificatifs merkelises et des ZK-SNARKs pour rendre des formats plus liables plus respectueux de la vie privee. Les zkVM generalistes pourraient a terme faciliter les preuves portant sur des justificatifs deja existants et orientes securite.
+Plusieurs approches techniques soutiennent ce modèle. Les justificatifs BBS+ permettent la divulgation sélective et les preuves non corrélables. D'autres approches utilisent des justificatifs structurés en arbres de Merkle et des ZK-SNARKs pour rendre des formats autrement corrélables plus respectueux de la vie privée. Les zkVM généralistes pourraient à terme faciliter les preuves portant sur des justificatifs déjà existants et orientés sécurité.
 
-Ces outils sont utiles parce qu'ils peuvent fournir une non-liabilite de l'emetteur au niveau de la preuve. Autrement dit, l'emetteur ne devrait pas apprendre ou le justificatif est utilise, et differents usages du meme justificatif ne devraient pas etre trivialement relies par la preuve elle-meme.
+Ces outils sont utiles parce qu'ils peuvent empêcher la corrélation par l'émetteur au niveau de la preuve. Autrement dit, l'émetteur ne devrait pas apprendre où le justificatif est utilisé, et différents usages du même justificatif ne devraient pas être trivialement reliés par la preuve elle-même.
 
-Cela resout un probleme important. Cela ne resout pas tous les problemes de vie privee.
+Cela résout un problème important. Cela ne résout pas tous les problèmes de vie privée.
 
-## Le modele de menace : le titulaire d'abord
+## Le modèle de menace : le titulaire d'abord
 
-Pour la participation civique, le modele de confidentialite doit partir du point de vue du titulaire. La personne qui utilise le justificatif doit garder le controle de ce qu'elle revele et a qui.
+Pour la participation civique, le modèle de confidentialité doit partir du point de vue du titulaire. La personne qui utilise le justificatif doit garder le contrôle de ce qu'elle révèle et à qui.
 
-Cela exige un modele de menace plus strict que celui de la plupart des plateformes sociales actuelles :
+Cela exige un modèle de menace plus strict que celui de la plupart des plateformes sociales actuelles :
 
-- Le verificateur, c'est-a-dire la plateforme qui demande la preuve, ne doit pas etre aveuglement fiable. Il peut chercher a deanonymiser l'utilisateur, sauf si le systeme rend cela difficile et auditable.
-- L'emetteur est fiable pour identifier le titulaire et emettre un justificatif valide, mais il ne doit pas savoir ou, quand ni pourquoi ce justificatif est ensuite utilise.
-- L'emetteur et le verificateur ne doivent pas pouvoir collaborer pour identifier les utilisateurs a partir des presentations de preuves.
-- Le code client proprietaire, le code du wallet et les frontends de verification doivent etre consideres comme des surfaces de risque, sauf s'ils sont open source, inspectables et idealement audites.
+- Le vérificateur, c'est-à-dire la plateforme qui demande la preuve, ne doit pas être considéré comme digne de confiance aveuglément. Il peut chercher à désanonymiser l'utilisateur, sauf si le système rend cela difficile et auditable.
+- L'émetteur est digne de confiance pour identifier le titulaire et émettre un justificatif valide, mais il ne doit pas savoir où, quand ni pourquoi ce justificatif est ensuite utilisé.
+- L'émetteur et le vérificateur ne doivent pas pouvoir collaborer pour identifier les utilisateurs à partir des présentations de preuves.
+- Le code client propriétaire, le code du portefeuille et les interfaces de vérification doivent être considérés comme des surfaces de risque, sauf s'ils sont open source, inspectables et idéalement audités.
 
-C'est tres different du modele dominant des reseaux sociaux, ou l'on fait habituellement confiance aux plateformes pour collecter, stocker et proteger les donnees personnelles de facon responsable. L'histoire des plateformes donne aux utilisateurs de nombreuses raisons d'etre sceptiques.
+C'est très différent du modèle dominant des réseaux sociaux, où l'on fait habituellement confiance aux plateformes pour collecter, stocker et protéger les données personnelles de façon responsable. L'histoire des plateformes donne aux utilisateurs de nombreuses raisons d'être sceptiques.
 
-## Le reste de l'iceberg de la vie privee
+## Le reste de l'iceberg de la vie privée
 
-L'erreur la plus facile est de prendre la preuve zero-knowledge pour tout le systeme de confidentialite. En realite, la preuve n'est qu'une couche.
+L'erreur la plus facile est de prendre la ZKP pour tout le système de confidentialité. En réalité, la preuve n'est qu'une couche.
 
-### Sur-divulgation
+### Divulgation excessive
 
-Meme lorsqu'une preuve est generee en zero-knowledge, le verificateur peut demander des attributs trop precis, trop nombreux ou trop rares. L'utilisateur ne revele peut-etre pas son document complet, mais une combinaison d'attributs peut encore l'identifier.
+Même lorsqu'une preuve est générée à divulgation nulle de connaissance, le vérificateur peut demander des attributs trop précis, trop nombreux ou trop rares. L'utilisateur ne révèle peut-être pas son document complet, mais une combinaison d'attributs peut encore l'identifier.
 
-Par exemple, prouver un age precis, une ville, une profession et un statut de membre peut suffire a isoler une personne dans une petite communaute. Les systemes respectueux de la vie privee doivent privilegier des predicats grossiers et la divulgation minimale necessaire.
+Par exemple, prouver un âge précis, une ville, une profession et un statut de membre peut suffire à isoler une personne dans une petite communauté. Les systèmes respectueux de la vie privée doivent privilégier des critères peu précis et la divulgation minimale nécessaire.
 
-### Metadonnees reseau
+### Métadonnées réseau
 
-Un verificateur peut tenter de relier une preuve a l'utilisateur via les adresses IP, les empreintes navigateur, les metadonnees d'appareil ou le timing des requetes. Si la preuve est envoyee depuis la meme session navigateur qu'une connexion identifiante ou une verification e-mail, la confidentialite mathematique de la preuve peut ne plus compter.
+Un vérificateur peut tenter de relier une preuve à l'utilisateur via les adresses IP, les empreintes du navigateur, les métadonnées de l'appareil ou le moment des requêtes. Si la preuve est envoyée depuis la même session de navigateur qu'une connexion identifiante ou une vérification par e-mail, la confidentialité mathématique de la preuve peut ne plus compter.
 
-Zero-knowledge ne masque pas automatiquement la couche reseau. La confidentialite du transport, les proxys, les politiques de journalisation et la separation des sessions comptent aussi.
+Une ZKP ne masque pas automatiquement la couche réseau. La confidentialité du transport, les proxys, les politiques de journalisation et la séparation des sessions comptent aussi.
 
-### Cookies et courtiers de donnees
+### Cookies et courtiers de données
 
-Les cookies tiers, scripts d'analyse, identifiants publicitaires et donnees achetees peuvent tous affaiblir la confidentialite de la preuve. Si un verificateur integre du tracking autour du flux de preuve, il peut correler une preuve anonyme avec une identite web connue.
+Les cookies tiers, scripts d'analyse, identifiants publicitaires et données achetées peuvent tous affaiblir la confidentialité de la preuve. Si un vérificateur intègre du suivi autour du parcours de preuve, il peut corréler une preuve anonyme avec une identité web connue.
 
-Pour une plateforme civique, le flux de preuve doit eviter entierement les trackers tiers. La vie privee ne peut pas dependre d'un protocole cryptographique pendant que la page fuit l'identite via une infrastructure web ordinaire.
+Pour une plateforme civique, le parcours de preuve doit éviter entièrement les traceurs tiers. La vie privée ne peut pas dépendre d'un protocole cryptographique pendant que la page divulgue l'identité via une infrastructure web ordinaire.
 
-### E-mail, telephone et recuperation de compte
+### E-mail, téléphone et récupération de compte
 
-Les adresses e-mail et numeros de telephone sont pratiques, mais ce sont aussi de puissants identifiants. Si le verificateur les associe a une preuve zero-knowledge, la preuve peut devenir une partie d'un profil d'identite plus large.
+Les adresses e-mail et numéros de téléphone sont pratiques, mais ce sont aussi de puissants identifiants. Si le vérificateur les associe à une ZKP, la preuve peut devenir une partie d'un profil d'identité plus large.
 
-Cela ne signifie pas qu'une plateforme civique ne peut jamais utiliser l'e-mail ou le telephone. Cela signifie que ces identifiants doivent etre isoles des evenements de preuve autant que possible, utilises seulement quand c'est necessaire et soumis a des politiques claires de retention.
+Cela ne signifie pas qu'une plateforme civique ne peut jamais utiliser l'e-mail ou le téléphone. Cela signifie que ces identifiants doivent être isolés des événements de preuve autant que possible, utilisés seulement quand c'est nécessaire et soumis à des politiques claires de conservation.
 
 ### Identifiants permanents
 
-Une preuve zero-knowledge peut encore etre liee si le meme identifiant permanent apparait autour d'elle. Adresses de wallet, DIDs, identifiants de sujet de justificatif, identifiants d'appareil ou identifiants de compte stables peuvent tous devenir des points de correlation.
+Une ZKP peut encore être corrélée si le même identifiant permanent apparaît autour d'elle. Adresses de portefeuille, DIDs, identifiants du titulaire d'un justificatif, identifiants d'appareil ou identifiants de compte stables peuvent tous devenir des points de corrélation.
 
-Les systemes qui ont besoin de pseudonymat doivent utiliser des identifiants contextuels ou pairwise au lieu d'identifiants universels. Par defaut, l'utilisateur ne devrait pas porter la meme trace entre espaces civiques sans lien.
+Les systèmes qui ont besoin de pseudonymat doivent utiliser des identifiants contextuels ou propres à chaque relation au lieu d'identifiants universels. Par défaut, l'utilisateur ne devrait pas porter la même trace entre espaces civiques sans lien.
 
-### Correlation temporelle
+### Corrélation temporelle
 
-Meme si les identifiants sont caches, le timing peut reveler des relations. Un verificateur peut correler le moment ou une preuve est generee avec une autre requete, comme une connexion, un clic de notification ou un chargement de page.
+Même si les identifiants sont cachés, le moment des requêtes peut révéler des relations. Un vérificateur peut corréler le moment où une preuve est générée avec une autre requête, comme une connexion, un clic de notification ou un chargement de page.
 
-Les concepteurs doivent traiter les horodatages comme sensibles. Le batching, la soumission differee, la minimisation des logs et la separation entre authentification et presentation de preuve peuvent reduire le risque de correlation.
+Les concepteurs doivent traiter les horodatages comme sensibles. Le traitement par lots, la soumission différée, la minimisation des journaux et la séparation entre authentification et présentation de preuve peuvent réduire le risque de corrélation.
 
-### Wallets, appareils et chaine d'approvisionnement
+### Portefeuilles, appareils et chaîne d'approvisionnement
 
-La preuve peut etre cryptographiquement correcte, mais le wallet ou le client peut encore divulguer des donnees sensibles. Un wallet proprietaire peut envoyer de la telemetrie. Un SDK compromis peut reveler des attributs. Un frontend malveillant peut demander plus que ce que l'utilisateur comprend.
+La preuve peut être cryptographiquement correcte, mais le portefeuille ou le client peut encore divulguer des données sensibles. Un portefeuille propriétaire peut envoyer de la télémétrie. Un SDK compromis peut révéler des attributs. Une interface malveillante peut demander plus que ce que l'utilisateur comprend.
 
-L'open source ne supprime pas magiquement ces risques, mais le code ferme les rend beaucoup plus difficiles a inspecter. Pour des systemes civiques de confiance, les clients open source, builds reproductibles, audits independants et telemetrie minimale doivent etre consideres comme de l'infrastructure de base.
+L'open source ne supprime pas magiquement ces risques, mais le code fermé les rend beaucoup plus difficiles à inspecter. Pour des systèmes civiques de confiance, les clients open source, compilations reproductibles, audits indépendants et télémétrie minimale doivent être considérés comme de l'infrastructure de base.
 
-### Inference comportementale
+### Inférence comportementale
 
-Le machine learning peut inferer l'identite a partir de motifs qui semblent inoffensifs isoles. Style d'ecriture, horaires d'activite, comportement d'appareil, motifs de localisation et historique d'interaction peuvent tous reduire l'ensemble d'anonymat.
+L'apprentissage automatique peut inférer l'identité à partir de motifs qui semblent inoffensifs pris isolément. Style d'écriture, horaires d'activité, comportement de l'appareil, habitudes de localisation et historique d'interaction peuvent tous réduire l'ensemble d'anonymat.
 
-C'est une autre raison pour laquelle la vie privee ne peut pas etre reduite a la preuve. La participation anonyme exige aussi des choix produit, de moderation et de retention qui evitent de constituer des dossiers comportementaux inutiles.
+C'est une autre raison pour laquelle la vie privée ne peut pas être réduite à la preuve. La participation anonyme exige aussi des choix de produit, de modération et de conservation qui évitent de constituer des dossiers comportementaux inutiles.
 
-## Une meilleure architecture pour des preuves crediblement anonymes
+## Une meilleure architecture pour des preuves véritablement anonymes
 
-Un flux de justificatif respectueux de la vie privee doit etre concu avec l'hypothese que le verificateur veut apprendre plus qu'il ne devrait.
+Un parcours d'utilisation de justificatifs respectueux de la vie privée doit être conçu avec l'hypothèse que le vérificateur veut apprendre plus qu'il ne devrait.
 
-Au minimum, une plateforme civique utilisant des preuves zero-knowledge devrait appliquer ces principes :
+Au minimum, une plateforme civique utilisant des ZKP devrait appliquer ces principes :
 
-- Demander la preuve la moins precise qui satisfait l'exigence civique.
-- Eviter de combiner presentation de preuve et flux de compte identifiants.
-- Ne pas attacher numeros de telephone, e-mails, adresses de wallet ou DIDs permanents aux evenements de preuve sauf necessite reelle.
-- Exclure cookies tiers, analytics et trackers du flux de preuve.
-- Minimiser les logs, en particulier adresses IP, horodatages et metadonnees de requetes.
-- Utiliser des pseudonymes propres a chaque contexte quand une participation persistante est necessaire.
-- Rendre open source et auditables le frontend de verification, la logique de demande de preuve, les integrations wallet et les SDK.
-- Rendre les demandes de preuve comprehensibles pour les utilisateurs, afin qu'ils voient ce qui est prouve et ce qui n'est pas revele.
-- Empecher les callbacks vers l'emetteur et autres mecanismes qui lui permettraient d'apprendre ou les justificatifs sont utilises.
+- Demander la preuve la moins précise qui satisfait l'exigence civique.
+- Éviter de combiner présentation de preuve et parcours de compte identifiants.
+- Ne pas attacher numéros de téléphone, e-mails, adresses de portefeuille ou DIDs permanents aux événements de preuve sauf nécessité réelle.
+- Exclure cookies tiers, outils d'analyse et traceurs du parcours de preuve.
+- Minimiser les journaux, en particulier adresses IP, horodatages et métadonnées de requêtes.
+- Utiliser des pseudonymes propres à chaque contexte quand une participation persistante est nécessaire.
+- Rendre open source et auditables l'interface de vérification, la logique de demande de preuve, les intégrations de portefeuille et les SDK.
+- Rendre les demandes de preuve compréhensibles pour les utilisateurs, afin qu'ils voient ce qui est prouvé et ce qui n'est pas révélé.
+- Empêcher les rappels vers l'émetteur et autres mécanismes qui lui permettraient d'apprendre où les justificatifs sont utilisés.
 
-Le but n'est pas seulement des preuves anonymes. Le but est une anonymite credible : un systeme ou les utilisateurs, auditeurs et acteurs de la societe civile peuvent verifier que les promesses de confidentialite correspondent au comportement reel de la plateforme.
+Le but n'est pas seulement d'obtenir des preuves anonymes. Le but est un anonymat crédible : un système où les utilisateurs, auditeurs et acteurs de la société civile peuvent vérifier que les promesses de confidentialité correspondent au comportement réel de la plateforme.
 
-## Defis ouverts
+## Défis ouverts
 
 Il reste beaucoup de travail difficile.
 
-D'abord, l'experience utilisateur n'est pas assez bonne. La plupart des personnes ne peuvent pas raisonner sur les schemas de justificatifs, la divulgation selective, les demandes de preuve, la non-liabilite de l'emetteur ou les attaques par correlation. Un produit sur doit expliquer ses proprietes de confidentialite sans demander aux utilisateurs de devenir cryptographes.
+D'abord, l'expérience utilisateur n'est pas assez bonne. La plupart des personnes ne peuvent pas raisonner sur les schémas de justificatifs, la divulgation sélective, les demandes de preuve, l'impossibilité de corrélation par l'émetteur ou les attaques par corrélation. Un produit sûr doit expliquer ses propriétés de confidentialité sans demander aux utilisateurs de devenir cryptographes.
 
-Ensuite, l'ecosysteme des justificatifs est fragmente. BBS+, SD-JWT, permis de conduire mobiles, puces de passeport, justificatifs merkelises et preuves basees sur zkVM font tous des compromis differents. Les plateformes civiques ont besoin d'interoperabilite sans se rabattre sur le plus petit denominateur commun de la vie privee.
+Ensuite, l'écosystème des justificatifs est fragmenté. BBS+, SD-JWT, permis de conduire mobiles, puces de passeport, justificatifs structurés en arbres de Merkle et preuves basées sur zkVM font tous des compromis différents. Les plateformes civiques ont besoin d'interopérabilité sans se rabattre sur le plus petit dénominateur commun de la vie privée.
 
-Troisiemement, la resistance aux attaques Sybil et la vie privee restent en tension. Une unicite plus forte exige souvent une preuve d'identite plus forte. Le defi consiste a verifier seulement ce qui est necessaire et a eviter que cette verification devienne un graphe d'identite generalise.
+Troisièmement, la résistance aux attaques Sybil et la vie privée restent en tension. Une unicité plus forte exige souvent une preuve d'identité plus forte. Le défi consiste à vérifier seulement ce qui est nécessaire et à éviter que cette vérification devienne un graphe d'identité généralisé.
 
-Quatriemement, la prevention des abus ne doit pas recreer la surveillance. Les espaces anonymes ou pseudonymes ont tout de meme besoin de moderation, de limites de frequence et de mecanismes de responsabilite. Ces mecanismes doivent etre concus pour ne pas reidentifier silencieusement tout le monde.
+Quatrièmement, la prévention des abus ne doit pas recréer la surveillance. Les espaces anonymes ou pseudonymes ont tout de même besoin de modération, de limites de fréquence et de mécanismes de responsabilité. Ces mécanismes doivent être conçus pour ne pas réidentifier silencieusement tout le monde.
 
-Enfin, l'open source est necessaire mais pas suffisant. Le code publie aide, mais les utilisateurs ont aussi besoin de builds reproductibles, d'audits independants, d'une gouvernance claire et de garanties au deploiement que le code inspecte est bien celui qui est utilise.
+Enfin, l'open source est nécessaire mais pas suffisant. Le code publié aide, mais les utilisateurs ont aussi besoin de compilations reproductibles, d'audits indépendants, d'une gouvernance claire et de garanties au déploiement que le code inspecté est bien celui qui est utilisé.
 
 ## Conclusion
 
-Les preuves zero-knowledge sont puissantes. Elles permettent de prouver des faits sans reveler les donnees sous-jacentes et peuvent empecher les emetteurs de suivre l'usage des justificatifs.
+Les ZKP sont puissantes. Elles permettent de prouver des faits sans révéler les données sous-jacentes et peuvent empêcher les émetteurs de suivre l'usage des justificatifs.
 
-Mais les preuves ne sont pas tout le systeme de confidentialite. Un verificateur peut encore attaquer les couches voisines : attributs, metadonnees, cookies, e-mail, telephone, identifiants permanents, timing, wallets, appareils et comportements.
+Mais les preuves ne sont pas tout le système de confidentialité. Un vérificateur peut encore attaquer les couches voisines : attributs, métadonnées, cookies, e-mail, téléphone, identifiants permanents, moment des requêtes, portefeuilles, appareils et comportements.
 
-Pour les technologies civiques, cette distinction est essentielle. Si l'identite numerique devient une partie de la participation publique, elle ne doit pas devenir une nouvelle facon de surveiller les citoyens. Les preuves zero-knowledge peuvent faire partie de la reponse, mais seulement dans une architecture plus large fondee sur la minimisation des donnees, la non-liabilite, l'auditabilite open source et le controle par l'utilisateur.
+Pour les technologies civiques, cette distinction est essentielle. Si l'identité numérique devient une partie de la participation publique, elle ne doit pas devenir une nouvelle façon de surveiller les citoyens. Les ZKP peuvent faire partie de la réponse, mais seulement dans une architecture plus large fondée sur la minimisation des données, l'impossibilité de corrélation, l'auditabilité du code open source et le contrôle par l'utilisateur.
 
-La lecon pratique est claire : utilisez zero-knowledge, mais ne vous arretez pas la.
+La leçon pratique est claire : utilisez les ZKP, mais ne vous arrêtez pas là.
 
 ## Pour aller plus loin
 
-- [Presentation originale](https://docs.google.com/presentation/d/e/2PACX-1vRKRJW4-ZUHso3o-KzzwemuezH7ifLENCpvJCr9552PlRHzOtyxetsLM-4ghHDwCA/pub?start=false&loop=false&delayms=3000)
-- [Presentation BBS+ au NIST](https://csrc.nist.gov/csrc/media/presentations/2023/crclub-2023-10-18/images-media/20231018-crypto-club--greg-and-vasilis--slides--BBS.pdf)
+- [Présentation originale](https://docs.google.com/presentation/d/e/2PACX-1vRKRJW4-ZUHso3o-KzzwemuezH7ifLENCpvJCr9552PlRHzOtyxetsLM-4ghHDwCA/pub?start=false&loop=false&delayms=3000)
+- [Présentation BBS+ au NIST](https://csrc.nist.gov/csrc/media/presentations/2023/crclub-2023-10-18/images-media/20231018-crypto-club--greg-and-vasilis--slides--BBS.pdf)
 - [Documentation Iden3 sur les arbres de Merkle](https://docs.iden3.io/basics/key-concepts/#why-do-we-use-merkle-trees-at-iden3)

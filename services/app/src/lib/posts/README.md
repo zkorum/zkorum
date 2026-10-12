@@ -10,7 +10,7 @@ This follows the convention from [Josh Collinsworth's SvelteKit blog starter](ht
 
 1. Vite glob import loads all `.md` files as raw strings at build time
 2. `gray-matter` extracts YAML frontmatter (title, author, date, etc.)
-3. `unified` / `remark` / `rehype` converts Markdown to sanitized HTML
+3. `unified` / `remark` / `rehype` converts repository-owned Markdown to HTML, including authored raw HTML. This pipeline does not sanitize untrusted content.
 4. SvelteKit prerenders static HTML pages
 
 ## Structure
@@ -24,7 +24,11 @@ posts/
 ├── fr/
 ├── es/
 ├── ar/
+├── fa/
+├── he/
 ├── ja/
+├── ky/
+├── ru/
 ├── zh-hans/
 └── zh-hant/
 ```

@@ -1,6 +1,23 @@
+import type { locales } from "$lib/paraglide/runtime";
+import { toLocale } from "$lib/paraglide/runtime";
+
+import { getComparisonFaq } from "./faq-comparison-content";
+
 export interface FaqItem {
   question: string;
   answer: string;
+  comparison?: FaqComparison;
+}
+
+export interface FaqComparison {
+  firstColumnLabel: string;
+  columns: readonly [string, string];
+  rows: readonly FaqComparisonRow[];
+}
+
+export interface FaqComparisonRow {
+  feature: string;
+  values: readonly [string, string];
 }
 
 export interface FaqGroup {
@@ -13,25 +30,7 @@ interface FaqContent {
   groups: FaqGroup[];
 }
 
-const faqLocales = [
-  "en",
-  "fr",
-  "es",
-  "ar",
-  "fa",
-  "he",
-  "ja",
-  "zh-hans",
-  "zh-hant",
-  "ky",
-  "ru",
-] as const;
-
-type Locale = (typeof faqLocales)[number];
-
-function isFaqLocale(locale: string): locale is Locale {
-  return faqLocales.some((supportedLocale) => supportedLocale === locale);
-}
+type Locale = (typeof locales)[number];
 
 export const faqContentByLocale: Record<Locale, FaqContent> = {
   en: {
@@ -52,9 +51,9 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
               "Use Conversation Mode when the question is still open and you want to gather perspectives, map disagreement, and find common ground. Use Prioritization Mode when you already have proposals and need a ranked list of what matters most. [Read the Facilitation Guide](/resources/facilitation-guide).",
           },
           {
-            question: "Can I use both modes together?",
+            question: "We've reached consensus. What happens next?",
             answer:
-              "Yes. A common process is to start with Conversation Mode, identify strong or bridging proposals, then use Prioritization Mode to turn them into an actionable ranking.",
+              "Consensus shows what the group can support, but not what to do first. Move the strongest consensus and bridging proposals into Prioritization Mode, which uses [Solidago](https://solidago.tournesol.app/) for ranked voting. Participants rank the options, and Agora produces a shared priority list that can guide a roadmap, budget, action plan, or final decision. [See how a 30-person team used this process to co-write its AI charter](/resources/ai-charter-workshop).",
           },
         ],
       },
@@ -76,6 +75,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "Opinion groups are clusters of participants who vote in similar ways. They are inferred from voting behavior, not from demographics or AI labels. Bridging statements are statements that different groups support, even when those same groups disagree on many other things. This is the Pol.is-inspired part of the algorithm that makes hidden common ground visible.",
           },
+          getComparisonFaq("en"),
           {
             question: "Is AI deciding the results?",
             answer:
@@ -120,7 +120,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Is Agora open source?",
             answer:
-              "Yes. Agora's code is available on [GitHub](https://github.com/zkorum/agora) under open-source licenses. We encourage auditing, feedback, and contributions from the community. We uphold the vision that democracy needs digital infrastructure that anyone can use, modify, and improve.",
+              "Yes. Agora's code is available on [GitHub](https://github.com/zkorum/agora) under open-source licenses. We encourage auditing, feedback, and contributions from the community. We uphold the vision that democracy needs digital infrastructure that anyone can use, modify, and improve. Our product roadmap is open too. [Help shape what we build next](https://www.agoracitizen.app/conversation/nRAynpw).",
           },
           {
             question: "Can Agora work with other tools?",
@@ -138,20 +138,20 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
         title: "Utiliser Agora",
         items: [
           {
-            question: "A qui s'adresse Agora ?",
+            question: "À qui s'adresse Agora ?",
             answer:
-              "Agora s'adresse aux facilitateurs, organisateurs d'evenements, equipes de participation citoyenne, community managers, entreprises, DAO, ONG, institutions publiques et a tout groupe qui doit comprendre des personnes aux points de vue differents.",
+              "Agora s'adresse aux facilitateurs, organisateurs d'événements, équipes de participation citoyenne, responsables de communautés, entreprises, DAO, ONG, institutions publiques et à tout groupe qui doit comprendre des personnes aux points de vue différents.",
           },
           {
             question:
               "Comment choisir entre le mode Conversation et le mode Priorisation ?",
             answer:
-              "Utilisez le mode Conversation lorsque la question reste ouverte et que vous voulez recueillir des perspectives, cartographier les desaccords et trouver des terrains d'entente. Utilisez le mode Priorisation lorsque vous avez deja des propositions et que vous avez besoin d'une liste classee de ce qui compte le plus. [Lire le guide de facilitation](/resources/facilitation-guide).",
+              "Utilisez le mode Conversation lorsque la question reste ouverte et que vous voulez recueillir des perspectives, cartographier les désaccords et trouver un terrain d'entente. Utilisez le mode Priorisation lorsque vous avez déjà des propositions et que vous avez besoin d'une liste classée de ce qui compte le plus. [Lire le guide de facilitation](/resources/facilitation-guide).",
           },
           {
             question: "Puis-je utiliser les deux modes ensemble ?",
             answer:
-              "Oui. Un processus courant consiste a commencer par le mode Conversation, a identifier les propositions fortes ou passerelles, puis a utiliser le mode Priorisation pour les transformer en classement actionnable.",
+              "Oui. Commencez par le mode Conversation pour identifier les propositions consensuelles ou passerelles, puis transférez-les dans le mode Priorisation. Celui-ci utilise [Solidago](https://solidago.tournesol.app/) pour produire une liste de priorités partagées. [Découvrez comment une équipe de 30 personnes a rédigé sa charte d'IA avec ce processus](/resources/ai-charter-workshop).",
           },
         ],
       },
@@ -161,54 +161,55 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Comment Agora trouve-t-il un terrain d'entente ?",
             answer:
-              "Les participants votent d'accord, pas d'accord ou incertain sur des affirmations. Agora cartographie ensuite les motifs de ces votes, et non la formulation des affirmations, pour montrer ou les personnes se regroupent, ou elles divergent et quelles affirmations recoivent du soutien dans differents groupes d'opinion. La cartographie d'opinion repose sur l'apprentissage automatique, pas sur un LLM, avec [Red Dwarf](https://github.com/polis-community/red-dwarf), une reimplementation open source du [Pol.is](https://compdemocracy.org/Polis/) original.",
+              "Les participants votent « D'accord », « Pas d'accord » ou « Incertain » sur des propositions. Agora cartographie ensuite les schémas de vote, et non la formulation des propositions, pour montrer où les personnes se regroupent, où elles divergent et quelles propositions reçoivent du soutien dans différents groupes d'opinion. La cartographie des opinions repose sur l'apprentissage automatique, pas sur un LLM, avec [Red Dwarf](https://github.com/polis-community/red-dwarf), une réimplémentation open source du [Pol.is](https://compdemocracy.org/Polis/) original.",
           },
           {
-            question: "Quelle est la difference entre consensus et majorite ?",
+            question: "Quelle est la différence entre consensus et majorité ?",
             answer:
-              "Une affirmation majoritaire est soutenue par la plupart des participants dans l'ensemble. Une affirmation de consensus est soutenue a travers les groupes d'opinion, elle ne peut donc pas simplement ecraser un groupe plus petit. Dans Agora, consensus ne signifie pas que tout le monde est d'accord ; cela signifie que l'affirmation a une legitimite a travers les principales differences presentes.",
+              "Une proposition majoritaire est soutenue par la plupart des participants dans l'ensemble. Une proposition consensuelle est soutenue par les différents groupes d'opinion, elle ne peut donc pas simplement écraser un groupe plus petit. Dans Agora, le consensus ne signifie pas que tout le monde est d'accord ; cela signifie que la proposition a une légitimité au-delà des principales différences présentes.",
           },
           {
             question:
-              "Que sont les groupes d'opinion et les affirmations passerelles ?",
+              "Que sont les groupes d'opinion et les propositions passerelles ?",
             answer:
-              "Les groupes d'opinion sont des ensembles de participants qui votent de maniere similaire. Ils sont deduits du comportement de vote, et non de donnees demographiques ou d'etiquettes d'IA. Les affirmations passerelles sont des affirmations soutenues par differents groupes, meme lorsque ces memes groupes sont en desaccord sur beaucoup d'autres points. C'est la partie inspiree de Pol.is qui rend visible le terrain d'entente cache.",
+              "Les groupes d'opinion sont des ensembles de participants qui votent de manière similaire. Ils sont déduits du comportement de vote, et non de données démographiques ou d'étiquettes d'IA. Les propositions passerelles sont soutenues par différents groupes, même lorsque ces mêmes groupes sont en désaccord sur beaucoup d'autres points. C'est la partie inspirée de Pol.is qui rend visible le terrain d'entente caché.",
           },
+          getComparisonFaq("fr"),
           {
-            question: "L'IA decide-t-elle des resultats ?",
+            question: "L'IA décide-t-elle des résultats ?",
             answer:
-              "Non. Les groupes d'opinion et les signaux de terrain d'entente viennent d'une analyse deterministe des motifs de vote, pas de l'IA generative. Apres l'etape de regroupement, Agora utilise Mistral Large pour nommer et resumer les opinions representatives de chaque groupe, mais ces resumes servent seulement d'aide a la lecture des resultats. Les affirmations sources restent visibles sous chaque groupe, et les proprietaires de conversation peuvent desactiver les resumes par IA.",
+              "Non. Les groupes d'opinion et les signaux de terrain d'entente viennent d'une analyse déterministe des schémas de vote, pas de l'IA générative. Après l'étape de regroupement, Agora utilise Mistral Large pour nommer et résumer les opinions représentatives de chaque groupe, mais ces résumés servent seulement d'aide à la lecture des résultats. Les propositions sources restent visibles sous chaque groupe, et les propriétaires de conversation peuvent désactiver les résumés par IA.",
           },
           {
             question: "Qu'est-ce que le vote plural ?",
             answer:
-              "Le vote plural est utilise lorsqu'un groupe doit prioriser des propositions, et pas seulement cartographier des opinions. Il aide a produire une liste classee tout en tenant compte de la diversite du groupe. Au lieu de recompenser uniquement le bloc le plus nombreux, il recherche des priorites qui peuvent conserver leur legitimite a travers les differences. En savoir plus sur [COCM](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4311507).",
+              "Le vote plural est utilisé lorsqu'un groupe doit prioriser des propositions, et pas seulement cartographier des opinions. Il aide à produire une liste classée tout en tenant compte de la diversité du groupe. Au lieu de récompenser uniquement le bloc le plus nombreux, il recherche des priorités qui peuvent conserver leur légitimité au-delà des différences. En savoir plus sur [COCM](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4311507).",
           },
         ],
       },
       {
-        title: "Confidentialite et confiance",
+        title: "Confidentialité et confiance",
         items: [
           {
             question:
-              "Comment Agora protege-t-il la vie privee avec les preuves a divulgation nulle de connaissance ?",
+              "Comment Agora protège-t-il la vie privée avec les preuves à divulgation nulle de connaissance ?",
             answer:
-              "Les [preuves a divulgation nulle de connaissance (ZKP)](https://en.wikipedia.org/wiki/Zero-knowledge_proof) permettent aux participants de prouver une eligibilite ou une unicite sans reveler de donnees personnelles. Par exemple, prouver votre tranche d'age a Agora sans reveler votre age exact. Agora prend actuellement en charge [ZK Passport](https://rarimo.com/), qui permet de prouver anonymement la citoyennete, l'age et le genre. Contactez-nous si vous souhaitez decouvrir et configurer d'autres systemes d'identite, comme une preuve anonyme de presence a un evenement, une localisation GPS ou meme une connexion WiFi.",
+              "Les [preuves à divulgation nulle de connaissance (ZKP)](https://en.wikipedia.org/wiki/Zero-knowledge_proof) permettent aux participants de prouver une éligibilité ou une unicité sans révéler de données personnelles. Par exemple, prouver votre tranche d'âge à Agora sans révéler votre âge exact. Agora prend actuellement en charge [Rarimo](https://rarimo.com/), qui permet de prouver anonymement la citoyenneté, l'âge et le genre. Contactez-nous si vous souhaitez découvrir et configurer d'autres systèmes d'identité, comme une preuve anonyme de présence à un événement, une localisation GPS ou même une connexion Wi-Fi.",
           },
           {
             question: "La participation sur Agora est-elle anonyme ?",
             answer:
-              "Agora permet une participation respectueuse de la vie privee, mais l'anonymat depend de la configuration et de ce que les personnes ecrivent. [Pourquoi les ZKP seules ne suffisent pas a proteger la vie privee](/resources/why-zk-proofs-alone-arent-enough).",
+              "Agora permet une participation respectueuse de la vie privée, mais l'anonymat dépend de la configuration et de ce que les personnes écrivent. [Pourquoi les ZKP seules ne suffisent pas à protéger la vie privée](/resources/why-zk-proofs-alone-arent-enough).",
           },
           {
-            question: "Comment fonctionne la moderation ?",
+            question: "Comment fonctionne la modération ?",
             answer:
-              "Tout le monde peut signaler du contenu comme du spam, du contenu trompeur, antisocial, sexuel, de doxxing ou illegal. Les createurs de conversations et les moderateurs peuvent agir sur les signalements, et les actions de moderation sont enregistrees dans l'historique de moderation.",
+              "Tout le monde peut signaler du contenu comme du spam, du contenu trompeur, antisocial, sexuel, de la divulgation de données personnelles ou du contenu illégal. Les créateurs de conversations et les modérateurs peuvent agir sur les signalements, et les actions de modération sont enregistrées dans l'historique de modération.",
           },
           {
             question: "Agora est-il conforme au RGPD ?",
             answer:
-              "Agora est developpe par ZKorum SAS en France et concu autour de la protection de la vie privee des la conception, de la minimisation des donnees, des droits des utilisateurs et des obligations du RGPD.",
+              "Agora est développé par ZKorum SAS en France et conçu autour de la protection de la vie privée dès la conception, de la minimisation des données, des droits des utilisateurs et des obligations du RGPD.",
           },
         ],
       },
@@ -218,12 +219,12 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Agora est-il open source ?",
             answer:
-              "Oui. Le code d'Agora est disponible sur [GitHub](https://github.com/zkorum/agora) sous licences open source. Nous encourageons les audits, les retours et les contributions de la communaute. Nous defendons l'idee que la democratie a besoin d'une infrastructure numerique que chacun peut utiliser, modifier et ameliorer.",
+              "Oui. Le code d'Agora est disponible sur [GitHub](https://github.com/zkorum/agora) sous licences open source. Nous encourageons les audits, les retours et les contributions de la communauté. Nous défendons l'idée que la démocratie a besoin d'une infrastructure numérique que chacun peut utiliser, modifier et améliorer. Notre feuille de route produit est également ouverte. [Contribuez à définir nos prochaines évolutions](https://www.agoracitizen.app/conversation/nRAynpw).",
           },
           {
             question: "Agora peut-il fonctionner avec d'autres outils ?",
             answer:
-              "Oui. Agora prend en charge une interoperabilite pratique via les imports, exports, integrations, API en cours de developpement et code open source. Nous avons aussi lance l'initiative [DDS (Decentralized Deliberation Standard)](https://dds.xyz), pour une interoperabilite plus large au niveau protocolaire.",
+              "Oui. Agora prend en charge une interopérabilité pratique via les imports, exports, intégrations, API en cours de développement et code open source. Nous avons aussi lancé l'initiative [DDS (Decentralized Deliberation Standard)](https://dds.xyz), pour une interopérabilité plus large au niveau protocolaire.",
           },
         ],
       },
@@ -236,51 +237,52 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
         title: "Usar Agora",
         items: [
           {
-            question: "Para quien es Agora?",
+            question: "¿Para quién es Agora?",
             answer:
-              "Agora es para facilitadores, organizadores de eventos, equipos de participacion civica, responsables de comunidades, empresas, DAO, ONG, instituciones publicas y cualquier grupo que necesite entender a personas con diferencias.",
+              "Agora es para facilitadores, organizadores de eventos, equipos de participación cívica, responsables de comunidades, empresas, DAO, ONG, instituciones públicas y cualquier grupo que necesite entender a personas con puntos de vista diferentes.",
           },
           {
             question:
-              "Como elijo entre el modo Conversacion y el modo Priorizacion?",
+              "¿Cómo elijo entre el modo Conversación y el modo Priorización?",
             answer:
-              "Usa el modo Conversacion cuando la pregunta sigue abierta y quieres recoger perspectivas, mapear desacuerdos y encontrar puntos en comun. Usa el modo Priorizacion cuando ya tienes propuestas y necesitas una lista ordenada de lo que mas importa. [Lee la guia de facilitacion](/resources/facilitation-guide).",
+              "Usa el modo Conversación cuando la pregunta sigue abierta y quieres recoger perspectivas, mapear desacuerdos y encontrar puntos en común. Usa el modo Priorización cuando ya tienes propuestas y necesitas una lista ordenada de lo que más importa. [Lee la guía de facilitación](/resources/facilitation-guide).",
           },
           {
-            question: "Puedo usar ambos modos juntos?",
+            question: "¿Puedo usar ambos modos juntos?",
             answer:
-              "Si. Un proceso habitual es empezar con el modo Conversacion, identificar propuestas fuertes o puente, y luego usar el modo Priorizacion para convertirlas en un ranking accionable.",
+              "Sí. Empieza con el modo Conversación para identificar propuestas de consenso o propuestas puente y luego pásalas al modo Priorización. Este utiliza [Solidago](https://solidago.tournesol.app/) para generar una lista de prioridades compartidas. [Descubre cómo un equipo de 30 personas redactó su carta de uso de la IA con este proceso](/resources/ai-charter-workshop).",
           },
         ],
       },
       {
-        title: "Como funciona el consenso",
+        title: "Cómo funciona el consenso",
         items: [
           {
-            question: "Como encuentra Agora puntos en comun?",
+            question: "¿Cómo encuentra Agora puntos en común?",
             answer:
-              "Las personas participantes votan de acuerdo, en desacuerdo o no estoy seguro sobre afirmaciones. Luego Agora mapea los patrones de esos votos, no la redaccion de las afirmaciones, para mostrar donde se agrupan las personas, donde divergen y que afirmaciones reciben apoyo entre distintos grupos de opinion. El mapeo de opinion se basa en aprendizaje automatico, no en un LLM, usando [Red Dwarf](https://github.com/polis-community/red-dwarf), una reimplementacion open source del [Pol.is](https://compdemocracy.org/Polis/) original.",
+              "Las personas participantes votan «De acuerdo», «En desacuerdo» o «No estoy seguro» sobre afirmaciones. Luego Agora mapea los patrones de esos votos, no la redacción de las afirmaciones, para mostrar dónde se agrupan las personas, dónde divergen y qué afirmaciones reciben apoyo entre distintos grupos de opinión. El mapeo de opiniones se basa en aprendizaje automático, no en un LLM, usando [Red Dwarf](https://github.com/polis-community/red-dwarf), una reimplementación de código abierto del [Pol.is](https://compdemocracy.org/Polis/) original.",
           },
           {
-            question: "Cual es la diferencia entre consenso y mayoria?",
+            question: "¿Cuál es la diferencia entre consenso y mayoría?",
             answer:
-              "Una afirmacion mayoritaria esta apoyada por la mayoria de participantes en conjunto. Una afirmacion de consenso esta apoyada entre grupos de opinion, por lo que no puede simplemente imponerse sobre un grupo menor. En Agora, consenso no significa que todo el mundo este de acuerdo; significa que la afirmacion tiene legitimidad a traves de las principales diferencias presentes.",
+              "Una afirmación mayoritaria está apoyada por la mayoría de participantes en conjunto. Una afirmación de consenso está apoyada por distintos grupos de opinión, por lo que no puede simplemente imponerse sobre un grupo menor. En Agora, consenso no significa que todo el mundo esté de acuerdo; significa que la afirmación tiene legitimidad a través de las principales diferencias presentes.",
           },
           {
             question:
-              "Que son los grupos de opinion y las afirmaciones puente?",
+              "¿Qué son los grupos de opinión y las afirmaciones puente?",
             answer:
-              "Los grupos de opinion son grupos de participantes que votan de forma similar. Se infieren del comportamiento de voto, no de datos demograficos ni etiquetas de IA. Las afirmaciones puente son afirmaciones que distintos grupos apoyan, incluso cuando esos mismos grupos discrepan en muchas otras cosas. Esta es la parte inspirada en Pol.is del algoritmo que hace visible el terreno comun oculto.",
+              "Los grupos de opinión son grupos de participantes que votan de forma similar. Se infieren del comportamiento de voto, no de datos demográficos ni etiquetas de IA. Las afirmaciones puente son afirmaciones que distintos grupos apoyan, incluso cuando esos mismos grupos discrepan en muchas otras cosas. Esta es la parte inspirada en Pol.is del algoritmo que hace visible el terreno común oculto.",
+          },
+          getComparisonFaq("es"),
+          {
+            question: "¿La IA decide los resultados?",
+            answer:
+              "No. Los grupos de opinión y las señales de terreno común vienen de un análisis determinista de patrones de voto, no de IA generativa. Después del agrupamiento de opiniones, Agora usa Mistral Large para etiquetar y resumir las opiniones representativas de cada grupo, pero esos resúmenes solo ayudan a leer los resultados. Las afirmaciones fuente siguen visibles bajo cada grupo, y los propietarios de la conversación pueden desactivar los resúmenes con IA.",
           },
           {
-            question: "La IA decide los resultados?",
+            question: "¿Qué es el voto plural?",
             answer:
-              "No. Los grupos de opinion y las senales de terreno comun vienen de un analisis determinista de patrones de voto, no de IA generativa. Despues del agrupamiento de opiniones, Agora usa Mistral Large para etiquetar y resumir las opiniones representativas de cada grupo, pero esos resumenes solo ayudan a leer los resultados. Las afirmaciones fuente siguen visibles bajo cada grupo, y los propietarios de la conversacion pueden desactivar los resumenes con IA.",
-          },
-          {
-            question: "Que es Plural Voting?",
-            answer:
-              "Plural Voting se usa cuando un grupo necesita priorizar propuestas, no solo mapear opiniones. Ayuda a producir una lista ordenada teniendo en cuenta la diversidad del grupo. En vez de premiar solo al bloque mas grande, busca prioridades que puedan mantener legitimidad a traves de las diferencias. Mas informacion sobre [COCM](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4311507).",
+              "El voto plural se usa cuando un grupo necesita priorizar propuestas, no solo mapear opiniones. Ayuda a producir una lista ordenada teniendo en cuenta la diversidad del grupo. En vez de premiar solo al bloque más grande, busca prioridades que puedan mantener legitimidad a través de las diferencias. Más información sobre [COCM](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4311507).",
           },
         ],
       },
@@ -289,24 +291,24 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
         items: [
           {
             question:
-              "Como protege Agora la privacidad con pruebas de conocimiento cero?",
+              "¿Cómo protege Agora la privacidad con pruebas de conocimiento cero?",
             answer:
-              "Las [pruebas de conocimiento cero (ZKP)](https://en.wikipedia.org/wiki/Zero-knowledge_proof) permiten a las personas demostrar elegibilidad o unicidad sin revelar datos personales. Por ejemplo, demostrar tu grupo de edad a Agora sin revelar tu edad real. Actualmente Agora admite [ZK Passport](https://rarimo.com/), que permite demostrar ciudadania, edad y genero de forma anonima. Contactanos si quieres descubrir y configurar otros sistemas de identidad, como prueba anonima de asistencia a eventos, ubicacion GPS o incluso conexion WiFi.",
+              "Las [pruebas de conocimiento cero (ZKP)](https://en.wikipedia.org/wiki/Zero-knowledge_proof) permiten a las personas demostrar elegibilidad o unicidad sin revelar datos personales. Por ejemplo, demostrar tu grupo de edad a Agora sin revelar tu edad real. Actualmente Agora admite [Rarimo](https://rarimo.com/), que permite demostrar ciudadanía, edad y género de forma anónima. Contáctanos si quieres descubrir y configurar otros sistemas de identidad, como prueba anónima de asistencia a eventos, ubicación GPS o incluso conexión Wi-Fi.",
           },
           {
-            question: "La participacion en Agora es anonima?",
+            question: "¿La participación en Agora es anónima?",
             answer:
-              "Agora admite participacion que preserva la privacidad, pero el anonimato depende de la configuracion y de lo que escriban las personas. [Por que las ZKP por si solas no bastan para proteger la privacidad](/resources/why-zk-proofs-alone-arent-enough).",
+              "Agora admite participación que preserva la privacidad, pero el anonimato depende de la configuración y de lo que escriban las personas. [Por qué las ZKP por sí solas no bastan para proteger la privacidad](/resources/why-zk-proofs-alone-arent-enough).",
           },
           {
-            question: "Como funciona la moderacion?",
+            question: "¿Cómo funciona la moderación?",
             answer:
-              "Cualquier persona puede reportar contenido como spam, informacion enganosa, contenido antisocial, sexual, doxxing o ilegal. Los creadores de conversaciones y moderadores pueden actuar sobre los reportes, y las acciones de moderacion quedan registradas en el historial de moderacion.",
+              "Cualquier persona puede reportar contenido como spam, información engañosa, contenido antisocial, sexual, divulgación de datos personales o contenido ilegal. Los creadores de conversaciones y moderadores pueden actuar sobre los reportes, y las acciones de moderación quedan registradas en el historial de moderación.",
           },
           {
-            question: "Agora cumple con el GDPR?",
+            question: "¿Agora cumple con el RGPD?",
             answer:
-              "Agora es desarrollado por ZKorum SAS en Francia y esta disenado alrededor de la privacidad desde el diseno, la minimizacion de datos, los derechos de las personas usuarias y las obligaciones del GDPR.",
+              "Agora es desarrollado por ZKorum SAS en Francia y está diseñado alrededor de la privacidad desde el diseño, la minimización de datos, los derechos de las personas usuarias y las obligaciones del RGPD.",
           },
         ],
       },
@@ -314,14 +316,14 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
         title: "Infraestructura abierta",
         items: [
           {
-            question: "Agora es open source?",
+            question: "¿Agora es de código abierto?",
             answer:
-              "Si. El codigo de Agora esta disponible en [GitHub](https://github.com/zkorum/agora) bajo licencias open source. Animamos a la comunidad a auditar, enviar comentarios y contribuir. Defendemos la vision de que la democracia necesita infraestructura digital que cualquiera pueda usar, modificar y mejorar.",
+              "Sí. El código de Agora está disponible en [GitHub](https://github.com/zkorum/agora) bajo licencias de código abierto. Animamos a la comunidad a auditar, enviar comentarios y contribuir. Defendemos la visión de que la democracia necesita infraestructura digital que cualquiera pueda usar, modificar y mejorar. Nuestra hoja de ruta de producto también es abierta. [Ayuda a dar forma a lo que construiremos después](https://www.agoracitizen.app/conversation/nRAynpw).",
           },
           {
-            question: "Agora puede funcionar con otras herramientas?",
+            question: "¿Agora puede funcionar con otras herramientas?",
             answer:
-              "Si. Agora admite interoperabilidad practica mediante importaciones, exportaciones, embeds, API en desarrollo y codigo open source. Tambien lanzamos la iniciativa [DDS (Decentralized Deliberation Standard)](https://dds.xyz), para una interoperabilidad mas amplia a nivel de protocolo.",
+              "Sí. Agora admite interoperabilidad práctica mediante importaciones, exportaciones, contenido incrustado, API en desarrollo y código abierto. También lanzamos la iniciativa [DDS (Decentralized Deliberation Standard)](https://dds.xyz), para una interoperabilidad más amplia a nivel de protocolo.",
           },
         ],
       },
@@ -346,7 +348,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "هل يمكنني استخدام الوضعين معا؟",
             answer:
-              "نعم. من الشائع أن تبدأ بوضع المحادثة، وتحدد المقترحات القوية أو الجسرية، ثم تستخدم وضع تحديد الأولويات لتحويلها إلى ترتيب قابل للتنفيذ.",
+              "نعم. ابدأ بوضع المحادثة لتحديد المقترحات المتوافق عليها أو الجسرية، ثم انقلها إلى وضع تحديد الأولويات الذي يستخدم [Solidago](https://solidago.tournesol.app/) لإنتاج قائمة أولويات مشتركة. [اكتشف كيف استخدم فريق من 30 شخصًا هذه العملية لكتابة ميثاقه للذكاء الاصطناعي](/resources/ai-charter-workshop).",
           },
         ],
       },
@@ -368,6 +370,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "مجموعات الرأي هي تجمعات من المشاركين الذين يصوتون بطرق متشابهة. يتم استنتاجها من سلوك التصويت، لا من البيانات الديموغرافية أو تسميات الذكاء الاصطناعي. العبارات الجسرية هي عبارات تدعمها مجموعات مختلفة، حتى عندما تختلف تلك المجموعات نفسها حول أشياء كثيرة أخرى. هذا هو الجزء المستلهم من Pol.is في الخوارزمية، وهو ما يجعل الأرضية المشتركة المخفية مرئية.",
           },
+          getComparisonFaq("ar"),
           {
             question: "هل يقرر الذكاء الاصطناعي النتائج؟",
             answer:
@@ -412,7 +415,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "هل Agora مفتوحة المصدر؟",
             answer:
-              "نعم. كود Agora متاح على [GitHub](https://github.com/zkorum/agora) بموجب تراخيص مفتوحة المصدر. نشجع المجتمع على التدقيق وإرسال الملاحظات والمساهمة. نتمسك برؤية أن الديمقراطية تحتاج إلى بنية تحتية رقمية يستطيع أي شخص استخدامها وتعديلها وتحسينها.",
+              "نعم. كود Agora متاح على [GitHub](https://github.com/zkorum/agora) بموجب تراخيص مفتوحة المصدر. نشجع المجتمع على التدقيق وإرسال الملاحظات والمساهمة. نتمسك برؤية أن الديمقراطية تحتاج إلى بنية تحتية رقمية يستطيع أي شخص استخدامها وتعديلها وتحسينها. خارطة طريق منتجنا مفتوحة أيضًا. [ساهم في تشكيل ما نبنيه لاحقًا](https://www.agoracitizen.app/conversation/nRAynpw).",
           },
           {
             question: "هل يمكن أن تعمل Agora مع أدوات أخرى؟",
@@ -442,7 +445,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "آیا می‌توانم هر دو حالت را با هم استفاده کنم؟",
             answer:
-              "بله. یک فرایند رایج این است که با حالت گفت‌وگو شروع کنید، پیشنهادهای قوی یا پل‌ساز را شناسایی کنید، سپس از حالت اولویت‌بندی استفاده کنید تا آن‌ها را به یک رتبه‌بندی قابل اقدام تبدیل کنید.",
+              "بله. با حالت گفت‌وگو شروع کنید و پیشنهادهای اجماعی یا پل‌ساز را شناسایی کنید، سپس آن‌ها را به حالت اولویت‌بندی ببرید. این حالت با [Solidago](https://solidago.tournesol.app/) فهرستی از اولویت‌های مشترک می‌سازد. [ببینید چگونه یک تیم ۳۰ نفره با این فرایند منشور هوش مصنوعی خود را نوشت](/resources/ai-charter-workshop).",
           },
         ],
       },
@@ -464,6 +467,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "گروه‌های نظر خوشه‌هایی از شرکت‌کنندگان هستند که به شکل مشابه رای می‌دهند. آن‌ها از رفتار رای‌دادن استنتاج می‌شوند، نه از داده‌های جمعیت‌شناختی یا برچسب‌های هوش مصنوعی. گزاره‌های پل‌ساز گزاره‌هایی هستند که گروه‌های مختلف از آن‌ها حمایت می‌کنند، حتی وقتی همان گروه‌ها درباره بسیاری از موضوعات دیگر اختلاف دارند. این بخش الهام‌گرفته از Pol.is در الگوریتم است که زمینه مشترک پنهان را آشکار می‌کند.",
           },
+          getComparisonFaq("fa"),
           {
             question: "آیا هوش مصنوعی نتیجه‌ها را تعیین می‌کند؟",
             answer:
@@ -508,7 +512,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "آیا Agora متن‌باز است؟",
             answer:
-              "بله. کد Agora در [GitHub](https://github.com/zkorum/agora) تحت مجوزهای متن‌باز در دسترس است. ما از ممیزی، بازخورد و مشارکت جامعه استقبال می‌کنیم. ما از این دیدگاه پشتیبانی می‌کنیم که دموکراسی به زیرساخت دیجیتالی نیاز دارد که هر کسی بتواند از آن استفاده کند، تغییرش دهد و بهترش کند.",
+              "بله. کد Agora در [GitHub](https://github.com/zkorum/agora) تحت مجوزهای متن‌باز در دسترس است. ما از ممیزی، بازخورد و مشارکت جامعه استقبال می‌کنیم. ما از این دیدگاه پشتیبانی می‌کنیم که دموکراسی به زیرساخت دیجیتالی نیاز دارد که هر کسی بتواند از آن استفاده کند، تغییرش دهد و بهترش کند. نقشه راه محصول ما نیز باز است. [در شکل‌دادن به آنچه در آینده می‌سازیم نقش داشته باشید](https://www.agoracitizen.app/conversation/nRAynpw).",
           },
           {
             question: "آیا Agora با ابزارهای دیگر کار می‌کند؟",
@@ -538,7 +542,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "אפשר להשתמש בשני המצבים יחד?",
             answer:
-              "כן. תהליך נפוץ הוא להתחיל במצב שיחה, לזהות הצעות חזקות או מגשרות, ואז להשתמש במצב תעדוף כדי להפוך אותן לדירוג שאפשר לפעול לפיו.",
+              "כן. התחילו במצב שיחה כדי לזהות הצעות שיש עליהן קונצנזוס או הצעות מגשרות, ואז העבירו אותן למצב תעדוף. הוא משתמש ב-[Solidago](https://solidago.tournesol.app/) כדי ליצור רשימת עדיפויות משותפת. [ראו כיצד צוות של 30 אנשים השתמש בתהליך כדי לכתוב אמנה לשימוש בבינה מלאכותית](/resources/ai-charter-workshop).",
           },
         ],
       },
@@ -560,6 +564,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "קבוצות דעה הן אשכולות של משתתפים שמצביעים בדרכים דומות. הן מוסקות מהתנהגות ההצבעה, לא מדמוגרפיה או מתוויות של בינה מלאכותית. אמירות מגשרות הן אמירות שקבוצות שונות תומכות בהן, גם כאשר אותן קבוצות חלוקות בנושאים רבים אחרים. זהו החלק בהשראת Pol.is באלגוריתם, שהופך בסיס משותף נסתר לגלוי.",
           },
+          getComparisonFaq("he"),
           {
             question: "האם בינה מלאכותית מחליטה את התוצאות?",
             answer:
@@ -603,7 +608,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "האם Agora היא קוד פתוח?",
             answer:
-              "כן. הקוד של Agora זמין ב-[GitHub](https://github.com/zkorum/agora) תחת רישיונות קוד פתוח. אנו מעודדים ביקורת, משוב ותרומות מהקהילה. אנו מחזיקים בחזון שלפיו דמוקרטיה צריכה תשתית דיגיטלית שכל אחד יכול להשתמש בה, לשנות ולשפר.",
+              "כן. הקוד של Agora זמין ב-[GitHub](https://github.com/zkorum/agora) תחת רישיונות קוד פתוח. אנו מעודדים ביקורת, משוב ותרומות מהקהילה. אנו מחזיקים בחזון שלפיו דמוקרטיה צריכה תשתית דיגיטלית שכל אחד יכול להשתמש בה, לשנות ולשפר. גם מפת הדרכים של המוצר שלנו פתוחה. [עזרו לעצב את מה שנבנה בהמשך](https://www.agoracitizen.app/conversation/nRAynpw).",
           },
           {
             question: "האם Agora יכולה לעבוד עם כלים אחרים?",
@@ -634,7 +639,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "両方のモードを一緒に使えますか？",
             answer:
-              "はい。一般的には、Conversation Modeから始めて、強い提案や橋渡しになる提案を見つけ、その後Prioritization Modeで実行可能な順位づけに変換します。",
+              "はい。会話モードで合意を得た提案や橋渡しになる提案を見つけ、優先順位付けモードに移します。このモードは[Solidago](https://solidago.tournesol.app/)で共有の優先順位リストを作ります。[30人のチームがこのプロセスでAI憲章を作った事例をご覧ください](/resources/ai-charter-workshop)。",
           },
         ],
       },
@@ -656,6 +661,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "意見グループは、似た投票行動をする参加者のクラスターです。人口統計やAIラベルではなく、投票行動から推定されます。橋渡しステートメントは、他の多くの点で対立しているグループ同士でも支持できるステートメントです。これはPol.isに着想を得たアルゴリズムの一部で、隠れた共通点を見えるようにします。",
           },
+          getComparisonFaq("ja"),
           {
             question: "AIが結果を決めているのですか？",
             answer:
@@ -700,7 +706,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Agoraはオープンソースですか？",
             answer:
-              "はい。Agoraのコードはオープンソースライセンスのもとで[GitHub](https://github.com/zkorum/agora)に公開されています。私たちはコミュニティからの監査、フィードバック、貢献を歓迎しています。民主主義には、誰もが使い、変更し、改善できるデジタルインフラが必要だというビジョンを大切にしています。",
+              "はい。Agoraのコードはオープンソースライセンスのもとで[GitHub](https://github.com/zkorum/agora)に公開されています。私たちはコミュニティからの監査、フィードバック、貢献を歓迎しています。民主主義には、誰もが使い、変更し、改善できるデジタルインフラが必要だというビジョンを大切にしています。 製品ロードマップも公開されています。[次に何をつくるか、一緒に考えましょう](https://www.agoracitizen.app/conversation/nRAynpw)。",
           },
           {
             question: "Agoraは他のツールと連携できますか？",
@@ -730,7 +736,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "两个模式可以一起使用吗？",
             answer:
-              "可以。常见流程是先用对话模式，识别有力的提案或能连接不同群体的提案，再用优先级模式将它们转化为可行动的排序。",
+              "可以。先用对话模式识别共识提案或桥接提案，再将其转入优先级排序模式。该模式使用 [Solidago](https://solidago.tournesol.app/) 生成共同的优先事项列表。[看看一个30人团队如何通过这一流程共同撰写AI章程](/resources/ai-charter-workshop)。",
           },
         ],
       },
@@ -752,6 +758,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "意见群体是投票方式相似的参与者聚类。它们来自投票行为，而不是人口统计数据或 AI 标签。桥接陈述是不同群体都支持的陈述，即使这些群体在许多其他问题上存在分歧。这是算法中受 Pol.is 启发的部分，让隐藏的共同点变得可见。",
           },
+          getComparisonFaq("zh-hans"),
           {
             question: "结果是由 AI 决定的吗？",
             answer:
@@ -795,7 +802,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Agora 是开源的吗？",
             answer:
-              "是的。Agora 的代码以开源许可证发布在 [GitHub](https://github.com/zkorum/agora) 上。我们鼓励社区进行审计、反馈和贡献。我们坚持这样的愿景：民主需要任何人都能使用、修改和改进的数字基础设施。",
+              "是的。Agora 的代码以开源许可证发布在 [GitHub](https://github.com/zkorum/agora) 上。我们鼓励社区进行审计、反馈和贡献。我们坚持这样的愿景：民主需要任何人都能使用、修改和改进的数字基础设施。 我们的产品路线图同样是开放的。[参与塑造 Agora 的下一步发展](https://www.agoracitizen.app/conversation/nRAynpw)。",
           },
           {
             question: "Agora 能与其他工具配合使用吗？",
@@ -825,7 +832,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "兩個模式可以一起使用嗎？",
             answer:
-              "可以。常見流程是先用對話模式，識別有力的提案或能連接不同群體的提案，再用優先級模式將它們轉化為可行動的排序。",
+              "可以。先用對話模式識別共識提案或橋接提案，再將其轉入優先順序排序模式。該模式使用 [Solidago](https://solidago.tournesol.app/) 產生共同的優先事項清單。[看看一個30人團隊如何透過這一流程共同撰寫AI章程](/resources/ai-charter-workshop)。",
           },
         ],
       },
@@ -847,6 +854,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "意見群體是投票方式相似的參與者聚類。它們來自投票行為，而不是人口統計資料或 AI 標籤。橋接陳述是不同群體都支持的陳述，即使這些群體在許多其他問題上存在分歧。這是演算法中受 Pol.is 啟發的部分，讓隱藏的共同點變得可見。",
           },
+          getComparisonFaq("zh-hant"),
           {
             question: "結果是由 AI 決定的嗎？",
             answer:
@@ -890,7 +898,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Agora 是開源的嗎？",
             answer:
-              "是的。Agora 的程式碼以開源授權發布在 [GitHub](https://github.com/zkorum/agora) 上。我們鼓勵社群進行審計、回饋和貢獻。我們堅持這樣的願景：民主需要任何人都能使用、修改和改進的數位基礎設施。",
+              "是的。Agora 的程式碼以開源授權發布在 [GitHub](https://github.com/zkorum/agora) 上。我們鼓勵社群進行審計、回饋和貢獻。我們堅持這樣的願景：民主需要任何人都能使用、修改和改進的數位基礎設施。 我們的產品路線圖同樣是開放的。[參與塑造 Agora 的下一步發展](https://www.agoracitizen.app/conversation/nRAynpw)。",
           },
           {
             question: "Agora 能與其他工具配合使用嗎？",
@@ -921,7 +929,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Эки режимди чогуу колдонсо болобу?",
             answer:
-              "Ооба. Көп колдонулган жол: Талкуу режими менен баштап, күчтүү же көпүрө болгон пикирлерди аныктоо, андан кийин Артыкчылык берүү режими аркылуу аларды аракетке жарай турган рейтингге айлантуу.",
+              "Ооба. Талкуу режиминде консенсус же көпүрө сунуштарды аныктап, аларды Артыкчылык берүү режимине өткөрүңүз. Ал [Solidago](https://solidago.tournesol.app/) аркылуу жалпы артыкчылыктардын тизмесин түзөт. [30 адамдан турган команда бул жараян менен AI хартиясын кантип жазганын көрүңүз](/resources/ai-charter-workshop).",
           },
         ],
       },
@@ -943,6 +951,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "Пикир топтору окшош добуш берген катышуучулардын кластерлери. Алар демографиядан же AI белгилеринен эмес, добуш берүү жүрүм-турумунан чыгарылат. Көпүрө пикирлерди ар башка топтор колдойт, ошол эле топтор башка көп маселеде келишпесе да. Бул Pol.isтен шыктанган алгоритмдин бөлүгү жана жашыруун жалпы негизди көрүнүктүү кылат.",
           },
+          getComparisonFaq("ky"),
           {
             question: "Натыйжаларды AI чечеби?",
             answer:
@@ -987,7 +996,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Agora ачык булактуубу?",
             answer:
-              "Ооба. Agoraнын коду [GitHub](https://github.com/zkorum/agora) сайтында ачык булак лицензиялары менен жеткиликтүү. Биз коомчулуктан аудитти, пикирди жана салымдарды кубаттайбыз. Демократияга ар ким колдонуп, өзгөртүп жана жакшырта ала турган санариптик инфраструктура керек деген көз карашты колдойбуз.",
+              "Ооба. Agoraнын коду [GitHub](https://github.com/zkorum/agora) сайтында ачык булак лицензиялары менен жеткиликтүү. Биз коомчулуктан аудитти, пикирди жана салымдарды кубаттайбыз. Демократияга ар ким колдонуп, өзгөртүп жана жакшырта ала турган санариптик инфраструктура керек деген көз карашты колдойбуз. Биздин өнүмдүн жол картасы да ачык. [Кийинки кадамдарыбызды аныктоого салым кошуңуз](https://www.agoracitizen.app/conversation/nRAynpw).",
           },
           {
             question: "Agora башка куралдар менен иштей алабы?",
@@ -1018,7 +1027,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Можно ли использовать оба режима вместе?",
             answer:
-              "Да. Частый процесс: начать с режима обсуждения, определить сильные или мостовые предложения, а затем использовать режим приоритизации, чтобы превратить их в практический рейтинг.",
+              "Да. Начните с режима обсуждения, найдите консенсусные или мостовые предложения и перенесите их в режим приоритизации. Он использует [Solidago](https://solidago.tournesol.app/) для формирования общих приоритетов. [Посмотрите, как команда из 30 человек использовала этот процесс для совместного создания хартии ИИ](/resources/ai-charter-workshop).",
           },
         ],
       },
@@ -1040,6 +1049,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
             answer:
               "Группы мнений — это кластеры участников, которые голосуют похожим образом. Они определяются по поведению при голосовании, а не по демографии или меткам ИИ. Мостовые высказывания поддерживают разные группы, даже если эти же группы расходятся по многим другим вопросам. Эта часть алгоритма, вдохновлённая Pol.is, делает скрытые точки соприкосновения видимыми.",
           },
+          getComparisonFaq("ru"),
           {
             question: "Определяет ли ИИ результаты?",
             answer:
@@ -1084,7 +1094,7 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
           {
             question: "Agora имеет открытый исходный код?",
             answer:
-              "Да. Код Agora доступен на [GitHub](https://github.com/zkorum/agora) под лицензиями открытого исходного кода. Мы поощряем аудит, обратную связь и вклад сообщества. Мы придерживаемся идеи, что демократии нужна цифровая инфраструктура, которую любой может использовать, изменять и улучшать.",
+              "Да. Код Agora доступен на [GitHub](https://github.com/zkorum/agora) под лицензиями открытого исходного кода. Мы поощряем аудит, обратную связь и вклад сообщества. Мы придерживаемся идеи, что демократии нужна цифровая инфраструктура, которую любой может использовать, изменять и улучшать. Наша дорожная карта продукта тоже открыта. [Помогите определить, что мы создадим дальше](https://www.agoracitizen.app/conversation/nRAynpw).",
           },
           {
             question: "Может ли Agora работать с другими инструментами?",
@@ -1098,7 +1108,5 @@ export const faqContentByLocale: Record<Locale, FaqContent> = {
 };
 
 export function getFaqContent(locale: string): FaqContent {
-  if (isFaqLocale(locale)) return faqContentByLocale[locale];
-
-  return faqContentByLocale.en;
+  return faqContentByLocale[toLocale(locale) ?? "en"];
 }

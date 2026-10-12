@@ -133,6 +133,13 @@ export default tseslint.config(
     },
   },
   {
+    files: ["src/routes/resources/*/+page.svelte"],
+    rules: {
+      // Resource HTML comes only from repository-owned Markdown, not user input.
+      "svelte/no-at-html-tags": "off",
+    },
+  },
+  {
     files: ["src/**/*.test.ts", "src/**/*.spec.ts", "tests/**/*.ts"],
     rules: {
       "@typescript-eslint/no-floating-promises": "off",

@@ -1,7 +1,7 @@
 ---
 title: "نقشه‌برداری اجماع درباره بلاکچین در حفاظت از محیط زیست"
 description: "چگونه آگورا به Tech4Nature کمک کرد تا دیدگاه‌های متنوع درباره فناوری بلاکچین را در کارگاه نوآوری خود هدایت کند."
-author: "Agora Team"
+author: "تیم آگورا"
 date: "2025-10-01"
 type: "case-study"
 thumbnail: "https://iucn.org/sites/default/files/styles/article_image/public/2025-08/006_flona_carajas_joao-marcos-rosac-1.jpg?h=4cc6839d&itok=2_-LFOvZ"

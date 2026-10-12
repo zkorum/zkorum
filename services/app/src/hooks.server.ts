@@ -1,5 +1,6 @@
 import type { Handle, HandleServerError } from "@sveltejs/kit";
 
+import { baseLocale, locales } from "$lib/paraglide/runtime";
 import { paraglideMiddleware } from "$lib/paraglide/server";
 
 const isProduction =
@@ -26,7 +27,15 @@ export const handle: Handle = ({ event, resolve }) =>
     ({ request: localizedRequest, locale }) => {
       event.request = localizedRequest;
       return resolve(event, {
-        transformPageChunk: ({ html }) => html.replace("%lang%", locale),
+        transformPageChunk: ({ html }) =>
+          html
+            .replace("%lang%", locale)
+            .replace("%locales%", locales.join(","))
+            .replace("%baseLocale%", baseLocale)
+            .replace(
+              "%dir%",
+              ["ar", "fa", "he"].includes(locale) ? "rtl" : "ltr",
+            ),
       });
     },
   );

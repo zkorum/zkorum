@@ -30,7 +30,7 @@
   </header>
 
   <div class="prose prose-lg max-w-none font-sans">
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -- Markdown content is sanitized via rehype -->
+    <!-- Repository-owned Markdown is rendered on the server, including authored HTML. -->
     {@html data.post.content}
   </div>
 </article>

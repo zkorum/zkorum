@@ -157,6 +157,73 @@
                     {/if}
                   {/each}
                 </Text>
+                {#if item.comparison}
+                  <div
+                    class="
+                      mt-6 overflow-hidden rounded-xl border border-border
+                    "
+                  >
+                    <table
+                      class="
+                        w-full table-fixed border-collapse text-start text-sm
+                        wrap-break-word
+                      "
+                    >
+                      <caption class="sr-only">{item.question}</caption>
+                      <thead class="bg-gradient-light-purple/20">
+                        <tr>
+                          <th
+                            scope="col"
+                            class="
+                              w-[44%] px-2 py-3 font-semibold text-foreground
+                              sm:px-4
+                            "
+                          >
+                            {item.comparison.firstColumnLabel}
+                          </th>
+                          {#each item.comparison.columns as column (column)}
+                            <th
+                              scope="col"
+                              class="
+                                w-[28%] border-s border-border px-2 py-3
+                                font-semibold text-foreground
+                                sm:px-4
+                              "
+                            >
+                              {column}
+                            </th>
+                          {/each}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {#each item.comparison.rows as row (row.feature)}
+                          <tr class="border-t border-border align-top">
+                            <th
+                              scope="row"
+                              class="
+                                px-2 py-3 font-medium text-foreground
+                                sm:px-4
+                              "
+                            >
+                              {row.feature}
+                            </th>
+                            {#each row.values as value, valueIndex (valueIndex)}
+                              <td
+                                class="
+                                  border-s border-border px-2 py-3
+                                  text-secondary-foreground
+                                  sm:px-4
+                                "
+                              >
+                                {value}
+                              </td>
+                            {/each}
+                          </tr>
+                        {/each}
+                      </tbody>
+                    </table>
+                  </div>
+                {/if}
               </details>
             {/each}
           </div>

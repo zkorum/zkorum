@@ -2,7 +2,7 @@
   import { browser } from "$app/environment";
   import { page } from "$app/state";
   import * as m from "$lib/paraglide/messages.js";
-  import { locales, localizeHref } from "$lib/paraglide/runtime";
+  import { locales, localizeHref, toLocale } from "$lib/paraglide/runtime";
   import GradientText from "$ui/shared/gradient-text.svelte";
   import Select from "$ui/shared/select.svelte";
 
@@ -12,30 +12,24 @@
     return locales.some((locale) => locale === value);
   }
 
-  const localeData = [
-    { code: "en", label: "EN", name: "English" },
-    { code: "fr", label: "FR", name: "Français" },
-    { code: "es", label: "ES", name: "Español" },
-    { code: "ar", label: "AR", name: "العربية" },
-    { code: "fa", label: "FA", name: "فارسی" },
-    { code: "he", label: "HE", name: "עברית" },
-    { code: "ja", label: "JA", name: "日本語" },
-    { code: "ky", label: "KY", name: "Кыргызча" },
-    { code: "ru", label: "RU", name: "Русский" },
-    { code: "zh-hans", label: "中简", name: "简体中文" },
-    { code: "zh-hant", label: "中繁", name: "繁體中文" },
-  ];
+  const localeData: Record<Locale, { label: string; name: string }> = {
+    en: { label: "EN", name: "English" },
+    fr: { label: "FR", name: "Français" },
+    es: { label: "ES", name: "Español" },
+    ar: { label: "AR", name: "العربية" },
+    fa: { label: "FA", name: "فارسی" },
+    he: { label: "HE", name: "עברית" },
+    ja: { label: "JA", name: "日本語" },
+    ky: { label: "KY", name: "Кыргызча" },
+    ru: { label: "RU", name: "Русский" },
+    "zh-hans": { label: "中简", name: "简体中文" },
+    "zh-hant": { label: "中繁", name: "繁體中文" },
+  };
 
-  const availableLocales = $derived(
-    localeData.filter((l): l is typeof l & { code: Locale } =>
-      isLocale(l.code),
-    ),
-  );
-
-  // Map to Select item format
-  const selectItems = $derived(
-    availableLocales.map((l) => ({ value: l.code, label: l.label })),
-  );
+  const selectItems = locales.map((locale) => ({
+    value: locale,
+    label: localeData[locale].name,
+  }));
 
   const currentLocale = $derived(
     (() => {
@@ -50,11 +44,15 @@
 
   function handleLocaleChange(newLocale: string | undefined) {
     if (browser && newLocale && isLocale(newLocale)) {
-      localStorage.setItem("displayLanguage", newLocale);
+      try {
+        localStorage.setItem("displayLanguage", newLocale);
+      } catch {
+        // The explicit locale URL still works when storage is unavailable.
+      }
       const localizedPath = localizeHref(page.url.pathname, {
         locale: newLocale,
       });
-      window.location.href = localizedPath;
+      window.location.href = localizedPath + page.url.search + page.url.hash;
     }
   }
 </script>
@@ -66,7 +64,9 @@
   onValueChange={handleLocaleChange}
 >
   {#snippet triggerLabel(item)}
-    <GradientText angle={122}>{item.label}</GradientText>
+    <GradientText angle={122}
+      >{localeData[toLocale(item.value) ?? "en"].label}</GradientText
+    >
   {/snippet}
   {#snippet itemLabel(item)}
     <GradientText angle={122}>{item.label}</GradientText>
