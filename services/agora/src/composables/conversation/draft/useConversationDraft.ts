@@ -141,6 +141,7 @@ export function useConversationDraft(
     initialDraft.conversationEmailUpdateEnabledOverride
   );
   const seedOpinions = ref<string[]>([...initialDraft.seedOpinions]);
+  const aiSuggestionDraftId = ref(initialDraft.aiSuggestionDraftId);
   const ownedConversationTypeConfig = ref<Readonly<ConversationTypeConfig>>(
     projectConversationTypeConfig(initialDraft)
   );
@@ -191,6 +192,7 @@ export function useConversationDraft(
   if (config.syncToStore && store) {
     // Create a computed object containing all draft state for efficient watching
     const draftSnapshot = computed<ConversationDraft>(() => ({
+      aiSuggestionDraftId: aiSuggestionDraftId.value,
       title: title.value,
       content: content.value,
       multilingualSetting: multilingualSetting.value,
@@ -507,6 +509,7 @@ export function useConversationDraft(
       emptyDraft.conversationEmailUpdateEnabledOverride;
     seedOpinions.value = [];
     conversationTypeConfig.value = projectConversationTypeConfig(emptyDraft);
+    aiSuggestionDraftId.value = emptyDraft.aiSuggestionDraftId;
     isPrivate.value = emptyDraft.isPrivate;
     participationMode.value = emptyDraft.participationMode;
     requiresEventTicket.value = emptyDraft.requiresEventTicket;

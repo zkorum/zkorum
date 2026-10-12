@@ -1,7 +1,35 @@
 import { describe, expect, it, vi } from "vitest";
 import { createPhoneTurnstileVerifier } from "../src/service/phoneTurnstile.js";
+import { createTurnstileVerifier } from "../src/service/turnstile.js";
 
 describe("phone Turnstile validation", () => {
+    it("isolates AI generation from phone SMS using the same verifier", async () => {
+        const fetchSiteverify = vi
+            .fn<typeof fetch>()
+            .mockResolvedValueOnce(
+                Response.json({
+                    success: true,
+                    hostname: "www.agoracitizen.app",
+                    action: "phone_sms",
+                }),
+            )
+            .mockResolvedValueOnce(
+                Response.json({
+                    success: true,
+                    hostname: "www.agoracitizen.app",
+                    action: "ai_seed_suggestions",
+                }),
+            );
+        const guard = createTurnstileVerifier({
+            secretKey: "shared-secret",
+            allowedHostnames: ["www.agoracitizen.app"],
+            action: "ai_seed_suggestions",
+            fetchSiteverify,
+            logError: vi.fn(),
+        });
+        expect(await guard.verify("phone-token")).toBe(false);
+        expect(await guard.verify("generation-token")).toBe(true);
+    });
     const log = { warn: vi.fn() };
 
     function verifier(fetchSiteverify: typeof fetch) {

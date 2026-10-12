@@ -18,6 +18,7 @@ import {
     getDefaultPhoneSmsCostCents,
     phoneSmsCostOverridesSchema,
 } from "./service/phoneSmsPricing.js";
+import { seedSuggestionSourceNames } from "./service/seedSuggestionSourceName.js";
 
 export type Environment = "development" | "production" | "staging" | "test";
 
@@ -122,13 +123,16 @@ const baseConfigSchema = sharedConfigSchema.extend({
     TWILIO_ACCOUNT_SID: z.string().min(1).optional(),
     TWILIO_AUTH_TOKEN: z.string().min(1).optional(),
     TWILIO_SERVICE_SID: z.string().min(1).optional(),
-    PHONE_TURNSTILE_ENABLED: environmentBoolean(false),
-    PHONE_TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
-    PHONE_TURNSTILE_ALLOWED_HOSTNAMES: z
+    TURNSTILE_ENABLED: environmentBoolean(false),
+    TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+    TURNSTILE_ALLOWED_HOSTNAMES: z
         .string()
         .transform((value) => value.split(",").map((item) => item.trim()))
         .pipe(turnstileHostnamesSchema)
         .optional(),
+    PHONE_TURNSTILE_ENABLED: z.never().optional(),
+    PHONE_TURNSTILE_SECRET_KEY: z.never().optional(),
+    PHONE_TURNSTILE_ALLOWED_HOSTNAMES: z.never().optional(),
     PHONE_SMS_BUDGET_ALERT_EMAIL: z.email().optional(),
     TEST_CODE: z.coerce.number().int().min(0).max(999999).default(0),
     SPECIALLY_AUTHORIZED_PHONES: z.string().min(1).optional(),
@@ -253,6 +257,32 @@ const baseConfigSchema = sharedConfigSchema.extend({
         }),
     IMPORT_ALLOWED_ORGS: z.string().default(""), // Comma-separated org names allowed to import conversations when posting as org (empty = all orgs allowed)
     IMPORT_ALLOWED_USERS: z.string().default(""), // Comma-separated user IDs allowed to import conversations when posting as user (empty = all users allowed)
+    // AI seed suggestions on the "Add Seed Statements" page. Off by default.
+    AI_SUGGESTIONS_ENABLED: environmentBoolean(false),
+    IS_AI_SUGGESTIONS_ORG_ONLY: environmentBoolean(false), // If true, only authors posting as an organization can use AI suggestions
+    AI_SUGGESTIONS_ALLOWED_ORGS: z.string().default(""), // Comma-separated organization slugs (empty = all organizations)
+    AI_SUGGESTIONS_ALLOWED_USERS: z.string().default(""), // Comma-separated user IDs allowed to use AI suggestions when posting as user (empty = all users allowed)
+    // Where suggestions come from: "bedrock" (the real model, with the AWS credentials
+    // of the process) or "simulated" (canned answers with no model call, for tests).
+    AI_SUGGESTIONS_SOURCE: z.enum(seedSuggestionSourceNames).default("bedrock"),
+    AI_SUGGESTIONS_BEDROCK_REGION: z
+        .string()
+        .trim()
+        .min(1)
+        .default("us-east-1"),
+    AI_SUGGESTIONS_BEDROCK_MODEL_ID: z
+        .string()
+        .trim()
+        .min(1)
+        .default("mistral.mistral-large-3-675b-instruct"),
+    AI_SUGGESTIONS_TEMPERATURE: z.coerce.number().min(0).max(1.5).default(0.3),
+    AI_SUGGESTIONS_TIMEOUT_MS: z.coerce
+        .number()
+        .int()
+        .min(1000)
+        .max(60_000)
+        .default(30_000),
+    AI_SUGGESTIONS_PROMPT: z.string().trim().min(1).optional(),
     // CSV Import buffer configuration
     IMPORT_BUFFER_MAX_BATCH_SIZE: z.coerce
         .number()
@@ -288,7 +318,18 @@ const baseConfigSchema = sharedConfigSchema.extend({
         .default(5000), // Max votes to fetch from Valkey per flush
 });
 
-const configSchema = baseConfigSchema.superRefine((value, ctx) => {
+export const configSchema = baseConfigSchema.superRefine((value, ctx) => {
+    if (
+        value.TURNSTILE_ENABLED &&
+        (value.TURNSTILE_SECRET_KEY === undefined ||
+            value.TURNSTILE_ALLOWED_HOSTNAMES === undefined)
+    ) {
+        ctx.addIssue({
+            code: "custom",
+            path: ["TURNSTILE_ENABLED"],
+            message: "Turnstile requires a secret key and allowed hostnames",
+        });
+    }
     for (const country of value.PHONE_AUTH_ALLOWED_COUNTRIES) {
         if (
             value.PHONE_SMS_COST_CENTS_BY_COUNTRY[country] === undefined &&
@@ -331,18 +372,18 @@ const configSchema = baseConfigSchema.superRefine((value, ctx) => {
 
     if (
         value.NODE_ENV === "production" &&
-        value.PHONE_TURNSTILE_ENABLED &&
+        value.TURNSTILE_ENABLED &&
         [
             "1x0000000000000000000000000000000AA",
             "2x0000000000000000000000000000000AA",
             "3x0000000000000000000000000000000AA",
-        ].includes(value.PHONE_TURNSTILE_SECRET_KEY ?? "")
+        ].includes(value.TURNSTILE_SECRET_KEY ?? "")
     ) {
         ctx.addIssue({
             code: "custom",
-            path: ["PHONE_TURNSTILE_SECRET_KEY"],
+            path: ["TURNSTILE_SECRET_KEY"],
             message:
-                "Cloudflare Turnstile test secrets cannot enforce production SMS",
+                "Cloudflare Turnstile test secrets cannot enforce production challenges",
         });
     }
 
@@ -358,6 +399,36 @@ const configSchema = baseConfigSchema.superRefine((value, ctx) => {
             message:
                 "TEST_CODE, SPECIALLY_AUTHORIZED_PHONES, and SPECIALLY_AUTHORIZED_EMAILS must not enable test authentication in production",
         });
+    }
+
+    if (
+        value.NODE_ENV === "production" &&
+        value.AI_SUGGESTIONS_SOURCE !== "bedrock"
+    ) {
+        ctx.addIssue({
+            code: "custom",
+            path: ["AI_SUGGESTIONS_SOURCE"],
+            message:
+                "AI_SUGGESTIONS_SOURCE must be bedrock in production: simulated is for development and tests",
+        });
+    }
+
+    if (value.NODE_ENV === "production" && value.AI_SUGGESTIONS_ENABLED) {
+        if (!value.TURNSTILE_ENABLED) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["TURNSTILE_ENABLED"],
+                message: "Production AI suggestions require Turnstile",
+            });
+        }
+        if (value.QUEUE_VALKEY_URL === undefined) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["QUEUE_VALKEY_URL"],
+                message:
+                    "Production AI suggestions require Valkey for cross-instance rate limits",
+            });
+        }
     }
 
     if (value.SESSION_REFRESH_THRESHOLD_DAYS >= value.SESSION_LIFETIME_DAYS) {
@@ -386,7 +457,7 @@ export const phoneCountryPolicy = phoneCountryPolicySchema.parse({
     authenticationCountries: config.PHONE_AUTH_ALLOWED_COUNTRIES,
     registrationCountries: config.PHONE_REGISTRATION_ALLOWED_COUNTRIES,
 });
-const phoneTurnstileConfigSchema = z.discriminatedUnion("enabled", [
+const turnstileConfigSchema = z.discriminatedUnion("enabled", [
     z.object({ enabled: z.literal(false) }),
     z.object({
         enabled: z.literal(true),
@@ -394,12 +465,12 @@ const phoneTurnstileConfigSchema = z.discriminatedUnion("enabled", [
         allowedHostnames: turnstileHostnamesSchema,
     }),
 ]);
-export const phoneTurnstileConfig = phoneTurnstileConfigSchema.parse(
-    config.PHONE_TURNSTILE_ENABLED
+export const turnstileConfig = turnstileConfigSchema.parse(
+    config.TURNSTILE_ENABLED
         ? {
               enabled: true,
-              secretKey: config.PHONE_TURNSTILE_SECRET_KEY,
-              allowedHostnames: config.PHONE_TURNSTILE_ALLOWED_HOSTNAMES,
+              secretKey: config.TURNSTILE_SECRET_KEY,
+              allowedHostnames: config.TURNSTILE_ALLOWED_HOSTNAMES,
           }
         : { enabled: false },
 );

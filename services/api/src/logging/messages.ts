@@ -7,6 +7,7 @@ export const logMessageTemplates: readonly LogMessageTemplate[] = [
     { parts: ["request completed"] },
     { parts: ["request errored"] },
     { parts: ["Application event"] },
+    { parts: ["AGORA_AI_SUGGESTION_EVENT"] },
     { parts: ["Log details omitted"] },
     { parts: ["Email deliverability check failed"] },
     { parts: ["Database query executed"] },

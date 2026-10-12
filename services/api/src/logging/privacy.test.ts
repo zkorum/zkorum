@@ -3,6 +3,7 @@ import { AxiosError, AxiosHeaders } from "axios";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { createApiLogPrivacy, logApiError } from "./privacy.js";
+import { logSeedSuggestionEvent } from "../service/seedSuggestion.js";
 
 function captureServer() {
     const lines: string[] = [];
@@ -32,6 +33,92 @@ function captureServer() {
 }
 
 describe("API logging privacy", () => {
+    it("keeps approved Bedrock diagnostics while omitting provider text and metadata", async () => {
+        const capture = captureServer();
+        const error = new Error("private-provider-message private-credential");
+        error.name = "AccessDeniedException";
+        Object.assign(error, {
+            $metadata: {
+                httpStatusCode: 403,
+                requestId: "private-provider-request-id",
+            },
+        });
+        try {
+            logApiError({
+                logger: capture.server.log,
+                level: "warn",
+                event: { event: "application_error" },
+                error,
+            });
+            expect(capture.records().at(0)).toMatchObject({
+                err: {
+                    type: "AccessDeniedException",
+                    statusCode: 403,
+                    message: "Error details omitted",
+                },
+            });
+            for (const secret of [
+                "private-provider-message",
+                "private-credential",
+                "private-provider-request-id",
+            ])
+                expect(capture.lines.join("")).not.toContain(secret);
+        } finally {
+            await capture.server.close();
+        }
+    });
+    it("retains seed-suggestion analytics without provider messages or draft text", async () => {
+        const capture = captureServer();
+        const userId = crypto.randomUUID();
+        const draftId = crypto.randomUUID();
+        try {
+            logSeedSuggestionEvent({
+                logger: capture.server.log,
+                event: {
+                    event: "failed",
+                    userId,
+                    draftId,
+                    conversationType: "polis",
+                    source: "bedrock",
+                    durationMs: 15,
+                    reason: "model_failure",
+                },
+            });
+            capture.server.log.info(
+                {
+                    event: "seed_suggestion",
+                    seedSuggestion: {
+                        event: "added",
+                        userId,
+                        draftId,
+                        generationId: crypto.randomUUID(),
+                        suggestionId: crypto.randomUUID(),
+                        detail: "private-provider-error",
+                        title: "private-draft-title",
+                        model: "private-model-text",
+                    },
+                },
+                "AGORA_AI_SUGGESTION_EVENT",
+            );
+            expect(capture.records().at(0)).toMatchObject({
+                msg: "AGORA_AI_SUGGESTION_EVENT",
+                event: "seed_suggestion_failed",
+                seedSuggestion: { draftId, reason: "model_failure" },
+            });
+            expect(capture.records().at(1)).toMatchObject({
+                event: "seed_suggestion",
+                seedSuggestion: { event: "added", userId },
+            });
+            for (const secret of [
+                "private-provider-error",
+                "private-draft-title",
+                "private-model-text",
+            ])
+                expect(capture.lines.join("")).not.toContain(secret);
+        } finally {
+            await capture.server.close();
+        }
+    });
     it("logs route templates and status without URL capabilities, headers, body or IP", async () => {
         const capture = captureServer();
         const secrets = [

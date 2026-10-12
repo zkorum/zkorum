@@ -499,7 +499,7 @@ export async function createNewPost({
                 }
 
                 for (const seedOpinion of normalizedSeedOpinions) {
-                    const seedOpinionResult = await postNewOpinion({
+                    await postNewOpinion({
                         db,
                         tx,
                         normalizedContent: seedOpinion,
@@ -526,11 +526,6 @@ export async function createNewPost({
                             requiresEventTicket: requiresEventTicket ?? null,
                         },
                     });
-                    if (!seedOpinionResult.success) {
-                        throw httpErrors.internalServerError(
-                            "Failed to create seed opinion",
-                        );
-                    }
                 }
             }
         }

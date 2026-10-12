@@ -3,6 +3,7 @@
  * Extracted to avoid duplication between composable and store
  */
 
+import { uid } from "quasar";
 import type { OrganizationProperties } from "src/shared/types/zod";
 
 import type {
@@ -109,6 +110,7 @@ export function createEmptyDraft(): ConversationDraft {
     inheritProjectLanguages: false,
     conversationEmailUpdateEnabledOverride: undefined,
     seedOpinions: [],
+    aiSuggestionDraftId: uid(),
 
     // Conversation Type
     conversationType: "polis",

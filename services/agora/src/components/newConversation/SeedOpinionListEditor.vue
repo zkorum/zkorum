@@ -69,7 +69,10 @@ watch(
       )
     )
       return;
-    items.value = contents.map(createItem);
+    items.value = contents.map((content, index) => {
+      const existing = items.value[index];
+      return existing?.content === content ? existing : createItem(content);
+    });
     errors.value = {};
   },
   { deep: true }

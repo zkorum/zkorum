@@ -196,6 +196,8 @@ The legacy path is generated only by production builds. Browser compatibility mu
 
 Keystore operations prefer the native Web Locks API for cross-tab coordination. Supported browsers without Web Locks use the maintained `browser-tabs-lock` fallback without modifying browser globals.
 
+First-party frontend UUID generation uses Quasar's `uid()` helper with native WebCrypto, so these flows do not require the newer `crypto.randomUUID()` API. This covers draft correlation and client-generated idempotency keys. UUID validation still uses the shared Zod schemas.
+
 ## Logos
 
 Currently we are not bundling company logos in the source code due to copyright.

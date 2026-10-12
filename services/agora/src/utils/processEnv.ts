@@ -35,7 +35,8 @@ export const envSchema = z.object({
   VITE_DEV_AUTHORIZED_PHONES: z.string().optional(), // Comma-separated list of phone numbers for dev/staging testing (must match backend). Must not be set in production (safety check enforced)
   VITE_DEV_AUTHORIZED_EMAILS: z.string().optional(), // Comma-separated list of emails for dev/staging testing (must match backend). Must not be set in production (safety check enforced)
   VITE_PHONE_AUTH_MODE: phoneAuthModeSchema.optional(), // Frontend presentation only; PHONE_AUTH_MODE on the API is authoritative
-  VITE_PHONE_TURNSTILE_SITE_KEY: z.string().min(1).optional(), // Public widget key; never put the API secret here
+  VITE_TURNSTILE_SITE_KEY: z.string().min(1).optional(), // Shared public widget key; never put the API secret here
+  VITE_PHONE_TURNSTILE_SITE_KEY: z.never().optional(),
   VITE_DISCORD_LINK: z.string().optional(), // Discord invite link for support
   // Note: We use z.enum instead of transform because process.env contains raw strings at runtime.
   // The processEnv object reads build-time process.env values, so transforms don't run at runtime.
@@ -50,6 +51,9 @@ export const envSchema = z.object({
   VITE_MAXDIFF_GITHUB_ALLOWED_USERS: z.string().optional(), // Comma-separated user IDs allowed to use GitHub connector when posting as user
   VITE_IMPORT_ALLOWED_ORGS: z.string().optional(), // Comma-separated org names allowed to import conversations when posting as org (empty = all orgs allowed)
   VITE_IMPORT_ALLOWED_USERS: z.string().optional(), // Comma-separated user IDs allowed to import conversations when posting as user (empty = all users allowed)
+  // Shows the "AI Suggestions" button on the "Add Seed Statements" page. Off unless "true".
+  // Who may actually use it (organizations, users) is decided by the API alone.
+  VITE_AI_SUGGESTIONS_ENABLED: z.enum(["true", "false"]).optional(),
 });
 
 export type ProcessEnv = z.infer<typeof envSchema>;
@@ -100,9 +104,20 @@ function validateEnvSchema(
       "1x00000000000000000000BB",
       "2x00000000000000000000BB",
       "3x00000000000000000000FF",
-    ].includes(result.VITE_PHONE_TURNSTILE_SITE_KEY ?? "")
+    ].includes(result.VITE_TURNSTILE_SITE_KEY ?? "")
   ) {
     throw new Error("Turnstile test site keys must not be used in production");
+  }
+
+  if (
+    result.NODE_ENV === "production" &&
+    result.VITE_STAGING !== "true" &&
+    result.VITE_AI_SUGGESTIONS_ENABLED === "true" &&
+    result.VITE_TURNSTILE_SITE_KEY === undefined
+  ) {
+    throw new Error(
+      "Production AI suggestions require VITE_TURNSTILE_SITE_KEY"
+    );
   }
 
   return result;
@@ -154,7 +169,7 @@ export const processEnv = {
   VITE_DEV_AUTHORIZED_PHONES: process.env.VITE_DEV_AUTHORIZED_PHONES,
   VITE_DEV_AUTHORIZED_EMAILS: process.env.VITE_DEV_AUTHORIZED_EMAILS,
   VITE_PHONE_AUTH_MODE: process.env.VITE_PHONE_AUTH_MODE,
-  VITE_PHONE_TURNSTILE_SITE_KEY: process.env.VITE_PHONE_TURNSTILE_SITE_KEY,
+  VITE_TURNSTILE_SITE_KEY: process.env.VITE_TURNSTILE_SITE_KEY,
   VITE_DISCORD_LINK: process.env.VITE_DISCORD_LINK,
   VITE_EXPORT_CONVOS_ENABLED: process.env.VITE_EXPORT_CONVOS_ENABLED,
   VITE_FEATURED_CONVERSATION_SLUG: process.env.VITE_FEATURED_CONVERSATION_SLUG,
@@ -165,4 +180,5 @@ export const processEnv = {
     process.env.VITE_MAXDIFF_GITHUB_ALLOWED_USERS,
   VITE_IMPORT_ALLOWED_ORGS: process.env.VITE_IMPORT_ALLOWED_ORGS,
   VITE_IMPORT_ALLOWED_USERS: process.env.VITE_IMPORT_ALLOWED_USERS,
+  VITE_AI_SUGGESTIONS_ENABLED: process.env.VITE_AI_SUGGESTIONS_ENABLED,
 } satisfies ProcessEnv;

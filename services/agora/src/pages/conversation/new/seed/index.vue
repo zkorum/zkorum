@@ -92,6 +92,39 @@
           :existing-opinions="[]"
           :disabled="isSubmitButtonLoading"
         />
+        <SeedSuggestionsBox
+          v-if="isSuggestionsBoxVisible && !isNavigatingAway"
+          :suggestions="pendingSuggestions"
+          :guidance="clarificationGuidance"
+          :disabled="isSubmitButtonLoading || isNavigatingAway"
+          :can-add-suggestion="canAddSuggestion"
+          :can-generate="canRequestSuggestions"
+          :is-generating="isGeneratingSuggestions"
+          :generate-more-label="generateMoreLabel"
+          @add="addSuggestion"
+          @discard="discardSuggestion"
+          @generate-more="generateSuggestions"
+          @edit-conversation="handleBack"
+        />
+        <ConversationControlButton
+          v-if="
+            isAiSuggestionsEnabled &&
+            !isSuggestionsBoxVisible &&
+            !isSubmitButtonLoading
+          "
+          :label="aiSuggestionsButtonLabel"
+          icon="pi pi-lightbulb"
+          :show-border="false"
+          icon-position="left"
+          :disabled="!canRequestSuggestions"
+          :aria-busy="isGeneratingSuggestions"
+          @click="generateSuggestions"
+        />
+        <TurnstileChallenge
+          v-if="isAiSuggestionsEnabled && !isSubmitButtonLoading"
+          ref="suggestionChallenge"
+          :action="SEED_SUGGESTIONS_TURNSTILE_ACTION"
+        />
       </div>
     </div>
 
@@ -121,6 +154,7 @@ import PreParticipationIntentionDialog from "src/components/authentication/inten
 import ConversationTitle from "src/components/features/conversation/ConversationTitle.vue";
 import BackButton from "src/components/navigation/buttons/BackButton.vue";
 import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
+import ConversationControlButton from "src/components/newConversation/ConversationControlButton.vue";
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
 import NewConversationRouteGuard from "src/components/newConversation/NewConversationRouteGuard.vue";
 import SeedOpinionListEditor from "src/components/newConversation/SeedOpinionListEditor.vue";
@@ -128,13 +162,17 @@ import {
   type SeedOpinionsTranslations,
   seedOpinionsTranslations,
 } from "src/components/newConversation/SeedOpinions.i18n";
+import SeedSuggestionsBox from "src/components/newConversation/SeedSuggestionsBox.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
+import TurnstileChallenge from "src/components/verification/TurnstileChallenge.vue";
 import { useConversationDraft } from "src/composables/conversation/draft";
 import { useCreateSurveyAccess } from "src/composables/conversation/useCreateSurveyAccess";
 import type { SeedOpinionCreateFailure } from "src/composables/conversation/usePublishConversationDraft";
 import { usePublishConversationDraft } from "src/composables/conversation/usePublishConversationDraft";
+import { useSeedSuggestions } from "src/composables/conversation/useSeedSuggestions";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { validateRichTextInput } from "src/shared/richText";
+import { SEED_SUGGESTIONS_TURNSTILE_ACTION } from "src/shared/types/turnstile";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { useNewPostDraftsStore } from "src/stores/newConversationDrafts";
@@ -143,6 +181,7 @@ import {
   isHistoryBackToPath,
   navigateBackOrReplace,
 } from "src/utils/nav/historyBack";
+import { processEnv } from "src/utils/processEnv";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, nextTick, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -170,15 +209,46 @@ const isMaxDiffDraft = computed(
 
 const { previewGitHubIssues } = useMaxDiffApi();
 const { publishConversationDraft } = usePublishConversationDraft();
-
 const showLoginDialog = ref(false);
 const isSubmitButtonLoading = ref(false);
 const isNavigatingAway = ref(false);
+const suggestionChallenge = ref<InstanceType<typeof TurnstileChallenge>>();
+
+const isAiSuggestionsEnabled =
+  processEnv.VITE_AI_SUGGESTIONS_ENABLED === "true";
+const {
+  pendingSuggestions,
+  clarificationGuidance,
+  isGenerating: isGeneratingSuggestions,
+  canGenerate: canGenerateSuggestions,
+  canAddSuggestion,
+  generate,
+  add: addSuggestionToStatements,
+  discard: discardSuggestion,
+} = useSeedSuggestions({
+  conversationDraft,
+  disabled: computed(
+    () => isSubmitButtonLoading.value || isNavigatingAway.value
+  ),
+});
+const canRequestSuggestions = computed(
+  () =>
+    canGenerateSuggestions.value &&
+    (processEnv.VITE_TURNSTILE_SITE_KEY === undefined ||
+      suggestionChallenge.value?.hasToken === true)
+);
+const isSuggestionsBoxVisible = computed(
+  () =>
+    pendingSuggestions.value.length > 0 ||
+    clarificationGuidance.value !== undefined
+);
+
 const seedEditor = ref<InstanceType<typeof SeedOpinionListEditor>>();
 const routeGuard = ref<{ unlockRoute: () => void } | undefined>(undefined);
 
 async function handleBack(event: MouseEvent): Promise<void> {
   event.preventDefault();
+  if (isSubmitButtonLoading.value) return;
   isNavigatingAway.value = true;
 
   const fallbackRoute = { name: "/conversation/new/create/" } as const;
@@ -213,6 +283,42 @@ const submitButtonLabel = computed(() => {
     ? t("nextButton")
     : t("publishButton");
 });
+
+const aiSuggestionsButtonLabel = computed(() =>
+  isGeneratingSuggestions.value
+    ? t("aiSuggestionsGenerating")
+    : t("aiSuggestionsButton")
+);
+const generateMoreLabel = computed(() =>
+  isGeneratingSuggestions.value
+    ? t("aiSuggestionsGenerating")
+    : t("aiSuggestionsGenerateMore")
+);
+
+async function generateSuggestions(): Promise<void> {
+  if (!canRequestSuggestions.value) return;
+  if (!isLoggedIn.value) {
+    showLoginDialog.value = true;
+    return;
+  }
+  const result = await generate(suggestionChallenge.value?.takeToken());
+  if (result.status !== "error") return;
+  switch (result.reason) {
+    case "not_available":
+      showNotifyMessage(t("aiSuggestionsNotAvailable"));
+      break;
+    case "rate_limited":
+      showNotifyMessage(t("aiSuggestionsRateLimited"));
+      break;
+    case "failed":
+      showNotifyMessage(t("aiSuggestionsFailed"));
+      break;
+  }
+}
+
+function addSuggestion(suggestionId: string): void {
+  if (!isSubmitButtonLoading.value) addSuggestionToStatements(suggestionId);
+}
 
 onMounted(async () => {
   await nextTick();
