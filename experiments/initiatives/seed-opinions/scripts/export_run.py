@@ -28,6 +28,7 @@ Usage:
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 import mlflow
@@ -98,8 +99,18 @@ def main() -> None:
     rows = build_export_rows(experiment.experiment_id, RUN_ID)
 
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    output = EXPORTS_DIR / f"{run.info.run_name}.csv"
-    pd.DataFrame(rows).to_csv(output, index=False)
+    file_name = re.sub(r"[^A-Za-z0-9_-]+", "_", run.info.run_name or "run")
+    output = EXPORTS_DIR / f"{file_name}.csv"
+    csv_rows = [
+        {
+            key: "'" + value
+            if isinstance(value, str) and value.lstrip().startswith(("=", "+", "-", "@"))
+            else value
+            for key, value in row.items()
+        }
+        for row in rows
+    ]
+    pd.DataFrame(csv_rows).to_csv(output, index=False)
     print(f"Exported {len(rows)} rows from run '{run.info.run_name}' -> {output}")
 
 

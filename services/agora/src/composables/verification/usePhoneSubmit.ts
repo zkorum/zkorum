@@ -102,7 +102,7 @@ export function usePhoneSubmit({
     try {
       const turnstileToken = takeTurnstileToken();
       if (
-        processEnv.VITE_PHONE_TURNSTILE_SITE_KEY !== undefined &&
+        processEnv.VITE_TURNSTILE_SITE_KEY !== undefined &&
         turnstileToken === undefined
       ) {
         showNotifyMessage(tTurnstile("retrySecurityCheck"));

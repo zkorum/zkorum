@@ -1,12 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
     createBedrockSeedSuggestionSource,
     type BedrockConverse,
     type BedrockConverseParams,
 } from "./seedSuggestionModel.js";
+import type { SeedSuggestionModelInput } from "./seedSuggestionPrompt.js";
 
-const input = {
+const input: SeedSuggestionModelInput = {
+    conversationType: "polis",
     conversationTitle: "Night buses",
     conversationBody: "Which priorities?",
     existingStatements: [],
@@ -19,6 +21,24 @@ const answerText = JSON.stringify({
 });
 
 describe("Bedrock seed suggestion source", () => {
+    it("does not retry when its caller cancels a request", async () => {
+        const controller = new AbortController();
+        let calls = 0;
+        const source = bedrockSource((params) => {
+            calls += 1;
+            return hangUntilAborted(params);
+        });
+        const generating = source.generate({
+            ...input,
+            signal: controller.signal,
+        });
+        controller.abort();
+        expect(await generating).toMatchObject({
+            success: false,
+            reason: "cancelled",
+        });
+        expect(calls).toBe(1);
+    });
     function bedrockSource(converse: BedrockConverse) {
         return createBedrockSeedSuggestionSource({
             modelId: "mistral.mistral-large-3-675b-instruct",
@@ -26,6 +46,7 @@ describe("Bedrock seed suggestion source", () => {
             temperature: 0.3,
             timeoutMs: 1000,
             converse,
+            logError: vi.fn(),
         });
     }
 
@@ -62,7 +83,6 @@ describe("Bedrock seed suggestion source", () => {
         expect(await source.generate(input)).toMatchObject({
             success: false,
             reason: "model_failure",
-            detail: "Error: AccessDeniedException",
         });
     });
 
@@ -101,6 +121,7 @@ describe("Bedrock seed suggestion source", () => {
                     ? hangUntilAborted(params)
                     : Promise.resolve(answerText);
             },
+            logError: vi.fn(),
         });
 
         expect(await source.generate(input)).toMatchObject({ success: true });
@@ -119,6 +140,7 @@ describe("Bedrock seed suggestion source", () => {
                 callCount += 1;
                 return hangUntilAborted(params);
             },
+            logError: vi.fn(),
         });
 
         expect(await source.generate(input)).toMatchObject({
@@ -156,6 +178,7 @@ describe("Bedrock seed suggestion source", () => {
                         reject(timeout);
                     });
                 }),
+            logError: vi.fn(),
         });
 
         expect(await source.generate(input)).toMatchObject({

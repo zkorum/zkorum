@@ -1,16 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { MAX_LENGTH_CONVERSATION_BODY } from "@/shared/shared.js";
+import {
+    MAX_LENGTH_CONVERSATION_BODY,
+    MAX_LENGTH_OPINION,
+} from "@/shared/shared.js";
 import { Dto } from "@/shared/types/dto.js";
 import type { GenerateSeedSuggestionsRequest } from "@/shared/types/dto.js";
 import {
-    createSeedSuggestionRateLimiter,
     createSeedSuggestionSource,
     createSimulatedSeedSuggestionSource,
-    formatSeedSuggestionEvent,
     generateSeedSuggestions,
     type SeedSuggestionSettings,
 } from "./seedSuggestion.js";
+import { createInMemorySeedSuggestionRateLimiter } from "./seedSuggestionRateLimit.js";
 import type {
     SeedSuggestionModelResult,
     SeedSuggestionSource,
@@ -18,11 +20,6 @@ import type {
 
 const settings: SeedSuggestionSettings = {
     source: "simulated",
-    systemPrompt: undefined,
-    temperature: 0.3,
-    timeoutMs: 1000,
-    bedrockRegion: "us-east-1",
-    bedrockModelId: "mistral.mistral-large-3-675b-instruct",
 };
 
 function sourceAnswering(
@@ -30,7 +27,6 @@ function sourceAnswering(
 ): SeedSuggestionSource {
     return {
         name: "simulated",
-        modelId: "test",
         generate: () => Promise.resolve(result),
     };
 }
@@ -59,6 +55,7 @@ describe("simulated seed suggestion source", () => {
             conversationBody: "",
             existingStatements: [],
             targetCount: 3,
+            conversationType: "polis",
         });
 
         expect(result.success).toBe(true);
@@ -75,6 +72,7 @@ describe("simulated seed suggestion source", () => {
             conversationBody: "",
             existingStatements: [],
             targetCount: 3,
+            conversationType: "polis",
         });
         expect(first.success).toBe(true);
         if (!first.success) {
@@ -85,6 +83,7 @@ describe("simulated seed suggestion source", () => {
             conversationBody: "",
             existingStatements: first.answer.statements,
             targetCount: 3,
+            conversationType: "polis",
         });
         expect(second.success).toBe(true);
         if (!second.success) {
@@ -102,6 +101,7 @@ describe("simulated seed suggestion source", () => {
             conversationBody: "",
             existingStatements: [],
             targetCount: 3,
+            conversationType: "polis",
         });
         expect(notConfident).toMatchObject({
             success: true,
@@ -113,6 +113,7 @@ describe("simulated seed suggestion source", () => {
             conversationBody: "",
             existingStatements: [],
             targetCount: 3,
+            conversationType: "polis",
         });
         expect(failure).toMatchObject({
             success: false,
@@ -124,12 +125,50 @@ describe("simulated seed suggestion source", () => {
             conversationBody: "",
             existingStatements: [],
             targetCount: 3,
+            conversationType: "polis",
         });
         expect(slow.success).toBe(true);
     });
 });
 
 describe("generateSeedSuggestions", () => {
+    it("passes the conversation type through to the model", async () => {
+        const source = createSimulatedSeedSuggestionSource();
+        const generate = vi.spyOn(source, "generate");
+        await generateSeedSuggestions({
+            source,
+            request: buildRequest({ conversationType: "ranking" }),
+        });
+        expect(generate).toHaveBeenCalledWith(
+            expect.objectContaining({ conversationType: "ranking" }),
+        );
+    });
+    it("uses Unicode character limits consistently in generation and response parsing", async () => {
+        const text = "😀".repeat(MAX_LENGTH_OPINION);
+        const result = await generateSeedSuggestions({
+            source: sourceAnswering({
+                success: true,
+                answer: {
+                    confidence: true,
+                    userFeedback: "",
+                    statements: [text],
+                },
+            }),
+            request: buildRequest(),
+        });
+        expect(result.success).toBe(true);
+        if (result.success)
+            expect(
+                Dto.generateSeedSuggestionsResponse.parse(result.response),
+            ).toMatchObject({ confident: true, suggestions: [{ text }] });
+    });
+    it("accepts an empty rich-text description when the title is sufficient", async () => {
+        const result = await generateSeedSuggestions({
+            source: createSimulatedSeedSuggestionSource(),
+            request: buildRequest({ conversationBody: "<p></p>" }),
+        });
+        expect(result.success).toBe(true);
+    });
     const source = createSimulatedSeedSuggestionSource({ slowDelayMs: 1 });
 
     it("returns suggestions with identifiers that fit the response schema", async () => {
@@ -204,7 +243,7 @@ describe("generateSeedSuggestions", () => {
                     userFeedback: "A tip that must not be returned.",
                     statements: [
                         "   ",
-                        "x".repeat(281),
+                        "x".repeat(MAX_LENGTH_OPINION + 1),
                         "  night buses should run   every 30 minutes. ",
                         "Night buses should also run on weekdays.",
                     ],
@@ -250,7 +289,7 @@ describe("generateSeedSuggestions", () => {
                 answer: {
                     confidence: true,
                     userFeedback: "",
-                    statements: ["", "x".repeat(300)],
+                    statements: ["", "x".repeat(MAX_LENGTH_OPINION + 1)],
                 },
             }),
             request: buildRequest(),
@@ -308,7 +347,6 @@ describe("generateSeedSuggestions", () => {
         const result = await generateSeedSuggestions({
             source: {
                 name: "simulated",
-                modelId: "test",
                 generate: () => {
                     called = true;
                     return Promise.resolve({
@@ -337,7 +375,6 @@ describe("generateSeedSuggestions", () => {
         const seen: string[] = [];
         const source: SeedSuggestionSource = {
             name: "simulated",
-            modelId: "test",
             generate: (input) => {
                 seen.push(input.conversationBody);
                 return Promise.resolve({
@@ -361,18 +398,25 @@ describe("createSeedSuggestionSource", () => {
     it("builds the source named in the settings", () => {
         expect(createSeedSuggestionSource(settings).name).toBe("simulated");
         expect(
-            createSeedSuggestionSource({ ...settings, source: "bedrock" }),
+            createSeedSuggestionSource({
+                source: "bedrock",
+                systemPrompt: undefined,
+                temperature: 0.3,
+                timeoutMs: 1000,
+                modelId: "mistral.mistral-large-3-675b-instruct",
+                converse: () => Promise.resolve(""),
+                logError: vi.fn(),
+            }),
         ).toMatchObject({
             name: "bedrock",
-            modelId: "mistral.mistral-large-3-675b-instruct",
         });
     });
 });
 
-describe("createSeedSuggestionRateLimiter", () => {
+describe("createInMemorySeedSuggestionRateLimiter", () => {
     it("allows five generations per minute per user, then refuses", () => {
         let currentTime = 0;
-        const limiter = createSeedSuggestionRateLimiter({
+        const limiter = createInMemorySeedSuggestionRateLimiter({
             now: () => currentTime,
         });
 
@@ -389,7 +433,7 @@ describe("createSeedSuggestionRateLimiter", () => {
 
     it("allows again once the oldest generation leaves the window", () => {
         let currentTime = 0;
-        const limiter = createSeedSuggestionRateLimiter({
+        const limiter = createInMemorySeedSuggestionRateLimiter({
             maxRequests: 2,
             windowMs: 1000,
             now: () => currentTime,
@@ -400,27 +444,5 @@ describe("createSeedSuggestionRateLimiter", () => {
         expect(limiter.consume("user-a").isAllowed).toBe(false);
         currentTime = 1001;
         expect(limiter.consume("user-a").isAllowed).toBe(true);
-    });
-});
-
-describe("formatSeedSuggestionEvent", () => {
-    it("writes one marked line that can be parsed back", () => {
-        const line = formatSeedSuggestionEvent({
-            event: "added",
-            userId: "user-a",
-            draftId: "draft-1",
-            generationId: "generation-1",
-            suggestionId: "suggestion-1",
-        });
-
-        expect(line.startsWith("AGORA_AI_SUGGESTION_EVENT {")).toBe(true);
-        expect(line).not.toContain("\n");
-        const parsed: unknown = JSON.parse(
-            line.slice("AGORA_AI_SUGGESTION_EVENT ".length),
-        );
-        expect(parsed).toMatchObject({
-            event: "added",
-            suggestionId: "suggestion-1",
-        });
     });
 });

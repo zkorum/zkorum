@@ -1,7 +1,7 @@
 <template>
   <section
     class="suggestions-box"
-    :class="{ 'is-not-confident': tip !== undefined }"
+    :class="{ 'needs-clarification': guidance !== undefined }"
     :aria-label="t('aiSuggestionsButton')"
   >
     <div class="suggestions-header">
@@ -10,12 +10,14 @@
     </div>
     <p class="suggestions-note">
       {{
-        tip === undefined ? t("aiSuggestionsNote") : t("aiSuggestionsNotClear")
+        guidance === undefined
+          ? t("aiSuggestionsNote")
+          : t("aiSuggestionsNotClear")
       }}
     </p>
 
-    <div v-if="tip !== undefined" class="suggestions-tip">
-      <p class="suggestions-tip-text">{{ tip }}</p>
+    <div v-if="guidance !== undefined" class="suggestions-guidance">
+      <p class="suggestions-guidance-text">{{ guidance }}</p>
     </div>
 
     <ul v-if="suggestions.length > 0" class="suggestions-list">
@@ -29,7 +31,7 @@
           <PrimeButton
             :label="t('aiSuggestionAdd')"
             size="small"
-            :disabled="isFrozen || !canTakeSuggestion"
+            :disabled="disabled || !canAddSuggestion"
             @click="emit('add', suggestion.suggestionId)"
           />
           <PrimeButton
@@ -37,7 +39,7 @@
             size="small"
             text
             severity="secondary"
-            :disabled="isFrozen"
+            :disabled="disabled"
             @click="emit('discard', suggestion.suggestionId)"
           />
         </div>
@@ -45,12 +47,15 @@
     </ul>
 
     <div class="box-footer">
-      <SpaLink
-        v-if="tip !== undefined"
-        :to="{ name: '/conversation/new/create/' }"
-        deferred
+      <component
+        :is="disabled ? 'span' : SpaLink"
+        v-if="guidance !== undefined"
+        :to="disabled ? undefined : { name: '/conversation/new/create/' }"
+        :deferred="disabled ? undefined : true"
+        :aria-disabled="disabled"
+        :class="{ 'is-disabled': disabled }"
         class="edit-conversation-link"
-        @click="emit('editConversation', $event)"
+        @click="editConversation"
       >
         <ZKIcon
           :name="backIcon"
@@ -59,12 +64,12 @@
           aria-hidden="true"
         />
         {{ t("aiSuggestionsEditConversation") }}
-      </SpaLink>
+      </component>
       <PrimeButton
         v-else
         :label="generateMoreLabel"
         size="small"
-        :disabled="isFrozen || !canGenerate"
+        :disabled="disabled || !canGenerate"
         :aria-busy="isGenerating"
         @click="emit('generateMore')"
       />
@@ -79,11 +84,9 @@ import SpaLink from "src/components/ui-library/SpaLink.vue";
 import ZKIcon from "src/components/ui-library/ZKIcon.vue";
 import type { SeedSuggestionItem } from "src/composables/conversation/useSeedSuggestions";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import {
-  type ConversationReviewTranslations,
-  conversationReviewTranslations,
-} from "src/pages/conversation/new/seed/index.i18n";
 import { computed } from "vue";
+
+import { seedOpinionsTranslations } from "./SeedOpinions.i18n";
 
 defineOptions({
   components: {
@@ -91,18 +94,13 @@ defineOptions({
   },
 });
 
-defineProps<{
-  suggestions: SeedSuggestionItem[];
-  /** Shown when the model was not confident enough to make suggestions. */
-  tip: string | undefined;
-  /** True while the conversation is being sent: no action is possible. */
-  isFrozen: boolean;
-  /** False once the conversation holds the maximum number of statements. */
-  canTakeSuggestion: boolean;
-  /** False while a request is running, after a not-confident answer, and above the statement limit. */
+const props = defineProps<{
+  suggestions: readonly SeedSuggestionItem[];
+  guidance: string | undefined;
+  disabled: boolean;
+  canAddSuggestion: boolean;
   canGenerate: boolean;
   isGenerating: boolean;
-  /** "Generate more", or "Generating" with its moving dots while a request is running. */
   generateMoreLabel: string;
 }>();
 
@@ -113,9 +111,20 @@ const emit = defineEmits<{
   editConversation: [event: MouseEvent];
 }>();
 
-const { t } = useComponentI18n<ConversationReviewTranslations>(
-  conversationReviewTranslations
-);
+const { t } = useComponentI18n(seedOpinionsTranslations);
+
+function editConversation(event: MouseEvent): void {
+  if (
+    props.disabled ||
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  )
+    return;
+  emit("editConversation", event);
+}
 
 const $q = useQuasar();
 const backIcon = computed(() =>
@@ -134,7 +143,7 @@ const backIcon = computed(() =>
   background-color: $primary-lightest;
   --suggestions-accent: #{$primary-dark};
 
-  &.is-not-confident {
+  &.needs-clarification {
     border-color: rgba($negative, 0.3);
     background-color: rgba($negative, 0.08);
     --suggestions-accent: #{$negative};
@@ -164,14 +173,14 @@ const backIcon = computed(() =>
   line-height: 1.4;
 }
 
-.suggestions-tip,
+.suggestions-guidance,
 .suggestion-item {
   padding: 0.75rem 1rem;
   border-radius: 12px;
   background-color: $color-background-default;
 }
 
-.suggestions-tip-text,
+.suggestions-guidance-text,
 .suggestion-text {
   margin: 0;
   color: $color-text-strong;
@@ -218,8 +227,13 @@ const backIcon = computed(() =>
   font-weight: var(--font-weight-medium);
   text-decoration: none;
 
-  &:hover {
+  &:hover:not(.is-disabled) {
     background-color: rgba($negative, 0.08);
+  }
+
+  &.is-disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 }
 </style>

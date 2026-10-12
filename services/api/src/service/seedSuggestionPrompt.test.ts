@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_LENGTH_OPINION } from "@/shared/shared.js";
 
 import {
     DEFAULT_SEED_SUGGESTION_SYSTEM_PROMPT,
@@ -9,10 +10,27 @@ import {
 } from "./seedSuggestionPrompt.js";
 
 describe("seed suggestion prompt", () => {
+    it("adapts generation instructions to prioritization conversations", () => {
+        const messages = buildSeedSuggestionMessages({
+            systemPrompt: DEFAULT_SEED_SUGGESTION_SYSTEM_PROMPT,
+            input: {
+                conversationType: "ranking",
+                conversationTitle: "Night buses",
+                conversationBody: "Which actions should we prioritize?",
+                existingStatements: [],
+                targetCount: 3,
+            },
+        });
+        expect(messages.user).toContain("Conversation type: ranking");
+        expect(messages.system).toContain(
+            "independently actionable proposals to rank by priority",
+        );
+    });
     it("fills every placeholder", () => {
         const messages = buildSeedSuggestionMessages({
             systemPrompt: DEFAULT_SEED_SUGGESTION_SYSTEM_PROMPT,
             input: {
+                conversationType: "polis",
                 conversationTitle: "Night buses",
                 conversationBody: "Which priorities?",
                 existingStatements: ["Run every 30 minutes."],
@@ -23,7 +41,7 @@ describe("seed suggestion prompt", () => {
         expect(messages.system).not.toContain("{{");
         expect(messages.system).toContain("produce 3 standalone statements");
         expect(messages.user).toBe(
-            'Conversation title: Night buses\nConversation body: Which priorities?\nOpinions participants already wrote (may be empty): ["Run every 30 minutes."]',
+            'Conversation type: polis\nConversation title: Night buses\nConversation body: Which priorities?\nOpinions participants already wrote (may be empty): ["Run every 30 minutes."]',
         );
     });
 
@@ -31,6 +49,7 @@ describe("seed suggestion prompt", () => {
         const messages = buildSeedSuggestionMessages({
             systemPrompt: DEFAULT_SEED_SUGGESTION_SYSTEM_PROMPT,
             input: {
+                conversationType: "polis",
                 conversationTitle: "Costs: $& and {{conversation_body}}",
                 conversationBody: "Body",
                 existingStatements: [],
@@ -70,7 +89,9 @@ describe("parseSeedSuggestionAnswer", () => {
             "Here is the result: " + JSON.stringify(answer) + " Done.";
 
         expect(parseSeedSuggestionAnswer(fenced)?.statements).toHaveLength(3);
-        expect(parseSeedSuggestionAnswer(surrounded)?.statements).toHaveLength(3);
+        expect(parseSeedSuggestionAnswer(surrounded)?.statements).toHaveLength(
+            3,
+        );
     });
 
     it("accepts a missing tip", () => {
@@ -97,14 +118,26 @@ describe("parseSeedSuggestionAnswer", () => {
 });
 
 describe("selectUsableSeedStatements", () => {
-    it("keeps statements of exactly 280 characters and drops longer ones", () => {
+    it("normalizes invisible controls before comparing model output with existing statements", () => {
         expect(
             selectUsableSeedStatements({
-                statements: ["a".repeat(280), "b".repeat(281)],
+                statements: ["One.\u202E", "Two.\u0000"],
+                existingStatements: ["One."],
+                targetCount: 3,
+            }),
+        ).toEqual(["Two."]);
+    });
+    it("keeps statements at the publishing limit and drops longer ones", () => {
+        expect(
+            selectUsableSeedStatements({
+                statements: [
+                    "a".repeat(MAX_LENGTH_OPINION),
+                    "b".repeat(MAX_LENGTH_OPINION + 1),
+                ],
                 existingStatements: [],
                 targetCount: 3,
             }),
-        ).toEqual(["a".repeat(280)]);
+        ).toEqual(["a".repeat(MAX_LENGTH_OPINION)]);
     });
 
     it("counts characters, not bytes", () => {
@@ -131,6 +164,11 @@ describe("selectUsableSeedStatements", () => {
 });
 
 describe("selectUsableSeedTip", () => {
+    it("applies the shared control-character policy to model guidance", () => {
+        expect(selectUsableSeedTip("\u202ESpecify the city.\u202C\u0000")).toBe(
+            "Specify the city.",
+        );
+    });
     it("trims the tip and treats a blank one as missing", () => {
         expect(selectUsableSeedTip("  Add the question.  ")).toBe(
             "Add the question.",

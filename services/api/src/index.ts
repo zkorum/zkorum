@@ -38,6 +38,7 @@ import fastifySensible from "@fastify/sensible";
 import fastifySSE from "@fastify/sse";
 import fastifySwagger from "@fastify/swagger";
 import { Script } from "@valkey/valkey-glide";
+import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import * as ucans from "@ucans/ucans";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import {
@@ -61,7 +62,7 @@ import {
     log,
     phoneAuthConfig,
     phoneCountryPolicy,
-    phoneTurnstileConfig,
+    turnstileConfig,
     server,
     type PhoneAuthConfig,
 } from "./app.js";
@@ -97,12 +98,26 @@ import {
     PROJECT_DOCUMENT_UPLOAD_FIELD_NAMES,
 } from "@/shared/projectDocument.js";
 import { checkFeatureAccess } from "@/shared-app-api/featureAccess.js";
+import { createSeedSuggestionSource } from "@/service/seedSuggestion.js";
 import {
-    createSeedSuggestionRateLimiter,
-    createSeedSuggestionSource,
-    formatSeedSuggestionEvent,
-    generateSeedSuggestions,
-} from "@/service/seedSuggestion.js";
+    createSeedSuggestionService,
+    type SeedSuggestionServiceFailure,
+    type GenerateSeedSuggestionsServiceResult,
+} from "@/service/seedSuggestionService.js";
+import {
+    createSeedSuggestionUsageTracker,
+    CONSUME_ISSUED_SEED_SUGGESTION_SCRIPT,
+} from "@/service/seedSuggestionUsage.js";
+import {
+    consumeSeedSuggestionRateLimit,
+    createInMemorySeedSuggestionRateLimiter,
+    SEED_SUGGESTION_RATE_LIMITS,
+    type SeedSuggestionRateLimitOperation,
+    SEED_SUGGESTION_RATE_LIMIT_SCRIPT,
+} from "@/service/seedSuggestionRateLimit.js";
+import { createTurnstileVerifier } from "@/service/turnstile.js";
+import { SEED_SUGGESTIONS_TURNSTILE_ACTION } from "@/shared/types/turnstile.js";
+import { createBedrockConverse } from "@/service/seedSuggestionModel.js";
 import { zodCsvFiles } from "@/service/csvImport.js";
 import * as conversationExportService from "@/service/conversationExport/index.js";
 import * as conversationImportService from "@/service/conversationImport/index.js";
@@ -414,15 +429,63 @@ log.info(
 );
 
 const isImportDisabled = config.IMPORT_BUFFER_MAX_BATCH_SIZE === 0;
-const seedSuggestionSource = createSeedSuggestionSource({
-    source: config.AI_SUGGESTIONS_SOURCE,
-    systemPrompt: config.AI_SUGGESTIONS_PROMPT,
-    temperature: config.AI_SUGGESTIONS_TEMPERATURE,
-    timeoutMs: config.AI_SUGGESTIONS_TIMEOUT_MS,
-    bedrockRegion: config.AI_SUGGESTIONS_BEDROCK_REGION,
-    bedrockModelId: config.AI_SUGGESTIONS_BEDROCK_MODEL_ID,
-});
-const seedSuggestionRateLimiter = createSeedSuggestionRateLimiter();
+const logSeedSuggestionError = (error: unknown): void => {
+    logApiError({
+        logger: log,
+        level: "warn",
+        event: { event: "application_error" },
+        error,
+    });
+};
+const seedSuggestionClient =
+    config.AI_SUGGESTIONS_ENABLED && config.AI_SUGGESTIONS_SOURCE === "bedrock"
+        ? new BedrockRuntimeClient({
+              region: config.AI_SUGGESTIONS_BEDROCK_REGION,
+              maxAttempts: 1,
+          })
+        : undefined;
+if (seedSuggestionClient !== undefined) {
+    try {
+        await seedSuggestionClient.config.credentials();
+    } catch (error) {
+        logSeedSuggestionError(error);
+        seedSuggestionClient.destroy();
+        throw new Error(
+            "Enabled AI suggestions require resolvable AWS credentials",
+        );
+    }
+    server.addHook("onClose", () => {
+        seedSuggestionClient.destroy();
+        return Promise.resolve();
+    });
+}
+const seedSuggestionSource = !config.AI_SUGGESTIONS_ENABLED
+    ? undefined
+    : seedSuggestionClient === undefined
+      ? createSeedSuggestionSource({ source: "simulated" })
+      : createSeedSuggestionSource({
+            source: "bedrock",
+            systemPrompt: config.AI_SUGGESTIONS_PROMPT,
+            temperature: config.AI_SUGGESTIONS_TEMPERATURE,
+            timeoutMs: config.AI_SUGGESTIONS_TIMEOUT_MS,
+            modelId: config.AI_SUGGESTIONS_BEDROCK_MODEL_ID,
+            converse: createBedrockConverse(seedSuggestionClient),
+            logError: logSeedSuggestionError,
+        });
+const seedSuggestionGenerationRateLimiter =
+    createInMemorySeedSuggestionRateLimiter();
+const seedSuggestionAcceptanceRateLimiter =
+    createInMemorySeedSuggestionRateLimiter({
+        maxRequests: SEED_SUGGESTION_RATE_LIMITS.record_acceptance,
+    });
+const seedSuggestionTurnstile = turnstileConfig.enabled
+    ? createTurnstileVerifier({
+          secretKey: turnstileConfig.secretKey,
+          allowedHostnames: turnstileConfig.allowedHostnames,
+          action: SEED_SUGGESTIONS_TURNSTILE_ACTION,
+          logError: logSeedSuggestionError,
+      })
+    : undefined;
 const maxdiffConnectorRateLimitConfig = {
     max: 10,
     timeWindow: 60 * 1000,
@@ -603,10 +666,10 @@ const phoneAuth = initializePhoneAuth({
     phoneAuthConfig,
     budget: phoneSmsBudget,
 });
-const phoneTurnstile = phoneTurnstileConfig.enabled
+const phoneTurnstile = turnstileConfig.enabled
     ? createPhoneTurnstileVerifier({
-          secretKey: phoneTurnstileConfig.secretKey,
-          allowedHostnames: phoneTurnstileConfig.allowedHostnames,
+          secretKey: turnstileConfig.secretKey,
+          allowedHostnames: turnstileConfig.allowedHostnames,
           log,
       })
     : undefined;
@@ -1187,9 +1250,117 @@ const queueValkeyRef: ValkeyRef = {
         type: "Queue",
     }),
 };
+if (
+    config.NODE_ENV === "production" &&
+    config.AI_SUGGESTIONS_ENABLED &&
+    queueValkeyRef.current === undefined
+) {
+    throw new Error(
+        "Production AI suggestions require an available Valkey rate-limit store",
+    );
+}
 const contentTranslationQueueScript = new Script(
     ENQUEUE_CONTENT_TRANSLATION_WORK_SCRIPT,
 );
+const seedSuggestionRateLimitScript = new Script(
+    SEED_SUGGESTION_RATE_LIMIT_SCRIPT,
+);
+const seedSuggestionConsumeScript = new Script(
+    CONSUME_ISSUED_SEED_SUGGESTION_SCRIPT,
+);
+const seedSuggestionUsageTracker = createSeedSuggestionUsageTracker({
+    getValkey: () => queueValkeyRef.current,
+    consumeScript: seedSuggestionConsumeScript,
+});
+server.addHook("onClose", () => {
+    seedSuggestionRateLimitScript.release();
+    seedSuggestionConsumeScript.release();
+    return Promise.resolve();
+});
+
+async function consumeSeedSuggestionLimit({
+    userId,
+    operation,
+}: {
+    userId: string;
+    operation: SeedSuggestionRateLimitOperation;
+}) {
+    try {
+        if (queueValkeyRef.current !== undefined) {
+            return await consumeSeedSuggestionRateLimit({
+                valkey: queueValkeyRef.current,
+                script: seedSuggestionRateLimitScript,
+                userId,
+                operation,
+            });
+        }
+        if (config.NODE_ENV === "production") {
+            throw new Error("AI suggestion rate-limit store is unavailable");
+        }
+        return (
+            operation === "generate"
+                ? seedSuggestionGenerationRateLimiter
+                : seedSuggestionAcceptanceRateLimiter
+        ).consume(userId);
+    } catch (error) {
+        logApiError({
+            logger: log,
+            level: "error",
+            event: { event: "application_error" },
+            error,
+        });
+        throw server.httpErrors.serviceUnavailable(
+            "AI suggestions are temporarily unavailable",
+        );
+    }
+}
+
+function throwSeedSuggestionFailure({
+    reply,
+    failure,
+}: {
+    reply: FastifyReply;
+    failure: SeedSuggestionServiceFailure;
+}): never {
+    switch (failure.reason) {
+        case "disabled":
+            throw server.httpErrors.forbidden("AI suggestions are disabled");
+        case "not_available":
+            throw server.httpErrors.forbidden(
+                "AI suggestions are not available for this account",
+            );
+        case "organization_not_available":
+            throw server.httpErrors.forbidden(
+                "Organization membership is required for AI suggestions",
+            );
+        case "security_challenge_failed":
+            throw server.httpErrors.badRequest(
+                "Security challenge verification failed",
+            );
+        case "rate_limited":
+            reply.header("Retry-After", Math.ceil(failure.retryAfterMs / 1000));
+            throw server.httpErrors.tooManyRequests(
+                "AI suggestion rate limit exceeded",
+            );
+        case "description_too_long":
+            throw server.httpErrors.badRequest(
+                "Conversation description is too long",
+            );
+        case "timeout":
+            throw server.httpErrors.gatewayTimeout(
+                "AI suggestions took too long",
+            );
+        case "cancelled":
+            throw server.httpErrors.requestTimeout(
+                "AI suggestion request was cancelled",
+            );
+        case "model_failure":
+        case "invalid_answer":
+            throw server.httpErrors.badGateway(
+                "AI suggestions could not be generated",
+            );
+    }
+}
 const SURVEY_DISPLAY_CONTENT_CONCURRENCY = 5;
 
 function getSurveyQuestionConfigContent(
@@ -3682,7 +3853,9 @@ server.after(() => {
                 db,
                 userId: deviceStatus.userId,
                 request: {
-                    currentDisplayLanguage: getRequestDisplayLanguage({ request }),
+                    currentDisplayLanguage: getRequestDisplayLanguage({
+                        request,
+                    }),
                 },
             });
             return await editOpinion({
@@ -4418,16 +4591,44 @@ server.after(() => {
             reply.send(response);
         },
     });
+    const seedSuggestionService = createSeedSuggestionService({
+        source: seedSuggestionSource,
+        access: {
+            orgOnly: config.IS_AI_SUGGESTIONS_ORG_ONLY,
+            allowedOrgs: config.AI_SUGGESTIONS_ALLOWED_ORGS,
+            allowedUsers: config.AI_SUGGESTIONS_ALLOWED_USERS,
+        },
+        isOrganizationMember: async ({ userId, organizationSlug }) =>
+            await db.transaction(
+                async (tx) =>
+                    (await authUtilService.isUserPartOfOrganization({
+                        // Authorize against current membership, including recent revocations.
+                        db: tx,
+                        userId,
+                        organizationName: organizationSlug,
+                    })) !== undefined,
+            ),
+        consumeRateLimit: consumeSeedSuggestionLimit,
+        verifyChallenge: seedSuggestionTurnstile?.verify,
+        usageTracker: seedSuggestionUsageTracker,
+        logger: log,
+    });
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/conversation/seed/generate`,
+        config: { rateLimit: { max: 30, timeWindow: 60_000 } },
         schema: {
+            headers: z.looseObject({
+                "x-turnstile-token": z.string().max(2048).optional(),
+            }),
             body: Dto.generateSeedSuggestionsRequest,
-            response: {
-                200: Dto.generateSeedSuggestionsResponse,
-            },
+            response: { 200: Dto.generateSeedSuggestionsResponse },
         },
-        handler: async (request) => {
+        handler: async (request, reply) => {
+            if (seedSuggestionSource === undefined)
+                throw server.httpErrors.forbidden(
+                    "AI suggestions are disabled",
+                );
             const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
                 db,
                 request,
@@ -4438,114 +4639,37 @@ server.after(() => {
                     },
                 },
             );
-
-            // Checked before anything else: a refused request makes no model call.
-            const accessCheck = checkFeatureAccess({
-                featureEnabled: config.AI_SUGGESTIONS_ENABLED,
-                isOrgOnly: config.IS_AI_SUGGESTIONS_ORG_ONLY,
-                allowedOrgs: config.AI_SUGGESTIONS_ALLOWED_ORGS,
-                allowedUsers: config.AI_SUGGESTIONS_ALLOWED_USERS,
-                postAsOrganization:
-                    request.body.postAsOrganization !== undefined,
-                organizationName: request.body.postAsOrganization ?? "",
-                userId: deviceStatus.userId,
-            });
-            if (!accessCheck.allowed) {
-                switch (accessCheck.reason) {
-                    case "disabled":
-                        throw server.httpErrors.forbidden(
-                            "AI suggestions are disabled",
-                        );
-                    case "org_required":
-                        throw server.httpErrors.forbidden(
-                            "AI suggestions are restricted to organizations",
-                        );
-                    case "org_not_in_whitelist":
-                        throw server.httpErrors.forbidden(
-                            "This organization is not allowed to use AI suggestions",
-                        );
-                    case "user_not_in_whitelist":
-                        throw server.httpErrors.forbidden(
-                            "This user is not allowed to use AI suggestions",
-                        );
-                }
-            }
-
-            const rateLimit = seedSuggestionRateLimiter.consume(
-                deviceStatus.userId,
-            );
-            if (!rateLimit.isAllowed) {
-                throw server.httpErrors.createError(
-                    429,
-                    `AI suggestions rate limit exceeded. Retry after ${String(Math.ceil(rateLimit.retryAfterMs / 1000))} seconds`,
-                );
-            }
-
-            const startedAt = Date.now();
-            const result = await generateSeedSuggestions({
-                source: seedSuggestionSource,
-                request: request.body,
-            });
-            const requestEvent = {
-                userId: deviceStatus.userId,
-                draftId: request.body.draftId,
-                conversationType: request.body.conversationType,
-                source: seedSuggestionSource.name,
-                model: seedSuggestionSource.modelId,
-                durationMs: Date.now() - startedAt,
+            const controller = new AbortController();
+            const onDisconnect = () => {
+                if (!reply.raw.writableEnded) controller.abort();
             };
-            if (!result.success) {
-                log.warn(
-                    formatSeedSuggestionEvent({
-                        event: "failed",
-                        ...requestEvent,
-                        reason: result.reason,
-                        detail: result.detail,
-                    }),
-                );
-                switch (result.reason) {
-                    case "description_too_long":
-                        throw server.httpErrors.badRequest(
-                            "Conversation description is too long",
-                        );
-                    case "source_unavailable":
-                        throw server.httpErrors.serviceUnavailable(
-                            "AI suggestions are not available",
-                        );
-                    case "timeout":
-                        throw server.httpErrors.gatewayTimeout(
-                            "AI suggestions took too long",
-                        );
-                    case "model_failure":
-                    case "invalid_answer":
-                        throw server.httpErrors.badGateway(
-                            "AI suggestions could not be generated",
-                        );
-                }
+            reply.raw.on("close", onDisconnect);
+            let result: GenerateSeedSuggestionsServiceResult;
+            try {
+                result = await seedSuggestionService.generate({
+                    userId: deviceStatus.userId,
+                    request: request.body,
+                    turnstileToken: request.headers["x-turnstile-token"],
+                    signal: controller.signal,
+                });
+            } finally {
+                reply.raw.off("close", onDisconnect);
             }
-            log.info(
-                formatSeedSuggestionEvent({
-                    event: "generated",
-                    ...requestEvent,
-                    generationId: result.response.generationId,
-                    confident: result.response.confident,
-                    suggestionIds: result.response.confident
-                        ? result.response.suggestions.map(
-                              (suggestion) => suggestion.suggestionId,
-                          )
-                        : [],
-                }),
-            );
+            if (!result.success)
+                throwSeedSuggestionFailure({ reply, failure: result });
             return result.response;
         },
     });
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/conversation/seed/suggestion/use`,
-        schema: {
-            body: Dto.recordSeedSuggestionUseRequest,
-        },
+        config: { rateLimit: { max: 60, timeWindow: 60_000 } },
+        schema: { body: Dto.recordSeedSuggestionUseRequest },
         handler: async (request, reply) => {
+            if (seedSuggestionSource === undefined)
+                throw server.httpErrors.forbidden(
+                    "AI suggestions are disabled",
+                );
             const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
                 db,
                 request,
@@ -4556,16 +4680,12 @@ server.after(() => {
                     },
                 },
             );
-            // Nothing is stored: the line in the log is the record.
-            log.info(
-                formatSeedSuggestionEvent({
-                    event: "added",
-                    userId: deviceStatus.userId,
-                    draftId: request.body.draftId,
-                    generationId: request.body.generationId,
-                    suggestionId: request.body.suggestionId,
-                }),
-            );
+            const result = await seedSuggestionService.recordAcceptance({
+                userId: deviceStatus.userId,
+                request: request.body,
+            });
+            if (!result.success)
+                throwSeedSuggestionFailure({ reply, failure: result });
             reply.send();
         },
     });

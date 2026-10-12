@@ -1,4 +1,5 @@
 import { isAxiosError } from "axios";
+import { DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
 import {
   Dto,
   type GenerateSeedSuggestionsRequest,
@@ -8,6 +9,7 @@ import {
 
 import { api } from "../client";
 import { useCommonApi } from "../common";
+import { getErrorLogContext } from "../errorLog";
 
 export type GenerateSeedSuggestionsFailure =
   | "not_available"
@@ -33,27 +35,44 @@ function getFailureReason(error: unknown): GenerateSeedSuggestionsFailure {
 export function useBackendSeedSuggestionApi() {
   const { buildEncodedUcan, createRawAxiosRequestConfig } = useCommonApi();
 
-  async function generateSeedSuggestions(
-    request: GenerateSeedSuggestionsRequest
-  ): Promise<GenerateSeedSuggestionsResult> {
+  async function generateSeedSuggestions({
+    request,
+    turnstileToken,
+    signal,
+  }: {
+    request: GenerateSeedSuggestionsRequest;
+    turnstileToken: string | undefined;
+    signal: AbortSignal;
+  }): Promise<GenerateSeedSuggestionsResult> {
     try {
       const params = Dto.generateSeedSuggestionsRequest.parse(request);
-      const url = "/api/v1/conversation/seed/generate";
-      const encodedUcan = await buildEncodedUcan(url, { method: "POST" });
-      const response = await api.post(
-        url,
-        params,
-        // The model can take up to 30 seconds; the standard timeout is too short.
-        createRawAxiosRequestConfig({
-          encodedUcan,
-          timeoutProfile: "file-upload",
-        })
-      );
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1ConversationSeedGeneratePost(
+          params,
+          turnstileToken
+        );
+      const encodedUcan = await buildEncodedUcan(url, options);
+      const config = createRawAxiosRequestConfig({
+        encodedUcan,
+        timeoutProfile: "long-running",
+        signal,
+      });
+      const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1ConversationSeedGeneratePost(params, turnstileToken, config);
       return {
         status: "success",
         data: Dto.generateSeedSuggestionsResponse.parse(response.data),
       };
     } catch (error) {
+      if (!signal.aborted) {
+        console.warn(
+          "Seed suggestion generation failed",
+          getErrorLogContext(error)
+        );
+      }
       return { status: "error", reason: getFailureReason(error) };
     }
   }
@@ -67,11 +86,24 @@ export function useBackendSeedSuggestionApi() {
   ): Promise<void> {
     try {
       const params = Dto.recordSeedSuggestionUseRequest.parse(request);
-      const url = "/api/v1/conversation/seed/suggestion/use";
-      const encodedUcan = await buildEncodedUcan(url, { method: "POST" });
-      await api.post(url, params, createRawAxiosRequestConfig({ encodedUcan }));
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1ConversationSeedSuggestionUsePost(
+          params
+        );
+      const encodedUcan = await buildEncodedUcan(url, options);
+      await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1ConversationSeedSuggestionUsePost(
+        params,
+        createRawAxiosRequestConfig({ encodedUcan })
+      );
     } catch (error) {
-      console.warn("Failed to record the use of an AI suggestion", error);
+      console.warn(
+        "Failed to record acceptance of an AI suggestion",
+        getErrorLogContext(error)
+      );
     }
   }
 

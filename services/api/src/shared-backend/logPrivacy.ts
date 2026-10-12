@@ -56,6 +56,16 @@ const errorTypeSchema = z.enum([
     "TimeoutError",
     "ZodError",
     "DrizzleQueryError",
+    "AccessDeniedException",
+    "ValidationException",
+    "ResourceNotFoundException",
+    "ThrottlingException",
+    "ModelNotReadyException",
+    "ModelTimeoutException",
+    "ModelErrorException",
+    "InternalServerException",
+    "ServiceUnavailableException",
+    "CredentialsProviderError",
     "PostgresError",
 ]);
 const frameSchema = z.object({
@@ -142,9 +152,34 @@ export const logContextSchema = z.object({
             "email_deliverability_check_failed",
             "application_error",
             "application_event",
+            "seed_suggestion",
+            "seed_suggestion_failed",
             "database_query",
             "log_sanitization_failed",
         ])
+        .optional(),
+    seedSuggestion: z
+        .object({
+            event: z.enum(["generated", "failed", "added"]),
+            userId: uuid,
+            draftId: uuid,
+            generationId: uuid.optional(),
+            suggestionId: uuid.optional(),
+            suggestionIds: z.array(uuid).max(3).optional(),
+            confident: z.boolean().optional(),
+            conversationType: z.enum(["polis", "ranking"]).optional(),
+            source: z.enum(["bedrock", "simulated"]).optional(),
+            durationMs: counter.optional(),
+            reason: z
+                .enum([
+                    "model_failure",
+                    "invalid_answer",
+                    "timeout",
+                    "cancelled",
+                    "description_too_long",
+                ])
+                .optional(),
+        })
         .optional(),
 });
 
@@ -324,7 +359,11 @@ export function toLogError({
             const codeValue = ownValue({ value, key: "code" });
             const statusValue =
                 ownValue({ value, key: "status" }) ??
-                ownValue({ value, key: "statusCode" });
+                ownValue({ value, key: "statusCode" }) ??
+                ownValue({
+                    value: ownValue({ value, key: "$metadata" }),
+                    key: "httpStatusCode",
+                });
             const type =
                 name === undefined
                     ? undefined

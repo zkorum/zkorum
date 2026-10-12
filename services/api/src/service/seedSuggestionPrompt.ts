@@ -1,19 +1,16 @@
 import { z } from "zod";
-import { MAX_LENGTH_OPINION, countUnicodeCodePoints } from "@/shared/shared.js";
-import { MAX_LENGTH_SEED_SUGGESTION_TIP } from "@/shared/types/dto.js";
+import {
+    MAX_LENGTH_OPINION,
+    countUnicodeCodePoints,
+    removeNonDisplayControlCharacters,
+} from "@/shared/shared.js";
+import {
+    MAX_LENGTH_SEED_SUGGESTION_TIP,
+    type GenerateSeedSuggestionsRequest,
+} from "@/shared/types/dto.js";
+import { getSeedOpinionComparisonKey } from "@/shared/seedOpinions.js";
 
-/**
- * Prompt for AI seed suggestions: iteration 23 of `seed-opinions-per-set`, as
- * selected by the experiments in experiments/initiatives/seed-opinions (sections 3 to 6 of
- * seed-opinions-description.md). Copied here as is; AI_SUGGESTIONS_PROMPT overrides the
- * system part.
- *
- * It deliberately contains no instruction about the output language: with one, the
- * model answered English conversations in French. Without, it follows the language of
- * the conversation it is given.
- */
-export const SEED_SUGGESTION_PROMPT_ITERATION = 23;
-
+// Based on iteration 23 documented in experiments/initiatives/seed-opinions.
 export const DEFAULT_SEED_SUGGESTION_SYSTEM_PROMPT =
     "You generate seed opinions for a citizen deliberation platform. Answer this " +
     "question with `confidence` (true or false): based on the title, description " +
@@ -61,15 +58,18 @@ export const DEFAULT_SEED_SUGGESTION_SYSTEM_PROMPT =
     '"statements": [exactly {{target_count}} strings, never an empty list]}.';
 
 const SEED_SUGGESTION_USER_PROMPT =
+    "Conversation type: {{conversation_type}}\n" +
     "Conversation title: {{conversation_title}}\n" +
     "Conversation body: {{conversation_body}}\n" +
     "Opinions participants already wrote (may be empty): {{existing_opinions}}";
 
 export interface SeedSuggestionModelInput {
+    conversationType: GenerateSeedSuggestionsRequest["conversationType"];
     conversationTitle: string;
     conversationBody: string;
     existingStatements: readonly string[];
     targetCount: number;
+    signal?: AbortSignal;
 }
 
 export interface SeedSuggestionModelAnswer {
@@ -93,15 +93,20 @@ export function buildSeedSuggestionMessages({
     input,
 }: BuildSeedSuggestionMessagesParams): SeedSuggestionMessages {
     const userValues = new Map([
+        ["{{conversation_type}}", input.conversationType],
         ["{{conversation_title}}", input.conversationTitle],
         ["{{conversation_body}}", input.conversationBody],
         ["{{existing_opinions}}", JSON.stringify(input.existingStatements)],
     ]);
     return {
-        system: systemPrompt.replaceAll(
-            "{{target_count}}",
-            String(input.targetCount),
-        ),
+        system:
+            systemPrompt.replaceAll(
+                "{{target_count}}",
+                String(input.targetCount),
+            ) +
+            (input.conversationType === "ranking"
+                ? "\nFor this prioritization conversation, generate concrete, independently actionable proposals to rank by priority. Replace the agree/disagree and pro/against framing with a diverse set of actionable options."
+                : ""),
         // One pass, so that author text containing a placeholder is never substituted.
         user: SEED_SUGGESTION_USER_PROMPT.replace(
             /\{\{[a-z_]+\}\}/g,
@@ -150,10 +155,6 @@ export function parseSeedSuggestionAnswer(
     };
 }
 
-function normalizeForComparison(text: string): string {
-    return text.trim().replace(/\s+/g, " ").toLowerCase();
-}
-
 interface SelectUsableSeedStatementsParams {
     statements: readonly string[];
     existingStatements: readonly string[];
@@ -169,11 +170,11 @@ export function selectUsableSeedStatements({
     existingStatements,
     targetCount,
 }: SelectUsableSeedStatementsParams): string[] {
-    const seen = new Set(existingStatements.map(normalizeForComparison));
+    const seen = new Set(existingStatements.map(getSeedOpinionComparisonKey));
     const usable: string[] = [];
     for (const statement of statements) {
-        const text = statement.trim();
-        const normalized = normalizeForComparison(text);
+        const text = removeNonDisplayControlCharacters(statement).trim();
+        const normalized = getSeedOpinionComparisonKey(text);
         if (
             text === "" ||
             countUnicodeCodePoints(text) > MAX_LENGTH_OPINION ||
@@ -192,7 +193,7 @@ export function selectUsableSeedStatements({
 
 /** The tip of a not-confident answer, or undefined when the model gave none. */
 export function selectUsableSeedTip(userFeedback: string): string | undefined {
-    const tip = userFeedback.trim();
+    const tip = removeNonDisplayControlCharacters(userFeedback).trim();
     if (tip === "") {
         return undefined;
     }

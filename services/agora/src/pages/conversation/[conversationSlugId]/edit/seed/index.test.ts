@@ -1,4 +1,5 @@
 import { createPinia, setActivePinia } from "pinia";
+import type * as QuasarModule from "quasar";
 import type {
   UpdateConversationRequest,
   UpdateConversationResponse,
@@ -42,12 +43,16 @@ vi.mock("src/utils/api/conversationUpdates/conversationEmailUpdates", () => ({
 vi.mock("src/utils/ui/notify", () => ({
   useNotify: () => ({ showNotifyMessage: mocks.notify }),
 }));
-vi.mock("quasar", () => ({
-  useQuasar: () => ({
-    lang: { rtl: false },
-    platform: { is: { mobile: false } },
-  }),
-}));
+vi.mock("quasar", async (importOriginal) => {
+  const actual = await importOriginal<typeof QuasarModule>();
+  return {
+    ...actual,
+    useQuasar: () => ({
+      lang: { rtl: false },
+      platform: { is: { mobile: false } },
+    }),
+  };
+});
 vi.mock("src/composables/ui/useComponentI18n", () => ({
   useComponentI18n: (texts: { en: Record<string, string> }) => ({
     t: (key: string) => texts.en[key] ?? key,

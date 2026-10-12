@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";
+import type { FastifyBaseLogger } from "fastify";
+import { logApiError } from "@/logging/privacy.js";
 import { htmlToCountedText } from "@/shared/richText.js";
 import {
     validateRichTextHtmlByteCount,
@@ -11,7 +13,7 @@ import {
     type GenerateSeedSuggestionsResponse,
 } from "@/shared/types/dto.js";
 import {
-    createBedrockConverse,
+    type BedrockConverse,
     createBedrockSeedSuggestionSource,
     type SeedSuggestionFailureReason,
     type SeedSuggestionModelResult,
@@ -25,11 +27,6 @@ import {
 } from "./seedSuggestionPrompt.js";
 import type { SeedSuggestionSourceName } from "./seedSuggestionSourceName.js";
 
-export const SEED_SUGGESTION_RATE_LIMIT_MAX = 5;
-export const SEED_SUGGESTION_RATE_LIMIT_WINDOW_MS = 60 * 1000;
-const MAX_TRACKED_USERS = 10_000;
-
-/** Why a request failed: the model's failures, or a description over the limits. */
 export type GenerateSeedSuggestionsFailureReason =
     | SeedSuggestionFailureReason
     | "description_too_long";
@@ -39,12 +36,11 @@ export type GenerateSeedSuggestionsResult =
     | {
           success: false;
           reason: GenerateSeedSuggestionsFailureReason;
-          detail: string;
       };
 
 type DescriptionResult =
     | { success: true; plainText: string }
-    | { success: false; detail: string };
+    | { success: false };
 
 /**
  * The description as plain text, refused above the limits that apply when the
@@ -60,22 +56,17 @@ function readDescription(html: string | undefined): DescriptionResult {
         mode: "conversation",
     });
     if (!htmlSize.success) {
-        return {
-            success: false,
-            detail: `${htmlSize.reason}: ${String(htmlSize.count)} > ${String(htmlSize.limit)}`,
-        };
+        return { success: false };
     }
     const plainText = htmlToCountedText(html);
+    if (plainText.trim() === "") return { success: true, plainText: "" };
     const textSize = validateRichTextInputWithPlainText({
         htmlString: html,
         plainText,
         mode: "conversation",
     });
     if (!textSize.success) {
-        return {
-            success: false,
-            detail: `${textSize.reason}: ${String(textSize.count)} > ${String(textSize.limit)}`,
-        };
+        return { success: false };
     }
     return { success: true, plainText };
 }
@@ -98,13 +89,14 @@ export function createSimulatedSeedSuggestionSource({
         conversationTitle,
         existingStatements,
         targetCount,
+        signal,
     }: SeedSuggestionModelInput): Promise<SeedSuggestionModelResult> => {
+        if (signal?.aborted) return { success: false, reason: "cancelled" };
         const title = conversationTitle.toLowerCase();
         if (title.includes(SIMULATE_FAILURE)) {
             return {
                 success: false,
                 reason: "model_failure",
-                detail: "simulated failure",
             };
         }
         if (title.includes(SIMULATE_NOT_CONFIDENT)) {
@@ -119,7 +111,13 @@ export function createSimulatedSeedSuggestionSource({
             };
         }
         if (title.includes(SIMULATE_SLOW)) {
-            await sleep(slowDelayMs);
+            try {
+                await sleep(slowDelayMs, undefined, { signal });
+            } catch (error) {
+                if (signal?.aborted)
+                    return { success: false, reason: "cancelled" };
+                throw error;
+            }
         }
         // Numbered after what is already on the page, so pressing the button again
         // returns statements that differ from the previous ones.
@@ -138,37 +136,37 @@ export function createSimulatedSeedSuggestionSource({
         };
     };
 
-    return { name: "simulated", modelId: "simulated", generate };
+    return { name: "simulated", generate };
 }
 
-export interface SeedSuggestionSettings {
-    source: SeedSuggestionSourceName;
-    /** Overrides the system prompt selected by the experiments. */
-    systemPrompt: string | undefined;
-    temperature: number;
-    timeoutMs: number;
-    bedrockRegion: string;
-    bedrockModelId: string;
-}
+export type SeedSuggestionSettings =
+    | { source: "simulated" }
+    | {
+          source: "bedrock";
+          systemPrompt: string | undefined;
+          temperature: number;
+          timeoutMs: number;
+          modelId: string;
+          converse: BedrockConverse;
+          logError: (error: unknown) => void;
+      };
 
-export function createSeedSuggestionSource({
-    source,
-    systemPrompt = DEFAULT_SEED_SUGGESTION_SYSTEM_PROMPT,
-    temperature,
-    timeoutMs,
-    bedrockRegion,
-    bedrockModelId,
-}: SeedSuggestionSettings): SeedSuggestionSource {
-    switch (source) {
+export function createSeedSuggestionSource(
+    settings: SeedSuggestionSettings,
+): SeedSuggestionSource {
+    switch (settings.source) {
         case "simulated":
             return createSimulatedSeedSuggestionSource();
         case "bedrock":
             return createBedrockSeedSuggestionSource({
-                modelId: bedrockModelId,
-                systemPrompt,
-                temperature,
-                timeoutMs,
-                converse: createBedrockConverse(bedrockRegion),
+                modelId: settings.modelId,
+                systemPrompt:
+                    settings.systemPrompt ??
+                    DEFAULT_SEED_SUGGESTION_SYSTEM_PROMPT,
+                temperature: settings.temperature,
+                timeoutMs: settings.timeoutMs,
+                converse: settings.converse,
+                logError: settings.logError,
             });
     }
 }
@@ -176,26 +174,29 @@ export function createSeedSuggestionSource({
 interface GenerateSeedSuggestionsParams {
     source: SeedSuggestionSource;
     request: GenerateSeedSuggestionsRequest;
+    signal?: AbortSignal;
 }
 
 export async function generateSeedSuggestions({
     source,
     request,
+    signal,
 }: GenerateSeedSuggestionsParams): Promise<GenerateSeedSuggestionsResult> {
     const description = readDescription(request.conversationBody);
     if (!description.success) {
         return {
             success: false,
             reason: "description_too_long",
-            detail: description.detail,
         };
     }
     const result = await source.generate({
+        conversationType: request.conversationType,
         conversationTitle: request.conversationTitle,
         // The description is rich text; the model reads plain text.
         conversationBody: description.plainText,
         existingStatements: request.existingStatements,
         targetCount: SEED_SUGGESTION_TARGET_COUNT,
+        signal,
     });
     if (!result.success) {
         return result;
@@ -209,7 +210,6 @@ export async function generateSeedSuggestions({
             return {
                 success: false,
                 reason: "invalid_answer",
-                detail: "not confident, but no tip was given",
             };
         }
         // The statements of a not-confident answer are never sent to the browser.
@@ -228,7 +228,6 @@ export async function generateSeedSuggestions({
         return {
             success: false,
             reason: "invalid_answer",
-            detail: "no statement passed the checks",
         };
     }
     return {
@@ -256,7 +255,6 @@ interface SeedSuggestionRequestEvent {
     draftId: string;
     conversationType: GenerateSeedSuggestionsRequest["conversationType"];
     source: SeedSuggestionSourceName;
-    model: string;
     durationMs: number;
 }
 
@@ -270,7 +268,6 @@ export type SeedSuggestionEvent =
     | (SeedSuggestionRequestEvent & {
           event: "failed";
           reason: GenerateSeedSuggestionsFailureReason;
-          detail: string;
       })
     | {
           event: "added";
@@ -280,64 +277,24 @@ export type SeedSuggestionEvent =
           suggestionId: string;
       };
 
-export function formatSeedSuggestionEvent(event: SeedSuggestionEvent): string {
-    return `${SEED_SUGGESTION_EVENT_MARKER} ${JSON.stringify({
-        timestamp: new Date().toISOString(),
-        ...event,
-    })}`;
-}
-
-export type SeedSuggestionRateLimitResult =
-    | { isAllowed: true }
-    | { isAllowed: false; retryAfterMs: number };
-
-export interface SeedSuggestionRateLimiter {
-    consume: (userId: string) => SeedSuggestionRateLimitResult;
-}
-
-interface CreateSeedSuggestionRateLimiterParams {
-    maxRequests?: number;
-    windowMs?: number;
-    now?: () => number;
-}
-
-/**
- * Sliding-window limit on generations per user, to bound model cost.
- *
- * Kept in this process: with several API instances, each one counts separately, so
- * the effective limit is `maxRequests` per instance.
- */
-export function createSeedSuggestionRateLimiter({
-    maxRequests = SEED_SUGGESTION_RATE_LIMIT_MAX,
-    windowMs = SEED_SUGGESTION_RATE_LIMIT_WINDOW_MS,
-    now = Date.now,
-}: CreateSeedSuggestionRateLimiterParams = {}): SeedSuggestionRateLimiter {
-    const requestTimesByUser = new Map<string, number[]>();
-
-    const consume = (userId: string): SeedSuggestionRateLimitResult => {
-        const currentTime = now();
-        const windowStart = currentTime - windowMs;
-        const recentTimes = (requestTimesByUser.get(userId) ?? []).filter(
-            (time) => time > windowStart,
+export function logSeedSuggestionEvent({
+    logger,
+    event,
+}: {
+    logger: Pick<FastifyBaseLogger, "info" | "warn" | "error">;
+    event: SeedSuggestionEvent;
+}): void {
+    if (event.event === "failed") {
+        logApiError({
+            logger,
+            level: "warn",
+            event: { event: "seed_suggestion_failed", seedSuggestion: event },
+            error: undefined,
+        });
+    } else {
+        logger.info(
+            { event: "seed_suggestion", seedSuggestion: event },
+            SEED_SUGGESTION_EVENT_MARKER,
         );
-        const oldestTime = recentTimes.at(0);
-        if (recentTimes.length >= maxRequests && oldestTime !== undefined) {
-            requestTimesByUser.set(userId, recentTimes);
-            return {
-                isAllowed: false,
-                retryAfterMs: oldestTime + windowMs - currentTime,
-            };
-        }
-        if (requestTimesByUser.size >= MAX_TRACKED_USERS) {
-            for (const [trackedUserId, times] of requestTimesByUser) {
-                if (times.every((time) => time <= windowStart)) {
-                    requestTimesByUser.delete(trackedUserId);
-                }
-            }
-        }
-        requestTimesByUser.set(userId, [...recentTimes, currentTime]);
-        return { isAllowed: true };
-    };
-
-    return { consume };
+    }
 }

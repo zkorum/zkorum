@@ -516,14 +516,18 @@ source = { virtual = "." }
 dependencies = [
     { name = "boto3" },
     { name = "mlflow" },
+    { name = "pandas" },
     { name = "py3langid" },
+    { name = "requests" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.43.47" },
     { name = "mlflow", specifier = ">=3.14.0" },
+    { name = "pandas", specifier = ">=2.3.3" },
     { name = "py3langid", specifier = ">=0.3.0" },
+    { name = "requests", specifier = ">=2.34.2" },
 ]
 
 [[package]]

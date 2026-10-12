@@ -6866,7 +6866,7 @@ export interface ApiV1ConversationSeedGeneratePostRequest {
     'conversationTitle': string;
     'conversationBody'?: string;
     'conversationType': ApiV1ConversationSeedGeneratePostRequestConversationTypeEnum;
-    'postAsOrganization': string;
+    'postAsOrganization'?: string;
     'existingStatements': Array<string>;
 }
 
@@ -13454,10 +13454,11 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @param {ApiV1ConversationSeedGeneratePostRequest} apiV1ConversationSeedGeneratePostRequest 
+         * @param {string} [xTurnstileToken] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1ConversationSeedGeneratePost: async (apiV1ConversationSeedGeneratePostRequest: ApiV1ConversationSeedGeneratePostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1ConversationSeedGeneratePost: async (apiV1ConversationSeedGeneratePostRequest: ApiV1ConversationSeedGeneratePostRequest, xTurnstileToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'apiV1ConversationSeedGeneratePostRequest' is not null or undefined
             assertParamExists('apiV1ConversationSeedGeneratePost', 'apiV1ConversationSeedGeneratePostRequest', apiV1ConversationSeedGeneratePostRequest)
             const localVarPath = `/api/v1/conversation/seed/generate`;
@@ -13479,6 +13480,9 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
+            if (xTurnstileToken != null) {
+                localVarHeaderParameter['x-turnstile-token'] = String(xTurnstileToken);
+            }
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -17152,11 +17156,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {ApiV1ConversationSeedGeneratePostRequest} apiV1ConversationSeedGeneratePostRequest 
+         * @param {string} [xTurnstileToken] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest: ApiV1ConversationSeedGeneratePostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1ConversationSeedGeneratePost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest, options);
+        async apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest: ApiV1ConversationSeedGeneratePostRequest, xTurnstileToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1ConversationSeedGeneratePost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest, xTurnstileToken, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1ConversationSeedGeneratePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18778,11 +18783,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         /**
          * 
          * @param {ApiV1ConversationSeedGeneratePostRequest} apiV1ConversationSeedGeneratePostRequest 
+         * @param {string} [xTurnstileToken] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest: ApiV1ConversationSeedGeneratePostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1ConversationSeedGeneratePost200Response> {
-            return localVarFp.apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest, options).then((request) => request(axios, basePath));
+        apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest: ApiV1ConversationSeedGeneratePostRequest, xTurnstileToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1ConversationSeedGeneratePost200Response> {
+            return localVarFp.apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest, xTurnstileToken, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -20272,11 +20278,12 @@ export class DefaultApi extends BaseAPI {
     /**
      * 
      * @param {ApiV1ConversationSeedGeneratePostRequest} apiV1ConversationSeedGeneratePostRequest 
+     * @param {string} [xTurnstileToken] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest: ApiV1ConversationSeedGeneratePostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest: ApiV1ConversationSeedGeneratePostRequest, xTurnstileToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1ConversationSeedGeneratePost(apiV1ConversationSeedGeneratePostRequest, xTurnstileToken, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

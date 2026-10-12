@@ -15,7 +15,7 @@ import { type ApiErrorResponse, classifyApiError } from "./error";
 
 export type { KeyAction };
 
-export type ApiTimeoutProfile = "standard" | "extended" | "file-upload";
+export type ApiTimeoutProfile = "standard" | "extended" | "file-upload" | "long-running";
 
 export interface AxiosSuccessResponse<T> {
   data: T;
@@ -141,6 +141,7 @@ export function useCommonApi() {
       case "extended":
         return EXTENDED_TIMEOUT_MS;
       case "file-upload":
+      case "long-running":
         return FILE_UPLOAD_TIMEOUT_MS;
       default:
         return STANDARD_TIMEOUT_MS;

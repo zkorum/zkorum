@@ -16,7 +16,7 @@ const mockWidget = vi.hoisted(() => {
 });
 
 vi.mock("src/utils/processEnv", () => ({
-  processEnv: { VITE_PHONE_TURNSTILE_SITE_KEY: "test-site-key" },
+  processEnv: { VITE_TURNSTILE_SITE_KEY: "test-site-key" },
 }));
 vi.mock("src/utils/auth/turnstile", () => ({
   loadTurnstile: () =>

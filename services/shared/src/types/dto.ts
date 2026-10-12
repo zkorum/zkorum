@@ -1202,8 +1202,8 @@ export const zodVotedOpinionPageCursor = z
 // AI seed suggestions (services/api/src/service/seedSuggestion.ts)
 export const SEED_SUGGESTION_TARGET_COUNT = 3;
 export const MAX_LENGTH_SEED_SUGGESTION_TIP = 1000;
-const MAX_SEED_SUGGESTION_EXISTING_STATEMENTS = 100;
-const MAX_LENGTH_SEED_SUGGESTION_EXISTING_STATEMENT = 1000;
+export const MAX_SEED_SUGGESTION_EXISTING_STATEMENTS = 100;
+export const MAX_LENGTH_SEED_SUGGESTION_EXISTING_STATEMENT = 1000;
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Dto {
@@ -1557,15 +1557,14 @@ export class Dto {
             conversationTitle: zodConversationTitle,
             conversationBody: zodConversationBodyInput,
             conversationType: zodConversationType,
-            postAsOrganization: z.preprocess(
-                (val) => (val === "" || val === undefined ? undefined : val),
-                zodOrganizationSlug.optional(),
-            ),
+            postAsOrganization: zodOrganizationSlug.optional(),
             // Plain text of every statement already on the page, the author's and
             // earlier suggestions alike, so that new suggestions do not repeat them.
             existingStatements: z
                 .array(
-                    z.string().max(MAX_LENGTH_SEED_SUGGESTION_EXISTING_STATEMENT),
+                    z
+                        .string()
+                        .max(MAX_LENGTH_SEED_SUGGESTION_EXISTING_STATEMENT),
                 )
                 .max(MAX_SEED_SUGGESTION_EXISTING_STATEMENTS),
         })
@@ -1582,7 +1581,14 @@ export class Dto {
                         z
                             .object({
                                 suggestionId: z.uuid(),
-                                text: z.string().min(1).max(MAX_LENGTH_OPINION),
+                                text: z
+                                    .string()
+                                    .min(1)
+                                    .refine(
+                                        (value) =>
+                                            countUnicodeCodePoints(value) <=
+                                            MAX_LENGTH_OPINION,
+                                    ),
                             })
                             .strict(),
                     )
@@ -1594,7 +1600,14 @@ export class Dto {
             .object({
                 generationId: z.uuid(),
                 confident: z.literal(false),
-                tip: z.string().min(1).max(MAX_LENGTH_SEED_SUGGESTION_TIP),
+                tip: z
+                    .string()
+                    .min(1)
+                    .refine(
+                        (value) =>
+                            countUnicodeCodePoints(value) <=
+                            MAX_LENGTH_SEED_SUGGESTION_TIP,
+                    ),
             })
             .strict(),
     ]);

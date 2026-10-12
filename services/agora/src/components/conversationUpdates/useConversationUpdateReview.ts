@@ -3,6 +3,7 @@ import {
   skipToken,
   useQuery,
 } from "@tanstack/vue-query";
+import { uid } from "quasar";
 import type {
   ConversationEmailUpdateHistoryRecord,
   Dto,
@@ -307,9 +308,7 @@ export function useConversationUpdateReview({
     const token = generation;
     // Keep this ID after a transport failure: retrying must not queue another test.
     const requestId =
-      current.test.kind === "retry"
-        ? current.test.requestId
-        : crypto.randomUUID();
+      current.test.kind === "retry" ? current.test.requestId : uid();
     state.value = {
       ...current,
       testRequested: true,

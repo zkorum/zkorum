@@ -5,6 +5,7 @@ import {
     logContextSchema,
 } from "../shared-backend/logPrivacy.js";
 import { logMessageTemplates } from "./messages.js";
+import type { SeedSuggestionEvent } from "../service/seedSuggestion.js";
 
 const count = z.number().nonnegative().optional();
 const loadEventSchema = z.object({
@@ -105,7 +106,11 @@ export function createApiLogPrivacy(sourceRoot: URL) {
 
 type ApiErrorEvent =
     | { event: "email_deliverability_check_failed"; provider: "reacher" }
-    | { event: "application_error" };
+    | { event: "application_error" }
+    | {
+          event: "seed_suggestion_failed";
+          seedSuggestion: Extract<SeedSuggestionEvent, { event: "failed" }>;
+      };
 
 export function logApiError({
     logger,
@@ -122,6 +127,8 @@ export function logApiError({
         { ...event, err: error },
         event.event === "email_deliverability_check_failed"
             ? "Email deliverability check failed"
-            : "Application event",
+            : event.event === "seed_suggestion_failed"
+              ? "AGORA_AI_SUGGESTION_EVENT"
+              : "Application event",
     );
 }

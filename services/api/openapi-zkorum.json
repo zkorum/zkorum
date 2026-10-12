@@ -20520,7 +20520,7 @@
                                     "conversationTitle": {
                                         "type": "string",
                                         "minLength": 1,
-                                        "maxLength": 140
+                                        "maxLength": 150
                                     },
                                     "conversationBody": {
                                         "type": "string"
@@ -20550,7 +20550,6 @@
                                     "draftId",
                                     "conversationTitle",
                                     "conversationType",
-                                    "postAsOrganization",
                                     "existingStatements"
                                 ],
                                 "additionalProperties": false
@@ -20558,6 +20557,17 @@
                         }
                     }
                 },
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 2048
+                        },
+                        "in": "header",
+                        "name": "x-turnstile-token",
+                        "required": false
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Default Response",
@@ -20593,8 +20603,7 @@
                                                             },
                                                             "text": {
                                                                 "type": "string",
-                                                                "minLength": 1,
-                                                                "maxLength": 280
+                                                                "minLength": 1
                                                             }
                                                         },
                                                         "required": [
@@ -20628,8 +20637,7 @@
                                                 },
                                                 "tip": {
                                                     "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 1000
+                                                    "minLength": 1
                                                 }
                                             },
                                             "required": [

@@ -1,3 +1,4 @@
+import { uid } from "quasar";
 import type { GenerateSeedSuggestionsRequest } from "src/shared/types/dto";
 import type { GenerateSeedSuggestionsResult } from "src/utils/api/seedSuggestion/seedSuggestion";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,11 +12,16 @@ import {
 } from "./useSeedSuggestions";
 
 const mocks = vi.hoisted(() => ({
-  generateSeedSuggestions: vi.fn((_request: GenerateSeedSuggestionsRequest) =>
-    Promise.resolve<GenerateSeedSuggestionsResult>({
-      status: "error",
-      reason: "failed",
-    })
+  generateSeedSuggestions: vi.fn(
+    (_params: {
+      request: GenerateSeedSuggestionsRequest;
+      turnstileToken: string | undefined;
+      signal: AbortSignal;
+    }) =>
+      Promise.resolve<GenerateSeedSuggestionsResult>({
+        status: "error",
+        reason: "failed",
+      })
   ),
   recordSeedSuggestionUse: vi.fn(),
 }));
@@ -52,7 +58,7 @@ describe("buildExistingStatements", () => {
     expect(
       buildExistingStatements({
         seedOpinions: ["<p>Run every <strong>30</strong> minutes.</p>"],
-        shownSuggestionTexts: ["Add security staff.", "Light the stops."],
+        suggestionHistory: ["Add security staff.", "Light the stops."],
       })
     ).toEqual([
       "Run every 30 minutes.",
@@ -65,7 +71,7 @@ describe("buildExistingStatements", () => {
     expect(
       buildExistingStatements({
         seedOpinions: ["", "<p></p>", "<p>Light the stops.</p>"],
-        shownSuggestionTexts: ["Light the stops.", "  "],
+        suggestionHistory: ["Light the stops.", "  "],
       })
     ).toEqual(["Light the stops."]);
   });
@@ -73,7 +79,7 @@ describe("buildExistingStatements", () => {
   it("stays within what the API accepts", () => {
     const statements = buildExistingStatements({
       seedOpinions: [],
-      shownSuggestionTexts: [
+      suggestionHistory: [
         "x".repeat(1500),
         ...Array.from({ length: 150 }, (_, index) => `Suggestion ${index}`),
       ],
@@ -90,7 +96,7 @@ describe("buildExistingStatements", () => {
 let suggestionCounter = 0;
 
 function confidentAnswer(texts: string[]): GenerateSeedSuggestionsResult {
-  const generationId = crypto.randomUUID();
+  const generationId = uid();
   return {
     status: "success",
     data: {
@@ -113,13 +119,98 @@ function setUp(seedOpinions: string[] = []) {
     title: "Night buses",
     seedOpinions,
   });
+  const disabled = ref(false);
   return {
     conversationDraft,
-    suggestions: useSeedSuggestions({ conversationDraft }),
+    disabled,
+    suggestions: useSeedSuggestions({ conversationDraft, disabled }),
   };
 }
 
 describe("useSeedSuggestions", () => {
+  it("cancels generation when submission starts and does not accept its result after submission fails", async () => {
+    let resolve: ((result: GenerateSeedSuggestionsResult) => void) | undefined;
+    mocks.generateSeedSuggestions.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done;
+      })
+    );
+    const { disabled, suggestions } = setUp();
+    const generating = suggestions.generate();
+    await vi.waitFor(() =>
+      expect(mocks.generateSeedSuggestions).toHaveBeenCalled()
+    );
+    const params = mocks.generateSeedSuggestions.mock.calls.at(-1)?.[0];
+    disabled.value = true;
+    expect(params?.signal.aborted).toBe(true);
+    disabled.value = false;
+    resolve?.(confidentAnswer(["Stale statement."]));
+    expect(await generating).toEqual({ status: "skipped" });
+    expect(suggestions.pendingSuggestions.value).toEqual([]);
+  });
+  it("ignores a generation for a draft that changed while awaiting the model", async () => {
+    let resolve: ((result: GenerateSeedSuggestionsResult) => void) | undefined;
+    mocks.generateSeedSuggestions.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done;
+      })
+    );
+    const { conversationDraft, suggestions } = setUp();
+    const generating = suggestions.generate("challenge-token");
+    await vi.waitFor(() =>
+      expect(mocks.generateSeedSuggestions).toHaveBeenCalled()
+    );
+    const params = mocks.generateSeedSuggestions.mock.calls.at(-1)?.[0];
+    expect(params?.turnstileToken).toBe("challenge-token");
+    conversationDraft.value.title = "Different topic";
+    expect(params?.signal.aborted).toBe(true);
+    resolve?.(confidentAnswer(["Stale statement."]));
+    await generating;
+    expect(suggestions.pendingSuggestions.value).toEqual([]);
+  });
+
+  it("ignores late results while disabled and blocks Add and Discard", async () => {
+    mocks.generateSeedSuggestions.mockResolvedValueOnce(
+      confidentAnswer(["Kept statement."])
+    );
+    const { disabled, suggestions } = setUp();
+    await suggestions.generate();
+    const id = suggestions.pendingSuggestions.value.at(0)?.suggestionId ?? "";
+    let resolve: ((result: GenerateSeedSuggestionsResult) => void) | undefined;
+    mocks.generateSeedSuggestions.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done;
+      })
+    );
+    const generating = suggestions.generate();
+    await vi.waitFor(() =>
+      expect(mocks.generateSeedSuggestions).toHaveBeenCalledTimes(2)
+    );
+    disabled.value = true;
+    expect(suggestions.add(id)).toBeUndefined();
+    suggestions.discard(id);
+    resolve?.(confidentAnswer(["Late statement."]));
+    await generating;
+    expect(
+      suggestions.pendingSuggestions.value.map((item) => item.text)
+    ).toEqual(["Kept statement."]);
+  });
+
+  it("does not add a suggestion duplicated by an author while generation was in flight", async () => {
+    mocks.generateSeedSuggestions.mockResolvedValueOnce(
+      confidentAnswer(["Light the stops."])
+    );
+    const { conversationDraft, suggestions } = setUp();
+    await suggestions.generate();
+    conversationDraft.value.seedOpinions.push("<p> light   THE stops. </p>");
+    expect(
+      suggestions.add(
+        suggestions.pendingSuggestions.value.at(0)?.suggestionId ?? ""
+      )
+    ).toBeUndefined();
+    expect(conversationDraft.value.seedOpinions).toHaveLength(1);
+  });
+
   beforeEach(() => {
     mocks.generateSeedSuggestions.mockReset();
     mocks.recordSeedSuggestionUse.mockReset();
@@ -183,8 +274,10 @@ describe("useSeedSuggestions", () => {
     ]);
     expect(mocks.generateSeedSuggestions).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        draftId: conversationDraft.value.aiSuggestionDraftId,
-        existingStatements: ["First."],
+        request: expect.objectContaining({
+          draftId: conversationDraft.value.aiSuggestionDraftId,
+          existingStatements: ["First."],
+        }),
       })
     );
   });
@@ -195,7 +288,7 @@ describe("useSeedSuggestions", () => {
       .mockResolvedValueOnce({
         status: "success",
         data: {
-          generationId: crypto.randomUUID(),
+          generationId: uid(),
           confident: false,
           tip: "Say which city this is about.",
         },
@@ -205,7 +298,7 @@ describe("useSeedSuggestions", () => {
     await suggestions.generate();
     await suggestions.generate();
 
-    expect(suggestions.notConfidentTip.value).toBe(
+    expect(suggestions.clarificationGuidance.value).toBe(
       "Say which city this is about."
     );
     expect(suggestions.pendingSuggestions.value.map((s) => s.text)).toEqual([
@@ -236,7 +329,7 @@ describe("useSeedSuggestions", () => {
       (_, i) => `<p>${String(i)}</p>`
     );
 
-    expect(suggestions.canTakeSuggestion.value).toBe(false);
+    expect(suggestions.canAddSuggestion.value).toBe(false);
     expect(
       suggestions.add(
         suggestions.pendingSuggestions.value[0]?.suggestionId ?? ""

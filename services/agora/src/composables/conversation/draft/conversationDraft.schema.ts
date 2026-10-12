@@ -6,6 +6,7 @@
  * - newConversationDrafts store (persistence validation)
  */
 
+import { uid } from "quasar";
 import { MAX_LENGTH_CONVERSATION_TITLE } from "src/shared/shared";
 import {
   zodConversationMultilingualSetting,
@@ -100,7 +101,7 @@ const zodConversationDraftBase = z.object({
   inheritProjectLanguages: z.boolean().default(false),
   conversationEmailUpdateEnabledOverride: z.boolean().optional(),
   seedOpinions: z.array(z.string()),
-  aiSuggestionDraftId: z.uuid().default(() => crypto.randomUUID()),
+  aiSuggestionDraftId: z.uuid().default(uid),
 
   // Publishing options
   postAs: zodPostAsSettings,

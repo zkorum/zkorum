@@ -206,7 +206,7 @@ watch(
       processRequestCodeResponse(pendingOtpData.value);
       pendingOtpData.value = null;
     } else {
-      if (processEnv.VITE_PHONE_TURNSTILE_SITE_KEY !== undefined) {
+      if (processEnv.VITE_TURNSTILE_SITE_KEY !== undefined) {
         initialCodeAwaitingChallenge.value = true;
       } else {
         await requestCodeClicked(false);
@@ -337,7 +337,7 @@ async function requestCodeClicked(isRequestingNewCode: boolean) {
   try {
     const turnstileToken = turnstileWidget.value?.takeToken();
     if (
-      processEnv.VITE_PHONE_TURNSTILE_SITE_KEY !== undefined &&
+      processEnv.VITE_TURNSTILE_SITE_KEY !== undefined &&
       turnstileToken === undefined
     ) {
       showNotifyMessage(tTurnstile("retrySecurityCheck"));
