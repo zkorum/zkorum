@@ -1,0 +1,35 @@
+name: Soft-delete policy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  soft-deletes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: services/api/package.json
+      - run: pnpm install --frozen-lockfile
+        working-directory: services/api
+      - run: pnpm typecheck
+        working-directory: services/api
+      - run: pnpm exec vitest run scripts/check-soft-deletes.test.ts
+        working-directory: services/api
+        env:
+          SOFT_DELETE_PYTHON: python3
+      - run: make check-soft-deletes
+        env:
+          SOFT_DELETE_PYTHON: python3

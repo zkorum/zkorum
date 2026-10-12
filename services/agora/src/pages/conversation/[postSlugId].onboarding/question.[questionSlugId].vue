@@ -72,8 +72,12 @@
             <ContentTranslationControl
               v-if="displayedSurveyQuestionTranslationPreview !== undefined"
               v-model="surveyQuestionTranslationMode"
-              :source-language-label="displayedSurveyQuestionTranslationPreview.sourceLanguageLabel"
-              :translation-status="displayedSurveyQuestionTranslationPreview.translationStatus"
+              :source-language-label="
+                displayedSurveyQuestionTranslationPreview.sourceLanguageLabel
+              "
+              :translation-status="
+                displayedSurveyQuestionTranslationPreview.translationStatus
+              "
               class="survey-card__translation-control"
             />
 
@@ -99,6 +103,7 @@
               :is-multiple-selection="!isSingleSelectionQuestion"
               :is-required="isQuestionRequired"
               :options="choiceOptions"
+              :option-text-values="optionTextValues"
               :selected-single-option-slug-id="selectedSingleOptionSlugId"
               :selected-multi-option-slug-ids="selectedMultiOptionSlugIds"
               :select-option-label="t('selectOptionLabel')"
@@ -110,6 +115,7 @@
               @update:selected-multi-option-slug-ids="
                 selectedMultiOptionSlugIds = $event
               "
+              @update:option-text-values="optionTextValues = $event"
             />
 
             <div v-else class="survey-card__editor">
@@ -164,6 +170,7 @@ import ZKDigitsInput from "src/components/ui-library/ZKDigitsInput.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
+import { useSurveyAnswerDraft } from "src/composables/conversation/useSurveyAnswerDraft";
 import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavigation";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
@@ -175,12 +182,11 @@ import {
   useSurveyAnswerSaveMutation,
 } from "src/utils/api/survey/useSurveyQueries";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
+import { useViewerQueryScope } from "src/utils/query/viewerScope";
 import { getSingleRouteParam } from "src/utils/router/params";
 import {
-  areSurveyAnswersEqual,
   getSurveyFreeTextCharacterCount,
   isSurveyAnswerSubmittable,
-  normalizeSurveyAnswer,
 } from "src/utils/survey/answer";
 import {
   isIntegerFreeTextQuestion,
@@ -195,12 +201,10 @@ import {
   getConversationSurveySummaryPath,
 } from "src/utils/survey/navigation";
 import { surveyTemplateTextTranslations } from "src/utils/survey/templates.i18n";
-import {
-  getConversationLanguageSettingSourceLanguageCode,
-} from "src/utils/translation/contentTranslation";
+import { getConversationLanguageSettingSourceLanguageCode } from "src/utils/translation/contentTranslation";
 import { useSurveyQuestionDisplayContent } from "src/utils/translation/useSurveyQuestionDisplayContent";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, ref, watch } from "vue";
+import { computed, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -326,68 +330,49 @@ const nextQuestionSlugId = computed(() => {
   return surveyForm.value?.questions[questionIndex.value + 1]?.questionSlugId;
 });
 
-const selectedSingleOptionSlugId = ref<string | null>(null);
-const selectedMultiOptionSlugIds = ref<string[]>([]);
-const textValueHtml = ref("");
-const textValuePlain = ref("");
-
-watch(
+const viewerScope = useViewerQueryScope();
+const {
+  selectedSingleOptionSlugId,
+  selectedMultiOptionSlugIds,
+  optionTextValues,
+  textValueHtml,
+  textValuePlain,
+  draftAnswer,
+  hasDraftChanged,
+  isDraftReady,
+} = useSurveyAnswerDraft({
   question,
-  (currentQuestion) => {
-    if (currentQuestion === undefined) {
-      selectedSingleOptionSlugId.value = null;
-      selectedMultiOptionSlugIds.value = [];
-      textValueHtml.value = "";
-      textValuePlain.value = "";
-      return;
-    }
+  viewerUserId: () => viewerScope.value.userId,
+});
 
-    switch (currentQuestion.questionType) {
-      case "choice": {
-        const currentChoiceAnswer =
-          currentQuestion.currentAnswer?.questionType === "choice"
-            ? currentQuestion.currentAnswer
-            : undefined;
-        selectedSingleOptionSlugId.value = isSingleSelectionChoiceQuestion({
-          question: currentQuestion,
-        })
-          ? (currentChoiceAnswer?.optionSlugIds[0] ?? null)
-          : null;
-        selectedMultiOptionSlugIds.value =
-          currentChoiceAnswer !== undefined
-            ? [...currentChoiceAnswer.optionSlugIds]
-            : [];
-        textValueHtml.value = "";
-        textValuePlain.value = "";
-        break;
-      }
-      case "free_text":
-        selectedSingleOptionSlugId.value = null;
-        selectedMultiOptionSlugIds.value = [];
-        textValueHtml.value =
-          currentQuestion.currentAnswer?.questionType === "free_text"
-            ? currentQuestion.currentAnswer.textValueHtml
-            : "";
-        textValuePlain.value =
-          currentQuestion.currentAnswer?.questionType === "free_text"
-            ? currentQuestion.currentAnswer.textValuePlainText
-            : "";
-        break;
-    }
-  },
-  { immediate: true }
-);
-
-const choiceOptions = computed<Array<{ label: string; value: string }>>(() => {
+const choiceOptions = computed(() => {
   const currentQuestion = question.value;
-  if (currentQuestion === undefined || currentQuestion.questionType !== "choice") {
+  if (
+    currentQuestion === undefined ||
+    currentQuestion.questionType !== "choice"
+  ) {
     return [];
   }
 
-  return displayedQuestionContent.value.options.map((option) => ({
-    label: option.optionText,
-    value: option.optionSlugId,
-  }));
+  const displayedTextBySlugId = new Map(
+    displayedQuestionContent.value.options.map((option) => [
+      option.optionSlugId,
+      option.optionText,
+    ])
+  );
+  return currentQuestion.options.flatMap((option) =>
+    option.optionSlugId === undefined
+      ? []
+      : [
+          {
+            label:
+              displayedTextBySlugId.get(option.optionSlugId) ??
+              option.optionText,
+            value: option.optionSlugId,
+            allowsText: option.allowsText === true,
+          },
+        ]
+  );
 });
 
 const displayedQuestionText = computed(
@@ -411,39 +396,14 @@ const templateTexts = computed(() => {
   );
 });
 
-const draftAnswer = computed(() => {
-  const currentQuestion = question.value;
-
-  if (currentQuestion === undefined) {
-    return undefined;
-  }
-
-  return normalizeSurveyAnswer({
-    question: currentQuestion,
-    selectedSingleOptionSlugId: selectedSingleOptionSlugId.value,
-    selectedMultiOptionSlugIds: selectedMultiOptionSlugIds.value,
-    textValueHtml: textValueHtml.value,
-    textValuePlainText: textValuePlain.value,
-  });
-});
-
-const hasDraftChanged = computed(() => {
-  const currentQuestion = question.value;
-
-  if (currentQuestion === undefined) {
-    return false;
-  }
-
-  return !areSurveyAnswersEqual({
-    left: currentQuestion.currentAnswer,
-    right: draftAnswer.value,
-  });
-});
-
 const shouldPersistPassOnLeave = computed(() => {
   const currentQuestion = question.value;
 
-  if (currentQuestion === undefined || isQuestionRequired.value) {
+  if (
+    !isDraftReady.value ||
+    currentQuestion === undefined ||
+    isQuestionRequired.value
+  ) {
     return false;
   }
 
@@ -457,7 +417,7 @@ const shouldPersistPassOnLeave = computed(() => {
 const canNavigateForward = computed(() => {
   const currentQuestion = question.value;
 
-  if (currentQuestion === undefined) {
+  if (!isDraftReady.value || currentQuestion === undefined) {
     return false;
   }
   if (draftAnswer.value === undefined) {
@@ -535,7 +495,10 @@ const questionDescription = computed(() => {
 
 const showPublicAggregateSuppressionNotice = computed(() => {
   const currentQuestion = question.value;
-  if (currentQuestion === undefined || currentQuestion.questionType !== "choice") {
+  if (
+    currentQuestion === undefined ||
+    currentQuestion.questionType !== "choice"
+  ) {
     return false;
   }
 

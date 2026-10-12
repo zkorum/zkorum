@@ -4199,10 +4199,12 @@ async function queryConversationConfigurationRows({
     db,
     conversationSlugId,
     now,
+    projectIdOverride,
 }: {
     db: PostgresJsDatabase;
     conversationSlugId: string;
     now: Date;
+    projectIdOverride?: number;
 }) {
     const rows = await db
         .select({
@@ -4333,7 +4335,10 @@ async function queryConversationConfigurationRows({
         .innerJoin(
             projectTable,
             and(
-                eq(projectTable.id, conversationTable.projectId),
+                eq(
+                    projectTable.id,
+                    projectIdOverride ?? conversationTable.projectId,
+                ),
                 isNull(projectTable.deletedAt),
             ),
         )
@@ -4395,12 +4400,14 @@ async function hasConversationEmailUpdateCapability({
     projectId,
     now,
     lockAuthorization = false,
+    lockMode = "update",
 }: {
     db: PostgresJsDatabase;
     userId: string;
     projectId: number;
     now: Date;
     lockAuthorization?: boolean;
+    lockMode?: "update" | "share";
 }): Promise<boolean> {
     const query = db
         .select({ id: projectOrganizationOwnershipTable.id })
@@ -4476,7 +4483,7 @@ async function hasConversationEmailUpdateCapability({
         )
         .limit(1);
     const rows = lockAuthorization
-        ? await query.for("update", {
+        ? await query.for(lockMode, {
               of: [
                   projectOrganizationOwnershipTable,
                   organizationTable,
@@ -4642,7 +4649,7 @@ async function lockActiveEmailUpdateAuthorization({
     );
 }
 
-async function hasActiveDelivery({
+export async function hasActiveDelivery({
     db,
     projectId,
 }: {
@@ -4677,6 +4684,61 @@ export type ConversationEmailUpdateOverrideUpdateResult =
               | "missing_participant_contact_email"
               | "active_delivery_conflict";
       };
+
+export async function validateConversationEmailUpdateProjectMove({
+    db,
+    userId,
+    conversationSlugId,
+    projectId,
+    enabledOverride,
+    now,
+}: {
+    db: PostgresJsDatabase;
+    userId: string;
+    conversationSlugId: string;
+    projectId: number;
+    enabledOverride: boolean | null | undefined;
+    now: Date;
+}): Promise<
+    | { success: true }
+    | {
+          success: false;
+          reason: "feature_not_available" | "missing_participant_contact_email";
+      }
+> {
+    const row = (
+        await queryConversationConfigurationRows({
+            db,
+            conversationSlugId,
+            now,
+            projectIdOverride: projectId,
+        })
+    ).at(0);
+    if (row === undefined)
+        return { success: false, reason: "feature_not_available" };
+    const override =
+        enabledOverride === undefined ? row.override_enabled : enabledOverride;
+    const configured = isConversationEmailUpdateConfigured({
+        projectDefaultEnabled: row.default_enabled,
+        conversationOverrideEnabled: override,
+    });
+    if (configured && normalizeContactEmail(row.contact_email) === undefined)
+        return { success: false, reason: "missing_participant_contact_email" };
+    if (
+        configured &&
+        (!row.feature_available ||
+            !(await hasConversationEmailUpdateCapability({
+                db,
+                userId,
+                projectId,
+                now,
+                lockAuthorization: true,
+                lockMode: "share",
+            })))
+    )
+        return { success: false, reason: "feature_not_available" };
+    return { success: true };
+}
 
 export async function updateConversationEmailUpdateOverrideInTransaction({
     db,

@@ -1,18 +1,27 @@
 import path from "node:path";
 
 import vue from "@vitejs/plugin-vue";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [vue()],
   test: {
     globals: true,
     environment: "jsdom",
+    exclude: [...configDefaults.exclude, "scripts/*.test.mjs"],
   },
   resolve: {
-    alias: {
-      "#q-app/wrappers": "@quasar/app-vite/wrappers",
-      src: path.resolve(__dirname, "./src"),
-    },
+    alias: [
+      { find: "#q-app/wrappers", replacement: "@quasar/app-vite/wrappers" },
+      { find: "src", replacement: path.resolve(__dirname, "./src") },
+      // DOM component tests need Quasar's browser build, not its Node SSR entry.
+      {
+        find: /^quasar$/,
+        replacement: path.resolve(
+          __dirname,
+          "node_modules/quasar/dist/quasar.client.js"
+        ),
+      },
+    ],
   },
 });

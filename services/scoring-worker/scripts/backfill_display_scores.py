@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 def backfill_display_scores(*, engine: Engine, batch_size: int = 500) -> dict[str, int]:
     """Fill derived scores without changing raw values, votes, ranks, or input revisions."""
     updated: dict[str, int] = {}
+    # Normalize retained historical values too, without reactivating tombstones.
     for model in (RankingScoreEntity, MaxdiffUserEntityScore):
         total = 0
         with Session(engine) as session:
@@ -76,7 +77,10 @@ def backfill_display_scores(*, engine: Engine, batch_size: int = 500) -> dict[st
                 continue
             snapshot = session.scalars(
                 select(RankingConversationStatsSnapshot)
-                .where(RankingConversationStatsSnapshot.conversation_id == conversation.id)
+                .where(
+                    RankingConversationStatsSnapshot.conversation_id == conversation.id,
+                    RankingConversationStatsSnapshot.deleted_at.is_(None),
+                )
                 .order_by(
                     RankingConversationStatsSnapshot.created_at.desc(),
                     RankingConversationStatsSnapshot.id.desc(),
@@ -104,7 +108,10 @@ def backfill_display_scores(*, engine: Engine, batch_size: int = 500) -> dict[st
                         RankingScoreEntity.entity_slug_id == RankingItem.slug_id,
                     ),
                 )
-                .where(RankingConversationStatsItem.stats_snapshot_id == snapshot.id)
+                .where(
+                    RankingConversationStatsItem.stats_snapshot_id == snapshot.id,
+                    RankingConversationStatsItem.deleted_at.is_(None),
+                )
             ).all()
             if any(score.display_score is None for score in scores):
                 skipped += 1

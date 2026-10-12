@@ -35,7 +35,7 @@ CREATE TABLE "conversation_content" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "conversation_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"public_id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"conversation_id" integer NOT NULL,
-	"title" varchar(140) NOT NULL,
+	"title" varchar(150) NOT NULL,
 	"body" text,
 	"body_plain_text" text,
 	"source_language_code" "spoken_language_code",
@@ -164,7 +164,7 @@ CREATE TABLE "project_contact" (
 	"project_id" integer NOT NULL,
 	"first_name" varchar(65) NOT NULL,
 	"last_name" varchar(65),
-	"role_label" varchar(140),
+	"role_label" varchar(150),
 	"email" text,
 	"website_url" text,
 	"image_path" text,
@@ -193,8 +193,8 @@ CREATE TABLE "project_content" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "project_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"public_id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"project_id" integer NOT NULL,
-	"title" varchar(140) NOT NULL,
-	"subtitle" varchar(140),
+	"title" varchar(150) NOT NULL,
+	"subtitle" varchar(150),
 	"body" text,
 	"body_plain_text" text,
 	"banner_path" text,
@@ -251,7 +251,7 @@ CREATE TABLE "project_document_localization" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "project_document_localization_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"project_document_id" integer NOT NULL,
 	"language_code" "display_language_code" NOT NULL,
-	"name" varchar(140) NOT NULL,
+	"name" varchar(150) NOT NULL,
 	"download_file_name" varchar(255) NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"deleted_at" timestamp (0)
@@ -313,7 +313,7 @@ CREATE TABLE "project_organization_attribution" (
 CREATE TABLE "project" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "project_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"slug" varchar(65) NOT NULL,
-	"title" varchar(140) NOT NULL,
+	"title" varchar(150) NOT NULL,
 	"directory_visibility" "directory_visibility" NOT NULL,
 	"auto_provisioned_for_organization_id" integer,
 	"current_content_id" integer,
@@ -371,6 +371,7 @@ CREATE TABLE "ranking_conversation_stats_snapshot" (
 	"scoring_input_revision" bigint NOT NULL,
 	"is_closed" boolean NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	"deleted_at" timestamp (0),
 	CONSTRAINT "ranking_stats_snapshot_id_conversation_unique" UNIQUE("id","conversation_id"),
 	CONSTRAINT "ranking_conversation_stats_snapshot_counts_check" CHECK ("ranking_conversation_stats_snapshot"."item_count" >= 0 AND "ranking_conversation_stats_snapshot"."item_count" <= "ranking_conversation_stats_snapshot"."total_item_count" AND "ranking_conversation_stats_snapshot"."vote_count" >= 0 AND "ranking_conversation_stats_snapshot"."vote_count" <= "ranking_conversation_stats_snapshot"."total_vote_count" AND "ranking_conversation_stats_snapshot"."participant_count" >= 0 AND "ranking_conversation_stats_snapshot"."participant_count" <= "ranking_conversation_stats_snapshot"."total_participant_count" AND "ranking_conversation_stats_snapshot"."scoring_input_revision" >= 0)
 );
@@ -423,4 +424,6 @@ CREATE UNIQUE INDEX "project_active_slug_unique" ON "project" USING btree ("slug
 
 CREATE UNIQUE INDEX "project_translation_target_language_active_unique" ON "project_translation_target_language" USING btree ("project_id","language_code") WHERE "project_translation_target_language"."deleted_at" is null;
 
-CREATE INDEX "ranking_conversation_stats_snapshot_latest_idx" ON "ranking_conversation_stats_snapshot" USING btree ("conversation_id","created_at" DESC,"id" DESC);
+CREATE INDEX "ranking_conversation_stats_snapshot_latest_idx" ON "ranking_conversation_stats_snapshot" USING btree ("conversation_id","created_at" DESC,"id" DESC) WHERE "ranking_conversation_stats_snapshot"."deleted_at" IS NULL;
+
+CREATE INDEX "ranking_stats_snapshot_deleted_idx" ON "ranking_conversation_stats_snapshot" USING btree ("deleted_at","id") WHERE "ranking_conversation_stats_snapshot"."deleted_at" IS NOT NULL;

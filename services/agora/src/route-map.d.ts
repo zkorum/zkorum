@@ -51,6 +51,13 @@ declare module 'vue-router/auto-routes' {
       { conversationSlugId: ParamValue<false> },
       | never
     >,
+    '/conversation/[conversationSlugId]/edit/seed/': RouteRecordInfo<
+      '/conversation/[conversationSlugId]/edit/seed/',
+      '/conversation/:conversationSlugId/edit/seed',
+      { conversationSlugId: ParamValue<true> },
+      { conversationSlugId: ParamValue<false> },
+      | never
+    >,
     '/conversation/[conversationSlugId]/edit/survey/': RouteRecordInfo<
       '/conversation/[conversationSlugId]/edit/survey/',
       '/conversation/:conversationSlugId/edit/survey',
@@ -813,6 +820,12 @@ declare module 'vue-router/auto-routes' {
     'src/pages/conversation/[conversationSlugId]/edit/index.vue': {
       routes:
         | '/conversation/[conversationSlugId]/edit/'
+      views:
+        | never
+    }
+    'src/pages/conversation/[conversationSlugId]/edit/seed/index.vue': {
+      routes:
+        | '/conversation/[conversationSlugId]/edit/seed/'
       views:
         | never
     }

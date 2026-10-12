@@ -167,7 +167,7 @@ CREATE TABLE "project_document_localization" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "project_document_localization_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"project_document_id" integer NOT NULL,
 	"language_code" "display_language_code" NOT NULL,
-	"name" varchar(140) NOT NULL,
+	"name" varchar(150) NOT NULL,
 	"download_file_name" varchar(255) NOT NULL,
 	"created_at" timestamp (0) DEFAULT now() NOT NULL,
 	"deleted_at" timestamp (0)
@@ -196,7 +196,7 @@ CREATE TABLE "project_organization_ownership" (
 CREATE TABLE "project" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "project_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"slug" varchar(65) NOT NULL,
-	"title" varchar(140) NOT NULL,
+	"title" varchar(150) NOT NULL,
 	"directory_visibility" "directory_visibility" NOT NULL,
 	"auto_provisioned_for_organization_id" integer,
 	"current_content_id" integer,

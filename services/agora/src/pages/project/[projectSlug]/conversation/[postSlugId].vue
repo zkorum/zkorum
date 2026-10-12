@@ -86,7 +86,9 @@
                 :on-view-analysis="onViewAnalysis"
                 :navigate-to-discover-tab="navigateToDiscoverTab"
                 :conversation-route-context="conversationRouteContext"
+                :editing-opinion="editingOpinion"
                 v-bind="analysisRouteProps"
+                @edit-opinion="beginEditOpinion"
                 @analysis-live-pause-stats="setAnalysisLivePauseStats"
                 @update:comment-filter="
                   (filter: CommentFilterOptions) => {
@@ -110,6 +112,7 @@
       :respect-drawer-offset="false"
     >
       <CommentComposer
+        :editing-opinion="editingOpinion"
         :post-slug-id="loadedConversationData.metadata.conversationSlugId"
         :participation-mode="loadedConversationData.metadata.participationMode"
         :requires-event-ticket="
@@ -118,6 +121,8 @@
         :survey-gate="loadedConversationData.interaction.surveyGate"
         :is-composer-disabled="isVotingDisabled"
         :conversation-route-context="conversationRouteContext"
+        @edit-cancelled="finishEditOpinion"
+        @edited-opinion="handleEditedOpinion"
         @submitted-comment="handleSubmittedComment"
       />
     </FloatingBottomContainer>
@@ -126,6 +131,7 @@
 
 <script setup lang="ts">
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
+import { isAxiosError } from "axios";
 import { storeToRefs } from "pinia";
 import FloatingBottomContainer from "src/components/navigation/FloatingBottomContainer.vue";
 import CommentComposer from "src/components/post/comments/CommentComposer.vue";
@@ -153,11 +159,12 @@ import { useLanguageStore } from "src/stores/language";
 import { useBackendProjectPageApi } from "src/utils/api/projectPage";
 import type { CommentFilterOptions } from "src/utils/component/opinion";
 import { getScrollTop } from "src/utils/html/scroll";
+import { getConversationEditReturnPath } from "src/utils/router/conversationEditReturn";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import { getSingleRouteParam } from "src/utils/router/params";
 import { useConversationDisplayContent } from "src/utils/translation/useConversationDisplayContent";
 import { computed, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import {
   type ConversationPageTranslations,
@@ -173,6 +180,7 @@ usePageLayout({
   enableDrawer: false,
 });
 const route = useRoute();
+const router = useRouter();
 const queryClient = useQueryClient();
 const { fetchProjectConversationPage, accessProjectDocument } =
   useBackendProjectPageApi();
@@ -230,6 +238,10 @@ const {
   loadedConversationData,
   loadedConversationDisplayContent,
   currentTab,
+  editingOpinion,
+  beginEditOpinion,
+  finishEditOpinion,
+  handleEditedOpinion,
   isCurrentTabLoading,
   moderationHistoryTrigger,
   commentFilter,
@@ -277,6 +289,29 @@ const projectConversationQuery = useQuery({
 });
 const projectConversationData = computed(
   () => projectConversationQuery.data.value
+);
+watch(
+  () => ({
+    data: conversationData.value,
+    projectError: projectConversationQuery.error.value,
+  }),
+  async ({ data, projectError }) => {
+    if (
+      !isAxiosError(projectError) ||
+      projectError.response?.status !== 404 ||
+      data === undefined ||
+      projectSlug.value === ""
+    )
+      return;
+    const normalReturnPath = getConversationEditReturnPath({
+      conversationSlugId: conversationSlugId.value,
+      returnTo: route.fullPath.replace(
+        `/project/${encodeURIComponent(projectSlug.value)}`,
+        ""
+      ),
+    });
+    await router.replace(normalReturnPath);
+  }
 );
 
 const {

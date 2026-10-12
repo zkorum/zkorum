@@ -10,6 +10,7 @@ import {
     zodConversationTypeConfig,
     zodPreferredOpinionGroupCount,
     zodProjectSlug,
+    zodConversationProjectAssignment,
     zodSlugId,
 } from "./zod.js";
 
@@ -162,17 +163,19 @@ export const zodSSEConversationCommentStatsUpdatedData = z
         moderatedOpinionCount: z.number().int().nonnegative(),
         hiddenOpinionCount: z.number().int().nonnegative(),
         isClosed: z.boolean(),
-        opinionVoteCounts: z.array(
-            z
-                .object({
-                    opinionSlugId: zodSlugId,
-                    numParticipants: z.number().int().nonnegative(),
-                    numAgrees: z.number().int().nonnegative(),
-                    numDisagrees: z.number().int().nonnegative(),
-                    numPasses: z.number().int().nonnegative(),
-                })
-                .strict(),
-        ).default([]),
+        opinionVoteCounts: z
+            .array(
+                z
+                    .object({
+                        opinionSlugId: zodSlugId,
+                        numParticipants: z.number().int().nonnegative(),
+                        numAgrees: z.number().int().nonnegative(),
+                        numDisagrees: z.number().int().nonnegative(),
+                        numPasses: z.number().int().nonnegative(),
+                    })
+                    .strict(),
+            )
+            .default([]),
         timestamp: z.number(),
     })
     .strict();
@@ -216,6 +219,7 @@ export const zodSSEConversationSettingsData = z
         presentation: zodConversationTypeConfig,
         preferredOpinionGroupCount: zodPreferredOpinionGroupCount,
         isClosed: z.boolean(),
+        projectAssignment: zodConversationProjectAssignment.optional(),
     })
     .strict();
 export type SSEConversationSettingsData = z.infer<
@@ -318,6 +322,17 @@ export const zodSSEShutdownData = z
 export type SSEShutdownData = z.infer<typeof zodSSEShutdownData>;
 
 export const zodSSEEventDataByType = {
+    opinion_updated: z
+        .object({
+            conversationSlugId: zodSlugId,
+            opinionSlugId: zodSlugId,
+            previousSourceVersion: z.uuid(),
+            sourceVersion: z.uuid(),
+            opinion: z.string(),
+            sourceLanguageCode: z.string().nullable(),
+            timestamp: z.number(),
+        })
+        .strict(),
     connected: zodSSEConnectedData,
     notification: zodSSENotificationData,
     new_conversation: zodSSENewConversationData,
@@ -356,6 +371,7 @@ export type SSEConnectedEvent = SSEEvent<"connected">;
 export type SSENotificationEvent = SSEEvent<"notification">;
 export type SSENewConversationEvent = SSEEvent<"new_conversation">;
 export type SSENewOpinionEvent = SSEEvent<"new_opinion">;
+export type SSEOpinionUpdatedEvent = SSEEvent<"opinion_updated">;
 export type SSEPopularConversationEvent = SSEEvent<"popular_conversation">;
 export type SSEConversationAnalysisUpdatedEvent =
     SSEEvent<"conversation_analysis_updated">;
@@ -380,6 +396,7 @@ export type AnySSEEvent =
     | SSENotificationEvent
     | SSENewConversationEvent
     | SSENewOpinionEvent
+    | SSEOpinionUpdatedEvent
     | SSEPopularConversationEvent
     | SSEConversationAnalysisUpdatedEvent
     | SSEConversationCommentStatsUpdatedEvent

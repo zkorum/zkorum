@@ -18,7 +18,10 @@
               :is-private="!isIndexed"
               :title="conversationTitle"
               size="medium"
-              :conversation-type-config="{ conversationType: 'polis', votingPresentation: 'list' }"
+              :conversation-type-config="{
+                conversationType: 'polis',
+                votingPresentation: 'list',
+              }"
               :external-source-config="null"
               :project-context="undefined"
               project-context-title-mode="original"
@@ -31,6 +34,8 @@
               :conversation-author-username="conversationAuthorUsername"
               :conversation-organization-name="conversationOrganizationName"
               :conversation-route-context="normalConversationRouteContext"
+              :editable-opinion="undefined"
+              :editing-opinion-slug-id="undefined"
             />
           </div>
         </div>
@@ -38,7 +43,7 @@
         <UserIdentityCard
           :author-verified="false"
           :created-at="opinionItem.createdAt"
-          :is-edited="false"
+          :is-edited="opinionItem.isEdited ?? false"
           :user-identity="opinionItem.username"
           :show-verified-text="false"
           organization-image-url=""

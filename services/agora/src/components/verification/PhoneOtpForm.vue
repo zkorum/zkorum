@@ -1,7 +1,13 @@
 <template>
   <div>
+    <div
+      v-if="countryPolicy.isPending.value"
+      class="row justify-center q-pa-md"
+    >
+      <q-spinner />
+    </div>
     <PhoneAuthUnavailableNotice
-      v-if="!phoneAuthAvailability.available"
+      v-else-if="!phoneAuthAvailability.available"
       :reason="phoneAuthAvailability.reason"
     />
 
@@ -64,6 +70,7 @@
 </template>
 
 <script setup lang="ts">
+import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { storeToRefs } from "pinia";
 import {
   type PhoneAuthUnavailableNoticeTranslations,
@@ -72,20 +79,19 @@ import {
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { createRequestGate } from "src/composables/verification/createRequestGate";
 import { useOtpTimers } from "src/composables/verification/useOtpTimers";
+import { usePhoneCountryPolicy } from "src/composables/verification/usePhoneCountryPolicy";
 import { useVerificationComplete } from "src/composables/verification/useVerificationComplete";
 import { authenticate200, verifyPhoneOtp200 } from "src/shared/types/dto-auth";
 import { phoneVerificationStore } from "src/stores/onboarding/phone";
 import { useAuthPhoneApi } from "src/utils/api/auth-phone";
 import {
-  pausePhoneRegistration,
   type PhoneAuthAvailability,
   type PhoneAuthPurpose,
   type PhoneAuthUnavailableReason,
-  usePhoneAuthAvailability,
 } from "src/utils/auth/phoneAuthMode";
 import { processEnv } from "src/utils/processEnv";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, onUnmounted, ref, watch, watchEffect } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 
 import ZKButton from "../ui-library/ZKButton.vue";
 import ZKInputOtp from "../ui-library/ZKInputOtp.vue";
@@ -116,17 +122,38 @@ const { t: tPhoneAvailability } =
 
 const phoneStore = phoneVerificationStore();
 const { verificationPhoneNumber, pendingOtpData } = storeToRefs(phoneStore);
-const modeAvailability = usePhoneAuthAvailability(() => props.purpose);
+const countryPolicy = usePhoneCountryPolicy();
+const parsedPhoneNumber = computed(() =>
+  parsePhoneNumberFromString(
+    verificationPhoneNumber.value.internationalPhoneNumber
+  )
+);
+const policyAvailability = computed(() =>
+  verificationPhoneNumber.value.internationalPhoneNumber === ""
+    ? countryPolicy.availabilityForPurpose(props.purpose)
+    : countryPolicy.availabilityFor({
+        purpose: props.purpose,
+        country: parsedPhoneNumber.value?.country,
+      })
+);
 const responseUnavailableReason = ref<"registration_unavailable">();
 const phoneAuthAvailability = computed<PhoneAuthAvailability>(() => {
+  if (!countryPolicy.isReady.value)
+    return { available: false, reason: "technical_unavailable" };
   if (responseUnavailableReason.value !== undefined) {
     return {
       available: false,
       reason: responseUnavailableReason.value,
     };
   }
-  return modeAvailability.value;
+  return policyAvailability.value;
 });
+watch(
+  () => policyAvailability.value.available,
+  (available) => {
+    if (available) responseUnavailableReason.value = undefined;
+  }
+);
 
 const {
   verificationCode,
@@ -158,28 +185,11 @@ onUnmounted(() => {
 const isSubmitButtonLoading = requestGate.isBusy;
 const isInteractionLocked = computed(() => requestGate.isBusy.value);
 
-const formattedPhoneNumber = ref("");
-
-watchEffect(() => {
-  const phoneNumber = verificationPhoneNumber.value.internationalPhoneNumber;
-  if (!phoneNumber) {
-    formattedPhoneNumber.value = "";
-    return;
-  }
-
-  formattedPhoneNumber.value = phoneNumber;
-
-  void (async () => {
-    try {
-      const { parsePhoneNumberFromString } =
-        await import("libphonenumber-js/max");
-      const parsed = parsePhoneNumberFromString(phoneNumber);
-      formattedPhoneNumber.value = parsed?.formatInternational() || phoneNumber;
-    } catch (e) {
-      console.warn("Failed to load phone formatter", e);
-    }
-  })();
-});
+const formattedPhoneNumber = computed(
+  () =>
+    parsedPhoneNumber.value?.formatInternational() ??
+    verificationPhoneNumber.value.internationalPhoneNumber
+);
 
 let isInitialized = false;
 watch(
@@ -301,7 +311,7 @@ async function nextButtonClicked() {
             showPhoneAuthUnavailable("technical_unavailable");
             break;
           case "phone_registration_unavailable":
-            handlePhoneRegistrationUnavailable();
+            await handlePhoneRegistrationUnavailable();
             break;
         }
       }
@@ -386,10 +396,12 @@ function showPhoneAuthUnavailable(reason: PhoneAuthUnavailableReason) {
   }
 }
 
-function handlePhoneRegistrationUnavailable(): void {
-  pausePhoneRegistration();
+async function handlePhoneRegistrationUnavailable(): Promise<void> {
   responseUnavailableReason.value = "registration_unavailable";
-  requestGate.terminate();
+  const result = await countryPolicy.refresh();
+  if (result.isSuccess && policyAvailability.value.available) {
+    responseUnavailableReason.value = undefined;
+  }
 }
 
 function ensurePhoneAuthAvailable(): boolean {

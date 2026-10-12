@@ -939,6 +939,8 @@ export default async function ({ conversations }: ScenarioSetupData) {
     sleep(INITIAL_WAIT_FOR_OPINIONS_SECONDS);
 
     // Step 6: Fetch available opinions from every configured conversation
+    let fetchedOpinions: { opinionSlugId: string; sourceVersion: string }[] =
+        [];
     let fetchedOpinionSlugs: string[] = [];
     let fetchedOpinionSlugsByConversation = new Map<string, string[]>();
     for (let attempt = 1; attempt <= OPINION_FETCH_RETRY_ATTEMPTS; attempt++) {
@@ -946,7 +948,10 @@ export default async function ({ conversations }: ScenarioSetupData) {
             `[${userId}] Fetching opinions (attempt ${String(attempt)}/${String(OPINION_FETCH_RETRY_ATTEMPTS)})...`,
         );
 
-        const fetchedOpinionSlugSet = new Set<string>();
+        const fetchedOpinionsBySlug = new Map<
+            string,
+            { opinionSlugId: string; sourceVersion: string }
+        >();
         const fetchedOpinionSlugsByConversationAttempt = new Map<
             string,
             string[]
@@ -961,7 +966,7 @@ export default async function ({ conversations }: ScenarioSetupData) {
             if (fetchResult.success) {
                 const conversationOpinionSlugs: string[] = [];
                 for (const opinion of fetchResult.opinions) {
-                    fetchedOpinionSlugSet.add(opinion.opinionSlugId);
+                    fetchedOpinionsBySlug.set(opinion.opinionSlugId, opinion);
                     conversationOpinionSlugs.push(opinion.opinionSlugId);
                 }
                 fetchedOpinionSlugsByConversationAttempt.set(
@@ -986,7 +991,8 @@ export default async function ({ conversations }: ScenarioSetupData) {
             }
         }
 
-        fetchedOpinionSlugs = Array.from(fetchedOpinionSlugSet);
+        fetchedOpinions = Array.from(fetchedOpinionsBySlug.values());
+        fetchedOpinionSlugs = Array.from(fetchedOpinionsBySlug.keys());
         fetchedOpinionSlugsByConversation =
             fetchedOpinionSlugsByConversationAttempt;
         console.log(
@@ -1090,7 +1096,7 @@ export default async function ({ conversations }: ScenarioSetupData) {
             conversationSlugIds: CONVERSATION_SLUG_IDS,
             opinionTexts,
             sleepBetweenActions: SLEEP_BETWEEN_ACTIONS,
-            allAvailableOpinions: fetchedOpinionSlugs,
+            allAvailableOpinions: fetchedOpinions,
             alreadyVotedOpinionSlugs,
             priorityOpinionSlugs: assignedConversationOpinionSlugs,
             minPriorityVotesToCast: priorityVotesToCast,

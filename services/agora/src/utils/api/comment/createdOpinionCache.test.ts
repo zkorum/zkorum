@@ -4,7 +4,10 @@ import type { FetchOpinionPageResponse } from "src/shared/types/dto";
 import type { DisplayedOpinionItem } from "src/shared/types/zod";
 import { describe, expect, it } from "vitest";
 
-import { cacheCreatedOpinion } from "./createdOpinionCache";
+import {
+  cacheCreatedOpinion,
+  cacheCreatedSeedOpinions,
+} from "./createdOpinionCache";
 import type { OpinionCache } from "./opinionCache";
 import {
   initialOpinionPageRequest,
@@ -56,6 +59,43 @@ const createdOpinion: DisplayedOpinionItem = {
     translationControl: null,
   },
 };
+
+describe("cacheCreatedSeedOpinions", () => {
+  it("caches new seeds without creating votes or changing voted-statement lists", async () => {
+    const queryClient = new QueryClient();
+    const keys: CommentsTestKey[] = [
+      ["comments", "conversation", "discover", "user"],
+      ["comments", "conversation", "new", "user"],
+      ["comments", "conversation", "my_votes", "user"],
+      ["comments", "conversation", "new", "other-user"],
+    ];
+    for (const key of keys)
+      queryClient.setQueryData<OpinionCache>(key, {
+        pages: [pageForKey({ key, items: [], nextCursor: null })],
+        pageParams: [initialRequestForKey(key)],
+      });
+    const seed = {
+      ...createdOpinion,
+      isSeed: true,
+      numParticipants: 0,
+      numAgrees: 0,
+    };
+    await cacheCreatedSeedOpinions({
+      queryClient,
+      conversationSlugId: "conversation",
+      opinions: [seed],
+      viewerUserId: "user",
+    });
+    for (const key of keys)
+      expect(
+        queryClient.getQueryData<OpinionCache>(key)?.pages.at(0)?.items
+      ).toEqual(key[2] === "my_votes" || key[3] !== "user" ? [] : [seed]);
+    expect(
+      queryClient.getQueryData(["userVotes", "conversation", "user"])
+    ).toBeUndefined();
+    queryClient.clear();
+  });
+});
 
 describe("cacheCreatedOpinion", () => {
   it("inserts a new statement into the first server page without losing its cursor", async () => {

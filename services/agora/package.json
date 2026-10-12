@@ -15,6 +15,7 @@
     "format:check": "prettier . --check",
     "prepare": "quasar prepare",
     "test": "vitest run",
+    "test:nginx": "node --test scripts/nginx-conversation-indexing.test.mjs",
     "test:watch": "vitest",
     "dev": "env-cmd -f .env.dev -- quasar dev",
     "start": "serve dist/spa",

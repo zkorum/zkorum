@@ -33,15 +33,51 @@
           <ZKCard padding="1rem" class="summary-card">
             <div class="summary-card__title">{{ t("changeSummaryTitle") }}</div>
             <div v-if="hasAnySummaryChanges" class="summary-card__list">
-              <div>{{ t("addedQuestions", { count: changeSummary.addedQuestionCount }) }}</div>
-              <div>{{ t("removedQuestions", { count: changeSummary.removedQuestionCount }) }}</div>
-              <div>{{ t("updatedQuestions", { count: changeSummary.updatedQuestionCount }) }}</div>
-              <div>{{ t("addedOptions", { count: changeSummary.addedOptionCount }) }}</div>
-              <div>{{ t("removedOptions", { count: changeSummary.removedOptionCount }) }}</div>
-              <div>{{ t("updatedOptions", { count: changeSummary.updatedOptionCount }) }}</div>
+              <div>
+                {{
+                  t("addedQuestions", {
+                    count: changeSummary.addedQuestionCount,
+                  })
+                }}
+              </div>
+              <div>
+                {{
+                  t("removedQuestions", {
+                    count: changeSummary.removedQuestionCount,
+                  })
+                }}
+              </div>
+              <div>
+                {{
+                  t("updatedQuestions", {
+                    count: changeSummary.updatedQuestionCount,
+                  })
+                }}
+              </div>
+              <div>
+                {{
+                  t("addedOptions", { count: changeSummary.addedOptionCount })
+                }}
+              </div>
+              <div>
+                {{
+                  t("removedOptions", {
+                    count: changeSummary.removedOptionCount,
+                  })
+                }}
+              </div>
+              <div>
+                {{
+                  t("updatedOptions", {
+                    count: changeSummary.updatedOptionCount,
+                  })
+                }}
+              </div>
             </div>
 
-            <div v-else class="summary-card__empty">{{ t("noChangesSummary") }}</div>
+            <div v-else class="summary-card__empty">
+              {{ t("noChangesSummary") }}
+            </div>
           </ZKCard>
 
           <SurveyCompletionCountsCard
@@ -78,6 +114,14 @@
       }"
       @confirm="deleteSurvey"
     />
+    <EditConversationRouteGuard
+      v-if="
+        editStore.session?.original.conversationSlugId === conversationSlugId
+      "
+      :conversation-slug-id="conversationSlugId"
+      :has-unsaved-changes="hasUnsavedChanges || editStore.hasUnsavedChanges"
+      :navigation-pending="isSaving || isDeleting"
+    />
   </NewConversationLayout>
 </template>
 
@@ -85,6 +129,7 @@
 import Button from "primevue/button";
 import BackButton from "src/components/navigation/buttons/BackButton.vue";
 import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
+import EditConversationRouteGuard from "src/components/newConversation/EditConversationRouteGuard.vue";
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
 import SurveyCompletionCountsCard from "src/components/survey/SurveyCompletionCountsCard.vue";
 import SurveyConfigEditor from "src/components/survey/SurveyConfigEditor.vue";
@@ -94,6 +139,7 @@ import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { GetConversationForEditResponse } from "src/shared/types/dto";
 import type { SurveyConfig } from "src/shared/types/zod";
+import { useEditConversationStore } from "src/stores/editConversation";
 import { useBackendPostEditApi } from "src/utils/api/post/postEdit";
 import {
   useSurveyCompletionCountsQuery,
@@ -109,10 +155,13 @@ import {
   summarizeSurveyConfigChanges,
 } from "src/utils/survey/config";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { type EditSurveyTranslations, editSurveyTranslations } from "./index.i18n";
+import {
+  type EditSurveyTranslations,
+  editSurveyTranslations,
+} from "./index.i18n";
 
 defineOptions({
   components: {
@@ -120,13 +169,18 @@ defineOptions({
   },
 });
 
-const { t, locale } = useComponentI18n<EditSurveyTranslations>(editSurveyTranslations);
+const { t, locale } = useComponentI18n<EditSurveyTranslations>(
+  editSurveyTranslations
+);
 const { showNotifyMessage } = useNotify();
 const route = useRoute();
 const router = useRouter();
 const { getConversationForEdit } = useBackendPostEditApi();
+const editStore = useEditConversationStore();
 
-const conversationSlugId = getSingleRouteParam(route.params.conversationSlugId);
+const conversationSlugId = computed(() =>
+  getSingleRouteParam(route.params.conversationSlugId)
+);
 const isLoading = ref(true);
 const isSaving = ref(false);
 const isDeleting = ref(false);
@@ -147,14 +201,14 @@ const canDeleteSurvey = computed(() => {
 });
 
 const completionCountsQuery = useSurveyCompletionCountsQuery({
-  conversationSlugId: computed(() => conversationSlugId),
+  conversationSlugId,
   enabled: computed(() => !isLoading.value),
 });
 const updateSurveyConfigMutation = useSurveyConfigUpdateMutation({
-  conversationSlugId: computed(() => conversationSlugId),
+  conversationSlugId,
 });
 const deleteSurveyConfigMutation = useSurveyConfigDeleteMutation({
-  conversationSlugId: computed(() => conversationSlugId),
+  conversationSlugId,
 });
 const hasUnsavedChanges = computed(() => {
   return !areSurveyConfigsEqual({
@@ -231,40 +285,51 @@ const surveyEditorTexts = computed(() => ({
   optionSemanticChangeHint: t("optionSemanticChangeHint"),
 }));
 
-onMounted(async () => {
-  const response = await getConversationForEdit(conversationSlugId);
-
-  if (!response.success) {
-    showNotifyMessage(t("loadError"));
-    await router.replace({
-      name: "/conversation/[conversationSlugId]/edit/",
-      params: { conversationSlugId },
-      query: route.query,
-    });
-    return;
-  }
-
-  editPermissions.value = response.editPermissions;
-  if (
-    !response.editPermissions.canEditSurvey &&
-    (response.surveyConfig == null || !response.editPermissions.canDeleteSurvey)
-  ) {
-    await router.replace({
-      name: "/conversation/[conversationSlugId]/edit/",
-      params: { conversationSlugId },
-      query: route.query,
-    });
-    return;
-  }
-
-  surveyConfig.value = cloneSurveyConfig({
-    surveyConfig: response.surveyConfig ?? null,
-  });
-  originalSurveyConfig.value = cloneSurveyConfig({
-    surveyConfig: response.surveyConfig ?? null,
-  });
-  isLoading.value = false;
+let isAlive = true;
+onBeforeUnmount(() => {
+  isAlive = false;
 });
+watch(
+  conversationSlugId,
+  async (slug) => {
+    isLoading.value = true;
+    const response = await getConversationForEdit(slug);
+    if (!isAlive || slug !== conversationSlugId.value) return;
+
+    if (!response.success) {
+      showNotifyMessage(t("loadError"));
+      await router.replace({
+        name: "/conversation/[conversationSlugId]/edit/",
+        params: { conversationSlugId: slug },
+        query: route.query,
+      });
+      return;
+    }
+
+    editPermissions.value = response.editPermissions;
+    if (
+      !response.editPermissions.canEditSurvey &&
+      (response.surveyConfig == null ||
+        !response.editPermissions.canDeleteSurvey)
+    ) {
+      await router.replace({
+        name: "/conversation/[conversationSlugId]/edit/",
+        params: { conversationSlugId: slug },
+        query: route.query,
+      });
+      return;
+    }
+
+    surveyConfig.value = cloneSurveyConfig({
+      surveyConfig: response.surveyConfig ?? null,
+    });
+    originalSurveyConfig.value = cloneSurveyConfig({
+      surveyConfig: response.surveyConfig ?? null,
+    });
+    isLoading.value = false;
+  },
+  { immediate: true }
+);
 
 function clearSurveyValidationError(): void {
   surveyValidationErrorMessage.value = null;
@@ -275,8 +340,23 @@ function showSurveyValidationError(): void {
 }
 
 async function redirectToConversation(): Promise<void> {
+  const session = editStore.session;
+  if (session?.original.conversationSlugId === conversationSlugId.value) {
+    session.original.surveyConfig = cloneSurveyConfig({
+      surveyConfig: surveyConfig.value,
+    });
+    session.form.surveyConfig = cloneSurveyConfig({
+      surveyConfig: surveyConfig.value,
+    });
+    await router.replace({
+      name: "/conversation/[conversationSlugId]/edit/",
+      params: { conversationSlugId: conversationSlugId.value },
+      query: route.query,
+    });
+    return;
+  }
   const returnPath = getConversationEditReturnPath({
-    conversationSlugId,
+    conversationSlugId: conversationSlugId.value,
     returnTo: route.query.returnTo,
   });
   await router.replace(returnPath);

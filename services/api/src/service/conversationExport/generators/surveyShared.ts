@@ -4,14 +4,17 @@ import {
     maxdiffResultTable,
     opinionModerationTable,
     opinionTable,
-    surveyAnswerOptionTable,
     surveyAnswerTable,
-    surveyQuestionOptionTable,
     surveyResponseTable,
     userTable,
     voteTable,
 } from "@/shared-backend/schema.js";
 import { PUBLIC_AGGREGATE_SUPPRESSION_THRESHOLD } from "@/shared/shared.js";
+import { getSurveyOptionText } from "@/shared/surveyChoiceText.js";
+import {
+    groupSurveyAnswerOptionRows,
+    loadSurveyAnswerOptionRows,
+} from "@/service/surveyAnswerOptions.js";
 import type {
     ConversationType,
     SurveyAggregateRow as PublicSurveyAggregateRow,
@@ -93,6 +96,7 @@ interface SurveyOptionExportMetadata {
     exportQuestionId: number;
     optionOrder: number;
     optionText: string;
+    allowsText: 0 | 1;
 }
 
 interface SurveyExportMetadata {
@@ -207,6 +211,7 @@ function buildSurveyExportMetadata({
                 exportQuestionId: questionMetadata.exportQuestionId,
                 optionOrder: optionIndex + 1,
                 optionText: option.optionText,
+                allowsText: option.allowsText ? 1 : 0,
             };
             nextOptionId += 1;
             optionIdByOptionSlugId.set(
@@ -219,6 +224,7 @@ function buildSurveyExportMetadata({
                 "question-id": optionMetadata.exportQuestionId,
                 "option-order": optionMetadata.optionOrder,
                 "option-text": optionMetadata.optionText,
+                "allows-text": optionMetadata.allowsText,
             });
         }
     }
@@ -394,35 +400,35 @@ async function loadSurveyCountedParticipantIds({
                   )
                   .where(
                       and(
-                          eq(
-                              maxdiffResultTable.conversationId,
-                              conversationId,
-                          ),
+                          eq(maxdiffResultTable.conversationId, conversationId),
                           eq(userTable.isDeleted, false),
                           isNull(maxdiffComparisonTable.deletedAt),
                       ),
                   )
             : await db
                   .selectDistinct({ participantId: voteTable.authorId })
-            .from(voteTable)
-            .innerJoin(opinionTable, eq(voteTable.opinionId, opinionTable.id))
-            .innerJoin(userTable, eq(voteTable.authorId, userTable.id))
-            .leftJoin(
-                opinionModerationTable,
-                and(
-                    eq(opinionModerationTable.opinionId, opinionTable.id),
-                    isNull(opinionModerationTable.deletedAt),
-                ),
-            )
-            .where(
-                and(
-                    eq(opinionTable.conversationId, conversationId),
-                    eq(userTable.isDeleted, false),
-                    isNull(opinionModerationTable.id),
-                    isNotNull(opinionTable.currentContentId),
-                    isNotNull(voteTable.currentContentId),
-                ),
-            );
+                  .from(voteTable)
+                  .innerJoin(
+                      opinionTable,
+                      eq(voteTable.opinionId, opinionTable.id),
+                  )
+                  .innerJoin(userTable, eq(voteTable.authorId, userTable.id))
+                  .leftJoin(
+                      opinionModerationTable,
+                      and(
+                          eq(opinionModerationTable.opinionId, opinionTable.id),
+                          isNull(opinionModerationTable.deletedAt),
+                      ),
+                  )
+                  .where(
+                      and(
+                          eq(opinionTable.conversationId, conversationId),
+                          eq(userTable.isDeleted, false),
+                          isNull(opinionModerationTable.id),
+                          isNotNull(opinionTable.currentContentId),
+                          isNotNull(voteTable.currentContentId),
+                      ),
+                  );
 
     return new Set(participantRows.map((row) => row.participantId));
 }
@@ -447,7 +453,11 @@ async function loadRowsInIdBatches<Id extends string | number, Row>({
     loadBatch: (ids: Id[]) => Promise<Row[]>;
 }): Promise<Row[]> {
     const rows: Row[] = [];
-    for (let offset = 0; offset < ids.length; offset += SURVEY_QUERY_ID_BATCH_SIZE) {
+    for (
+        let offset = 0;
+        offset < ids.length;
+        offset += SURVEY_QUERY_ID_BATCH_SIZE
+    ) {
         rows.push(
             ...(await loadBatch(
                 ids.slice(offset, offset + SURVEY_QUERY_ID_BATCH_SIZE),
@@ -462,9 +472,11 @@ export async function loadSurveyExportContext({
     conversationId,
     conversationType = "polis",
     includeClusterMemberships = true,
+    includeOptionText = false,
 }: Pick<GeneratorParams, "db" | "conversationId"> & {
     conversationType?: ConversationType;
     includeClusterMemberships?: boolean;
+    includeOptionText?: boolean;
 }): Promise<SurveyExportContext> {
     const activeSurveyConfig = await getActiveSurveyConfigRecord({
         db,
@@ -515,7 +527,10 @@ export async function loadSurveyExportContext({
                     and(
                         eq(surveyResponseTable.conversationId, conversationId),
                         eq(userTable.isDeleted, false),
-                        inArray(surveyResponseTable.participantId, participantIds),
+                        inArray(
+                            surveyResponseTable.participantId,
+                            participantIds,
+                        ),
                     ),
                 ),
     });
@@ -555,71 +570,33 @@ export async function loadSurveyExportContext({
     const answerOptionRows = await loadRowsInIdBatches({
         ids: answerIds,
         loadBatch: async (surveyAnswerIds) =>
-            await db
-                .select({
-                    surveyAnswerId: surveyAnswerOptionTable.surveyAnswerId,
-                    optionSlugId: surveyQuestionOptionTable.slugId,
-                })
-                .from(surveyAnswerOptionTable)
-                .innerJoin(
-                    surveyQuestionOptionTable,
-                    eq(
-                        surveyAnswerOptionTable.surveyQuestionOptionId,
-                        surveyQuestionOptionTable.id,
-                    ),
-                )
-                .where(
-                    and(
-                        inArray(
-                            surveyAnswerOptionTable.surveyAnswerId,
-                            surveyAnswerIds,
-                        ),
-                        isNull(surveyAnswerOptionTable.deletedAt),
-                    ),
-                ),
+            await loadSurveyAnswerOptionRows({
+                db,
+                answerIds: surveyAnswerIds,
+                includeText: includeOptionText,
+            }),
     });
 
-    const optionSlugIdsByAnswerId = new Map<number, string[]>();
-    for (const answerOption of answerOptionRows) {
-        const optionSlugIds =
-            optionSlugIdsByAnswerId.get(answerOption.surveyAnswerId) ?? [];
-        optionSlugIds.push(answerOption.optionSlugId);
-        optionSlugIdsByAnswerId.set(answerOption.surveyAnswerId, optionSlugIds);
-    }
+    const optionsByAnswerId = groupSurveyAnswerOptionRows(answerOptionRows);
 
     const answersByResponseId = new Map<
         number,
-        Map<
-            number,
-            {
-                answerId: number;
-                answeredQuestionSemanticVersion: number;
-                textValueHtml: string | null;
-                textValuePlainText: string | null;
-                optionSlugIds: string[];
-            }
-        >
+        Map<number, StoredSurveyAnswer>
     >();
     for (const answer of answerRows) {
         const answersByQuestionId =
             answersByResponseId.get(answer.surveyResponseId) ??
-            new Map<
-                number,
-                {
-                    answerId: number;
-                    answeredQuestionSemanticVersion: number;
-                    textValueHtml: string | null;
-                    textValuePlainText: string | null;
-                    optionSlugIds: string[];
-                }
-            >();
+            new Map<number, StoredSurveyAnswer>();
         answersByQuestionId.set(answer.surveyQuestionId, {
             answerId: answer.answerId,
             answeredQuestionSemanticVersion:
                 answer.answeredQuestionSemanticVersion,
             textValueHtml: answer.textValueHtml,
             textValuePlainText: answer.textValuePlainText,
-            optionSlugIds: optionSlugIdsByAnswerId.get(answer.answerId) ?? [],
+            optionSlugIds:
+                optionsByAnswerId.get(answer.answerId)?.optionSlugIds ?? [],
+            optionTextValues: optionsByAnswerId.get(answer.answerId)
+                ?.optionTextValues,
         });
         answersByResponseId.set(answer.surveyResponseId, answersByQuestionId);
     }
@@ -736,7 +713,7 @@ function buildPublicSurveyAggregateBlockRows({
             : formatPercentage({
                   numerator: optionCount.count,
                   denominator,
-        }),
+              }),
         isSuppressed,
         isPublicAggregateSuppressionEnabled:
             question.isPublicAggregateSuppressionEnabled,
@@ -819,13 +796,13 @@ export function buildSurveyAggregateResultRows({
         const validOverallAnswerStates: SurveyChoiceParticipantAnswer[] = [];
         for (const participantState of countedParticipantStates) {
             const formItem = deriveSurveyQuestionFormItem({
-                    question,
-                    storedAnswer:
-                        participantState.surveyState.answersByQuestionId.get(
-                            question.id,
-                        ),
-                    surveyIsOptional: activeSurveyConfig.isOptional,
-                });
+                question,
+                storedAnswer:
+                    participantState.surveyState.answersByQuestionId.get(
+                        question.id,
+                    ),
+                surveyIsOptional: activeSurveyConfig.isOptional,
+            });
             if (
                 formItem.isCurrentAnswerValid &&
                 formItem.currentAnswer?.questionType === "choice"
@@ -1237,7 +1214,11 @@ export function buildSurveyParticipantResponseRows({
                     ...baseRow,
                     "option-id": optionId,
                     "answer-text-html": "",
-                    "answer-text-plain": "",
+                    "answer-text-plain":
+                        getSurveyOptionText({
+                            values: currentAnswer.optionTextValues,
+                            optionSlugId,
+                        }) ?? "",
                 });
             }
         }

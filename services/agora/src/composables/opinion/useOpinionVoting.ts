@@ -15,7 +15,9 @@ export interface UseOpinionVotingParams {
 
 export interface UseOpinionVotingReturn {
   userVotes: ComputedRef<readonly UserVote[]>;
-  castVote: (params: OpinionVoteParams) => Promise<CastVoteResponse | undefined>;
+  castVote: (
+    params: OpinionVoteParams
+  ) => Promise<CastVoteResponse | undefined>;
   fetchUserVotingData: () => Promise<void>;
 }
 
@@ -27,8 +29,10 @@ export function useOpinionVoting({
   function captureVotingAction(): () => boolean {
     const voterId = authStore.userId;
     const isCurrentView = captureAction?.() ?? (() => true);
-    return () => isCurrentView() && (authStore.userId === voterId ||
-      (voterId === undefined && authStore.isGuest));
+    return () =>
+      isCurrentView() &&
+      (authStore.userId === voterId ||
+        (voterId === undefined && authStore.isGuest));
   }
   // Use TanStack Query for vote data
   const userVotesQuery = useUserVotesQuery({
@@ -43,11 +47,16 @@ export function useOpinionVoting({
     return userVotesQuery.data.value || [];
   });
 
-  async function castVote({ opinionSlugId, voteAction }: OpinionVoteParams): Promise<CastVoteResponse | undefined> {
+  async function castVote({
+    opinionSlugId,
+    voteAction,
+    sourceVersion,
+  }: OpinionVoteParams): Promise<CastVoteResponse | undefined> {
     const isCurrent = captureVotingAction();
     const result = await voteMutation.mutateAsync({
       opinionSlugId,
       voteAction,
+      sourceVersion,
       isCurrent,
     });
 

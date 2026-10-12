@@ -1,13 +1,12 @@
-// WARNING: this is also used in schema.ts and cannot be imported there so it was copy-pasted
-// IF YOU CHANGE THESE VALUES ALSO CHANGE THEM IN SCHEMA.TS
 export const MAX_LENGTH_OPTION = 30;
-export const MAX_LENGTH_TITLE = 140; // 140 is LinkedIn question limit
+export const MAX_LENGTH_TITLE = 150;
+export const MAX_LENGTH_CONVERSATION_TITLE = 150;
 export const MAX_LENGTH_BODY = 1000;
 export const MAX_LENGTH_BODY_HTML = 3000; // Reserve extra space for HTML tags
 export const MAX_LENGTH_CONVERSATION_BODY = 5000;
 export const MAX_LENGTH_CONVERSATION_BODY_HTML = 30000;
 export const LEGACY_MAX_LENGTH_CONVERSATION_BODY_HTML_OUTPUT = 60000;
-export const MAX_LENGTH_OPINION = 280;
+export const MAX_LENGTH_OPINION = 350;
 export const MAX_LENGTH_OPINION_HTML_OUTPUT = 3000; // Old value for database retro-compatibility of existing data
 export const MAX_BYTES_RICH_TEXT_HTML = 16_384;
 export const MAX_BYTES_CONVERSATION_BODY_HTML = 60_000;
@@ -15,6 +14,8 @@ export const MAX_LENGTH_CONVERSATION_EMAIL_UPDATE = 10_000;
 export const MAX_BYTES_CONVERSATION_EMAIL_UPDATE_HTML = 16_384;
 export const MAX_LENGTH_SURVEY_QUESTION = 500;
 export const MAX_LENGTH_SURVEY_OPTION = 200;
+export const MAX_LENGTH_SURVEY_OPTION_TEXT = 300;
+export const MAX_BYTES_SURVEY_OPTION_TEXT = 16_384;
 export const PUBLIC_AGGREGATE_SUPPRESSION_THRESHOLD = 5;
 export const MAX_LENGTH_NAME_CREATOR = 65;
 export const MAX_LENGTH_DESCRIPTION_CREATOR = 280;

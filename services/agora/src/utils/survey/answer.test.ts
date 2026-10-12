@@ -1,4 +1,7 @@
-import type { SurveyAnswerDraft, SurveyQuestionFormItem } from "src/shared/types/zod";
+import type {
+  SurveyAnswerDraft,
+  SurveyQuestionFormItem,
+} from "src/shared/types/zod";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -8,6 +11,169 @@ import {
   isSurveyAnswerSubmittable,
   normalizeSurveyAnswer,
 } from "./answer";
+
+function createChoiceQuestion(
+  maxSelections: number
+): Extract<SurveyQuestionFormItem, { questionType: "choice" }> {
+  return {
+    questionType: "choice",
+    choiceDisplay: "list",
+    questionSlugId: "question1",
+    questionText: "How do you travel?",
+    isRequired: true,
+    isPublicAggregateSuppressionEnabled: false,
+    displayOrder: 0,
+    constraints: { type: "choice", minSelections: 1, maxSelections },
+    options: [
+      {
+        optionSlugId: "option-a",
+        optionText: "Other",
+        displayOrder: 0,
+        allowsText: true,
+      },
+      {
+        optionSlugId: "option-b",
+        optionText: "Bicycle",
+        displayOrder: 1,
+        allowsText: true,
+      },
+    ],
+    isPassed: false,
+    isStale: false,
+    isMissingRequired: true,
+    isCurrentAnswerValid: false,
+    currentSemanticVersion: 1,
+  };
+}
+
+describe("optional choice text", () => {
+  it("does not mistake inherited object keys for accompanying text", () => {
+    const question = createChoiceQuestion(1);
+    question.options[0].optionSlugId = "toString";
+    expect(
+      normalizeSurveyAnswer({
+        question,
+        selectedSingleOptionSlugId: "toString",
+        selectedMultiOptionSlugIds: [],
+        textValueHtml: "",
+        textValuePlainText: "",
+      })
+    ).toEqual({
+      questionType: "choice",
+      optionSlugIds: ["toString"],
+      optionTextValues: { toString: "" },
+    });
+  });
+  it.each([1, 2])(
+    "allows a required choice with blank optional text and a %i-selection limit",
+    (maxSelections) => {
+      const question = createChoiceQuestion(maxSelections);
+      const answer = normalizeSurveyAnswer({
+        question,
+        selectedSingleOptionSlugId: "option-a",
+        selectedMultiOptionSlugIds: ["option-a"],
+        textValueHtml: "",
+        textValuePlainText: "",
+        optionTextValues: { "option-a": "  " },
+      });
+      expect(answer).toEqual({
+        questionType: "choice",
+        optionSlugIds: ["option-a"],
+        optionTextValues: { "option-a": "  " },
+      });
+      expect(isSurveyAnswerSubmittable({ question, answer })).toBe(true);
+    }
+  );
+
+  it("preserves raw text for validation and excludes deselected drafts", () => {
+    const question = createChoiceQuestion(2);
+    const values = {
+      "option-a": " Cargo bike ",
+      "option-b": "Electric",
+      unused: "Retained local draft",
+    };
+    const answer = normalizeSurveyAnswer({
+      question,
+      selectedSingleOptionSlugId: null,
+      selectedMultiOptionSlugIds: ["option-a", "option-b"],
+      textValueHtml: "",
+      textValuePlainText: "",
+      optionTextValues: values,
+    });
+    expect(answer).toEqual({
+      questionType: "choice",
+      optionSlugIds: ["option-a", "option-b"],
+      optionTextValues: { "option-a": " Cargo bike ", "option-b": "Electric" },
+    });
+    if (answer === undefined) throw new Error("Expected fixture answer");
+    expect(buildSurveyAnswerSubmission(answer)).toEqual(answer);
+    expect(values.unused).toBe("Retained local draft");
+  });
+
+  it("detects text-only edits and explicit clearing", () => {
+    const original: SurveyAnswerDraft = {
+      questionType: "choice",
+      optionSlugIds: ["option-a"],
+      optionTextValues: { "option-a": "Cargo bike" },
+    };
+    expect(
+      areSurveyAnswersEqual({
+        left: original,
+        right: { ...original, optionTextValues: { "option-a": "Tricycle" } },
+      })
+    ).toBe(false);
+    expect(
+      areSurveyAnswersEqual({
+        left: original,
+        right: { ...original, optionTextValues: { "option-a": "" } },
+      })
+    ).toBe(false);
+    expect(
+      areSurveyAnswersEqual({
+        left: { questionType: "choice", optionSlugIds: ["option-a"] },
+        right: { ...original, optionTextValues: { "option-a": "" } },
+      })
+    ).toBe(true);
+  });
+
+  it("enforces the grapheme limit without requiring text", () => {
+    const question = createChoiceQuestion(1);
+    const answer: SurveyAnswerDraft = {
+      questionType: "choice",
+      optionSlugIds: ["option-a"],
+      optionTextValues: { "option-a": "👨‍👩‍👧‍👦".repeat(300) },
+    };
+    expect(isSurveyAnswerSubmittable({ question, answer })).toBe(true);
+    expect(
+      isSurveyAnswerSubmittable({
+        question,
+        answer: {
+          ...answer,
+          optionTextValues: { "option-a": "a".repeat(301) },
+        },
+      })
+    ).toBe(false);
+    expect(
+      isSurveyAnswerSubmittable({
+        question,
+        answer: { ...answer, optionTextValues: { "option-b": "Unselected" } },
+      })
+    ).toBe(false);
+  });
+
+  it("rejects overlong whitespace instead of trimming it into a submittable draft", () => {
+    const question = createChoiceQuestion(1);
+    const answer = normalizeSurveyAnswer({
+      question,
+      selectedSingleOptionSlugId: "option-a",
+      selectedMultiOptionSlugIds: [],
+      textValueHtml: "",
+      textValuePlainText: "",
+      optionTextValues: { "option-a": " ".repeat(301) },
+    });
+    expect(isSurveyAnswerSubmittable({ question, answer })).toBe(false);
+  });
+});
 
 describe("buildSurveyAnswerSubmission", () => {
   it("strips locally derived plain text from free-text submissions", () => {

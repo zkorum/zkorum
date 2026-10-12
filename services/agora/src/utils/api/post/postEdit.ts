@@ -57,8 +57,28 @@ export function useBackendPostEditApi() {
     return Dto.updateConversationResponse.parse(response.data);
   }
 
+  async function refreshConversationMetadata({
+    conversationSlugId,
+    authenticated,
+  }: {
+    conversationSlugId: string;
+    authenticated: boolean;
+  }) {
+    const url = "/api/v1/conversation/get";
+    const request = Dto.getConversationRequest.parse({ conversationSlugId });
+    const requestConfig = authenticated
+      ? createRawAxiosRequestConfig({
+          encodedUcan: await buildEncodedUcan(url, { method: "POST" }),
+        })
+      : undefined;
+    const response = await api.post<unknown>(url, request, requestConfig);
+    const parsed = Dto.getConversationResponse.parse(response.data);
+    return parsed.status === "ready" ? parsed.conversationData : undefined;
+  }
+
   return {
     getConversationForEdit,
     updateConversation,
+    refreshConversationMetadata,
   };
 }

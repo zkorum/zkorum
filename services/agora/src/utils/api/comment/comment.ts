@@ -34,7 +34,11 @@ import type { z } from "zod";
 import { useBackendAuthApi } from "../auth";
 import { api } from "../client";
 import { useCommonApi } from "../common";
-import { type OpinionPageRequest, type OpinionPageResult,parseOpinionPageResponse } from "./opinionPageBoundary";
+import {
+  type OpinionPageRequest,
+  type OpinionPageResult,
+  parseOpinionPageResponse,
+} from "./opinionPageBoundary";
 
 export {
   type AnalysisData,
@@ -65,7 +69,9 @@ export function useBackendCommentApi() {
   const { isGuestOrLoggedIn } = storeToRefs(useAuthenticationStore());
   const { ensureParticipationAuthState } = useBackendAuthApi();
 
-  async function fetchOpinionPage(request: OpinionPageRequest & { signal?: AbortSignal }): Promise<OpinionPageResult> {
+  async function fetchOpinionPage(
+    request: OpinionPageRequest & { signal?: AbortSignal }
+  ): Promise<OpinionPageResult> {
     const { signal, ...pageRequest } = request;
     await waitForAuthInitialization();
     if (pageRequest.filter === "hidden") {
@@ -85,7 +91,11 @@ export function useBackendCommentApi() {
         api
       ).apiV1OpinionFetchHiddenPagePost(
         params,
-        createRawAxiosRequestConfig({ encodedUcan, timeoutProfile: "extended", signal })
+        createRawAxiosRequestConfig({
+          encodedUcan,
+          timeoutProfile: "extended",
+          signal,
+        })
       );
       return parseOpinionPageResponse({ request, rawResponse: response.data });
     }
@@ -102,7 +112,11 @@ export function useBackendCommentApi() {
       api
     ).apiV1OpinionFetchPagePost(
       params,
-      createRawAxiosRequestConfig({ encodedUcan, timeoutProfile: "extended", signal })
+      createRawAxiosRequestConfig({
+        encodedUcan,
+        timeoutProfile: "extended",
+        signal,
+      })
     );
     return parseOpinionPageResponse({ request, rawResponse: response.data });
   }
@@ -137,7 +151,11 @@ export function useBackendCommentApi() {
       api
     ).apiV1OpinionNextUnansweredPost(
       params,
-      createRawAxiosRequestConfig({ encodedUcan, timeoutProfile: "extended", signal })
+      createRawAxiosRequestConfig({
+        encodedUcan,
+        timeoutProfile: "extended",
+        signal,
+      })
     );
     return Dto.fetchNextUnansweredOpinionResponse.parse(response.data);
   }
@@ -189,7 +207,8 @@ export function useBackendCommentApi() {
 
     if (data.success) {
       // TODO: properly manage errors in backend and return login status to update to
-      const { authStateChanged, needsCacheRefresh } = await ensureParticipationAuthState();
+      const { authStateChanged, needsCacheRefresh } =
+        await ensureParticipationAuthState();
       return {
         success: true,
         opinionSlugId: data.opinionSlugId,
@@ -221,6 +240,24 @@ export function useBackendCommentApi() {
         timeoutProfile: "standard",
       })
     );
+  }
+
+  async function editOpinion(
+    request: z.infer<typeof Dto.editOpinionRequest>
+  ): Promise<z.infer<typeof Dto.editOpinionResponse>> {
+    const params = Dto.editOpinionRequest.parse(request);
+    const { url, options } =
+      await DefaultApiAxiosParamCreator().apiV1OpinionEditPost(params);
+    const encodedUcan = await buildEncodedUcan(url, options);
+    const response = await DefaultApiFactory(
+      undefined,
+      undefined,
+      api
+    ).apiV1OpinionEditPost(
+      params,
+      createRawAxiosRequestConfig({ encodedUcan })
+    );
+    return Dto.editOpinionResponse.parse(response.data);
   }
 
   async function fetchOpinionsBySlugIdList(
@@ -462,6 +499,7 @@ export function useBackendCommentApi() {
   }
 
   return {
+    editOpinion,
     createNewComment,
     fetchOpinionPage,
     fetchNextUnansweredOpinion,

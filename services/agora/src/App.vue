@@ -10,6 +10,11 @@
   <!-- Non-drawer pages (onboarding, project, embed, welcome, survey onboarding, 404) render their own layout -->
   <router-view v-else />
 
+  <ConversationPageMetadata
+    v-if="metadataConversationSlugId !== undefined"
+    :conversation-slug-id="metadataConversationSlugId"
+  />
+
   <PostSignupPreferencesDialog />
   <EmbeddedBrowserWarningDialog />
 
@@ -24,6 +29,7 @@ import { useRoute } from "vue-router";
 
 import { type AppTranslations, appTranslations } from "./App.i18n";
 import EmbeddedBrowserWarningDialog from "./components/embeddedBrowser/EmbeddedBrowserWarningDialog.vue";
+import ConversationPageMetadata from "./components/metadata/ConversationPageMetadata.vue";
 import PostSignupPreferencesDialog from "./components/onboarding/dialogs/PostSignupPreferencesDialog.vue";
 import { createOfflineNotificationController } from "./composables/offlineNotification";
 import { useComponentI18n } from "./composables/ui/useComponentI18n";
@@ -41,11 +47,13 @@ import { useBackendAuthApi } from "./utils/api/auth";
 import { createAuthInitializationController } from "./utils/auth/authInitialization";
 import { useHtmlNodeCssPatch } from "./utils/css/htmlNodeCssPatch";
 import { shouldUseDrawerLayout } from "./utils/router/appLayout";
+import { getConversationMetadataSlugId } from "./utils/router/conversationMetadataRoute";
 import {
   isConversationRouteName,
   isProjectRouteName,
 } from "./utils/router/conversationRouteContext";
 import { getSingleRouteParam } from "./utils/router/params";
+import { contentTranslationSubscriptions } from "./utils/translation/contentTranslationSubscriptions";
 import { useNotify } from "./utils/ui/notify";
 
 const { t } = useComponentI18n<AppTranslations>(appTranslations);
@@ -73,6 +81,9 @@ const { zupassIframeContainer } = useZupassVerification();
 
 // Determine layout mode from route name
 const route = useRoute();
+const metadataConversationSlugId = computed(() =>
+  getConversationMetadataSlugId(route)
+);
 const realtimeConversationSlugId = computed(() => {
   if (!isConversationRouteName(route.name)) {
     return undefined;
@@ -96,9 +107,9 @@ const realtimeProjectSlug = computed(() => {
   return getSingleRouteParam(route.params.projectSlug) || undefined;
 });
 const realtimeTopics = computed(() => {
-  const topics: string[] = [];
+  const topics = new Set(contentTranslationSubscriptions.topics.value);
   if (realtimeConversationSlugId.value !== undefined) {
-    topics.push(
+    topics.add(
       buildContentTranslationTopic({
         conversationSlugId: realtimeConversationSlugId.value,
         targetLanguageCode: languageStore.displayLanguage,
@@ -108,7 +119,7 @@ const realtimeTopics = computed(() => {
 
   const projectSlug = realtimeProjectSlug.value;
   if (projectSlug !== undefined) {
-    topics.push(
+    topics.add(
       buildProjectContentTranslationTopic({
         projectSlug,
         targetLanguageCode: languageStore.displayLanguage,
@@ -116,7 +127,7 @@ const realtimeTopics = computed(() => {
     );
   }
 
-  return topics;
+  return [...topics].sort();
 });
 
 // Initialize SSE for real-time events after auth initialization.

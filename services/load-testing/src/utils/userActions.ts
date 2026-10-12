@@ -9,6 +9,7 @@ import {
     fetchMainPage,
     fetchConversationPage,
     type CreateOpinionResponse,
+    type FetchOpinionsResponse,
     type VoteResponse,
 } from "./api.js";
 import { logLoadEvent } from "./semanticLog.js";
@@ -27,7 +28,7 @@ export interface UserActionConfig {
     conversationSlugIds: string[]; // Can be single or multiple conversations
     opinionTexts: string[];
     sleepBetweenActions: number;
-    allAvailableOpinions: string[];
+    allAvailableOpinions: FetchOpinionsResponse["opinions"];
     alreadyVotedOpinionSlugs?: string[];
     priorityOpinionSlugs?: string[];
     minPriorityVotesToCast?: number;
@@ -105,7 +106,7 @@ export async function performUserActions({
         conversationSlugId: string;
     }[] = [];
     const votedOpinions = new Set(alreadyVotedOpinionSlugs ?? []);
-    const availableOpinionSlugs = [...allAvailableOpinions];
+    const availableOpinions = [...allAvailableOpinions];
     const priorityOpinionSlugSet = new Set(priorityOpinionSlugs ?? []);
     const priorityVoteTarget = minPriorityVotesToCast ?? 0;
     let priorityVotesSucceeded = 0;
@@ -291,7 +292,6 @@ export async function performUserActions({
                     slugId: opinionResult.opinionSlugId,
                     conversationSlugId,
                 });
-                availableOpinionSlugs.push(opinionResult.opinionSlugId);
                 votedOpinions.add(opinionResult.opinionSlugId);
                 metrics.opinionsSucceeded++;
             } else {
@@ -302,13 +302,13 @@ export async function performUserActions({
         }
 
         // Get unvoted opinions
-        const unvotedOpinions = availableOpinionSlugs.filter(
-            (opinionSlugId) => !votedOpinions.has(opinionSlugId),
+        const unvotedOpinions = availableOpinions.filter(
+            (opinion) => !votedOpinions.has(opinion.opinionSlugId),
         );
 
         if (unvotedOpinions.length === 0) {
             console.log(
-                `User ${userId} has no more unvoted opinions (voted: ${String(votedOpinions.size)}/${String(availableOpinionSlugs.length)})`,
+                `User ${userId} has no more unvoted opinions (voted: ${String(votedOpinions.size)}/${String(availableOpinions.length)})`,
             );
             logLoadEvent({
                 phase: "user_action",
@@ -318,15 +318,15 @@ export async function performUserActions({
                 metadata: {
                     reason: "no_unvoted_opinions",
                     votedOpinions: votedOpinions.size,
-                    availableOpinions: availableOpinionSlugs.length,
+                    availableOpinions: availableOpinions.length,
                 },
             });
             break;
         }
 
         const priorityUnvotedOpinions = shouldPrioritizeVotes
-            ? unvotedOpinions.filter((opinionSlugId) =>
-                  priorityOpinionSlugSet.has(opinionSlugId),
+            ? unvotedOpinions.filter((opinion) =>
+                  priorityOpinionSlugSet.has(opinion.opinionSlugId),
               )
             : [];
         const targetOpinionPool =
@@ -335,10 +335,11 @@ export async function performUserActions({
                 : unvotedOpinions;
 
         // Randomly select an unvoted opinion, prioritizing the assigned conversation first.
-        const targetOpinionSlugId =
+        const targetOpinion =
             targetOpinionPool[
                 Math.floor(Math.random() * targetOpinionPool.length)
             ];
+        const targetOpinionSlugId = targetOpinion.opinionSlugId;
 
         const votingAction = chooseVotingAction({
             userId,
@@ -348,6 +349,7 @@ export async function performUserActions({
 
         const result = await castVote({
             commentSlugId: targetOpinionSlugId,
+            sourceVersion: targetOpinion.sourceVersion,
             votingAction,
             did,
             prefixedKey,

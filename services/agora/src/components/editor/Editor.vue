@@ -159,6 +159,7 @@ const props = withDefaults(
   }
 );
 const emit = defineEmits<{
+  ready: [serializedContent: string];
   manuallyFocused: [];
   blur: [];
   submit: [];
@@ -352,6 +353,7 @@ const editor = useEditor({
   },
   onCreate: ({ editor }) => {
     updateEditorState({ editorInstance: editor, updateModelText: false });
+    emit("ready", serializedEditorContent);
   },
   onUpdate: ({ editor }) => {
     updateEditorState({ editorInstance: editor, updateModelText: true });
@@ -377,6 +379,9 @@ onUnmounted(() => {
 
 // Expose focus method for parent components
 defineExpose({
+  focusEnd: () => {
+    editor.value?.chain().focus("end").run();
+  },
   focus: () => {
     editor.value?.chain().focus().run();
   },

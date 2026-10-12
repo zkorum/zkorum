@@ -16,6 +16,8 @@
       :on-view-analysis="props.onViewAnalysis"
       :is-voting-disabled="isVotingDisabled"
       :conversation-route-context="props.conversationRouteContext"
+      :editing-opinion="editingOpinion"
+      @edit-opinion="emit('editOpinion', $event)"
     />
     <CommentSection
       v-else
@@ -32,6 +34,8 @@
       :is-voting-disabled="isVotingDisabled"
       :conversation-route-context="props.conversationRouteContext"
       :filter="props.commentFilter"
+      :editing-opinion="editingOpinion"
+      @edit-opinion="emit('editOpinion', $event)"
     />
   </div>
 </template>
@@ -42,7 +46,10 @@ import type {
   RegisterChildRefreshHandler,
   SubmittedCommentData,
 } from "src/composables/conversation/useConversationParentState";
-import type { ExtendedConversationDisplayData } from "src/shared/types/zod";
+import type {
+  DisplayedOpinionItem,
+  ExtendedConversationDisplayData,
+} from "src/shared/types/zod";
 import { useUserStore } from "src/stores/user";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { useInvalidateCommentQueries } from "src/utils/api/comment/useCommentQueries";
@@ -70,10 +77,12 @@ const props = defineProps<{
   commentFilter: CommentFilterOptions;
   onViewAnalysis: () => void;
   conversationRouteContext: ConversationRouteContext;
+  editingOpinion: DisplayedOpinionItem | undefined;
 }>();
 
 const emit = defineEmits<{
   "update:commentFilter": [filter: CommentFilterOptions];
+  editOpinion: [opinion: DisplayedOpinionItem];
 }>();
 
 const setCurrentTabLoading = inject<(loading: boolean) => void>(
@@ -102,8 +111,7 @@ const oneAtATimeRef = ref<InstanceType<typeof OneAtATimeSection>>();
 const isTabActive = ref(true);
 let unregisterChildRefreshHandler: (() => void) | undefined;
 
-const { markCommentsAsStale } =
-  useInvalidateCommentQueries();
+const { markCommentsAsStale } = useInvalidateCommentQueries();
 const { loadAuthenticatedModules } = useBackendAuthApi();
 const userStore = useUserStore();
 
@@ -185,9 +193,12 @@ async function submittedComment(data: SubmittedCommentData): Promise<void> {
     opinionSectionRef.value.highlightOpinion(data.displayedOpinionItem);
   }
   if (oneAtATimeRef.value) {
-    await oneAtATimeRef.value.acknowledgeCreatedOpinion(
-      data.displayedOpinionItem.opinionSlugId
-    );
+    if (data.kind === "edited")
+      await oneAtATimeRef.value.acknowledgeEditedOpinion(data.displayedOpinionItem);
+    else
+      await oneAtATimeRef.value.acknowledgeCreatedOpinion(
+        data.displayedOpinionItem.opinionSlugId
+      );
   }
 
   // Handle deferred cache refresh if auth state changed (new guest user)

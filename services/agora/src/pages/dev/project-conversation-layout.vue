@@ -132,6 +132,7 @@
               class="project-conversation-layout-dev__statement-card"
             >
               <TranslatedCommentItem
+                :editing-opinion-slug-id="undefined"
                 :show-vote-results="true"
                 :comment-item="commentItem"
                 :post-slug-id="conversation.slugId"

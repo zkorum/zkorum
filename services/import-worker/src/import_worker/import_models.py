@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
+from import_worker.generated_shared_types import MAX_LENGTH_CONVERSATION_TITLE
+
 
 class PolisConversationData(BaseModel):
     model_config = ConfigDict(extra="allow")
@@ -66,7 +68,7 @@ class ImportPolisResults(BaseModel):
 class SummaryCsvRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    topic: str = Field(min_length=1, max_length=140)
+    topic: str = Field(min_length=1, max_length=MAX_LENGTH_CONVERSATION_TITLE)
     url: HttpUrl | Literal[""] | None = None
     views: int | None = Field(default=None, ge=0)
     voters: int = Field(ge=0)

@@ -14,7 +14,8 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast
 
 import regex
-from sqlalchemy import and_, delete, insert, or_, select, text, update
+from sqlalchemy import and_, or_, select, text, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from scoring_worker.generated_models import (
@@ -50,9 +51,10 @@ PARTICIPANT_MILESTONE_SEEDS = (2,)
 VOTE_MILESTONE_SEEDS: tuple[int, ...] = ()
 MILESTONE_MULTIPLIERS = ((1, 1), (25, 10), (5, 1))
 SCORING_ADVISORY_LOCK_NAMESPACE = 1_397_705_809
+SCORE_WRITE_BATCH_SIZE = 1_000
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
     from uuid import UUID
 
     from sqlalchemy import Connection, Engine
@@ -768,7 +770,7 @@ def _write_scores_batch(
     *,
     conversation_ids: list[int],
     results: dict[int, tuple[list[ScoredEntity], dict[str, int]]],
-    user_scores: list[UserScoreEntry] | None = None,
+    user_scores: Sequence[UserScoreEntry],
 ) -> dict[int, int]:
     """Write scoring results for multiple conversations in one transaction.
 
@@ -783,15 +785,6 @@ def _write_scores_batch(
     score_ids: dict[int, int] = {}
 
     with Session(connection, join_transaction_mode="create_savepoint") as session:
-        session.execute(
-            delete(MaxdiffUserEntityScore).where(
-                MaxdiffUserEntityScore.maxdiff_result_id.in_(
-                    select(MaxdiffResult.id).where(
-                        MaxdiffResult.conversation_id.in_(conversation_ids)
-                    )
-                )
-            )
-        )
         for conv_id, (scores, participant_counts) in results.items():
             if not scores:
                 continue
@@ -859,25 +852,94 @@ def _write_scores_batch(
                 .values(current_ranking_score_id=ranking_score.id),
             )
 
-        # The conversation is locked and its previous rows were deleted above.
-        # Passing values to execute lets the driver batch them without building
-        # a single statement that exceeds PostgreSQL's parameter limit.
-        if user_scores:
-            values = [
-                {
-                    "maxdiff_result_id": e.maxdiff_result_id,
-                    "entity_slug_id": e.entity_slug_id,
-                    "score": e.score,
-                    "display_score": e.display_score,
-                    "uncertainty_left": e.uncertainty_left,
-                    "uncertainty_right": e.uncertainty_right,
-                }
-                for e in user_scores
-            ]
-            session.execute(insert(MaxdiffUserEntityScore), values)
-
+        _sync_personal_scores(
+            session=session,
+            conversation_ids=conversation_ids,
+            user_scores=user_scores,
+            now=now,
+        )
         session.commit()
     return score_ids
+
+
+def _sync_personal_scores(
+    *,
+    session: Session,
+    conversation_ids: Sequence[int],
+    user_scores: Sequence[UserScoreEntry],
+    now: datetime,
+) -> None:
+    """Reuse active score rows and tombstone only keys omitted by this publication."""
+    submitted_keys = {(entry.maxdiff_result_id, entry.entity_slug_id) for entry in user_scores}
+    active_rows = session.execute(
+        select(
+            MaxdiffUserEntityScore.id,
+            MaxdiffUserEntityScore.maxdiff_result_id,
+            MaxdiffUserEntityScore.entity_slug_id,
+        )
+        .where(
+            MaxdiffUserEntityScore.maxdiff_result_id.in_(
+                select(MaxdiffResult.id).where(MaxdiffResult.conversation_id.in_(conversation_ids))
+            ),
+            MaxdiffUserEntityScore.deleted_at.is_(None),
+        )
+        .execution_options(yield_per=SCORE_WRITE_BATCH_SIZE)
+    ).tuples()
+    removed_ids = [
+        score_id
+        for score_id, result_id, slug_id in active_rows
+        if (result_id, slug_id) not in submitted_keys
+    ]
+    for offset in range(0, len(removed_ids), SCORE_WRITE_BATCH_SIZE):
+        session.execute(
+            update(MaxdiffUserEntityScore)
+            .where(
+                MaxdiffUserEntityScore.id.in_(removed_ids[offset : offset + SCORE_WRITE_BATCH_SIZE])
+            )
+            .values(deleted_at=now)
+            .execution_options(synchronize_session=False)
+        )
+
+    statement = pg_insert(MaxdiffUserEntityScore)
+    upsert = statement.on_conflict_do_update(
+        index_elements=[
+            MaxdiffUserEntityScore.maxdiff_result_id,
+            MaxdiffUserEntityScore.entity_slug_id,
+        ],
+        set_={
+            MaxdiffUserEntityScore.score: statement.excluded.score,
+            MaxdiffUserEntityScore.display_score: statement.excluded.display_score,
+            MaxdiffUserEntityScore.uncertainty_left: statement.excluded.uncertainty_left,
+            MaxdiffUserEntityScore.uncertainty_right: statement.excluded.uncertainty_right,
+            MaxdiffUserEntityScore.deleted_at: None,
+        },
+        where=or_(
+            MaxdiffUserEntityScore.deleted_at.is_not(None),
+            MaxdiffUserEntityScore.score.is_distinct_from(statement.excluded.score),
+            MaxdiffUserEntityScore.display_score.is_distinct_from(statement.excluded.display_score),
+            MaxdiffUserEntityScore.uncertainty_left.is_distinct_from(
+                statement.excluded.uncertainty_left
+            ),
+            MaxdiffUserEntityScore.uncertainty_right.is_distinct_from(
+                statement.excluded.uncertainty_right
+            ),
+        ),
+    )
+    for offset in range(0, len(user_scores), SCORE_WRITE_BATCH_SIZE):
+        session.execute(
+            upsert,
+            [
+                {
+                    "maxdiff_result_id": entry.maxdiff_result_id,
+                    "entity_slug_id": entry.entity_slug_id,
+                    "score": entry.score,
+                    "display_score": entry.display_score,
+                    "uncertainty_left": entry.uncertainty_left,
+                    "uncertainty_right": entry.uncertainty_right,
+                }
+                for entry in user_scores[offset : offset + SCORE_WRITE_BATCH_SIZE]
+            ],
+        )
 
 
 def _clear_scores_batch(
@@ -912,10 +974,13 @@ def _prune_unpublished_ranking_snapshots(
     conversation_id: int,
     current_snapshot_id: int,
 ) -> None:
-    """Keep only the baseline, current snapshot, and published checkpoints."""
+    """Keep baseline/current/checkpoint snapshots active and tombstone the rest."""
     earliest_snapshot_id = (
         select(RankingConversationStatsSnapshot.id)
-        .where(RankingConversationStatsSnapshot.conversation_id == conversation_id)
+        .where(
+            RankingConversationStatsSnapshot.conversation_id == conversation_id,
+            RankingConversationStatsSnapshot.deleted_at.is_(None),
+        )
         .order_by(
             RankingConversationStatsSnapshot.created_at,
             RankingConversationStatsSnapshot.id,
@@ -931,27 +996,31 @@ def _prune_unpublished_ranking_snapshots(
         )
         .exists()
     )
-    prunable_snapshot_ids = list(
-        session.scalars(
-            select(RankingConversationStatsSnapshot.id).where(
-                RankingConversationStatsSnapshot.conversation_id == conversation_id,
-                RankingConversationStatsSnapshot.id != current_snapshot_id,
-                RankingConversationStatsSnapshot.id != earliest_snapshot_id,
-                ~has_checkpoint,
-            )
-        )
+    prunable_snapshot_ids = select(RankingConversationStatsSnapshot.id).where(
+        RankingConversationStatsSnapshot.conversation_id == conversation_id,
+        RankingConversationStatsSnapshot.deleted_at.is_(None),
+        RankingConversationStatsSnapshot.id != current_snapshot_id,
+        RankingConversationStatsSnapshot.id != earliest_snapshot_id,
+        ~has_checkpoint,
     )
-    if not prunable_snapshot_ids:
-        return
+    now = datetime.now(tz=UTC).replace(microsecond=0)
     session.execute(
-        delete(RankingConversationStatsItem).where(
-            RankingConversationStatsItem.stats_snapshot_id.in_(prunable_snapshot_ids)
+        update(RankingConversationStatsItem)
+        .where(
+            RankingConversationStatsItem.stats_snapshot_id.in_(prunable_snapshot_ids),
+            RankingConversationStatsItem.deleted_at.is_(None),
         )
+        .values(deleted_at=now)
+        .execution_options(synchronize_session=False)
     )
     session.execute(
-        delete(RankingConversationStatsSnapshot).where(
-            RankingConversationStatsSnapshot.id.in_(prunable_snapshot_ids)
+        update(RankingConversationStatsSnapshot)
+        .where(
+            RankingConversationStatsSnapshot.id.in_(prunable_snapshot_ids),
+            RankingConversationStatsSnapshot.deleted_at.is_(None),
         )
+        .values(deleted_at=now)
+        .execution_options(synchronize_session=False)
     )
 
 
@@ -1010,7 +1079,10 @@ def _update_ranking_stats_batch(
             )
             previous_snapshot = session.execute(
                 select(RankingConversationStatsSnapshot.is_closed)
-                .where(RankingConversationStatsSnapshot.conversation_id == conversation_id)
+                .where(
+                    RankingConversationStatsSnapshot.conversation_id == conversation_id,
+                    RankingConversationStatsSnapshot.deleted_at.is_(None),
+                )
                 .order_by(
                     RankingConversationStatsSnapshot.created_at.desc(),
                     RankingConversationStatsSnapshot.id.desc(),
@@ -1109,8 +1181,6 @@ def _update_ranking_stats_batch(
                 )
             checkpoint_changed = previous_snapshot is None
             if checkpoint_values:
-                from sqlalchemy.dialects.postgresql import insert as pg_insert
-
                 inserted_checkpoints = session.execute(
                     pg_insert(RankingConversationStatsCheckpoint)
                     .values(checkpoint_values)
@@ -1267,7 +1337,10 @@ def reconcile_unscored_conversations(engine: Engine) -> list[tuple[int, str]]:
     """Find conversations needing scoring (safety net for missed ZADDs)."""
     latest_snapshot_is_closed = (
         select(RankingConversationStatsSnapshot.is_closed)
-        .where(RankingConversationStatsSnapshot.conversation_id == Conversation.id)
+        .where(
+            RankingConversationStatsSnapshot.conversation_id == Conversation.id,
+            RankingConversationStatsSnapshot.deleted_at.is_(None),
+        )
         .order_by(
             RankingConversationStatsSnapshot.created_at.desc(),
             RankingConversationStatsSnapshot.id.desc(),
@@ -1287,7 +1360,10 @@ def reconcile_unscored_conversations(engine: Engine) -> list[tuple[int, str]]:
                 RankingConversationConfig.ranking_mode == "bws",
                 or_(
                     ~select(RankingConversationStatsSnapshot.id)
-                    .where(RankingConversationStatsSnapshot.conversation_id == Conversation.id)
+                    .where(
+                        RankingConversationStatsSnapshot.conversation_id == Conversation.id,
+                        RankingConversationStatsSnapshot.deleted_at.is_(None),
+                    )
                     .exists(),
                     latest_snapshot_is_closed != Conversation.is_closed,
                     RankingConversationConfig.scoring_input_revision

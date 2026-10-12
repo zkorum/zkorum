@@ -473,7 +473,7 @@ class ConversationContent(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     public_id: Mapped[uuid_pkg.UUID] = mapped_column(Uuid)
     conversation_id: Mapped[int] = mapped_column(Integer)
-    title: Mapped[str] = mapped_column(String(140))
+    title: Mapped[str] = mapped_column(String(150))
     body: Mapped[str | None] = mapped_column(Text, nullable=True)
     body_plain_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_language_code: Mapped[SpokenLanguageCode | None] = mapped_column(
@@ -653,6 +653,8 @@ class OpinionContent(Base):
     opinion_id: Mapped[int] = mapped_column(Integer)
     conversation_content_id: Mapped[int] = mapped_column(Integer)
     content: Mapped[str] = mapped_column(Text)
+    is_edited: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    edited_by_user_id: Mapped[uuid_pkg.UUID | None] = mapped_column(Uuid, nullable=True)
     content_plain_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_language_code: Mapped[SpokenLanguageCode | None] = mapped_column(
         SaEnum(
@@ -1215,6 +1217,7 @@ class SurveyAnswerOption(Base):
     survey_answer_id: Mapped[int] = mapped_column(Integer)
     survey_question_id: Mapped[int] = mapped_column(Integer)
     survey_question_option_id: Mapped[int] = mapped_column(Integer)
+    text_value_plain_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -1314,6 +1317,7 @@ class SurveyQuestionOption(Base):
     survey_question_id: Mapped[int] = mapped_column(Integer)
     current_content_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     display_order: Mapped[int] = mapped_column(Integer)
+    allows_text: Mapped[bool] = mapped_column(Boolean, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
 

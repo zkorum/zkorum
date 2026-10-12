@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { htmlToCountedText } from "@/shared/richText.js";
 import { createExportParticipantMap } from "./participantMap.js";
+import { buildCsvBuffer } from "./csv.js";
+import { surveyParticipantResponseHeaders } from "./surveyHeaders.js";
 import {
     buildSurveyAggregateResultRows,
     buildSurveyCompletionCounts,
@@ -57,12 +59,14 @@ const surveyConfig: ActiveSurveyConfigRecord = {
                     slugId: "optYes01",
                     displayOrder: 0,
                     optionText: "Yes",
+                    allowsText: false,
                 },
                 {
                     id: 102,
                     slugId: "optNo001",
                     displayOrder: 1,
                     optionText: "No",
+                    allowsText: false,
                 },
             ],
         },
@@ -163,6 +167,102 @@ function createCompleteMonoChoiceState({
 }
 
 describe("buildSurveyParticipantResponseRows", () => {
+    it("exports each selected option's plain text with its option ID and keeps aggregates independent of the text", async () => {
+        const config: ActiveSurveyConfigRecord = {
+            ...surveyConfig,
+            questions: surveyConfig.questions.map((question) =>
+                question.questionType === "choice"
+                    ? {
+                          ...question,
+                          constraints: {
+                              type: "choice",
+                              minSelections: 1,
+                              maxSelections: 2,
+                          },
+                          options: question.options.map((option) => ({
+                              ...option,
+                              allowsText: true,
+                          })),
+                      }
+                    : question,
+            ),
+        };
+        const participant = createCompleteMonoChoiceState({
+            participantId: "user-1",
+            responseId: 1,
+            optionSlugId: "optYes01",
+        });
+        participant.surveyState.activeSurveyConfig = config;
+        const answer: StoredSurveyAnswer = {
+            answerId: 11,
+            answeredQuestionSemanticVersion: 1,
+            textValueHtml: null,
+            textValuePlainText: null,
+            optionSlugIds: ["optYes01", "optNo001"],
+            optionTextValues: {
+                optYes01: 'Cargo bike, "family"\n<literal text>',
+                optNo001: "Tricycle",
+            },
+        };
+        participant.surveyState.answersByQuestionId.set(11, answer);
+        participant.surveyGate = deriveSurveyGate({
+            surveyState: participant.surveyState,
+            participantId: "user-1",
+        });
+        const context: SurveyExportContext = {
+            activeSurveyConfig: config,
+            participantIds: new Set(["user-1"]),
+            participantStates: [participant],
+            clusterMembershipByParticipantId: new Map(),
+        };
+        const rows = buildSurveyParticipantResponseRows({
+            context,
+            participantMap: createExportParticipantMap(),
+        });
+        expect(rows.slice(0, 2)).toMatchObject([
+            {
+                "option-id": 0,
+                "answer-text-html": "",
+                "answer-text-plain": 'Cargo bike, "family"\n<literal text>',
+            },
+            {
+                "option-id": 1,
+                "answer-text-html": "",
+                "answer-text-plain": "Tricycle",
+            },
+        ]);
+        expect(
+            buildSurveyQuestionOptionRows({ context }).every(
+                (row) => row["allows-text"] === 1,
+            ),
+        ).toBe(true);
+        const csv = await buildCsvBuffer({
+            headers: surveyParticipantResponseHeaders,
+            rows,
+        });
+        expect(csv.toString()).toContain(
+            '"Cargo bike, ""family""\n<literal text>"',
+        );
+        const aggregates = buildSurveyAggregateRows({
+            context,
+            includeSuppression: false,
+        });
+        participant.surveyState.answersByQuestionId.set(11, {
+            ...answer,
+            optionTextValues: undefined,
+        });
+        expect(
+            buildSurveyAggregateRows({ context, includeSuppression: false }),
+        ).toEqual(aggregates);
+        expect(
+            buildSurveyParticipantResponseRows({
+                context,
+                participantMap: createExportParticipantMap(),
+            })
+                .slice(0, 2)
+                .every((row) => row["answer-text-plain"] === ""),
+        ).toBe(true);
+    });
     it("exports question and option metadata with explicit order columns", () => {
         const context: SurveyExportContext = {
             activeSurveyConfig: surveyConfig,
@@ -200,6 +300,7 @@ describe("buildSurveyParticipantResponseRows", () => {
                 "question-id": 0,
                 "option-order": 1,
                 "option-text": "Yes",
+                "allows-text": 0,
             },
             {
                 "option-id": 1,
@@ -207,6 +308,7 @@ describe("buildSurveyParticipantResponseRows", () => {
                 "question-id": 0,
                 "option-order": 2,
                 "option-text": "No",
+                "allows-text": 0,
             },
         ]);
     });

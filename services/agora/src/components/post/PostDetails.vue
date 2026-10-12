@@ -83,18 +83,23 @@
           :is-voting-disabled="isVotingDisabled"
           :conversation-route-context="conversationRouteContext"
           filter="discover"
+          :editing-opinion="editingOpinion"
+          @edit-opinion="beginEditOpinion"
         />
       </div>
     </ZKHoverEffect>
 
     <FloatingBottomContainer v-if="!compactMode">
       <CommentComposer
+        :editing-opinion="editingOpinion"
         :post-slug-id="conversationData.metadata.conversationSlugId"
         :participation-mode="conversationData.metadata.participationMode"
         :requires-event-ticket="conversationData.metadata.requiresEventTicket"
         :survey-gate="conversationData.interaction.surveyGate"
         :is-composer-disabled="isVotingDisabled"
         :conversation-route-context="conversationRouteContext"
+        @edit-cancelled="editingOpinion = undefined"
+        @edited-opinion="handleEditedOpinion"
         @submitted-comment="submittedComment"
       />
     </FloatingBottomContainer>
@@ -112,7 +117,10 @@ import type {
   SubmittedCommentData,
 } from "src/composables/conversation/useConversationParentState";
 import type { ConversationContentFetchResponse } from "src/shared/types/dto";
-import type { ExtendedConversation } from "src/shared/types/zod";
+import type {
+  DisplayedOpinionItem,
+  ExtendedConversation,
+} from "src/shared/types/zod";
 import { useUserStore } from "src/stores/user";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import {
@@ -151,6 +159,20 @@ const emit = defineEmits<{
 }>();
 
 const currentTab = ref<"comment" | "analysis">("comment");
+const editingOpinion = ref<DisplayedOpinionItem>();
+function beginEditOpinion(opinion: DisplayedOpinionItem): void {
+  if (editingOpinion.value === undefined) editingOpinion.value = opinion;
+}
+async function handleEditedOpinion(
+  opinion: DisplayedOpinionItem
+): Promise<void> {
+  editingOpinion.value = undefined;
+  await submittedComment({
+    displayedOpinionItem: opinion,
+    needsCacheRefresh: false,
+    kind: "edited",
+  });
+}
 const route = useRoute();
 
 const opinionSectionRef = ref<InstanceType<typeof CommentSection>>();

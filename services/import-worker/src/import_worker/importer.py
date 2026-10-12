@@ -41,8 +41,8 @@ from import_worker.generated_models import (
 )
 from import_worker.generated_shared_types import (
     MAX_LENGTH_CONVERSATION_BODY_HTML,
+    MAX_LENGTH_CONVERSATION_TITLE,
     MAX_LENGTH_OPINION_HTML_OUTPUT,
-    MAX_LENGTH_TITLE,
 )
 from import_worker.html import html_to_counted_text, process_user_generated_html
 from import_worker.ids import generate_random_slug_id, generate_uuid
@@ -398,7 +398,9 @@ def _create_conversation(
     title = imported.conversation_data.topic
     if len(title.strip()) == 0:
         title = "[No title] Imported conversation"
-    title = _truncate_with_ellipsis(title, max_length=MAX_LENGTH_TITLE, ellipsis=" [...]")
+    title = _truncate_with_ellipsis(
+        title, max_length=MAX_LENGTH_CONVERSATION_TITLE, ellipsis=" [...]"
+    )
     body = _truncate_with_ellipsis(
         imported.conversation_data.description,
         max_length=MAX_LENGTH_CONVERSATION_BODY_HTML,

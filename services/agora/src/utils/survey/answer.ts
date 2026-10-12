@@ -2,13 +2,21 @@ import {
   countPlainTextCharacters,
   hasVisiblePlainText,
 } from "src/shared/shared";
+import {
+  getSurveyOptionText,
+  isSurveyOptionTextWithinLimit,
+  normalizeSurveyOptionText,
+} from "src/shared/surveyChoiceText";
 import type {
   SurveyAnswerDraft,
   SurveyAnswerSubmission,
   SurveyQuestionFormItem,
 } from "src/shared/types/zod";
 
-import { isIntegerFreeTextQuestion, isSingleSelectionChoiceQuestion } from "./config";
+import {
+  isIntegerFreeTextQuestion,
+  isSingleSelectionChoiceQuestion,
+} from "./config";
 
 export function getSurveyFreeTextCharacterCount({
   textValuePlainText,
@@ -24,12 +32,14 @@ export function normalizeSurveyAnswer({
   selectedMultiOptionSlugIds,
   textValueHtml,
   textValuePlainText,
+  optionTextValues = {},
 }: {
   question: SurveyQuestionFormItem;
   selectedSingleOptionSlugId: string | null;
   selectedMultiOptionSlugIds: readonly string[];
   textValueHtml: string;
   textValuePlainText: string;
+  optionTextValues?: Readonly<Record<string, string>>;
 }): SurveyAnswerDraft | undefined {
   switch (question.questionType) {
     case "choice": {
@@ -43,9 +53,27 @@ export function normalizeSurveyAnswer({
         return undefined;
       }
 
+      const selectedTextValues: Record<string, string> = {};
+      const optionsBySlugId = new Map(
+        question.options.map((option) => [option.optionSlugId, option])
+      );
+      for (const optionSlugId of optionSlugIds) {
+        const option = optionsBySlugId.get(optionSlugId);
+        const textValue = getSurveyOptionText({
+          values: optionTextValues,
+          optionSlugId,
+        });
+        if (option?.allowsText === true || textValue !== undefined) {
+          selectedTextValues[optionSlugId] = textValue ?? "";
+        }
+      }
+
       return {
         questionType: "choice",
         optionSlugIds,
+        ...(Object.keys(selectedTextValues).length === 0
+          ? {}
+          : { optionTextValues: selectedTextValues }),
       };
     }
     case "free_text": {
@@ -112,7 +140,21 @@ export function areSurveyAnswersEqual({
       return (
         leftOptionSlugIds.length === rightOptionSlugIds.length &&
         leftOptionSlugIds.every((optionSlugId, index) => {
-          return optionSlugId === rightOptionSlugIds[index];
+          return (
+            optionSlugId === rightOptionSlugIds[index] &&
+            normalizeSurveyOptionText(
+              getSurveyOptionText({
+                values: left.optionTextValues,
+                optionSlugId,
+              }) ?? ""
+            ) ===
+              normalizeSurveyOptionText(
+                getSurveyOptionText({
+                  values: right.optionTextValues,
+                  optionSlugId,
+                }) ?? ""
+              )
+          );
         })
       );
     }
@@ -150,12 +192,15 @@ export function isSurveyAnswerSubmittable({
       return false;
     }
 
-    return parsedValue >= minValue && (maxValue === undefined || parsedValue <= maxValue);
+    return (
+      parsedValue >= minValue &&
+      (maxValue === undefined || parsedValue <= maxValue)
+    );
   };
 
   switch (answer.questionType) {
     case "choice": {
-      if (question.constraints.type !== "choice") {
+      if (question.questionType !== "choice") {
         return false;
       }
 
@@ -163,9 +208,37 @@ export function isSurveyAnswerSubmittable({
         question.constraints.maxSelections === undefined ||
         answer.optionSlugIds.length <= question.constraints.maxSelections;
 
+      const selectedOptionSlugIds = new Set(answer.optionSlugIds);
+      const optionsBySlugId = new Map(
+        question.options.map((option) => [option.optionSlugId, option])
+      );
+      const savedTextValues =
+        question.currentAnswer?.questionType === "choice"
+          ? question.currentAnswer.optionTextValues
+          : undefined;
       return (
+        selectedOptionSlugIds.size === answer.optionSlugIds.length &&
         answer.optionSlugIds.length >= question.constraints.minSelections &&
-        withinMaxSelections
+        withinMaxSelections &&
+        answer.optionSlugIds.every((optionSlugId) =>
+          optionsBySlugId.has(optionSlugId)
+        ) &&
+        Object.entries(answer.optionTextValues ?? {}).every(
+          ([optionSlugId, textValue]) => {
+            const normalizedText = normalizeSurveyOptionText(textValue);
+            return (
+              selectedOptionSlugIds.has(optionSlugId) &&
+              isSurveyOptionTextWithinLimit(textValue) &&
+              (normalizedText === undefined ||
+                optionsBySlugId.get(optionSlugId)?.allowsText === true ||
+                normalizedText ===
+                  getSurveyOptionText({
+                    values: savedTextValues,
+                    optionSlugId,
+                  }))
+            );
+          }
+        )
       );
     }
     case "free_text": {

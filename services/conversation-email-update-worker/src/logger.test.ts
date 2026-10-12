@@ -6,6 +6,67 @@ import { createStructuredLogger } from "./logger.js";
 import { normalizeError, structuredEventSchema } from "./observability.js";
 
 describe("privacy-safe structured logging", () => {
+    it("projects late-position event variants and removes unrelated child context", () => {
+        const lines: string[] = [];
+        const log = createStructuredLogger({
+            environment: "test",
+            workerId: "worker-01",
+            level: "info",
+            destination: {
+                write(line) {
+                    lines.push(line);
+                },
+            },
+        });
+        const event = {
+            event: "worker_started",
+            outcome: "started",
+            sendingEnabled: true,
+            killSwitch: false,
+            provider: "simulated",
+            heartbeatIntervalMs: 60_000,
+        };
+        log.child({ token: "private-capability" }).info(event);
+        const parsed: unknown = JSON.parse(lines.at(0) ?? "{}");
+        expect(parsed).toMatchObject(event);
+        expect(lines.join("")).not.toContain("private-capability");
+        log.info("%s -- %s", "select 'private-sql-value'", [
+            "private-parameter",
+        ]);
+        expect(lines.join("")).not.toContain("private-sql-value");
+        expect(lines.join("")).not.toContain("private-parameter");
+    });
+    it("filters persistent child bindings and hostile accessors", () => {
+        const lines: string[] = [];
+        const log = createStructuredLogger({
+            environment: "production",
+            workerId: "worker-01",
+            level: "info",
+            destination: {
+                write(chunk) {
+                    lines.push(chunk);
+                },
+            },
+        });
+        const child = log.child({
+            email: "private-recipient@example.invalid",
+            token: "private-capability",
+            deliveryId: 7,
+        });
+        child.setBindings({ html: "private-message-content" });
+        child.info({ event: "worker_started", outcome: "started" });
+        expect(lines.join("")).not.toContain("private-");
+        expect(lines.join("")).toContain('"deliveryId":7');
+        const hostile = Object.defineProperty({}, "event", {
+            get() {
+                throw new Error("private-provider-message");
+            },
+        });
+        expect(() => {
+            log.error(hostile);
+        }).not.toThrow();
+        expect(lines.join("")).not.toContain("private-provider-message");
+    });
     it("logs a Drizzle cause and lane without query, connection or recipient data", () => {
         const lines: string[] = [];
         const log = createStructuredLogger({

@@ -20,16 +20,40 @@ interface CommentActionTranslations {
 /**
  * Get all available comment actions with their handlers and visibility logic
  */
-export function getCommentActions(
-  deleteCommentCallback: () => void | Promise<void>,
-  reportCommentCallback: () => void,
-  openUserReportsCallback: () => void | Promise<void>,
-  muteUserCallback: () => void | Promise<void>,
-  moderateCommentCallback: () => void | Promise<void>,
-  shareOpinionCallback: () => void | Promise<void>,
-  translations: CommentActionTranslations
-): ContentAction[] {
+interface CommentActionsParams {
+  deleteCommentCallback: () => void | Promise<void>;
+  reportCommentCallback: () => void;
+  openUserReportsCallback: () => void | Promise<void>;
+  muteUserCallback: () => void | Promise<void>;
+  moderateCommentCallback: () => void | Promise<void>;
+  shareOpinionCallback: () => void | Promise<void>;
+  translations: CommentActionTranslations;
+  management: {
+    canEdit: boolean;
+    canDelete: boolean;
+    editLabel: string;
+    editCommentCallback: () => void;
+  };
+}
+
+export function getCommentActions({
+  deleteCommentCallback,
+  reportCommentCallback,
+  openUserReportsCallback,
+  muteUserCallback,
+  moderateCommentCallback,
+  shareOpinionCallback,
+  translations,
+  management,
+}: CommentActionsParams): ContentAction[] {
   return [
+    {
+      id: "edit",
+      label: management.editLabel,
+      icon: "mdi-pencil",
+      handler: management.editCommentCallback,
+      isVisible: () => management.canEdit,
+    },
     {
       id: "share",
       label: translations.share,
@@ -83,7 +107,7 @@ export function getCommentActions(
       icon: "mdi-delete",
       variant: "destructive",
       handler: deleteCommentCallback,
-      isVisible: (context: ContentActionContext) => context.isOwner,
+      isVisible: () => management.canDelete,
     },
   ];
 }
@@ -91,25 +115,11 @@ export function getCommentActions(
 /**
  * Get filtered actions based on context
  */
-export function getAvailableCommentActions(
-  context: ContentActionContext,
-  deleteCommentCallback: () => void | Promise<void>,
-  reportCommentCallback: () => void,
-  openUserReportsCallback: () => void | Promise<void>,
-  muteUserCallback: () => void | Promise<void>,
-  moderateCommentCallback: () => void | Promise<void>,
-  shareOpinionCallback: () => void | Promise<void>,
-  translations: CommentActionTranslations
-): ContentAction[] {
-  const allActions = getCommentActions(
-    deleteCommentCallback,
-    reportCommentCallback,
-    openUserReportsCallback,
-    muteUserCallback,
-    moderateCommentCallback,
-    shareOpinionCallback,
-    translations
-  );
+export function getAvailableCommentActions({
+  context,
+  ...params
+}: CommentActionsParams & { context: ContentActionContext }): ContentAction[] {
+  const allActions = getCommentActions(params);
 
   return allActions.filter((action) => action.isVisible(context));
 }

@@ -1,4 +1,5 @@
 import { log } from "@/app.js";
+import { getOpinionManagementCapabilities } from "./opinionPermissions.js";
 import {
     opinionContentTable,
     opinionTable,
@@ -123,6 +124,7 @@ export async function getUserComments({
                 createdAt: opinionTable.createdAt,
                 updatedAt: opinionTable.updatedAt,
                 comment: opinionContentTable.content,
+                isEdited: opinionContentTable.isEdited,
                 sourceLanguageCode: opinionContentTable.sourceLanguageCode,
                 username: userTable.username,
                 postId: conversationTable.id,
@@ -185,6 +187,13 @@ export async function getUserComments({
                 : await preparedQuery;
 
         const extendedCommentList: ExtendedOpinionWithConvId[] = [];
+        const managementBySlugId = await getOpinionManagementCapabilities({
+            db,
+            opinionSlugIds: commentResponseList.map(
+                (opinion) => opinion.commentSlugId,
+            ),
+            userId,
+        });
 
         for (const opinionResponse of commentResponseList) {
             const counts = await fetchOpinionDisplayCounts({
@@ -213,6 +222,10 @@ export async function getUserComments({
                 username: opinionResponse.username,
                 moderation: moderationProperties,
                 isSeed: opinionResponse.isSeed,
+                isEdited: opinionResponse.isEdited,
+                management: managementBySlugId.get(
+                    opinionResponse.commentSlugId,
+                ),
             };
 
             const postItem = await fetchPostBySlugId({

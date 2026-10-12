@@ -42,7 +42,10 @@ export class DrizzleFastifyLogger implements Logger {
     }) {
         this.logger = fastifyLogger;
     }
-    logQuery(query: string, params: unknown[]): void {
-        this.logger.debug("%s -- parameterCount=%d", query, params.length);
+    logQuery(_query: string, params: unknown[]): void {
+        this.logger.debug(
+            { event: "database_query", parameterCount: params.length },
+            "Database query executed",
+        );
     }
 }

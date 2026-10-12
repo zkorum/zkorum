@@ -10,7 +10,13 @@
         :vote-count="localNumDisagrees"
         :percentage="formatPercentage(relativeTotalPercentageDisagrees)"
         :show-vote-count="props.showVoteResults && userCastedVote"
-        @click="castPersonalVote({ opinionSlugId: props.commentItem.opinionSlugId, voteAction: 'disagree' })"
+        @click="
+          castPersonalVote({
+            opinionSlugId: props.commentItem.opinionSlugId,
+            sourceVersion: props.sourceVersion,
+            voteAction: 'disagree',
+          })
+        "
       />
 
       <VotingButton
@@ -22,7 +28,13 @@
         :vote-count="localNumPasses"
         :percentage="formatPercentage(relativeTotalPercentagePasses)"
         :show-vote-count="props.showVoteResults && userCastedVote"
-        @click="castPersonalVote({ opinionSlugId: props.commentItem.opinionSlugId, voteAction: 'pass' })"
+        @click="
+          castPersonalVote({
+            opinionSlugId: props.commentItem.opinionSlugId,
+            sourceVersion: props.sourceVersion,
+            voteAction: 'pass',
+          })
+        "
       />
 
       <VotingButton
@@ -34,7 +46,13 @@
         :vote-count="localNumAgrees"
         :percentage="formatPercentage(relativeTotalPercentageAgrees)"
         :show-vote-count="props.showVoteResults && userCastedVote"
-        @click="castPersonalVote({ opinionSlugId: props.commentItem.opinionSlugId, voteAction: 'agree' })"
+        @click="
+          castPersonalVote({
+            opinionSlugId: props.commentItem.opinionSlugId,
+            sourceVersion: props.sourceVersion,
+            voteAction: 'agree',
+          })
+        "
       />
     </div>
 
@@ -70,7 +88,10 @@ import PreParticipationIntentionDialog from "src/components/authentication/inten
 import VotingButton from "src/components/features/opinion/VotingButton.vue";
 import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
-import type { OpinionVoteParams, OpinionVotingUtilities } from "src/composables/opinion/types";
+import type {
+  OpinionVoteParams,
+  OpinionVotingUtilities,
+} from "src/composables/opinion/types";
 import { useVotingActionGuard } from "src/composables/opinion/useVotingActionGuard";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import {
@@ -86,7 +107,10 @@ import { useUserClusteringSession } from "src/utils/api/vote/useVoteQueries";
 import { formatPercentage } from "src/utils/common";
 import { computeBannerState } from "src/utils/component/bannerState";
 import { MIN_VOTES_FOR_CLUSTER } from "src/utils/component/opinion";
-import { isQueryForViewerScope, useViewerQueryScope } from "src/utils/query/viewerScope";
+import {
+  isQueryForViewerScope,
+  useViewerQueryScope,
+} from "src/utils/query/viewerScope";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, onUnmounted, ref } from "vue";
 
@@ -97,6 +121,7 @@ import {
 
 const props = defineProps<{
   commentItem: OpinionItem;
+  sourceVersion: string;
   postSlugId: string;
   votingUtilities: OpinionVotingUtilities;
   participationMode: ParticipationMode;
@@ -143,7 +168,11 @@ const userClusteredThisMount = ref(false);
 const userIsClusteredFromCache = computed(() => {
   const analysisQueryData = queryClient.getQueriesData<AnalysisData>({
     queryKey: ["analysis", props.postSlugId],
-    predicate: query => isQueryForViewerScope({ queryKey: query.queryKey, viewerScope: viewerScope.value }),
+    predicate: (query) =>
+      isQueryForViewerScope({
+        queryKey: query.queryKey,
+        viewerScope: viewerScope.value,
+      }),
   });
 
   return analysisQueryData.some(
@@ -201,69 +230,77 @@ function onLoginCallback() {
   );
 }
 
-async function castPersonalVote({ opinionSlugId, voteAction }: OpinionVoteParams): Promise<void> {
+async function castPersonalVote({
+  opinionSlugId,
+  voteAction,
+  sourceVersion,
+}: OpinionVoteParams): Promise<void> {
   await actionGuard.run(async (isCurrent) => {
-  if (props.isVotingDisabled) return;
-  if (await shouldOpenParticipationModal()) {
-    if (isCurrent()) showLoginDialog.value = true;
-    return;
-  }
-  if (!isCurrent()) return;
-
-  // Allow re-clicking the same vote to cancel it
-  // If already voted and clicking same button, treat as cancel
-  const isCancellation = userVoteAction.value === voteAction;
-  if (isCancellation) {
-    voteAction = "cancel";
-    // Hide banner immediately for cancellations to prevent flash
-    hasVotedThisSession.value = false;
-  }
-
-  // Cast vote - TanStack Query handles optimistic updates automatically
-  try {
-    const result = await props.votingUtilities.castVote({ opinionSlugId, voteAction });
-
-    if (result === undefined || !isCurrent()) return;
-
-    if (result.success) {
-      // Detect clustering for the first time this mount
-      if (result.userIsClustered === true && !userClusteredThisMount.value) {
-        userClusteredThisMount.value = true;
-      }
-
-      // Show banner for actual votes (not cancellations)
-      if (!isCancellation) {
-        hasVotedThisSession.value = true;
-      }
-    } else {
-      // Show specific error message based on reason
-      if (result.reason === "conversation_closed") {
-        showNotifyMessage(t("conversationClosed"));
-      } else if (result.reason === "conversation_locked") {
-        showNotifyMessage(t("voteFailed"));
-      } else if (
-        result.reason === "event_ticket_required" ||
-        result.reason === "account_required" ||
-        result.reason === "strong_verification_required" ||
-        result.reason === "email_verification_required"
-      ) {
-        showLoginDialog.value = true;
-      } else if (
-        result.reason === "survey_required" ||
-        result.reason === "survey_outdated"
-      ) {
-        showLoginDialog.value = true;
-      } else {
-        showNotifyMessage(t("voteFailed"));
-      }
-
-      // Invalidate conversation for ANY conversation state error to refresh UI
-      // This handles: conversation_closed, conversation_locked, or if conversation was reopened
-      invalidateConversation(props.postSlugId);
+    if (props.isVotingDisabled) return;
+    if (await shouldOpenParticipationModal()) {
+      if (isCurrent()) showLoginDialog.value = true;
+      return;
     }
-  } catch {
-    if (isCurrent()) showNotifyMessage(t("voteFailed"));
-  }
+    if (!isCurrent()) return;
+
+    // Allow re-clicking the same vote to cancel it
+    // If already voted and clicking same button, treat as cancel
+    const isCancellation = userVoteAction.value === voteAction;
+    if (isCancellation) {
+      voteAction = "cancel";
+      // Hide banner immediately for cancellations to prevent flash
+      hasVotedThisSession.value = false;
+    }
+
+    // Cast vote - TanStack Query handles optimistic updates automatically
+    try {
+      const result = await props.votingUtilities.castVote({
+        opinionSlugId,
+        voteAction,
+        sourceVersion,
+      });
+
+      if (result === undefined || !isCurrent()) return;
+
+      if (result.success) {
+        // Detect clustering for the first time this mount
+        if (result.userIsClustered === true && !userClusteredThisMount.value) {
+          userClusteredThisMount.value = true;
+        }
+
+        // Show banner for actual votes (not cancellations)
+        if (!isCancellation) {
+          hasVotedThisSession.value = true;
+        }
+      } else {
+        // Show specific error message based on reason
+        if (result.reason === "conversation_closed") {
+          showNotifyMessage(t("conversationClosed"));
+        } else if (result.reason === "conversation_locked") {
+          showNotifyMessage(t("voteFailed"));
+        } else if (
+          result.reason === "event_ticket_required" ||
+          result.reason === "account_required" ||
+          result.reason === "strong_verification_required" ||
+          result.reason === "email_verification_required"
+        ) {
+          showLoginDialog.value = true;
+        } else if (
+          result.reason === "survey_required" ||
+          result.reason === "survey_outdated"
+        ) {
+          showLoginDialog.value = true;
+        } else {
+          showNotifyMessage(t("voteFailed"));
+        }
+
+        // Invalidate conversation for ANY conversation state error to refresh UI
+        // This handles: conversation_closed, conversation_locked, or if conversation was reopened
+        invalidateConversation(props.postSlugId);
+      }
+    } catch {
+      if (isCurrent()) showNotifyMessage(t("voteFailed"));
+    }
   });
 }
 

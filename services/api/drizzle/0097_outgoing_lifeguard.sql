@@ -1,0 +1,2 @@
+ALTER TABLE "phone_sms_budget_policy" ADD COLUMN "monthly_budget_cents" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "phone_sms_budget_policy" ADD CONSTRAINT "phone_sms_budget_monthly_limit_check" CHECK ("phone_sms_budget_policy"."monthly_budget_cents" >= 0);

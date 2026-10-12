@@ -25,6 +25,8 @@
               :is-voting-disabled="props.isVotingDisabled"
               :show-vote-results="true"
               :conversation-route-context="props.conversationRouteContext"
+              :editing-opinion-slug-id="editingOpinion?.opinionSlugId"
+              @edit-opinion="emit('editOpinion', $event)"
               @deleted="(opinionSlugId) => handleOpinionDeleted(opinionSlugId)"
               @muted-comment="handleOpinionMuted()"
             />
@@ -53,6 +55,7 @@ import { useOpinionVoting } from "src/composables/opinion/useOpinionVoting";
 import { useTargetOpinion } from "src/composables/opinion/useTargetOpinion";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type {
+  DisplayedOpinionItem,
   EventSlug,
   ParticipationMode,
   SurveyGateSummary,
@@ -94,10 +97,12 @@ const props = defineProps<{
   isVotingDisabled: boolean;
   conversationRouteContext: ConversationRouteContext;
   filter: CommentFilterOptions;
+  editingOpinion: DisplayedOpinionItem | undefined;
 }>();
 
 const emit = defineEmits<{
   deleted: [];
+  editOpinion: [opinion: DisplayedOpinionItem];
   participantCountDelta: [delta: number];
   ticketVerified: [
     payload: { userIdChanged: boolean; needsCacheRefresh: boolean },
@@ -174,6 +179,7 @@ const {
   setupHighlightFromRoute,
   clearRouteQueryParameters,
   highlightOpinion,
+  getCachedOpinion,
 } = useTargetOpinion({
   onModeratedOpinionDetected: (opinion) => {
     if (opinion.moderation.status !== "moderated") {
@@ -203,6 +209,28 @@ const {
   isComponentMounted,
   targetOpinion,
 });
+
+let previousHighlightedOpinion: DisplayedOpinionItem | null = null;
+watch(
+  () => props.editingOpinion,
+  (opinion, previous) => {
+    if (opinion !== undefined) {
+      if (previous === undefined)
+        previousHighlightedOpinion = targetOpinion.value;
+      highlightOpinion(opinion);
+    } else if (
+      previous !== undefined &&
+      targetOpinion.value?.displayContent.sourceVersion ===
+        previous.displayContent.sourceVersion
+    ) {
+      targetOpinion.value =
+        previousHighlightedOpinion === null
+          ? null
+          : getCachedOpinion(previousHighlightedOpinion);
+    }
+  },
+  { immediate: true }
+);
 const hasMore = computed(
   () => hasMoreLocally.value || activeQuery.hasNextPage.value
 );

@@ -120,7 +120,7 @@ export function useOpinionItemDisplayContent({
   );
   const displayedOpinion = computed(() => {
     const preview = translationPreview.value;
-    if (preview?.mode === "translated") {
+    if (preview?.mode === "translated" && preview.translationStatus === "completed") {
       return preview.translatedOpinion;
     }
     return toValue(opinionItem).opinion;

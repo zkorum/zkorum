@@ -1,11 +1,15 @@
-import { describe, expect, it } from "vitest";
+import type { PhoneAuthMode } from "src/shared/types/phone-auth";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   getEffectivePhoneAuthMode,
   getPhoneAuthAvailability,
-  pausePhoneRegistration,
+  type PhoneAuthPurpose,
+  updateBackendPhoneAuthMode,
   usePhoneAuthAvailability,
 } from "./phoneAuthMode";
+
+afterEach(() => updateBackendPhoneAuthMode("enabled"));
 
 describe("getEffectivePhoneAuthMode", () => {
   it.each([
@@ -14,7 +18,7 @@ describe("getEffectivePhoneAuthMode", () => {
     ["login_only", "enabled", "login_only"],
     ["login_only", "disabled", "disabled"],
     ["disabled", "enabled", "disabled"],
-  ] as const)(
+  ] satisfies Array<[PhoneAuthMode, PhoneAuthMode, PhoneAuthMode]>)(
     "combines %s configuration with %s backend mode",
     (configuredMode, backendMode, expectedMode) => {
       expect(getEffectivePhoneAuthMode({ configuredMode, backendMode })).toBe(
@@ -35,11 +39,14 @@ describe("getPhoneAuthAvailability", () => {
     ["disabled", "login", false],
     ["disabled", "registration", false],
     ["disabled", "credential", false],
-  ] as const)("returns %s/%s availability", (mode, purpose, available) => {
-    expect(getPhoneAuthAvailability({ mode, purpose }).available).toBe(
-      available
-    );
-  });
+  ] satisfies Array<[PhoneAuthMode, PhoneAuthPurpose, boolean]>)(
+    "returns %s/%s availability",
+    (mode, purpose, available) => {
+      expect(getPhoneAuthAvailability({ mode, purpose }).available).toBe(
+        available
+      );
+    }
+  );
 
   it("distinguishes technical shutdown from registration restrictions", () => {
     expect(
@@ -57,7 +64,7 @@ describe("getPhoneAuthAvailability", () => {
 it("keeps phone login available after registration is paused at runtime", () => {
   const login = usePhoneAuthAvailability("login");
   const registration = usePhoneAuthAvailability("registration");
-  pausePhoneRegistration();
+  updateBackendPhoneAuthMode("login_only");
 
   expect(login.value).toEqual({ available: true });
   expect(registration.value).toEqual({

@@ -249,7 +249,7 @@ export async function getOrCreateDefaultProjectForOrganization({
 }: {
     db: PostgresDatabase;
     organizationId: number;
-}): Promise<{ projectId: number }> {
+}): Promise<{ projectId: number; projectSlug: string; projectTitle: string }> {
     return await getPrimaryDatabase(db).transaction(async (tx) => {
         const organizationRows = await tx
             .select({ displayName: organizationTable.displayName })
@@ -272,6 +272,8 @@ export async function getOrCreateDefaultProjectForOrganization({
                 projectId: projectTable.id,
                 currentContentId: projectTable.currentContentId,
                 deletedAt: projectTable.deletedAt,
+                projectSlug: projectTable.slug,
+                projectTitle: projectTable.title,
             })
             .from(projectTable)
             .where(
@@ -298,6 +300,8 @@ export async function getOrCreateDefaultProjectForOrganization({
                         projectId: projectTable.id,
                         currentContentId: projectTable.currentContentId,
                         deletedAt: projectTable.deletedAt,
+                        projectSlug: projectTable.slug,
+                        projectTitle: projectTable.title,
                     })
             ).at(0);
         if (project === undefined) {
@@ -347,7 +351,11 @@ export async function getOrCreateDefaultProjectForOrganization({
             .values({ projectId: project.projectId, organizationId })
             .onConflictDoNothing();
 
-        return { projectId: project.projectId };
+        return {
+            projectId: project.projectId,
+            projectSlug: project.projectSlug,
+            projectTitle: project.projectTitle,
+        };
     });
 }
 
@@ -399,7 +407,10 @@ export async function resolveConversationCreateTarget({
                 "Missing conversation_create capability",
             );
         }
-        return { ...organization, ...project };
+        return {
+            organizationId: organization.organizationId,
+            projectId: project.projectId,
+        };
     }
 
     const organizationRows = await db
@@ -443,7 +454,10 @@ export async function resolveConversationCreateTarget({
         throw httpErrors.forbidden("Missing conversation_create capability");
     }
 
-    return { ...organization, ...project };
+    return {
+        organizationId: organization.organizationId,
+        projectId: project.projectId,
+    };
 }
 
 export async function resolveConversationCreateTargetResult({
@@ -706,6 +720,72 @@ export async function getConversationCreateProjectOptions({
         };
     }
     const projectIds = availableProjectRows.map((project) => project.projectId);
+    const dynamicTranslationProjectIds =
+        projectIds.length === 0
+            ? []
+            : await db
+                  .selectDistinct({
+                      projectId: projectOrganizationOwnershipTable.projectId,
+                  })
+                  .from(projectOrganizationOwnershipTable)
+                  .innerJoin(
+                      organizationTable,
+                      and(
+                          eq(
+                              organizationTable.id,
+                              projectOrganizationOwnershipTable.organizationId,
+                          ),
+                          isNull(organizationTable.deletedAt),
+                      ),
+                  )
+                  .innerJoin(
+                      organizationMembershipTable,
+                      and(
+                          eq(
+                              organizationMembershipTable.organizationId,
+                              organizationTable.id,
+                          ),
+                          eq(organizationMembershipTable.userId, userId),
+                          isNull(organizationMembershipTable.deletedAt),
+                      ),
+                  )
+                  .innerJoin(
+                      premiumFeatureEntitlementTable,
+                      and(
+                          eq(
+                              premiumFeatureEntitlementTable.organizationId,
+                              organizationTable.id,
+                          ),
+                          eq(
+                              premiumFeatureEntitlementTable.feature,
+                              "dynamic_translation",
+                          ),
+                          lte(
+                              premiumFeatureEntitlementTable.startsAt,
+                              new Date(),
+                          ),
+                          isNull(premiumFeatureEntitlementTable.revokedAt),
+                          or(
+                              isNull(premiumFeatureEntitlementTable.expiresAt),
+                              gt(
+                                  premiumFeatureEntitlementTable.expiresAt,
+                                  new Date(),
+                              ),
+                          ),
+                      ),
+                  )
+                  .where(
+                      and(
+                          inArray(
+                              projectOrganizationOwnershipTable.projectId,
+                              projectIds,
+                          ),
+                          isNull(projectOrganizationOwnershipTable.deletedAt),
+                      ),
+                  );
+    const canUseDynamicTranslation = new Set(
+        dynamicTranslationProjectIds.map((row) => row.projectId),
+    );
     const targetLanguageRows =
         projectIds.length === 0
             ? []
@@ -752,6 +832,9 @@ export async function getConversationCreateProjectOptions({
                 noProject?.conversationEmailUpdateDefaultEnabled,
         }),
         projectList: availableProjectRows.map((project) => ({
+            canUseDynamicTranslation: canUseDynamicTranslation.has(
+                project.projectId,
+            ),
             projectSlug: project.projectSlug,
             projectTitle: project.projectTitle,
             defaultLanguageCode:
@@ -1051,6 +1134,7 @@ export async function getProjectCapabilitiesById({
     userId,
     projectIds,
     requestedCapabilities,
+    lockAuthorization = false,
 }: {
     db: PostgresDatabase;
     userId: string | undefined;
@@ -1059,6 +1143,7 @@ export async function getProjectCapabilitiesById({
         AllProjectCapability,
         ...AllProjectCapability[],
     ];
+    lockAuthorization?: boolean;
 }): Promise<ReadonlyMap<number, ReadonlySet<AllProjectCapability>>> {
     const capabilitiesByProjectId = new Map<
         number,
@@ -1068,7 +1153,7 @@ export async function getProjectCapabilitiesById({
         return capabilitiesByProjectId;
     }
 
-    const query = db
+    let query = db
         .select({
             projectId: projectOrganizationOwnershipTable.projectId,
             capability:
@@ -1119,6 +1204,16 @@ export async function getProjectCapabilitiesById({
         )
         .$dynamic();
 
+    if (lockAuthorization) {
+        query = query.for("share", {
+            of: [
+                organizationMembershipTable,
+                organizationTable,
+                organizationMembershipAllProjectCapabilityTable,
+                projectOrganizationOwnershipTable,
+            ],
+        });
+    }
     const rows =
         projectIds.length === 1 && requestedCapabilities.length === 1
             ? await query.limit(1)

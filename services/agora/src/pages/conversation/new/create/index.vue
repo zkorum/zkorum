@@ -46,14 +46,22 @@
         @update:participation-mode="updateParticipationModeWithReachWarning"
       >
         <template #extra-controls>
-          <CreateConversationProjectLanguageSettings
-            v-if="projectLanguageProjects.length > 0"
+          <ConversationProjectSelect
+            v-if="conversationCreateProjectOptions.length > 0"
+            :options="projectSelectOptions"
+            :model-value="selectedProjectTarget"
+            :fallback-label="undefined"
+            @update:model-value="selectProject"
+          />
+          <ConversationProjectLanguageSettings
+            v-if="selectedProjectOption !== undefined"
             v-model:inherit-project-languages="inheritProjectLanguages"
             v-model:override-multilingual-setting="multilingualSetting"
-            :selected-project-slug="selectedProjectSlug"
-            :project-list="projectLanguageProjects"
-            @automatic-project-selection="prepareAutomaticProjectSelection"
-            @update:selected-project-slug="updateProjectWithReachWarning"
+            :project="selectedProjectOption"
+            :can-use-dynamic-translation="
+              selectedProjectOption.canUseDynamicTranslation
+            "
+            :detected-language-code="undefined"
           />
           <CreateConversationUpdatesSettings
             v-if="
@@ -68,7 +76,11 @@
             :scope-default-enabled="
               selectedEmailUpdatesConfiguration.scopeDefaultEnabled
             "
-            :can-configure="selectedEmailUpdatesConfiguration.canConfigure"
+            :access="
+              selectedEmailUpdatesConfiguration.canConfigure
+                ? 'configure'
+                : 'none'
+            "
             :has-participant-contact-email="
               selectedEmailUpdatesConfiguration.hasParticipantContactEmail
             "
@@ -139,7 +151,7 @@
             :show-toolbar="false"
             :single-line="true"
             :disabled="false"
-            :max-length="MAX_LENGTH_TITLE"
+            :max-length="MAX_LENGTH_CONVERSATION_TITLE"
             :show-character-count="true"
             min-height="auto"
             class="title-editor"
@@ -205,6 +217,10 @@ import PreParticipationIntentionDialog from "src/components/authentication/inten
 import ActiveImportBanner from "src/components/conversation/import/ActiveImportBanner.vue";
 import BackButton from "src/components/navigation/buttons/BackButton.vue";
 import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
+import ConversationProjectLanguageSettings from "src/components/newConversation/ConversationProjectLanguageSettings.vue";
+import ConversationProjectSelect, {
+  type ConversationProjectSelectOption,
+} from "src/components/newConversation/ConversationProjectSelect.vue";
 import ConversationUpdatesPartialEmailReachDialog from "src/components/newConversation/ConversationUpdatesPartialEmailReachDialog.vue";
 import {
   areConversationUpdatesReachStatesEqual,
@@ -216,8 +232,6 @@ import {
   type PartialEmailReachParticipationMode,
   resolvePartialEmailReachAction,
 } from "src/components/newConversation/conversationUpdatesPartialEmailReachLogic";
-import type { CreateConversationProjectLanguageProject } from "src/components/newConversation/CreateConversationProjectLanguageSettings.vue";
-import CreateConversationProjectLanguageSettings from "src/components/newConversation/CreateConversationProjectLanguageSettings.vue";
 import CreateConversationUpdatesSettings from "src/components/newConversation/CreateConversationUpdatesSettings.vue";
 import PolisCsvUpload from "src/components/newConversation/import/csv/PolisCsvUpload.vue";
 import PolisUrlInput from "src/components/newConversation/import/url/PolisUrlInput.vue";
@@ -232,12 +246,11 @@ import {
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import {
   MAX_LENGTH_CONVERSATION_BODY,
-  MAX_LENGTH_TITLE,
+  MAX_LENGTH_CONVERSATION_TITLE,
 } from "src/shared/shared";
 import type { GetConversationCreateProjectOptionsResponse } from "src/shared/types/dto";
-import type {
-  ParticipationMode,
-} from "src/shared/types/zod";
+import type { ConversationProjectTarget } from "src/shared/types/zod";
+import type { ParticipationMode } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { useNewPostDraftsStore } from "src/stores/newConversationDrafts";
@@ -352,16 +365,25 @@ const conversationCreateProjectOptions = ref<ConversationCreateProjectOption[]>(
   []
 );
 const noProjectEmailUpdates = ref<ConversationCreateEmailUpdates>();
-const projectLanguageProjects = computed<
-  CreateConversationProjectLanguageProject[]
->(() =>
-  conversationCreateProjectOptions.value.map((project) => ({
-    slug: project.projectSlug,
-    title: project.projectTitle,
-    defaultLanguageCode: project.defaultLanguageCode,
-    languageSettings: project.languageSettings,
-  }))
+const selectedProjectTarget = computed<ConversationProjectTarget>(() =>
+  selectedProjectSlug.value === undefined
+    ? { kind: "no_project", organizationSlug: postAs.value.organizationName }
+    : { kind: "project", projectSlug: selectedProjectSlug.value }
 );
+const projectSelectOptions = computed<ConversationProjectSelectOption[]>(() => [
+  {
+    kind: "no_project",
+    organizationSlug: postAs.value.organizationName,
+    title: undefined,
+  },
+  ...conversationCreateProjectOptions.value.map<ConversationProjectSelectOption>(
+    (project) => ({
+      kind: "project",
+      projectSlug: project.projectSlug,
+      title: project.projectTitle,
+    })
+  ),
+]);
 const selectedProjectOption = computed(() =>
   conversationCreateProjectOptions.value.find(
     (project) => project.projectSlug === selectedProjectSlug.value
@@ -379,6 +401,7 @@ const acknowledgedPartialEmailReachState = ref<
   ConversationUpdatesReachState | undefined
 >(undefined);
 let projectOptionsRequestId = 0;
+let initializedProjectOptionsOrganization: string | undefined;
 let applyContextEmailVerificationDefault = !hasForwardSeedEntry();
 
 function getCreateConversationUpdatesReachState({
@@ -435,8 +458,11 @@ function applyEmailVerificationDefault(
   applyContextEmailVerificationDefault = false;
 }
 
-function prepareAutomaticProjectSelection(): void {
-  applyContextEmailVerificationDefault = true;
+function selectProject(target: ConversationProjectTarget): void {
+  const projectSlug =
+    target.kind === "project" ? target.projectSlug : undefined;
+  updateProjectWithReachWarning(projectSlug);
+  inheritProjectLanguages.value = projectSlug !== undefined;
 }
 
 function updateParticipationModeWithReachWarning(
@@ -588,11 +614,19 @@ watch(
       configuration: selectedEmailUpdatesConfiguration.value,
     });
     const requestId = ++projectOptionsRequestId;
-    conversationCreateProjectOptions.value = [];
-    noProjectEmailUpdates.value = undefined;
-    selectedProjectSlug.value = undefined;
-    conversationEmailUpdateEnabledOverride.value = undefined;
-    inheritProjectLanguages.value = false;
+    const initializeProjectSelection =
+      previousContext === undefined ||
+      isLoggedIn !== previousContext.isLoggedIn ||
+      postAsOrganization !== previousContext.postAsOrganization ||
+      organizationName !== previousContext.organizationName;
+    if (initializeProjectSelection) {
+      initializedProjectOptionsOrganization = undefined;
+      conversationCreateProjectOptions.value = [];
+      noProjectEmailUpdates.value = undefined;
+      selectedProjectSlug.value = undefined;
+      conversationEmailUpdateEnabledOverride.value = undefined;
+      inheritProjectLanguages.value = false;
+    }
 
     if (
       !isLoggedIn ||
@@ -633,6 +667,18 @@ watch(
 
     conversationCreateProjectOptions.value = response.projectList;
     noProjectEmailUpdates.value = response.noProjectEmailUpdates;
+    if (
+      initializeProjectSelection ||
+      initializedProjectOptionsOrganization !== organizationSlug ||
+      (selectedProjectSlug.value !== undefined &&
+        !response.projectList.some(
+          (project) => project.projectSlug === selectedProjectSlug.value
+        ))
+    ) {
+      selectedProjectSlug.value = response.projectList.at(0)?.projectSlug;
+      inheritProjectLanguages.value = selectedProjectSlug.value !== undefined;
+    }
+    initializedProjectOptionsOrganization = organizationSlug;
     applyEmailVerificationDefault(selectedEmailUpdatesConfiguration.value);
     showReachWarningForTransition({
       previous: previousReachState,

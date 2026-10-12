@@ -13,6 +13,7 @@ test:
 	uv run --extra dev pytest -v
 
 lint:
+	$(MAKE) -C ../.. check-soft-deletes
 	uv run --extra dev ruff check
 
 typecheck:

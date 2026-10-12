@@ -367,6 +367,20 @@
               </template>
             </q-input>
 
+            <q-toggle
+              :model-value="option.allowsText === true"
+              :label="surveyConfigEditorTexts.allowOptionalTextLabel"
+              :disable="props.readOnly"
+              @update:model-value="
+                (value) =>
+                  updateOptionAllowsText({
+                    questionIndex,
+                    optionIndex,
+                    allowsText: value === true,
+                  })
+              "
+            />
+
             <div
               v-if="shouldShowOptionSemanticToggle({ question, option })"
               class="survey-config-editor__help-block survey-config-editor__help-block--nested"
@@ -642,6 +656,27 @@ const templateTexts = computed(() => {
 const surveyConfigEditorTexts = computed(() => {
   return surveyConfigEditorTranslations[currentLocale.value];
 });
+
+function updateOptionAllowsText({
+  questionIndex,
+  optionIndex,
+  allowsText,
+}: {
+  questionIndex: number;
+  optionIndex: number;
+  allowsText: boolean;
+}): void {
+  const question = surveyConfig.value?.questions[questionIndex];
+  if (props.readOnly || question?.questionType !== "choice") {
+    return;
+  }
+  const option = question.options[optionIndex];
+  if (option === undefined) {
+    return;
+  }
+  option.allowsText = allowsText;
+  emit("clearValidationError");
+}
 const surveyQuestions = computed(() => {
   return surveyConfig.value?.questions ?? [];
 });

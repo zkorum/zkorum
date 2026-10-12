@@ -60,16 +60,25 @@ import {
     config,
     log,
     phoneAuthConfig,
+    phoneCountryPolicy,
     phoneTurnstileConfig,
     server,
     type PhoneAuthConfig,
 } from "./app.js";
 import * as authService from "@/service/auth.js";
+import { logApiError } from "@/logging/privacy.js";
 import {
     createPhoneSmsBudget,
     type PhoneSmsBudget,
 } from "@/service/phoneSmsBudget.js";
 import { createPhoneTurnstileVerifier } from "@/service/phoneTurnstile.js";
+import { getDefaultPhoneSmsCostCents } from "@/service/phoneSmsPricing.js";
+import type { PhoneCountry } from "@/shared/types/phone-country-policy.js";
+import { parsePhoneNumberFromString } from "libphonenumber-js/max";
+import {
+    resolveCountryPhoneAuth,
+    registerPhonePolicyRoute,
+} from "@/service/phoneCountryPolicy.js";
 import { sendEmail } from "@/service/email.js";
 import * as authUtilService from "@/service/authUtil.js";
 import * as csvImportService from "@/service/csvImport.js";
@@ -202,6 +211,7 @@ import {
 import twilio from "twilio";
 import { initializeValkey } from "./shared-backend/valkey.js";
 import { createVoteBuffer } from "./service/voteBuffer.js";
+import { editOpinion } from "./service/opinionEdit.js";
 import {
     consumeContentTranslationUserRateLimit,
     CONTENT_TRANSLATION_USER_RATE_LIMIT_SCRIPT,
@@ -317,6 +327,10 @@ import {
     registerConversationEmailUpdateActionRoutes,
 } from "./service/conversationEmailUpdateAction.js";
 import { registerProjectDocumentAccessRoute } from "./service/projectDocumentAccessRoute.js";
+import {
+    isConversationIndexable,
+    registerConversationIndexingRoute,
+} from "./service/conversationIndexing.js";
 import { createConversationEmailUpdateSnsIngressService } from "./service/conversationEmailUpdateSns.js";
 import {
     CONVERSATION_EMAIL_UPDATE_SIMULATOR_TOPIC_ARN,
@@ -417,10 +431,13 @@ const surveyResultsRateLimitConfig = {
 const CONTENT_TRANSLATION_USER_RATE_LIMIT_MAX = 20;
 const CONTENT_TRANSLATION_USER_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
-function initializePhoneAuth(
-    phoneAuthConfig: PhoneAuthConfig,
-    budget: PhoneSmsBudget,
-): authService.PhoneAuth {
+function initializePhoneAuth({
+    phoneAuthConfig,
+    budget,
+}: {
+    phoneAuthConfig: PhoneAuthConfig;
+    budget: PhoneSmsBudget;
+}): authService.PhoneAuth {
     if (phoneAuthConfig.mode === "disabled") {
         return phoneAuthConfig;
     }
@@ -447,6 +464,8 @@ function initializePhoneAuth(
     return {
         mode: "enabled",
         delivery,
+        minimumResponseTimeMs: config.PHONE_LOGIN_ONLY_RESPONSE_MIN_MS,
+        responseJitterMs: config.PHONE_LOGIN_ONLY_RESPONSE_JITTER_MS,
     };
 }
 
@@ -540,9 +559,24 @@ const db = await createDb({
     logQueries: config.API_LOG_SQL_QUERIES,
 });
 const alertRecipient = config.PHONE_SMS_BUDGET_ALERT_EMAIL;
+const phoneSmsCosts = new Map<PhoneCountry, number>();
+for (const country of phoneCountryPolicy.authenticationCountries) {
+    const cost =
+        config.PHONE_SMS_COST_CENTS_BY_COUNTRY[country] ??
+        getDefaultPhoneSmsCostCents(country);
+    if (cost !== undefined) phoneSmsCosts.set(country, cost);
+}
 const phoneSmsBudget = createPhoneSmsBudget({
     db,
-    log,
+    logError: (error) => {
+        logApiError({
+            logger: log,
+            level: "error",
+            event: { event: "application_error" },
+            error,
+        });
+    },
+    costEstimates: phoneSmsCosts,
     sendAlert:
         alertRecipient === undefined
             ? undefined
@@ -550,40 +584,62 @@ const phoneSmsBudget = createPhoneSmsBudget({
                   await sendEmail({ to: alertRecipient, subject, text });
               },
 });
-const phoneAuth = initializePhoneAuth(phoneAuthConfig, phoneSmsBudget);
-const phoneTurnstile =
-    phoneTurnstileConfig.enabled
-        ? createPhoneTurnstileVerifier({
-              secretKey: phoneTurnstileConfig.secretKey,
-              allowedHostnames: phoneTurnstileConfig.allowedHostnames,
-              log,
-          })
-        : undefined;
+const phoneAuth = initializePhoneAuth({
+    phoneAuthConfig,
+    budget: phoneSmsBudget,
+});
+const phoneTurnstile = phoneTurnstileConfig.enabled
+    ? createPhoneTurnstileVerifier({
+          secretKey: phoneTurnstileConfig.secretKey,
+          allowedHostnames: phoneTurnstileConfig.allowedHostnames,
+          log,
+      })
+    : undefined;
 if (phoneAuth.mode !== "disabled" && phoneAuth.delivery.type === "twilio") {
     phoneSmsBudget.start();
-    server.addHook("onClose", () => {
-        phoneSmsBudget.shutdown();
-        return Promise.resolve();
+    server.addHook("onClose", async () => {
+        await phoneSmsBudget.shutdown();
     });
 }
 
 async function getEffectivePhoneAuth({
     forVerification = false,
+    phoneNumber,
 }: {
     forVerification?: boolean;
+    phoneNumber?: string;
 } = {}): Promise<authService.PhoneAuth> {
-    if (phoneAuth.mode === "disabled" || phoneAuth.delivery.type !== "twilio") {
-        return phoneAuth;
+    if (
+        phoneAuth.mode === "disabled" ||
+        phoneCountryPolicy.authenticationCountries.length === 0
+    )
+        return { mode: "disabled" };
+    const country =
+        phoneNumber === undefined
+            ? undefined
+            : parsePhoneNumberFromString(phoneNumber)?.country;
+    const countryAuth =
+        phoneNumber === undefined
+            ? phoneAuth
+            : resolveCountryPhoneAuth({
+                  phoneAuth,
+                  country,
+                  policy: phoneCountryPolicy,
+              });
+    if (countryAuth.mode === "disabled") return countryAuth;
+    const budgetMode =
+        countryAuth.delivery.type === "twilio"
+            ? await phoneSmsBudget.getMode({ forVerification, country })
+            : "enabled";
+    if (budgetMode === "disabled") return { mode: "disabled" };
+    if (
+        countryAuth.mode === "login_only" ||
+        budgetMode === "login_only" ||
+        phoneCountryPolicy.registrationCountries.length === 0
+    ) {
+        return { ...countryAuth, mode: "login_only" };
     }
-    const mode = await phoneSmsBudget.getMode({ forVerification });
-    if (mode === "disabled") return { mode: "disabled" };
-    if (mode === "enabled" || phoneAuth.mode === "login_only") return phoneAuth;
-    return {
-        mode: "login_only",
-        delivery: phoneAuth.delivery,
-        minimumResponseTimeMs: config.PHONE_LOGIN_ONLY_RESPONSE_MIN_MS,
-        responseJitterMs: config.PHONE_LOGIN_ONLY_RESPONSE_JITTER_MS,
-    };
+    return countryAuth;
 }
 log.info(
     "AGORA_LOAD_EVENT %s",
@@ -1898,6 +1954,14 @@ async function verifyUcanAndKnownDeviceStatus(
 }
 
 const apiVersion = "v1";
+server.register((indexingServer, _options, done) => {
+    registerConversationIndexingRoute({
+        server: indexingServer,
+        apiVersion,
+        isIndexable: (request) => isConversationIndexable({ db, ...request }),
+    });
+    done();
+});
 server.register((actionServer, _options, done) => {
     registerConversationEmailUpdateActionRoutes({
         server: actionServer,
@@ -2122,6 +2186,16 @@ server.after(() => {
         },
     });
 
+    registerPhonePolicyRoute({
+        server,
+        apiVersion,
+        // Existing login codes remain verifiable when sending capacity is exhausted.
+        getPolicy: async () => ({
+            mode: (await getEffectivePhoneAuth({ forVerification: true })).mode,
+            countryPolicy: phoneCountryPolicy,
+        }),
+    });
+
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/auth/authenticate`,
@@ -2171,7 +2245,9 @@ server.after(() => {
                 return await authService.authenticateAttempt({
                     db,
                     now,
-                    phoneAuth: await getEffectivePhoneAuth(),
+                    phoneAuth: await getEffectivePhoneAuth({
+                        phoneNumber: request.body.phoneNumber,
+                    }),
                     authenticateRequestBody: request.body,
                     minutesBeforeSmsCodeExpiry:
                         config.MINUTES_BEFORE_SMS_OTP_EXPIRY,
@@ -2227,6 +2303,7 @@ server.after(() => {
                     defaultCallingCode: request.body.defaultCallingCode,
                     phoneAuth: await getEffectivePhoneAuth({
                         forVerification: true,
+                        phoneNumber: request.body.phoneNumber,
                     }),
                     peppers: config.PEPPERS,
                     sessionLifetimeDays: config.SESSION_LIFETIME_DAYS,
@@ -3184,6 +3261,7 @@ server.after(() => {
                 opinionSlugId: request.body.opinionSlugId,
                 didWrite: didWrite,
                 votingAction: request.body.chosenOption,
+                sourceVersion: request.body.sourceVersion,
                 userAgent: request.headers["user-agent"] ?? "Unknown device",
                 now: now,
                 currentDisplayLanguage: getRequestDisplayLanguage({ request }),
@@ -3574,6 +3652,40 @@ server.after(() => {
 
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
+        url: `/api/${apiVersion}/opinion/edit`,
+        schema: {
+            body: Dto.editOpinionRequest,
+            response: { 200: Dto.editOpinionResponse },
+        },
+        handler: async (request) => {
+            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
+                db,
+                request,
+                { expectedKnownDeviceStatus: { isGuestOrLoggedIn: true } },
+            );
+            const preferences = await getLanguagePreferences({
+                db,
+                userId: deviceStatus.userId,
+                request: {
+                    currentDisplayLanguage: getRequestDisplayLanguage({ request }),
+                },
+            });
+            return await editOpinion({
+                db,
+                request: request.body,
+                userId: deviceStatus.userId,
+                voteBuffer,
+                googleCloudCredentials,
+                valkey: queueValkeyRef.current,
+                translationQueueScript: contentTranslationQueueScript,
+                displayLanguage: preferences.displayLanguage,
+                spokenLanguages: preferences.spokenLanguages,
+            });
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
         url: `/api/${apiVersion}/opinion/delete`,
         schema: {
             body: Dto.deleteOpinionRequest,
@@ -3664,10 +3776,12 @@ server.after(() => {
                       spokenLanguages: [displayLanguage],
                   };
             const translation =
-                await getPreferredContentTranslationAvailabilityForConversation({
-                    conversationSlugId,
-                    displayLanguage: languagePreferences.displayLanguage,
-                });
+                await getPreferredContentTranslationAvailabilityForConversation(
+                    {
+                        conversationSlugId,
+                        displayLanguage: languagePreferences.displayLanguage,
+                    },
+                );
             const items = await fetchOpinionsByPostSlugId({
                 db,
                 postSlugId: conversationSlugId,
@@ -3721,10 +3835,12 @@ server.after(() => {
                   })
                 : { displayLanguage, spokenLanguages: [displayLanguage] };
             const translation =
-                await getPreferredContentTranslationAvailabilityForConversation({
-                    conversationSlugId,
-                    displayLanguage: languagePreferences.displayLanguage,
-                });
+                await getPreferredContentTranslationAvailabilityForConversation(
+                    {
+                        conversationSlugId,
+                        displayLanguage: languagePreferences.displayLanguage,
+                    },
+                );
             const pageSize = 30;
             const result = await fetchOpinionsByPostSlugId({
                 db,
@@ -3751,9 +3867,12 @@ server.after(() => {
             const lastItem = items.at(-1);
             return {
                 items,
-                nextCursor: allItems.length > pageSize && lastItem !== undefined
-                    ? result.cursorsByOpinionSlugId.get(lastItem.opinionSlugId) ?? null
-                    : null,
+                nextCursor:
+                    allItems.length > pageSize && lastItem !== undefined
+                        ? (result.cursorsByOpinionSlugId.get(
+                              lastItem.opinionSlugId,
+                          ) ?? null)
+                        : null,
             };
         },
     });
@@ -3969,10 +4088,22 @@ server.after(() => {
             const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
                 db,
                 request,
-                { expectedKnownDeviceStatus: { isLoggedIn: true, isRegistered: true } },
+                {
+                    expectedKnownDeviceStatus: {
+                        isLoggedIn: true,
+                        isRegistered: true,
+                    },
+                },
             );
-            if (!await isSiteModeratorAccount({ db, userId: deviceStatus.userId })) {
-                throw server.httpErrors.unauthorized("User is not a site moderator");
+            if (
+                !(await isSiteModeratorAccount({
+                    db,
+                    userId: deviceStatus.userId,
+                }))
+            ) {
+                throw server.httpErrors.unauthorized(
+                    "User is not a site moderator",
+                );
             }
             const { conversationSlugId, cursor } = request.body;
             const displayLanguage = getRequestDisplayLanguage({ request });
@@ -3982,10 +4113,12 @@ server.after(() => {
                 request: { currentDisplayLanguage: displayLanguage },
             });
             const translation =
-                await getPreferredContentTranslationAvailabilityForConversation({
-                    conversationSlugId,
-                    displayLanguage: preferences.displayLanguage,
-                });
+                await getPreferredContentTranslationAvailabilityForConversation(
+                    {
+                        conversationSlugId,
+                        displayLanguage: preferences.displayLanguage,
+                    },
+                );
             const pageSize = 30;
             const result = await fetchOpinionsByPostSlugId({
                 db,
@@ -4008,9 +4141,12 @@ server.after(() => {
             const lastItem = items.at(-1);
             return {
                 items,
-                nextCursor: allItems.length > pageSize && lastItem !== undefined
-                    ? result.cursorsByOpinionSlugId.get(lastItem.opinionSlugId) ?? null
-                    : null,
+                nextCursor:
+                    allItems.length > pageSize && lastItem !== undefined
+                        ? (result.cursorsByOpinionSlugId.get(
+                              lastItem.opinionSlugId,
+                          ) ?? null)
+                        : null,
             };
         },
     });
@@ -4910,6 +5046,7 @@ server.after(() => {
             const updateResult = await postEditService.updateConversation({
                 db: db,
                 userId: deviceStatus.userId,
+                realtimeSSEManager,
                 googleCloudCredentials,
                 valkey: queueValkeyRef.current,
                 data: request.body,
@@ -4934,7 +5071,12 @@ server.after(() => {
                     );
                 }
 
-                reply.send({ success: true });
+                reply.send({
+                    success: true,
+                    addedSeedOpinions: updateResult.addedSeedOpinions,
+                    addedOpinions: updateResult.addedOpinions,
+                    projectAssignment: updateResult.projectAssignment,
+                });
                 return;
             }
 

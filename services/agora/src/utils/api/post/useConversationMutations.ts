@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { UpdateConversationRequest } from "src/shared/types/dto";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { cacheCreatedSeedOpinions } from "src/utils/api/comment/createdOpinionCache";
 import { invalidateConversationContentQueries } from "src/utils/api/contentTranslation/conversationContentQuery";
+import { applyConversationProjectAssignment } from "src/utils/api/post/conversationProjectCache";
 import { useBackendPostApi } from "src/utils/api/post/post";
 import { useBackendPostEditApi } from "src/utils/api/post/postEdit";
 import {
@@ -9,6 +12,7 @@ import {
   conversationMutationsTranslations,
 } from "src/utils/api/post/useConversationMutations.i18n";
 import { updateConversationQueryCache } from "src/utils/api/post/useConversationQuery";
+import { useViewerQueryScope } from "src/utils/query/viewerScope";
 import { useNotify } from "src/utils/ui/notify";
 
 export function useCloseConversationMutation() {
@@ -168,13 +172,17 @@ export function useOpenConversationMutation() {
 }
 
 export function useUpdateConversationMutation() {
+  const auth = useAuthenticationStore();
   const queryClient = useQueryClient();
-  const { updateConversation } = useBackendPostEditApi();
+  const { updateConversation, refreshConversationMetadata } =
+    useBackendPostEditApi();
+  const viewerScope = useViewerQueryScope();
 
   return useMutation({
     mutationFn: (data: UpdateConversationRequest) => updateConversation(data),
 
     onMutate: async (variables) => {
+      const viewerUserId = auth.userId;
       const polisSettings =
         variables.conversationTypeConfig.conversationType === "polis"
           ? variables.conversationTypeConfig
@@ -222,15 +230,57 @@ export function useUpdateConversationMutation() {
         },
       });
 
-      return { previousConversations };
+      return { previousConversations, viewerUserId };
     },
 
-    onSuccess: async (data, variables) => {
+    onSuccess: async (data, variables, context) => {
       if (data.success) {
+        await cacheCreatedSeedOpinions({
+          queryClient,
+          conversationSlugId: variables.conversationSlugId,
+          opinions: data.addedOpinions ?? [],
+          viewerUserId: context?.viewerUserId,
+        });
+        if ((data.addedSeedOpinions?.length ?? 0) > 0) {
+          for (const family of [
+            "commentStats",
+            "analysisFrameManifest",
+            "maxdiff-items",
+            "maxdiff-load",
+            "ranking-stats-checkpoints",
+          ]) {
+            void queryClient.invalidateQueries({
+              queryKey: [family, variables.conversationSlugId],
+              refetchType: "none",
+            });
+          }
+          void queryClient.invalidateQueries({
+            queryKey: ["comments", variables.conversationSlugId],
+            predicate: ({ queryKey, state }) =>
+              state.data === undefined ||
+              !["discover", "new"].includes(String(queryKey[2])),
+            refetchType: "none",
+          });
+        }
         await invalidateConversationContentQueries({
           queryClient,
           conversationSlugId: variables.conversationSlugId,
         });
+        if (data.projectAssignment !== undefined) {
+          // Keep the committed scope authoritative over an immediate replica refresh.
+          void applyConversationProjectAssignment({
+            queryClient,
+            conversationSlugId: variables.conversationSlugId,
+            assignment: data.projectAssignment,
+            viewerScope: viewerScope.value,
+            isCurrent: () => auth.userId === context?.viewerUserId,
+            refreshMetadata: () =>
+              refreshConversationMetadata({
+                conversationSlugId: variables.conversationSlugId,
+                authenticated: auth.isGuestOrLoggedIn,
+              }),
+          });
+        }
         void queryClient.invalidateQueries({
           queryKey: ["feed"],
           refetchType: "none",
@@ -248,6 +298,8 @@ export function useUpdateConversationMutation() {
         void queryClient.invalidateQueries({
           queryKey: ["conversation", variables.conversationSlugId],
         });
+        for (const [queryKey, previous] of context?.previousConversations ?? [])
+          queryClient.setQueryData(queryKey, previous);
       }
     },
 

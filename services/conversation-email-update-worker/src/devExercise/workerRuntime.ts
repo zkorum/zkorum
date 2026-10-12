@@ -1,4 +1,4 @@
-import pino from "pino";
+import { createStructuredLogger } from "../logger.js";
 import { setTimeout as sleep } from "node:timers/promises";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -138,8 +138,9 @@ export async function runExerciseWorker({
     if (fixture === undefined) {
         throw new Error("Exercise worker requires a prepared fixture");
     }
-    const log = pino({
-        name: "conversation-email-update-dev-exercise",
+    const log = createStructuredLogger({
+        environment: "development",
+        workerId: `dev-exercise-${manifest.plan.fixtureId}`,
         level: "info",
     });
     const workerConfig = {

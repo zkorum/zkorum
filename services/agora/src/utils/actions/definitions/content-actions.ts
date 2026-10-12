@@ -72,11 +72,17 @@ export function useContentActions() {
   /**
    * Show comment action dialog
    */
-  const showCommentActions = (
-    targetId: string,
-    targetAuthor: string,
-    conversationAuthorUsername: string,
-    conversationOrganizationName: string,
+  const showCommentActions = ({
+    targetId,
+    targetAuthor,
+    conversationAuthorUsername,
+    conversationOrganizationName,
+    callbacks,
+  }: {
+    targetId: string;
+    targetAuthor: string;
+    conversationAuthorUsername: string;
+    conversationOrganizationName: string;
     callbacks: {
       deleteCommentCallback: () => void | Promise<void>;
       reportCommentCallback: () => void;
@@ -84,8 +90,11 @@ export function useContentActions() {
       muteUserCallback: () => void | Promise<void>;
       moderateCommentCallback: () => void | Promise<void>;
       shareOpinionCallback: () => void | Promise<void>;
-    }
-  ): void => {
+      editCommentCallback: () => void;
+      canEdit: boolean;
+      canDelete: boolean;
+    };
+  }): void => {
     const currentUser = profileData.value.userName;
     const isConversationOwner =
       currentUser !== "" && currentUser === conversationAuthorUsername;
@@ -116,16 +125,17 @@ export function useContentActions() {
       share: t("share"),
     };
 
-    const availableActions = getAvailableCommentActions(
+    const availableActions = getAvailableCommentActions({
       context,
-      callbacks.deleteCommentCallback,
-      callbacks.reportCommentCallback,
-      callbacks.openUserReportsCallback,
-      callbacks.muteUserCallback,
-      callbacks.moderateCommentCallback,
-      callbacks.shareOpinionCallback,
-      commentTranslations
-    );
+      ...callbacks,
+      translations: commentTranslations,
+      management: {
+        canEdit: callbacks.canEdit,
+        canDelete: callbacks.canDelete,
+        editLabel: t("edit"),
+        editCommentCallback: callbacks.editCommentCallback,
+      },
+    });
 
     dialogState.value = {
       isVisible: true,

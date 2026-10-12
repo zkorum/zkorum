@@ -6,6 +6,7 @@ import {
 } from "@tanstack/vue-query";
 import { storeToRefs } from "pinia";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { normalizeSurveyOptionTextValues } from "src/shared/surveyChoiceText";
 import type {
   SurveyFormFetchResponse,
   SurveyStatusCheckResponse,
@@ -19,8 +20,15 @@ import {
 } from "src/shared/types/zod";
 import { useLanguageStore } from "src/stores/language";
 import { useBackendAuthApi } from "src/utils/api/auth";
-import { getSurveyFormQueryKey, getSurveyStatusQueryKey } from "src/utils/query/conversationQueryKeys";
-import { isQueryForViewerScope, useViewerQueryScope,type ViewerQueryScope } from "src/utils/query/viewerScope";
+import {
+  getSurveyFormQueryKey,
+  getSurveyStatusQueryKey,
+} from "src/utils/query/conversationQueryKeys";
+import {
+  isQueryForViewerScope,
+  useViewerQueryScope,
+  type ViewerQueryScope,
+} from "src/utils/query/viewerScope";
 import {
   buildSurveyAnswerSubmission,
   isSurveyAnswerSubmittable,
@@ -94,7 +102,10 @@ function getCachedSurveyForm({
   const formEntries = queryClient.getQueriesData<SurveyFormData>({
     queryKey: ["survey-form", conversationSlugId],
   });
-  return formEntries.find(([queryKey, data]) => data !== undefined && isQueryForViewerScope({ queryKey, viewerScope }))?.[1];
+  return formEntries.find(
+    ([queryKey, data]) =>
+      data !== undefined && isQueryForViewerScope({ queryKey, viewerScope })
+  )?.[1];
 }
 
 function updateSurveyStatusCache({
@@ -119,7 +130,10 @@ function updateSurveyStatusCache({
   });
 
   queryClient.setQueriesData<SurveyStatusCheckResponse>(
-    { queryKey: getSurveyStatusQueryKey({ conversationSlugId, viewerScope }), exact: true },
+    {
+      queryKey: getSurveyStatusQueryKey({ conversationSlugId, viewerScope }),
+      exact: true,
+    },
     (oldData) => {
       if (oldData === undefined) {
         return oldData;
@@ -145,7 +159,12 @@ function updateSurveyGateViewerCaches({
   surveyGate: SurveyGateSummary;
   viewerScope: ViewerQueryScope;
 }): void {
-  updateSurveyStatusCache({ queryClient, conversationSlugId, surveyGate, viewerScope });
+  updateSurveyStatusCache({
+    queryClient,
+    conversationSlugId,
+    surveyGate,
+    viewerScope,
+  });
 
   updateConversationQueryCache({
     queryClient,
@@ -192,9 +211,18 @@ function updateSurveyQuestionWithSubmittedAnswer({
   }
 
   const isCurrentAnswerValid = isSurveyAnswerSubmittable({ question, answer });
+  const currentAnswer =
+    answer.questionType === "choice" && answer.optionTextValues !== undefined
+      ? {
+          ...answer,
+          optionTextValues: normalizeSurveyOptionTextValues(
+            answer.optionTextValues
+          ),
+        }
+      : answer;
   return {
     ...question,
-    currentAnswer: answer,
+    currentAnswer,
     isPassed: false,
     isMissingRequired: question.isRequired && !isCurrentAnswerValid,
     isStale: false,
@@ -219,7 +247,11 @@ function updateSurveyFormAnswerCaches({
   viewerScope: ViewerQueryScope;
 }): void {
   queryClient.setQueriesData<SurveyFormData>(
-    { queryKey: ["survey-form", conversationSlugId], predicate: (query) => isQueryForViewerScope({ queryKey: query.queryKey, viewerScope }) },
+    {
+      queryKey: ["survey-form", conversationSlugId],
+      predicate: (query) =>
+        isQueryForViewerScope({ queryKey: query.queryKey, viewerScope }),
+    },
     (oldData) => {
       if (oldData === undefined) {
         return oldData;
@@ -251,7 +283,11 @@ function clearSurveyFormAnswerCaches({
   viewerScope: ViewerQueryScope;
 }): void {
   queryClient.setQueriesData<SurveyFormData>(
-    { queryKey: ["survey-form", conversationSlugId], predicate: (query) => isQueryForViewerScope({ queryKey: query.queryKey, viewerScope }) },
+    {
+      queryKey: ["survey-form", conversationSlugId],
+      predicate: (query) =>
+        isQueryForViewerScope({ queryKey: query.queryKey, viewerScope }),
+    },
     (oldData) => {
       if (oldData === undefined) {
         return oldData;
@@ -333,7 +369,12 @@ export function useSurveyStatusQuery({
   const viewerScope = useViewerQueryScope();
 
   return useQuery({
-    queryKey: computed(() => getSurveyStatusQueryKey({ conversationSlugId: toValue(conversationSlugId), viewerScope: viewerScope.value })),
+    queryKey: computed(() =>
+      getSurveyStatusQueryKey({
+        conversationSlugId: toValue(conversationSlugId),
+        viewerScope: viewerScope.value,
+      })
+    ),
     queryFn: async ({ signal }) => {
       const response = await checkSurveyStatus({
         conversationSlugId: toValue(conversationSlugId),
@@ -368,12 +409,14 @@ export function useSurveyFormQuery({
   const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
 
   return useQuery({
-    queryKey: computed(() => getSurveyFormQueryKey({
-      conversationSlugId: toValue(conversationSlugId),
-      displayLanguage: displayLanguage.value,
-      spokenLanguages: spokenLanguages.value,
-      viewerScope: viewerScope.value,
-    })),
+    queryKey: computed(() =>
+      getSurveyFormQueryKey({
+        conversationSlugId: toValue(conversationSlugId),
+        displayLanguage: displayLanguage.value,
+        spokenLanguages: spokenLanguages.value,
+        viewerScope: viewerScope.value,
+      })
+    ),
     queryFn: async ({ signal }): Promise<SurveyFormData> => {
       const response = await fetchSurveyForm({
         conversationSlugId: toValue(conversationSlugId),

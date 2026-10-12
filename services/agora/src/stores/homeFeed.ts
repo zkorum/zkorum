@@ -1,5 +1,10 @@
 import { defineStore, storeToRefs } from "pinia";
 import type { FetchFeedResponse } from "src/shared/types/dto";
+import type {
+  ConversationProjectAssignment,
+  ExtendedConversation,
+} from "src/shared/types/zod";
+import { getConversationProjectContextFromAssignment } from "src/shared/utils/conversationProject";
 import { useBackendPostApi } from "src/utils/api/post/post";
 import { computed, ref } from "vue";
 
@@ -35,6 +40,39 @@ export const useHomeFeedStore = defineStore("homeFeed", () => {
 
   let fullHomeFeedList: HomeFeedItem[] = [];
   const partialHomeFeedList = ref<HomeFeedItem[]>([]);
+  function applyProjectAssignment({
+    conversationSlugId,
+    assignment,
+    freshConversation,
+  }: {
+    conversationSlugId: string;
+    assignment: ConversationProjectAssignment;
+    freshConversation?: Pick<ExtendedConversation, "metadata" | "interaction">;
+  }): void {
+    const update = (item: HomeFeedItem): HomeFeedItem =>
+      item.conversationData.metadata.conversationSlugId === conversationSlugId
+        ? {
+            ...item,
+            conversationData: {
+              ...item.conversationData,
+              interaction:
+                freshConversation?.interaction ??
+                item.conversationData.interaction,
+              metadata: freshConversation?.metadata ?? {
+                ...item.conversationData.metadata,
+                currentProjectSlug: assignment.projectSlug,
+                projectContext: getConversationProjectContextFromAssignment({
+                  assignment,
+                  conversationSlugId,
+                  currentContext: item.conversationData.metadata.projectContext,
+                }),
+              },
+            },
+          }
+        : item;
+    fullHomeFeedList = fullHomeFeedList.map(update);
+    partialHomeFeedList.value = partialHomeFeedList.value.map(update);
+  }
 
   function setFeedData(data: FetchFeedResponse) {
     fullHomeFeedList = [...data.feedItemList];
@@ -44,13 +82,17 @@ export const useHomeFeedStore = defineStore("homeFeed", () => {
     } else {
       hasPendingFollowingTab.value = false;
     }
-    localTopSlugIds[currentHomeFeedTab.value] = [...data.topConversationSlugIdList];
+    localTopSlugIds[currentHomeFeedTab.value] = [
+      ...data.topConversationSlugIdList,
+    ];
 
     canLoadMore.value = true;
     loadMore();
   }
 
-  async function hasNewPostCheck(tabOverride?: HomeFeedSortOption): Promise<void> {
+  async function hasNewPostCheck(
+    tabOverride?: HomeFeedSortOption
+  ): Promise<void> {
     const tab = tabOverride ?? currentHomeFeedTab.value;
     const localList = localTopSlugIds[tab];
 
@@ -59,9 +101,7 @@ export const useHomeFeedStore = defineStore("homeFeed", () => {
     }
 
     const pendingRef =
-      tab === "new"
-        ? hasPendingNewTab
-        : hasPendingFollowingTab;
+      tab === "new" ? hasPendingNewTab : hasPendingFollowingTab;
 
     try {
       const response = await fetchRecentPost({
@@ -78,8 +118,7 @@ export const useHomeFeedStore = defineStore("homeFeed", () => {
           (slugId: string) => !localList.includes(slugId)
         );
         if (newItems.length > 0) {
-          localTopSlugIds[tab] =
-            response.data.topConversationSlugIdList;
+          localTopSlugIds[tab] = response.data.topConversationSlugIdList;
           pendingRef.value = true;
         } else {
           pendingRef.value = false;
@@ -139,6 +178,7 @@ export const useHomeFeedStore = defineStore("homeFeed", () => {
   }
 
   return {
+    applyProjectAssignment,
     setFeedData,
     clearFeedDisplay,
     clearFeedData,

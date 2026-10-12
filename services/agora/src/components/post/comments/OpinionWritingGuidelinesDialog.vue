@@ -30,7 +30,11 @@
           <div class="guideline">
             <div class="guideline-title">{{ t("keepBriefTitle") }}</div>
             <div class="guideline-description">
-              {{ t("keepBriefDescription") }}
+              {{
+                t("keepBriefDescription", {
+                  maxLength: formattedOpinionLimit,
+                })
+              }}
             </div>
             <ul class="examples-list">
               <li class="example-good">✅ {{ t("keepBriefExampleGood") }}</li>
@@ -73,15 +77,24 @@
 <script setup lang="ts">
 import ZKBottomDialogContainer from "src/components/ui-library/ZKBottomDialogContainer.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { parseSupportedDisplayLanguageOrUndefined } from "src/shared/languages";
+import { MAX_LENGTH_OPINION } from "src/shared/shared";
+import { computed } from "vue";
 
 import {
   type OpinionWritingGuidelinesDialogTranslations,
   opinionWritingGuidelinesDialogTranslations,
 } from "./OpinionWritingGuidelinesDialog.i18n";
 
-const { t } = useComponentI18n<OpinionWritingGuidelinesDialogTranslations>(
+const { t, locale } = useComponentI18n<OpinionWritingGuidelinesDialogTranslations>(
   opinionWritingGuidelinesDialogTranslations
 );
+
+const formattedOpinionLimit = computed(() => {
+  const displayLanguage =
+    parseSupportedDisplayLanguageOrUndefined(locale.value) ?? "en";
+  return new Intl.NumberFormat(displayLanguage).format(MAX_LENGTH_OPINION);
+});
 
 const showDialog = defineModel<boolean>({ required: true });
 </script>

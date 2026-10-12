@@ -129,6 +129,7 @@ export function useVoteMutation(postSlugId: string) {
         votingAction: voteAction,
         returnIsUserClustered,
         isCurrent: variables.isCurrent,
+        sourceVersion: variables.sourceVersion,
       });
     },
 
@@ -177,6 +178,16 @@ export function useVoteMutation(postSlugId: string) {
             votesKey: currentVotesKey(),
             snapshot: context.snapshot,
           });
+        if (data.reason === "statement_changed") {
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: ["comments", postSlugId],
+            }),
+            queryClient.invalidateQueries({
+              queryKey: ["nextUnansweredOpinion", postSlugId],
+            }),
+          ]);
+        }
         return;
       }
 

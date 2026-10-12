@@ -51,6 +51,36 @@ References: [web.dev responsive images](https://web.dev/learn/design/responsive-
 [MDN aspect-ratio](https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio),
 and [MDN object-fit](https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit).
 
+## Conversation indexing and browser translation
+
+Unlisted conversations (`isIndexed: false`) are excluded from search engines with
+`X-Robots-Tag: noindex, nofollow` on their HTML responses. The application nginx
+uses an internal POST subrequest to the API's `/api/v1/conversation/indexing`
+endpoint. Only a successful HTTP 200 response with an explicit
+`X-Conversation-Indexing: index` header permits indexing; missing/deleted
+conversations, incomplete imports, and lookup failures are excluded. The lookup
+reads the database writer so visibility changes are not
+delayed by replica lag. The frontend container must share the Docker network with
+the `api` service on port 8080. Deploy the API endpoint before the frontend nginx
+configuration. This covers conversation subroutes and project-scoped URLs,
+including alternate-case paths. Conversation slug IDs retain their original case.
+
+`ConversationPageMetadata.vue`, mounted at the application root, passively
+observes the active conversation's shared query without initiating requests and
+applies a robots meta tag during SPA navigation. Its reusable `PageMetadata.vue`
+component restores the previous head
+and HTML attributes when leaving conversation pages, including KeepAlive
+deactivation. Only changes to the indexing or translation policy update the DOM.
+
+Browser page translation remains blocked by default. When the active
+conversation's effective `multilingualSetting.dynamicTranslationEnabled` is
+`false`, the metadata component removes the Google `notranslate` meta tag,
+the HTML `notranslate` class, and `translate="no"`. All three signals are restored
+when dynamic translation is enabled or the user leaves the conversation.
+
+Run `pnpm test:nginx` to verify HTML response headers and failure handling in an
+isolated nginx container with a mock API (requires Docker or Podman).
+
 ## Environment Variables
 
 ### Setup

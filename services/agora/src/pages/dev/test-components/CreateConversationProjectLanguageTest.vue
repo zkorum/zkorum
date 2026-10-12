@@ -10,7 +10,8 @@
       <p class="section-description">
         Uses the real create-conversation project language component with mock
         project data. Actual projects are filtered with
-        <code>directoryVisible === true</code> and <code>deletedAt === null</code>.
+        <code>directoryVisible === true</code> and
+        <code>deletedAt === null</code>.
       </p>
 
       <div class="scenario-grid">
@@ -29,21 +30,39 @@
       </div>
 
       <div class="prototype-panel">
-        <CreateConversationProjectLanguageSettings
-          v-model:selected-project-slug="selectedProjectSlug"
+        <ConversationProjectSelect
+          :options="projectOptions"
+          :model-value="
+            selectedProjectSlug === undefined
+              ? { kind: 'no_project', organizationSlug: 'demo-org' }
+              : { kind: 'project', projectSlug: selectedProjectSlug }
+          "
+          :fallback-label="undefined"
+          @update:model-value="selectProject"
+        />
+        <ConversationProjectLanguageSettings
+          v-if="languageProject !== undefined"
           v-model:inherit-project-languages="inheritProjectLanguages"
           v-model:override-multilingual-setting="overrideMultilingualSetting"
-          :project-list="projects"
+          :project="languageProject"
+          :detected-language-code="undefined"
+          :can-use-dynamic-translation="true"
         />
       </div>
 
       <div class="current-state">
         <div class="current-state__title">Current prototype state</div>
         <div>Actual projects: {{ actualProjects.length }}</div>
-        <div>Selected project: {{ selectedProject?.title ?? "No project" }}</div>
+        <div>
+          Selected project: {{ selectedProject?.title ?? "No project" }}
+        </div>
         <div>
           Language mode:
-          {{ selectedProject !== undefined && inheritProjectLanguages ? "inherit" : "override" }}
+          {{
+            selectedProject !== undefined && inheritProjectLanguages
+              ? "inherit"
+              : "override"
+          }}
         </div>
       </div>
     </template>
@@ -53,10 +72,14 @@
 <script setup lang="ts">
 import Button from "primevue/button";
 import Card from "primevue/card";
-import CreateConversationProjectLanguageSettings from "src/components/newConversation/CreateConversationProjectLanguageSettings.vue";
+import ConversationProjectLanguageSettings from "src/components/newConversation/ConversationProjectLanguageSettings.vue";
+import ConversationProjectSelect, {
+  type ConversationProjectSelectOption,
+} from "src/components/newConversation/ConversationProjectSelect.vue";
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 import type {
   ConversationMultilingualSetting,
+  ConversationProjectTarget,
   ProjectLanguageSettings,
 } from "src/shared/types/zod";
 import { computed, ref } from "vue";
@@ -164,8 +187,33 @@ const actualProjects = computed(() =>
 );
 
 const selectedProject = computed(() =>
-  actualProjects.value.find((project) => project.slug === selectedProjectSlug.value)
+  actualProjects.value.find(
+    (project) => project.slug === selectedProjectSlug.value
+  )
 );
+const languageProject = computed(() =>
+  selectedProject.value === undefined
+    ? undefined
+    : {
+        projectSlug: selectedProject.value.slug,
+        projectTitle: selectedProject.value.title,
+        defaultLanguageCode: selectedProject.value.defaultLanguageCode,
+        languageSettings: selectedProject.value.languageSettings,
+      }
+);
+const projectOptions = computed<ConversationProjectSelectOption[]>(() => [
+  { kind: "no_project", organizationSlug: "demo-org", title: undefined },
+  ...actualProjects.value.map<ConversationProjectSelectOption>((project) => ({
+    kind: "project",
+    projectSlug: project.slug,
+    title: project.title,
+  })),
+]);
+function selectProject(target: ConversationProjectTarget): void {
+  const slug = target.kind === "project" ? target.projectSlug : undefined;
+  selectedProjectSlug.value = slug;
+  inheritProjectLanguages.value = slug !== undefined;
+}
 
 function loadVisibleProjectsScenario(): void {
   projects.value = visibleProjectsScenario;

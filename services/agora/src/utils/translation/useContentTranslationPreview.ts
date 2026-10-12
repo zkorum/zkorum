@@ -29,6 +29,7 @@ import {
   getLanguageDisplayName,
   resolveContentTranslationPollingOutcome,
 } from "./contentTranslation";
+import { getContentTranslationSubscription } from "./contentTranslationSubscriptions";
 import {
   type ContentTranslationPreviewTranslations,
   contentTranslationPreviewTranslations,
@@ -298,6 +299,12 @@ function useContentTranslationController({
   );
 
   const recovery = useContentTranslationRecovery({
+    subscription: computed(() =>
+      getContentTranslationSubscription({
+        subject: eventSubject.value,
+        targetLanguageCode: displayLanguage.value,
+      })
+    ),
     identity: computed(() =>
       getContentTranslationEventIdentity({
         subject: eventSubject.value,

@@ -844,21 +844,35 @@ Prefer `log.info()`, `log.warn()`, or `log.error()` for production-relevant even
 
 `log.debug()` is allowed in Python workers for dev-only or high-frequency diagnostics. Python workers default to `DEBUG` when `AGORA_DEV_MODE=true`, default to `INFO` otherwise, and support worker-specific `*_LOG_LEVEL` overrides.
 
-API uses `API_LOG_LEVEL` (default `info`). SQL templates require both
-`API_LOG_SQL_QUERIES=true` and DEBUG logging; parameter values are never logged.
+API uses `API_LOG_LEVEL` (default `info`). Database-query diagnostic events require both
+`API_LOG_SQL_QUERIES=true` and DEBUG logging; only parameter counts are logged,
+not SQL statements or parameter values. TypeScript backend logging uses the
+shared privacy projections described in `services/shared-backend/LOGGING.md`.
 Ranking performance events are opt-in with `API_RANKING_PERFORMANCE_ENABLED=true`
 and `SCORING_WORKER_PERFORMANCE_ENABLED=true`, and use the existing
 `AGORA_LOAD_EVENT`/dev-log-runner capture system. See
 `services/load-testing/PERFORMANCE.md`. Keep routine logs production-oriented;
 the frontend still awaits a centralized log-level mechanism.
 
-**Examples:**
+**Required pattern for new TypeScript backend logs:**
+
+- Use the configured privacy-aware logger; do not create unrestricted Pino instances or bypass it with `console`/stdout.
+- In the API, use `logApiError` for new error events. Use schema-derived structured events in the Conversation Email Updates worker.
+- Put approved counts, timings, and necessary pseudonymous IDs in structured fields. Keep messages source-controlled and registered in `services/api/src/logging/messages.ts`; never interpolate user/provider data into messages.
+- Extend the event/metadata schemas deliberately when adding useful context. Unknown fields are omitted and unapproved messages become generic; do not rely on them reaching the logs.
+- Never log credentials, OTPs, bodies, raw URLs, SQL, or raw provider response/configuration data, including through child bindings. Preserve the privacy hooks on child loggers and verify changes against emitted-log tests. See [the shared logging guide](services/shared-backend/LOGGING.md).
+
+**API error example:**
 
 ```typescript
-// GOOD
-log.info(`[Math Updater] Processing conversation ${conversationSlugId}`);
-log.warn(`[Scanner] Skipped conversation due to rate limiting`);
-log.error(error, `[API] Failed to create opinion`);
+import { logApiError } from "@/logging/privacy.js";
+
+logApiError({
+  logger: log,
+  level: "error",
+  event: { event: "application_error" },
+  error,
+});
 ```
 
 ## Important Patterns

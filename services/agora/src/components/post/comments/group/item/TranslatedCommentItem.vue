@@ -13,6 +13,8 @@
     :show-vote-results="showVoteResults"
     :content-translation="translationPreview"
     :conversation-route-context="conversationRouteContext"
+    :editing-opinion-slug-id="editingOpinionSlugId"
+    @edit-opinion="emit('editOpinion', $event)"
     @update:content-translation-mode="setTranslationMode"
     @deleted="emit('deleted', $event)"
     @muted-comment="emit('mutedComment')"
@@ -35,6 +37,7 @@ import CommentItem from "./CommentItem.vue";
 
 const props = defineProps<{
   commentItem: DisplayedOpinionItem;
+  editingOpinionSlugId: string | undefined;
   postSlugId: string;
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
@@ -50,11 +53,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: [opinionSlugId: string];
+  editOpinion: [opinion: DisplayedOpinionItem];
   mutedComment: [];
 }>();
 
-const { translationPreview, setTranslationMode } = useOpinionItemDisplayContent({
-  conversationSlugId: computed(() => props.postSlugId),
-  opinionItem: computed(() => props.commentItem),
-});
+const { translationPreview, setTranslationMode } = useOpinionItemDisplayContent(
+  {
+    conversationSlugId: computed(() => props.postSlugId),
+    opinionItem: computed(() => props.commentItem),
+  }
+);
 </script>

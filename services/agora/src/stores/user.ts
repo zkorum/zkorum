@@ -1,10 +1,12 @@
 import { defineStore } from "pinia";
 import type {
+  ConversationProjectAssignment,
   EventSlug,
   ExtendedConversation,
   ExtendedOpinion,
   OrganizationProperties,
 } from "src/shared/types/zod";
+import { getConversationProjectContextFromAssignment } from "src/shared/utils/conversationProject";
 import { useBackendUserApi } from "src/utils/api/user";
 import { computed, reactive, ref } from "vue";
 
@@ -53,6 +55,35 @@ export const useUserStore = defineStore("user", () => {
   function clearProfileData() {
     profileGeneration += 1;
     profileData.value = createEmptyProfile();
+  }
+  function applyProjectAssignment({
+    conversationSlugId,
+    assignment,
+    freshConversation,
+  }: {
+    conversationSlugId: string;
+    assignment: ConversationProjectAssignment;
+    freshConversation?: Pick<ExtendedConversation, "metadata" | "interaction">;
+  }): void {
+    profileData.value.userPostList = profileData.value.userPostList.map(
+      (conversation) =>
+        conversation.metadata.conversationSlugId === conversationSlugId
+          ? {
+              ...conversation,
+              interaction:
+                freshConversation?.interaction ?? conversation.interaction,
+              metadata: freshConversation?.metadata ?? {
+                ...conversation.metadata,
+                currentProjectSlug: assignment.projectSlug,
+                projectContext: getConversationProjectContextFromAssignment({
+                  assignment,
+                  conversationSlugId,
+                  currentContext: conversation.metadata.projectContext,
+                }),
+              },
+            }
+          : conversation
+    );
   }
 
   function captureProfileRequest(): () => boolean {
@@ -247,6 +278,7 @@ export const useUserStore = defineStore("user", () => {
   }
 
   return {
+    applyProjectAssignment,
     loadUserProfile,
     loadUserProfileMetadata,
     retryUserPosts,

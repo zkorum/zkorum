@@ -15,6 +15,7 @@ export const surveyQuestionOptionHeaders = [
     "question-id",
     "option-order",
     "option-text",
+    "allows-text",
 ] as const;
 
 export const surveyAggregateHeaders = [

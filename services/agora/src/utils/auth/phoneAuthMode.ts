@@ -13,7 +13,11 @@ export type PhoneAuthAvailability =
 
 const configuredPhoneAuthMode: PhoneAuthMode =
   processEnv.VITE_PHONE_AUTH_MODE ?? "enabled";
-const backendPhoneAuthMode = ref<"enabled" | "login_only">("enabled");
+const backendPhoneAuthMode = ref<PhoneAuthMode>("enabled");
+
+export function updateBackendPhoneAuthMode(mode: PhoneAuthMode): void {
+  backendPhoneAuthMode.value = mode;
+}
 
 export function getEffectivePhoneAuthMode({
   configuredMode,
@@ -29,10 +33,6 @@ export function getEffectivePhoneAuthMode({
     return "login_only";
   }
   return "enabled";
-}
-
-export function pausePhoneRegistration(): void {
-  backendPhoneAuthMode.value = "login_only";
 }
 
 export function getPhoneAuthAvailability({

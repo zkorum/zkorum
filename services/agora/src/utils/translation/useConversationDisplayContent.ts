@@ -24,6 +24,7 @@ import {
   isSameContentLanguage,
   selectConversationInitialDisplayContent,
 } from "./contentTranslation";
+import { getContentTranslationSubscription } from "./contentTranslationSubscriptions";
 import {
   type ContentTranslationPreviewTranslations,
   contentTranslationPreviewTranslations,
@@ -260,6 +261,12 @@ export function useConversationDisplayContent({
   });
 
   const recovery = useContentTranslationRecovery({
+    subscription: computed(() =>
+      getContentTranslationSubscription({
+        subject: eventSubject.value,
+        targetLanguageCode: displayLanguage.value,
+      })
+    ),
     canRefresh: computed(() => !requestedContentQuery.isFetching.value),
     identity: computed(() =>
       getContentTranslationEventIdentity({

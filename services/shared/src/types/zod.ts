@@ -2,7 +2,9 @@ import { z } from "zod";
 import { validateDidKey, validateDidWeb } from "../did/util.js";
 import {
     MAX_LENGTH_TITLE,
+    MAX_LENGTH_CONVERSATION_TITLE,
     MAX_LENGTH_SURVEY_OPTION,
+    MAX_BYTES_SURVEY_OPTION_TEXT,
     MAX_LENGTH_SURVEY_QUESTION,
     MIN_LENGTH_USERNAME,
     MAX_LENGTH_USERNAME,
@@ -23,14 +25,17 @@ import {
     ZodSupportedDisplayLanguageCodes,
 } from "../languages.js";
 import { projectOrganizationAttributionRoleValues } from "./project.js";
+import { isSurveyOptionTextWithinLimit } from "../surveyChoiceText.js";
 
 // Date objects are used internally; JSON uses ISO timestamps or epoch milliseconds.
 // Restrict coercion inputs so null/booleans cannot silently become valid dates.
-export const zodDateTimeFlexible = z.union([
-    z.date(),
-    z.iso.datetime({ offset: true }),
-    z.number().int().min(-8_640_000_000_000_000).max(8_640_000_000_000_000),
-]).pipe(z.coerce.date());
+export const zodDateTimeFlexible = z
+    .union([
+        z.date(),
+        z.iso.datetime({ offset: true }),
+        z.number().int().min(-8_640_000_000_000_000).max(8_640_000_000_000_000),
+    ])
+    .pipe(z.coerce.date());
 export const zodSlugId = z.string().max(10);
 export const zodOrganizationSlug = z
     .string()
@@ -40,6 +45,31 @@ export const zodOrganizationSlug = z
         "Organization slug may only contain lower-cased letters, numbers and single hyphens",
     );
 export const zodProjectSlug = zodOrganizationSlug;
+export const zodConversationProjectTarget = z.discriminatedUnion("kind", [
+    z
+        .object({ kind: z.literal("project"), projectSlug: zodProjectSlug })
+        .strict(),
+    z
+        .object({
+            kind: z.literal("no_project"),
+            organizationSlug: zodOrganizationSlug,
+        })
+        .strict(),
+]);
+export type ConversationProjectTarget = z.infer<
+    typeof zodConversationProjectTarget
+>;
+export const zodConversationProjectAssignment = z
+    .object({
+        previousProjectSlug: zodProjectSlug,
+        projectSlug: zodProjectSlug,
+        projectTitle: z.string().trim().min(1).max(MAX_LENGTH_TITLE),
+        target: zodConversationProjectTarget,
+    })
+    .strict();
+export type ConversationProjectAssignment = z.infer<
+    typeof zodConversationProjectAssignment
+>;
 
 export const zodEventSlug = z.enum(["devconnect-2025"]);
 
@@ -298,7 +328,10 @@ export const zodModerationExplanation = z.string().max(MAX_LENGTH_BODY);
 export const zodCode = z.coerce.number().min(0).max(999999);
 export const zodDigit = z.coerce.number().int().nonnegative().lte(9);
 export const zodUserId = z.uuid().min(1);
-export const zodConversationTitle = z.string().max(MAX_LENGTH_TITLE).min(1);
+export const zodConversationTitle = z
+    .string()
+    .max(MAX_LENGTH_CONVERSATION_TITLE)
+    .min(1);
 export const zodRichTextValidationFailureReason = z.enum(
     richTextValidationFailureReasons,
 );
@@ -508,7 +541,7 @@ export const zodLocalizedConversationContent = createZodLocalizedContent(
 );
 export const zodProjectContentVariant = z
     .object({
-        title: zodConversationTitle,
+        title: z.string().max(MAX_LENGTH_TITLE).min(1),
         subtitle: z.string().trim().min(1).max(MAX_LENGTH_TITLE).optional(),
         bodyHtml: zodConversationBodyOutput.optional(),
     })
@@ -633,7 +666,9 @@ const zodImportRouteTarget = z
     })
     .strict();
 
-const zodSettingsRouteTarget = z.object({ type: z.literal("settings") }).strict();
+const zodSettingsRouteTarget = z
+    .object({ type: z.literal("settings") })
+    .strict();
 
 export const zodRouteTarget = z.discriminatedUnion("type", [
     zodOpinionRouteTarget,
@@ -854,11 +889,7 @@ const zodSurveyQuestionFreeTextRichTextConstraints = z
     .object({
         type: z.literal("free_text"),
         inputMode: z.literal("rich_text").optional().default("rich_text"),
-        minPlainTextLength: z
-            .number()
-            .int()
-            .nonnegative()
-            .optional(),
+        minPlainTextLength: z.number().int().nonnegative().optional(),
         maxPlainTextLength: z.number().int().positive(),
         maxHtmlLength: z.number().int().positive(),
     })
@@ -879,11 +910,7 @@ const zodSurveyQuestionFreeTextRichTextConstraintsInput = z
             .int()
             .positive()
             .max(MAX_LENGTH_BODY_HTML),
-        maxHtmlLength: z
-            .number()
-            .int()
-            .positive()
-            .max(MAX_LENGTH_BODY_HTML),
+        maxHtmlLength: z.number().int().positive().max(MAX_LENGTH_BODY_HTML),
     })
     .strict();
 
@@ -907,6 +934,7 @@ export const zodSurveyQuestionOption = z
         optionSlugId: zodSlugId.optional(),
         optionText: z.string().min(1).max(MAX_LENGTH_SURVEY_OPTION),
         displayOrder: z.number().int().nonnegative(),
+        allowsText: z.boolean().optional(),
         textChangeIsSemantic: z.boolean().optional(),
     })
     .strict();
@@ -1202,8 +1230,40 @@ export const zodSurveyCompletionCounts = z
 const zodSurveyChoiceAnswerDraftBase = z
     .object({
         optionSlugIds: z.array(zodSlugId),
+        optionTextValues: z
+            .record(
+                zodSlugId,
+                z
+                    .string()
+                    .max(MAX_BYTES_SURVEY_OPTION_TEXT)
+                    .refine(isSurveyOptionTextWithinLimit),
+            )
+            .optional(),
     })
     .strict();
+
+const zodSurveyChoiceAnswer = zodSurveyChoiceAnswerDraftBase
+    .extend({ questionType: z.literal("choice") })
+    .strict()
+    .superRefine((answer, ctx) => {
+        const selectedOptionSlugIds = new Set(answer.optionSlugIds);
+        if (selectedOptionSlugIds.size !== answer.optionSlugIds.length) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["optionSlugIds"],
+                message: "Choice selections must be unique",
+            });
+        }
+        for (const optionSlugId of Object.keys(answer.optionTextValues ?? {})) {
+            if (!selectedOptionSlugIds.has(optionSlugId)) {
+                ctx.addIssue({
+                    code: "custom",
+                    path: ["optionTextValues", optionSlugId],
+                    message: "Text must belong to a selected option",
+                });
+            }
+        }
+    });
 
 const zodSurveyFreeTextAnswerDraft = z
     .object({
@@ -1214,20 +1274,12 @@ const zodSurveyFreeTextAnswerDraft = z
     .strict();
 
 export const zodSurveyAnswerDraft = z.discriminatedUnion("questionType", [
-    zodSurveyChoiceAnswerDraftBase
-        .extend({
-            questionType: z.literal("choice"),
-        })
-        .strict(),
+    zodSurveyChoiceAnswer,
     zodSurveyFreeTextAnswerDraft,
 ]);
 
 export const zodSurveyAnswerSubmission = z.discriminatedUnion("questionType", [
-    zodSurveyChoiceAnswerDraftBase
-        .extend({
-            questionType: z.literal("choice"),
-        })
-        .strict(),
+    zodSurveyChoiceAnswer,
     z
         .object({
             questionType: z.literal("free_text"),
@@ -1298,6 +1350,7 @@ export const zodConversationProjectContext = z
 const zodConversationMetadataBase = z
     .object({
         conversationSlugId: zodSlugId,
+        currentProjectSlug: zodProjectSlug.optional(),
         conversationViewSnapshotId: z.number().int().positive().optional(),
         createdAt: zodDateTimeFlexible,
         updatedAt: zodDateTimeFlexible.optional(),
@@ -1350,6 +1403,7 @@ const zodConversationMetadataWithIdBase = z
     .object({
         conversationId: z.number().int().nonnegative(),
         conversationSlugId: zodSlugId,
+        currentProjectSlug: zodProjectSlug.optional(),
         conversationViewSnapshotId: z.number().int().positive().optional(),
         createdAt: z.date(),
         updatedAt: z.date().optional(),
@@ -1481,6 +1535,11 @@ export const zodOpinionItem = z
         username: z.string(),
         moderation: zodOpinionModerationProperties,
         isSeed: z.boolean(),
+        isEdited: z.boolean().optional(),
+        management: z
+            .object({ canEdit: z.boolean(), canDelete: z.boolean() })
+            .strict()
+            .optional(),
     })
     .strict();
 export const zodDisplayedOpinionItem = zodOpinionItem.extend({
