@@ -194,6 +194,7 @@
         "conversation_view_snapshot"
     ],
     "opinion-paging": [
+        "conversation_moderation",
         "user",
         "user_mute_preference",
         "polis_conversation_config",

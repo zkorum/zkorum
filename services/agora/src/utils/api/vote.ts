@@ -31,7 +31,7 @@ export function useBackendVoteApi() {
     votingAction: VotingAction;
     returnIsUserClustered: boolean;
     isCurrent: () => boolean;
-    sourceVersion: string | undefined;
+    sourceVersion: string;
   }): Promise<CastVoteResponse> {
     const params: ApiV1VoteCastPostRequest = {
       opinionSlugId,

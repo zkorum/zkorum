@@ -13,6 +13,7 @@ import {
   zodSSEEventDataByType,
 } from "src/shared/types/dto";
 import type {
+  DisplayedOpinionItem,
   ExtendedConversation,
   ParticipationMode,
 } from "src/shared/types/zod";
@@ -28,6 +29,7 @@ import {
   type OpinionCache,
 } from "src/utils/api/comment/opinionCache";
 import { applyOpinionContentUpdate } from "src/utils/api/comment/opinionContentUpdate";
+import { applyOpinionVoteCountUpdate } from "src/utils/api/comment/opinionVoteCountUpdate";
 import { fetchAnalysisDataWithCache } from "src/utils/api/comment/useCommentQueries";
 import { useCommonApi } from "src/utils/api/common";
 import {
@@ -1110,6 +1112,13 @@ export function useRealtimeSSE({
         }
         case "opinion_updated": {
           const data = sseEvent.data;
+          queryClient.setQueriesData<DisplayedOpinionItem>(
+            { queryKey: ["opinionTarget", data.opinionSlugId] },
+            (opinion) =>
+              opinion === undefined
+                ? opinion
+                : applyOpinionContentUpdate({ opinion, event: data })
+          );
           queryClient.setQueriesData<OpinionCache>(
             { queryKey: ["comments", data.conversationSlugId] },
             (cache) =>
@@ -1830,6 +1839,22 @@ export function useRealtimeSSE({
     const liveCountsByOpinionSlugId = new Map(
       data.opinionVoteCounts.map((counts) => [counts.opinionSlugId, counts])
     );
+    let needsPermissionRefresh = false;
+    for (const counts of liveCountsByOpinionSlugId.values()) {
+      queryClient.setQueriesData<DisplayedOpinionItem>(
+        { queryKey: ["opinionTarget", counts.opinionSlugId, authStore.userId] },
+        (opinion) => {
+          if (opinion === undefined) return opinion;
+          const updated = applyOpinionVoteCountUpdate({
+            opinion,
+            counts,
+            authorHasVote: votedOpinionSlugIds.has(opinion.opinionSlugId),
+          });
+          needsPermissionRefresh ||= updated.needsPermissionRefresh;
+          return updated.opinion;
+        }
+      );
+    }
     if (liveCountsByOpinionSlugId.size === 0) {
       return;
     }
@@ -1837,6 +1862,7 @@ export function useRealtimeSSE({
     queryClient.setQueriesData<OpinionCache>(
       {
         predicate: (query) =>
+          query.queryKey[3] === authStore.userId &&
           isConversationCommentsQueryKey({
             queryKey: query.queryKey,
             conversationSlugId: data.conversationSlugId,
@@ -1857,35 +1883,29 @@ export function useRealtimeSSE({
               return opinion;
             }
 
-            const management =
-              opinion.management === undefined
-                ? undefined
-                : {
-                    ...opinion.management,
-                    canEdit:
-                      opinion.management.canDelete &&
-                      liveCounts.numAgrees +
-                        liveCounts.numDisagrees +
-                        liveCounts.numPasses <=
-                        (opinion.isSeed
-                          ? 0
-                          : votedOpinionSlugIds.has(opinion.opinionSlugId)
-                            ? 1
-                            : 0),
-                  };
-
-            return {
-              ...opinion,
-              management,
-              numParticipants: liveCounts.numParticipants,
-              numAgrees: liveCounts.numAgrees,
-              numDisagrees: liveCounts.numDisagrees,
-              numPasses: liveCounts.numPasses,
-            };
+            const updated = applyOpinionVoteCountUpdate({
+              opinion,
+              counts: liveCounts,
+              authorHasVote: votedOpinionSlugIds.has(opinion.opinionSlugId),
+            });
+            needsPermissionRefresh ||= updated.needsPermissionRefresh;
+            return updated.opinion;
           },
         });
       }
     );
+    if (needsPermissionRefresh) {
+      void queryClient.invalidateQueries({
+        queryKey: ["comments", data.conversationSlugId],
+        predicate: (query) => query.queryKey[3] === authStore.userId,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["opinionTarget"],
+        predicate: (query) =>
+          query.queryKey[2] === authStore.userId &&
+          liveCountsByOpinionSlugId.has(String(query.queryKey[1])),
+      });
+    }
   }
 
   async function refreshActiveConversationQueriesAfterReconnect({

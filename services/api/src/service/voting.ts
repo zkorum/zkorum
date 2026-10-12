@@ -80,7 +80,7 @@ interface CastVoteForOpinionSlugIdProps {
     now: Date;
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
     returnIsUserClustered?: boolean;
-    sourceVersion?: string;
+    sourceVersion: string;
 }
 
 interface CastVoteForOpinionSlugIdFromUserIdProps {
@@ -520,9 +520,7 @@ export async function castVoteForOpinionSlugId({
     const content = contentRows.at(0);
     if (
         content === undefined ||
-        (votingAction !== "cancel" &&
-            sourceVersion !== undefined &&
-            sourceVersion !== content.sourceVersion)
+        (votingAction !== "cancel" && sourceVersion !== content.sourceVersion)
     )
         return { success: false, reason: "statement_changed" };
 

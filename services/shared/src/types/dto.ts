@@ -2204,7 +2204,7 @@ export class Dto {
     static castVoteRequest = z
         .object({
             opinionSlugId: z.string(),
-            sourceVersion: z.uuid().optional(),
+            sourceVersion: z.uuid(),
             chosenOption: zodVotingAction,
             returnIsUserClustered: z.boolean().optional(),
         })

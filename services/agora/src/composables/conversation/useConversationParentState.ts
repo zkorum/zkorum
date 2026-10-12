@@ -375,9 +375,12 @@ export function useConversationParentState({
     }
 
     const handler = submittedCommentHandler.value;
-    if (currentTab.value === "comment" && handler !== undefined) {
+    if (
+      (currentTab.value === "comment" || data.kind === "edited") &&
+      handler !== undefined
+    ) {
       await handler(data);
-      return;
+      if (currentTab.value === "comment") return;
     }
 
     invalidateComments(slugId);
@@ -394,7 +397,10 @@ export function useConversationParentState({
         getConversationCommentRoute({
           conversationSlugId: slugId,
           routeContext: routeContextValue.value,
-          query: { opinion: data.displayedOpinionItem.opinionSlugId },
+          query:
+            data.kind === "edited"
+              ? undefined
+              : { opinion: data.displayedOpinionItem.opinionSlugId },
         })
       );
     }

@@ -130,7 +130,10 @@ import type { OpinionContentSource } from "./contentTranslation.js";
 import { translationSourceMatchesCurrentSource } from "@/shared-backend/translate.js";
 import * as conversationContentService from "./conversationContent.js";
 import { getProjectLanguageSettings } from "./projectAccess.js";
-import { getOpinionManagementCapabilities } from "./opinionPermissions.js";
+import {
+    canManageOpinion,
+    getOpinionManagementCapabilities,
+} from "./opinionPermissions.js";
 import {
     getConversationOverrideTranslationTargetLanguagePolicy,
     getProjectTranslationTargetLanguagePolicy,
@@ -3397,7 +3400,9 @@ interface PostNewOpinionBaseProps {
 
 type PostNewOpinionContentProps =
     | {
-          normalizedContent: NormalizedUserRichText & { sourceLanguageMetadata?: ContentLanguageMetadata };
+          normalizedContent: NormalizedUserRichText & {
+              sourceLanguageMetadata?: ContentLanguageMetadata;
+          };
           commentBody?: never;
       }
     | {
@@ -3436,13 +3441,18 @@ type PostNewOpinionProps = PostNewOpinionBaseProps &
     );
 
 export function postNewOpinion(
-    props: PostNewOpinionBaseProps & PostNewOpinionWithConversationMetadataProps & {
-        isSeed: true;
-        normalizedContent: NormalizedUserRichText & { sourceLanguageMetadata?: ContentLanguageMetadata };
-        commentBody?: never;
-    },
+    props: PostNewOpinionBaseProps &
+        PostNewOpinionWithConversationMetadataProps & {
+            isSeed: true;
+            normalizedContent: NormalizedUserRichText & {
+                sourceLanguageMetadata?: ContentLanguageMetadata;
+            };
+            commentBody?: never;
+        },
 ): Promise<Extract<CreateCommentResponse, { success: true }>>;
-export function postNewOpinion(props: PostNewOpinionProps): Promise<CreateCommentResponse>;
+export function postNewOpinion(
+    props: PostNewOpinionProps,
+): Promise<CreateCommentResponse>;
 export async function postNewOpinion(
     props: PostNewOpinionProps,
 ): Promise<CreateCommentResponse> {
@@ -3511,8 +3521,8 @@ export async function postNewOpinion(
                       await checkConversationParticipation({
                           db,
                           conversationSlugId,
-                           didWrite: props.didWrite,
-                           userAgent: props.userAgent,
+                          didWrite: props.didWrite,
+                          userAgent: props.userAgent,
                           now,
                           currentDisplayLanguage: props.currentDisplayLanguage,
                       });
@@ -3541,11 +3551,13 @@ export async function postNewOpinion(
                 conversationId: participationContext.conversationId,
             })
         ).dynamicTranslationEnabled;
-    const languageMetadata = props.normalizedContent?.sourceLanguageMetadata ?? await resolveContentLanguageMetadata({
-        text: contentPlainText,
-        googleCloudCredentials,
-        useGoogleLanguageDetection: resolvedUseGoogleLanguageDetection,
-    });
+    const languageMetadata =
+        props.normalizedContent?.sourceLanguageMetadata ??
+        (await resolveContentLanguageMetadata({
+            text: contentPlainText,
+            googleCloudCredentials,
+            useGoogleLanguageDetection: resolvedUseGoogleLanguageDetection,
+        }));
 
     const opinionSlugId = generateRandomSlugId();
 
@@ -3762,38 +3774,49 @@ export async function deleteOpinionBySlugId({
     opinionSlugId,
     userId,
 }: DeleteCommentBySlugIdProps): Promise<void> {
-    const { isOpinionDeleted } =
+    const { conversationId: targetConversationId } =
         await useCommonComment().getOpinionMetadataFromOpinionSlugId({
-            db: db,
+            db: getPrimaryDatabase(db),
             opinionSlugId,
         });
-    if (isOpinionDeleted) {
-        throw httpErrors.conflict("Opinion had already been deleted");
-    }
-    await db.transaction(async (tx) => {
+    await getPrimaryDatabase(db).transaction(async (tx) => {
+        const conversationRows = await tx
+            .select({ projectId: conversationTable.projectId })
+            .from(conversationTable)
+            .where(eq(conversationTable.id, targetConversationId))
+            .for("no key update")
+            .limit(1);
+        const conversation = conversationRows.at(0);
+        if (conversation === undefined)
+            throw httpErrors.notFound("Conversation not found");
         const opinionRows = await tx
             .select({
                 opinionId: opinionTable.id,
                 conversationId: opinionTable.conversationId,
                 authorId: opinionTable.authorId,
+                isSeed: opinionTable.isSeed,
+                currentContentId: opinionTable.currentContentId,
             })
             .from(opinionTable)
             .where(and(eq(opinionTable.slugId, opinionSlugId)))
             .for("update")
             .limit(1);
 
-        if (opinionRows.length !== 1) {
+        const opinion = opinionRows.at(0);
+        if (opinion === undefined) {
             throw httpErrors.notFound("Opinion not found");
         }
 
-        const opinion = opinionRows[0];
-        const capabilities = await getOpinionManagementCapabilities({
-            db: tx,
-            opinionSlugIds: [opinionSlugId],
-            userId,
-            lockAuthorization: true,
-        });
-        if (capabilities.get(opinionSlugId)?.canDelete !== true)
+        if (opinion.currentContentId === null)
+            throw httpErrors.conflict("Opinion had already been deleted");
+        if (
+            !(await canManageOpinion({
+                db: tx,
+                userId,
+                opinion: { ...opinion, projectId: conversation.projectId },
+                lockAuthorization: true,
+            }))
+        )
             throw httpErrors.forbidden("Missing statement deletion permission");
         const moderationRows = await tx
             .select({ moderationId: opinionModerationTable.id })
@@ -3816,26 +3839,14 @@ export async function deleteOpinionBySlugId({
             )
             .limit(1);
 
-        const updatedCommentIdResponse = await tx
+        await tx
             .update(opinionTable)
             .set({
                 currentContentId: null,
             })
-            .where(eq(opinionTable.id, opinion.opinionId))
-            .returning({
-                updateCommentId: opinionTable.id,
-                conversationId: opinionTable.conversationId,
-            });
+            .where(eq(opinionTable.id, opinion.opinionId));
 
-        if (updatedCommentIdResponse.length != 1) {
-            log.error(
-                "Invalid comment table update response length: " +
-                    updatedCommentIdResponse.length.toString(),
-            );
-            tx.rollback();
-        }
-
-        const conversationId = updatedCommentIdResponse[0].conversationId;
+        const conversationId = opinion.conversationId;
 
         await createConversationViewSnapshotsFromCurrentState({
             db: tx,

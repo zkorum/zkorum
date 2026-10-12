@@ -63,6 +63,7 @@ import { usePolisVotingSession } from "src/composables/opinion/usePolisVotingSes
 import { useVoteReconciliation } from "src/composables/opinion/useVoteReconciliation";
 import { useVotingActionGuard } from "src/composables/opinion/useVotingActionGuard";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import type { FetchNextUnansweredOpinionResponse } from "src/shared/types/dto";
 import type {
   DisplayedOpinionItem,
   EventSlug,
@@ -77,7 +78,14 @@ import { useBackendVoteApi } from "src/utils/api/vote";
 import { formatAmount } from "src/utils/common";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, onActivated, onDeactivated, onUnmounted, watch } from "vue";
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onUnmounted,
+  ref,
+  watch,
+} from "vue";
 
 import CommentGroup from "./group/CommentGroup.vue";
 import {
@@ -126,6 +134,7 @@ const { userId } = storeToRefs(authStore);
 const opinionUpdates = useOpinionUpdatesStore();
 const { fetchNextUnansweredOpinion } = useBackendCommentApi();
 const isSubmittingVote = actionGuard.isPending;
+const recentlyEditedOpinion = ref(false);
 let liveRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 const reconciliation = useVoteReconciliation({
   needsConfirmation: session.hasPendingWrites,
@@ -142,16 +151,17 @@ const reconciliation = useVoteReconciliation({
       await query.refetch();
   },
 });
+const queryKey = computed(() => [
+  "nextUnansweredOpinion",
+  props.postSlugId,
+  props.order,
+  userId.value,
+  displayLanguage.value,
+  [...spokenLanguages.value].sort(),
+  excludedOpinionSlugIds.value,
+]);
 const query = useQuery({
-  queryKey: [
-    "nextUnansweredOpinion",
-    computed(() => props.postSlugId),
-    computed(() => props.order),
-    userId,
-    displayLanguage,
-    spokenLanguages,
-    excludedOpinionSlugIds,
-  ],
+  queryKey,
   queryFn: ({ signal }) =>
     fetchNextUnansweredOpinion({
       conversationSlugId: props.postSlugId,
@@ -159,7 +169,7 @@ const query = useQuery({
       excludedOpinionSlugIds: excludedOpinionSlugIds.value,
       signal,
     }),
-  staleTime: 0,
+  staleTime: computed(() => (recentlyEditedOpinion.value ? 30_000 : 0)),
   enabled: computed(
     () => !isSubmittingVote.value && props.editingOpinion === undefined
   ),
@@ -220,7 +230,11 @@ watch(
   }
 );
 
-async function castVote({ opinionSlugId, voteAction }: OpinionVoteParams) {
+async function castVote({
+  opinionSlugId,
+  voteAction,
+  sourceVersion,
+}: OpinionVoteParams) {
   return await actionGuard.run(async (isCurrent) => {
     if (props.isVotingDisabled) return undefined;
     const previousVote = userVotes.value.find(
@@ -229,6 +243,7 @@ async function castVote({ opinionSlugId, voteAction }: OpinionVoteParams) {
     const vote = session.prepareVote({
       opinionSlugId,
       voteAction,
+      sourceVersion,
       previousVote,
     });
     if (vote === undefined) return undefined;
@@ -277,6 +292,7 @@ async function undoVote(): Promise<void> {
 }
 
 function resetSession(): void {
+  recentlyEditedOpinion.value = false;
   actionGuard.invalidate();
   session.reset();
   reconciliation.restart();
@@ -325,9 +341,27 @@ async function acknowledgeCreatedOpinion(opinionSlugId: string): Promise<void> {
   await query.refetch();
 }
 
-async function acknowledgeEditedOpinion(opinion: DisplayedOpinionItem): Promise<void> {
+async function acknowledgeEditedOpinion(
+  opinion: DisplayedOpinionItem
+): Promise<void> {
+  const capturedKey = queryKey.value;
+  const isCurrent = actionGuard.capture();
+  recentlyEditedOpinion.value = true;
+  await queryClient.cancelQueries({
+    queryKey: capturedKey,
+    exact: true,
+  });
+  if (!isCurrent() || capturedKey !== queryKey.value) return;
+  queryClient.setQueryData<FetchNextUnansweredOpinionResponse>(
+    capturedKey,
+    (data) =>
+      data?.status === "ready" &&
+      data.opinion.opinionSlugId === opinion.opinionSlugId
+        ? { ...data, opinion }
+        : data
+  );
   session.updateCurrentOpinion(opinion);
-  await refresh({ preserveCurrent: true });
+  session.preserveCurrent();
 }
 
 onActivated(() => {

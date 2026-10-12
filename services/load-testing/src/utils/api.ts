@@ -36,6 +36,7 @@ export interface CreateOpinionResponse {
 
 export interface VoteParams {
     commentSlugId: string;
+    sourceVersion: string;
     votingAction: "agree" | "disagree" | "pass" | "cancel";
     did: string;
     prefixedKey: string;
@@ -103,7 +104,7 @@ export type FetchConversationMetadataResponse =
 
 export interface FetchOpinionsResponse {
     success: boolean;
-    opinions: { opinionSlugId: string }[];
+    opinions: { opinionSlugId: string; sourceVersion: string }[];
     responseTime: number;
     error?: string;
 }
@@ -444,7 +445,10 @@ export function fetchOpinions(
             const response = http.post(
                 url,
                 JSON.stringify({ conversationSlugId, filter: "new", cursor }),
-                { headers: { "Content-Type": "application/json" }, timeout: "30s" },
+                {
+                    headers: { "Content-Type": "application/json" },
+                    timeout: "30s",
+                },
             );
             if (response.status !== 200) {
                 return {
@@ -455,7 +459,12 @@ export function fetchOpinions(
                 };
             }
             const page = Dto.fetchOpinionPageResponse.parse(response.json());
-            opinions.push(...page.items.map((item) => ({ opinionSlugId: item.opinionSlugId })));
+            opinions.push(
+                ...page.items.map((item) => ({
+                    opinionSlugId: item.opinionSlugId,
+                    sourceVersion: item.displayContent.sourceVersion,
+                })),
+            );
             cursor = page.nextCursor;
             if (cursor !== null) {
                 if (seenCursors.has(cursor.opinionSlugId)) {
@@ -469,7 +478,11 @@ export function fetchOpinions(
                 seenCursors.add(cursor.opinionSlugId);
             }
         } while (cursor !== null);
-        return { success: true, opinions, responseTime: Date.now() - startTime };
+        return {
+            success: true,
+            opinions,
+            responseTime: Date.now() - startTime,
+        };
     } catch (error) {
         return {
             success: false,
@@ -618,18 +631,24 @@ export async function createOpinion(
  * Uses the generated OpenAPI endpoint following the agora pattern
  */
 export async function castVote(params: VoteParams): Promise<VoteResponse> {
-    const { commentSlugId, votingAction, did, prefixedKey, backendDid } =
-        params;
+    const {
+        commentSlugId,
+        sourceVersion,
+        votingAction,
+        did,
+        prefixedKey,
+        backendDid,
+    } = params;
 
     const url = `${API_BASE_URL}/api/v1/vote/cast`;
     const pathname = "/api/v1/vote/cast";
 
-    const requestBody = {
-        opinionSlugId: commentSlugId,
-        chosenOption: votingAction,
-    };
-
     try {
+        const requestBody = Dto.castVoteRequest.parse({
+            opinionSlugId: commentSlugId,
+            chosenOption: votingAction,
+            sourceVersion,
+        });
         // Build UCAN token
         const encodedUcan = await buildUcan({
             did,
@@ -652,11 +671,21 @@ export async function castVote(params: VoteParams): Promise<VoteResponse> {
 
         const responseTime = Date.now() - startTime;
 
+        if (response.status !== 200 && response.status !== 201) {
+            return {
+                success: false,
+                responseTime,
+                error:
+                    typeof response.body === "string"
+                        ? response.body
+                        : `HTTP ${String(response.status)}`,
+            };
+        }
+        const result = Dto.castVoteResponse.parse(response.json());
         return {
-            success: response.status === 200 || response.status === 201,
+            success: result.success,
             responseTime,
-            error:
-                response.status >= 400 ? (response.body as string) : undefined,
+            error: result.success ? undefined : result.reason,
         };
     } catch (error) {
         return {

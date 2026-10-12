@@ -10225,7 +10225,7 @@ export type ApiV1VoteCastPost200ResponseOneOf1ReasonEnum = typeof ApiV1VoteCastP
 
 export interface ApiV1VoteCastPostRequest {
     'opinionSlugId': string;
-    'sourceVersion'?: string;
+    'sourceVersion': string;
     'chosenOption': ApiV1VoteCastPostRequestChosenOptionEnum;
     'returnIsUserClustered'?: boolean;
 }

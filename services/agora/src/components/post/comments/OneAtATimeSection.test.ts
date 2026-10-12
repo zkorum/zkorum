@@ -19,7 +19,10 @@ vi.mock("src/utils/api/comment/comment", () => ({
   useBackendCommentApi: () => ({ fetchNextUnansweredOpinion: mocks.fetchNext }),
 }));
 vi.mock("src/utils/api/vote", () => ({
-  useBackendVoteApi: () => ({ castVoteForComment: mocks.castVote, fetchUserVotesForPostSlugIds: mocks.fetchVotes }),
+  useBackendVoteApi: () => ({
+    castVoteForComment: mocks.castVote,
+    fetchUserVotesForPostSlugIds: mocks.fetchVotes,
+  }),
 }));
 vi.mock("src/utils/api/auth", () => ({
   useBackendAuthApi: () => ({ ensureParticipationAuthState: mocks.ensureAuth }),
@@ -31,64 +34,130 @@ vi.mock("src/utils/api/common", () => ({
   useCommonApi: () => ({ getErrorMessage: () => "error" }),
 }));
 vi.mock("src/composables/conversation/useParticipationGate", () => ({
-  useParticipationGate: () => ({ shouldOpenParticipationModal: () => Promise.resolve(false), openParticipationOnboarding: vi.fn() }),
+  useParticipationGate: () => ({
+    shouldOpenParticipationModal: () => Promise.resolve(false),
+    openParticipationOnboarding: vi.fn(),
+  }),
 }));
-vi.mock("src/utils/ui/notify", () => ({ useNotify: () => ({ showNotifyMessage: mocks.notify }) }));
+vi.mock("src/utils/ui/notify", () => ({
+  useNotify: () => ({ showNotifyMessage: mocks.notify }),
+}));
 vi.mock("src/composables/ui/useComponentI18n", () => ({
-  useComponentI18n: () => ({ t: (key: string, params?: { count: string }) => params ? `${params.count} remaining` : key }),
+  useComponentI18n: () => ({
+    t: (key: string, params?: { count: string }) =>
+      params ? `${params.count} remaining` : key,
+  }),
 }));
 vi.mock("src/stores/language", async () => {
   const { defineStore } = await import("pinia");
-  return { useLanguageStore: defineStore("test-language", { state: () => ({ displayLanguage: "en", spokenLanguages: ["en"] }) }) };
+  return {
+    useLanguageStore: defineStore("test-language", {
+      state: () => ({ displayLanguage: "en", spokenLanguages: ["en"] }),
+    }),
+  };
 });
 vi.mock("src/components/post/voting/VotingSessionToolbar.vue", () => ({
-  default: defineComponent((props: {
-    progress: VotingSessionProgress; canUndo: boolean; isBusy: boolean; isDisabled: boolean;
-  }, { emit }) => () => h("div", { "data-testid": "toolbar" }, [
-    h("span", { "data-testid": "remaining" }, props.progress.kind === "count" ? props.progress.label : `${props.progress.value}%`),
-    h("button", { "data-testid": "undo", disabled: !props.canUndo || props.isBusy || props.isDisabled, onClick: () => emit("undo") }, "Undo"),
-  ]), {
-    props: {
-      progress: { type: Object, required: true },
-      canUndo: { type: Boolean, required: true },
-      isBusy: { type: Boolean, required: true },
-      isDisabled: { type: Boolean, required: true },
-    },
-    emits: ["undo"],
-  }),
+  default: defineComponent(
+    (
+      props: {
+        progress: VotingSessionProgress;
+        canUndo: boolean;
+        isBusy: boolean;
+        isDisabled: boolean;
+      },
+      { emit }
+    ) =>
+      () =>
+        h("div", { "data-testid": "toolbar" }, [
+          h(
+            "span",
+            { "data-testid": "remaining" },
+            props.progress.kind === "count"
+              ? props.progress.label
+              : `${props.progress.value}%`
+          ),
+          h(
+            "button",
+            {
+              "data-testid": "undo",
+              disabled: !props.canUndo || props.isBusy || props.isDisabled,
+              onClick: () => emit("undo"),
+            },
+            "Undo"
+          ),
+        ]),
+    {
+      props: {
+        progress: { type: Object, required: true },
+        canUndo: { type: Boolean, required: true },
+        isBusy: { type: Boolean, required: true },
+        isDisabled: { type: Boolean, required: true },
+      },
+      emits: ["undo"],
+    }
+  ),
 }));
 vi.mock("./group/CommentGroup.vue", () => ({
-  default: defineComponent((props: {
-    commentItemList: DisplayedOpinionItem[]; votingUtilities: OpinionVotingUtilities; isVotingDisabled: boolean;
-  }) => () => {
-    const opinion = props.commentItemList.at(0);
-    if (opinion === undefined) return h("div");
-    return h("div", { "data-testid": "statement" }, [
-      opinion.opinionSlugId,
-      h("button", {
-        "data-testid": "agree",
-        disabled: props.isVotingDisabled,
-        onClick: () => props.votingUtilities.castVote({ opinionSlugId: opinion.opinionSlugId, voteAction: "agree" }),
-      }, "Agree"),
-    ]);
-  }, {
-    props: {
-      commentItemList: { type: Array, required: true },
-      votingUtilities: { type: Object, required: true },
-      isVotingDisabled: { type: Boolean, required: true },
-    },
-  }),
+  default: defineComponent(
+    (props: {
+      commentItemList: DisplayedOpinionItem[];
+      votingUtilities: OpinionVotingUtilities;
+      isVotingDisabled: boolean;
+    }) =>
+      () => {
+        const opinion = props.commentItemList.at(0);
+        if (opinion === undefined) return h("div");
+        return h("div", { "data-testid": "statement" }, [
+          opinion.opinionSlugId,
+          h(
+            "button",
+            {
+              "data-testid": "agree",
+              disabled: props.isVotingDisabled,
+              onClick: () =>
+                props.votingUtilities.castVote({
+                  opinionSlugId: opinion.opinionSlugId,
+                  sourceVersion: opinion.displayContent.sourceVersion,
+                  voteAction: "agree",
+                }),
+            },
+            "Agree"
+          ),
+        ]);
+      },
+    {
+      props: {
+        commentItemList: { type: Array, required: true },
+        votingUtilities: { type: Object, required: true },
+        isVotingDisabled: { type: Boolean, required: true },
+      },
+    }
+  ),
 }));
 
 import OneAtATimeSection from "./OneAtATimeSection.vue";
 
 function opinion(opinionSlugId: string): DisplayedOpinionItem {
   return {
-    opinionSlugId, opinion: opinionSlugId, sourceLanguageCode: "en",
-    username: "author", createdAt: new Date(), updatedAt: new Date(),
-    numParticipants: 0, numAgrees: 0, numDisagrees: 0, numPasses: 0,
-    moderation: { status: "unmoderated" }, isSeed: false,
-    displayContent: { sourceVersion: "source", status: "available", mode: "original", content: { content: opinionSlugId }, translationControl: null },
+    opinionSlugId,
+    opinion: opinionSlugId,
+    sourceLanguageCode: "en",
+    username: "author",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    numParticipants: 0,
+    numAgrees: 0,
+    numDisagrees: 0,
+    numPasses: 0,
+    moderation: { status: "unmoderated" },
+    isSeed: false,
+    displayContent: {
+      sourceVersion: "source",
+      status: "available",
+      mode: "original",
+      content: { content: opinionSlugId },
+      translationControl: null,
+    },
   };
 }
 
@@ -105,7 +174,8 @@ async function settle(): Promise<void> {
 
 async function click(testId: string): Promise<void> {
   const button = container.querySelector(`[data-testid="${testId}"]`);
-  if (!(button instanceof HTMLButtonElement)) throw new Error(`Missing test button ${testId}`);
+  if (!(button instanceof HTMLButtonElement))
+    throw new Error(`Missing test button ${testId}`);
   button.click();
   await settle();
 }
@@ -119,27 +189,66 @@ beforeEach(async () => {
   const auth = useAuthenticationStore();
   auth.isAuthInitialized = true;
   mocks.ensureAuth.mockImplementation(() => {
-    if (!auth.isKnown) auth.setLoginStatus({ isKnown: true, isRegistered: false, userId: "guest" });
-    return Promise.resolve({ authStateChanged: true, needsCacheRefresh: false });
+    if (!auth.isKnown)
+      auth.setLoginStatus({
+        isKnown: true,
+        isRegistered: false,
+        userId: "guest",
+      });
+    return Promise.resolve({
+      authStateChanged: true,
+      needsCacheRefresh: false,
+    });
   });
-  mocks.fetchVotes.mockImplementation(() => Promise.resolve([...databaseVotes].map(([opinionSlugId, votingAction]) => ({ opinionSlugId, votingAction }))));
-  mocks.castVote.mockImplementation(({ opinionSlugId, votingAction }: { opinionSlugId: string; votingAction: string }) => {
-    if (votingAction === "agree") databaseVotes.set(opinionSlugId, "agree");
-    // Cancellations remain buffered until the test advances persistence.
-    return Promise.resolve({ success: true });
+  mocks.fetchVotes.mockImplementation(() =>
+    Promise.resolve(
+      [...databaseVotes].map(([opinionSlugId, votingAction]) => ({
+        opinionSlugId,
+        votingAction,
+      }))
+    )
+  );
+  mocks.castVote.mockImplementation(
+    ({
+      opinionSlugId,
+      votingAction,
+    }: {
+      opinionSlugId: string;
+      votingAction: string;
+    }) => {
+      if (votingAction === "agree") databaseVotes.set(opinionSlugId, "agree");
+      // Cancellations remain buffered until the test advances persistence.
+      return Promise.resolve({ success: true });
+    }
+  );
+  mocks.fetchNext.mockImplementation(
+    ({ excludedOpinionSlugIds }: { excludedOpinionSlugIds: string[] }) => {
+      const remaining = opinions.filter(
+        (item) =>
+          !databaseVotes.has(item.opinionSlugId) &&
+          !excludedOpinionSlugIds.includes(item.opinionSlugId)
+      );
+      const next = remaining.at(0);
+      return Promise.resolve(
+        next === undefined
+          ? { status: "caught_up", remainingCount: 0 }
+          : { status: "ready", opinion: next, remainingCount: remaining.length }
+      );
+    }
+  );
+  queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
   });
-  mocks.fetchNext.mockImplementation(({ excludedOpinionSlugIds }: { excludedOpinionSlugIds: string[] }) => {
-    const remaining = opinions.filter(item => !databaseVotes.has(item.opinionSlugId) && !excludedOpinionSlugIds.includes(item.opinionSlugId));
-    const next = remaining.at(0);
-    return Promise.resolve(next === undefined
-      ? { status: "caught_up", remainingCount: 0 }
-      : { status: "ready", opinion: next, remainingCount: remaining.length });
-  });
-  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   app = createApp(OneAtATimeSection, {
-    postSlugId: "conversation", order: "discover", conversationAuthorUsername: "author",
-    conversationOrganizationName: "", participationMode: "guest", requiresEventTicket: undefined,
-    surveyGate: undefined, onViewAnalysis: vi.fn(), isVotingDisabled: false,
+    postSlugId: "conversation",
+    order: "discover",
+    conversationAuthorUsername: "author",
+    conversationOrganizationName: "",
+    participationMode: "guest",
+    requiresEventTicket: undefined,
+    surveyGate: undefined,
+    onViewAnalysis: vi.fn(),
+    isVotingDisabled: false,
     conversationRouteContext: { kind: "normal" },
   });
   app.use(pinia);
@@ -166,10 +275,14 @@ describe("Polis repeated Undo", () => {
     expect(container.textContent).toContain("0 remaining");
 
     await click("undo");
-    expect(container.querySelector('[data-testid="statement"]')?.textContent).toContain("third");
+    expect(
+      container.querySelector('[data-testid="statement"]')?.textContent
+    ).toContain("third");
     expect(container.textContent).toContain("1 remaining");
     await click("undo");
-    expect(container.querySelector('[data-testid="statement"]')?.textContent).toContain("second");
+    expect(
+      container.querySelector('[data-testid="statement"]')?.textContent
+    ).toContain("second");
     expect(container.textContent).toContain("2 remaining");
     await vi.advanceTimersByTimeAsync(1000);
     expect(container.textContent).toContain("2 remaining");
@@ -177,9 +290,13 @@ describe("Polis repeated Undo", () => {
     databaseVotes.delete("third");
     databaseVotes.delete("second");
     await vi.advanceTimersByTimeAsync(1000);
-    expect(container.querySelector('[data-testid="statement"]')?.textContent).toContain("second");
+    expect(
+      container.querySelector('[data-testid="statement"]')?.textContent
+    ).toContain("second");
     await click("agree");
-    expect(container.querySelector('[data-testid="statement"]')?.textContent).toContain("third");
+    expect(
+      container.querySelector('[data-testid="statement"]')?.textContent
+    ).toContain("third");
     expect(container.textContent).toContain("1 remaining");
     await click("agree");
     expect(container.querySelector('[data-testid="statement"]')).toBeNull();
@@ -195,7 +312,9 @@ describe("Polis repeated Undo", () => {
     expect(container.querySelector('[data-testid="statement"]')).toBeNull();
     expect(container.textContent).toContain("0 remaining");
     await click("undo");
-    expect(container.querySelector('[data-testid="statement"]')?.textContent).toContain("third");
+    expect(
+      container.querySelector('[data-testid="statement"]')?.textContent
+    ).toContain("third");
   });
 
   it("ignores repeated Undo input until the first cancellation settles", async () => {
@@ -210,14 +329,21 @@ describe("Polis repeated Undo", () => {
     await settle();
     await click("undo");
     expect(mocks.castVote).toHaveBeenCalledTimes(4);
-    expect(container.querySelector('[data-testid="statement"]')?.textContent).toContain("first");
+    expect(
+      container.querySelector('[data-testid="statement"]')?.textContent
+    ).toContain("first");
   });
 
   it("does not attach an old in-flight vote to another account's history", async () => {
     const deferred = Promise.withResolvers<{ success: true }>();
     mocks.castVote.mockReturnValueOnce(deferred.promise);
     await click("agree");
-    useAuthenticationStore().setLoginStatus({ isKnown: true, userId: "other", isRegistered: true, isLoggedIn: true });
+    useAuthenticationStore().setLoginStatus({
+      isKnown: true,
+      userId: "other",
+      isRegistered: true,
+      isLoggedIn: true,
+    });
     await settle();
     deferred.resolve({ success: true });
     await settle();

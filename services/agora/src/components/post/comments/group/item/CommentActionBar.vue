@@ -13,6 +13,7 @@
         @click="
           castPersonalVote({
             opinionSlugId: props.commentItem.opinionSlugId,
+            sourceVersion: props.sourceVersion,
             voteAction: 'disagree',
           })
         "
@@ -30,6 +31,7 @@
         @click="
           castPersonalVote({
             opinionSlugId: props.commentItem.opinionSlugId,
+            sourceVersion: props.sourceVersion,
             voteAction: 'pass',
           })
         "
@@ -47,6 +49,7 @@
         @click="
           castPersonalVote({
             opinionSlugId: props.commentItem.opinionSlugId,
+            sourceVersion: props.sourceVersion,
             voteAction: 'agree',
           })
         "
@@ -118,7 +121,7 @@ import {
 
 const props = defineProps<{
   commentItem: OpinionItem;
-  sourceVersion: string | undefined;
+  sourceVersion: string;
   postSlugId: string;
   votingUtilities: OpinionVotingUtilities;
   participationMode: ParticipationMode;
@@ -230,8 +233,8 @@ function onLoginCallback() {
 async function castPersonalVote({
   opinionSlugId,
   voteAction,
+  sourceVersion,
 }: OpinionVoteParams): Promise<void> {
-  const sourceVersion = props.sourceVersion;
   await actionGuard.run(async (isCurrent) => {
     if (props.isVotingDisabled) return;
     if (await shouldOpenParticipationModal()) {

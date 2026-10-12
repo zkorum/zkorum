@@ -24,9 +24,15 @@ export function applyOpinionContentUpdate({
       status: "available",
       mode: "original",
       content: { content: event.opinion },
-      translationControl: opinion.displayContent.translationControl === null ? null : {
-        status: "pending", alternateMode: "translated", canRequestAlternate: true,
-      },
+      translationControl:
+        opinion.displayContent.translationControl === null
+          ? null
+          : {
+              status: "not_requested",
+              alternateMode: "translated",
+              canRequestAlternate:
+                opinion.displayContent.translationControl.canRequestAlternate,
+            },
     },
   };
 }

@@ -17,7 +17,9 @@
         :min-height="innerFocus ? '6rem' : '2rem'"
         :show-toolbar="innerFocus"
         :single-line="false"
-        :disabled="editMutation.isPending.value"
+        :disabled="
+          editMutation.isPending.value || editSession.isInitializing.value
+        "
         :max-length="MAX_LENGTH_OPINION"
         :show-character-count="innerFocus"
         @update:character-count="onCharacterCountUpdate"
@@ -129,6 +131,7 @@ import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
 import ZKIcon from "src/components/ui-library/ZKIcon.vue";
 import type { SubmittedCommentData } from "src/composables/conversation/useConversationParentState";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
+import { useOpinionComposerEditing } from "src/composables/opinion/useOpinionComposerEditing";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useIdleMount } from "src/composables/ui/useIdleMount";
 import { hasVisiblePlainText, MAX_LENGTH_OPINION } from "src/shared/shared";
@@ -309,14 +312,6 @@ if (newOpinionIntention.enabled) {
 
 const opinionBody = ref(newOpinionIntention.opinionBody);
 const opinionPlainText = ref("");
-let creationDraft = "";
-const editBaseline = ref<string>();
-const isEditDirty = computed(
-  () =>
-    props.editingOpinion !== undefined &&
-    editBaseline.value !== undefined &&
-    opinionBody.value !== editBaseline.value
-);
 const hasVisibleOpinionText = computed(() =>
   hasVisiblePlainText(opinionPlainText.value)
 );
@@ -327,33 +322,9 @@ const showGuidelinesDialog = ref(false);
 // Template ref for Editor component
 const editorRef = ref<{ focus: () => void; focusEnd: () => void }>();
 
-watch(
-  () => props.editingOpinion,
-  (opinion, previous) => {
-    if (opinion !== undefined) {
-      if (previous === undefined) {
-        creationDraft = opinionBody.value;
-        if (hasVisibleOpinionText.value)
-          saveOpinionDraft(props.postSlugId, creationDraft);
-      }
-      editBaseline.value = undefined;
-      opinionBody.value = opinion.opinion;
-      innerFocus.value = true;
-      mountEditor();
-      lockRoute();
-    } else if (previous !== undefined) {
-      opinionBody.value = creationDraft;
-      editBaseline.value = undefined;
-      innerFocus.value = false;
-      lockRoute();
-    }
-  }
-);
-
 function onEditorReady(serializedContent: string): void {
   if (props.editingOpinion === undefined) return;
-  opinionBody.value = serializedContent;
-  editBaseline.value = serializedContent;
+  editSession.ready(serializedContent);
   void nextTick(() => editorRef.value?.focusEnd());
 }
 
@@ -366,33 +337,33 @@ async function discardEditAndLeave(): Promise<void> {
 }
 
 async function saveEdit(): Promise<void> {
-  const opinion = props.editingOpinion;
+  const session = editSession.capture();
   if (
-    opinion === undefined ||
+    session === undefined ||
     !isEditDirty.value ||
+    isOverLimit.value ||
+    !hasVisibleOpinionText.value ||
     editMutation.isPending.value
   )
     return;
   try {
     const result = await editMutation.mutateAsync({
-      opinionSlugId: opinion.opinionSlugId,
-      sourceVersion: opinion.displayContent.sourceVersion,
+      opinionSlugId: session.opinion.opinionSlugId,
+      sourceVersion: session.opinion.displayContent.sourceVersion,
       opinionBody: opinionBody.value,
     });
-    if (
-      props.editingOpinion?.displayContent.sourceVersion !==
-      opinion.displayContent.sourceVersion
-    )
-      return;
+    if (!editSession.isCurrent(session)) return;
     if (result.success) emit("editedOpinion", result.displayedOpinionItem);
     else
-      showNotifyMessage(
-        result.reason === "has_votes"
-          ? editT("hasVotes")
-          : result.reason === "version_conflict"
-            ? editT("changed")
-            : editT("failed")
-      );
+      showNotifyMessage({
+        message:
+          result.reason === "has_votes"
+            ? editT("hasVotes")
+            : result.reason === "version_conflict"
+              ? editT("changed")
+              : editT("failed"),
+        force: true,
+      });
   } catch {
     showNotifyMessage(editT("failed"));
   }
@@ -487,6 +458,27 @@ const {
   onBeforeRouteLeaveCallback
 );
 
+const savedCreationDraft = getOpinionDraft(props.postSlugId);
+if (savedCreationDraft !== undefined)
+  opinionBody.value = savedCreationDraft.body;
+const editSession = useOpinionComposerEditing({
+  target: () => props.editingOpinion,
+  body: opinionBody,
+  saveCreationDraft: (body) => {
+    if (body.length > 0) saveOpinionDraft(props.postSlugId, body);
+  },
+  activate: () => {
+    innerFocus.value = true;
+    mountEditor();
+    lockRoute();
+  },
+  deactivate: () => {
+    innerFocus.value = false;
+    lockRoute();
+  },
+});
+const isEditDirty = editSession.isDirty;
+
 const { y: yScroll } = useWindowScroll();
 
 let disableAutocollapse = false;
@@ -499,11 +491,6 @@ const { t } = useComponentI18n<CommentComposerTranslations>(
 
 onMounted(() => {
   lockRoute();
-
-  const savedDraft = getOpinionDraft(props.postSlugId);
-  if (savedDraft) {
-    opinionBody.value = savedDraft.body;
-  }
 });
 
 watch(yScroll, () => {
@@ -700,15 +687,6 @@ async function submitPostClicked() {
   width: 100%;
   background-color: #ffffff;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.actionBar {
-  display: flex;
-  padding: 0.5rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  color: $color-text-weak;
 }
 
 .actionButtonCluster {

@@ -1,9 +1,15 @@
+import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useRouteQuery } from "@vueuse/router";
+import { storeToRefs } from "pinia";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { DisplayedOpinionItem, OpinionItem } from "src/shared/types/zod";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { useLanguageStore } from "src/stores/language";
 import { useBackendCommentApi } from "src/utils/api/comment/comment";
+import type { OpinionQueryScope } from "src/utils/api/comment/opinionQueryScope";
+import { getOpinionTargetQueryKey } from "src/utils/api/comment/opinionTargetQueryKey";
 import { useNotify } from "src/utils/ui/notify";
-import { type Ref, ref } from "vue";
+import { computed, nextTick, onScopeDispose, type Ref, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -14,8 +20,8 @@ import {
 export interface UseTargetOpinionReturn {
   targetOpinion: Ref<DisplayedOpinionItem | null>;
   setupHighlightFromRoute: () => Promise<void>;
-  fetchTargetOpinion: (opinionSlugId: string) => Promise<void>;
   highlightOpinion: (opinion: DisplayedOpinionItem) => void;
+  getCachedOpinion: (opinion: DisplayedOpinionItem) => DisplayedOpinionItem;
   clearRouteQueryParameters: () => Promise<void>;
 }
 
@@ -40,6 +46,75 @@ export function useTargetOpinion({
   });
 
   const { fetchOpinionsBySlugIdList } = useBackendCommentApi();
+  const queryClient = useQueryClient();
+  const { userId } = storeToRefs(useAuthenticationStore());
+  const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
+  const selectedSlugId = ref("");
+  let contextGeneration = 0;
+  function captureScope(): OpinionQueryScope {
+    return {
+      viewerUserId: userId.value,
+      displayLanguage: displayLanguage.value,
+      spokenLanguages: [...spokenLanguages.value],
+    };
+  }
+  function queryKey(opinionSlugId: string) {
+    return getOpinionTargetQueryKey({
+      opinionSlugId,
+      viewerUserId: userId.value,
+      displayLanguage: displayLanguage.value,
+      spokenLanguages: spokenLanguages.value,
+    });
+  }
+  async function loadOpinion({
+    opinionSlugId,
+    generation,
+  }: {
+    opinionSlugId: string;
+    generation: number;
+  }): Promise<DisplayedOpinionItem> {
+    const opinion = (await fetchOpinionsBySlugIdList([opinionSlugId])).at(0);
+    if (generation !== contextGeneration)
+      throw new DOMException("Statement viewer changed", "AbortError");
+    if (opinion === undefined) throw new Error("Statement not found");
+    return opinion;
+  }
+  const selectedQuery = useQuery({
+    queryKey: computed(() => queryKey(selectedSlugId.value)),
+    queryFn: () =>
+      loadOpinion({
+        opinionSlugId: selectedSlugId.value,
+        generation: contextGeneration,
+      }),
+    enabled: computed(() => selectedSlugId.value !== ""),
+    staleTime: 30_000,
+  });
+  watch(selectedQuery.data, (opinion) => {
+    if (
+      opinion !== undefined &&
+      targetOpinion.value?.opinionSlugId === opinion.opinionSlugId
+    )
+      targetOpinion.value = opinion;
+  });
+  watch(
+    userId,
+    () => {
+      targetOpinion.value = null;
+      selectedSlugId.value = "";
+      contextGeneration += 1;
+    },
+    { flush: "sync" }
+  );
+  watch(
+    [displayLanguage, spokenLanguages],
+    () => {
+      contextGeneration += 1;
+    },
+    { flush: "sync", deep: true }
+  );
+  onScopeDispose(() => {
+    contextGeneration += 1;
+  });
 
   async function clearRouteQueryParameters(): Promise<void> {
     if (Object.keys(route.query).length > 0) {
@@ -51,12 +126,18 @@ export function useTargetOpinion({
   }
 
   function scrollToOpinion(opinionSlugId: string): void {
-    setTimeout(() => {
+    const generation = contextGeneration;
+    void nextTick(() => {
+      if (
+        generation !== contextGeneration ||
+        targetOpinion.value?.opinionSlugId !== opinionSlugId
+      )
+        return;
       const element = document.getElementById(`comment-${opinionSlugId}`);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
       }
-    }, 300);
+    });
   }
 
   async function setupHighlightFromRoute(): Promise<void> {
@@ -75,31 +156,51 @@ export function useTargetOpinion({
     }
 
     try {
-      const opinions = await fetchOpinionsBySlugIdList([opinionSlugId]);
-      if (opinions.length > 0) {
-        targetOpinion.value = opinions[0];
-        if (opinions[0].moderation.status === "moderated") {
-          onModeratedOpinionDetected?.(opinions[0]);
-        }
-      } else {
-        showNotifyMessage(t("statementNotFound"));
-      }
+      selectedSlugId.value = opinionSlugId;
+      const generation = contextGeneration;
+      const scope = captureScope();
+      const opinion = await queryClient.fetchQuery({
+        queryKey: getOpinionTargetQueryKey({ opinionSlugId, ...scope }),
+        queryFn: () => loadOpinion({ opinionSlugId, generation }),
+        staleTime: 30_000,
+      });
+      if (
+        generation !== contextGeneration ||
+        selectedSlugId.value !== opinionSlugId
+      )
+        return;
+      targetOpinion.value = opinion;
+      if (opinion.moderation.status === "moderated")
+        onModeratedOpinionDetected?.(opinion);
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
       console.error("Error fetching target opinion:", error);
       showNotifyMessage(t("statementNotFound"));
     }
   }
 
   function highlightOpinion(opinion: DisplayedOpinionItem): void {
+    selectedSlugId.value = opinion.opinionSlugId;
+    queryClient.setQueryData(queryKey(opinion.opinionSlugId), opinion);
     targetOpinion.value = opinion;
     scrollToOpinion(opinion.opinionSlugId);
+  }
+
+  function getCachedOpinion(
+    opinion: DisplayedOpinionItem
+  ): DisplayedOpinionItem {
+    return (
+      queryClient.getQueryData<DisplayedOpinionItem>(
+        queryKey(opinion.opinionSlugId)
+      ) ?? opinion
+    );
   }
 
   return {
     targetOpinion,
     setupHighlightFromRoute,
-    fetchTargetOpinion,
     highlightOpinion,
+    getCachedOpinion,
     clearRouteQueryParameters,
   };
 }

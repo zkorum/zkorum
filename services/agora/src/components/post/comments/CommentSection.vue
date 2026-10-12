@@ -179,6 +179,7 @@ const {
   setupHighlightFromRoute,
   clearRouteQueryParameters,
   highlightOpinion,
+  getCachedOpinion,
 } = useTargetOpinion({
   onModeratedOpinionDetected: (opinion) => {
     if (opinion.moderation.status !== "moderated") {
@@ -222,7 +223,10 @@ watch(
       targetOpinion.value?.displayContent.sourceVersion ===
         previous.displayContent.sourceVersion
     ) {
-      targetOpinion.value = previousHighlightedOpinion;
+      targetOpinion.value =
+        previousHighlightedOpinion === null
+          ? null
+          : getCachedOpinion(previousHighlightedOpinion);
     }
   },
   { immediate: true }

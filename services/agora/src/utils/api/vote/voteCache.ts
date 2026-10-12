@@ -64,7 +64,7 @@ export function applyOptimisticVote({
 }: {
   queryClient: QueryClient;
   votesKey: UserVotesQueryKey;
-  params: OpinionVoteParams;
+  params: Pick<OpinionVoteParams, "opinionSlugId" | "voteAction">;
 }): VoteCacheSnapshot {
   const conversationSlugId = votesKey[1];
   const oldVotes = queryClient.getQueryData<UserVote[]>(votesKey) ?? [];

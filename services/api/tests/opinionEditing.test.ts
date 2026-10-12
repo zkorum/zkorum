@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, count, eq, sql } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { Script } from "@valkey/valkey-glide";
+import { Decoder, GlideClient, Script } from "@valkey/valkey-glide";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import {
     afterAll,
@@ -33,8 +33,19 @@ import {
 import { getOpinionManagementCapabilities } from "../src/service/opinionPermissions.js";
 import { editOpinion } from "../src/service/opinionEdit.js";
 import { deleteOpinionBySlugId } from "../src/service/comment.js";
-import type { VoteBuffer } from "../src/service/voteBuffer.js";
+import {
+    createVoteBuffer,
+    CLEANUP_VOTES_SCRIPT,
+    type VoteBuffer,
+} from "../src/service/voteBuffer.js";
 import { readDbFixtureSql } from "./dbFixture.js";
+import { VALKEY_QUEUE_KEYS } from "../src/shared-backend/valkeyQueues.js";
+import { Dto } from "../src/shared/types/dto.js";
+import {
+    resolveContentLanguageMetadata,
+    UNKNOWN_CONTENT_LANGUAGE_METADATA,
+} from "../src/service/contentLanguageMetadata.js";
+import { createEagerContentTranslationWorkForOpinion } from "../src/service/contentTranslation.js";
 
 vi.mock("../src/shared-backend/conversationCounters.js", async () => ({
     ...(await vi.importActual("../src/shared-backend/conversationCounters.js")),
@@ -46,32 +57,34 @@ vi.mock("../src/service/conversationViewSnapshot.js", async () => ({
 }));
 vi.mock("../src/service/contentLanguageMetadata.js", async () => ({
     ...(await vi.importActual("../src/service/contentLanguageMetadata.js")),
-    resolveContentLanguageMetadata: vi.fn(async () => ({
+    resolveContentLanguageMetadata: vi.fn().mockResolvedValue({
         sourceLanguageCode: null,
         sourceRawLanguageCode: null,
         sourceLanguageProvider: null,
         sourceLanguageConfidence: null,
-    })),
+    }),
 }));
 vi.mock("../src/service/conversationMultilingual.js", () => ({
-    getConversationMultilingualSetting: vi.fn(async () => ({
+    getConversationMultilingualSetting: vi.fn().mockResolvedValue({
         dynamicTranslationEnabled: false,
-    })),
+    }),
 }));
 vi.mock("../src/service/contentTranslation.js", async () => ({
     ...(await vi.importActual("../src/service/contentTranslation.js")),
-    createEagerContentTranslationWorkForConversation: vi.fn(async () => []),
+    createEagerContentTranslationWorkForOpinion: vi.fn().mockResolvedValue([]),
 }));
 
 process.env.TESTCONTAINERS_RYUK_DISABLED ??= "true";
 const authorId = "00000000-0000-4000-8000-000000000001";
 const editorId = "00000000-0000-4000-8000-000000000002";
 const voterId = "00000000-0000-4000-8000-000000000003";
-const blockingVotes = vi.fn(async () => false);
+const blockingVotes = vi
+    .fn<VoteBuffer["hasBlockingVotes"]>()
+    .mockResolvedValue(false);
 const voteBuffer: VoteBuffer = {
-    add: async () => {},
-    flush: async () => {},
-    shutdown: async () => {},
+    add: vi.fn<VoteBuffer["add"]>().mockResolvedValue(undefined),
+    flush: vi.fn<VoteBuffer["flush"]>().mockResolvedValue(undefined),
+    shutdown: vi.fn<VoteBuffer["shutdown"]>().mockResolvedValue(undefined),
     getBufferSize: () => 0,
     hasBlockingVotes: blockingVotes,
 };
@@ -83,8 +96,23 @@ function first<T>(rows: T[]): T {
 }
 
 describe("statement editing and seed deletion", () => {
-    let container: StartedTestContainer;
-    let client: postgres.Sql;
+    it("requires the displayed content version on every public vote request", () => {
+        expect(
+            Dto.castVoteRequest.safeParse({
+                opinionSlugId: "editstat",
+                chosenOption: "agree",
+            }).success,
+        ).toBe(false);
+        expect(
+            Dto.castVoteRequest.safeParse({
+                opinionSlugId: "editstat",
+                chosenOption: "agree",
+                sourceVersion: "00000000-0000-4000-8000-000000000001",
+            }).success,
+        ).toBe(true);
+    });
+    let container: StartedTestContainer | undefined;
+    let client: postgres.Sql | undefined;
     let db: PostgresJsDatabase;
     let conversationId: number;
     let conversationContentId: number;
@@ -117,6 +145,7 @@ describe("statement editing and seed deletion", () => {
     }, 120_000);
     beforeEach(async () => {
         blockingVotes.mockReset().mockResolvedValue(false);
+        vi.mocked(createEagerContentTranslationWorkForOpinion).mockClear();
         await db.execute(
             sql`TRUNCATE TABLE "user", project, organization, conversation, conversation_content, opinion, opinion_content, vote, vote_content, analysis_snapshot_opinion, organization_membership, organization_membership_all_project_capability, project_organization_ownership, realtime_event_outbox CASCADE`,
         );
@@ -583,4 +612,262 @@ describe("statement editing and seed deletion", () => {
             }),
         ).rejects.toThrow("Missing statement deletion permission");
     });
+
+    it("does not hold statement locks while a language provider is running", async () => {
+        const { opinion, content } = await statement();
+        let releaseDetection: (() => void) | undefined;
+        const entered = new Promise<void>((resolveEntered) => {
+            vi.mocked(resolveContentLanguageMetadata).mockImplementationOnce(
+                () =>
+                    new Promise((resolveDetection) => {
+                        releaseDetection = () => {
+                            resolveDetection(UNKNOWN_CONTENT_LANGUAGE_METADATA);
+                        };
+                        resolveEntered();
+                    }),
+            );
+        });
+        const saving = save({
+            slugId: opinion.slugId,
+            sourceVersion: content.publicId,
+        });
+        await entered;
+        try {
+            const acquired = await Promise.race([
+                db.transaction(async (tx) => {
+                    await tx
+                        .select({ id: opinionTable.id })
+                        .from(opinionTable)
+                        .where(eq(opinionTable.id, opinion.id))
+                        .for("update");
+                    return true;
+                }),
+                new Promise<boolean>((resolve) => {
+                    setTimeout(() => {
+                        resolve(false);
+                    }, 1000);
+                }),
+            ]);
+            expect(acquired).toBe(true);
+        } finally {
+            releaseDetection?.();
+        }
+        expect((await saving).success).toBe(true);
+    });
+
+    it("schedules translations only for the edited seed version", async () => {
+        const seed = await statement(true);
+        const unrelated = await statement(true);
+        expect(
+            (
+                await save({
+                    slugId: seed.opinion.slugId,
+                    sourceVersion: seed.content.publicId,
+                    userId: editorId,
+                })
+            ).success,
+        ).toBe(true);
+        expect(
+            createEagerContentTranslationWorkForOpinion,
+        ).toHaveBeenCalledTimes(1);
+        const translationCall = vi
+            .mocked(createEagerContentTranslationWorkForOpinion)
+            .mock.calls.at(0);
+        expect(translationCall?.[0].source.opinionSlugId).toBe(
+            seed.opinion.slugId,
+        );
+        expect(
+            first(
+                await db
+                    .select()
+                    .from(opinionTable)
+                    .where(eq(opinionTable.id, unrelated.opinion.id)),
+            ).currentContentId,
+        ).toBe(unrelated.content.id);
+    });
+
+    it("checks shared pending votes across instances and ignores current cancellations", async () => {
+        const { opinion, content } = await statement();
+        const cacheContainer = await new GenericContainer(
+            "valkey/valkey:8-alpine",
+        )
+            .withExposedPorts(6379)
+            .start();
+        const valkey = await GlideClient.createClient({
+            addresses: [
+                {
+                    host: cacheContainer.getHost(),
+                    port: cacheContainer.getMappedPort(6379),
+                },
+            ],
+            defaultDecoder: Decoder.String,
+        });
+        const sender = createVoteBuffer({
+            db,
+            valkeyRef: { current: valkey },
+            flushIntervalMs: 60_000,
+            valkeyBatchLimit: 100,
+        });
+        const receiver = createVoteBuffer({
+            db,
+            valkeyRef: { current: valkey },
+            flushIntervalMs: 60_000,
+            valkeyBatchLimit: 100,
+        });
+        const baseVote = {
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            timestamp: new Date(),
+        };
+        try {
+            await sender.add({
+                vote: { ...baseVote, userId: authorId, vote: "agree" },
+            });
+            expect(
+                await receiver.hasBlockingVotes({
+                    opinionId: opinion.id,
+                    authorId,
+                    isSeed: false,
+                }),
+            ).toBe(false);
+            expect(
+                await receiver.hasBlockingVotes({
+                    opinionId: opinion.id,
+                    authorId,
+                    isSeed: true,
+                }),
+            ).toBe(true);
+            await sender.add({
+                vote: { ...baseVote, userId: voterId, vote: "pass" },
+            });
+            await receiver.add({
+                vote: { ...baseVote, userId: voterId, vote: "pass" },
+            });
+            expect(
+                await receiver.hasBlockingVotes({
+                    opinionId: opinion.id,
+                    authorId,
+                    isSeed: false,
+                }),
+            ).toBe(true);
+            const member = `${voterId}:${String(opinion.id)}`;
+            const previousPayload = await valkey.hget(
+                VALKEY_QUEUE_KEYS.VOTE_BUFFER_DATA,
+                member,
+            );
+            if (previousPayload === null)
+                throw new Error("Missing queued vote");
+            await sender.add({
+                vote: {
+                    ...baseVote,
+                    userId: voterId,
+                    vote: "cancel",
+                },
+            });
+            expect(
+                await receiver.hasBlockingVotes({
+                    opinionId: opinion.id,
+                    authorId,
+                    isSeed: false,
+                }),
+            ).toBe(false);
+            const cleanup = new Script(CLEANUP_VOTES_SCRIPT);
+            try {
+                expect(
+                    await valkey.invokeScript(cleanup, {
+                        keys: [
+                            VALKEY_QUEUE_KEYS.VOTE_BUFFER_INDEX,
+                            VALKEY_QUEUE_KEYS.VOTE_BUFFER_DATA,
+                            `${VALKEY_QUEUE_KEYS.VOTE_BUFFER_DATA}:opinion:`,
+                        ],
+                        args: [member, String(previousPayload)],
+                    }),
+                ).toBe(0);
+                expect(
+                    await valkey.hget(
+                        VALKEY_QUEUE_KEYS.VOTE_BUFFER_DATA,
+                        member,
+                    ),
+                ).not.toBeNull();
+            } finally {
+                cleanup.release();
+            }
+            await sender.flush();
+            await receiver.flush();
+            expect(
+                first(
+                    await db
+                        .select()
+                        .from(voteTable)
+                        .where(
+                            and(
+                                eq(voteTable.opinionId, opinion.id),
+                                eq(voteTable.authorId, voterId),
+                            ),
+                        ),
+                ).currentContentId,
+            ).toBeNull();
+
+            // Hold a captured batch before its transaction, then commit a newer
+            // cancellation on the other instance before the old batch resumes.
+            await sender.add({
+                vote: { ...baseVote, userId: voterId, vote: "pass" },
+            });
+            let resume: (() => void) | undefined;
+            let entered: (() => void) | undefined;
+            const paused = new Promise<void>((resolve) => {
+                resume = resolve;
+            });
+            const captured = new Promise<void>((resolve) => {
+                entered = resolve;
+            });
+            const transaction = db.transaction.bind(db);
+            const transactionSpy = vi
+                .spyOn(db, "transaction")
+                .mockImplementationOnce(async (callback, config) => {
+                    entered?.();
+                    await paused;
+                    return await transaction(callback, config);
+                });
+            const flushing = receiver.flush();
+            await captured;
+            try {
+                await sender.add({
+                    vote: { ...baseVote, userId: voterId, vote: "cancel" },
+                });
+                await sender.flush();
+            } finally {
+                resume?.();
+                await flushing;
+                transactionSpy.mockRestore();
+            }
+            expect(
+                first(
+                    await db
+                        .select()
+                        .from(voteTable)
+                        .where(
+                            and(
+                                eq(voteTable.opinionId, opinion.id),
+                                eq(voteTable.authorId, voterId),
+                            ),
+                        ),
+                ).currentContentId,
+            ).toBeNull();
+            expect(
+                first(
+                    await db
+                        .select()
+                        .from(opinionTable)
+                        .where(eq(opinionTable.id, opinion.id)),
+                ).numPasses,
+            ).toBe(0);
+        } finally {
+            await sender.shutdown();
+            await receiver.shutdown();
+            valkey.close();
+            await cacheContainer.stop();
+        }
+    }, 120_000);
 });

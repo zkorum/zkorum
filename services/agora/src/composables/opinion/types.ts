@@ -7,7 +7,7 @@ export interface UserVote {
 }
 
 export interface OpinionVoteParams {
-  sourceVersion?: string;
+  sourceVersion: string;
   opinionSlugId: string;
   voteAction: VotingAction;
 }

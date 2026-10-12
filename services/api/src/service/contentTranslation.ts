@@ -1736,7 +1736,7 @@ export async function scheduleEagerContentTranslationForConversation({
     });
 }
 
-export async function createEagerContentTranslationWorkForConversation({
+async function createEagerContentTranslationWorkForConversation({
     db,
     conversationSlugId,
     now,
@@ -1806,6 +1806,54 @@ export async function createEagerContentTranslationWorkForKnownConversation({
         log,
         checkExistingTranslations: false,
     });
+}
+
+export async function createEagerContentTranslationWorkForOpinion({
+    db,
+    source,
+    now,
+    log,
+}: {
+    db: PostgresDatabase;
+    source: OpinionContentSource;
+    now: Date;
+    log: Pick<BaseLogger, "info" | "error">;
+}): Promise<number[]> {
+    const conversationSource = await fetchConversationSource({
+        db,
+        conversationSlugId: source.conversationSlugId,
+    });
+    if (conversationSource === undefined) return [];
+    const policy = await resolveConversationTranslationTargetLanguagePolicy({
+        db,
+        source: conversationSource,
+    });
+    if (!policy.dynamicTranslationEnabled) return [];
+    const workIds: number[] = [];
+    for (const targetLanguageCode of policy.effectiveTargetLanguageCodes) {
+        if (
+            !shouldTranslateContent({
+                sourceLanguageCode: source.sourceLanguageCode,
+                sourceRawLanguageCode: source.sourceRawLanguageCode,
+                targetLanguageCode,
+            })
+        )
+            continue;
+        const workId = await ensureEagerTranslationWork({
+            db,
+            input: {
+                conversationId: source.conversationId,
+                sourceKind: "opinion",
+                sourceContentId: source.contentId,
+                targetLanguageCode,
+            },
+            translationExists: false,
+            now,
+            log,
+        });
+        if (workId !== undefined) workIds.push(workId);
+    }
+    return workIds;
 }
 
 async function createEagerContentTranslationWorkForConversationSources({

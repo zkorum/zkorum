@@ -1,14 +1,11 @@
-import { and, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type { z } from "zod";
 import type { Script } from "@valkey/valkey-glide";
-import type { Valkey } from "@/shared-backend/valkey.js";
-import type {
-    SupportedDisplayLanguageCodes,
-    SupportedSpokenLanguageCodes,
-} from "@/shared/languages.js";
-import { Dto } from "@/shared/types/dto.js";
+import { log } from "@/app.js";
 import { getPrimaryDatabase } from "@/shared-backend/db.js";
+import type { GoogleCloudCredentials } from "@/shared-backend/googleCloudAuth.js";
+import { scheduleConversationAnalysisRefresh } from "@/shared-backend/conversationCounters.js";
 import {
     conversationTable,
     conversationModerationTable,
@@ -17,24 +14,145 @@ import {
     opinionModerationTable,
     userTable,
 } from "@/shared-backend/schema.js";
-import type { GoogleCloudCredentials } from "@/shared-backend/googleCloudAuth.js";
-import { scheduleConversationAnalysisRefresh } from "@/shared-backend/conversationCounters.js";
-import { log } from "@/app.js";
-import type { VoteBuffer } from "./voteBuffer.js";
-import { getOpinionManagementCapabilities } from "./opinionPermissions.js";
-import { normalizeUserRichTextInput } from "./richText.js";
+import type { Valkey } from "@/shared-backend/valkey.js";
+import type {
+    SupportedDisplayLanguageCodes,
+    SupportedSpokenLanguageCodes,
+} from "@/shared/languages.js";
+import { Dto } from "@/shared/types/dto.js";
+import { fetchOpinionsByOpinionSlugIdList } from "./comment.js";
 import {
+    type ContentLanguageMetadata,
     contentLanguageMetadataUpdateValues,
     resolveContentLanguageMetadata,
 } from "./contentLanguageMetadata.js";
-import { getConversationMultilingualSetting } from "./conversationMultilingual.js";
-import { fetchOpinionsByOpinionSlugIdList } from "./comment.js";
-import { createConversationViewSnapshotsFromCurrentState } from "./conversationViewSnapshot.js";
-import { queueOpinionUpdatedEvent } from "./realtimeEventOutbox.js";
 import {
-    createEagerContentTranslationWorkForConversation,
+    createEagerContentTranslationWorkForOpinion,
     enqueueEagerContentTranslationWork,
 } from "./contentTranslation.js";
+import { getConversationMultilingualSetting } from "./conversationMultilingual.js";
+import { createConversationViewSnapshotsFromCurrentState } from "./conversationViewSnapshot.js";
+import {
+    canManageOpinion,
+    hasBlockingOpinionVotes,
+} from "./opinionPermissions.js";
+import { queueOpinionUpdatedEvent } from "./realtimeEventOutbox.js";
+import { normalizeUserRichTextInput } from "./richText.js";
+import type { VoteBuffer } from "./voteBuffer.js";
+
+type EditOpinionResponse = z.infer<typeof Dto.editOpinionResponse>;
+type EditOpinionFailure = Extract<EditOpinionResponse, { success: false }>;
+
+async function loadOpinion({
+    db,
+    opinionSlugId,
+}: {
+    db: PostgresJsDatabase;
+    opinionSlugId: string;
+}) {
+    const rows = await db
+        .select({
+            id: opinionTable.id,
+            slugId: opinionTable.slugId,
+            authorId: opinionTable.authorId,
+            isSeed: opinionTable.isSeed,
+            conversationId: conversationTable.id,
+            conversationSlugId: conversationTable.slugId,
+            projectId: conversationTable.projectId,
+            conversationContentId: conversationTable.currentContentId,
+            isImporting: conversationTable.isImporting,
+            sourceVersion: opinionContentTable.publicId,
+            content: opinionContentTable.content,
+            conversationLocked: conversationModerationTable.id,
+            moderationAction: opinionModerationTable.moderationAction,
+        })
+        .from(opinionTable)
+        .innerJoin(
+            opinionContentTable,
+            and(
+                eq(opinionContentTable.id, opinionTable.currentContentId),
+                eq(opinionContentTable.opinionId, opinionTable.id),
+            ),
+        )
+        .innerJoin(
+            conversationTable,
+            eq(conversationTable.id, opinionTable.conversationId),
+        )
+        .innerJoin(userTable, eq(userTable.id, opinionTable.authorId))
+        .leftJoin(
+            conversationModerationTable,
+            and(
+                eq(
+                    conversationModerationTable.conversationId,
+                    conversationTable.id,
+                ),
+                isNull(conversationModerationTable.deletedAt),
+            ),
+        )
+        .leftJoin(
+            opinionModerationTable,
+            and(
+                eq(opinionModerationTable.opinionId, opinionTable.id),
+                isNull(opinionModerationTable.deletedAt),
+            ),
+        )
+        .where(
+            and(
+                eq(opinionTable.slugId, opinionSlugId),
+                eq(userTable.isDeleted, false),
+            ),
+        )
+        .limit(1);
+    return rows.at(0);
+}
+
+type EditableOpinion = NonNullable<Awaited<ReturnType<typeof loadOpinion>>>;
+
+async function validateEdit({
+    db,
+    opinion,
+    userId,
+    sourceVersion,
+    voteBuffer,
+    lockAuthorization = false,
+}: {
+    db: PostgresJsDatabase;
+    opinion: EditableOpinion;
+    userId: string;
+    sourceVersion: string;
+    voteBuffer: VoteBuffer;
+    lockAuthorization?: boolean;
+}): Promise<EditOpinionFailure | undefined> {
+    if (opinion.conversationContentId === null || opinion.isImporting)
+        return { success: false, reason: "not_found" };
+    if (!(await canManageOpinion({ db, opinion, userId, lockAuthorization })))
+        return { success: false, reason: "not_allowed" };
+    if (opinion.sourceVersion !== sourceVersion)
+        return { success: false, reason: "version_conflict" };
+    if (opinion.conversationLocked !== null)
+        return { success: false, reason: "conversation_locked" };
+    if (opinion.moderationAction === "hide")
+        return { success: false, reason: "not_allowed" };
+    if (
+        (await hasBlockingOpinionVotes({
+            db,
+            opinionId: opinion.id,
+            authorId: opinion.authorId,
+            isSeed: opinion.isSeed,
+        })) ||
+        (await voteBuffer.hasBlockingVotes({
+            opinionId: opinion.id,
+            authorId: opinion.authorId,
+            isSeed: opinion.isSeed,
+        }))
+    )
+        return { success: false, reason: "has_votes" };
+    return undefined;
+}
+
+type PreparedChange =
+    | { readonly kind: "unchanged" }
+    | { readonly kind: "changed"; readonly language: ContentLanguageMetadata };
 
 export async function editOpinion({
     db,
@@ -56,266 +174,226 @@ export async function editOpinion({
     translationQueueScript: Script;
     displayLanguage: SupportedDisplayLanguageCodes;
     spokenLanguages: SupportedSpokenLanguageCodes[];
-}): Promise<z.infer<typeof Dto.editOpinionResponse>> {
+}): Promise<EditOpinionResponse> {
     const normalized = normalizeUserRichTextInput({
         html: request.opinionBody,
         validationMode: "opinion",
     });
     if (!normalized.success)
         return { success: false, reason: normalized.reason };
-    let translationWorkIds: number[] = [];
+    const writer = getPrimaryDatabase(db);
+    const initial = await loadOpinion({
+        db: writer,
+        opinionSlugId: request.opinionSlugId,
+    });
+    if (initial === undefined) return { success: false, reason: "not_found" };
+    const rejection = await validateEdit({
+        db: writer,
+        opinion: initial,
+        userId,
+        sourceVersion: request.sourceVersion,
+        voteBuffer,
+    });
+    if (rejection !== undefined) return rejection;
+
+    // Detection can call a provider. Prepare it without holding statement or
+    // conversation locks; the immutable source version is checked again below.
+    const multilingual =
+        normalized.content.html === initial.content
+            ? undefined
+            : await getConversationMultilingualSetting({
+                  db: writer,
+                  conversationId: initial.conversationId,
+              });
+    const prepared: PreparedChange =
+        multilingual === undefined
+            ? { kind: "unchanged" }
+            : {
+                  kind: "changed",
+                  language: await resolveContentLanguageMetadata({
+                      text: normalized.content.plainText,
+                      googleCloudCredentials,
+                      useGoogleLanguageDetection:
+                          multilingual.dynamicTranslationEnabled,
+                  }),
+              };
     const blockedDuringSave = new Error(
         "Statement received votes while saving",
     );
-    let response: z.infer<typeof Dto.editOpinionResponse>;
+    let result: { response: EditOpinionResponse; translationWorkIds: number[] };
     try {
-        response = await getPrimaryDatabase(db).transaction(
-            async (tx): Promise<z.infer<typeof Dto.editOpinionResponse>> => {
-                // Lock the stable row before joining content: a concurrent pointer
-                // update can otherwise make PostgreSQL discard the joined result.
-                const lockedRows = await tx
-                    .select({
-                        id: opinionTable.id,
-                        slugId: opinionTable.slugId,
-                        authorId: opinionTable.authorId,
-                        isSeed: opinionTable.isSeed,
-                        createdAt: opinionTable.createdAt,
-                        updatedAt: opinionTable.updatedAt,
-                        conversationId: opinionTable.conversationId,
-                        currentContentId: opinionTable.currentContentId,
-                    })
-                    .from(opinionTable)
-                    .where(eq(opinionTable.slugId, request.opinionSlugId))
-                    .for("update")
-                    .limit(1);
-                const locked = lockedRows.at(0);
-                if (locked === undefined)
-                    return { success: false, reason: "not_found" };
-                if (locked.currentContentId === null)
-                    return { success: false, reason: "not_found" };
-                const sourceRows = await tx
-                    .select({
-                        conversationSlugId: conversationTable.slugId,
-                        conversationContentId:
-                            conversationTable.currentContentId,
-                        contentId: opinionContentTable.id,
-                        sourceVersion: opinionContentTable.publicId,
-                        content: opinionContentTable.content,
-                        isEdited: opinionContentTable.isEdited,
-                        sourceLanguageCode:
-                            opinionContentTable.sourceLanguageCode,
-                        username: userTable.username,
-                    })
-                    .from(opinionContentTable)
-                    .innerJoin(
-                        conversationTable,
-                        eq(conversationTable.id, locked.conversationId),
-                    )
-                    .innerJoin(userTable, eq(userTable.id, locked.authorId))
-                    .where(
-                        and(
-                            eq(opinionContentTable.id, locked.currentContentId),
-                            eq(opinionContentTable.opinionId, locked.id),
-                            isNotNull(conversationTable.currentContentId),
-                        ),
-                    )
-                    .limit(1)
-                    .for("no key update", { of: conversationTable });
-                const source = sourceRows.at(0);
-                if (source === undefined)
-                    return { success: false, reason: "not_found" };
-                if (source.conversationContentId === null)
-                    return { success: false, reason: "not_found" };
-                const opinion = {
-                    ...locked,
-                    ...source,
-                    conversationContentId: source.conversationContentId,
+        result = await writer.transaction(async (tx) => {
+            // Match the vote-buffer lock order: conversation, then statement.
+            await tx
+                .select({ id: conversationTable.id })
+                .from(conversationTable)
+                .where(eq(conversationTable.id, initial.conversationId))
+                .for("no key update");
+            await tx
+                .select({ id: opinionTable.id })
+                .from(opinionTable)
+                .where(
+                    and(
+                        eq(opinionTable.id, initial.id),
+                        eq(opinionTable.conversationId, initial.conversationId),
+                    ),
+                )
+                .for("update");
+            const opinion = await loadOpinion({
+                db: tx,
+                opinionSlugId: request.opinionSlugId,
+            });
+            if (opinion === undefined)
+                return {
+                    response: {
+                        success: false,
+                        reason: "not_found",
+                    } satisfies EditOpinionFailure,
+                    translationWorkIds: [],
                 };
-                const capabilities = await getOpinionManagementCapabilities({
-                    db: tx,
-                    opinionSlugIds: [opinion.slugId],
-                    userId,
-                    lockAuthorization: true,
-                });
-                const management = capabilities.get(opinion.slugId);
-                if (management?.canDelete !== true)
-                    return { success: false, reason: "not_allowed" };
-                if (opinion.sourceVersion !== request.sourceVersion)
-                    return { success: false, reason: "version_conflict" };
-                const lockRows = await tx
-                    .select({ id: conversationModerationTable.id })
-                    .from(conversationModerationTable)
-                    .where(
-                        and(
-                            eq(
-                                conversationModerationTable.conversationId,
-                                opinion.conversationId,
-                            ),
-                            isNull(conversationModerationTable.deletedAt),
+            const failure = await validateEdit({
+                db: tx,
+                opinion,
+                userId,
+                sourceVersion: request.sourceVersion,
+                voteBuffer,
+                lockAuthorization: true,
+            });
+            if (failure !== undefined)
+                return { response: failure, translationWorkIds: [] };
+            if (opinion.conversationContentId === null)
+                return {
+                    response: {
+                        success: false,
+                        reason: "not_found",
+                    } satisfies EditOpinionFailure,
+                    translationWorkIds: [],
+                };
+            const translationWorkIds: number[] = [];
+            if (prepared.kind === "changed") {
+                const inserted = await tx
+                    .insert(opinionContentTable)
+                    .values({
+                        opinionId: opinion.id,
+                        conversationContentId: opinion.conversationContentId,
+                        content: normalized.content.html,
+                        contentPlainText: normalized.content.plainText,
+                        isEdited: true,
+                        editedByUserId: userId,
+                        ...contentLanguageMetadataUpdateValues(
+                            prepared.language,
                         ),
-                    )
-                    .limit(1);
-                const lock = lockRows.at(0);
-                if (lock !== undefined)
-                    return { success: false, reason: "conversation_locked" };
-                if (
-                    !management.canEdit ||
+                    })
+                    .returning({
+                        id: opinionContentTable.id,
+                        publicId: opinionContentTable.publicId,
+                        createdAt: opinionContentTable.createdAt,
+                    });
+                const content = inserted.at(0);
+                if (content === undefined)
+                    throw new Error(
+                        "Statement content insertion returned no row",
+                    );
+                await tx
+                    .update(opinionTable)
+                    .set({
+                        currentContentId: content.id,
+                        updatedAt: content.createdAt,
+                    })
+                    .where(eq(opinionTable.id, opinion.id));
+                if (opinion.isSeed)
+                    translationWorkIds.push(
+                        ...(await createEagerContentTranslationWorkForOpinion({
+                            db: tx,
+                            source: {
+                                conversationId: opinion.conversationId,
+                                conversationSlugId: opinion.conversationSlugId,
+                                opinionSlugId: opinion.slugId,
+                                contentId: content.id,
+                                publicId: content.publicId,
+                                content: normalized.content.html,
+                                ...prepared.language,
+                            },
+                            now: content.createdAt,
+                            log,
+                        })),
+                    );
+                await scheduleConversationAnalysisRefresh({
+                    db: tx,
+                    conversationId: opinion.conversationId,
+                    log,
+                });
+                await createConversationViewSnapshotsFromCurrentState({
+                    db: tx,
+                    conversationId: opinion.conversationId,
+                    viewReason: "conversation_content_updated",
+                    emitCommentStatsRealtimeEvent: true,
+                });
+                await queueOpinionUpdatedEvent({
+                    db: tx,
+                    data: {
+                        conversationSlugId: opinion.conversationSlugId,
+                        opinionSlugId: opinion.slugId,
+                        previousSourceVersion: opinion.sourceVersion,
+                        sourceVersion: content.publicId,
+                        opinion: normalized.content.html,
+                        sourceLanguageCode:
+                            prepared.language.sourceLanguageCode,
+                        timestamp: Date.now(),
+                    },
+                });
+            }
+            // Reuse the localized mapper in the write transaction, including its
+            // policy-derived translation controls, without a replica follow-up.
+            const displayed = await fetchOpinionsByOpinionSlugIdList({
+                db: tx,
+                opinionSlugIdList: [opinion.slugId],
+                displayContentViewerPreferences: {
+                    viewerUserId: userId,
+                    displayLanguage,
+                    spokenLanguages,
+                },
+            });
+            const saved = displayed.at(0);
+            if (saved === undefined)
+                throw new Error("Saved statement is not readable");
+            if (
+                prepared.kind === "changed" &&
+                ((await hasBlockingOpinionVotes({
+                    db: tx,
+                    opinionId: opinion.id,
+                    authorId: opinion.authorId,
+                    isSeed: opinion.isSeed,
+                })) ||
                     (await voteBuffer.hasBlockingVotes({
                         opinionId: opinion.id,
                         authorId: opinion.authorId,
                         isSeed: opinion.isSeed,
-                    }))
-                )
-                    return { success: false, reason: "has_votes" };
-                const moderationRows = await tx
-                    .select()
-                    .from(opinionModerationTable)
-                    .where(
-                        and(
-                            eq(opinionModerationTable.opinionId, opinion.id),
-                            isNull(opinionModerationTable.deletedAt),
-                        ),
-                    )
-                    .limit(1);
-                const moderation = moderationRows.at(0);
-                if (moderation?.moderationAction === "hide")
-                    return { success: false, reason: "not_allowed" };
-                let wasEdited = false;
-                if (normalized.content.html !== opinion.content) {
-                    const multilingual =
-                        await getConversationMultilingualSetting({
-                            db: tx,
-                            conversationId: opinion.conversationId,
-                        });
-                    const language = await resolveContentLanguageMetadata({
-                        text: normalized.content.plainText,
-                        googleCloudCredentials,
-                        useGoogleLanguageDetection:
-                            multilingual.dynamicTranslationEnabled,
-                    });
-                    const finalCapabilities =
-                        await getOpinionManagementCapabilities({
-                            db: tx,
-                            opinionSlugIds: [opinion.slugId],
-                            userId,
-                        });
-                    if (
-                        finalCapabilities.get(opinion.slugId)?.canEdit !==
-                            true ||
-                        (await voteBuffer.hasBlockingVotes({
-                            opinionId: opinion.id,
-                            authorId: opinion.authorId,
-                            isSeed: opinion.isSeed,
-                        }))
-                    )
-                        return { success: false, reason: "has_votes" };
-                    const contentRows = await tx
-                        .insert(opinionContentTable)
-                        .values({
-                            opinionId: opinion.id,
-                            conversationContentId:
-                                opinion.conversationContentId,
-                            content: normalized.content.html,
-                            contentPlainText: normalized.content.plainText,
-                            isEdited: true,
-                            editedByUserId: userId,
-                            ...contentLanguageMetadataUpdateValues(language),
-                        })
-                        .returning({
-                            id: opinionContentTable.id,
-                            publicId: opinionContentTable.publicId,
-                            createdAt: opinionContentTable.createdAt,
-                        });
-                    const content = contentRows.at(0);
-                    if (content === undefined)
-                        throw new Error(
-                            "Statement content insertion returned no row",
-                        );
-                    wasEdited = true;
-                    await tx
-                        .update(opinionTable)
-                        .set({
-                            currentContentId: content.id,
-                            updatedAt: content.createdAt,
-                        })
-                        .where(eq(opinionTable.id, opinion.id));
-                    await scheduleConversationAnalysisRefresh({
-                        db: tx,
-                        conversationId: opinion.conversationId,
-                        log,
-                    });
-                    await createConversationViewSnapshotsFromCurrentState({
-                        db: tx,
-                        conversationId: opinion.conversationId,
-                        viewReason: "conversation_content_updated",
-                        emitCommentStatsRealtimeEvent: true,
-                    });
-                    await queueOpinionUpdatedEvent({
-                        db: tx,
-                        data: {
-                            conversationSlugId: opinion.conversationSlugId,
-                            opinionSlugId: opinion.slugId,
-                            previousSourceVersion: opinion.sourceVersion,
-                            sourceVersion: content.publicId,
-                            opinion: normalized.content.html,
-                            sourceLanguageCode: language.sourceLanguageCode,
-                            timestamp: Date.now(),
-                        },
-                    });
-                    if (opinion.isSeed)
-                        translationWorkIds =
-                            await createEagerContentTranslationWorkForConversation(
-                                {
-                                    db: tx,
-                                    conversationSlugId:
-                                        opinion.conversationSlugId,
-                                    now: content.createdAt,
-                                    log,
-                                },
-                            );
-                }
-                // Localization needs the existing policy/translation mapper. Read in
-                // this write transaction so the response cannot regress through a replica.
-                const displayed = await fetchOpinionsByOpinionSlugIdList({
-                    db: tx,
-                    opinionSlugIdList: [opinion.slugId],
-                    displayContentViewerPreferences: {
-                        viewerUserId: userId,
-                        displayLanguage,
-                        spokenLanguages,
-                    },
-                });
-                const saved = displayed.at(0);
-                if (saved === undefined)
-                    throw new Error("Saved statement is not readable");
-                if (
-                    wasEdited &&
-                    (!saved.management?.canEdit ||
-                        (await voteBuffer.hasBlockingVotes({
-                            opinionId: opinion.id,
-                            authorId: opinion.authorId,
-                            isSeed: opinion.isSeed,
-                        })))
-                ) {
-                    // Rejecting after staging rows must roll back the content, outbox,
-                    // and translation work together; returning a failure would commit them.
-                    throw blockedDuringSave;
-                }
-                return { success: true, displayedOpinionItem: saved };
-            },
-        );
+                    })))
+            ) {
+                // A policy refusal after staging writes must abort the transaction.
+                throw blockedDuringSave;
+            }
+            return {
+                response: {
+                    success: true,
+                    displayedOpinionItem: saved,
+                } satisfies EditOpinionResponse,
+                translationWorkIds,
+            };
+        });
     } catch (error: unknown) {
         if (error === blockedDuringSave)
             return { success: false, reason: "has_votes" };
         throw error;
     }
-    if (response.success && translationWorkIds.length > 0)
+    if (result.translationWorkIds.length > 0)
         await enqueueEagerContentTranslationWork({
             valkey,
             queueScript: translationQueueScript,
-            workIds: translationWorkIds,
+            workIds: result.translationWorkIds,
             now: new Date(),
             log,
         });
-    return response;
+    return result.response;
 }

@@ -22,7 +22,11 @@ import type {
   FetchCommentStatsResponse,
 } from "src/shared/types/dto";
 import type { Dto } from "src/shared/types/dto";
-import type { AnalysisView, OpinionItem } from "src/shared/types/zod";
+import type {
+  AnalysisView,
+  DisplayedOpinionItem,
+  OpinionItem,
+} from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLanguageStore } from "src/stores/language";
 import { useUserStore } from "src/stores/user";
@@ -34,7 +38,13 @@ import {
   useViewerQueryScope,
   type ViewerQueryScope,
 } from "src/utils/query/viewerScope";
-import { computed, type MaybeRefOrGetter, toValue } from "vue";
+import {
+  computed,
+  type MaybeRefOrGetter,
+  onScopeDispose,
+  toValue,
+  watch,
+} from "vue";
 import type { z } from "zod";
 
 import { useNotify } from "../../ui/notify";
@@ -60,6 +70,11 @@ import {
   type OpinionPageRequest,
   type OpinionPageResult,
 } from "./opinionPageBoundary";
+import {
+  isOpinionQueryForScope,
+  type OpinionQueryScope,
+} from "./opinionQueryScope";
+import { getOpinionTargetQueryKey } from "./opinionTargetQueryKey";
 import {
   type UseCommentQueriesTranslations,
   useCommentQueriesTranslations,
@@ -1035,27 +1050,122 @@ export function useEditOpinionMutation(conversationSlugId: string) {
   const { editOpinion } = useBackendCommentApi();
   const queryClient = useQueryClient();
   const userStore = useUserStore();
+  const { userId } = storeToRefs(useAuthenticationStore());
+  const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
+  let viewerGeneration = 0;
+  watch(
+    [userId, displayLanguage, spokenLanguages],
+    () => {
+      viewerGeneration += 1;
+    },
+    { flush: "sync", deep: true }
+  );
+  onScopeDispose(() => {
+    viewerGeneration += 1;
+  });
   const { markCommentsAsStale, markAnalysisAsStale } =
     useInvalidateCommentQueries();
   return useMutation({
     mutationFn: (request: z.infer<typeof Dto.editOpinionRequest>) =>
       editOpinion(request),
-    onMutate: async () => {
-      await queryClient.cancelQueries({
-        queryKey: ["comments", conversationSlugId],
-      });
+    onMutate: async (request) => {
+      const scope: OpinionQueryScope = {
+        viewerUserId: userId.value,
+        displayLanguage: displayLanguage.value,
+        spokenLanguages: [...spokenLanguages.value],
+      };
+      const generation = viewerGeneration;
+      const predicate = (query: { queryKey: readonly unknown[] }) =>
+        isOpinionQueryForScope({ queryKey: query.queryKey, scope });
+      await Promise.all([
+        queryClient.cancelQueries({
+          queryKey: ["comments", conversationSlugId],
+          predicate,
+        }),
+        queryClient.cancelQueries({
+          queryKey: ["opinionTarget", request.opinionSlugId],
+          predicate,
+        }),
+      ]);
+      return { scope, generation };
     },
-    onSuccess: (result) => {
-      if (!result.success) return;
+    onSuccess: (result, request, context) => {
+      if (
+        context === undefined ||
+        context.generation !== viewerGeneration ||
+        context.scope.viewerUserId !== userId.value
+      )
+        return;
+      const scope = context.scope;
+      const predicate = (query: { queryKey: readonly unknown[] }) =>
+        isOpinionQueryForScope({ queryKey: query.queryKey, scope });
+      if (!result.success) {
+        if (
+          result.reason === "has_votes" ||
+          result.reason === "not_allowed" ||
+          result.reason === "conversation_locked"
+        ) {
+          queryClient.setQueriesData<OpinionCache>(
+            { queryKey: ["comments", conversationSlugId], predicate },
+            (cache) =>
+              mapCachedOpinions({
+                cache,
+                mapOpinion: (opinion) =>
+                  opinion.opinionSlugId !== request.opinionSlugId ||
+                  opinion.management === undefined
+                    ? opinion
+                    : {
+                        ...opinion,
+                        management: { ...opinion.management, canEdit: false },
+                      },
+              })
+          );
+          queryClient.setQueriesData<DisplayedOpinionItem>(
+            { queryKey: ["opinionTarget", request.opinionSlugId], predicate },
+            (opinion) =>
+              opinion?.management === undefined
+                ? opinion
+                : {
+                    ...opinion,
+                    management: { ...opinion.management, canEdit: false },
+                  }
+          );
+        }
+        if (result.reason === "version_conflict") {
+          void queryClient.invalidateQueries({
+            queryKey: ["opinionTarget", request.opinionSlugId],
+            predicate,
+          });
+          void queryClient.invalidateQueries({
+            queryKey: ["comments", conversationSlugId],
+            predicate,
+          });
+        }
+        return;
+      }
       const opinion = result.displayedOpinionItem;
+      const applySavedOpinion = (current: DisplayedOpinionItem | undefined) =>
+        current === undefined ||
+        current.displayContent.sourceVersion === request.sourceVersion ||
+        current.displayContent.sourceVersion ===
+          opinion.displayContent.sourceVersion
+          ? opinion
+          : current;
+      queryClient.setQueryData<DisplayedOpinionItem>(
+        getOpinionTargetQueryKey({
+          opinionSlugId: opinion.opinionSlugId,
+          ...scope,
+        }),
+        applySavedOpinion
+      );
       queryClient.setQueriesData<OpinionCache>(
-        { queryKey: ["comments", conversationSlugId] },
+        { queryKey: ["comments", conversationSlugId], predicate },
         (cache) =>
           mapCachedOpinions({
             cache,
             mapOpinion: (current) =>
               current.opinionSlugId === opinion.opinionSlugId
-                ? opinion
+                ? applySavedOpinion(current)
                 : current,
           })
       );

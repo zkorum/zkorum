@@ -3653,11 +3653,34 @@ server.after(() => {
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/opinion/edit`,
-        schema: { body: Dto.editOpinionRequest, response: { 200: Dto.editOpinionResponse } },
+        schema: {
+            body: Dto.editOpinionRequest,
+            response: { 200: Dto.editOpinionResponse },
+        },
         handler: async (request) => {
-            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(db, request, { expectedKnownDeviceStatus: { isGuestOrLoggedIn: true } });
-            const preferences = await getLanguagePreferences({ db, userId: deviceStatus.userId, request: { currentDisplayLanguage: getRequestDisplayLanguage({ request }) } });
-            return await editOpinion({ db, request: request.body, userId: deviceStatus.userId, voteBuffer, googleCloudCredentials, valkey: queueValkeyRef.current, translationQueueScript: contentTranslationQueueScript, displayLanguage: preferences.displayLanguage, spokenLanguages: preferences.spokenLanguages });
+            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
+                db,
+                request,
+                { expectedKnownDeviceStatus: { isGuestOrLoggedIn: true } },
+            );
+            const preferences = await getLanguagePreferences({
+                db,
+                userId: deviceStatus.userId,
+                request: {
+                    currentDisplayLanguage: getRequestDisplayLanguage({ request }),
+                },
+            });
+            return await editOpinion({
+                db,
+                request: request.body,
+                userId: deviceStatus.userId,
+                voteBuffer,
+                googleCloudCredentials,
+                valkey: queueValkeyRef.current,
+                translationQueueScript: contentTranslationQueueScript,
+                displayLanguage: preferences.displayLanguage,
+                spokenLanguages: preferences.spokenLanguages,
+            });
         },
     });
 
