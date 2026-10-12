@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="%lang%" class="scroll-smooth notranslate" translate="no">
+<html
+  lang="%lang%"
+  dir="%dir%"
+  class="scroll-smooth notranslate"
+  translate="no"
+>
   <head>
     <meta charset="utf-8" />
     <meta name="google" content="notranslate" />
@@ -10,7 +15,7 @@
         location.hostname === "agoracitizen.network" ||
         location.hostname.endsWith(".agoracitizen.network")
       ) {
-        var s = document.createElement("script");
+        const s = document.createElement("script");
         s.defer = true;
         s.dataset.domain = "agoracitizen.network";
         s.src = "https://plausible.io/js/script.outbound-links.js";
@@ -24,27 +29,14 @@
     </script>
     <script>
       (function () {
-        var SUPPORTED_LOCALES = [
-          "en",
-          "fr",
-          "es",
-          "ar",
-          "fa",
-          "he",
-          "ja",
-          "zh-hans",
-          "zh-hant",
-          "ky",
-          "ru",
-        ];
-        var DEFAULT_LOCALE = "en";
-        var RTL_LOCALES = ["ar", "fa", "he"];
-        var STORAGE_KEY = "displayLanguage";
+        const SUPPORTED_LOCALES = "%locales%".split(",");
+        const DEFAULT_LOCALE = "%baseLocale%";
+        const STORAGE_KEY = "displayLanguage";
 
         function parseSupportedLocale(rawLanguage) {
           if (!rawLanguage) return null;
 
-          var lang = rawLanguage.toLowerCase();
+          const lang = rawLanguage.toLowerCase();
           if (
             lang === "zh-tw" ||
             lang === "zh-hk" ||
@@ -56,8 +48,8 @@
             return "zh-hans";
           }
 
-          var primary = lang.split("-")[0];
-          return SUPPORTED_LOCALES.indexOf(primary) !== -1 ? primary : null;
+          const primary = lang.split("-")[0];
+          return SUPPORTED_LOCALES.includes(primary) ? primary : null;
         }
 
         function detectDeviceLocale() {
@@ -71,64 +63,43 @@
         }
 
         function detectBrowserLocale() {
-          var languages = navigator.languages || [navigator.language || ""];
-          for (var i = 0; i < languages.length; i++) {
-            var locale = parseSupportedLocale(languages[i]);
+          const languages = navigator.languages || [navigator.language || ""];
+          for (const language of languages) {
+            const locale = parseSupportedLocale(language);
             if (locale) return locale;
           }
           return null;
         }
 
         function getPreferredLocale() {
-          var saved = localStorage.getItem(STORAGE_KEY);
-          var savedLocale = parseSupportedLocale(saved);
-          if (savedLocale) return savedLocale;
+          try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            const savedLocale = parseSupportedLocale(saved);
+            if (savedLocale) return savedLocale;
+          } catch (_) {
+            // Storage can be unavailable in private or embedded browsing.
+          }
           return (
             detectDeviceLocale() || detectBrowserLocale() || DEFAULT_LOCALE
           );
         }
 
-        function getCurrentLocaleFromPath() {
-          var segments = location.pathname.split("/").filter(Boolean);
-          var first = segments[0];
-          if (first && SUPPORTED_LOCALES.indexOf(first) !== -1) {
-            return first;
-          }
-          return DEFAULT_LOCALE;
-        }
-
-        function buildPathForLocale(locale) {
-          var segments = location.pathname.split("/").filter(Boolean);
-          var currentLocale = getCurrentLocaleFromPath();
-          // Remove current locale prefix if present
-          if (
-            segments[0] === currentLocale &&
-            currentLocale !== DEFAULT_LOCALE
-          ) {
-            segments.shift();
-          }
-          // Add new locale prefix (except for default)
-          if (locale !== DEFAULT_LOCALE) {
-            segments.unshift(locale);
-          }
-          return "/" + segments.join("/") + (segments.length ? "/" : "");
-        }
-
         function handleLanguageRedirect() {
-          var currentLocale = getCurrentLocaleFromPath();
-          var preferredLocale = getPreferredLocale();
+          // Negotiate only an initial homepage visit; shared resource URLs and
+          // internal navigation already express a language choice.
+          if (location.pathname !== "/") return;
+          if (
+            document.referrer &&
+            new URL(document.referrer).origin === location.origin
+          ) {
+            return;
+          }
 
-          // Set RTL direction for RTL languages
-          var effectiveLocale = preferredLocale;
-          document.documentElement.dir =
-            RTL_LOCALES.indexOf(effectiveLocale) !== -1 ? "rtl" : "ltr";
-
-          // Redirect if current locale doesn't match preference
-          if (currentLocale !== preferredLocale) {
-            var targetPath = buildPathForLocale(preferredLocale);
-            if (targetPath !== location.pathname) {
-              location.replace(targetPath + location.search + location.hash);
-            }
+          const preferredLocale = getPreferredLocale();
+          if (preferredLocale !== DEFAULT_LOCALE) {
+            location.replace(
+              "/" + preferredLocale + location.search + location.hash,
+            );
           }
         }
 

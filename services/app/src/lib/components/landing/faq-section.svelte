@@ -160,12 +160,13 @@
                 {#if item.comparison}
                   <div
                     class="
-                      mt-6 overflow-x-auto rounded-xl border border-border
+                      mt-6 overflow-hidden rounded-xl border border-border
                     "
                   >
                     <table
                       class="
-                        w-full min-w-[760px] border-collapse text-left text-sm
+                        w-full table-fixed border-collapse text-start text-sm
+                        wrap-break-word
                       "
                     >
                       <caption class="sr-only">{item.question}</caption>
@@ -174,7 +175,8 @@
                           <th
                             scope="col"
                             class="
-                              w-[44%] px-4 py-3 font-semibold text-foreground
+                              w-[44%] px-2 py-3 font-semibold text-foreground
+                              sm:px-4
                             "
                           >
                             {item.comparison.firstColumnLabel}
@@ -183,8 +185,9 @@
                             <th
                               scope="col"
                               class="
-                                w-[28%] border-l border-border px-4 py-3
+                                w-[28%] border-s border-border px-2 py-3
                                 font-semibold text-foreground
+                                sm:px-4
                               "
                             >
                               {column}
@@ -197,15 +200,19 @@
                           <tr class="border-t border-border align-top">
                             <th
                               scope="row"
-                              class="px-4 py-3 font-medium text-foreground"
+                              class="
+                                px-2 py-3 font-medium text-foreground
+                                sm:px-4
+                              "
                             >
                               {row.feature}
                             </th>
                             {#each row.values as value, valueIndex (valueIndex)}
                               <td
                                 class="
-                                  border-l border-border px-4 py-3
+                                  border-s border-border px-2 py-3
                                   text-secondary-foreground
+                                  sm:px-4
                                 "
                               >
                                 {value}

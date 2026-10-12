@@ -1,7 +1,7 @@
 ---
 title: "تبدیل ناامیدی به قدرت جمعی"
 description: "چگونه شبکه شهروندی آگورا برای تبدیل بسیج گسترده به مطالبات دموکراتیک مشترک در جریان اعتصاب #bloquonstout فرانسه مورد استفاده قرار گرفت."
-author: "Agora Team"
+author: "تیم آگورا"
 date: "2025-09-01"
 type: "case-study"
 thumbnail: "/images/bloquonstout-thumbnail.jpg"

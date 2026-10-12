@@ -1,7 +1,7 @@
 ---
 title: "הפיכת תסכול לכוח קולקטיבי"
 description: "כיצד Agora Citizen Network שימשה להפיכת גיוס המוני לדרישות דמוקרטיות משותפות במהלך שביתת #bloquonstout בצרפת."
-author: "Agora Team"
+author: "צוות Agora"
 date: "2025-09-01"
 type: "case-study"
 thumbnail: "/images/bloquonstout-thumbnail.jpg"

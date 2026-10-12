@@ -34,6 +34,7 @@
         <enhanced:img
           src="$lib/assets/casestudy-unesco-mil.jpeg"
           alt=""
+          loading="lazy"
           sizes="(min-width: 768px) 33vw, 100vw"
           class="
             absolute inset-0 size-full object-cover transition-transform
@@ -55,17 +56,13 @@
             <Text size="base" element="span" class="text-white">
               {m.casestudy_date_october_2025()}
             </Text>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 256 256"
-              fill="white"
-            >
-              <path
-                d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-93.66a8,8,0,0,1,0,11.32l-32,32a8,8,0,0,1-11.32-11.32L148.69,136H88a8,8,0,0,1,0-16h60.69l-18.35-18.34a8,8,0,0,1,11.32-11.32Z"
-              />
-            </svg>
+            <span
+              class="
+                icon-[lucide--circle-arrow-right] size-6 shrink-0 text-white
+                rtl:rotate-180
+              "
+              aria-hidden="true"
+            ></span>
           </div>
         </div>
       </a>
@@ -77,21 +74,22 @@
           overflow-hidden rounded-2xl p-8
         "
       >
-        <img
-          src="/images/resources/ai-charter-workshop.webp"
+        <enhanced:img
+          src="/static/images/resources/ai-charter-workshop.webp"
           alt=""
+          loading="lazy"
           sizes="(min-width: 768px) 33vw, 100vw"
           class="
-            absolute inset-0 size-full object-cover saturate-60 transition-transform
-            duration-300
+            absolute inset-0 size-full object-cover saturate-60
+            transition-transform duration-300
             group-hover:scale-105
           "
         />
         <div class="absolute inset-0 bg-brand-purple/15 mix-blend-color"></div>
         <div
           class="
-            absolute inset-0 bg-linear-to-b from-black/10 from-0%
-            via-black/45 via-45% to-black/85
+            absolute inset-0 bg-linear-to-b from-black/10 from-0% via-black/45
+            via-45% to-black/85
           "
         ></div>
         <div class="relative z-10 flex flex-col gap-2 drop-shadow-lg">
@@ -102,17 +100,13 @@
             <Text size="base" element="span" class="text-white">
               {m.casestudy_date_september_2026()}
             </Text>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 256 256"
-              fill="white"
-            >
-              <path
-                d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-93.66a8,8,0,0,1,0,11.32l-32,32a8,8,0,0,1-11.32-11.32L148.69,136H88a8,8,0,0,1,0-16h60.69l-18.35-18.34a8,8,0,0,1,11.32-11.32Z"
-              />
-            </svg>
+            <span
+              class="
+                icon-[lucide--circle-arrow-right] size-6 shrink-0 text-white
+                rtl:rotate-180
+              "
+              aria-hidden="true"
+            ></span>
           </div>
         </div>
       </a>
@@ -127,6 +121,7 @@
         <enhanced:img
           src="$lib/assets/casestudy-bloquonstout.png"
           alt=""
+          loading="lazy"
           sizes="(min-width: 768px) 33vw, 100vw"
           class="
             absolute inset-0 size-full object-cover transition-transform
@@ -148,17 +143,13 @@
             <Text size="base" element="span" class="text-white">
               {m.casestudy_date_september_2025()}
             </Text>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 256 256"
-              fill="white"
-            >
-              <path
-                d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-93.66a8,8,0,0,1,0,11.32l-32,32a8,8,0,0,1-11.32-11.32L148.69,136H88a8,8,0,0,1,0-16h60.69l-18.35-18.34a8,8,0,0,1,11.32-11.32Z"
-              />
-            </svg>
+            <span
+              class="
+                icon-[lucide--circle-arrow-right] size-6 shrink-0 text-white
+                rtl:rotate-180
+              "
+              aria-hidden="true"
+            ></span>
           </div>
         </div>
       </a>
