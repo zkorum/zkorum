@@ -165,6 +165,9 @@ make dev-generate
 ### Testing & Linting
 
 ```bash
+# Repository-wide database deletion policy
+make check-soft-deletes
+
 # Frontend (Vue/Quasar)
 cd services/agora && pnpm lint:fix && pnpm test
 
@@ -188,6 +191,8 @@ cd services/scoring-worker && make test && make lint && make typecheck
 ```
 
 When the user explicitly asks for `lint:fix`, run only that service's `lint:fix` command unless they also ask for `lint`, typechecking, tests, or broader verification.
+
+Ordinary API/worker database-row removal must use soft deletion or non-destructive updates/upserts. `make check-soft-deletes` enforces this boundary and runs in CI, API lint, and scoring-worker lint. The planned dedicated `services/deletion-worker/` is the intentional eventual hard-purge exception; see the scoring tombstone inventory and eligibility/coordination rules in `AGENTS_DELETION_SERVICE_PLAN.md` section 6.5.1. Tests, guarded production-excluded development-exercise cleanup, and exact hash-pinned historical destructive migrations are explicit exceptions.
 
 ### Git Commits
 
