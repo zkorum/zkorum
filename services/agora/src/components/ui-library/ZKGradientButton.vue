@@ -5,7 +5,10 @@
     :style="buttonStyles"
     v-bind="$attrs"
   >
-    <span class="zk-gradient-button__label">{{ label }}</span>
+    <span class="zk-gradient-button__label">
+      <slot name="prefix" />
+      {{ label }}
+    </span>
   </button>
 </template>
 

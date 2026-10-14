@@ -28,6 +28,8 @@
             <PhoneInputForm
               ref="phoneInputFormRef"
               :purpose="phoneAuthPurpose"
+              :is-loading="isLoading"
+              :disabled="nextCodeWaitSeconds > 0"
               @submit="submitPhone"
             />
 
