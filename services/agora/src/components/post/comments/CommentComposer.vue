@@ -4,9 +4,6 @@
       class="container borderStyle"
       :class="{ focused: innerFocus, editing: editingOpinion !== undefined }"
     >
-      <div v-if="editingOpinion" class="editing-header" role="status">
-        {{ editT("editing") }}
-      </div>
       <Editor
         v-if="isEditorMounted"
         :key="editingOpinion?.displayContent.sourceVersion ?? 'creation'"
@@ -51,7 +48,7 @@
         <PrimeButton
           v-if="editingOpinion"
           :label="editT('cancel')"
-          severity="secondary"
+          severity="primary"
           outlined
           :disabled="editMutation.isPending.value"
           @click="cancelEdit"
@@ -715,12 +712,6 @@ async function submitPostClicked() {
 .borderStyle.editing {
   border-color: $primary;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-}
-.editing-header {
-  color: $primary;
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
 }
 .editing :deep(.editor-wrapper) {
   max-height: min(14rem, 35vh);
