@@ -25,17 +25,24 @@ export function getInheritedProjectLanguageCodes(
 export function getProjectLanguageOverride({
   project,
   detectedLanguageCode,
+  canUseDynamicTranslation,
   dynamicTranslationEnabled = project.languageSettings
     .dynamicTranslationEnabled,
 }: {
   project: ConversationLanguageProject;
   detectedLanguageCode: SupportedDisplayLanguageCodes | null | undefined;
+  canUseDynamicTranslation: boolean;
   dynamicTranslationEnabled?: boolean;
 }) {
+  // Once detached, even the project's primary language becomes a manual target.
+  // Carry it forward only when the destination can configure paid languages.
   return zodConversationMultilingualSetting.safeParse({
-    additionalLanguageCodes: getInheritedProjectLanguageCodes(project).filter(
-      (code) => code !== detectedLanguageCode
-    ),
-    dynamicTranslationEnabled,
+    additionalLanguageCodes: canUseDynamicTranslation
+      ? getInheritedProjectLanguageCodes(project).filter(
+          (code) => code !== detectedLanguageCode
+        )
+      : [],
+    dynamicTranslationEnabled:
+      canUseDynamicTranslation && dynamicTranslationEnabled,
   });
 }

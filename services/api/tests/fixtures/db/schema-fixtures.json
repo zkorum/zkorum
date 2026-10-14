@@ -1,6 +1,6 @@
 {
     "conversation-project-edit": [
-        "user", "organization", "organization_membership", "organization_membership_all_project_capability",
+        "user", "organization", "organization_localization", "organization_membership", "organization_membership_capability", "organization_membership_all_project_capability",
         "project", "project_content", "project_organization_ownership", "project_contact", "project_translation_target_language",
         "premium_feature_entitlement", "polis_conversation_config", "ranking_conversation_config", "conversation", "conversation_content", "conversation_moderation", "conversation_translation_target_language",
         "survey_config", "survey_question", "survey_question_content", "survey_question_option", "survey_question_option_content",

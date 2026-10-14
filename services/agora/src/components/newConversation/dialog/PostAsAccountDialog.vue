@@ -1,15 +1,16 @@
 <template>
   <q-dialog v-model="showDialog" position="bottom">
     <ZKBottomDialogContainer>
-      <!-- TODO: ACCESSIBILITY - Change <div> to <button> element for keyboard accessibility -->
-      <!-- Account option selection should be keyboard accessible for users with motor disabilities -->
-      <div
+      <button
+        v-if="canPostAsPersonal"
+        type="button"
         class="account-option"
         :class="{
           'account-option--selected': isAccountSelected({
             isOrganization: false,
           }),
         }"
+        :aria-pressed="!postAs.postAsOrganization"
         @click="setPostAs({ isOrganization: false })"
       >
         <DynamicProfileImage
@@ -18,13 +19,12 @@
           class="account-avatar"
         />
         <span class="account-name">{{ profileData.userName }}</span>
-      </div>
+      </button>
 
-      <!-- TODO: ACCESSIBILITY - Change <div> to <button> element for keyboard accessibility -->
-      <!-- Organization account option selection should be keyboard accessible for users with motor disabilities -->
-      <div
-        v-for="organization in profileData.organizationList"
+      <button
+        v-for="organization in availableOrganizations"
         :key="organization.slug"
+        type="button"
         class="account-option"
         :class="{
           'account-option--selected': isAccountSelected({
@@ -32,6 +32,12 @@
             organizationSlug: organization.slug,
           }),
         }"
+        :aria-pressed="
+          isAccountSelected({
+            isOrganization: true,
+            organizationSlug: organization.slug,
+          })
+        "
         @click="
           setPostAs({
             isOrganization: true,
@@ -47,7 +53,7 @@
           class="account-avatar"
         />
         <span class="account-name">{{ organization.name }}</span>
-      </div>
+      </button>
     </ZKBottomDialogContainer>
   </q-dialog>
 </template>
@@ -62,6 +68,7 @@ import { computed } from "vue";
 
 interface Props {
   modelValue: boolean;
+  allowedPostAs: readonly PostAsSettings[] | undefined;
 }
 
 interface Emits {
@@ -74,6 +81,24 @@ const emit = defineEmits<Emits>();
 const { profileData } = storeToRefs(useUserStore());
 
 const postAs = defineModel<PostAsSettings>("postAs", { required: true });
+
+const canPostAsPersonal = computed(
+  () =>
+    props.allowedPostAs === undefined ||
+    props.allowedPostAs.some((identity) => !identity.postAsOrganization)
+);
+const availableOrganizations = computed(() => {
+  const identities = props.allowedPostAs;
+  if (identities === undefined) return profileData.value.organizationList;
+  const slugs = new Set(
+    identities
+      .filter((identity) => identity.postAsOrganization)
+      .map((identity) => identity.organizationName)
+  );
+  return profileData.value.organizationList.filter((organization) =>
+    slugs.has(organization.slug)
+  );
+});
 
 const showDialog = computed({
   get: () => props.modelValue,
@@ -113,6 +138,12 @@ function isAccountSelected(selection: AccountSelection): boolean {
 
 <style scoped lang="scss">
 .account-option {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -130,7 +161,7 @@ function isAccountSelected(selection: AccountSelection): boolean {
 }
 
 .account-avatar {
-  margin-right: 12px;
+  margin-inline-end: 12px;
   flex-shrink: 0;
 }
 

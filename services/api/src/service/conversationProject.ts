@@ -18,7 +18,10 @@ import type {
     PremiumFeature,
 } from "@/shared/types/zod.js";
 import type { SupportedDisplayLanguageCodes } from "@/shared/languages.js";
-import { getOrCreateDefaultProjectForOrganization } from "./projectAccess.js";
+import {
+    getOrCreateDefaultProjectForOrganization,
+    getOrCreatePersonalOrganization,
+} from "./projectAccess.js";
 import type { AllProjectCapability } from "./projectAccessLogic.js";
 import { getImplicitDefaultDisplayLanguage } from "./projectLanguage.js";
 import { sourceLanguageToDisplayLanguage } from "./translationLanguageSetting.js";
@@ -27,6 +30,18 @@ type ProjectOption = Extract<
     GetConversationForEditResponse,
     { success: true }
 >["projectOptions"][number];
+
+function createUnprovisionedPersonalOption(): ProjectOption {
+    return {
+        target: { kind: "no_project", organizationSlug: undefined },
+        premiumFeatures: [],
+        emailUpdates: {
+            canConfigure: false,
+            hasParticipantContactEmail: false,
+            scopeDefaultEnabled: false,
+        },
+    };
+}
 
 async function getDestinationOrganizations({
     db,
@@ -39,7 +54,8 @@ async function getDestinationOrganizations({
         .select({
             id: organizationTable.id,
             slug: organizationTable.slug,
-            title: organizationTable.displayName,
+            autoProvisionedForUserId:
+                organizationTable.autoProvisionedForUserId,
             capability:
                 organizationMembershipAllProjectCapabilityTable.capability,
         })
@@ -81,6 +97,10 @@ async function getDestinationOrganizations({
         .where(
             and(
                 eq(organizationMembershipTable.userId, userId),
+                or(
+                    isNull(organizationTable.autoProvisionedForUserId),
+                    eq(organizationTable.autoProvisionedForUserId, userId),
+                ),
                 isNull(organizationTable.deletedAt),
                 isNull(organizationMembershipTable.deletedAt),
             ),
@@ -111,7 +131,8 @@ export async function getConversationProjectOptions({
 }): Promise<ProjectOption[]> {
     const organizations = await getDestinationOrganizations({ db, userId });
     const organizationIds = [...organizations.keys()];
-    if (organizationIds.length === 0) return [];
+    if (organizationIds.length === 0)
+        return [createUnprovisionedPersonalOption()];
     const now = new Date();
     const [entitlements, defaults, projects] = await Promise.all([
         db
@@ -229,6 +250,7 @@ export async function getConversationProjectOptions({
             capabilities: Set<AllProjectCapability>;
             premiumFeatures: Set<PremiumFeature>;
             canConfigureEmailUpdates: boolean;
+            organizationSlugs: Set<string>;
         }
     >();
     for (const project of projects) {
@@ -239,7 +261,9 @@ export async function getConversationProjectOptions({
             capabilities: new Set<AllProjectCapability>(),
             premiumFeatures: new Set<PremiumFeature>(),
             canConfigureEmailUpdates: false,
+            organizationSlugs: new Set<string>(),
         };
+        entry.organizationSlugs.add(owner.slug);
         for (const capability of owner.capabilities)
             entry.capabilities.add(capability);
         for (const feature of featuresByOrganization.get(owner.id) ?? [])
@@ -299,8 +323,13 @@ export async function getConversationProjectOptions({
         const scopeProject =
             scope === undefined ? undefined : projectsById.get(scope.projectId);
         options.push({
-            target: { kind: "no_project", organizationSlug: organization.slug },
-            title: organization.title,
+            target: {
+                kind: "no_project",
+                organizationSlug:
+                    organization.autoProvisionedForUserId === null
+                        ? organization.slug
+                        : undefined,
+            },
             premiumFeatures: [
                 ...(scopeProject?.premiumFeatures ??
                     featuresByOrganization.get(organization.id) ??
@@ -320,14 +349,23 @@ export async function getConversationProjectOptions({
             },
         });
     }
+    if (
+        ![...organizations.values()].some(
+            (organization) => organization.autoProvisionedForUserId === userId,
+        )
+    ) {
+        options.unshift(createUnprovisionedPersonalOption());
+    }
     for (const {
         project,
         canConfigureEmailUpdates,
         premiumFeatures,
+        organizationSlugs,
     } of destinations) {
         options.push({
             target: { kind: "project", projectSlug: project.slug },
             title: project.title,
+            organizationSlugs: [...organizationSlugs],
             premiumFeatures: [...premiumFeatures],
             defaultLanguageCode:
                 sourceLanguageToDisplayLanguage({
@@ -377,6 +415,61 @@ export async function resolveConversationProjectTarget({
                 )
         ).at(0);
     }
+    if (target.organizationSlug === undefined) {
+        return await db.transaction(async (tx) => {
+            // Serialize first-time personal-scope provisioning by concurrent edits.
+            const user = (
+                await tx
+                    .select({ id: userTable.id })
+                    .from(userTable)
+                    .where(
+                        and(
+                            eq(userTable.id, userId),
+                            eq(userTable.isDeleted, false),
+                        ),
+                    )
+                    .for("no key update")
+            ).at(0);
+            if (user === undefined) return undefined;
+            const existing = (
+                await tx
+                    .select({
+                        projectId: projectTable.id,
+                        projectSlug: projectTable.slug,
+                        projectTitle: projectTable.title,
+                    })
+                    .from(projectTable)
+                    .innerJoin(
+                        organizationTable,
+                        eq(
+                            organizationTable.id,
+                            projectTable.autoProvisionedForOrganizationId,
+                        ),
+                    )
+                    .where(
+                        and(
+                            eq(
+                                organizationTable.autoProvisionedForUserId,
+                                userId,
+                            ),
+                            isNull(organizationTable.deletedAt),
+                            isNull(projectTable.deletedAt),
+                        ),
+                    )
+            ).at(0);
+            if (existing !== undefined) return existing;
+            const organization = await getOrCreatePersonalOrganization({
+                db: tx,
+                userId,
+                autoProvisionedDefaultLanguage:
+                    getImplicitDefaultDisplayLanguage(),
+            });
+            return await getOrCreateDefaultProjectForOrganization({
+                db: tx,
+                organizationId: organization.organizationId,
+            });
+        });
+    }
     const organizations = await getDestinationOrganizations({ db, userId });
     const organization = [...organizations.values()].find(
         (row) =>
@@ -385,8 +478,30 @@ export async function resolveConversationProjectTarget({
             row.capabilities.has("conversation_edit"),
     );
     if (organization === undefined) return undefined;
-    return await getOrCreateDefaultProjectForOrganization({
-        db,
-        organizationId: organization.id,
-    });
+    // Existing scopes need no provisioning locks; moves lock projects before owners.
+    const existing = (
+        await db
+            .select({
+                projectId: projectTable.id,
+                projectSlug: projectTable.slug,
+                projectTitle: projectTable.title,
+            })
+            .from(projectTable)
+            .where(
+                and(
+                    eq(
+                        projectTable.autoProvisionedForOrganizationId,
+                        organization.id,
+                    ),
+                    isNull(projectTable.deletedAt),
+                ),
+            )
+    ).at(0);
+    return (
+        existing ??
+        (await getOrCreateDefaultProjectForOrganization({
+            db,
+            organizationId: organization.id,
+        }))
+    );
 }

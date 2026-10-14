@@ -458,6 +458,7 @@ const zodConversationProjectOption = z.union([
         .object({
             target: zodConversationProjectTarget.options[0],
             title: zodProjectTitle,
+            organizationSlugs: z.array(zodOrganizationSlug).min(1),
             premiumFeatures: z.array(zodPremiumFeature),
             defaultLanguageCode: ZodSupportedDisplayLanguageCodes,
             languageSettings: zodProjectLanguageSettings,
@@ -467,7 +468,6 @@ const zodConversationProjectOption = z.union([
     z
         .object({
             target: zodConversationProjectTarget.options[1],
-            title: z.string().trim().min(1),
             premiumFeatures: z.array(zodPremiumFeature),
             emailUpdates: zodConversationCreateEmailUpdateConfiguration,
         })
@@ -1920,7 +1920,6 @@ export class Dto {
                 requiresEventTicket: zodEventSlug.optional(),
                 aiLabelingEnabled: z.boolean(),
                 preferredOpinionGroupCount: zodPreferredOpinionGroupCount,
-                postAsOrganizationName: z.string().optional(),
                 postAsOrganizationSlug: zodOrganizationSlug.optional(),
                 surveyConfig: zodSurveyConfig.nullable().optional(),
                 createdAt: zodDateTimeFlexible,

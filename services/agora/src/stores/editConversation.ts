@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 import { getConversationUpdatesOverrideUpdate } from "src/components/newConversation/createConversationUpdatesSettingsLogic";
-import type { ConversationFormState } from "src/composables/conversation/draft/conversationDraft.types";
+import type {
+  ConversationFormState,
+  PostAsSettings,
+} from "src/composables/conversation/draft/conversationDraft.types";
 import type {
   ConversationEmailUpdateConfigurationResponse,
   GetConversationForEditResponse,
@@ -33,6 +36,7 @@ export interface EditConversationDetails {
 }
 
 export interface EditConversationSession extends EditConversationDetails {
+  postAs: PostAsSettings;
   newSeedOpinions: string[];
   isSaving: boolean;
 }

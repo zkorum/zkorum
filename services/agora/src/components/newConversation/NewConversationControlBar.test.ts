@@ -66,12 +66,18 @@ vi.mock("src/components/newConversation/ConversationControlButton.vue", () => ({
   },
 }));
 
-vi.mock("src/components/newConversation/dialog/AiLabelingOptionsDialog.vue", () => ({
-  default: () => null,
-}));
-vi.mock("src/components/newConversation/dialog/AnalysisPreferenceDialog.vue", () => ({
-  default: () => null,
-}));
+vi.mock(
+  "src/components/newConversation/dialog/AiLabelingOptionsDialog.vue",
+  () => ({
+    default: () => null,
+  })
+);
+vi.mock(
+  "src/components/newConversation/dialog/AnalysisPreferenceDialog.vue",
+  () => ({
+    default: () => null,
+  })
+);
 vi.mock(
   "src/components/newConversation/dialog/ConversationLanguageSettingDialog.vue",
   () => ({ default: () => null })
@@ -80,19 +86,28 @@ vi.mock(
   "src/components/newConversation/dialog/EventTicketRequirementDialog.vue",
   () => ({ default: () => null })
 );
-vi.mock("src/components/newConversation/dialog/LoginRequirementDialog.vue", () => ({
-  default: () => null,
-}));
+vi.mock(
+  "src/components/newConversation/dialog/LoginRequirementDialog.vue",
+  () => ({
+    default: () => null,
+  })
+);
 vi.mock(
   "src/components/newConversation/dialog/ModeChangeConfirmationDialog.vue",
   () => ({ default: () => null })
 );
-vi.mock("src/components/newConversation/dialog/PostAsAccountDialog.vue", () => ({
-  default: () => null,
-}));
-vi.mock("src/components/newConversation/dialog/VisibilityOptionsDialog.vue", () => ({
-  default: () => null,
-}));
+vi.mock(
+  "src/components/newConversation/dialog/PostAsAccountDialog.vue",
+  () => ({
+    default: () => null,
+  })
+);
+vi.mock(
+  "src/components/newConversation/dialog/VisibilityOptionsDialog.vue",
+  () => ({
+    default: () => null,
+  })
+);
 vi.mock("./dialog/MaxDiffSourceDialog.vue", () => ({ default: () => null }));
 vi.mock("./dialog/PostTypeDialog.vue", () => ({ default: () => null }));
 
@@ -108,6 +123,54 @@ afterEach(() => {
 });
 
 describe("NewConversationControlBar", () => {
+  it("does not clear existing premium settings when mounting an edit without creation access", async () => {
+    const updateAnalysis = vi.fn();
+    const updateLanguages = vi.fn();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const app = createApp(
+      defineComponent(
+        () => () =>
+          h(NewConversationControlBar, {
+            isEditMode: true,
+            allowedPostAs: undefined,
+            canUseAnalysisVariantsPreference: false,
+            canUseDynamicTranslation: false,
+            isPrivate: false,
+            participationMode: "account_required",
+            requiresEventTicket: undefined,
+            postAs: { postAsOrganization: false, organizationName: "" },
+            conversationTypeConfig: {
+              conversationType: "polis",
+              votingPresentation: "list",
+            },
+            importSettings: {
+              importType: null,
+              polisUrl: "",
+              csvFileMetadata: { summary: null, comments: null, votes: null },
+            },
+            externalSourceConfig: null,
+            aiLabelingEnabled: true,
+            preferredOpinionGroupCount: 3,
+            multilingualSetting: {
+              additionalLanguageCodes: ["fr"],
+              dynamicTranslationEnabled: true,
+            },
+            title: "Original title",
+            content: "Original body",
+            "onUpdate:preferredOpinionGroupCount": updateAnalysis,
+            "onUpdate:multilingualSetting": updateLanguages,
+          })
+      )
+    );
+    mountedApps.push(app);
+    app.mount(container);
+    await nextTick();
+    expect(updateAnalysis).not.toHaveBeenCalled();
+    expect(updateLanguages).not.toHaveBeenCalled();
+    expect(container.textContent).toContain("groupsLabel");
+  });
+
   it("only shows opinion-group controls for Polis conversations", async () => {
     const conversationTypeConfig = ref<ConversationTypeConfig>({
       conversationType: "polis",
@@ -117,6 +180,7 @@ describe("NewConversationControlBar", () => {
       setup() {
         return () =>
           h(NewConversationControlBar, {
+            allowedPostAs: undefined,
             isPrivate: false,
             participationMode: "account_required",
             requiresEventTicket: undefined,

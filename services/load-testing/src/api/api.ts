@@ -6329,7 +6329,6 @@ export interface ApiV1ConversationGetForEditPost200ResponseOneOf {
     'requiresEventTicket'?: ApiV1ConversationGetForEditPost200ResponseOneOfRequiresEventTicketEnum;
     'aiLabelingEnabled': boolean;
     'preferredOpinionGroupCount': number | null;
-    'postAsOrganizationName'?: string;
     'postAsOrganizationSlug'?: string;
     'surveyConfig'?: ApiV1ConversationGetForEditPost200ResponseOneOfSurveyConfig | null;
     'createdAt': string;
@@ -6461,6 +6460,7 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectLanguageProjec
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInner {
     'target': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOf;
     'title': string;
+    'organizationSlugs': Array<string>;
     'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerPremiumFeaturesEnum>;
     'defaultLanguageCode': ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerDefaultLanguageCodeEnum;
     'languageSettings': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerLanguageSettings;
@@ -6495,6 +6495,7 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerDe
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf {
     'target': ApiV1ConversationEmailUpdateActionManageOptOutPostRequestTargetOneOf;
     'title': string;
+    'organizationSlugs': Array<string>;
     'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfPremiumFeaturesEnum>;
     'defaultLanguageCode': ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfDefaultLanguageCodeEnum;
     'languageSettings': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerLanguageSettings;
@@ -6528,7 +6529,6 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAn
 
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1 {
     'target': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOf;
-    'title': string;
     'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1PremiumFeaturesEnum>;
     'emailUpdates': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerEmailUpdates;
 }
@@ -6550,7 +6550,7 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectTarget = ApiV1
 
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOf {
     'kind': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOfKindEnum;
-    'organizationSlug': string;
+    'organizationSlug'?: string;
 }
 
 export const ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOfKindEnum = {

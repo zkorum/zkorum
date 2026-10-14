@@ -23782,8 +23782,7 @@
                                                                 }
                                                             },
                                                             "required": [
-                                                                "kind",
-                                                                "organizationSlug"
+                                                                "kind"
                                                             ],
                                                             "additionalProperties": false
                                                         }
@@ -23821,6 +23820,15 @@
                                                                         "type": "string",
                                                                         "minLength": 1,
                                                                         "maxLength": 150
+                                                                    },
+                                                                    "organizationSlugs": {
+                                                                        "minItems": 1,
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string",
+                                                                            "maxLength": 65,
+                                                                            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                                                                        }
                                                                     },
                                                                     "premiumFeatures": {
                                                                         "type": "array",
@@ -23908,6 +23916,7 @@
                                                                 "required": [
                                                                     "target",
                                                                     "title",
+                                                                    "organizationSlugs",
                                                                     "premiumFeatures",
                                                                     "defaultLanguageCode",
                                                                     "languageSettings",
@@ -23934,14 +23943,9 @@
                                                                             }
                                                                         },
                                                                         "required": [
-                                                                            "kind",
-                                                                            "organizationSlug"
+                                                                            "kind"
                                                                         ],
                                                                         "additionalProperties": false
-                                                                    },
-                                                                    "title": {
-                                                                        "type": "string",
-                                                                        "minLength": 1
                                                                     },
                                                                     "premiumFeatures": {
                                                                         "type": "array",
@@ -23979,7 +23983,6 @@
                                                                 },
                                                                 "required": [
                                                                     "target",
-                                                                    "title",
                                                                     "premiumFeatures",
                                                                     "emailUpdates"
                                                                 ],
@@ -24014,9 +24017,6 @@
                                                     "type": "integer",
                                                     "minimum": 2,
                                                     "maximum": 6
-                                                },
-                                                "postAsOrganizationName": {
-                                                    "type": "string"
                                                 },
                                                 "postAsOrganizationSlug": {
                                                     "type": "string",
@@ -24517,8 +24517,7 @@
                                                             }
                                                         },
                                                         "required": [
-                                                            "kind",
-                                                            "organizationSlug"
+                                                            "kind"
                                                         ],
                                                         "additionalProperties": false
                                                     }
@@ -25003,8 +25002,7 @@
                                                                         }
                                                                     },
                                                                     "required": [
-                                                                        "kind",
-                                                                        "organizationSlug"
+                                                                        "kind"
                                                                     ],
                                                                     "additionalProperties": false
                                                                 }

@@ -336,6 +336,7 @@ function switchToOverride(dynamicTranslationEnabled: boolean): void {
   const result = getProjectLanguageOverride({
     project: props.project,
     detectedLanguageCode: props.detectedLanguageCode,
+    canUseDynamicTranslation: props.canUseDynamicTranslation,
     dynamicTranslationEnabled,
   });
   if (result.success) {

@@ -10,7 +10,9 @@ export function getConversationProjectTargetKey(
 ): string {
     return target.kind === "project"
         ? `project:${target.projectSlug}`
-        : `no_project:${target.organizationSlug}`;
+        : target.organizationSlug === undefined
+          ? "personal:no_project"
+          : `no_project:${target.organizationSlug}`;
 }
 
 export function getConversationProjectContextFromAssignment({

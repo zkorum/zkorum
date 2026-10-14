@@ -42,6 +42,7 @@
         v-model:ai-labeling-enabled="aiLabelingEnabled"
         v-model:preferred-opinion-group-count="preferredOpinionGroupCount"
         :participation-mode="participationMode"
+        :allowed-post-as="undefined"
         :hide-language-setting="selectedProjectSlug !== undefined"
         @update:participation-mode="updateParticipationModeWithReachWarning"
       >
@@ -218,9 +219,8 @@ import ActiveImportBanner from "src/components/conversation/import/ActiveImportB
 import BackButton from "src/components/navigation/buttons/BackButton.vue";
 import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
 import ConversationProjectLanguageSettings from "src/components/newConversation/ConversationProjectLanguageSettings.vue";
-import ConversationProjectSelect, {
-  type ConversationProjectSelectOption,
-} from "src/components/newConversation/ConversationProjectSelect.vue";
+import type { ConversationProjectSelectOption } from "src/components/newConversation/conversationProjectSelect";
+import ConversationProjectSelect from "src/components/newConversation/ConversationProjectSelect.vue";
 import ConversationUpdatesPartialEmailReachDialog from "src/components/newConversation/ConversationUpdatesPartialEmailReachDialog.vue";
 import {
   areConversationUpdatesReachStatesEqual,
@@ -367,19 +367,26 @@ const conversationCreateProjectOptions = ref<ConversationCreateProjectOption[]>(
 const noProjectEmailUpdates = ref<ConversationCreateEmailUpdates>();
 const selectedProjectTarget = computed<ConversationProjectTarget>(() =>
   selectedProjectSlug.value === undefined
-    ? { kind: "no_project", organizationSlug: postAs.value.organizationName }
+    ? {
+        kind: "no_project",
+        organizationSlug: postAs.value.postAsOrganization
+          ? postAs.value.organizationName
+          : undefined,
+      }
     : { kind: "project", projectSlug: selectedProjectSlug.value }
 );
 const projectSelectOptions = computed<ConversationProjectSelectOption[]>(() => [
   {
-    kind: "no_project",
-    organizationSlug: postAs.value.organizationName,
-    title: undefined,
+    target: {
+      kind: "no_project",
+      organizationSlug: postAs.value.postAsOrganization
+        ? postAs.value.organizationName
+        : undefined,
+    },
   },
   ...conversationCreateProjectOptions.value.map<ConversationProjectSelectOption>(
     (project) => ({
-      kind: "project",
-      projectSlug: project.projectSlug,
+      target: { kind: "project", projectSlug: project.projectSlug },
       title: project.projectTitle,
     })
   ),

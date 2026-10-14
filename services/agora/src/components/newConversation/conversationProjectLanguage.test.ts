@@ -27,7 +27,11 @@ describe("project language overrides", () => {
       "ar",
     ]);
     expect(
-      getProjectLanguageOverride({ project, detectedLanguageCode: "en" })
+      getProjectLanguageOverride({
+        project,
+        detectedLanguageCode: "en",
+        canUseDynamicTranslation: true,
+      })
     ).toMatchObject({
       success: true,
       data: {
@@ -38,8 +42,11 @@ describe("project language overrides", () => {
   });
   it("requires an explicit choice instead of silently truncating inherited languages", () => {
     expect(
-      getProjectLanguageOverride({ project, detectedLanguageCode: undefined })
-        .success
+      getProjectLanguageOverride({
+        project,
+        detectedLanguageCode: undefined,
+        canUseDynamicTranslation: true,
+      }).success
     ).toBe(false);
     expect(getInheritedProjectLanguageCodes(project)).toEqual([
       "en",
@@ -52,6 +59,7 @@ describe("project language overrides", () => {
       getProjectLanguageOverride({
         project,
         detectedLanguageCode: "en",
+        canUseDynamicTranslation: true,
         dynamicTranslationEnabled: false,
       })
     ).toMatchObject({
@@ -59,6 +67,21 @@ describe("project language overrides", () => {
       data: { dynamicTranslationEnabled: false },
     });
   });
+  it.each([null, undefined, "fr"] as const)(
+    "uses auto-detection when the destination cannot configure translation (detected=%s)",
+    (detectedLanguageCode) => {
+      expect(
+        getProjectLanguageOverride({
+          project,
+          detectedLanguageCode,
+          canUseDynamicTranslation: false,
+        })
+      ).toMatchObject({
+        success: true,
+        data: { additionalLanguageCodes: [], dynamicTranslationEnabled: false },
+      });
+    }
+  );
 });
 
 describe("project settings translations", () => {

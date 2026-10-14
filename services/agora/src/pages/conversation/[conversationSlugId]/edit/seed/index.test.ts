@@ -1,5 +1,7 @@
 import { createPinia, setActivePinia } from "pinia";
 import type * as QuasarModule from "quasar";
+import type { ConversationProjectSelectOption } from "src/components/newConversation/conversationProjectSelect";
+import type { PostAsSettings } from "src/composables/conversation/draft";
 import type {
   UpdateConversationRequest,
   UpdateConversationResponse,
@@ -88,10 +90,65 @@ vi.mock("src/components/features/conversation/ConversationTitle.vue", () => ({
   default: () => null,
 }));
 vi.mock("src/components/newConversation/NewConversationControlBar.vue", () => ({
-  default: () => null,
+  default: Object.assign(
+    (
+      props: { postAs: PostAsSettings },
+      { emit, slots }: Parameters<FunctionalComponent>[1]
+    ) =>
+      h("div", [
+        h(
+          "span",
+          { "data-post-as": "" },
+          props.postAs.organizationName || "personal"
+        ),
+        h(
+          "button",
+          {
+            onClick: () =>
+              emit("update:postAs", {
+                postAsOrganization: true,
+                organizationName: "owner",
+              }),
+          },
+          "Post as owner"
+        ),
+        h(
+          "button",
+          {
+            onClick: () =>
+              emit("update:postAs", {
+                postAsOrganization: false,
+                organizationName: "",
+              }),
+          },
+          "Post as personal"
+        ),
+        slots["extra-controls"]?.(),
+      ]),
+    { props: ["postAs"], emits: ["update:postAs"] }
+  ),
 }));
 vi.mock("src/components/newConversation/ConversationProjectSelect.vue", () => ({
-  default: () => null,
+  default: Object.assign(
+    (
+      props: { options: ConversationProjectSelectOption[] },
+      { emit }: Parameters<FunctionalComponent>[1]
+    ) =>
+      h(
+        "div",
+        { "data-project-options": "" },
+        props.options.map((option) =>
+          h(
+            "button",
+            {
+              onClick: () => emit("update:modelValue", option.target),
+            },
+            "title" in option ? option.title : "No project"
+          )
+        )
+      ),
+    { props: ["options"], emits: ["update:modelValue"] }
+  ),
 }));
 vi.mock(
   "src/components/newConversation/ConversationProjectLanguageSettings.vue",
@@ -187,7 +244,42 @@ async function mountFlow({
     languageSettingsSource: "conversation_override",
     currentProjectSlug: "seed-project",
     projectTarget: { kind: "project", projectSlug: "seed-project" },
-    projectOptions: [],
+    projectOptions: [
+      {
+        target: { kind: "no_project" },
+        premiumFeatures: [],
+        emailUpdates: {
+          canConfigure: false,
+          hasParticipantContactEmail: false,
+          scopeDefaultEnabled: false,
+        },
+      },
+      {
+        target: { kind: "no_project", organizationSlug: "owner" },
+        premiumFeatures: [],
+        emailUpdates: {
+          canConfigure: false,
+          hasParticipantContactEmail: false,
+          scopeDefaultEnabled: false,
+        },
+      },
+      {
+        target: { kind: "project", projectSlug: "destination" },
+        title: "Destination",
+        organizationSlugs: ["owner"],
+        premiumFeatures: [],
+        defaultLanguageCode: "en",
+        languageSettings: {
+          dynamicTranslationEnabled: false,
+          targetLanguageCodes: [],
+        },
+        emailUpdates: {
+          canConfigure: false,
+          hasParticipantContactEmail: false,
+          scopeDefaultEnabled: false,
+        },
+      },
+    ],
     isIndexed: true,
     participationMode: "account_required",
     aiLabelingEnabled: true,
@@ -234,6 +326,7 @@ async function mountFlow({
       surveyConfig: null,
     },
     projectTarget: response.projectTarget,
+    postAs: { postAsOrganization: false, organizationName: "" },
     isSaving: false,
     newSeedOpinions: newSeeds,
     emailConfiguration: undefined,
@@ -292,6 +385,122 @@ function clickButton(label: string): void {
 }
 
 describe("edit conversation statement step", () => {
+  it.each([false, true])(
+    "converts inherited languages using destination access when detaching a project (access=%s)",
+    async (hasTranslationAccess) => {
+      const { router, store, container } = await mountFlow({
+        newSeeds: [],
+        detailsChanged: false,
+      });
+      const session = store.session;
+      if (session === undefined) throw new Error("Missing edit session");
+      session.original.languageSettingsSource = "project_inherited";
+      session.original.projectLanguageProject = {
+        projectSlug: "seed-project",
+        projectTitle: "Source project",
+        defaultLanguageCode: "en",
+        languageSettings: {
+          dynamicTranslationEnabled: false,
+          targetLanguageCodes: [],
+        },
+      };
+      session.form.inheritProjectLanguages = true;
+      const destination = session.original.projectOptions.find(
+        (option) =>
+          option.target.kind === "no_project" &&
+          option.target.organizationSlug === undefined
+      );
+      if (destination === undefined) throw new Error("Missing destination");
+      destination.premiumFeatures = hasTranslationAccess
+        ? ["dynamic_translation"]
+        : [];
+      await router.push("/conversation/seedtest/edit?returnTo=/");
+      await vi.waitUntil(
+        () => container.querySelector("[data-project-options]") !== null
+      );
+      clickButton("No project");
+      await nextTick();
+      clickButton("Next");
+      await vi.waitUntil(() =>
+        router.currentRoute.value.path.endsWith("/seed")
+      );
+      mocks.save.mockResolvedValueOnce({
+        success: false,
+        reason: "not_author",
+      });
+      clickButton("Save");
+      await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
+      expect(mocks.save.mock.calls.at(0)?.at(0)).toMatchObject({
+        projectChange: {
+          expectedProjectSlug: "seed-project",
+          target: { kind: "no_project" },
+        },
+        languageSettingsSource: "conversation_override",
+        multilingualSetting: {
+          dynamicTranslationEnabled: false,
+          additionalLanguageCodes: hasTranslationAccess ? ["en"] : [],
+        },
+        newSeedOpinionList: [],
+      });
+    }
+  );
+
+  it("scopes projects to Post as and preserves the identity and project through Next, Back, and Save", async () => {
+    const { router, store, container } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    await router.push("/conversation/seedtest/edit?returnTo=/");
+    await vi.waitUntil(
+      () => container.querySelector("[data-post-as]") !== null
+    );
+    expect(
+      container.querySelector("[data-project-options]")?.textContent
+    ).not.toContain("Destination");
+
+    clickButton("Post as owner");
+    await nextTick();
+    expect(container.querySelector("[data-post-as]")?.textContent).toBe(
+      "owner"
+    );
+    expect(container.querySelector("[data-project-options]")?.textContent).toBe(
+      "No projectDestination"
+    );
+    clickButton("Destination");
+    await nextTick();
+    clickButton("Post as owner");
+    await nextTick();
+    clickButton("Next");
+    await vi.waitUntil(() => router.currentRoute.value.path.endsWith("/seed"));
+    expect(store.session?.postAs.organizationName).toBe("owner");
+    expect(store.session?.projectTarget).toEqual({
+      kind: "project",
+      projectSlug: "destination",
+    });
+
+    await router.push("/conversation/seedtest/edit?returnTo=/");
+    await vi.waitUntil(
+      () => container.querySelector("[data-post-as]") !== null
+    );
+    expect(container.querySelector("[data-post-as]")?.textContent).toBe(
+      "owner"
+    );
+    clickButton("Post as personal");
+    await nextTick();
+    expect(
+      container.querySelector("[data-project-options]")?.textContent
+    ).not.toContain("Destination");
+    clickButton("Next");
+    await vi.waitUntil(() => router.currentRoute.value.path.endsWith("/seed"));
+    mocks.save.mockResolvedValueOnce({ success: false, reason: "not_author" });
+    clickButton("Save");
+    await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
+    expect(mocks.save.mock.calls.at(0)?.at(0)?.projectChange).toEqual({
+      expectedProjectSlug: "seed-project",
+      target: { kind: "no_project", organizationSlug: undefined },
+    });
+  });
+
   it("prevents leaving or double-submitting while Save is pending", async () => {
     const { router, store } = await mountFlow({ newSeeds: [] });
     let finish = (_response: UpdateConversationResponse) => {};

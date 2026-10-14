@@ -6,6 +6,7 @@ import {
     conversationContentTable,
     conversationTable,
     conversationModerationTable,
+    conversationTranslationTargetLanguageTable,
     organizationTable,
     polisConversationConfigTable,
     rankingConversationConfigTable,
@@ -77,13 +78,14 @@ import {
 import { getImplicitDefaultDisplayLanguage } from "./projectLanguage.js";
 import {
     getManualMultilingualSettingsFromEffectiveTargets,
-    getManualMultilingualSettingsFromProjectLanguageSettings,
     getConversationOverrideTranslationTargetLanguagePolicy,
     getProjectTranslationTargetLanguagePolicy,
-    normalizeConversationMultilingualSettings,
-    normalizeInheritedConversationMultilingualSettings,
     sourceLanguageToDisplayLanguage,
 } from "./translationLanguageSetting.js";
+import {
+    authorizeConversationTranslationEdit,
+    type ConversationTranslationSelection,
+} from "./conversationTranslationEdit.js";
 import { normalizeUserRichTextInput } from "./richText.js";
 import { getDuplicateSeedOpinionIndexes } from "@/shared/seedOpinions.js";
 import { htmlToCountedText } from "@/shared/richText.js";
@@ -157,7 +159,6 @@ export async function getConversationForEdit({
             votingPresentation: polisConversationConfigTable.votingPresentation,
             preferredOpinionGroupCount:
                 polisConversationConfigTable.preferredOpinionGroupCount,
-            postAsOrganizationName: organizationTable.displayName,
             postAsOrganizationSlug: organizationTable.slug,
             autoProvisionedForUserId:
                 organizationTable.autoProvisionedForUserId,
@@ -296,7 +297,10 @@ export async function getConversationForEdit({
             ? { kind: "project", projectSlug: conversation.projectSlug }
             : {
                   kind: "no_project",
-                  organizationSlug: conversation.defaultProjectOrganizationSlug,
+                  organizationSlug:
+                      conversation.autoProvisionedForUserId === null
+                          ? conversation.defaultProjectOrganizationSlug
+                          : undefined,
               };
     const projectOptions = await getConversationProjectOptions({ db, userId });
     const editMultilingualSetting =
@@ -373,11 +377,6 @@ export async function getConversationForEdit({
         aiLabelingEnabled: conversation.aiLabelingEnabled ?? false,
         preferredOpinionGroupCount:
             conversation.preferredOpinionGroupCount ?? null,
-        postAsOrganizationName: toUnionUndefined(
-            conversation.autoProvisionedForUserId === null
-                ? conversation.postAsOrganizationName
-                : null,
-        ),
         postAsOrganizationSlug: toUnionUndefined(
             conversation.autoProvisionedForUserId === null
                 ? conversation.postAsOrganizationSlug
@@ -632,6 +631,8 @@ export async function updateConversation({
                     polisConversationConfigTable.preferredOpinionGroupCount,
                 currentLanguageSettingsSource:
                     conversationTable.languageSettingsSource,
+                currentDynamicTranslationEnabled:
+                    conversationTable.dynamicTranslationEnabled,
                 currentTitle: conversationContentTable.title,
                 currentBody: conversationContentTable.body,
                 currentSourceLanguageCode:
@@ -810,30 +811,18 @@ export async function updateConversation({
             buildSurveyLanguageDetectionCorpus({
                 surveyConfig: effectiveSurveyConfig,
             });
-        const currentMultilingualSetting =
-            await getConversationMultilingualSetting({
-                db: tx,
-                conversationId,
-            });
-        const inheritedProjectLanguageSettings =
+        const requestedTranslation: ConversationTranslationSelection =
             languageSettingsSource === "project_inherited"
-                ? await getProjectLanguageSettings({
-                      db: tx,
-                      projectId: destinationProjectId,
-                  })
-                : undefined;
-        const requestedMultilingualSetting =
-            inheritedProjectLanguageSettings === undefined
-                ? multilingualSetting
-                : normalizeInheritedConversationMultilingualSettings({
-                      languageSettings: inheritedProjectLanguageSettings,
-                  });
-        const premiumMultilingualSetting =
-            inheritedProjectLanguageSettings === undefined
-                ? multilingualSetting
-                : getManualMultilingualSettingsFromProjectLanguageSettings({
-                      languageSettings: inheritedProjectLanguageSettings,
-                  });
+                ? {
+                      source: "project_inherited",
+                      projectLanguageSettings: await getProjectLanguageSettings(
+                          {
+                              db: tx,
+                              projectId: destinationProjectId,
+                          },
+                      ),
+                  }
+                : { source: "conversation_override", multilingualSetting };
         const subject = getPremiumEntitlementSubjectForConversation({
             conversation: { projectId: destinationProjectId, userId },
         });
@@ -880,19 +869,61 @@ export async function updateConversation({
                     reason: "invalid_access_settings",
                 } satisfies UpdateConversationServiceResponse;
         }
+        let translationEdit = authorizeConversationTranslationEdit({
+            access: canUseDynamicTranslation
+                ? { kind: "configure" }
+                : { kind: "disabled_only" },
+            requested: requestedTranslation,
+        });
         if (
-            restrictedDynamicTranslationFeatures.length > 0 &&
-            (premiumMultilingualSetting.dynamicTranslationEnabled ||
-                premiumMultilingualSetting.additionalLanguageCodes.length > 0)
+            !translationEdit.success &&
+            !projectChanged &&
+            conversation.currentLanguageSettingsSource ===
+                requestedTranslation.source
         ) {
-            return {
-                success: false,
-                reason: "premium_access_required",
-            } as const;
+            const currentTargets = await tx
+                .select({
+                    languageCode:
+                        conversationTranslationTargetLanguageTable.languageCode,
+                })
+                .from(conversationTranslationTargetLanguageTable)
+                .where(
+                    and(
+                        eq(
+                            conversationTranslationTargetLanguageTable.conversationId,
+                            conversationId,
+                        ),
+                        isNull(
+                            conversationTranslationTargetLanguageTable.deletedAt,
+                        ),
+                    ),
+                );
+            const primaryLanguageCode =
+                requestedTranslation.source === "project_inherited"
+                    ? requestedTranslation.projectLanguageSettings
+                          .defaultLanguageCode
+                    : sourceLanguageToDisplayLanguage({
+                          sourceLanguageCode:
+                              conversation.currentSourceLanguageCode,
+                      });
+            translationEdit = authorizeConversationTranslationEdit({
+                access: {
+                    kind: "retain_existing",
+                    current: {
+                        source: conversation.currentLanguageSettingsSource,
+                        dynamicTranslationEnabled:
+                            conversation.currentDynamicTranslationEnabled,
+                        effectiveTargetLanguageCodes: currentTargets.map(
+                            (target) => target.languageCode,
+                        ),
+                        primaryLanguageCode,
+                    },
+                },
+                requested: requestedTranslation,
+            });
         }
-        const requestedDynamicTranslationEnabled =
-            canUseDynamicTranslation &&
-            requestedMultilingualSetting.dynamicTranslationEnabled;
+        if (!translationEdit.success) return translationEdit;
+        const { translationWorkEnabled } = translationEdit;
         const currentBody = toUnionUndefined(conversation.currentBody);
         const contentChanged =
             conversation.currentTitle !== conversationTitle ||
@@ -920,8 +951,7 @@ export async function updateConversation({
                                     surveyLanguageDetectionCorpus,
                             }),
                         googleCloudCredentials,
-                        useGoogleLanguageDetection:
-                            requestedDynamicTranslationEnabled,
+                        useGoogleLanguageDetection: translationWorkEnabled,
                     });
                 return blockSourceLanguageMetadataPromise;
             };
@@ -1177,7 +1207,7 @@ export async function updateConversation({
                 opinions: normalizedSeedOpinions,
                 userId,
                 googleCloudCredentials,
-                useGoogleLanguageDetection: requestedDynamicTranslationEnabled,
+                useGoogleLanguageDetection: translationWorkEnabled,
                 now,
                 conversation: {
                     id: conversationId,
@@ -1203,7 +1233,7 @@ export async function updateConversation({
                 surveyConfig: surveyConfig ?? null,
                 now,
                 googleCloudCredentials,
-                useGoogleLanguageDetection: requestedDynamicTranslationEnabled,
+                useGoogleLanguageDetection: translationWorkEnabled,
                 sourceLanguageMetadata,
             });
             surveySources = surveyUpdateEffect.currentQuestionSources;
@@ -1228,8 +1258,8 @@ export async function updateConversation({
             | undefined;
         if (
             !contentChanged &&
-            requestedDynamicTranslationEnabled &&
-            (!currentMultilingualSetting.dynamicTranslationEnabled ||
+            translationWorkEnabled &&
+            (!conversation.currentDynamicTranslationEnabled ||
                 surveyConfig !== undefined)
         ) {
             if (surveyConfig !== undefined) {
@@ -1255,8 +1285,7 @@ export async function updateConversation({
                             db: tx,
                             conversationId,
                             googleCloudCredentials,
-                            useGoogleLanguageDetection:
-                                requestedDynamicTranslationEnabled,
+                            useGoogleLanguageDetection: translationWorkEnabled,
                         },
                     );
             }
@@ -1277,17 +1306,11 @@ export async function updateConversation({
                           conversation.currentSourceLanguageConfidence,
                   });
 
-        const effectiveMultilingualSetting =
-            inheritedProjectLanguageSettings === undefined
-                ? normalizeConversationMultilingualSettings({
-                      multilingualSettings: requestedMultilingualSetting,
-                      canUseDynamicTranslation,
-                  })
-                : requestedMultilingualSetting;
         const targetLanguagePolicy =
-            inheritedProjectLanguageSettings === undefined
+            requestedTranslation.source === "conversation_override"
                 ? getConversationOverrideTranslationTargetLanguagePolicy({
-                      multilingualSettings: effectiveMultilingualSetting,
+                      multilingualSettings:
+                          requestedTranslation.multilingualSetting,
                       detectedTargetLanguageCode:
                           sourceLanguageToDisplayLanguage({
                               sourceLanguageCode:
@@ -1295,7 +1318,8 @@ export async function updateConversation({
                           }),
                   })
                 : getProjectTranslationTargetLanguagePolicy({
-                      languageSettings: inheritedProjectLanguageSettings,
+                      languageSettings:
+                          requestedTranslation.projectLanguageSettings,
                   });
         await upsertConversationMultilingualSetting({
             db: tx,
@@ -1335,7 +1359,7 @@ export async function updateConversation({
         }
 
         if (
-            targetLanguagePolicy.dynamicTranslationEnabled &&
+            translationWorkEnabled &&
             targetLanguagePolicy.effectiveTargetLanguageCodes.length > 0
         ) {
             if (
@@ -1371,7 +1395,7 @@ export async function updateConversation({
                 updatedSourceLanguageMetadata.sourceLanguageConfidence,
         };
         const seedOpinionSources =
-            targetLanguagePolicy.dynamicTranslationEnabled &&
+            translationWorkEnabled &&
             targetLanguagePolicy.effectiveTargetLanguageCodes.length > 0
                 ? await fetchSeedOpinionSources({
                       db: tx,
@@ -1383,7 +1407,10 @@ export async function updateConversation({
             await createEagerContentTranslationWorkForKnownConversation({
                 db: tx,
                 conversationSource,
-                targetLanguagePolicy,
+                targetLanguagePolicy: {
+                    ...targetLanguagePolicy,
+                    dynamicTranslationEnabled: translationWorkEnabled,
+                },
                 surveySources,
                 seedOpinionSources,
                 rankingItemSources,
