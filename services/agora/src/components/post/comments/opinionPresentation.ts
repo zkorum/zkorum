@@ -12,12 +12,10 @@ export function resolveOpinionView({
   metadata,
   routeContext,
   filter,
-  hasOpinionTarget,
 }: {
   metadata: ConversationTypeConfig;
   routeContext: ConversationRouteContext;
   filter: CommentFilterOptions;
-  hasOpinionTarget: boolean;
 }): OpinionView {
   if (metadata.conversationType !== "polis") {
     return { kind: "list", filter };
@@ -25,9 +23,7 @@ export function resolveOpinionView({
   if (routeContext.kind === "embed") {
     return { kind: "one_at_a_time", order: "discover" };
   }
-  if (hasOpinionTarget) {
-    return { kind: "list", filter };
-  }
+  // Statement links must not turn backend-configured single-statement voting into a list.
   if (
     metadata.votingPresentation === "one_at_a_time" &&
     (filter === "discover" || filter === "new")

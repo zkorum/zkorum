@@ -9,10 +9,6 @@ vi.mock("src/stores/user", () => ({
   useUserStore: () => ({}),
 }));
 
-vi.mock("vue-router", () => ({
-  useRoute: () => ({ query: {} }),
-}));
-
 vi.mock("src/utils/api/auth", () => ({
   useBackendAuthApi: () => ({
     loadAuthenticatedModules: vi.fn(),
@@ -52,6 +48,7 @@ describe("ConversationCommentTab", () => {
       commentFilter: "discover",
       onViewAnalysis: vi.fn(),
       conversationRouteContext: { kind: "normal" },
+      editingOpinion: undefined,
     });
 
     expect(() => app.mount(container)).not.toThrow();
