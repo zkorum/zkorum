@@ -361,10 +361,7 @@ export async function getUserPosts({
             where: whereClause,
             enableCompactBody: true,
             personalizedUserId: userId,
-            excludeLockedPosts: false,
-            removeMutedAuthors: false,
             baseImageServiceUrl,
-            sortAlgorithm: "new",
             currentDisplayLanguage,
         });
 

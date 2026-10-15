@@ -1,12 +1,13 @@
-import { QueryClient } from "@tanstack/vue-query";
+import { type InfiniteData, QueryClient } from "@tanstack/vue-query";
+import type { FetchFeedRequest, FetchFeedResponse } from "src/shared/types/dto";
 import type { ConversationProjectAssignment } from "src/shared/types/zod";
 import { zodConversationProjectContext } from "src/shared/types/zod";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 const stores = vi.hoisted(() => ({ feed: vi.fn(), profile: vi.fn() }));
-vi.mock("src/stores/homeFeed", () => ({
-  useHomeFeedStore: () => ({ applyProjectAssignment: stores.feed }),
+vi.mock("./feedQueryCache", () => ({
+  applyFeedProjectAssignment: stores.feed,
 }));
 vi.mock("src/stores/user", () => ({
   useUserStore: () => ({ applyProjectAssignment: stores.profile }),
@@ -14,6 +15,7 @@ vi.mock("src/stores/user", () => ({
 vi.mock("./post", () => ({ useBackendPostApi: vi.fn() }));
 
 import { applyConversationProjectAssignment } from "./conversationProjectCache";
+import type * as FeedQueryCache from "./feedQueryCache";
 import type { ConversationDetailData } from "./useConversationQuery";
 
 function freshConversation(currentProjectSlug: string): ConversationDetailData {
@@ -90,6 +92,179 @@ const cachedDetail = z.object({
 });
 
 describe("conversation project cache updates", () => {
+  it("preserves feed snapshots, viewer interactions, and unrelated caches during assignment projection", async () => {
+    const { applyFeedProjectAssignment } =
+      await vi.importActual<typeof FeedQueryCache>("./feedQueryCache");
+    const queryClient = new QueryClient();
+    const ownerKey = [
+      "feed",
+      "new",
+      "fr",
+      ["fr"],
+      { kind: "viewer", userId: "owner" },
+    ];
+    const otherViewerKey = [
+      "feed",
+      "new",
+      "fr",
+      ["fr"],
+      { kind: "viewer", userId: "previous-owner" },
+    ];
+    const unrelatedKey = [
+      "feed",
+      "following",
+      "en",
+      ["en"],
+      { kind: "viewer", userId: "owner" },
+    ];
+    const cached = freshConversation("source");
+    const data: InfiniteData<FetchFeedResponse, FetchFeedRequest> = {
+      pages: [
+        {
+          sortAlgorithm: "new",
+          nextCursor: null,
+          feedItemList: [
+            {
+              conversationData: {
+                ...cached,
+                metadata: {
+                  ...cached.metadata,
+                  conversationViewSnapshotId: 11,
+                  voteCount: 3,
+                },
+                payload: { title: "Cached title" },
+              },
+            },
+          ],
+        },
+      ],
+      pageParams: [{ sortAlgorithm: "new", cursor: null }],
+    };
+    const unrelated: InfiniteData<FetchFeedResponse, FetchFeedRequest> = {
+      pages: [
+        { sortAlgorithm: "following", nextCursor: null, feedItemList: [] },
+      ],
+      pageParams: [{ sortAlgorithm: "following", cursor: null }],
+    };
+    queryClient.setQueryData(ownerKey, data, { updatedAt: 123 });
+    queryClient.setQueryData(otherViewerKey, data, { updatedAt: 123 });
+    queryClient.setQueryData(unrelatedKey, unrelated, { updatedAt: 456 });
+    const fresh = freshConversation("destination");
+    applyFeedProjectAssignment({
+      queryClient,
+      conversationSlugId: "conv1234",
+      assignment: {
+        previousProjectSlug: "source",
+        projectSlug: "destination",
+        projectTitle: "Destination",
+        target: { kind: "project", projectSlug: "destination" },
+      },
+      freshConversation: {
+        metadata: {
+          ...fresh.metadata,
+          conversationViewSnapshotId: 22,
+          voteCount: 9,
+        },
+        interaction: { ...fresh.interaction, hasVoted: true },
+      },
+      viewerScope: { kind: "viewer", userId: "owner" },
+    });
+    const owner =
+      queryClient.getQueryData<
+        InfiniteData<FetchFeedResponse, FetchFeedRequest>
+      >(ownerKey)?.pages[0]?.feedItemList[0]?.conversationData;
+    const otherViewer =
+      queryClient.getQueryData<
+        InfiniteData<FetchFeedResponse, FetchFeedRequest>
+      >(otherViewerKey)?.pages[0]?.feedItemList[0]?.conversationData;
+    expect(owner?.metadata).toMatchObject({
+      conversationViewSnapshotId: 11,
+      voteCount: 3,
+      currentProjectSlug: "destination",
+    });
+    expect(owner?.interaction.hasVoted).toBe(false);
+    expect(owner?.interaction.conversationCapabilities.canEdit).toBe(true);
+    expect(otherViewer?.interaction.conversationCapabilities.canEdit).toBe(
+      false
+    );
+    expect(queryClient.getQueryState(ownerKey)).toMatchObject({
+      dataUpdatedAt: 123,
+      isInvalidated: true,
+    });
+    expect(queryClient.getQueryState(otherViewerKey)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryData(unrelatedKey)).toBe(unrelated);
+    expect(queryClient.getQueryState(unrelatedKey)).toMatchObject({
+      dataUpdatedAt: 456,
+      isInvalidated: false,
+    });
+    queryClient.clear();
+  });
+  it("updates paged feeds without copying viewer capabilities into public caches", async () => {
+    const { applyFeedProjectAssignment } =
+      await vi.importActual<typeof FeedQueryCache>("./feedQueryCache");
+    const queryClient = new QueryClient();
+    const ownerKey = [
+      "feed",
+      "new",
+      "en",
+      ["en"],
+      { kind: "viewer", userId: "owner" },
+    ];
+    const publicKey = ["feed", "new", "en", ["en"], { kind: "viewer" }];
+    const cached = freshConversation("source");
+    const data: InfiniteData<FetchFeedResponse, FetchFeedRequest> = {
+      pages: [
+        {
+          sortAlgorithm: "new",
+          nextCursor: null,
+          feedItemList: [
+            {
+              conversationData: {
+                ...cached,
+                payload: { title: "Cached title" },
+                interaction: {
+                  ...cached.interaction,
+                  conversationCapabilities: {
+                    canEdit: false,
+                    canDelete: false,
+                    canManageIntegrations: false,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ],
+      pageParams: [{ sortAlgorithm: "new", cursor: null }],
+    };
+    queryClient.setQueryData(ownerKey, data);
+    queryClient.setQueryData(publicKey, data);
+    applyFeedProjectAssignment({
+      queryClient,
+      conversationSlugId: "conv1234",
+      assignment: {
+        previousProjectSlug: "source",
+        projectSlug: "destination",
+        projectTitle: "Destination",
+        target: { kind: "project", projectSlug: "destination" },
+      },
+      freshConversation: freshConversation("destination"),
+      viewerScope: { kind: "viewer", userId: "owner" },
+    });
+    const owner =
+      queryClient.getQueryData<
+        InfiniteData<FetchFeedResponse, FetchFeedRequest>
+      >(ownerKey)?.pages[0]?.feedItemList[0]?.conversationData;
+    const anonymous =
+      queryClient.getQueryData<
+        InfiniteData<FetchFeedResponse, FetchFeedRequest>
+      >(publicKey)?.pages[0]?.feedItemList[0]?.conversationData;
+    expect(owner?.interaction.conversationCapabilities.canEdit).toBe(true);
+    expect(anonymous?.interaction.conversationCapabilities.canEdit).toBe(false);
+    expect(anonymous?.metadata.currentProjectSlug).toBe("destination");
+    expect(owner?.payload.title).toBe("Cached title");
+    queryClient.clear();
+  });
   it("refreshes ownership and capabilities only from the confirmed destination", async () => {
     const queryClient = new QueryClient();
     const key = ["conversation", "conv1234"];

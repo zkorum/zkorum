@@ -1215,25 +1215,74 @@ export const MAX_LENGTH_SEED_SUGGESTION_TIP = 1000;
 export const MAX_SEED_SUGGESTION_EXISTING_STATEMENTS = 100;
 export const MAX_LENGTH_SEED_SUGGESTION_EXISTING_STATEMENT = 1000;
 
+export const FEED_PAGE_SIZE = 20;
+export const FEED_HEAD_SIZE = 10;
+const zodFeedCursorTimestamp = zodDateTimeFlexible.pipe(
+    z
+        .date()
+        .min(new Date("0001-01-01T00:00:00Z"))
+        .max(new Date("9999-12-31T23:59:59.999Z")),
+);
+
+const zodNewFeedCursor = z
+    .object({
+        conversationId: z.number().int().positive().max(2_147_483_647),
+        createdAt: zodFeedCursorTimestamp,
+    })
+    .strict();
+const zodPopularFeedCursor = zodNewFeedCursor.extend({
+    score: z.number().min(0).max(2_147_483_647),
+    rankedAt: zodFeedCursorTimestamp,
+});
+const zodFeedItem = z
+    .object({
+        conversationData: zodExtendedConversationData,
+        displayContent: zodConversationDisplayedContent.optional(),
+    })
+    .strict();
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Dto {
-    static fetchFeedRequest = z
+    static fetchFeedRequest = z.discriminatedUnion("sortAlgorithm", [
+        z
+            .object({
+                sortAlgorithm: z.literal("new"),
+                cursor: zodNewFeedCursor.nullable(),
+            })
+            .strict(),
+        z
+            .object({
+                sortAlgorithm: z.literal("following"),
+                cursor: zodPopularFeedCursor.nullable(),
+            })
+            .strict(),
+    ]);
+    static fetchFeedResponse = z.discriminatedUnion("sortAlgorithm", [
+        z
+            .object({
+                sortAlgorithm: z.literal("new"),
+                feedItemList: z.array(zodFeedItem).max(FEED_PAGE_SIZE),
+                nextCursor: zodNewFeedCursor.nullable(),
+            })
+            .strict(),
+        z
+            .object({
+                sortAlgorithm: z.literal("following"),
+                feedItemList: z.array(zodFeedItem).max(FEED_PAGE_SIZE),
+                nextCursor: zodPopularFeedCursor.nullable(),
+            })
+            .strict(),
+    ]);
+    static fetchFeedHeadRequest = z
         .object({
             sortAlgorithm: zodFeedSortAlgorithm,
-            includeDisplayContent: z.boolean(),
         })
         .strict();
-    static fetchFeedResponse = z.object({
-        feedItemList: z.array(
-            z
-                .object({
-                    conversationData: zodExtendedConversationData,
-                    displayContent: zodConversationDisplayedContent.optional(),
-                })
-                .strict(),
-        ),
-        topConversationSlugIdList: z.array(zodSlugId), // used to determine if the feed is stale
-    });
+    static fetchFeedHeadResponse = z
+        .object({
+            topConversationSlugIdList: z.array(zodSlugId).max(FEED_HEAD_SIZE),
+        })
+        .strict();
     static postFetchRequest = z
         .object({
             postSlugId: zodSlugId, // z.object() does not exist :(
@@ -4705,6 +4754,8 @@ export type FetchCommentStatsResponse = z.infer<
     typeof Dto.fetchCommentStatsResponse
 >;
 export type FetchFeedResponse = z.infer<typeof Dto.fetchFeedResponse>;
+export type FetchFeedRequest = z.infer<typeof Dto.fetchFeedRequest>;
+export type FetchFeedHeadResponse = z.infer<typeof Dto.fetchFeedHeadResponse>;
 export type GetUserProfileResponse = z.infer<typeof Dto.getUserProfileResponse>;
 export type getUserConversationsResponse = z.infer<
     typeof Dto.fetchUserConversationsResponse

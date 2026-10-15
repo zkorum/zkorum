@@ -2,7 +2,7 @@
   <div v-if="conversationData !== undefined">
     <OneAtATimeSection
       v-if="opinionView.kind === 'one_at_a_time'"
-      :key="`${conversationData.metadata.conversationSlugId}:${props.commentFilter}`"
+      :key="`${conversationData.metadata.conversationSlugId}:${opinionView.order}`"
       ref="oneAtATimeRef"
       :post-slug-id="conversationData.metadata.conversationSlugId"
       :order="opinionView.order"
@@ -20,7 +20,7 @@
       @edit-opinion="emit('editOpinion', $event)"
     />
     <CommentSection
-      v-else
+      v-else-if="opinionView.kind === 'list'"
       :key="conversationData.metadata.conversationSlugId"
       ref="opinionSectionRef"
       :post-slug-id="conversationData.metadata.conversationSlugId"
@@ -34,7 +34,7 @@
       :on-view-analysis="props.onViewAnalysis"
       :is-voting-disabled="isVotingDisabled"
       :conversation-route-context="props.conversationRouteContext"
-      :filter="props.commentFilter"
+      :filter="opinionView.filter"
       :conversation-type-config="conversationData.metadata"
       :editing-opinion="editingOpinion"
       @edit-opinion="emit('editOpinion', $event)"
@@ -48,7 +48,6 @@ import type {
   RegisterChildRefreshHandler,
   SubmittedCommentData,
 } from "src/composables/conversation/useConversationParentState";
-import { getLinkedOpinionSlugId } from "src/composables/opinion/opinionLinkRoute";
 import type {
   DisplayedOpinionItem,
   ExtendedConversationDisplayData,
@@ -68,7 +67,6 @@ import {
   ref,
   watch,
 } from "vue";
-import { useRoute } from "vue-router";
 
 import CommentSection from "./comments/CommentSection.vue";
 import OneAtATimeSection from "./comments/OneAtATimeSection.vue";
@@ -115,7 +113,6 @@ const registerSubmittedCommentHandler = inject<
 
 const opinionSectionRef = ref<InstanceType<typeof CommentSection>>();
 const oneAtATimeRef = ref<InstanceType<typeof OneAtATimeSection>>();
-const route = useRoute();
 const isTabActive = ref(true);
 let unregisterChildRefreshHandler: (() => void) | undefined;
 
@@ -132,11 +129,6 @@ const opinionView = computed<OpinionView | { kind: "unavailable" }>(() => {
     metadata: data.metadata,
     routeContext: props.conversationRouteContext,
     filter: props.commentFilter,
-    hasOpinionTarget:
-      getLinkedOpinionSlugId({
-        route,
-        conversationSlugId: data.metadata.conversationSlugId,
-      }) !== undefined,
   });
 });
 

@@ -1,5 +1,11 @@
 import { QueryClient, VueQueryPlugin } from "@tanstack/vue-query";
 import { createPinia, defineStore } from "pinia";
+import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
+import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
+import {
+  getOpinionFilterSelection,
+  isOpinionListRoute,
+} from "src/composables/opinion/opinionLinkRoute";
 import type {
   GetOpinionBySlugIdListResponse,
   OpinionTarget,
@@ -10,9 +16,11 @@ import type {
 } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLanguageStore } from "src/stores/language";
+import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import type { useBackendCommentApi } from "src/utils/api/comment/comment";
 import { getOpinionTargetQueryKey } from "src/utils/api/comment/opinionTargetQueryKey";
 import type { CommentFilterOptions } from "src/utils/component/opinion";
+import { getConversationRouteContextFromRoute } from "src/utils/router/conversationRouteContext";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   computed,
@@ -22,6 +30,7 @@ import {
   KeepAlive,
   nextTick,
   ref,
+  watch,
 } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 
@@ -237,7 +246,7 @@ afterEach(() => {
 });
 
 async function mountStatementLink({
-  presentation = "one_at_a_time",
+  presentation = "list",
   url = "/conversation/conversa/?opinion=statement",
   loaded = true,
 }: {
@@ -250,10 +259,16 @@ async function mountStatementLink({
     routes: [
       {
         path: "/conversation/:postSlugId/",
+        name: "/conversation/[postSlugId]/",
         component: { template: "<div />" },
       },
       {
         path: "/project/:projectSlug/conversation/:postSlugId/",
+        name: "/project/[projectSlug]/conversation/[postSlugId]/",
+        component: { template: "<div />" },
+      },
+      {
+        path: "/onboarding/",
         component: { template: "<div />" },
       },
     ],
@@ -263,26 +278,55 @@ async function mountStatementLink({
     loaded ? conversation(presentation) : undefined
   );
   const visible = ref(true);
-  const filter = ref<CommentFilterOptions>("discover");
+  const initialFilterSelection = getOpinionFilterSelection(
+    router.currentRoute.value
+  );
+  const filter = ref<CommentFilterOptions>(
+    initialFilterSelection.kind === "explicit"
+      ? initialFilterSelection.filter
+      : "discover"
+  );
   const editingOpinion = ref<DisplayedOpinionItem>();
-  const root = defineComponent(
-    () => () =>
+  const root = defineComponent(() => {
+    watch(
+      [
+        () => router.currentRoute.value.path,
+        () => router.currentRoute.value.query.filter,
+      ],
+      () => {
+        const route = router.currentRoute.value;
+        const selection = getOpinionFilterSelection(route);
+        if (
+          isOpinionListRoute({ route, conversationSlugId: "conversa" }) &&
+          selection.kind === "explicit"
+        ) {
+          filter.value = selection.filter;
+        }
+      }
+    );
+    return () =>
       h(KeepAlive, null, () =>
-        visible.value
+        visible.value &&
+        isOpinionListRoute({
+          route: router.currentRoute.value,
+          conversationSlugId: "conversa",
+        })
           ? h(ConversationCommentTab, {
               conversationData: conversationData.value,
               moderationHistoryTrigger: 0,
               commentFilter: filter.value,
               editingOpinion: editingOpinion.value,
               onViewAnalysis: vi.fn(),
-              conversationRouteContext: { kind: "normal" },
+              conversationRouteContext: getConversationRouteContextFromRoute(
+                router.currentRoute.value
+              ),
               "onUpdate:commentFilter": (value: CommentFilterOptions) => {
                 filter.value = value;
               },
             })
           : null
-      )
-  );
+      );
+  });
   const container = document.createElement("div");
   document.body.append(container);
   queryClient = new QueryClient({
@@ -312,6 +356,9 @@ async function mountStatementLink({
     container,
     auth: useAuthenticationStore(pinia),
     language: useLanguageStore(pinia),
+    flow: onboardingFlowStore(pinia),
+    loginIntentions: app.runWithContext(useConversationLoginIntentions),
+    onboardingExit: app.runWithContext(useConversationOnboardingExit),
   };
 }
 
@@ -323,14 +370,92 @@ function highlighted(container: HTMLElement): string | undefined {
 }
 
 describe("statement URL navigation", () => {
-  it("uses backend ownership and opens the own statement in My statements without fetching Discover", async () => {
+  for (const mode of ["LOGIN", "SIGNUP"] satisfies Array<"LOGIN" | "SIGNUP">) {
+    for (const presentation of ["list", "one_at_a_time"] satisfies Array<
+      "list" | "one_at_a_time"
+    >) {
+      it.each([
+        "/conversation/conversa/",
+        "/project/project/conversation/conversa/",
+      ])(`resumes ${presentation} after ${mode} at %s`, async (url) => {
+        mocks.fetchTargets.mockResolvedValue([target({ isOwn: false })]);
+        const {
+          router,
+          auth,
+          flow,
+          loginIntentions,
+          onboardingExit,
+          container,
+        } = await mountStatementLink({
+          presentation,
+          url,
+        });
+        auth.setLoginStatus({ isKnown: false });
+        loginIntentions.setOpinionAgreementIntention("statement");
+        flow.onboardingMode = mode;
+        await router.push("/onboarding/");
+        expect(
+          container.querySelector('[data-testid="one-at-a-time"]')
+        ).toBeNull();
+        expect(highlighted(container)).toBeUndefined();
+        auth.setLoginStatus({ isKnown: true, userId: "authenticated-viewer" });
+        await onboardingExit.exitToConversation({
+          conversationSlugId: "conversa",
+        });
+
+        expect(router.currentRoute.value.path).toBe(url);
+        expect(router.currentRoute.value.query.opinion).toBe("statement");
+        if (presentation === "one_at_a_time") {
+          expect(
+            container.querySelector('[data-testid="one-at-a-time"]')
+          ).not.toBeNull();
+          expect(mocks.fetchTargets).not.toHaveBeenCalled();
+          expect(mocks.fetchPage).not.toHaveBeenCalled();
+        } else {
+          await vi.waitFor(() =>
+            expect(highlighted(container)).toBe("statement")
+          );
+          expect(
+            container.querySelector('[data-testid="one-at-a-time"]')
+          ).toBeNull();
+        }
+      });
+    }
+  }
+
+  it.each(["discover", "new"] satisfies CommentFilterOptions[])(
+    "never renders a list for one-at-a-time %s, including direct statement URLs",
+    async (filter) => {
+      const { container } = await mountStatementLink({
+        presentation: "one_at_a_time",
+        url: `/project/project/conversation/conversa/?opinion=statement&filter=${filter}`,
+      });
+      expect(
+        container.querySelector('[data-testid="one-at-a-time"]')
+      ).not.toBeNull();
+      expect(mocks.fetchTargets).not.toHaveBeenCalled();
+      expect(mocks.fetchPage).not.toHaveBeenCalled();
+    }
+  );
+
+  it("still highlights linked statements in one-at-a-time review lists", async () => {
+    const { container, filter } = await mountStatementLink({
+      presentation: "one_at_a_time",
+      url: "/conversation/conversa/?opinion=statement&filter=my_statements",
+    });
+    await vi.waitFor(() => expect(highlighted(container)).toBe("statement"));
+    expect(filter.value).toBe("my_statements");
+    expect(container.querySelector('[data-testid="one-at-a-time"]')).toBeNull();
+  });
+
+  it("keeps the linked statement highlighted in a list conversation", async () => {
     const { filter, container, router } = await mountStatementLink();
-    await vi.waitFor(() => expect(filter.value).toBe("my_statements"));
-    expect(highlighted(container)).toBe("statement");
+    await vi.waitFor(() => expect(highlighted(container)).toBe("statement"));
+    expect(filter.value).toBe("discover");
     expect(mocks.fetchTargets).toHaveBeenCalledTimes(1);
     expect(
       mocks.fetchPage.mock.calls.map(([request]) => request.filter)
-    ).toEqual(["my_statements"]);
+    ).toEqual(["discover"]);
     expect(router.currentRoute.value.query.opinion).toBe("statement");
   });
 
@@ -346,8 +471,8 @@ describe("statement URL navigation", () => {
     const { filter, container } = await mountStatementLink({
       url: "/project/project/conversation/conversa/?opinion=statement",
     });
-    await vi.waitFor(() => expect(filter.value).toBe("my_statements"));
-    expect(highlighted(container)).toBe("statement");
+    await vi.waitFor(() => expect(highlighted(container)).toBe("statement"));
+    expect(filter.value).toBe("discover");
   });
 
   it("rejects ambiguous repeated statement parameters before making a target request", async () => {
@@ -355,12 +480,10 @@ describe("statement URL navigation", () => {
       url: "/conversation/conversa/?opinion=statement&opinion=second",
     });
     expect(mocks.fetchTargets).not.toHaveBeenCalled();
-    expect(
-      container.querySelector('[data-testid="one-at-a-time"]')
-    ).not.toBeNull();
+    expect(highlighted(container)).toBe("");
   });
 
-  it("derives the filter from refreshed conversation data while retaining the highlight", async () => {
+  it("uses refreshed backend presentation even while the URL targets a statement", async () => {
     const { conversationData, filter, container } = await mountStatementLink({
       presentation: "list",
     });
@@ -371,43 +494,47 @@ describe("statement URL navigation", () => {
     >) {
       conversationData.value = conversation(mode);
       await vi.waitFor(() =>
-        expect(filter.value).toBe(
-          mode === "list" ? "discover" : "my_statements"
-        )
+        expect(
+          container.querySelector('[data-testid="one-at-a-time"]') !== null
+        ).toBe(mode === "one_at_a_time")
       );
-      expect(highlighted(container)).toBe("statement");
+      expect(filter.value).toBe("discover");
+      if (mode === "list") {
+        await vi.waitFor(() =>
+          expect(highlighted(container)).toBe("statement")
+        );
+      }
     }
   });
 
   it("restores the linked statement and its ownership context after cancelling an edit", async () => {
-    const { filter, container, editingOpinion, conversationData } =
-      await mountStatementLink();
+    const { filter, container, editingOpinion } = await mountStatementLink({
+      presentation: "one_at_a_time",
+      url: "/conversation/conversa/?opinion=statement&filter=my_statements",
+    });
     await vi.waitFor(() => expect(filter.value).toBe("my_statements"));
     editingOpinion.value = target({ slugId: "editing" }).opinion;
     await vi.waitFor(() => expect(highlighted(container)).toBe("editing"));
     editingOpinion.value = undefined;
     await vi.waitFor(() => expect(highlighted(container)).toBe("statement"));
-    conversationData.value = conversation("list");
-    await vi.waitFor(() => expect(filter.value).toBe("discover"));
-    conversationData.value = conversation("one_at_a_time");
-    await vi.waitFor(() => expect(filter.value).toBe("my_statements"));
-    expect(highlighted(container)).toBe("statement");
   });
 
-  it("uses the loaded conversation's latest mode when the statement arrives later", async () => {
+  it("does not let a late statement response override the backend's one-at-a-time setting", async () => {
     const response = Promise.withResolvers<GetOpinionBySlugIdListResponse>();
     mocks.fetchTargets.mockReturnValueOnce(response.promise);
     const { conversationData, filter, container } = await mountStatementLink({
-      presentation: "one_at_a_time",
+      presentation: "list",
     });
     expect(mocks.fetchPage).not.toHaveBeenCalled();
-    conversationData.value = conversation("list");
+    conversationData.value = conversation("one_at_a_time");
+    await nextTick();
     response.resolve([target()]);
-    await vi.waitFor(() => expect(highlighted(container)).toBe("statement"));
+    await nextTick();
     expect(filter.value).toBe("discover");
     expect(
-      mocks.fetchPage.mock.calls.map(([request]) => request.filter)
-    ).toEqual(["discover"]);
+      container.querySelector('[data-testid="one-at-a-time"]')
+    ).not.toBeNull();
+    expect(mocks.fetchPage).not.toHaveBeenCalled();
   });
 
   it("waits for the conversation before loading or selecting a statement view", async () => {
@@ -416,9 +543,9 @@ describe("statement URL navigation", () => {
     });
     expect(mocks.fetchTargets).not.toHaveBeenCalled();
     expect(mocks.fetchPage).not.toHaveBeenCalled();
-    conversationData.value = conversation("one_at_a_time");
-    await vi.waitFor(() => expect(filter.value).toBe("my_statements"));
-    expect(highlighted(container)).toBe("statement");
+    conversationData.value = conversation("list");
+    await vi.waitFor(() => expect(highlighted(container)).toBe("statement"));
+    expect(filter.value).toBe("discover");
   });
 
   it("ignores an old response after navigating to a different statement and preserves URL context", async () => {
@@ -463,10 +590,10 @@ describe("statement URL navigation", () => {
     expect(highlighted(container)).toBe("");
   });
 
-  it("can resume one-at-a-time Discover when selecting the already selected filter", async () => {
-    mocks.fetchTargets.mockResolvedValue([target({ isOwn: false })]);
-    const { router, filter, container } = await mountStatementLink();
-    await vi.waitFor(() => expect(highlighted(container)).toBe("statement"));
+  it("keeps one-at-a-time Discover when clearing the statement URL", async () => {
+    const { router, filter, container } = await mountStatementLink({
+      presentation: "one_at_a_time",
+    });
     expect(filter.value).toBe("discover");
     await router.replace("/conversation/conversa/?filter=discover");
     await vi.waitFor(() =>
@@ -502,9 +629,13 @@ describe("statement URL navigation", () => {
     await vi.waitFor(() => expect(highlighted(container)).toBe("statement"));
   });
 
-  it("waits for new ownership before fetching a list after the viewer changes", async () => {
-    const { auth, filter } = await mountStatementLink();
-    await vi.waitFor(() => expect(filter.value).toBe("my_statements"));
+  it("returns to one-at-a-time Discover when a review target no longer belongs to the viewer", async () => {
+    const { auth, filter } = await mountStatementLink({
+      presentation: "one_at_a_time",
+    });
+    filter.value = "my_statements";
+    await vi.waitFor(() => expect(mocks.fetchPage).toHaveBeenCalled());
+    expect(filter.value).toBe("my_statements");
     const response = Promise.withResolvers<GetOpinionBySlugIdListResponse>();
     mocks.fetchTargets.mockReturnValueOnce(response.promise);
     mocks.fetchPage.mockClear();
@@ -513,9 +644,7 @@ describe("statement URL navigation", () => {
     expect(mocks.fetchPage).not.toHaveBeenCalled();
     response.resolve([target({ isOwn: false })]);
     await vi.waitFor(() => expect(filter.value).toBe("discover"));
-    expect(
-      mocks.fetchPage.mock.calls.map(([request]) => request.filter)
-    ).toEqual(["discover"]);
+    expect(mocks.fetchPage).not.toHaveBeenCalled();
   });
 
   it("ignores a response in the previous display language", async () => {
@@ -573,7 +702,7 @@ describe("statement URL navigation", () => {
     await nextTick();
     await router.push("/conversation/conversa/?opinion=statement");
     visible.value = true;
-    await vi.waitFor(() => expect(filter.value).toBe("my_statements"));
+    await vi.waitFor(() => expect(filter.value).toBe("discover"));
     expect(highlighted(container)).toBe("statement");
   });
 });

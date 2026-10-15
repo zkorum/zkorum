@@ -20,7 +20,6 @@ import type {
     ExtendedConversation,
     ConversationType,
     RankingMode,
-    FeedSortAlgorithm,
     EventSlug,
     ParticipationMode,
     ConversationCapabilities,
@@ -32,10 +31,8 @@ import { eq, desc, SQL, and, isNotNull, isNull, or } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import sanitizeHtml from "sanitize-html";
 import { createPostModerationPropertyObject } from "./moderation.js";
-import { getUserMutePreferences } from "./muteUser.js";
 import { imagePathToUrl } from "@/utils/organizationLogic.js";
 import { optionalHttpsUrl } from "@/utils/url.js";
-import { getConversationEngagementScore } from "./recommendationSystem.js";
 import { log } from "@/app.js";
 import { alias } from "drizzle-orm/pg-core";
 import {
@@ -203,10 +200,7 @@ export function useCommonPost() {
         where: SQL | undefined;
         enableCompactBody: boolean;
         personalizedUserId?: string;
-        excludeLockedPosts: boolean;
-        removeMutedAuthors: boolean;
         baseImageServiceUrl: string;
-        sortAlgorithm: FeedSortAlgorithm;
         currentDisplayLanguage: SupportedDisplayLanguageCodes;
     }
 
@@ -216,10 +210,7 @@ export function useCommonPost() {
         where,
         enableCompactBody,
         personalizedUserId,
-        excludeLockedPosts,
-        removeMutedAuthors,
         baseImageServiceUrl,
-        sortAlgorithm,
         currentDisplayLanguage,
     }: FetchPostItemsProps): Promise<FetchedPostItemPerSlugId> {
         let postItems;
@@ -356,6 +347,7 @@ export function useCommonPost() {
             .where(
                 and(
                     where,
+                    isNull(projectTable.deletedAt),
                     isNull(organizationTable.deletedAt),
                     or(
                         isNull(organizationTable.autoProvisionedForUserId),
@@ -411,38 +403,6 @@ export function useCommonPost() {
                 ],
             }),
         ]);
-
-        if (sortAlgorithm == "following") {
-            postItems.sort((post1, post2) => {
-                const counts1 = requireConversationDisplayCounts({
-                    countsByConversationId:
-                        latestViewSnapshotCountsByConversationId,
-                    conversationId: post1.conversationId,
-                });
-                const counts2 = requireConversationDisplayCounts({
-                    countsByConversationId:
-                        latestViewSnapshotCountsByConversationId,
-                    conversationId: post2.conversationId,
-                });
-                const score1 = getConversationEngagementScore({
-                    createdAt: post1.createdAt,
-                    lastReactedAt: post1.lastReactedAt,
-                    opinionCount: counts1.opinionCount,
-                    voteCount: counts1.voteCount,
-                    participantCount: counts1.participantCount,
-                });
-
-                const score2 = getConversationEngagementScore({
-                    createdAt: post2.createdAt,
-                    lastReactedAt: post2.lastReactedAt,
-                    opinionCount: counts2.opinionCount,
-                    voteCount: counts2.voteCount,
-                    participantCount: counts2.participantCount,
-                });
-
-                return score2 - score1; // Higher engagements first
-            });
-        }
 
         const postItemMap: FetchedPostItemPerSlugId = new Map();
 
@@ -606,49 +566,20 @@ export function useCommonPost() {
                 body: toUnionUndefined(postItem.body),
             };
 
-            if (excludeLockedPosts && postItem.moderationAction == "lock") {
-                // Skip
-            } else {
-                postItemMap.set(postItem.slugId, {
-                    conversationContentId: postItem.conversationContentId,
-                    conversationData: {
-                        metadata: metadata,
-                        payload: payload,
-                        interaction: {
-                            hasVoted: false,
-                            votedIndex: 0,
-                            conversationCapabilities:
-                                getConversationCapabilities(
-                                    capabilitiesByProjectId.get(
-                                        postItem.projectId,
-                                    ),
-                                ),
-                        },
+            postItemMap.set(postItem.slugId, {
+                conversationContentId: postItem.conversationContentId,
+                conversationData: {
+                    metadata: metadata,
+                    payload: payload,
+                    interaction: {
+                        hasVoted: false,
+                        votedIndex: 0,
+                        conversationCapabilities: getConversationCapabilities(
+                            capabilitiesByProjectId.get(postItem.projectId),
+                        ),
                     },
-                });
-            }
-        }
-
-        if (personalizedUserId) {
-            // Remove muted users from the list
-            if (removeMutedAuthors) {
-                const mutedUserItems = await getUserMutePreferences({
-                    db: db,
-                    userId: personalizedUserId,
-                });
-                postItemMap.forEach((postItem, conversationSlugId, map) => {
-                    if (
-                        mutedUserItems.some(
-                            (muteItem) =>
-                                muteItem.username ===
-                                postItem.conversationData.metadata
-                                    .authorUsername,
-                        )
-                    ) {
-                        map.delete(conversationSlugId);
-                    }
-                });
-            }
+                },
+            });
         }
 
         return postItemMap;

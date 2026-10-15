@@ -1,5 +1,6 @@
 import type { OpinionTarget } from "src/shared/types/dto";
 import type { ConversationTypeConfig } from "src/shared/types/zod";
+import type { CommentFilterOptions } from "src/utils/component/opinion";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import { describe, expect, it } from "vitest";
 
@@ -9,55 +10,12 @@ import {
 } from "./opinionPresentation";
 
 describe("resolveOpinionView", () => {
-  it("uses the facilitator's setting for Discover and New, but keeps review lists", () => {
-    const metadata = {
-      conversationType: "polis",
-      votingPresentation: "one_at_a_time",
-    } satisfies ConversationTypeConfig;
-    const routeContext = { kind: "normal" } satisfies ConversationRouteContext;
-    expect(
-      resolveOpinionView({
-        metadata,
-        routeContext,
-        filter: "discover",
-        hasOpinionTarget: false,
-      })
-    ).toEqual({ kind: "one_at_a_time", order: "discover" });
-    expect(
-      resolveOpinionView({
-        metadata,
-        routeContext,
-        filter: "new",
-        hasOpinionTarget: false,
-      })
-    ).toEqual({ kind: "one_at_a_time", order: "new" });
-    expect(
-      resolveOpinionView({
-        metadata,
-        routeContext,
-        filter: "my_votes",
-        hasOpinionTarget: false,
-      })
-    ).toEqual({ kind: "list", filter: "my_votes" });
-    expect(
-      resolveOpinionView({
-        metadata,
-        routeContext,
-        filter: "moderated",
-        hasOpinionTarget: false,
-      })
-    ).toEqual({ kind: "list", filter: "moderated" });
-    expect(
-      resolveOpinionView({
-        metadata,
-        routeContext,
-        filter: "my_statements",
-        hasOpinionTarget: false,
-      })
-    ).toEqual({ kind: "list", filter: "my_statements" });
-  });
-
-  it("opens statement URLs in a highlightable list even for one-at-a-time Discover", () => {
+  it.each([
+    "my_votes",
+    "moderated",
+    "my_statements",
+    "hidden",
+  ] satisfies CommentFilterOptions[])("keeps %s as a review list", (filter) => {
     expect(
       resolveOpinionView({
         metadata: {
@@ -65,10 +23,48 @@ describe("resolveOpinionView", () => {
           votingPresentation: "one_at_a_time",
         },
         routeContext: { kind: "normal" },
-        filter: "discover",
-        hasOpinionTarget: true,
+        filter,
       })
-    ).toEqual({ kind: "list", filter: "discover" });
+    ).toEqual({ kind: "list", filter });
+  });
+
+  it.each(["discover", "new"] satisfies CommentFilterOptions[])(
+    "honors the backend's list setting for %s",
+    (filter) => {
+      expect(
+        resolveOpinionView({
+          metadata: { conversationType: "polis", votingPresentation: "list" },
+          routeContext: { kind: "normal" },
+          filter,
+        })
+      ).toEqual({ kind: "list", filter });
+    }
+  );
+
+  it("keeps Discover and New backend-owned in every route context", () => {
+    for (const routeContext of [
+      { kind: "normal" },
+      { kind: "project", projectSlug: "project" },
+      { kind: "embed" },
+    ] satisfies ConversationRouteContext[]) {
+      for (const filter of ["discover", "new"] satisfies Array<
+        "discover" | "new"
+      >) {
+        expect(
+          resolveOpinionView({
+            metadata: {
+              conversationType: "polis",
+              votingPresentation: "one_at_a_time",
+            },
+            routeContext,
+            filter,
+          })
+        ).toEqual({
+          kind: "one_at_a_time",
+          order: routeContext.kind === "embed" ? "discover" : filter,
+        });
+      }
+    }
   });
 
   it("always locks a Polis embed to Discover, including list conversations", () => {
@@ -77,7 +73,6 @@ describe("resolveOpinionView", () => {
         metadata: { conversationType: "polis", votingPresentation: "list" },
         routeContext: { kind: "embed" },
         filter: "my_votes",
-        hasOpinionTarget: true,
       })
     ).toEqual({ kind: "one_at_a_time", order: "discover" });
   });
@@ -88,7 +83,6 @@ describe("resolveOpinionView", () => {
         metadata: { conversationType: "ranking", rankingMode: "bws" },
         routeContext: { kind: "embed" },
         filter: "discover",
-        hasOpinionTarget: false,
       })
     ).toEqual({ kind: "list", filter: "discover" });
   });

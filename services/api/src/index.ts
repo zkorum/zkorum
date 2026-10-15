@@ -1587,9 +1587,12 @@ let cachedTopEngagementSlugIds: string[] = [];
 const popularConversationCheckInterval = setInterval(() => {
     void (async () => {
         try {
-            const topSlugIds = await feedService.getTopEngagementSlugIds({
-                db,
-            });
+            const { topConversationSlugIdList: topSlugIds } =
+                await feedService.fetchFeedHead({
+                    db,
+                    viewerId: undefined,
+                    sortAlgorithm: "following",
+                });
             const changed =
                 topSlugIds.length !== cachedTopEngagementSlugIds.length ||
                 topSlugIds.some(
@@ -2712,11 +2715,16 @@ server.after(() => {
             const headerDisplayLanguage = getRequestDisplayLanguage({
                 request,
             });
+            const viewerId =
+                deviceStatus.isKnown &&
+                (!deviceStatus.isRegistered || deviceStatus.isLoggedIn)
+                    ? deviceStatus.userId
+                    : undefined;
             const languagePreferences =
-                deviceStatus.isKnown && request.body.includeDisplayContent
+                viewerId !== undefined
                     ? await getLanguagePreferences({
                           db,
-                          userId: deviceStatus.userId,
+                          userId: viewerId,
                           request: {
                               currentDisplayLanguage: headerDisplayLanguage,
                           },
@@ -2725,16 +2733,34 @@ server.after(() => {
                           displayLanguage: headerDisplayLanguage,
                           spokenLanguages: [headerDisplayLanguage],
                       };
-            return await feedService.fetchFeed({
+            return await feedService.fetchFeedPage({
                 db: db,
-                personalizationUserId: deviceStatus.isKnown
-                    ? deviceStatus.userId
-                    : undefined,
+                viewerId,
                 baseImageServiceUrl: config.IMAGES_SERVICE_BASE_URL,
-                sortAlgorithm: request.body.sortAlgorithm,
+                request: Dto.fetchFeedRequest.parse(request.body),
                 currentDisplayLanguage: languagePreferences.displayLanguage,
                 spokenLanguages: languagePreferences.spokenLanguages,
-                includeDisplayContent: request.body.includeDisplayContent,
+            });
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/conversation/feed/head`,
+        schema: {
+            body: Dto.fetchFeedHeadRequest,
+            response: { 200: Dto.fetchFeedHeadResponse },
+        },
+        handler: async (request) => {
+            const { deviceStatus } = await verifyUcanOptionalAuth(db, request);
+            return await feedService.fetchFeedHead({
+                db,
+                viewerId:
+                    deviceStatus.isKnown &&
+                    (!deviceStatus.isRegistered || deviceStatus.isLoggedIn)
+                        ? deviceStatus.userId
+                        : undefined,
+                sortAlgorithm: request.body.sortAlgorithm,
             });
         },
     });

@@ -17,7 +17,7 @@ services:
       PHONE_SMS_COST_CENTS_BY_COUNTRY: "{}"
       THROTTLE_SMS_SECONDS_INTERVAL: "30"
       TURNSTILE_ENABLED: "true"
-      TURNSTILE_ALLOWED_HOSTNAMES: "agoracitizen.app"
+      TURNSTILE_ALLOWED_HOSTNAMES: "agoracitizen.app,www.agoracitizen.app"
       TURNSTILE_SECRET_KEY: "${TURNSTILE_SECRET_KEY:?Set the production Turnstile secret}"
       PHONE_SMS_BUDGET_ALERT_EMAIL: "${PHONE_SMS_BUDGET_ALERT_EMAIL:?Set the operator alert email}"
       VERIFICATOR_SVC_BASE_URL: "http://verificator-svc:8000"

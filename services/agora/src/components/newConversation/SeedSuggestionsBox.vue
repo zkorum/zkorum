@@ -50,7 +50,7 @@
       <component
         :is="disabled ? 'span' : SpaLink"
         v-if="guidance !== undefined"
-        :to="disabled ? undefined : { name: '/conversation/new/create/' }"
+        :to="disabled ? undefined : editConversationRoute"
         :deferred="disabled ? undefined : true"
         :aria-disabled="disabled"
         :class="{ 'is-disabled': disabled }"
@@ -85,6 +85,7 @@ import ZKIcon from "src/components/ui-library/ZKIcon.vue";
 import type { SeedSuggestionItem } from "src/composables/conversation/useSeedSuggestions";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { computed } from "vue";
+import type { RouteLocationRaw } from "vue-router";
 
 import { seedOpinionsTranslations } from "./SeedOpinions.i18n";
 
@@ -102,6 +103,7 @@ const props = defineProps<{
   canGenerate: boolean;
   isGenerating: boolean;
   generateMoreLabel: string;
+  editConversationRoute: RouteLocationRaw;
 }>();
 
 const emit = defineEmits<{

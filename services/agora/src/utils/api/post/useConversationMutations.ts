@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { storeToRefs } from "pinia";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { UpdateConversationRequest } from "src/shared/types/dto";
+import type { ExtendedConversation } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLanguageStore } from "src/stores/language";
 import { useUserStore } from "src/stores/user";
@@ -16,7 +17,10 @@ import {
   type ConversationMutationsTranslations,
   conversationMutationsTranslations,
 } from "src/utils/api/post/useConversationMutations.i18n";
-import { updateConversationQueryCache } from "src/utils/api/post/useConversationQuery";
+import {
+  type ConversationDetail,
+  updateConversationQueryCache,
+} from "src/utils/api/post/useConversationQuery";
 import { useViewerQueryScope } from "src/utils/query/viewerScope";
 import { useNotify } from "src/utils/ui/notify";
 import { onScopeDispose, watch } from "vue";
@@ -237,9 +241,33 @@ export function useUpdateConversationMutation() {
         queryKey: ["conversation", variables.conversationSlugId],
       });
 
-      const previousConversations = queryClient.getQueriesData({
-        queryKey: ["conversation", variables.conversationSlugId],
-      });
+      const previousConversations = queryClient.getQueriesData<
+        ExtendedConversation | ConversationDetail
+      >({ queryKey: ["conversation", variables.conversationSlugId] });
+      const previousMetadata = previousConversations.flatMap(([, previous]) =>
+        previous === undefined
+          ? []
+          : [
+              "conversationData" in previous
+                ? previous.conversationData.metadata
+                : previous.metadata,
+            ]
+      );
+      const aiLabelingEnabledChanged =
+        polisSettings?.aiLabelingEnabled !== undefined &&
+        (previousMetadata.length === 0 ||
+          previousMetadata.some(
+            (metadata) =>
+              metadata.aiLabelingEnabled !== polisSettings.aiLabelingEnabled
+          ));
+      const preferredOpinionGroupCountChanged =
+        polisSettings?.preferredOpinionGroupCount !== undefined &&
+        (previousMetadata.length === 0 ||
+          previousMetadata.some(
+            (metadata) =>
+              metadata.preferredOpinionGroupCount !==
+              polisSettings.preferredOpinionGroupCount
+          ));
 
       updateConversationQueryCache({
         queryClient,
@@ -248,6 +276,10 @@ export function useUpdateConversationMutation() {
           const updatedData = {
             metadata: {
               ...oldData.metadata,
+              ...(oldData.metadata.conversationType === "polis" &&
+              polisSettings !== undefined
+                ? { votingPresentation: polisSettings.votingPresentation }
+                : {}),
               isIndexed: variables.isIndexed,
               aiLabelingEnabled:
                 polisSettings?.aiLabelingEnabled ??
@@ -277,7 +309,18 @@ export function useUpdateConversationMutation() {
       });
 
       return {
-        previousConversations,
+        rollback: () => {
+          if (auth.userId !== viewerUserId) return;
+          for (const [queryKey, previous] of previousConversations) {
+            // A failed request must not repopulate caches cleared during logout.
+            queryClient.setQueryData<ExtendedConversation | ConversationDetail>(
+              queryKey,
+              (current) => (current === undefined ? undefined : previous)
+            );
+          }
+        },
+        aiLabelingEnabledChanged,
+        preferredOpinionGroupCountChanged,
         viewerUserId,
         opinionScope,
         generation,
@@ -370,30 +413,37 @@ export function useUpdateConversationMutation() {
           queryKey: ["feed"],
           refetchType: "none",
         });
+        if (
+          context?.preferredOpinionGroupCountChanged === true ||
+          context?.aiLabelingEnabledChanged === true
+        ) {
+          void queryClient.invalidateQueries({
+            queryKey: ["analysisFrameManifest", variables.conversationSlugId],
+            refetchType: "none",
+          });
+        }
+        if (context?.aiLabelingEnabledChanged === true) {
+          void queryClient.invalidateQueries({
+            queryKey: [
+              "analysisFrameGroupLabels",
+              variables.conversationSlugId,
+            ],
+            refetchType: "none",
+          });
+        }
         void queryClient.invalidateQueries({
           queryKey: ["analysis", variables.conversationSlugId],
         });
-        void queryClient.invalidateQueries({
-          queryKey: ["analysisMetadata", variables.conversationSlugId],
-        });
-        void queryClient.invalidateQueries({
-          queryKey: ["analysisContent", variables.conversationSlugId],
-        });
       } else {
+        context?.rollback();
         void queryClient.invalidateQueries({
           queryKey: ["conversation", variables.conversationSlugId],
         });
-        for (const [queryKey, previous] of context?.previousConversations ?? [])
-          queryClient.setQueryData(queryKey, previous);
       }
     },
 
     onError: (_error, _variables, context) => {
-      if (context?.previousConversations) {
-        for (const [queryKey, data] of context.previousConversations) {
-          queryClient.setQueryData(queryKey, data);
-        }
-      }
+      context?.rollback();
     },
 
     retry: false,

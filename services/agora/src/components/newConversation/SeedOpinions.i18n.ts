@@ -22,6 +22,7 @@ export interface SeedOpinionsTranslations {
   githubPreviewError: string;
   githubPreviewRetry: string;
   aiSuggestionsButton: string;
+  aiGenerateSeedOpinions: string;
   aiSuggestionsGenerating: string;
   aiSuggestionsGenerateMore: string;
   aiSuggestionsNote: string;
@@ -69,6 +70,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "Failed to load issues from GitHub",
     githubPreviewRetry: "Retry",
     aiSuggestionsButton: "AI Suggestions",
+    aiGenerateSeedOpinions: "Generate with AI",
     aiSuggestionsGenerating: "Generating",
     aiSuggestionsGenerateMore: "Generate more",
     aiSuggestionsNote:
@@ -112,6 +114,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "فشل تحميل المشكلات من GitHub",
     githubPreviewRetry: "إعادة المحاولة",
     aiSuggestionsButton: "اقتراحات الذكاء الاصطناعي",
+    aiGenerateSeedOpinions: "توليد بالذكاء الاصطناعي",
     aiSuggestionsGenerating: "جارٍ التوليد",
     aiSuggestionsGenerateMore: "توليد المزيد",
     aiSuggestionsNote:
@@ -158,6 +161,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "No se pudieron cargar las incidencias de GitHub",
     githubPreviewRetry: "Reintentar",
     aiSuggestionsButton: "Sugerencias de IA",
+    aiGenerateSeedOpinions: "Generar con IA",
     aiSuggestionsGenerating: "Generando",
     aiSuggestionsGenerateMore: "Generar más",
     aiSuggestionsNote:
@@ -203,6 +207,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "بارگیری مسائل از GitHub انجام نشد",
     githubPreviewRetry: "تلاش مجدد",
     aiSuggestionsButton: "پیشنهادهای هوش مصنوعی",
+    aiGenerateSeedOpinions: "تولید با هوش مصنوعی",
     aiSuggestionsGenerating: "در حال تولید",
     aiSuggestionsGenerateMore: "تولید بیشتر",
     aiSuggestionsNote:
@@ -246,6 +251,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "טעינת בעיות מ-GitHub נכשלה",
     githubPreviewRetry: "נסה שוב",
     aiSuggestionsButton: "הצעות AI",
+    aiGenerateSeedOpinions: "יצירה עם AI",
     aiSuggestionsGenerating: "יוצר",
     aiSuggestionsGenerateMore: "יצירת הצעות נוספות",
     aiSuggestionsNote:
@@ -291,6 +297,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "Impossible de charger les tickets GitHub",
     githubPreviewRetry: "Réessayer",
     aiSuggestionsButton: "Suggestions IA",
+    aiGenerateSeedOpinions: "Générer avec l’IA",
     aiSuggestionsGenerating: "Génération",
     aiSuggestionsGenerateMore: "En générer d'autres",
     aiSuggestionsNote:
@@ -333,6 +340,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "无法从 GitHub 加载 issue",
     githubPreviewRetry: "重试",
     aiSuggestionsButton: "AI 建议",
+    aiGenerateSeedOpinions: "用 AI 生成",
     aiSuggestionsGenerating: "正在生成",
     aiSuggestionsGenerateMore: "生成更多",
     aiSuggestionsNote: "根据您的标题和描述生成。不包含链接和文档的内容。",
@@ -370,6 +378,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "無法從 GitHub 載入 issue",
     githubPreviewRetry: "重試",
     aiSuggestionsButton: "AI 建議",
+    aiGenerateSeedOpinions: "用 AI 產生",
     aiSuggestionsGenerating: "正在生成",
     aiSuggestionsGenerateMore: "生成更多",
     aiSuggestionsNote: "根據您的標題和描述生成。不包含連結和文件的內容。",
@@ -409,6 +418,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "GitHub Issues を読み込めませんでした",
     githubPreviewRetry: "再試行",
     aiSuggestionsButton: "AI の提案",
+    aiGenerateSeedOpinions: "AI で生成",
     aiSuggestionsGenerating: "生成中",
     aiSuggestionsGenerateMore: "さらに生成",
     aiSuggestionsNote:
@@ -452,6 +462,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "GitHub маселелерин жүктөө ишке ашкан жок",
     githubPreviewRetry: "Кайра аракет кылуу",
     aiSuggestionsButton: "AI сунуштары",
+    aiGenerateSeedOpinions: "AI менен түзүү",
     aiSuggestionsGenerating: "Түзүлүүдө",
     aiSuggestionsGenerateMore: "Дагы түзүү",
     aiSuggestionsNote:
@@ -497,6 +508,7 @@ export const seedOpinionsTranslations: Record<
     githubPreviewError: "Не удалось загрузить задачи из GitHub",
     githubPreviewRetry: "Повторить",
     aiSuggestionsButton: "Предложения ИИ",
+    aiGenerateSeedOpinions: "Создать с ИИ",
     aiSuggestionsGenerating: "Генерация",
     aiSuggestionsGenerateMore: "Сгенерировать ещё",
     aiSuggestionsNote:

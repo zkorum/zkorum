@@ -15,7 +15,9 @@
         <div class="tabCluster">
           <div class="tabItem" @click="selectedTab('following')">
             <ZKBadge
-              :visible="hasPendingFollowingTab && currentHomeFeedTab !== 'following'"
+              :visible="
+                hasPendingFollowingTab && currentHomeFeedTab !== 'following'
+              "
             >
               <ZKTab
                 :text="isLoggedIn ? t('following') : t('popular')"
@@ -70,20 +72,15 @@ import ZKBadge from "src/components/ui-library/ZKBadge.vue";
 import ZKTab from "src/components/ui-library/ZKTab.vue";
 import { usePageLayout } from "src/composables/layout/usePageLayout";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import type { FeedSortAlgorithm } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
-import type { HomeFeedSortOption } from "src/stores/homeFeed";
 import { useHomeFeedStore } from "src/stores/homeFeed";
 import { useNavigationStore } from "src/stores/navigation";
-import { useInvalidateFeedQuery } from "src/utils/api/post/useFeedQuery";
-import { ref } from "vue";
+import { nextTick, useTemplateRef } from "vue";
 
 import { type HomeTranslations, homeTranslations } from "./index.i18n";
 
 defineOptions({ name: "HomePage" });
-
-interface CompactPostListExposed {
-  refreshFeed: (done: () => void) => void;
-}
 
 const { isActive } = usePageLayout({});
 
@@ -93,46 +90,30 @@ const { drawerBehavior } = storeToRefs(useNavigationStore());
 
 const { currentHomeFeedTab, hasPendingNewTab, hasPendingFollowingTab } =
   storeToRefs(useHomeFeedStore());
-const { clearFeedDisplay } = useHomeFeedStore();
 const { isLoggedIn } = storeToRefs(useAuthenticationStore());
-const { invalidateFeedTab } = useInvalidateFeedQuery();
-const compactPostListRef = ref<CompactPostListExposed | null>(null);
+const compactPostListRef =
+  useTemplateRef<InstanceType<typeof CompactPostList>>("compactPostListRef");
 
 function pullDownTriggered(done: () => void): void {
   if (compactPostListRef.value) {
-    compactPostListRef.value.refreshFeed(done);
+    void compactPostListRef.value.refreshFeed(done);
     return;
   }
 
   done();
 }
 
-function selectedTab(tab: HomeFeedSortOption) {
-  window.scrollTo({ top: 0, behavior: "smooth" });
+async function selectedTab(tab: FeedSortAlgorithm): Promise<void> {
+  window.scrollTo({ top: 0, behavior: "instant" });
 
-  const hadPending = tab === "new" ? hasPendingNewTab.value : hasPendingFollowingTab.value;
+  const hadPending =
+    tab === "new" ? hasPendingNewTab.value : hasPendingFollowingTab.value;
 
-  if (currentHomeFeedTab.value === tab) {
-    if (hadPending) {
-      if (tab === "new") {
-        hasPendingNewTab.value = false;
-      } else {
-        hasPendingFollowingTab.value = false;
-      }
-      invalidateFeedTab(tab);
-    }
-    return;
-  }
-
-  clearFeedDisplay();
   currentHomeFeedTab.value = tab;
-  if (tab === "new") {
-    hasPendingNewTab.value = false;
-  } else {
-    hasPendingFollowingTab.value = false;
-  }
   if (hadPending) {
-    invalidateFeedTab(tab);
+    await nextTick();
+    if (currentHomeFeedTab.value === tab)
+      await compactPostListRef.value?.refreshFeed(() => {});
   }
 }
 </script>
