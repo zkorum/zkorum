@@ -1,6 +1,23 @@
 <template>
   <div class="seed-editor">
     <p class="shortcut-hint">{{ t("addStatementShortcut") }}</p>
+    <div class="add-row">
+      <div class="add-actions">
+        <slot name="actions" />
+        <ConversationControlButton
+          v-if="items.length < MAX_SEED_OPINIONS_PER_SUBMISSION"
+          :label="t('addOpinion')"
+          icon="pi pi-plus"
+          :show-border="false"
+          icon-position="left"
+          :disabled="disabled"
+          @click="addItem"
+        />
+      </div>
+      <span class="statement-count">
+        {{ items.length }}/{{ MAX_SEED_OPINIONS_PER_SUBMISSION }}
+      </span>
+    </div>
     <div v-for="item in items" :key="item.id" class="seed-item">
       <SeedOpinionItem
         :ref="(el) => setItemRef({ el, id: item.id })"
@@ -14,17 +31,6 @@
         @add-next="addItem"
         @remove="removeItem(item.id)"
       />
-    </div>
-    <div v-if="!disabled" class="add-row">
-      <ConversationControlButton
-        v-if="items.length < MAX_SEED_OPINIONS_PER_SUBMISSION"
-        :label="t('addOpinion')"
-        icon="pi pi-plus"
-        :show-border="false"
-        icon-position="left"
-        @click="addItem"
-      />
-      <span>{{ items.length }}/{{ MAX_SEED_OPINIONS_PER_SUBMISSION }}</span>
     </div>
   </div>
 </template>
@@ -182,6 +188,17 @@ defineExpose({ validate, showFailure });
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   color: $color-text-weak;
+}
+.add-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.statement-count {
+  margin-inline-start: auto;
 }
 </style>

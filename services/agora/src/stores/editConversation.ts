@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { uid } from "quasar";
 import { getConversationUpdatesOverrideUpdate } from "src/components/newConversation/createConversationUpdatesSettingsLogic";
 import type {
   ConversationFormState,
@@ -36,6 +37,7 @@ export interface EditConversationDetails {
 }
 
 export interface EditConversationSession extends EditConversationDetails {
+  aiSuggestionDraftId: string;
   postAs: PostAsSettings;
   newSeedOpinions: string[];
   existingSeedOpinions: ExistingSeedOpinionDraft[];
@@ -182,10 +184,14 @@ export const useEditConversationStore = defineStore("editConversation", () => {
   );
 
   function start(
-    value: Omit<EditConversationSession, "existingSeedOpinions">
+    value: Omit<
+      EditConversationSession,
+      "existingSeedOpinions" | "aiSuggestionDraftId"
+    >
   ): void {
     session.value = {
       ...value,
+      aiSuggestionDraftId: uid(),
       existingSeedOpinions: value.original.seedOpinions.map((opinion) => ({
         slugId: opinion.slugId,
         sourceVersion: opinion.sourceVersion,

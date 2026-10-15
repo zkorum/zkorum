@@ -54,11 +54,22 @@
         class="statement-section"
       >
         <h2>{{ t("newTitle") }}</h2>
-        <SeedOpinionListEditor
+        <SeedOpinionEditor
           ref="seedEditor"
           v-model="newSeedOpinions"
+          :suggestion-context="{
+            aiSuggestionDraftId: session.aiSuggestionDraftId,
+            title: session.form.title,
+            content: session.form.content,
+            conversationType:
+              session.form.conversationTypeConfig.conversationType,
+            externalSourceConfig: session.original.externalSourceConfig,
+            postAs: session.postAs,
+          }"
           :existing-opinions="survivingSeedOpinions"
           :disabled="isSaving"
+          :edit-conversation-route="detailsRoute"
+          @edit-conversation="handleBack"
         />
       </section>
       <ZKCard
@@ -89,7 +100,7 @@ import { createConversationUpdatesSettingsTranslations } from "src/components/ne
 import EditConversationRouteGuard from "src/components/newConversation/EditConversationRouteGuard.vue";
 import ExistingSeedOpinionListEditor from "src/components/newConversation/ExistingSeedOpinionListEditor.vue";
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
-import SeedOpinionListEditor from "src/components/newConversation/SeedOpinionListEditor.vue";
+import SeedOpinionEditor from "src/components/newConversation/SeedOpinionEditor.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { UpdateConversationResponse } from "src/shared/types/dto";
@@ -137,7 +148,7 @@ const session = computed(() =>
 const { showNotifyMessage } = useNotify();
 const mutation = useUpdateConversationMutation();
 const isSaving = computed(() => session.value?.isSaving ?? false);
-const seedEditor = ref<InstanceType<typeof SeedOpinionListEditor>>();
+const seedEditor = ref<InstanceType<typeof SeedOpinionEditor>>();
 const existingSeedEditor =
   ref<InstanceType<typeof ExistingSeedOpinionListEditor>>();
 const routeGuard = ref<InstanceType<typeof EditConversationRouteGuard>>();

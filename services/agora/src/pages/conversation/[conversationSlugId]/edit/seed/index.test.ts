@@ -12,6 +12,8 @@ import {
   buildEditConversationRequest,
   useEditConversationStore,
 } from "src/stores/editConversation";
+import type { GenerateSeedSuggestionsResult } from "src/utils/api/seedSuggestion/seedSuggestion";
+import type * as ProcessEnvModule from "src/utils/processEnv";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   type App,
@@ -28,6 +30,29 @@ const mocks = vi.hoisted(() => ({
   >(),
   getForEdit: vi.fn(),
   notify: vi.fn(),
+  generateSeedSuggestions:
+    vi.fn<() => Promise<GenerateSeedSuggestionsResult>>(),
+  recordSeedSuggestionUse: vi.fn(),
+  aiSuggestionsEnabled: false,
+}));
+vi.mock("src/utils/processEnv", async (importOriginal) => {
+  const actual = await importOriginal<typeof ProcessEnvModule>();
+  return {
+    ...actual,
+    processEnv: {
+      ...actual.processEnv,
+      VITE_TURNSTILE_SITE_KEY: undefined,
+      get VITE_AI_SUGGESTIONS_ENABLED() {
+        return mocks.aiSuggestionsEnabled ? "true" : "false";
+      },
+    },
+  };
+});
+vi.mock("src/utils/api/seedSuggestion/seedSuggestion", () => ({
+  useBackendSeedSuggestionApi: () => ({
+    generateSeedSuggestions: mocks.generateSeedSuggestions,
+    recordSeedSuggestionUse: mocks.recordSeedSuggestionUse,
+  }),
 }));
 vi.mock("src/utils/api/post/useConversationMutations", () => ({
   useUpdateConversationMutation: () => ({ mutateAsync: mocks.save }),
@@ -199,6 +224,7 @@ afterEach(() => {
   for (const app of apps.splice(0)) app.unmount();
   document.body.replaceChildren();
   vi.clearAllMocks();
+  mocks.aiSuggestionsEnabled = false;
 });
 
 async function mountFlow({
@@ -394,6 +420,77 @@ function clickButton(label: string): void {
 }
 
 describe("edit conversation statement step", () => {
+  it("generates and adds AI statements to an edit without saving automatically", async () => {
+    mocks.aiSuggestionsEnabled = true;
+    mocks.generateSeedSuggestions.mockResolvedValueOnce({
+      status: "success",
+      data: {
+        confident: true,
+        generationId: "00000000-0000-4000-8000-000000000020",
+        suggestions: [
+          { suggestionId: "suggestion-1", text: "An AI statement" },
+        ],
+      },
+    });
+    const { store, container } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    const actionLabels = Array.from(
+      container.querySelectorAll(".add-actions button")
+    ).map((button) => button.textContent?.trim());
+    expect(actionLabels).toEqual(["Generate with AI", "Add Statement"]);
+
+    clickButton("Generate with AI");
+    await vi.waitUntil(
+      () => container.textContent?.includes("An AI statement") === true
+    );
+    expect(mocks.generateSeedSuggestions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          draftId: store.session?.aiSuggestionDraftId,
+          conversationTitle: "Original title",
+          conversationBody: "Original body",
+          existingStatements: ["An existing seed"],
+        }),
+      })
+    );
+    clickButton("Add");
+    await nextTick();
+    expect(store.session?.newSeedOpinions).toEqual(["<p>An AI statement</p>"]);
+    expect(store.hasUnsavedChanges).toBe(true);
+    expect(mocks.save).not.toHaveBeenCalled();
+    await vi.waitFor(() =>
+      expect(container.querySelector(".seed-item textarea")).toHaveProperty(
+        "value",
+        "<p>An AI statement</p>"
+      )
+    );
+  });
+
+  it("links clarification back to editing this conversation", async () => {
+    mocks.aiSuggestionsEnabled = true;
+    mocks.generateSeedSuggestions.mockResolvedValueOnce({
+      status: "success",
+      data: {
+        confident: false,
+        generationId: "00000000-0000-4000-8000-000000000020",
+        tip: "Please be more specific.",
+      },
+    });
+    const { container } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    clickButton("Generate with AI");
+    await vi.waitUntil(
+      () => container.querySelector(".edit-conversation-link") !== null
+    );
+    expect(
+      container.querySelector(".edit-conversation-link")?.getAttribute("href")
+    ).toBe("/conversation/seedtest/edit?returnTo=/");
+  });
+
   it.each([false, true])(
     "converts inherited languages using destination access when detaching a project (access=%s)",
     async (hasTranslationAccess) => {
