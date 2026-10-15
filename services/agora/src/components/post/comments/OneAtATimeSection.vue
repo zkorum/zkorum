@@ -15,8 +15,8 @@
     />
 
     <CommentGroup
-      v-if="currentOpinion !== undefined"
-      :comment-item-list="[currentOpinion]"
+      v-if="displayedOpinion !== undefined"
+      :comment-item-list="[displayedOpinion]"
       :post-slug-id="props.postSlugId"
       :conversation-author-username="props.conversationAuthorUsername"
       :conversation-organization-name="props.conversationOrganizationName"
@@ -27,7 +27,11 @@
       :requires-event-ticket="props.requiresEventTicket"
       :survey-gate="props.surveyGate"
       :on-view-analysis="props.onViewAnalysis"
-      :is-voting-disabled="props.isVotingDisabled || isSubmittingVote"
+      :is-voting-disabled="
+        props.isVotingDisabled ||
+        isSubmittingVote ||
+        currentOpinion === undefined
+      "
       :show-vote-results="false"
       :conversation-route-context="props.conversationRouteContext"
       @edit-opinion="emit('editOpinion', $event)"
@@ -35,14 +39,16 @@
       @deleted="handleDeletedOpinion"
     />
 
-    <PageLoadingSpinner v-else-if="query.isPending.value || isAdvancing" />
+    <div v-else-if="isWaitingForOpinion" aria-busy="true">
+      <PageLoadingSpinner v-if="showLoading" />
+    </div>
     <ErrorRetryBlock
       v-else-if="query.isError.value"
       :title="t('loadError')"
       :retry-label="t('retry')"
       @retry="refresh"
     />
-    <div v-else class="caught-up" role="status">
+    <div v-else-if="session.isCaughtUp.value" class="caught-up" role="status">
       <q-icon name="mdi-check-circle-outline" size="2rem" color="primary" />
       <strong class="text-primary">{{ t("caughtUp") }}</strong>
       <span>{{ t("caughtUpDescription") }}</span>
@@ -51,7 +57,8 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery, useQueryClient } from "@tanstack/vue-query";
+import { useQuery } from "@tanstack/vue-query";
+import { useTimeoutFn } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import VotingSessionToolbar from "src/components/post/voting/VotingSessionToolbar.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -63,7 +70,6 @@ import { usePolisVotingSession } from "src/composables/opinion/usePolisVotingSes
 import { useVoteReconciliation } from "src/composables/opinion/useVoteReconciliation";
 import { useVotingActionGuard } from "src/composables/opinion/useVotingActionGuard";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import type { FetchNextUnansweredOpinionResponse } from "src/shared/types/dto";
 import type {
   DisplayedOpinionItem,
   EventSlug,
@@ -110,16 +116,10 @@ const emit = defineEmits<{ editOpinion: [opinion: DisplayedOpinionItem] }>();
 
 const { t } = useComponentI18n<OneAtATimeTranslations>(oneAtATimeTranslations);
 const { showNotifyMessage } = useNotify();
-const queryClient = useQueryClient();
 const actionGuard = useVotingActionGuard();
 const session = usePolisVotingSession();
-const {
-  currentOpinion,
-  remainingCount,
-  excludedOpinionSlugIds,
-  isAdvancing,
-  canUndo,
-} = session;
+const { currentOpinion, remainingCount, fetchExcludedOpinionSlugIds, canUndo } =
+  session;
 const { shouldOpenParticipationModal, openParticipationOnboarding } =
   useParticipationGate({
     conversationSlugId: computed(() => props.postSlugId),
@@ -134,8 +134,8 @@ const { userId } = storeToRefs(authStore);
 const opinionUpdates = useOpinionUpdatesStore();
 const { fetchNextUnansweredOpinion } = useBackendCommentApi();
 const isSubmittingVote = actionGuard.isPending;
-const recentlyEditedOpinion = ref(false);
-let liveRefreshTimer: ReturnType<typeof setTimeout> | undefined;
+const showLoading = ref(false);
+const isActive = ref(true);
 const reconciliation = useVoteReconciliation({
   needsConfirmation: session.hasPendingWrites,
   isBusy: isSubmittingVote,
@@ -151,30 +151,64 @@ const reconciliation = useVoteReconciliation({
       await query.refetch();
   },
 });
-const queryKey = computed(() => [
-  "nextUnansweredOpinion",
-  props.postSlugId,
-  props.order,
-  userId.value,
-  displayLanguage.value,
-  [...spokenLanguages.value].sort(),
-  excludedOpinionSlugIds.value,
-]);
-const query = useQuery({
-  queryKey,
-  queryFn: ({ signal }) =>
-    fetchNextUnansweredOpinion({
-      conversationSlugId: props.postSlugId,
-      order: props.order,
-      excludedOpinionSlugIds: excludedOpinionSlugIds.value,
-      signal,
+const spokenLanguagesKey = computed(() =>
+  [...spokenLanguages.value].sort().join(",")
+);
+const query = useQuery(() => {
+  const request = {
+    conversationSlugId: props.postSlugId,
+    order: props.order,
+    excludedOpinionSlugIds: fetchExcludedOpinionSlugIds.value,
+  };
+  return {
+    queryKey: [
+      "nextUnansweredOpinion",
+      request.conversationSlugId,
+      request.order,
+      userId.value,
+      displayLanguage.value,
+      spokenLanguagesKey.value,
+      request.excludedOpinionSlugIds,
+    ],
+    queryFn: async ({ signal }: { signal: AbortSignal }) => ({
+      response: await fetchNextUnansweredOpinion({ ...request, signal }),
+      excludedOpinionSlugIds: request.excludedOpinionSlugIds,
     }),
-  staleTime: computed(() => (recentlyEditedOpinion.value ? 30_000 : 0)),
-  enabled: computed(
-    () => !isSubmittingVote.value && props.editingOpinion === undefined
-  ),
-  retry: false,
+    enabled:
+      isActive.value &&
+      session.needsNextOpinion.value &&
+      props.editingOpinion === undefined,
+    // Consumed exclusion-specific results are not useful cache entries.
+    gcTime: 0,
+    retry: false,
+  };
 });
+const isWaitingForOpinion = computed(
+  () => session.isWaitingForOpinion.value && !query.isError.value
+);
+const displayedOpinion = computed(
+  () =>
+    currentOpinion.value ??
+    (isWaitingForOpinion.value && !showLoading.value
+      ? session.previousOpinion.value
+      : undefined)
+);
+const loadingDelay = useTimeoutFn(
+  () => {
+    showLoading.value = true;
+  },
+  200,
+  { immediate: false }
+);
+watch(
+  [isWaitingForOpinion, isActive],
+  ([waiting, active]) => {
+    loadingDelay.stop();
+    showLoading.value = false;
+    if (waiting && active) loadingDelay.start();
+  },
+  { immediate: true }
+);
 const {
   userVotes,
   castVote: submitVote,
@@ -185,19 +219,20 @@ const {
 });
 
 watch(
-  [query.data, query.isFetching, isSubmittingVote],
-  ([data, isFetching, isPending]) => {
-    if (data === undefined || isFetching || isPending || query.isError.value)
-      return;
-    session.acceptQueryResult(data);
+  [query.data, query.isFetching],
+  ([data, isFetching]) => {
+    if (data === undefined || isFetching || query.isError.value) return;
+    session.acceptFetchedOpinion(data);
   },
   { immediate: true }
 );
-watch(
-  () => query.isError.value,
-  (isError) => {
-    if (isError) session.finishLoading();
-  }
+
+const liveRefresh = useTimeoutFn(
+  () => {
+    void query.refetch();
+  },
+  1200,
+  { immediate: false }
 );
 
 watch(
@@ -208,7 +243,6 @@ watch(
       newUserId !== undefined &&
       authStore.isGuest
     ) {
-      session.preserveCurrent();
       return;
     }
     resetSession();
@@ -220,13 +254,10 @@ watch(
   () => opinionUpdates.getNewOpinionSignalVersion(props.postSlugId),
   (version, previousVersion) => {
     if (version === previousVersion) return;
-    session.preserveCurrent();
-    void query.refetch();
-    if (liveRefreshTimer !== undefined) clearTimeout(liveRefreshTimer);
-    liveRefreshTimer = setTimeout(() => {
-      liveRefreshTimer = undefined;
-      void query.refetch();
-    }, 1200);
+    session.refresh({ preserveCurrent: true });
+    if (!isActive.value) return;
+    void query.refetch({ cancelRefetch: false });
+    liveRefresh.start();
   }
 );
 
@@ -252,6 +283,12 @@ async function castVote({
     if (response?.success) {
       vote.confirm();
       reconciliation.restart();
+    } else if (
+      response?.success === false &&
+      response.reason === "statement_changed"
+    ) {
+      session.refresh({ preserveCurrent: false });
+      await query.refetch();
     }
     return response;
   });
@@ -269,10 +306,6 @@ async function undoVote(): Promise<void> {
       const undo = session.prepareUndo();
       if (undo === undefined) return;
       try {
-        await queryClient.cancelQueries({
-          queryKey: ["nextUnansweredOpinion", props.postSlugId],
-        });
-        if (!isCurrent()) return;
         const response = await submitVote(undo.params);
         if (!isCurrent()) return;
         if (!response?.success) {
@@ -292,7 +325,7 @@ async function undoVote(): Promise<void> {
 }
 
 function resetSession(): void {
-  recentlyEditedOpinion.value = false;
+  liveRefresh.stop();
   actionGuard.invalidate();
   session.reset();
   reconciliation.restart();
@@ -301,15 +334,18 @@ function resetSession(): void {
 watch([() => props.postSlugId, () => props.order], resetSession, {
   flush: "sync",
 });
+watch([displayLanguage, spokenLanguagesKey], resetSession, { flush: "sync" });
 
 async function refresh({
   preserveCurrent = false,
 }: { preserveCurrent?: boolean } = {}): Promise<void> {
   if (isSubmittingVote.value) return;
+  const isCurrent = actionGuard.capture();
   session.refresh({ preserveCurrent });
   reconciliation.restart();
   await query.refetch();
-  if (!session.hasPendingWrites.value) await fetchUserVotingData();
+  if (isCurrent() && !session.hasPendingWrites.value)
+    await fetchUserVotingData();
 }
 
 function discardOpinions(
@@ -326,7 +362,7 @@ async function handleDeletedOpinion(opinionSlugId: string): Promise<void> {
 }
 
 async function handleMutedOpinion(): Promise<void> {
-  const username = currentOpinion.value?.username;
+  const username = displayedOpinion.value?.username;
   if (username !== undefined)
     discardOpinions((opinion) => opinion.username === username);
   await refresh();
@@ -341,47 +377,29 @@ async function acknowledgeCreatedOpinion(opinionSlugId: string): Promise<void> {
   await query.refetch();
 }
 
-async function acknowledgeEditedOpinion(
-  opinion: DisplayedOpinionItem
-): Promise<void> {
-  const capturedKey = queryKey.value;
-  const isCurrent = actionGuard.capture();
-  recentlyEditedOpinion.value = true;
-  await queryClient.cancelQueries({
-    queryKey: capturedKey,
-    exact: true,
-  });
-  if (!isCurrent() || capturedKey !== queryKey.value) return;
-  queryClient.setQueryData<FetchNextUnansweredOpinionResponse>(
-    capturedKey,
-    (data) =>
-      data?.status === "ready" &&
-      data.opinion.opinionSlugId === opinion.opinionSlugId
-        ? { ...data, opinion }
-        : data
-  );
+function acknowledgeEditedOpinion(opinion: DisplayedOpinionItem): void {
   session.updateCurrentOpinion(opinion);
-  session.preserveCurrent();
 }
 
 onActivated(() => {
+  isActive.value = true;
   reconciliation.resume();
   void refresh({ preserveCurrent: true });
 });
 onDeactivated(() => {
+  isActive.value = false;
   reconciliation.pause();
-  if (liveRefreshTimer !== undefined) clearTimeout(liveRefreshTimer);
+  liveRefresh.stop();
 });
 onUnmounted(() => {
   actionGuard.invalidate();
-  if (liveRefreshTimer !== undefined) clearTimeout(liveRefreshTimer);
 });
 
 defineExpose({
   refresh,
   acknowledgeCreatedOpinion,
   acknowledgeEditedOpinion,
-  isLoading: computed(() => query.isPending.value || isAdvancing.value),
+  isLoading: computed(() => isWaitingForOpinion.value && showLoading.value),
 });
 </script>
 

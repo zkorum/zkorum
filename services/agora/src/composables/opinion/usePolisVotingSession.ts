@@ -6,10 +6,23 @@ import type { FetchNextUnansweredOpinionResponse } from "src/shared/types/dto";
 import type { DisplayedOpinionItem, VotingOption } from "src/shared/types/zod";
 import { computed, shallowRef } from "vue";
 
+// The next-unanswered endpoint accepts at most 100 exclusions.
+const MAX_FETCH_EXCLUSIONS = 100;
+
 interface StatementState {
   opinion: DisplayedOpinionItem;
   vote: VotingOption | undefined;
 }
+
+type NextOpinion =
+  | { kind: "unfetched" }
+  | { kind: "ready"; opinion: DisplayedOpinionItem }
+  | { kind: "caught_up" };
+
+type FeedState =
+  | { kind: "waiting"; previousOpinion: DisplayedOpinionItem | undefined }
+  | { kind: "ready"; current: StatementState; next: NextOpinion }
+  | { kind: "caught_up" };
 
 interface HistoryEntry {
   opinion: DisplayedOpinionItem;
@@ -22,26 +35,81 @@ interface PendingWrite {
 }
 
 interface SessionState {
-  current: StatementState | undefined;
+  feed: FeedState;
   remaining: number | undefined;
   history: readonly HistoryEntry[];
   revisit: readonly StatementState[];
   exclusions: readonly string[];
   pending: ReadonlyMap<string, PendingWrite>;
-  preserveCurrent: boolean;
-  advancing: boolean;
+}
+
+export interface FetchedPolisOpinion {
+  readonly response: FetchNextUnansweredOpinionResponse;
+  readonly excludedOpinionSlugIds: readonly string[];
 }
 
 function emptySession(): SessionState {
   return {
-    current: undefined,
+    feed: { kind: "waiting", previousOpinion: undefined },
     remaining: undefined,
     history: [],
     revisit: [],
     exclusions: [],
     pending: new Map(),
-    preserveCurrent: false,
-    advancing: false,
+  };
+}
+
+function currentStatement(feed: FeedState): StatementState | undefined {
+  return feed.kind === "ready" ? feed.current : undefined;
+}
+
+function heldUnansweredIds(state: SessionState): Set<string> {
+  const ids = new Set(
+    state.revisit
+      .filter((item) => item.vote === undefined)
+      .map((item) => item.opinion.opinionSlugId)
+  );
+  if (state.feed.kind === "ready") {
+    if (state.feed.current.vote === undefined)
+      ids.add(state.feed.current.opinion.opinionSlugId);
+    if (state.feed.next.kind === "ready")
+      ids.add(state.feed.next.opinion.opinionSlugId);
+  }
+  return ids;
+}
+
+function advanceFeed({
+  feed,
+  revisit,
+  previousOpinion,
+}: {
+  feed: FeedState;
+  revisit: readonly StatementState[];
+  previousOpinion: DisplayedOpinionItem | undefined;
+}): { feed: FeedState; revisit: readonly StatementState[] } {
+  const next: NextOpinion =
+    feed.kind === "ready" ? feed.next : { kind: "unfetched" };
+  const revisited = revisit.at(-1);
+  if (revisited !== undefined)
+    return {
+      feed: { kind: "ready", current: revisited, next },
+      revisit: revisit.slice(0, -1),
+    };
+  if (next.kind === "ready")
+    return {
+      feed: {
+        kind: "ready",
+        current: { opinion: next.opinion, vote: undefined },
+        next: { kind: "unfetched" },
+      },
+      revisit,
+    };
+  return {
+    feed:
+      next.kind === "caught_up"
+        ? { kind: "caught_up" }
+        : { kind: "waiting", previousOpinion },
+    revisit,
   };
 }
 
@@ -52,7 +120,59 @@ function withExclusion({
   exclusions: readonly string[];
   id: string;
 }): string[] {
-  return [...exclusions.filter((existing) => existing !== id).slice(-98), id];
+  return [
+    ...exclusions
+      .filter((existing) => existing !== id)
+      .slice(-(MAX_FETCH_EXCLUSIONS - 1)),
+    id,
+  ];
+}
+
+function excludeOpinions({
+  state,
+  ids,
+}: {
+  state: SessionState;
+  ids: ReadonlySet<string>;
+}): SessionState {
+  let feed = state.feed;
+  let revisit: readonly StatementState[] = state.revisit.filter(
+    (item) => !ids.has(item.opinion.opinionSlugId)
+  );
+  if (feed.kind === "ready") {
+    if (feed.next.kind === "ready" && ids.has(feed.next.opinion.opinionSlugId))
+      feed = { ...feed, next: { kind: "unfetched" } };
+    if (ids.has(feed.current.opinion.opinionSlugId)) {
+      const advanced = advanceFeed({
+        feed,
+        revisit,
+        previousOpinion: undefined,
+      });
+      feed = advanced.feed;
+      revisit = advanced.revisit;
+    }
+  } else if (
+    feed.kind === "waiting" &&
+    feed.previousOpinion !== undefined &&
+    ids.has(feed.previousOpinion.opinionSlugId)
+  ) {
+    feed = { kind: "waiting", previousOpinion: undefined };
+  }
+  const removedUnanswered = [...heldUnansweredIds(state)].filter((id) =>
+    ids.has(id)
+  ).length;
+  return {
+    ...state,
+    feed,
+    revisit,
+    remaining:
+      state.remaining === undefined
+        ? undefined
+        : Math.max(0, state.remaining - removedUnanswered),
+    exclusions: [...new Set([...state.exclusions, ...ids])].slice(
+      -MAX_FETCH_EXCLUSIONS
+    ),
+  };
 }
 
 function adjustRemaining({
@@ -75,32 +195,60 @@ export function usePolisVotingSession() {
   const state = shallowRef<SessionState>(emptySession());
   let generation = 0;
 
-  function acceptQueryResult(data: FetchNextUnansweredOpinionResponse): void {
+  function acceptFetchedOpinion({
+    response,
+    excludedOpinionSlugIds,
+  }: FetchedPolisOpinion): void {
     const previous = state.value;
-    const current =
-      previous.preserveCurrent && previous.current !== undefined
-        ? {
-            ...previous.current,
-            opinion:
-              data.status === "ready" &&
-              data.opinion.opinionSlugId ===
-                previous.current.opinion.opinionSlugId
-                ? data.opinion
-                : previous.current.opinion,
-          }
-        : data.status === "ready"
-          ? { opinion: data.opinion, vote: undefined }
-          : undefined;
+    if (
+      response.status === "ready" &&
+      (currentStatement(previous.feed)?.opinion.opinionSlugId ===
+        response.opinion.opinionSlugId ||
+        previous.exclusions.includes(response.opinion.opinionSlugId) ||
+        previous.revisit.some(
+          (item) =>
+            item.opinion.opinionSlugId === response.opinion.opinionSlugId
+        ))
+    )
+      return;
+
+    const current = currentStatement(previous.feed);
+    const requestedExclusions = new Set(excludedOpinionSlugIds);
+    const reservedUnanswered = [current, ...previous.revisit].filter(
+      (item) =>
+        item !== undefined &&
+        item.vote === undefined &&
+        requestedExclusions.has(item.opinion.opinionSlugId)
+    ).length;
+    let feed: FeedState;
+    if (previous.feed.kind === "ready") {
+      feed = {
+        ...previous.feed,
+        next:
+          response.status === "ready"
+            ? { kind: "ready", opinion: response.opinion }
+            : { kind: "caught_up" },
+      };
+    } else {
+      feed =
+        response.status === "ready"
+          ? {
+              kind: "ready",
+              current: { opinion: response.opinion, vote: undefined },
+              next: { kind: "unfetched" },
+            }
+          : { kind: "caught_up" };
+    }
+    const nextState = { ...previous, feed };
     state.value = {
-      ...previous,
-      current,
+      ...nextState,
+      // Only add held statements actually excluded by this particular request.
       remaining:
-        previous.pending.size > 0
-          ? previous.remaining
-          : current !== undefined && current.vote === undefined
-            ? Math.max(data.remainingCount, 1)
-            : data.remainingCount,
-      advancing: false,
+        previous.pending.size === 0
+          ? response.remainingCount + reservedUnanswered
+          : previous.remaining === undefined
+            ? undefined
+            : Math.max(previous.remaining, heldUnansweredIds(nextState).size),
     };
   }
 
@@ -109,10 +257,8 @@ export function usePolisVotingSession() {
     voteAction,
     sourceVersion,
     previousVote,
-  }: OpinionVoteParams & {
-    previousVote: VotingOption | undefined;
-  }) {
-    const current = state.value.current;
+  }: OpinionVoteParams & { previousVote: VotingOption | undefined }) {
+    const current = currentStatement(state.value.feed);
     if (current?.opinion.opinionSlugId !== opinionSlugId) return undefined;
     const actionGeneration = generation;
     const after = voteAction === "cancel" ? undefined : voteAction;
@@ -140,22 +286,30 @@ export function usePolisVotingSession() {
           pending.set(opinionSlugId, { expectedVote: undefined });
           state.value = {
             ...previous,
-            current: { opinion: current.opinion, vote: undefined },
+            feed: {
+              kind: "ready",
+              current: { opinion: current.opinion, vote: undefined },
+              next:
+                previous.feed.kind === "ready"
+                  ? previous.feed.next
+                  : { kind: "unfetched" },
+            },
             history,
             remaining,
             pending,
-            advancing: false,
-            preserveCurrent: true,
             exclusions: previous.exclusions.filter(
               (id) => id !== opinionSlugId
             ),
           };
         } else {
           pending.delete(opinionSlugId);
-          const next = previous.revisit.at(-1);
           state.value = {
             ...previous,
-            current: next,
+            ...advanceFeed({
+              feed: previous.feed,
+              revisit: previous.revisit,
+              previousOpinion: current.opinion,
+            }),
             history,
             remaining,
             pending,
@@ -163,9 +317,6 @@ export function usePolisVotingSession() {
               exclusions: previous.exclusions,
               id: opinionSlugId,
             }),
-            revisit: previous.revisit.slice(0, -1),
-            preserveCurrent: next !== undefined,
-            advancing: next === undefined,
           };
         }
       },
@@ -180,19 +331,26 @@ export function usePolisVotingSession() {
     const id = entry.opinion.opinionSlugId;
     const pending = new Map(previous.pending);
     pending.set(id, { expectedVote: entry.before });
+    const current = currentStatement(previous.feed);
     const revisit =
-      previous.current !== undefined &&
-      previous.current.opinion.opinionSlugId !== id
-        ? [...previous.revisit, previous.current]
+      current !== undefined && current.opinion.opinionSlugId !== id
+        ? [...previous.revisit, current]
         : previous.revisit;
     state.value = {
       ...previous,
-      current: { opinion: entry.opinion, vote: entry.before },
+      feed: {
+        kind: "ready",
+        current: { opinion: entry.opinion, vote: entry.before },
+        next:
+          previous.feed.kind === "ready"
+            ? previous.feed.next
+            : previous.feed.kind === "caught_up"
+              ? { kind: "caught_up" }
+              : { kind: "unfetched" },
+      },
       revisit,
       pending,
       history: previous.history.slice(0, -1),
-      advancing: false,
-      preserveCurrent: true,
       remaining: adjustRemaining({
         count: previous.remaining,
         before: entry.after,
@@ -209,16 +367,44 @@ export function usePolisVotingSession() {
       params,
       rollback: () => {
         if (generation !== actionGeneration) return;
-        // A simultaneous statement submission may have added its auto-agreed ID.
-        const addedExclusions = state.value.exclusions.filter(
-          (existing) => !previous.exclusions.includes(existing)
+        // Statement submission can exclude an auto-agreed item while Undo is pending.
+        const addedExclusions = new Set(
+          state.value.exclusions.filter(
+            (id) => !previous.exclusions.includes(id)
+          )
         );
-        state.value = {
-          ...previous,
-          exclusions: [
-            ...new Set([...previous.exclusions, ...addedExclusions]),
-          ],
-        };
+        let restored =
+          addedExclusions.size === 0
+            ? previous
+            : excludeOpinions({ state: previous, ids: addedExclusions });
+        // Keep a refill received during Undo instead of restoring an obsolete end marker.
+        const observedFeed = state.value.feed;
+        if (observedFeed.kind === "ready") {
+          const advanced =
+            restored.feed.kind === "ready"
+              ? {
+                  feed: { ...restored.feed, next: observedFeed.next },
+                  revisit: restored.revisit,
+                }
+              : advanceFeed({
+                  feed: observedFeed,
+                  revisit: restored.revisit,
+                  previousOpinion:
+                    restored.feed.kind === "waiting"
+                      ? restored.feed.previousOpinion
+                      : undefined,
+                });
+          restored = { ...restored, ...advanced };
+          if (restored.remaining !== undefined)
+            restored = {
+              ...restored,
+              remaining: Math.max(
+                restored.remaining,
+                heldUnansweredIds(restored).size
+              ),
+            };
+        }
+        state.value = restored;
       },
     };
   }
@@ -249,41 +435,37 @@ export function usePolisVotingSession() {
   function refresh({ preserveCurrent }: { preserveCurrent: boolean }): void {
     const previous = state.value;
     const preserve =
-      previous.current !== undefined &&
+      previous.feed.kind === "ready" &&
       (preserveCurrent || previous.pending.size > 0);
     state.value = {
       ...previous,
-      preserveCurrent: preserve,
-      current: preserve ? previous.current : undefined,
-      advancing: !preserve,
+      feed:
+        preserve && previous.feed.kind === "ready"
+          ? {
+              ...previous.feed,
+              next:
+                previous.feed.next.kind === "caught_up"
+                  ? { kind: "unfetched" }
+                  : previous.feed.next,
+            }
+          : { kind: "waiting", previousOpinion: undefined },
     };
   }
 
   function excludeCreatedOpinion(id: string): void {
-    const previous = state.value;
-    const current =
-      previous.current?.opinion.opinionSlugId === id
-        ? undefined
-        : previous.current;
-    state.value = {
-      ...previous,
-      current,
-      preserveCurrent: current !== undefined,
-      exclusions: withExclusion({ exclusions: previous.exclusions, id }),
-    };
-  }
-
-  function preserveCurrent(): void {
-    state.value = {
-      ...state.value,
-      preserveCurrent: state.value.current !== undefined,
-    };
+    state.value = excludeOpinions({ state: state.value, ids: new Set([id]) });
   }
 
   function updateCurrentOpinion(opinion: DisplayedOpinionItem): void {
-    const current = state.value.current;
-    if (current?.opinion.opinionSlugId === opinion.opinionSlugId)
-      state.value = { ...state.value, current: { ...current, opinion } };
+    const feed = state.value.feed;
+    if (
+      feed.kind === "ready" &&
+      feed.current.opinion.opinionSlugId === opinion.opinionSlugId
+    )
+      state.value = {
+        ...state.value,
+        feed: { ...feed, current: { ...feed.current, opinion } },
+      };
   }
 
   function discard(matches: (opinion: DisplayedOpinionItem) => boolean): void {
@@ -293,27 +475,24 @@ export function usePolisVotingSession() {
       ...previous.history.map((entry) => entry.opinion),
       ...previous.revisit.map((item) => item.opinion),
     ];
-    if (previous.current !== undefined) known.push(previous.current.opinion);
+    const feed = previous.feed;
+    if (feed.kind === "ready") {
+      known.push(feed.current.opinion);
+      if (feed.next.kind === "ready") known.push(feed.next.opinion);
+    } else if (feed.kind === "waiting" && feed.previousOpinion !== undefined) {
+      known.push(feed.previousOpinion);
+    }
     const removed = new Set(
       known.filter(matches).map((opinion) => opinion.opinionSlugId)
     );
     const pending = new Map(previous.pending);
     for (const id of removed) pending.delete(id);
     state.value = {
-      ...previous,
+      ...excludeOpinions({ state: previous, ids: removed }),
       pending,
-      current:
-        previous.current !== undefined &&
-        !removed.has(previous.current.opinion.opinionSlugId)
-          ? previous.current
-          : undefined,
       history: previous.history.filter(
         (entry) => !removed.has(entry.opinion.opinionSlugId)
       ),
-      revisit: previous.revisit.filter(
-        (item) => !removed.has(item.opinion.opinionSlugId)
-      ),
-      exclusions: [...new Set([...previous.exclusions, ...removed])],
     };
   }
 
@@ -323,13 +502,36 @@ export function usePolisVotingSession() {
   }
 
   return {
-    currentOpinion: computed(() => state.value.current?.opinion),
+    currentOpinion: computed(() => currentStatement(state.value.feed)?.opinion),
+    previousOpinion: computed(() =>
+      state.value.feed.kind === "waiting"
+        ? state.value.feed.previousOpinion
+        : undefined
+    ),
     remainingCount: computed(() => state.value.remaining),
-    excludedOpinionSlugIds: computed(() => state.value.exclusions),
+    fetchExcludedOpinionSlugIds: computed(() => {
+      const previous = state.value;
+      const reserved = previous.revisit.map(
+        (item) => item.opinion.opinionSlugId
+      );
+      const current = currentStatement(previous.feed);
+      if (current !== undefined) reserved.push(current.opinion.opinionSlugId);
+      return [...new Set([...previous.exclusions, ...reserved])]
+        .slice(-MAX_FETCH_EXCLUSIONS)
+        .sort();
+    }),
+    needsNextOpinion: computed(
+      () =>
+        state.value.feed.kind === "waiting" ||
+        (state.value.feed.kind === "ready" &&
+          state.value.feed.next.kind === "unfetched" &&
+          state.value.revisit.length === 0)
+    ),
     canUndo: computed(() => state.value.history.length > 0),
     hasPendingWrites: computed(() => state.value.pending.size > 0),
-    isAdvancing: computed(() => state.value.advancing),
-    acceptQueryResult,
+    isWaitingForOpinion: computed(() => state.value.feed.kind === "waiting"),
+    isCaughtUp: computed(() => state.value.feed.kind === "caught_up"),
+    acceptFetchedOpinion,
     updateCurrentOpinion,
     prepareVote,
     prepareUndo,
@@ -337,11 +539,7 @@ export function usePolisVotingSession() {
     confirmPendingWrites,
     refresh,
     excludeCreatedOpinion,
-    preserveCurrent,
     discard,
     reset,
-    finishLoading: () => {
-      state.value = { ...state.value, advancing: false };
-    },
   };
 }

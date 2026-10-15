@@ -1,3 +1,4 @@
+import type { FetchNextUnansweredOpinionResponse } from "src/shared/types/dto";
 import type { DisplayedOpinionItem } from "src/shared/types/zod";
 import { describe, expect, it } from "vitest";
 
@@ -25,34 +26,58 @@ const statement: DisplayedOpinionItem = {
   },
 };
 
-function votedSession() {
-  const session = usePolisVotingSession();
-  session.acceptQueryResult({
-    status: "ready",
-    opinion: statement,
-    remainingCount: 1,
-  });
+type Session = ReturnType<typeof usePolisVotingSession>;
+
+function acceptResult({
+  session,
+  response,
+  excludedOpinionSlugIds = session.fetchExcludedOpinionSlugIds.value,
+}: {
+  session: Session;
+  response: FetchNextUnansweredOpinionResponse;
+  excludedOpinionSlugIds?: readonly string[];
+}): void {
+  session.acceptFetchedOpinion({ response, excludedOpinionSlugIds });
+}
+
+function confirmVote({
+  session,
+  opinion,
+}: {
+  session: Session;
+  opinion: DisplayedOpinionItem;
+}): void {
   session
     .prepareVote({
-      opinionSlugId: statement.opinionSlugId,
-      sourceVersion: statement.displayContent.sourceVersion,
+      opinionSlugId: opinion.opinionSlugId,
+      sourceVersion: opinion.displayContent.sourceVersion,
       voteAction: "agree",
       previousVote: undefined,
     })
     ?.confirm();
-  session.acceptQueryResult({ status: "caught_up", remainingCount: 0 });
+}
+
+function votedSession(): Session {
+  const session = usePolisVotingSession();
+  acceptResult({
+    session,
+    response: { status: "ready", opinion: statement, remainingCount: 1 },
+  });
+  confirmVote({ session, opinion: statement });
+  acceptResult({
+    session,
+    response: { status: "caught_up", remainingCount: 0 },
+  });
   return session;
 }
 
 describe("atomic Polis session state", () => {
-  it("refreshes edited content without advancing a preserved statement and binds votes to the displayed version", () => {
+  it("updates edited content without advancing and does not let a stale response undo the edit", () => {
     const session = usePolisVotingSession();
-    session.acceptQueryResult({
-      status: "ready",
-      opinion: statement,
-      remainingCount: 1,
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: statement, remainingCount: 1 },
     });
-    session.preserveCurrent();
     const edited: DisplayedOpinionItem = {
       ...statement,
       opinion: "Edited statement",
@@ -62,10 +87,11 @@ describe("atomic Polis session state", () => {
         sourceVersion: "edited-source",
       },
     };
-    session.acceptQueryResult({
-      status: "ready",
-      opinion: edited,
-      remainingCount: 1,
+    session.updateCurrentOpinion(edited);
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: statement, remainingCount: 1 },
+      excludedOpinionSlugIds: [],
     });
     expect(session.currentOpinion.value?.opinion).toBe("Edited statement");
     expect(
@@ -77,24 +103,25 @@ describe("atomic Polis session state", () => {
       })?.params.sourceVersion
     ).toBe("edited-source");
   });
+
   it("records cancellation as an undoable action without advancing away from the statement", () => {
     const session = usePolisVotingSession();
-    session.acceptQueryResult({
-      status: "ready",
-      opinion: statement,
-      remainingCount: 1,
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: statement, remainingCount: 1 },
     });
-    const cancel = session.prepareVote({
-      opinionSlugId: statement.opinionSlugId,
-      sourceVersion: statement.displayContent.sourceVersion,
-      voteAction: "cancel",
-      previousVote: "agree",
-    });
-    cancel?.confirm();
+    session
+      .prepareVote({
+        opinionSlugId: statement.opinionSlugId,
+        sourceVersion: statement.displayContent.sourceVersion,
+        voteAction: "cancel",
+        previousVote: "agree",
+      })
+      ?.confirm();
     expect(session.currentOpinion.value).toEqual(statement);
     expect(session.hasPendingWrites.value).toBe(true);
     expect(session.canUndo.value).toBe(true);
-    expect(session.isAdvancing.value).toBe(false);
+    expect(session.isWaitingForOpinion.value).toBe(false);
     expect(session.prepareUndo()?.params.voteAction).toBe("agree");
   });
 
@@ -102,15 +129,11 @@ describe("atomic Polis session state", () => {
     const session = votedSession();
     session.prepareUndo();
     const oldRead = session.capturePendingWrites();
-    session
-      .prepareVote({
-        opinionSlugId: statement.opinionSlugId,
-        sourceVersion: statement.displayContent.sourceVersion,
-        voteAction: "agree",
-        previousVote: undefined,
-      })
-      ?.confirm();
-    session.acceptQueryResult({ status: "caught_up", remainingCount: 0 });
+    confirmVote({ session, opinion: statement });
+    acceptResult({
+      session,
+      response: { status: "caught_up", remainingCount: 0 },
+    });
     session.prepareUndo();
     expect(session.confirmPendingWrites({ votes: [], captured: oldRead })).toBe(
       false
@@ -132,7 +155,7 @@ describe("atomic Polis session state", () => {
     expect(session.currentOpinion.value).toBeUndefined();
     expect(session.remainingCount.value).toBe(0);
     expect(session.canUndo.value).toBe(true);
-    expect(session.excludedOpinionSlugIds.value).toContain("created");
+    expect(session.fetchExcludedOpinionSlugIds.value).toContain("created");
   });
 
   it("does not resurrect a discarded statement or another session through a late rollback", () => {
@@ -150,5 +173,94 @@ describe("atomic Polis session state", () => {
     oldUndo?.rollback();
     expect(newSession.currentOpinion.value).toBeUndefined();
     expect(newSession.remainingCount.value).toBeUndefined();
+  });
+
+  it("does not restore an auto-agreed buffered statement when Undo fails", () => {
+    const session = usePolisVotingSession();
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: statement, remainingCount: 3 },
+    });
+    const second = { ...statement, opinionSlugId: "second" };
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: second, remainingCount: 2 },
+    });
+    confirmVote({ session, opinion: statement });
+    const created = { ...statement, opinionSlugId: "created" };
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: created, remainingCount: 1 },
+    });
+    const undo = session.prepareUndo();
+    session.excludeCreatedOpinion("created");
+    undo?.rollback();
+    expect(session.remainingCount.value).toBe(1);
+    confirmVote({ session, opinion: second });
+    expect(session.currentOpinion.value).toBeUndefined();
+    expect(session.needsNextOpinion.value).toBe(true);
+  });
+
+  it("removes discarded statements from the visible card, next slot, and waiting fallback", () => {
+    const session = usePolisVotingSession();
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: statement, remainingCount: 2 },
+    });
+    const second = { ...statement, opinionSlugId: "second" };
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: second, remainingCount: 1 },
+    });
+    session.discard((opinion) => opinion.username === "author");
+    expect(session.currentOpinion.value).toBeUndefined();
+    expect(session.previousOpinion.value).toBeUndefined();
+    expect(session.remainingCount.value).toBe(0);
+
+    const third = { ...statement, opinionSlugId: "third" };
+    acceptResult({
+      session,
+      response: { status: "ready", opinion: third, remainingCount: 1 },
+    });
+    confirmVote({ session, opinion: third });
+    expect(session.previousOpinion.value).toEqual(third);
+    session.discard((opinion) => opinion.opinionSlugId === "third");
+    expect(session.previousOpinion.value).toBeUndefined();
+  });
+
+  it("counts only the held statements excluded by a bounded request after extensive Undo", () => {
+    const session = usePolisVotingSession();
+    const total = 102;
+    for (let index = 0; index < total; index += 1) {
+      const item = { ...statement, opinionSlugId: `statement-${index}` };
+      acceptResult({
+        session,
+        response: {
+          status: "ready",
+          opinion: item,
+          remainingCount: total - index,
+        },
+      });
+      confirmVote({ session, opinion: item });
+    }
+    acceptResult({
+      session,
+      response: { status: "caught_up", remainingCount: 0 },
+    });
+    for (let index = 0; index < total; index += 1) session.prepareUndo();
+    session.confirmPendingWrites({
+      votes: [],
+      captured: session.capturePendingWrites(),
+    });
+    expect(session.fetchExcludedOpinionSlugIds.value).toHaveLength(100);
+    acceptResult({
+      session,
+      response: {
+        status: "ready",
+        opinion: { ...statement, opinionSlugId: "new" },
+        remainingCount: 3,
+      },
+    });
+    expect(session.remainingCount.value).toBe(103);
   });
 });
