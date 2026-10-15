@@ -1,5 +1,7 @@
 import { createPinia, setActivePinia } from "pinia";
 import type * as QuasarModule from "quasar";
+import type { ConversationProjectSelectOption } from "src/components/newConversation/conversationProjectSelect";
+import type { PostAsSettings } from "src/composables/conversation/draft";
 import type {
   UpdateConversationRequest,
   UpdateConversationResponse,
@@ -88,10 +90,65 @@ vi.mock("src/components/features/conversation/ConversationTitle.vue", () => ({
   default: () => null,
 }));
 vi.mock("src/components/newConversation/NewConversationControlBar.vue", () => ({
-  default: () => null,
+  default: Object.assign(
+    (
+      props: { postAs: PostAsSettings },
+      { emit, slots }: Parameters<FunctionalComponent>[1]
+    ) =>
+      h("div", [
+        h(
+          "span",
+          { "data-post-as": "" },
+          props.postAs.organizationName || "personal"
+        ),
+        h(
+          "button",
+          {
+            onClick: () =>
+              emit("update:postAs", {
+                postAsOrganization: true,
+                organizationName: "owner",
+              }),
+          },
+          "Post as owner"
+        ),
+        h(
+          "button",
+          {
+            onClick: () =>
+              emit("update:postAs", {
+                postAsOrganization: false,
+                organizationName: "",
+              }),
+          },
+          "Post as personal"
+        ),
+        slots["extra-controls"]?.(),
+      ]),
+    { props: ["postAs"], emits: ["update:postAs"] }
+  ),
 }));
 vi.mock("src/components/newConversation/ConversationProjectSelect.vue", () => ({
-  default: () => null,
+  default: Object.assign(
+    (
+      props: { options: ConversationProjectSelectOption[] },
+      { emit }: Parameters<FunctionalComponent>[1]
+    ) =>
+      h(
+        "div",
+        { "data-project-options": "" },
+        props.options.map((option) =>
+          h(
+            "button",
+            {
+              onClick: () => emit("update:modelValue", option.target),
+            },
+            "title" in option ? option.title : "No project"
+          )
+        )
+      ),
+    { props: ["options"], emits: ["update:modelValue"] }
+  ),
 }));
 vi.mock(
   "src/components/newConversation/ConversationProjectLanguageSettings.vue",
@@ -147,7 +204,12 @@ afterEach(() => {
 async function mountFlow({
   newSeeds = ["New seed"],
   detailsChanged = true,
-}: { newSeeds?: string[]; detailsChanged?: boolean } = {}) {
+  canEditSeed = true,
+}: {
+  newSeeds?: string[];
+  detailsChanged?: boolean;
+  canEditSeed?: boolean;
+} = {}) {
   const pinia = createPinia();
   setActivePinia(pinia);
   useAuthenticationStore().setLoginStatus({
@@ -187,7 +249,42 @@ async function mountFlow({
     languageSettingsSource: "conversation_override",
     currentProjectSlug: "seed-project",
     projectTarget: { kind: "project", projectSlug: "seed-project" },
-    projectOptions: [],
+    projectOptions: [
+      {
+        target: { kind: "no_project" },
+        premiumFeatures: [],
+        emailUpdates: {
+          canConfigure: false,
+          hasParticipantContactEmail: false,
+          scopeDefaultEnabled: false,
+        },
+      },
+      {
+        target: { kind: "no_project", organizationSlug: "owner" },
+        premiumFeatures: [],
+        emailUpdates: {
+          canConfigure: false,
+          hasParticipantContactEmail: false,
+          scopeDefaultEnabled: false,
+        },
+      },
+      {
+        target: { kind: "project", projectSlug: "destination" },
+        title: "Destination",
+        organizationSlugs: ["owner"],
+        premiumFeatures: [],
+        defaultLanguageCode: "en",
+        languageSettings: {
+          dynamicTranslationEnabled: false,
+          targetLanguageCodes: [],
+        },
+        emailUpdates: {
+          canConfigure: false,
+          hasParticipantContactEmail: false,
+          scopeDefaultEnabled: false,
+        },
+      },
+    ],
     isIndexed: true,
     participationMode: "account_required",
     aiLabelingEnabled: true,
@@ -211,6 +308,10 @@ async function mountFlow({
       {
         slugId: "oldseed1",
         content: "<p>An <strong>existing</strong> seed</p>",
+        sourceVersion: "00000000-0000-4000-8000-000000000010",
+        editing: canEditSeed
+          ? { allowed: true }
+          : { allowed: false, reason: "has_votes" },
       },
     ],
     canAddSeedOpinions: true,
@@ -234,6 +335,7 @@ async function mountFlow({
       surveyConfig: null,
     },
     projectTarget: response.projectTarget,
+    postAs: { postAsOrganization: false, organizationName: "" },
     isSaving: false,
     newSeedOpinions: newSeeds,
     emailConfiguration: undefined,
@@ -292,6 +394,122 @@ function clickButton(label: string): void {
 }
 
 describe("edit conversation statement step", () => {
+  it.each([false, true])(
+    "converts inherited languages using destination access when detaching a project (access=%s)",
+    async (hasTranslationAccess) => {
+      const { router, store, container } = await mountFlow({
+        newSeeds: [],
+        detailsChanged: false,
+      });
+      const session = store.session;
+      if (session === undefined) throw new Error("Missing edit session");
+      session.original.languageSettingsSource = "project_inherited";
+      session.original.projectLanguageProject = {
+        projectSlug: "seed-project",
+        projectTitle: "Source project",
+        defaultLanguageCode: "en",
+        languageSettings: {
+          dynamicTranslationEnabled: false,
+          targetLanguageCodes: [],
+        },
+      };
+      session.form.inheritProjectLanguages = true;
+      const destination = session.original.projectOptions.find(
+        (option) =>
+          option.target.kind === "no_project" &&
+          option.target.organizationSlug === undefined
+      );
+      if (destination === undefined) throw new Error("Missing destination");
+      destination.premiumFeatures = hasTranslationAccess
+        ? ["dynamic_translation"]
+        : [];
+      await router.push("/conversation/seedtest/edit?returnTo=/");
+      await vi.waitUntil(
+        () => container.querySelector("[data-project-options]") !== null
+      );
+      clickButton("No project");
+      await nextTick();
+      clickButton("Next");
+      await vi.waitUntil(() =>
+        router.currentRoute.value.path.endsWith("/seed")
+      );
+      mocks.save.mockResolvedValueOnce({
+        success: false,
+        reason: "not_author",
+      });
+      clickButton("Save");
+      await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
+      expect(mocks.save.mock.calls.at(0)?.at(0)).toMatchObject({
+        projectChange: {
+          expectedProjectSlug: "seed-project",
+          target: { kind: "no_project" },
+        },
+        languageSettingsSource: "conversation_override",
+        multilingualSetting: {
+          dynamicTranslationEnabled: false,
+          additionalLanguageCodes: hasTranslationAccess ? ["en"] : [],
+        },
+        newSeedOpinionList: [],
+      });
+    }
+  );
+
+  it("scopes projects to Post as and preserves the identity and project through Next, Back, and Save", async () => {
+    const { router, store, container } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    await router.push("/conversation/seedtest/edit?returnTo=/");
+    await vi.waitUntil(
+      () => container.querySelector("[data-post-as]") !== null
+    );
+    expect(
+      container.querySelector("[data-project-options]")?.textContent
+    ).not.toContain("Destination");
+
+    clickButton("Post as owner");
+    await nextTick();
+    expect(container.querySelector("[data-post-as]")?.textContent).toBe(
+      "owner"
+    );
+    expect(container.querySelector("[data-project-options]")?.textContent).toBe(
+      "No projectDestination"
+    );
+    clickButton("Destination");
+    await nextTick();
+    clickButton("Post as owner");
+    await nextTick();
+    clickButton("Next");
+    await vi.waitUntil(() => router.currentRoute.value.path.endsWith("/seed"));
+    expect(store.session?.postAs.organizationName).toBe("owner");
+    expect(store.session?.projectTarget).toEqual({
+      kind: "project",
+      projectSlug: "destination",
+    });
+
+    await router.push("/conversation/seedtest/edit?returnTo=/");
+    await vi.waitUntil(
+      () => container.querySelector("[data-post-as]") !== null
+    );
+    expect(container.querySelector("[data-post-as]")?.textContent).toBe(
+      "owner"
+    );
+    clickButton("Post as personal");
+    await nextTick();
+    expect(
+      container.querySelector("[data-project-options]")?.textContent
+    ).not.toContain("Destination");
+    clickButton("Next");
+    await vi.waitUntil(() => router.currentRoute.value.path.endsWith("/seed"));
+    mocks.save.mockResolvedValueOnce({ success: false, reason: "not_author" });
+    clickButton("Save");
+    await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
+    expect(mocks.save.mock.calls.at(0)?.at(0)?.projectChange).toEqual({
+      expectedProjectSlug: "seed-project",
+      target: { kind: "no_project", organizationSlug: undefined },
+    });
+  });
+
   it("prevents leaving or double-submitting while Save is pending", async () => {
     const { router, store } = await mountFlow({ newSeeds: [] });
     let finish = (_response: UpdateConversationResponse) => {};
@@ -344,7 +562,14 @@ describe("edit conversation statement step", () => {
       ...original,
       conversationSlugId: "nexttest",
       conversationTitle: "Another conversation",
-      seedOpinions: [{ slugId: "newseed1", content: "Another existing seed" }],
+      seedOpinions: [
+        {
+          slugId: "newseed1",
+          content: "Another existing seed",
+          sourceVersion: "00000000-0000-4000-8000-000000000011",
+          editing: { allowed: true },
+        },
+      ],
     });
     await router.push("/conversation/nexttest/edit/seed?returnTo=/");
     await vi.waitUntil(
@@ -420,14 +645,13 @@ describe("edit conversation statement step", () => {
     await vi.waitUntil(() => router.currentRoute.value.path === "/");
     expect(store.session).toBeUndefined();
   });
-  it("shows existing formatted statements without editing controls and submits only additions", async () => {
+  it("shows existing formatted statements with draft controls and submits only additions when unchanged", async () => {
     const { container, store } = await mountFlow();
     await vi.waitUntil(() => container.querySelector("textarea") !== null);
     const existing = container.querySelector(".statement-section");
     expect(existing?.querySelector("strong")?.textContent).toBe("existing");
-    expect(
-      existing?.querySelector("textarea, button, [contenteditable]")
-    ).toBeNull();
+    expect(existing?.querySelector("textarea, [contenteditable]")).toBeNull();
+    expect(existing?.textContent).toContain("Edit");
     mocks.save.mockResolvedValue({ success: false, reason: "not_author" });
     clickButton("Save");
     await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
@@ -436,8 +660,189 @@ describe("edit conversation statement step", () => {
         ? {}
         : buildEditConversationRequest(store.session)),
       newSeedOpinionList: ["New seed"],
+      seedOpinionChanges: [],
     });
     expect(store.session?.newSeedOpinions).toEqual(["New seed"]);
+  });
+
+  it("stages deletion visibly without saving, and undo restores an unchanged draft", async () => {
+    const { container, store } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    const deletion = container.querySelector(
+      'button[aria-label="Delete statement"]'
+    );
+    if (!(deletion instanceof HTMLButtonElement))
+      throw new Error("Missing deletion control");
+    deletion.click();
+    await nextTick();
+    expect(container.textContent).toContain("Deleted — unsaved");
+    expect(
+      container.querySelector(".deleted-content strong")?.textContent
+    ).toBe("existing");
+    expect(store.session?.original.seedOpinions).toHaveLength(1);
+    expect(store.hasUnsavedChanges).toBe(true);
+    expect(mocks.save).not.toHaveBeenCalled();
+    clickButton("Undo deletion");
+    await nextTick();
+    expect(container.textContent).not.toContain("Deleted — unsaved");
+    expect(store.hasUnsavedChanges).toBe(false);
+  });
+
+  it("preserves staged edits through deletion, undo, Back, and Next, then submits on Save", async () => {
+    const { container, store, router } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    clickButton("Edit");
+    await vi.waitUntil(() => container.querySelector("textarea") !== null);
+    const field = container.querySelector("textarea");
+    if (field === null) throw new Error("Missing statement editor");
+    field.value = "<p>Edited seed</p>";
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    await nextTick();
+    expect(container.textContent).toContain("Edited — unsaved");
+    const deletion = container.querySelector(
+      'button[aria-label="Delete statement"]'
+    );
+    if (!(deletion instanceof HTMLButtonElement))
+      throw new Error("Missing deletion control");
+    deletion.click();
+    await nextTick();
+    clickButton("Undo deletion");
+    await nextTick();
+    expect(container.textContent).toContain("Edited seed");
+    expect(container.textContent).toContain("Edited — unsaved");
+    expect(mocks.save).not.toHaveBeenCalled();
+    await router.push("/conversation/seedtest/edit?returnTo=/");
+    await vi.waitUntil(
+      () => container.querySelectorAll("textarea").length === 2
+    );
+    clickButton("Next");
+    await vi.waitUntil(() => router.currentRoute.value.path.endsWith("/seed"));
+    expect(store.hasUnsavedChanges).toBe(true);
+    mocks.save.mockResolvedValueOnce({ success: false, reason: "not_author" });
+    clickButton("Save");
+    await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
+    expect(mocks.save.mock.calls.at(0)?.at(0)?.seedOpinionChanges).toEqual([
+      {
+        action: "edit",
+        slugId: "oldseed1",
+        sourceVersion: "00000000-0000-4000-8000-000000000010",
+        content: "<p>Edited seed</p>",
+      },
+    ]);
+    await vi.waitUntil(() => !store.isSaving);
+    clickButton("Undo edit");
+    await nextTick();
+    expect(store.session?.existingSeedOpinions.at(0)?.content).toBe(
+      "<p>An <strong>existing</strong> seed</p>"
+    );
+  });
+
+  it("submits draft deletion only on Save and keeps it visible after failure", async () => {
+    const { container } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    const deletion = container.querySelector(
+      'button[aria-label="Delete statement"]'
+    );
+    if (!(deletion instanceof HTMLButtonElement))
+      throw new Error("Missing deletion control");
+    deletion.click();
+    await nextTick();
+    mocks.save.mockResolvedValueOnce({ success: false, reason: "not_author" });
+    clickButton("Save");
+    await vi.waitUntil(() => mocks.save.mock.calls.length === 1);
+    expect(mocks.save.mock.calls.at(0)?.at(0)?.seedOpinionChanges).toEqual([
+      {
+        action: "delete",
+        slugId: "oldseed1",
+        sourceVersion: "00000000-0000-4000-8000-000000000010",
+      },
+    ]);
+    expect(container.textContent).toContain("Deleted — unsaved");
+  });
+
+  it("blocks editing voted statements while allowing draft deletion and undo", async () => {
+    const { container } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+      canEditSeed: false,
+    });
+    expect(container.textContent).toContain(
+      "has received votes and can no longer be edited"
+    );
+    expect(
+      Array.from(container.querySelectorAll("button")).some(
+        (button) => button.textContent?.trim() === "Edit"
+      )
+    ).toBe(false);
+    const deletion = container.querySelector(
+      'button[aria-label="Delete statement"]'
+    );
+    if (!(deletion instanceof HTMLButtonElement))
+      throw new Error("Missing deletion control");
+    deletion.click();
+    await nextTick();
+    clickButton("Undo deletion");
+    await nextTick();
+    expect(container.querySelector("textarea")).toBeNull();
+  });
+
+  it("preserves a rejected draft and blocks resubmitting it after a vote arrives", async () => {
+    const { container, store } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    clickButton("Edit");
+    await vi.waitUntil(() => container.querySelector("textarea") !== null);
+    const field = container.querySelector("textarea");
+    if (field === null) throw new Error("Missing statement editor");
+    field.value = "Unsaved edit";
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    await nextTick();
+    mocks.save.mockResolvedValueOnce({
+      success: false,
+      reason: "seed_opinion_change_rejected",
+      seedOpinionSlugId: "oldseed1",
+      changeFailure: "has_votes",
+    });
+    clickButton("Save");
+    await vi.waitUntil(
+      () => mocks.save.mock.calls.length === 1 && !store.isSaving
+    );
+    expect(container.textContent).toContain("Unsaved edit");
+    expect(container.querySelector("textarea")).toBeNull();
+    clickButton("Save");
+    await nextTick();
+    expect(mocks.save).toHaveBeenCalledTimes(1);
+    clickButton("Undo edit");
+    await nextTick();
+    expect(store.hasUnsavedChanges).toBe(false);
+  });
+
+  it("shows a local validation error before submitting an oversized change batch", async () => {
+    const { container, store } = await mountFlow({
+      newSeeds: [],
+      detailsChanged: false,
+    });
+    const current = store.session;
+    const original = current?.existingSeedOpinions.at(0);
+    if (current === undefined || original === undefined)
+      throw new Error("Missing draft fixture");
+    current.existingSeedOpinions = Array.from({ length: 51 }, (_, index) => ({
+      ...original,
+      slugId: `seed${String(index).padStart(4, "0")}`,
+      deleted: true,
+    }));
+    await nextTick();
+    clickButton("Save");
+    await nextTick();
+    expect(container.textContent).toContain("existing statements per save");
+    expect(mocks.save).not.toHaveBeenCalled();
   });
 
   it("preserves details and additions across Back and Next without reloading", async () => {

@@ -2,12 +2,12 @@ import { defineStore } from "pinia";
 import type { SupportedCountryCallingCode } from "src/shared/types/zod";
 import { ref } from "vue";
 
-export const phoneVerificationStore = defineStore("phoneVerification", () => {
-  interface PhoneVerificationData {
-    internationalPhoneNumber: string;
-    countryCallingCode: SupportedCountryCallingCode;
-  }
+export interface PhoneVerificationData {
+  readonly internationalPhoneNumber: string;
+  readonly countryCallingCode: SupportedCountryCallingCode;
+}
 
+export const phoneVerificationStore = defineStore("phoneVerification", () => {
   const EMPTY_NUMBER: PhoneVerificationData = {
     internationalPhoneNumber: "",
     countryCallingCode: "33",

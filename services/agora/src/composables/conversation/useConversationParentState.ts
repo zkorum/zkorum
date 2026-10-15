@@ -1,5 +1,5 @@
 import { storeToRefs } from "pinia";
-import { getInitialFilterFromRoute } from "src/composables/opinion/getInitialFilterFromRoute";
+import { getOpinionFilterSelection } from "src/composables/opinion/opinionLinkRoute";
 import type { DisplayedOpinionItem } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
@@ -247,11 +247,36 @@ export function useConversationParentState({
   }
 
   // Filter state: owned here, displayed in PostActionBar slot, synced with child route via props
+  const initialFilterSelection = getOpinionFilterSelection(route);
   const commentFilter = ref<CommentFilterOptions>(
-    routeContextValue.value.kind === "embed"
-      ? "discover"
-      : getInitialFilterFromRoute(route)
+    routeContextValue.value.kind !== "embed" &&
+      initialFilterSelection.kind === "explicit"
+      ? initialFilterSelection.filter
+      : "discover"
   );
+
+  // Honor explicit filter URLs when navigating to a cached page.
+  watch([() => route.path, () => route.query.filter], () => {
+    const selection = getOpinionFilterSelection(route);
+    if (
+      selection.kind === "explicit" &&
+      routeContextValue.value.kind !== "embed" &&
+      commentRouteNames.some((name) => name === route.name)
+    ) {
+      commentFilter.value = selection.filter;
+    }
+  });
+
+  async function selectCommentFilter(
+    filter: CommentFilterOptions
+  ): Promise<void> {
+    commentFilter.value = filter;
+    await router.replace({
+      path: route.path,
+      hash: route.hash,
+      query: { ...route.query, opinion: undefined, filter },
+    });
+  }
 
   // Provide state and functions to child routes
   provide("refreshConversation", async () => {
@@ -346,8 +371,11 @@ export function useConversationParentState({
   );
 
   function openModerationHistory(): void {
+    commentFilter.value = "moderated";
     if (currentTab.value !== "comment") {
       navigateToCommentTab();
+    } else {
+      void selectCommentFilter("moderated");
     }
     moderationHistoryTrigger.value += 1;
   }
@@ -453,6 +481,7 @@ export function useConversationParentState({
     isCurrentTabLoading,
     moderationHistoryTrigger,
     commentFilter,
+    selectCommentFilter,
     actionBarElement,
     onViewAnalysis,
     navigateToDiscoverTab,

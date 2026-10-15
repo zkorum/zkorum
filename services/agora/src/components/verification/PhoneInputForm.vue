@@ -13,22 +13,24 @@
     <template v-else>
       <div>{{ t("smsDescription") }}</div>
 
-      <ZKPhoneNumberInput
-        v-model="phoneData.phoneNumber"
-        v-model:country-code="phoneData.countryCode"
-        :allowed-countries="allowedCountries"
-        :success="phoneData.isValid"
-        :error="phoneData.hasError"
-        show-code-in-list
-        :placeholder="t('phoneNumberPlaceholder')"
-        required
-        auto-format="blur"
-        :validation-error="false"
-        aria-describedby="phone-error"
-        :on-update="onPhoneUpdate"
-        :on-country-code="onCountryCodeUpdate"
-        :on-keydown-enter="submit"
-      />
+      <fieldset class="phoneFields" :disabled="isInteractionLocked">
+        <ZKPhoneNumberInput
+          v-model="phoneData.phoneNumber"
+          v-model:country-code="phoneData.countryCode"
+          :allowed-countries="allowedCountries"
+          :success="phoneData.isValid"
+          :error="phoneData.hasError"
+          show-code-in-list
+          :placeholder="t('phoneNumberPlaceholder')"
+          required
+          auto-format="blur"
+          :validation-error="false"
+          aria-describedby="phone-error"
+          :on-update="onPhoneUpdate"
+          :on-country-code="onCountryCodeUpdate"
+          :on-keydown-enter="submit"
+        />
+      </fieldset>
       <PhoneTurnstile ref="turnstileWidget" />
 
       <div
@@ -52,14 +54,25 @@
 
           <div
             v-for="authorizedNumber in devAuthorizedNumbers"
-            :key="authorizedNumber.fullNumber"
+            :key="authorizedNumber.number"
           >
             <ZKGradientButton
-              :label="authorizedNumber.fullNumber"
+              :label="authorizedNumber.number"
               label-color="#FFFFFF"
-              :style="{ width: '100%' }"
+              class="developmentNumberButton"
+              :disabled="isInteractionLocked"
+              :aria-busy="submittingPhoneNumber === authorizedNumber.number"
               @click="injectDevelopmentNumber(authorizedNumber)"
-            />
+            >
+              <template #prefix>
+                <q-spinner
+                  v-if="submittingPhoneNumber === authorizedNumber.number"
+                  class="q-me-sm"
+                  size="1.2em"
+                  aria-hidden="true"
+                />
+              </template>
+            </ZKGradientButton>
           </div>
         </div>
       </div>
@@ -68,12 +81,15 @@
 </template>
 
 <script setup lang="ts">
-import type { CountryCode } from "libphonenumber-js/max";
+import type { CountryCode, PhoneNumber } from "libphonenumber-js/max";
 import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { storeToRefs } from "pinia";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { usePhoneCountryPolicy } from "src/composables/verification/usePhoneCountryPolicy";
-import { phoneVerificationStore } from "src/stores/onboarding/phone";
+import {
+  type PhoneVerificationData,
+  phoneVerificationStore,
+} from "src/stores/onboarding/phone";
 import type { PhoneAuthPurpose } from "src/utils/auth/phoneAuthMode";
 import { parsePhoneNumberInput } from "src/utils/auth/phoneNumberInput";
 import { processEnv } from "src/utils/processEnv";
@@ -90,9 +106,11 @@ import PhoneTurnstile from "./PhoneTurnstile.vue";
 
 const props = defineProps<{
   purpose: PhoneAuthPurpose;
+  isLoading: boolean;
+  disabled: boolean;
 }>();
 const emit = defineEmits<{
-  submit: [];
+  submit: [phoneNumber: PhoneVerificationData];
 }>();
 
 const { t } = useComponentI18n<PhoneInputFormTranslations>(
@@ -126,29 +144,26 @@ const allowedCountries = computed(() =>
   countryPolicy.countriesFor(props.purpose)
 );
 const turnstileWidget = ref<InstanceType<typeof PhoneTurnstile>>();
-
-interface PhoneNumber {
-  fullNumber: string;
-}
-
-const devAuthorizedNumbers: PhoneNumber[] = [];
-loadDevAuthorizedNumbers();
-
-function loadDevAuthorizedNumbers() {
-  if (processEnv.VITE_DEV_AUTHORIZED_PHONES) {
-    const phoneList = processEnv.VITE_DEV_AUTHORIZED_PHONES.split(",");
-    phoneList.forEach((number) => {
-      const parsedNumber = parsePhoneNumberFromString(number);
-      if (parsedNumber) {
-        devAuthorizedNumbers.push({
-          fullNumber: parsedNumber.number,
-        });
-      } else {
-        console.warn("Failed to parse development phone number");
-      }
-    });
+const isInteractionLocked = computed(() => props.isLoading || props.disabled);
+const submittingPhoneNumber = computed(() =>
+  props.isLoading
+    ? verificationPhoneNumber.value.internationalPhoneNumber
+    : undefined
+);
+const devAuthorizedNumbers = [
+  ...new Set(
+    processEnv.VITE_DEV_AUTHORIZED_PHONES?.split(",").map((number) =>
+      number.trim()
+    )
+  ),
+].flatMap((number) => {
+  const parsedNumber = parsePhoneNumberFromString(number);
+  if (parsedNumber === undefined) {
+    console.warn("Failed to parse development phone number");
+    return [];
   }
-}
+  return [parsedNumber];
+});
 
 function clearErrors() {
   phoneData.hasError = false;
@@ -195,17 +210,15 @@ function onCountryCodeUpdate(_countryCode: CountryCode | null | undefined) {
   phoneData.hasAttemptedSubmission = false;
 }
 
-function injectDevelopmentNumber(phoneItem: PhoneNumber) {
-  const parsedNumber = parsePhoneNumberFromString(phoneItem.fullNumber);
-  if (parsedNumber) {
-    phoneData.phoneNumber = parsedNumber.nationalNumber;
-    phoneData.countryCode = parsedNumber.country || null;
-    submit();
-  }
+function injectDevelopmentNumber(phoneNumber: PhoneNumber) {
+  if (isInteractionLocked.value) return;
+  phoneData.phoneNumber = phoneNumber.nationalNumber;
+  phoneData.countryCode = phoneNumber.country ?? null;
+  submit();
 }
 
 function submit(): boolean {
-  if (!phoneAuthAvailability.value.available) {
+  if (isInteractionLocked.value || !phoneAuthAvailability.value.available) {
     return false;
   }
 
@@ -213,8 +226,7 @@ function submit(): boolean {
 
   const parsed = parsePhoneInput();
   if (parsed === undefined) return false;
-  verificationPhoneNumber.value = parsed;
-  emit("submit");
+  emit("submit", parsed);
   return true;
 }
 
@@ -239,6 +251,17 @@ defineExpose({ submit, takeTurnstileToken });
   padding: 1rem;
   background-color: #f3f4f6;
   border-radius: 15px;
+}
+
+.phoneFields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.developmentNumberButton {
+  width: 100%;
 }
 
 .error-message {

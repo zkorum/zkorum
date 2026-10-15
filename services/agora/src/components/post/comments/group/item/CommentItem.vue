@@ -32,13 +32,6 @@
       </div>
 
       <div class="comment-content">
-        <div
-          v-if="editingOpinionSlugId === commentItem.opinionSlugId"
-          class="editing-label"
-          role="status"
-        >
-          {{ editT("editing") }}
-        </div>
         <ContentTranslationControl
           v-if="contentTranslation?.isAvailable === true"
           :model-value="contentTranslation.mode"
@@ -91,7 +84,6 @@
 import OpinionIdentityCard from "src/components/post/comments/OpinionIdentityCard.vue";
 import ContentTranslationControl from "src/components/translation/ContentTranslationControl.vue";
 import type { OpinionVotingUtilities } from "src/composables/opinion/types";
-import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type {
   DisplayedOpinionItem,
   EventSlug,
@@ -104,7 +96,6 @@ import type { ContentTranslationDisplayMode } from "src/utils/translation/conten
 import { computed } from "vue";
 
 import ZKHtmlContent from "../../../../ui-library/ZKHtmlContent.vue";
-import { opinionEditingTranslations } from "../../opinionEditing.i18n";
 import CommentActionBar from "./CommentActionBar.vue";
 import CommentActionOptions from "./CommentActionOptions.vue";
 import CommentModeration from "./CommentModeration.vue";
@@ -148,7 +139,6 @@ const displayedOpinion = computed(() => {
   }
   return props.commentItem.opinion;
 });
-const { t: editT } = useComponentI18n(opinionEditingTranslations);
 
 function deletedComment() {
   emit("deleted", props.commentItem.opinionSlugId);
@@ -184,11 +174,6 @@ function mutedComment() {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-}
-.editing-label {
-  color: $primary;
-  font-size: 0.875rem;
-  font-weight: 600;
 }
 
 .comment-content :deep(p) {

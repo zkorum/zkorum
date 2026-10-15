@@ -9,6 +9,10 @@ vi.mock("src/stores/user", () => ({
   useUserStore: () => ({}),
 }));
 
+vi.mock("vue-router", () => ({
+  useRoute: () => ({ query: {} }),
+}));
+
 vi.mock("src/utils/api/auth", () => ({
   useBackendAuthApi: () => ({
     loadAuthenticatedModules: vi.fn(),
@@ -51,7 +55,9 @@ describe("ConversationCommentTab", () => {
     });
 
     expect(() => app.mount(container)).not.toThrow();
-    expect(container.querySelector('[data-testid="comment-section"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="comment-section"]')
+    ).toBeNull();
 
     app.unmount();
   });

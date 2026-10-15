@@ -6,7 +6,7 @@
   <div class="container">
     <div class="title">{{ t("title") }}</div>
 
-    <div class="userOpinion">
+    <div v-if="opinionItem !== undefined" class="userOpinion">
       <ZKHtmlContent
         :html-body="opinionItem.opinion"
         :compact-mode="false"
@@ -117,22 +117,7 @@ let postSlugId: string | null = null;
 let commentSlugId: string | null = null;
 loadRouteParams();
 
-const opinionItem = ref<OpinionItem>({
-  opinion: "",
-  sourceLanguageCode: null,
-  opinionSlugId: "",
-  createdAt: new Date(),
-  numParticipants: 0,
-  numDisagrees: 0,
-  numAgrees: 0,
-  numPasses: 0,
-  updatedAt: new Date(),
-  username: "",
-  isSeed: false,
-  moderation: {
-    status: "unmoderated",
-  },
-});
+const opinionItem = ref<OpinionItem>();
 
 onMounted(async () => {
   await initializeData();
@@ -166,8 +151,10 @@ async function initializeData() {
   }
 
   if (commentSlugId) {
-    const response = await fetchOpinionsBySlugIdList([commentSlugId]);
-    opinionItem.value = response[0];
+    const response = await fetchOpinionsBySlugIdList({
+      opinionSlugIdList: [commentSlugId],
+    });
+    opinionItem.value = response.at(0)?.opinion;
   }
 }
 

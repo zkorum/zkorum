@@ -18,6 +18,7 @@ describe("pagination boundary correlation", () => {
     { filter: "hidden", cursor: createdCursor },
     { filter: "new", cursor: createdCursor },
     { filter: "moderated", cursor: createdCursor },
+    { filter: "my_statements", cursor: createdCursor },
     {
       filter: "discover",
       cursor: {

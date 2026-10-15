@@ -6329,7 +6329,6 @@ export interface ApiV1ConversationGetForEditPost200ResponseOneOf {
     'requiresEventTicket'?: ApiV1ConversationGetForEditPost200ResponseOneOfRequiresEventTicketEnum;
     'aiLabelingEnabled': boolean;
     'preferredOpinionGroupCount': number | null;
-    'postAsOrganizationName'?: string;
     'postAsOrganizationSlug'?: string;
     'surveyConfig'?: ApiV1ConversationGetForEditPost200ResponseOneOfSurveyConfig | null;
     'createdAt': string;
@@ -6461,6 +6460,7 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectLanguageProjec
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInner {
     'target': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOf;
     'title': string;
+    'organizationSlugs': Array<string>;
     'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerPremiumFeaturesEnum>;
     'defaultLanguageCode': ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerDefaultLanguageCodeEnum;
     'languageSettings': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerLanguageSettings;
@@ -6495,6 +6495,7 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerDe
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf {
     'target': ApiV1ConversationEmailUpdateActionManageOptOutPostRequestTargetOneOf;
     'title': string;
+    'organizationSlugs': Array<string>;
     'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfPremiumFeaturesEnum>;
     'defaultLanguageCode': ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOfDefaultLanguageCodeEnum;
     'languageSettings': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerLanguageSettings;
@@ -6528,7 +6529,6 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAn
 
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1 {
     'target': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOf;
-    'title': string;
     'premiumFeatures': Array<ApiV1ConversationGetForEditPost200ResponseOneOfProjectOptionsInnerAnyOf1PremiumFeaturesEnum>;
     'emailUpdates': ApiV1ProjectCreateOptionsListPost200ResponseOneOfProjectListInnerEmailUpdates;
 }
@@ -6550,7 +6550,7 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectTarget = ApiV1
 
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOf {
     'kind': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOfKindEnum;
-    'organizationSlug': string;
+    'organizationSlug'?: string;
 }
 
 export const ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOfKindEnum = {
@@ -6562,7 +6562,29 @@ export type ApiV1ConversationGetForEditPost200ResponseOneOfProjectTargetOneOfKin
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInner {
     'slugId': string;
     'content': string;
+    'sourceVersion': string;
+    'editing': ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditing;
 }
+/**
+ * @type ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditing
+ */
+export type ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditing = ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf | ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf1;
+
+export interface ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf {
+    'allowed': boolean;
+}
+export interface ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf1 {
+    'allowed': boolean;
+    'reason': ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf1ReasonEnum;
+}
+
+export const ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf1ReasonEnum = {
+    HasVotes: 'has_votes',
+    NotAllowed: 'not_allowed',
+} as const;
+
+export type ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf1ReasonEnum = typeof ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf1ReasonEnum[keyof typeof ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInnerEditingOneOf1ReasonEnum];
+
 export interface ApiV1ConversationGetForEditPost200ResponseOneOfSurveyConfig {
     'isOptional': boolean;
     'questions': Array<ApiV1ConversationGetForEditPost200ResponseOneOfSurveyConfigQuestionsInner>;
@@ -6890,13 +6912,14 @@ export type ApiV1ConversationUpdatePost200Response = ApiV1ConversationUpdatePost
 export interface ApiV1ConversationUpdatePost200ResponseOneOf {
     'success': boolean;
     'projectAssignment'?: ApiV1ConversationUpdatePost200ResponseOneOfProjectAssignment;
-    'addedSeedOpinions'?: Array<ApiV1ConversationGetForEditPost200ResponseOneOfSeedOpinionsInner>;
+    'addedSeedOpinions'?: Array<ApiV1ConversationUpdatePost200ResponseOneOfAddedSeedOpinionsInner>;
     'addedOpinions'?: Array<ApiV1OpinionEditPost200ResponseOneOfDisplayedOpinionItem>;
+    'updatedOpinions'?: Array<ApiV1OpinionEditPost200ResponseOneOfDisplayedOpinionItem>;
 }
 /**
  * @type ApiV1ConversationUpdatePost200ResponseOneOf1
  */
-export type ApiV1ConversationUpdatePost200ResponseOneOf1 = ApiV1ConversationUpdatePost200ResponseOneOf1OneOf | ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1;
+export type ApiV1ConversationUpdatePost200ResponseOneOf1 = ApiV1ConversationUpdatePost200ResponseOneOf1OneOf | ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1 | ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2;
 
 export interface ApiV1ConversationUpdatePost200ResponseOneOf1OneOf {
     'success': boolean;
@@ -6927,6 +6950,7 @@ export interface ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1 {
     'success': boolean;
     'reason': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1ReasonEnum;
     'seedOpinionFailure': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailure;
+    'seedOpinionSlugId'?: string;
 }
 
 export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1ReasonEnum = {
@@ -6966,6 +6990,31 @@ export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailur
 
 export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1ReasonEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1ReasonEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf1SeedOpinionFailureOneOf1ReasonEnum];
 
+export interface ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2 {
+    'success': boolean;
+    'reason': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ReasonEnum;
+    'seedOpinionSlugId': string;
+    'changeFailure': ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ChangeFailureEnum;
+}
+
+export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ReasonEnum = {
+    SeedOpinionChangeRejected: 'seed_opinion_change_rejected',
+} as const;
+
+export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ReasonEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ReasonEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ReasonEnum];
+export const ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ChangeFailureEnum = {
+    NotFound: 'not_found',
+    VersionConflict: 'version_conflict',
+    HasVotes: 'has_votes',
+    NotAllowed: 'not_allowed',
+} as const;
+
+export type ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ChangeFailureEnum = typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ChangeFailureEnum[keyof typeof ApiV1ConversationUpdatePost200ResponseOneOf1OneOf2ChangeFailureEnum];
+
+export interface ApiV1ConversationUpdatePost200ResponseOneOfAddedSeedOpinionsInner {
+    'slugId': string;
+    'content': string;
+}
 export interface ApiV1ConversationUpdatePost200ResponseOneOfProjectAssignment {
     'previousProjectSlug': string;
     'projectSlug': string;
@@ -6985,6 +7034,7 @@ export interface ApiV1ConversationUpdatePostRequest {
     'conversationTypeConfig': ApiV1ConversationUpdatePostRequestConversationTypeConfig;
     'surveyConfig'?: ApiV1ConversationCreatePostRequestOneOfSurveyConfig | null;
     'newSeedOpinionList'?: Array<string>;
+    'seedOpinionChanges'?: Array<ApiV1ConversationUpdatePostRequestSeedOpinionChangesInner>;
     'conversationEmailUpdateEnabledOverride'?: boolean | null;
 }
 
@@ -7036,6 +7086,36 @@ export interface ApiV1ConversationUpdatePostRequestProjectChange {
     'expectedProjectSlug': string;
     'target': ApiV1ConversationGetForEditPost200ResponseOneOfProjectTarget;
 }
+/**
+ * @type ApiV1ConversationUpdatePostRequestSeedOpinionChangesInner
+ */
+export type ApiV1ConversationUpdatePostRequestSeedOpinionChangesInner = ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf | ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf1;
+
+export interface ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf {
+    'action': ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOfActionEnum;
+    'slugId': string;
+    'sourceVersion': string;
+    'content': string;
+}
+
+export const ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOfActionEnum = {
+    Edit: 'edit',
+} as const;
+
+export type ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOfActionEnum = typeof ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOfActionEnum[keyof typeof ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOfActionEnum];
+
+export interface ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf1 {
+    'action': ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf1ActionEnum;
+    'slugId': string;
+    'sourceVersion': string;
+}
+
+export const ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf1ActionEnum = {
+    Delete: 'delete',
+} as const;
+
+export type ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf1ActionEnum = typeof ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf1ActionEnum[keyof typeof ApiV1ConversationUpdatePostRequestSeedOpinionChangesInnerOneOf1ActionEnum];
+
 export interface ApiV1ConversationValidateCsvPost200Response {
     'summaryFile'?: ApiV1ConversationValidateCsvPost200ResponseSummaryFile;
     'commentsFile'?: ApiV1ConversationValidateCsvPost200ResponseSummaryFile;
@@ -8293,6 +8373,11 @@ export const ApiV1OpinionFetchAnalysisFrameOpinionListByFramePostRequestKindEnum
 
 export type ApiV1OpinionFetchAnalysisFrameOpinionListByFramePostRequestKindEnum = typeof ApiV1OpinionFetchAnalysisFrameOpinionListByFramePostRequestKindEnum[keyof typeof ApiV1OpinionFetchAnalysisFrameOpinionListByFramePostRequestKindEnum];
 
+export interface ApiV1OpinionFetchBySlugIdListPost200ResponseInner {
+    'opinion': ApiV1OpinionEditPost200ResponseOneOfDisplayedOpinionItem;
+    'conversationSlugId': string;
+    'isOwn': boolean;
+}
 export interface ApiV1OpinionFetchBySlugIdListPostRequest {
     'opinionSlugIdList': Array<string>;
 }
@@ -8414,6 +8499,7 @@ export interface ApiV1OpinionFetchPagePostRequestOneOf2 {
 export const ApiV1OpinionFetchPagePostRequestOneOf2FilterEnum = {
     New: 'new',
     Moderated: 'moderated',
+    MyStatements: 'my_statements',
 } as const;
 
 export type ApiV1OpinionFetchPagePostRequestOneOf2FilterEnum = typeof ApiV1OpinionFetchPagePostRequestOneOf2FilterEnum[keyof typeof ApiV1OpinionFetchPagePostRequestOneOf2FilterEnum];
@@ -17433,7 +17519,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest: ApiV1OpinionFetchBySlugIdListPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1OpinionEditPost200ResponseOneOfDisplayedOpinionItem>>> {
+        async apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest: ApiV1OpinionFetchBySlugIdListPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1OpinionFetchBySlugIdListPost200ResponseInner>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1OpinionFetchBySlugIdListPost']?.[localVarOperationServerIndex]?.url;
@@ -18991,7 +19077,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest: ApiV1OpinionFetchBySlugIdListPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<ApiV1OpinionEditPost200ResponseOneOfDisplayedOpinionItem>> {
+        apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest: ApiV1OpinionFetchBySlugIdListPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<ApiV1OpinionFetchBySlugIdListPost200ResponseInner>> {
             return localVarFp.apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest, options).then((request) => request(axios, basePath));
         },
         /**

@@ -7,9 +7,11 @@ import { phoneTurnstileTranslations } from "src/components/verification/PhoneTur
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { createRequestGate } from "src/composables/verification/createRequestGate";
 import { useOtpTimers } from "src/composables/verification/useOtpTimers";
-import { authenticate200 } from "src/shared/types/dto-auth";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { phoneVerificationStore } from "src/stores/onboarding/phone";
+import {
+  type PhoneVerificationData,
+  phoneVerificationStore,
+} from "src/stores/onboarding/phone";
 import { useAuthPhoneApi } from "src/utils/api/auth-phone";
 import { getAuthenticationStartKeyAction } from "src/utils/auth/authKeyAction";
 import {
@@ -19,6 +21,7 @@ import {
 } from "src/utils/auth/phoneAuthMode";
 import { processEnv } from "src/utils/processEnv";
 import { type MaybeRefOrGetter, onMounted, onUnmounted } from "vue";
+import { isNavigationFailure, type NavigationFailure } from "vue-router";
 
 interface PhoneSubmitTranslations {
   throttled: string;
@@ -30,7 +33,7 @@ interface PhoneSubmitTranslations {
 interface UsePhoneSubmitParams {
   purpose: MaybeRefOrGetter<PhoneAuthPurpose>;
   takeTurnstileToken: () => string | undefined;
-  onNavigateToOtp: () => Promise<unknown>;
+  onNavigateToOtp: () => Promise<void | NavigationFailure>;
   onAlreadyHasCredential: () => void;
   showNotifyMessage: (message: string) => void;
   translations: PhoneSubmitTranslations;
@@ -87,13 +90,13 @@ export function usePhoneSubmit({
     }
   }
 
-  async function submitPhone() {
+  async function submitPhone(phone: PhoneVerificationData) {
     if (!phoneAuthAvailability.value.available) {
       showPhoneAuthUnavailable(phoneAuthAvailability.value.reason);
       return;
     }
 
-    const phoneNumber = verificationPhoneNumber.value.internationalPhoneNumber;
+    const { internationalPhoneNumber: phoneNumber, countryCallingCode } = phone;
     if (phoneNumber === "" || verificationNextCodeSeconds.value > 0) return;
 
     const requestId = requestGate.start();
@@ -108,9 +111,13 @@ export function usePhoneSubmit({
         showNotifyMessage(tTurnstile("retrySecurityCheck"));
         return;
       }
+      verificationPhoneNumber.value = {
+        internationalPhoneNumber: phoneNumber,
+        countryCallingCode,
+      };
       const response = await sendSmsCode({
         phoneNumber,
-        defaultCallingCode: verificationPhoneNumber.value.countryCallingCode,
+        defaultCallingCode: countryCallingCode,
         isRequestingNewCode: false,
         turnstileToken,
         keyAction: getAuthenticationStartKeyAction({
@@ -123,15 +130,21 @@ export function usePhoneSubmit({
         return;
       }
       if (response.status === "success") {
-        const data = authenticate200.parse(response.data);
+        const data = response.data;
         if (data.success) {
           requestCodeThrottleUntil.value = null;
           pendingOtpData.value = {
-            codeExpiry: new Date(data.codeExpiry),
-            nextCodeSoonestTime: new Date(data.nextCodeSoonestTime),
+            codeExpiry: data.codeExpiry,
+            nextCodeSoonestTime: data.nextCodeSoonestTime,
           };
-          requestGate.terminate();
-          await onNavigateToOtp();
+          const navigationFailure = await onNavigateToOtp();
+          if (isNavigationFailure(navigationFailure)) {
+            if (requestGate.isCurrent(requestId)) {
+              showNotifyMessage(translations.somethingWrong);
+            }
+          } else {
+            requestGate.terminate();
+          }
         } else {
           switch (data.reason) {
             case "already_has_credential":
@@ -140,9 +153,7 @@ export function usePhoneSubmit({
               onAlreadyHasCredential();
               break;
             case "throttled":
-              requestCodeThrottleUntil.value = new Date(
-                data.nextCodeSoonestTime
-              );
+              requestCodeThrottleUntil.value = data.nextCodeSoonestTime;
               setNextCodeSoonestTime(requestCodeThrottleUntil.value);
               showNotifyMessage(translations.throttled);
               break;
@@ -159,6 +170,10 @@ export function usePhoneSubmit({
         }
       } else {
         console.error("Error while sending SMS code", response.message);
+        showNotifyMessage(translations.somethingWrong);
+      }
+    } catch {
+      if (requestGate.isCurrent(requestId)) {
         showNotifyMessage(translations.somethingWrong);
       }
     } finally {

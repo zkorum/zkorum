@@ -1,7 +1,6 @@
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 
 export interface OpinionEditingTranslations {
-  editing: string;
   save: string;
   cancel: string;
   discard: string;
@@ -17,7 +16,6 @@ export const opinionEditingTranslations: Record<
   OpinionEditingTranslations
 > = {
   en: {
-    editing: "Editing statement",
     save: "Save changes",
     cancel: "Cancel",
     discard: "Discard changes?",
@@ -29,7 +27,6 @@ export const opinionEditingTranslations: Record<
     failed: "Could not save your changes. Your text is still here.",
   },
   fr: {
-    editing: "Modification de la proposition",
     save: "Enregistrer",
     cancel: "Annuler",
     discard: "Abandonner les modifications ?",
@@ -44,7 +41,6 @@ export const opinionEditingTranslations: Record<
       "Impossible d’enregistrer vos modifications. Votre texte est conservé.",
   },
   ar: {
-    editing: "تعديل المقترح",
     save: "حفظ التغييرات",
     cancel: "إلغاء",
     discard: "تجاهل التغييرات؟",
@@ -56,7 +52,6 @@ export const opinionEditingTranslations: Record<
     failed: "تعذر حفظ التغييرات. لا يزال نصك محفوظًا هنا.",
   },
   es: {
-    editing: "Editando la proposición",
     save: "Guardar cambios",
     cancel: "Cancelar",
     discard: "¿Descartar cambios?",
@@ -68,7 +63,6 @@ export const opinionEditingTranslations: Record<
     failed: "No se pudieron guardar los cambios. Tu texto sigue aquí.",
   },
   fa: {
-    editing: "ویرایش گزاره",
     save: "ذخیره تغییرات",
     cancel: "لغو",
     discard: "حذف تغییرات؟",
@@ -80,7 +74,6 @@ export const opinionEditingTranslations: Record<
     failed: "ذخیره تغییرات ممکن نشد. متن شما همچنان اینجاست.",
   },
   "zh-Hans": {
-    editing: "编辑陈述",
     save: "保存修改",
     cancel: "取消",
     discard: "放弃修改？",
@@ -91,7 +84,6 @@ export const opinionEditingTranslations: Record<
     failed: "无法保存修改。你的文本仍保留在这里。",
   },
   "zh-Hant": {
-    editing: "編輯陳述",
     save: "儲存修改",
     cancel: "取消",
     discard: "放棄修改？",
@@ -102,7 +94,6 @@ export const opinionEditingTranslations: Record<
     failed: "無法儲存修改。你的文字仍保留在這裡。",
   },
   he: {
-    editing: "עריכת הצהרה",
     save: "שמירת שינויים",
     cancel: "ביטול",
     discard: "למחוק את השינויים?",
@@ -114,7 +105,6 @@ export const opinionEditingTranslations: Record<
     failed: "לא ניתן לשמור את השינויים. הטקסט שלך עדיין כאן.",
   },
   ja: {
-    editing: "意見を編集中",
     save: "変更を保存",
     cancel: "キャンセル",
     discard: "変更を破棄しますか？",
@@ -126,7 +116,6 @@ export const opinionEditingTranslations: Record<
     failed: "変更を保存できませんでした。入力内容はここに残っています。",
   },
   ky: {
-    editing: "Пикирди түзөтүү",
     save: "Өзгөртүүлөрдү сактоо",
     cancel: "Жокко чыгаруу",
     discard: "Өзгөртүүлөр жокко чыгарылсынбы?",
@@ -139,7 +128,6 @@ export const opinionEditingTranslations: Record<
       "Өзгөртүүлөрдү сактоо мүмкүн болгон жок. Текстиңиз бул жерде сакталууда.",
   },
   ru: {
-    editing: "Редактирование утверждения",
     save: "Сохранить изменения",
     cancel: "Отмена",
     discard: "Отменить изменения?",

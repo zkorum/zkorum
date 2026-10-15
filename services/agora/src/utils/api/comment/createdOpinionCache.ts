@@ -27,7 +27,7 @@ export async function cacheCreatedSeedOpinions({
     {
       queryKey: commentsKey,
       predicate: ({ queryKey }) =>
-        ["discover", "new"].includes(String(queryKey[2])) &&
+        ["discover", "new", "my_statements"].includes(String(queryKey[2])) &&
         queryKey[3] === viewerUserId,
     },
     (oldData) => {
@@ -85,8 +85,9 @@ export async function cacheCreatedOpinion({
     {
       queryKey: commentsKey,
       predicate: ({ queryKey }) =>
-        ["discover", "new", "my_votes"].includes(String(queryKey[2])) &&
-        queryKey[3] === viewerUserId,
+        ["discover", "new", "my_votes", "my_statements"].includes(
+          String(queryKey[2])
+        ) && queryKey[3] === viewerUserId,
     },
     (oldData) => {
       // An unfetched lazy list must stay unfetched, rather than look complete.

@@ -30,13 +30,8 @@ import type { ConversationProjectTarget } from "src/shared/types/zod";
 import { getConversationProjectTargetKey } from "src/shared/utils/conversationProject";
 import { computed, ref } from "vue";
 
-export type ConversationProjectSelectOption =
-  | (Extract<ConversationProjectTarget, { kind: "project" }> & {
-      title: string;
-    })
-  | (Extract<ConversationProjectTarget, { kind: "no_project" }> & {
-      title: string | undefined;
-    });
+import type { ConversationProjectSelectOption } from "./conversationProjectSelect";
+
 const props = defineProps<{
   options: readonly ConversationProjectSelectOption[];
   modelValue: ConversationProjectTarget;
@@ -49,39 +44,28 @@ const { t } = useComponentI18n(conversationProjectSettingsTranslations);
 const showDialog = ref(false);
 const selectOptions = computed(() =>
   props.options.map((option) => ({
-    value: getConversationProjectTargetKey(option),
-    label:
-      option.kind === "no_project"
-        ? option.title === undefined
-          ? t("noProjectLabel")
-          : t("noProjectScopeLabel", { organization: option.title })
-        : option.title,
+    value: getConversationProjectTargetKey(option.target),
+    label: "title" in option ? option.title : t("noProjectLabel"),
   }))
 );
-const controlLabel = computed(
-  () =>
-    selectOptions.value.find(
-      (option) =>
-        option.value === getConversationProjectTargetKey(props.modelValue)
-    )?.label ??
-    props.fallbackLabel ??
-    (props.modelValue.kind === "project"
-      ? props.modelValue.projectSlug
-      : t("noProjectLabel"))
+const controlLabel = computed(() =>
+  props.modelValue.kind === "no_project"
+    ? t("noProjectLabel")
+    : (selectOptions.value.find(
+        (option) =>
+          option.value === getConversationProjectTargetKey(props.modelValue)
+      )?.label ??
+      props.fallbackLabel ??
+      props.modelValue.projectSlug)
 );
 
 function selectTarget(value: string | string[] | null): void {
   if (typeof value !== "string") return;
   const option = props.options.find(
-    (option) => getConversationProjectTargetKey(option) === value
+    (option) => getConversationProjectTargetKey(option.target) === value
   );
   if (option === undefined) return;
-  emit(
-    "update:modelValue",
-    option.kind === "project"
-      ? { kind: "project", projectSlug: option.projectSlug }
-      : { kind: "no_project", organizationSlug: option.organizationSlug }
-  );
+  emit("update:modelValue", option.target);
   showDialog.value = false;
 }
 </script>

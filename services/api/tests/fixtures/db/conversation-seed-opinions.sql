@@ -321,6 +321,29 @@ CREATE TABLE "conversation_view_snapshot" (
 	CONSTRAINT "conversation_view_snapshot_preferred_opinion_group_count_check" CHECK ("conversation_view_snapshot"."preferred_opinion_group_count" IS NULL OR ("conversation_view_snapshot"."preferred_opinion_group_count" >= 2 AND "conversation_view_snapshot"."preferred_opinion_group_count" <= 6))
 );
 
+CREATE TABLE "maxdiff_comparison" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "maxdiff_comparison_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"maxdiff_result_id" integer NOT NULL,
+	"position" integer NOT NULL,
+	"best_slug_id" varchar(8) NOT NULL,
+	"worst_slug_id" varchar(8) NOT NULL,
+	"candidate_set" text[] NOT NULL,
+	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	"deleted_at" timestamp (0)
+);
+
+CREATE TABLE "maxdiff_result" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "maxdiff_result_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"participant_id" uuid NOT NULL,
+	"conversation_id" integer NOT NULL,
+	"ranking" jsonb,
+	"comparisons" jsonb NOT NULL,
+	"is_complete" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
+	CONSTRAINT "maxdiff_result_participant_id_conversation_id_unique" UNIQUE("participant_id","conversation_id")
+);
+
 CREATE TABLE "opinion_content" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "opinion_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"public_id" uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -616,6 +639,13 @@ CREATE TABLE "realtime_event_outbox" (
 	"created_at" timestamp (0) DEFAULT now() NOT NULL
 );
 
+CREATE TABLE "realtime_event_outbox_topic" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "realtime_event_outbox_topic_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"event_id" integer NOT NULL,
+	"topic" varchar(255) NOT NULL,
+	CONSTRAINT "realtime_event_outbox_topic_unique" UNIQUE("event_id","topic")
+);
+
 CREATE TABLE "survey_answer_option" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "survey_answer_option_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"survey_answer_id" integer NOT NULL,
@@ -814,6 +844,14 @@ CREATE INDEX "conversation_view_snapshot_latest_spec_active_idx" ON "conversatio
 
 CREATE INDEX "conversation_view_snapshot_analysis_snapshot_idx" ON "conversation_view_snapshot" USING btree ("analysis_snapshot_id") WHERE "conversation_view_snapshot"."analysis_snapshot_id" is not null;
 
+CREATE INDEX "maxdiff_comparison_result_idx" ON "maxdiff_comparison" USING btree ("maxdiff_result_id");
+
+CREATE UNIQUE INDEX "maxdiff_comparison_active_result_position_unique" ON "maxdiff_comparison" USING btree ("maxdiff_result_id","position") WHERE "maxdiff_comparison"."deleted_at" IS NULL;
+
+CREATE INDEX "maxdiff_result_complete_idx" ON "maxdiff_result" USING btree ("conversation_id","is_complete");
+
+CREATE INDEX "maxdiff_result_conversation_idx" ON "maxdiff_result" USING btree ("conversation_id");
+
 CREATE UNIQUE INDEX "opinion_moderation_active_opinion_unique" ON "opinion_moderation" USING btree ("opinion_id") WHERE "opinion_moderation"."deleted_at" is null;
 
 CREATE INDEX "opinion_authorId_idx" ON "opinion" USING btree ("author_id");
@@ -855,6 +893,8 @@ CREATE INDEX "realtime_event_outbox_created_at_idx" ON "realtime_event_outbox" U
 CREATE INDEX "realtime_event_outbox_conversation_replay_idx" ON "realtime_event_outbox" USING btree (("payload"->>'conversationSlugId'),"id") WHERE "realtime_event_outbox"."event_type" IN ('conversation_analysis_updated', 'conversation_settings_updated', 'conversation_survey_updated', 'opinion_updated');
 
 CREATE INDEX "realtime_event_outbox_ranking_replay_idx" ON "realtime_event_outbox" USING btree (("payload"->>'conversationSlugId'),"id") WHERE "realtime_event_outbox"."event_type" = 'conversation_ranking_stats_updated';
+
+CREATE INDEX "realtime_event_outbox_topic_replay_idx" ON "realtime_event_outbox_topic" USING btree ("topic","event_id");
 
 CREATE UNIQUE INDEX "survey_answer_option_answer_option_active_uidx" ON "survey_answer_option" USING btree ("survey_answer_id","survey_question_option_id") WHERE "survey_answer_option"."deleted_at" IS NULL;
 

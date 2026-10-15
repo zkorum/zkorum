@@ -9,8 +9,8 @@
           :title="t('languagesTitle')"
           :value="selectedLanguagesValue"
           :description="selectedLanguagesDescription"
-          :icon="canUseDynamicTranslation ? forwardIcon : 'mdi-lock-outline'"
-          :disabled="!canUseDynamicTranslation"
+          :icon="canManageLanguages ? forwardIcon : 'mdi-lock-outline'"
+          :disabled="!canManageLanguages"
           :clickable="true"
           @click="openAdditionalLanguagesPage"
         />
@@ -20,21 +20,18 @@
           :value="undefined"
           :description="t('dynamicTranslationDescription')"
           :icon="undefined"
-          :disabled="!canUseDynamicTranslation"
+          :disabled="!canChangeDynamicTranslation"
           :clickable="false"
         >
           <template #actions>
             <q-icon
-              v-if="!canUseDynamicTranslation"
+              v-if="!canChangeDynamicTranslation"
               name="mdi-lock-outline"
               class="language-settings-row__icon"
             />
             <q-toggle
               v-else
-              :model-value="
-                canUseDynamicTranslation &&
-                multilingualSetting.dynamicTranslationEnabled
-              "
+              :model-value="multilingualSetting.dynamicTranslationEnabled"
               @update:model-value="setDynamicTranslation"
             />
           </template>
@@ -114,6 +111,16 @@ const { t, locale } =
 const $q = useQuasar();
 
 const showLanguagePickerDialog = ref(false);
+const canManageLanguages = computed(
+  () =>
+    props.canUseDynamicTranslation ||
+    multilingualSetting.value.additionalLanguageCodes.length > 0
+);
+const canChangeDynamicTranslation = computed(
+  () =>
+    props.canUseDynamicTranslation ||
+    multilingualSetting.value.dynamicTranslationEnabled
+);
 
 const additionalLanguagesValue = computed(() => {
   const additionalLanguageLabels =
@@ -258,7 +265,7 @@ function getDisplayLanguageLabel(
 }
 
 function openAdditionalLanguagesPage(): void {
-  if (!props.canUseDynamicTranslation) {
+  if (!canManageLanguages.value) {
     return;
   }
 
@@ -267,7 +274,7 @@ function openAdditionalLanguagesPage(): void {
 }
 
 function setDynamicTranslation(value: boolean): void {
-  if (!props.canUseDynamicTranslation) {
+  if (value && !props.canUseDynamicTranslation) {
     return;
   }
 
@@ -294,7 +301,6 @@ watch(
   },
   { immediate: true }
 );
-
 </script>
 
 <style scoped lang="scss">
@@ -307,5 +313,4 @@ watch(
   border-radius: 18px;
   background: white;
 }
-
 </style>

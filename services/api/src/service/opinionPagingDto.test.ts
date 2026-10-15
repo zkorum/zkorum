@@ -45,4 +45,27 @@ describe("opinion page cursor contract", () => {
             }).success,
         ).toBe(false);
     });
+
+    it("requires a creation cursor for My statements and rejects a client-selected author", () => {
+        const request = {
+            conversationSlugId: "page1234",
+            filter: "my_statements",
+            cursor: createdCursor,
+        };
+        expect(Dto.fetchOpinionPageRequest.safeParse(request).success).toBe(
+            true,
+        );
+        expect(
+            Dto.fetchOpinionPageRequest.safeParse({
+                ...request,
+                cursor: votedCursor,
+            }).success,
+        ).toBe(false);
+        expect(
+            Dto.fetchOpinionPageRequest.safeParse({
+                ...request,
+                authorId: "another-user",
+            }).success,
+        ).toBe(false);
+    });
 });

@@ -11,7 +11,7 @@ import {
     surveyQuestionTable,
 } from "@/shared-backend/schema.js";
 import { detectLanguage } from "@/shared-backend/translate.js";
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import {
     type LanguageDetectionProvider,
@@ -32,6 +32,16 @@ export interface ContentLanguageMetadata {
     sourceLanguageProvider: LanguageDetectionProvider | null;
     sourceLanguageConfidence: number | null;
 }
+
+export interface ContentLanguageDetectionInput {
+    text: string;
+    googleText?: string;
+    useGoogleLanguageDetection: boolean;
+}
+
+export type ContentLanguageMetadataResolver = (
+    input: ContentLanguageDetectionInput,
+) => Promise<ContentLanguageMetadata>;
 
 export const UNKNOWN_CONTENT_LANGUAGE_METADATA: ContentLanguageMetadata = {
     sourceLanguageCode: null,
@@ -120,7 +130,9 @@ export async function resolveContentLanguageMetadata({
     googleCloudCredentials: GoogleCloudCredentials | undefined;
     useGoogleLanguageDetection: boolean;
     languageHints?: readonly LanguageDetectionHintInput[];
-    localLanguageDetector?: Parameters<typeof detectLanguageWithFallback>[0]["localDetector"];
+    localLanguageDetector?: Parameters<
+        typeof detectLanguageWithFallback
+    >[0]["localDetector"];
 }): Promise<ContentLanguageMetadata> {
     if (text.trim().length === 0) {
         return UNKNOWN_CONTENT_LANGUAGE_METADATA;
@@ -154,7 +166,10 @@ export async function resolveContentLanguageMetadata({
             sourceLanguageConfidence: detectionResult.confidence,
         };
     } catch (error) {
-        log.warn(error, "[ContentLanguageMetadata] Failed to detect content language");
+        log.warn(
+            error,
+            "[ContentLanguageMetadata] Failed to detect content language",
+        );
         return UNKNOWN_CONTENT_LANGUAGE_METADATA;
     }
 }
@@ -170,17 +185,13 @@ export function contentLanguageMetadataUpdateValues(
     return metadata;
 }
 
-export async function refreshCurrentConversationOwnedContentLanguageMetadata({
+export async function loadCurrentConversationOwnedLanguageSources({
     db,
     conversationId,
-    googleCloudCredentials,
-    useGoogleLanguageDetection,
 }: {
     db: PostgresJsDatabase;
     conversationId: number;
-    googleCloudCredentials: GoogleCloudCredentials | undefined;
-    useGoogleLanguageDetection: boolean;
-}): Promise<ContentLanguageMetadata | undefined> {
+}) {
     const conversationRows = await db
         .select({
             contentId: conversationContentTable.id,
@@ -209,11 +220,17 @@ export async function refreshCurrentConversationOwnedContentLanguageMetadata({
         .from(surveyQuestionTable)
         .innerJoin(
             surveyQuestionContentTable,
-            eq(surveyQuestionContentTable.id, surveyQuestionTable.currentContentId),
+            eq(
+                surveyQuestionContentTable.id,
+                surveyQuestionTable.currentContentId,
+            ),
         )
         .leftJoin(
             surveyQuestionOptionTable,
-            eq(surveyQuestionOptionTable.surveyQuestionId, surveyQuestionTable.id),
+            eq(
+                surveyQuestionOptionTable.surveyQuestionId,
+                surveyQuestionTable.id,
+            ),
         )
         .leftJoin(
             surveyQuestionOptionContentTable,
@@ -232,7 +249,7 @@ export async function refreshCurrentConversationOwnedContentLanguageMetadata({
         rows: surveyRows,
     });
     const bodyPlainText = conversationContent.bodyPlainText ?? "";
-    const blockLanguageMetadata = await resolveContentLanguageMetadata({
+    const blockInput = {
         text: buildContentBlockLanguageDetectionCorpusFromParts({
             conversationCorpus: buildConversationLanguageDetectionCorpus({
                 conversationTitle: conversationContent.title,
@@ -245,24 +262,11 @@ export async function refreshCurrentConversationOwnedContentLanguageMetadata({
             bodyPlainText,
             supplementalPlainText: surveyCorpus,
         }),
-        googleCloudCredentials,
-        useGoogleLanguageDetection,
-    });
-
-    await db
-        .update(conversationContentTable)
-        .set(contentLanguageMetadataUpdateValues(blockLanguageMetadata))
-        .where(eq(conversationContentTable.id, conversationContent.contentId));
+    };
 
     const questionContentIds = [
         ...new Set(surveyRows.map((row) => row.questionContentId)),
     ];
-    for (const questionContentId of questionContentIds) {
-        await db
-            .update(surveyQuestionContentTable)
-            .set(contentLanguageMetadataUpdateValues(blockLanguageMetadata))
-            .where(eq(surveyQuestionContentTable.id, questionContentId));
-    }
 
     const optionContentIds = [
         ...new Set(
@@ -271,16 +275,11 @@ export async function refreshCurrentConversationOwnedContentLanguageMetadata({
                 .filter((contentId): contentId is number => contentId !== null),
         ),
     ];
-    for (const optionContentId of optionContentIds) {
-        await db
-            .update(surveyQuestionOptionContentTable)
-            .set(contentLanguageMetadataUpdateValues(blockLanguageMetadata))
-            .where(eq(surveyQuestionOptionContentTable.id, optionContentId));
-    }
 
     const seedOpinionRows = await db
         .select({
             opinionContentId: opinionContentTable.id,
+            slugId: opinionTable.slugId,
             content: opinionContentTable.content,
             contentPlainText: opinionContentTable.contentPlainText,
         })
@@ -297,22 +296,77 @@ export async function refreshCurrentConversationOwnedContentLanguageMetadata({
             ),
         );
 
-    for (const seedOpinion of seedOpinionRows) {
-        const plainText =
-            seedOpinion.contentPlainText ??
-            htmlToCountedTextWithWarning({
-                html: seedOpinion.content,
-                context: "seed opinion language metadata",
-            });
-        const sourceLanguageMetadata = await resolveContentLanguageMetadata({
-            text: plainText,
-            googleCloudCredentials,
+    return {
+        contentId: conversationContent.contentId,
+        blockInput,
+        questionContentIds,
+        optionContentIds,
+        seedOpinions: seedOpinionRows.map((opinion) => ({
+            contentId: opinion.opinionContentId,
+            slugId: opinion.slugId,
+            text:
+                opinion.contentPlainText ??
+                htmlToCountedTextWithWarning({
+                    html: opinion.content,
+                    context: "seed opinion language metadata",
+                }),
+        })),
+    };
+}
+
+export async function refreshCurrentConversationOwnedContentLanguageMetadata({
+    db,
+    conversationId,
+    resolveLanguageMetadata,
+    useGoogleLanguageDetection,
+}: {
+    db: PostgresJsDatabase;
+    conversationId: number;
+    resolveLanguageMetadata: ContentLanguageMetadataResolver;
+    useGoogleLanguageDetection: boolean;
+}): Promise<ContentLanguageMetadata | undefined> {
+    const sources = await loadCurrentConversationOwnedLanguageSources({
+        db,
+        conversationId,
+    });
+    if (sources === undefined) return undefined;
+    const blockLanguageMetadata = await resolveLanguageMetadata({
+        ...sources.blockInput,
+        useGoogleLanguageDetection,
+    });
+    await db
+        .update(conversationContentTable)
+        .set(contentLanguageMetadataUpdateValues(blockLanguageMetadata))
+        .where(eq(conversationContentTable.id, sources.contentId));
+    if (sources.questionContentIds.length > 0)
+        await db
+            .update(surveyQuestionContentTable)
+            .set(contentLanguageMetadataUpdateValues(blockLanguageMetadata))
+            .where(
+                inArray(
+                    surveyQuestionContentTable.id,
+                    sources.questionContentIds,
+                ),
+            );
+    if (sources.optionContentIds.length > 0)
+        await db
+            .update(surveyQuestionOptionContentTable)
+            .set(contentLanguageMetadataUpdateValues(blockLanguageMetadata))
+            .where(
+                inArray(
+                    surveyQuestionOptionContentTable.id,
+                    sources.optionContentIds,
+                ),
+            );
+    for (const opinion of sources.seedOpinions) {
+        const sourceLanguageMetadata = await resolveLanguageMetadata({
+            text: opinion.text,
             useGoogleLanguageDetection,
         });
         await db
             .update(opinionContentTable)
             .set(contentLanguageMetadataUpdateValues(sourceLanguageMetadata))
-            .where(eq(opinionContentTable.id, seedOpinion.opinionContentId));
+            .where(eq(opinionContentTable.id, opinion.contentId));
     }
 
     return blockLanguageMetadata;

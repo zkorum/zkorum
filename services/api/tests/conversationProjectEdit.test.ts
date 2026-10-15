@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
@@ -17,7 +17,9 @@ vi.mock("@/app.js", () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 vi.mock("@/service/contentTranslation.js", () => ({
-    createEagerContentTranslationWorkForKnownConversation: async () => [],
+    createEagerContentTranslationWorkForKnownConversation: vi.fn(
+        async () => [],
+    ),
     fetchCurrentSurveyQuestionSources: async () => [],
     fetchSeedOpinionSources: async () => [],
 }));
@@ -46,7 +48,9 @@ import {
     projectContactTable,
 } from "../src/shared-backend/schema.js";
 import { getConversationProjectOptions } from "../src/service/conversationProject.js";
+import { getOrCreatePersonalOrganization } from "../src/service/projectAccess.js";
 import { updateConversation } from "../src/service/postEdit.js";
+import { createEagerContentTranslationWorkForKnownConversation } from "../src/service/contentTranslation.js";
 import { readDbFixtureSql } from "./dbFixture.js";
 
 process.env.TESTCONTAINERS_RYUK_DISABLED ??= "true";
@@ -128,8 +132,11 @@ describe("conversation project editing", () => {
     }, 120_000);
 
     beforeEach(async () => {
+        vi.mocked(
+            createEagerContentTranslationWorkForKnownConversation,
+        ).mockClear();
         await db.execute(
-            sql`TRUNCATE conversation_project_assignment, conversation_email_update_conversation, conversation_email_update_delivery, conversation_email_update, conversation_content, conversation_moderation, conversation_translation_target_language, conversation, polis_conversation_config, project_content, project_contact, project_translation_target_language, project_organization_ownership, project, premium_feature_entitlement, organization_membership_all_project_capability, organization_membership, organization, "user", realtime_event_outbox_topic, realtime_event_outbox RESTART IDENTITY CASCADE`,
+            sql`TRUNCATE conversation_project_assignment, conversation_email_update_conversation, conversation_email_update_delivery, conversation_email_update, conversation_content, conversation_moderation, conversation_translation_target_language, conversation, polis_conversation_config, project_content, project_contact, project_translation_target_language, project_organization_ownership, project, premium_feature_entitlement, organization_membership_all_project_capability, organization_membership_capability, organization_membership, organization_localization, organization, "user", realtime_event_outbox_topic, realtime_event_outbox RESTART IDENTITY CASCADE`,
         );
         await db
             .insert(userTable)
@@ -436,6 +443,17 @@ describe("conversation project editing", () => {
                 { kind: "no_project", organizationSlug: "owner" },
             ]),
         );
+        expect(options).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    target: { kind: "project", projectSlug: "destination" },
+                    organizationSlugs: ["owner"],
+                }),
+                expect.objectContaining({
+                    target: { kind: "no_project", organizationSlug: "owner" },
+                }),
+            ]),
+        );
     });
 
     it("derives Email Update permissions through any owner rather than the displayed organization", async () => {
@@ -486,6 +504,250 @@ describe("conversation project editing", () => {
                     option.target.projectSlug === "destination",
             )?.emailUpdates.canConfigure,
         ).toBe(true);
+        expect(options).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    target: { kind: "project", projectSlug: "destination" },
+                    organizationSlugs: expect.arrayContaining([
+                        "owner",
+                        "email-owner",
+                    ]),
+                }),
+            ]),
+        );
+    });
+
+    it("provisions the authenticated user's personal scope only when saving the move", async () => {
+        const options = await getConversationProjectOptions({ db, userId });
+        expect(options).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    target: { kind: "no_project", organizationSlug: undefined },
+                }),
+            ]),
+        );
+        expect(await db.select().from(organizationTable)).toHaveLength(1);
+        const data = request();
+        data.projectChange = {
+            expectedProjectSlug: "source",
+            target: { kind: "no_project" },
+        };
+        const response = await updateConversation({ db, userId, data });
+        expect(response).toMatchObject({
+            success: true,
+            projectAssignment: { target: { kind: "no_project" } },
+        });
+        const [personal] = await db
+            .select()
+            .from(organizationTable)
+            .where(eq(organizationTable.autoProvisionedForUserId, userId));
+        if (personal === undefined)
+            throw new Error("Missing personal organization");
+        const [personalProject] = await db
+            .select()
+            .from(projectTable)
+            .where(
+                eq(projectTable.autoProvisionedForOrganizationId, personal.id),
+            );
+        expect(personalProject).toBeDefined();
+        expect(
+            (await db.select().from(conversationTable)).at(0)?.projectId,
+        ).toBe(personalProject?.id);
+        const refreshedOptions = await getConversationProjectOptions({
+            db,
+            userId,
+        });
+        expect(
+            refreshedOptions.filter(
+                (option) =>
+                    option.target.kind === "no_project" &&
+                    option.target.organizationSlug === undefined,
+            ),
+        ).toHaveLength(1);
+    });
+
+    it("serializes concurrent first-time personal moves without duplicate scopes", async () => {
+        const data = request();
+        data.projectChange = {
+            expectedProjectSlug: "source",
+            target: { kind: "no_project" },
+        };
+        const responses = await Promise.all([
+            updateConversation({ db, userId, data }),
+            updateConversation({ db, userId, data }),
+        ]);
+        expect(responses.filter((response) => response.success)).toHaveLength(
+            1,
+        );
+        expect(responses.filter((response) => !response.success)).toEqual([
+            { success: false, reason: "project_assignment_changed" },
+        ]);
+        expect(
+            await db
+                .select()
+                .from(organizationTable)
+                .where(eq(organizationTable.autoProvisionedForUserId, userId)),
+        ).toHaveLength(1);
+    });
+
+    it("does not provision a personal scope for an unauthorized source editor", async () => {
+        await db
+            .update(organizationMembershipAllProjectCapabilityTable)
+            .set({ deletedAt: new Date(), revokedByUserId: userId })
+            .where(
+                eq(
+                    organizationMembershipAllProjectCapabilityTable.capability,
+                    "conversation_edit",
+                ),
+            );
+        const data = request();
+        data.projectChange = {
+            expectedProjectSlug: "source",
+            target: { kind: "no_project" },
+        };
+        expect(await updateConversation({ db, userId, data })).toEqual({
+            success: false,
+            reason: "not_author",
+        });
+        expect(await db.select().from(organizationTable)).toHaveLength(1);
+    });
+
+    it("coordinates personal moves with personal organization creation from other flows", async () => {
+        const data = request();
+        data.projectChange = {
+            expectedProjectSlug: "source",
+            target: { kind: "no_project" },
+        };
+        const [organization, response] = await Promise.all([
+            getOrCreatePersonalOrganization({
+                db,
+                userId,
+                autoProvisionedDefaultLanguage: "en",
+            }),
+            updateConversation({ db, userId, data }),
+        ]);
+        expect(response.success).toBe(true);
+        expect(
+            await db
+                .select()
+                .from(organizationTable)
+                .where(eq(organizationTable.autoProvisionedForUserId, userId)),
+        ).toHaveLength(1);
+        const [personalProject] = await db
+            .select()
+            .from(projectTable)
+            .where(
+                eq(
+                    projectTable.autoProvisionedForOrganizationId,
+                    organization.organizationId,
+                ),
+            );
+        expect(personalProject).toBeDefined();
+        expect(
+            (await db.select().from(conversationTable)).at(0)?.projectId,
+        ).toBe(personalProject?.id);
+    });
+
+    it("identifies the personal No project scope separately from organizations", async () => {
+        const [organization] = await db
+            .insert(organizationTable)
+            .values({
+                slug: "personal-scope",
+                displayName: "Facilitator",
+                autoProvisionedForUserId: userId,
+                defaultLanguageCode: "en",
+                directoryVisibility: "unlisted",
+                isFullImagePath: false,
+            })
+            .returning({ id: organizationTable.id });
+        if (organization === undefined)
+            throw new Error("Missing personal scope");
+        const [membership] = await db
+            .insert(organizationMembershipTable)
+            .values({ organizationId: organization.id, userId })
+            .returning({ id: organizationMembershipTable.id });
+        if (membership === undefined)
+            throw new Error("Missing personal membership");
+        await db
+            .insert(organizationMembershipAllProjectCapabilityTable)
+            .values([
+                {
+                    organizationMembershipId: membership.id,
+                    capability: "conversation_create",
+                },
+                {
+                    organizationMembershipId: membership.id,
+                    capability: "conversation_edit",
+                },
+            ]);
+        const options = await getConversationProjectOptions({ db, userId });
+        const personalScope = options.find(
+            (option) =>
+                option.target.kind === "no_project" &&
+                option.target.organizationSlug === undefined,
+        );
+        expect(personalScope).toBeDefined();
+        expect(
+            options.filter((option) => option.target.kind === "no_project"),
+        ).toHaveLength(2);
+    });
+
+    it("does not expose or move into another user's personal scope through an organization slug", async () => {
+        const otherUserId = "00000000-0000-4000-8000-000000000002";
+        await db
+            .insert(userTable)
+            .values({ id: otherUserId, username: "other-user" });
+        const [personal] = await db
+            .insert(organizationTable)
+            .values({
+                slug: "other-personal",
+                displayName: "Other personal",
+                autoProvisionedForUserId: otherUserId,
+                defaultLanguageCode: "en",
+                directoryVisibility: "unlisted",
+                isFullImagePath: false,
+            })
+            .returning({ id: organizationTable.id });
+        if (personal === undefined)
+            throw new Error("Missing other personal organization");
+        const [membership] = await db
+            .insert(organizationMembershipTable)
+            .values({ organizationId: personal.id, userId })
+            .returning({ id: organizationMembershipTable.id });
+        if (membership === undefined)
+            throw new Error("Missing other personal membership");
+        await db
+            .insert(organizationMembershipAllProjectCapabilityTable)
+            .values([
+                {
+                    organizationMembershipId: membership.id,
+                    capability: "conversation_create",
+                },
+                {
+                    organizationMembershipId: membership.id,
+                    capability: "conversation_edit",
+                },
+            ]);
+        const options = await getConversationProjectOptions({ db, userId });
+        expect(
+            options.filter(
+                (option) =>
+                    option.target.kind === "no_project" &&
+                    option.target.organizationSlug === undefined,
+            ),
+        ).toHaveLength(1);
+        const data = request();
+        data.projectChange = {
+            expectedProjectSlug: "source",
+            target: { kind: "no_project", organizationSlug: "other-personal" },
+        };
+        expect(await updateConversation({ db, userId, data })).toEqual({
+            success: false,
+            reason: "project_not_available",
+        });
+        expect(
+            (await db.select().from(conversationTable)).at(0)?.projectId,
+        ).toBe(sourceProjectId);
     });
 
     it("does not provision destination defaults for an unauthorized source editor", async () => {
@@ -621,6 +883,254 @@ describe("conversation project editing", () => {
             (await db.select().from(polisConversationConfigTable)).at(0)
                 ?.preferredOpinionGroupCount,
         ).toBe(3);
+    });
+
+    it.each([false, true])(
+        "preserves unchanged translation settings in ordinary edits without access (translation=%s)",
+        async (dynamicTranslationEnabled) => {
+            await db
+                .update(conversationTable)
+                .set({ dynamicTranslationEnabled })
+                .where(eq(conversationTable.id, conversationId));
+            await db
+                .update(conversationContentTable)
+                .set({ sourceLanguageCode: "en" })
+                .where(
+                    eq(conversationContentTable.conversationId, conversationId),
+                );
+            await db.insert(conversationTranslationTargetLanguageTable).values([
+                { conversationId, languageCode: "en" },
+                { conversationId, languageCode: "fr" },
+            ]);
+            const data = request();
+            data.projectChange = undefined;
+            data.isIndexed = false;
+            data.multilingualSetting = {
+                dynamicTranslationEnabled,
+                additionalLanguageCodes: ["fr"],
+            };
+            expect(
+                await updateConversation({ db, userId, data }),
+            ).toMatchObject({
+                success: true,
+                eagerContentTranslationWorkIds: [],
+            });
+            const [conversation] = await db
+                .select()
+                .from(conversationTable)
+                .where(eq(conversationTable.id, conversationId));
+            expect(conversation?.dynamicTranslationEnabled).toBe(
+                dynamicTranslationEnabled,
+            );
+            expect(conversation?.isIndexed).toBe(false);
+            expect(
+                vi.mocked(createEagerContentTranslationWorkForKnownConversation)
+                    .mock.lastCall?.[0].targetLanguagePolicy
+                    .dynamicTranslationEnabled,
+            ).toBe(false);
+            expect(
+                await db.select().from(conversationContentTable),
+            ).toHaveLength(1);
+        },
+    );
+
+    it.each([false, true])(
+        "avoids translation-history reads when no grandfathering is needed (access=%s)",
+        async (hasAccess) => {
+            if (hasAccess) {
+                await db.insert(premiumFeatureEntitlementTable).values({
+                    organizationId: 1,
+                    feature: "dynamic_translation",
+                    startsAt: new Date(Date.now() - 60_000),
+                });
+            }
+            const queries: string[] = [];
+            const tracedDb = drizzle(client, {
+                logger: {
+                    logQuery: (query) => {
+                        queries.push(query);
+                    },
+                },
+            });
+            const data = request();
+            data.projectChange = undefined;
+            data.isIndexed = false;
+            data.multilingualSetting.additionalLanguageCodes = hasAccess
+                ? ["fr"]
+                : [];
+            expect(
+                await updateConversation({ db: tracedDb, userId, data }),
+            ).toMatchObject({ success: true });
+            expect(
+                queries.filter(
+                    (query) =>
+                        query.startsWith("select ") &&
+                        query.includes(
+                            '"conversation_translation_target_language"',
+                        ),
+                ),
+            ).toHaveLength(0);
+        },
+    );
+
+    it("rejects newly requested languages without access and leaves the conversation unchanged", async () => {
+        const data = request();
+        data.projectChange = undefined;
+        data.isIndexed = false;
+        data.multilingualSetting.additionalLanguageCodes = ["fr"];
+        expect(await updateConversation({ db, userId, data })).toMatchObject({
+            success: false,
+            reason: "premium_access_required",
+        });
+        expect(
+            (await db.select().from(conversationTable)).at(0)?.isIndexed,
+        ).toBe(true);
+    });
+
+    it("does not carry existing premium languages into an unentitled destination", async () => {
+        await db
+            .insert(conversationTranslationTargetLanguageTable)
+            .values({ conversationId, languageCode: "fr" });
+        const data = request();
+        data.multilingualSetting.additionalLanguageCodes = ["fr"];
+        expect(await updateConversation({ db, userId, data })).toMatchObject({
+            success: false,
+            reason: "premium_access_required",
+        });
+        expect(
+            (await db.select().from(conversationTable)).at(0)?.projectId,
+        ).toBe(sourceProjectId);
+    });
+
+    it("authorizes inherited destination settings from the database rather than the submitted override", async () => {
+        await db
+            .update(projectTable)
+            .set({ dynamicTranslationEnabled: true })
+            .where(eq(projectTable.id, destinationProjectId));
+        const data = request();
+        data.languageSettingsSource = "project_inherited";
+        expect(await updateConversation({ db, userId, data })).toMatchObject({
+            success: false,
+            reason: "premium_access_required",
+        });
+        expect(
+            (await db.select().from(conversationTable)).at(0)?.projectId,
+        ).toBe(sourceProjectId);
+    });
+
+    it("does not authorize content edits merely because expired translation settings can be preserved", async () => {
+        await db
+            .update(conversationContentTable)
+            .set({ sourceLanguageCode: "en" })
+            .where(eq(conversationContentTable.conversationId, conversationId));
+        await db.insert(conversationTranslationTargetLanguageTable).values([
+            { conversationId, languageCode: "en" },
+            { conversationId, languageCode: "fr" },
+        ]);
+        const data = request();
+        data.projectChange = undefined;
+        data.multilingualSetting.additionalLanguageCodes = ["fr"];
+        data.conversationTitle = "Unauthorized content change";
+        expect(await updateConversation({ db, userId, data })).toMatchObject({
+            success: false,
+            reason: "premium_access_expired",
+        });
+        expect(await db.select().from(conversationContentTable)).toHaveLength(
+            1,
+        );
+        expect(
+            (await db.select().from(conversationContentTable)).at(0)?.title,
+        ).toBe("Conversation");
+    });
+
+    it("allows disabling translation and reducing existing targets without access", async () => {
+        await db
+            .update(conversationTable)
+            .set({ dynamicTranslationEnabled: true })
+            .where(eq(conversationTable.id, conversationId));
+        await db
+            .update(conversationContentTable)
+            .set({ sourceLanguageCode: "en" })
+            .where(eq(conversationContentTable.conversationId, conversationId));
+        await db.insert(conversationTranslationTargetLanguageTable).values([
+            { conversationId, languageCode: "en" },
+            { conversationId, languageCode: "fr" },
+            { conversationId, languageCode: "es" },
+        ]);
+        const data = request();
+        data.projectChange = undefined;
+        data.multilingualSetting = {
+            dynamicTranslationEnabled: false,
+            additionalLanguageCodes: ["fr"],
+        };
+        expect(await updateConversation({ db, userId, data })).toMatchObject({
+            success: true,
+            eagerContentTranslationWorkIds: [],
+        });
+        expect(
+            (await db.select().from(conversationTable)).at(0)
+                ?.dynamicTranslationEnabled,
+        ).toBe(false);
+        const targets = await db
+            .select({
+                languageCode:
+                    conversationTranslationTargetLanguageTable.languageCode,
+            })
+            .from(conversationTranslationTargetLanguageTable)
+            .where(
+                and(
+                    eq(
+                        conversationTranslationTargetLanguageTable.conversationId,
+                        conversationId,
+                    ),
+                    isNull(
+                        conversationTranslationTargetLanguageTable.deletedAt,
+                    ),
+                ),
+            );
+        expect(targets.map((target) => target.languageCode).sort()).toEqual([
+            "en",
+            "fr",
+        ]);
+    });
+
+    it("preserves expired inherited settings without mistaking the project primary language for a manual target", async () => {
+        await db
+            .update(projectTable)
+            .set({ dynamicTranslationEnabled: true })
+            .where(eq(projectTable.id, sourceProjectId));
+        await db
+            .insert(projectTranslationTargetLanguageTable)
+            .values({ projectId: sourceProjectId, languageCode: "fr" });
+        await db
+            .update(conversationTable)
+            .set({
+                dynamicTranslationEnabled: true,
+                languageSettingsSource: "project_inherited",
+            })
+            .where(eq(conversationTable.id, conversationId));
+        await db
+            .update(conversationContentTable)
+            .set({ sourceLanguageCode: "bs" })
+            .where(eq(conversationContentTable.conversationId, conversationId));
+        await db.insert(conversationTranslationTargetLanguageTable).values([
+            { conversationId, languageCode: "en" },
+            { conversationId, languageCode: "fr" },
+        ]);
+        const data = request();
+        data.projectChange = undefined;
+        data.languageSettingsSource = "project_inherited";
+        data.isIndexed = false;
+        expect(await updateConversation({ db, userId, data })).toMatchObject({
+            success: true,
+            eagerContentTranslationWorkIds: [],
+        });
+        const [conversation] = await db
+            .select()
+            .from(conversationTable)
+            .where(eq(conversationTable.id, conversationId));
+        expect(conversation?.dynamicTranslationEnabled).toBe(true);
+        expect(conversation?.languageSettingsSource).toBe("project_inherited");
     });
 
     it("does not upgrade shared authorization locks during concurrent Email Update-enabled moves", async () => {

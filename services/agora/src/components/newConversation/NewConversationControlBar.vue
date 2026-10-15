@@ -33,6 +33,7 @@
   <PostAsAccountDialog
     v-model="showPostAsDialogVisible"
     v-model:post-as="postAs"
+    :allowed-post-as="props.allowedPostAs"
   />
 
   <PostTypeDialog
@@ -176,6 +177,7 @@ interface ControlButton {
 }
 
 interface Props {
+  allowedPostAs: readonly PostAsSettings[] | undefined;
   isEditMode?: boolean;
   canAddEventTicket?: boolean;
   canChangeEventTicket?: boolean;
@@ -323,8 +325,13 @@ watch(supportsOpinionGroupAnalysis, (isSupported) => {
 const showImportModeChangeConfirmation = ref(false);
 
 const showAsDialog = (): void => {
+  if (!canChangePostAs.value) return;
   showPostAsDialogVisible.value = true;
 };
+
+const canChangePostAs = computed(
+  () => props.allowedPostAs === undefined || props.allowedPostAs.length > 1
+);
 
 // Computed properties to determine what content would be cleared
 const hasTitle = computed(() => title.value.trim() !== "");
@@ -501,18 +508,6 @@ const canUseDynamicTranslation = computed(() => {
     : createModeCanUseDynamicTranslation.value === true;
 });
 
-const isAnalysisVariantsPreferenceDenied = computed(() => {
-  return props.isEditMode
-    ? !props.canUseAnalysisVariantsPreference
-    : createModeCanUseAnalysisVariantsPreference.value === false;
-});
-
-const isDynamicTranslationDenied = computed(() => {
-  return props.isEditMode
-    ? !props.canUseDynamicTranslation
-    : createModeCanUseDynamicTranslation.value === false;
-});
-
 const canChangeEventTicket = computed(() => {
   return props.isEditMode
     ? props.canChangeEventTicket
@@ -607,9 +602,11 @@ watch(
 );
 
 watch(
-  isAnalysisVariantsPreferenceDenied,
-  (isDenied) => {
-    if (isDenied) {
+  () =>
+    !props.isEditMode &&
+    createModeCanUseAnalysisVariantsPreference.value === false,
+  (shouldReset) => {
+    if (shouldReset) {
       preferredOpinionGroupCount.value = null;
     }
   },
@@ -617,9 +614,9 @@ watch(
 );
 
 watch(
-  isDynamicTranslationDenied,
-  (isDenied) => {
-    if (isDenied) {
+  () => !props.isEditMode && createModeCanUseDynamicTranslation.value === false,
+  (shouldReset) => {
+    if (shouldReset) {
       multilingualSetting.value = {
         dynamicTranslationEnabled: false,
         additionalLanguageCodes: [],
@@ -687,12 +684,12 @@ const controlButtons = computed((): ControlButton[] => [
     label: t("asLabel").replace("{name}", postAsDisplayName.value),
     icon: showPostAsDialogVisible.value
       ? "pi pi-chevron-up"
-      : props.isEditMode
-        ? ""
-        : "pi pi-chevron-down",
+      : canChangePostAs.value
+        ? "pi pi-chevron-down"
+        : "",
     isVisible: isLoggedIn.value,
     clickHandler: showAsDialog,
-    clickable: !props.isEditMode,
+    clickable: canChangePostAs.value,
   },
   {
     id: "post-type",

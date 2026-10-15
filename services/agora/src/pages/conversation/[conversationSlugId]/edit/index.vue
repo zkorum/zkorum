@@ -36,7 +36,6 @@
       <NewConversationControlBar
         v-model:is-private="isPrivate"
         v-model:requires-event-ticket="requiresEventTicket"
-        v-model:post-as="postAs"
         v-model:import-settings="importSettings"
         v-model:external-source-config="externalSourceConfig"
         v-model:title="title"
@@ -45,6 +44,8 @@
         v-model:conversation-type-config="conversationTypeConfig"
         v-model:ai-labeling-enabled="aiLabelingEnabled"
         v-model:preferred-opinion-group-count="preferredOpinionGroupCount"
+        :post-as="postAs"
+        :allowed-post-as="allowedPostAs"
         :participation-mode="participationMode"
         :is-edit-mode="true"
         :can-add-event-ticket="canAddEventTicket"
@@ -58,6 +59,7 @@
         :detected-raw-language-code="visibleDetectedRawLanguageCode"
         :auto-detection-status="visibleAutoDetectionStatus"
         @update:participation-mode="updateParticipationModeWithReachWarning"
+        @update:post-as="updatePostAs"
       >
         <template #extra-controls>
           <ConversationProjectSelect
@@ -168,10 +170,7 @@
     <EditConversationRouteGuard
       :conversation-slug-id="conversationSlugId"
       :navigation-pending="editStore.isSaving"
-      :has-unsaved-changes="
-        hasUnsavedChanges ||
-        (editStore.session?.newSeedOpinions.length ?? 0) > 0
-      "
+      :has-unsaved-changes="hasUnsavedChanges || editStore.hasUnsavedChanges"
     />
   </NewConversationLayout>
 </template>
@@ -187,9 +186,7 @@ import {
 } from "src/components/newConversation/conversationProjectEdit.i18n";
 import { getProjectLanguageOverride } from "src/components/newConversation/conversationProjectLanguage";
 import ConversationProjectLanguageSettings from "src/components/newConversation/ConversationProjectLanguageSettings.vue";
-import ConversationProjectSelect, {
-  type ConversationProjectSelectOption,
-} from "src/components/newConversation/ConversationProjectSelect.vue";
+import ConversationProjectSelect from "src/components/newConversation/ConversationProjectSelect.vue";
 import ConversationUpdatesPartialEmailReachDialog from "src/components/newConversation/ConversationUpdatesPartialEmailReachDialog.vue";
 import {
   areConversationUpdatesReachStatesEqual,
@@ -201,6 +198,10 @@ import {
   resolvePartialEmailReachAction,
 } from "src/components/newConversation/conversationUpdatesPartialEmailReachLogic";
 import CreateConversationUpdatesSettings from "src/components/newConversation/CreateConversationUpdatesSettings.vue";
+import {
+  getEditConversationPostAsOptions,
+  getEditConversationProjectSelectOptions,
+} from "src/components/newConversation/editConversationProjectOptions";
 import EditConversationRouteGuard from "src/components/newConversation/EditConversationRouteGuard.vue";
 import NewConversationControlBar from "src/components/newConversation/NewConversationControlBar.vue";
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
@@ -209,6 +210,7 @@ import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import SpaLink from "src/components/ui-library/SpaLink.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import {
+  type PostAsSettings,
   useConversationDraft,
   type ValidationErrorField,
 } from "src/composables/conversation/draft";
@@ -292,6 +294,11 @@ type EditConversationData = Extract<
 >;
 const loadedConversation = ref<EditConversationData>();
 const projectTarget = ref<ConversationProjectTarget>();
+const allowedPostAs = computed(() =>
+  loadedConversation.value === undefined
+    ? []
+    : getEditConversationPostAsOptions(loadedConversation.value)
+);
 const hasProjectChange = computed(
   () =>
     projectTarget.value !== undefined &&
@@ -302,33 +309,10 @@ const hasProjectChange = computed(
 const projectSelectOptions = computed(() => {
   const conversation = loadedConversation.value;
   if (conversation === undefined) return [];
-  const options: ConversationProjectSelectOption[] =
-    conversation.projectOptions.map((option) => ({
-      ...option.target,
-      title: option.title,
-    }));
-  const currentValue = getConversationProjectTargetKey(
-    conversation.projectTarget
-  );
-  if (
-    !options.some(
-      (option) => getConversationProjectTargetKey(option) === currentValue
-    )
-  )
-    options.unshift(
-      conversation.projectTarget.kind === "project"
-        ? {
-            ...conversation.projectTarget,
-            title:
-              conversation.projectLanguageProject?.projectTitle ??
-              conversation.currentProjectSlug,
-          }
-        : {
-            ...conversation.projectTarget,
-            title: conversation.postAsOrganizationName,
-          }
-    );
-  return options;
+  return getEditConversationProjectSelectOptions({
+    conversation,
+    postAs: postAs.value,
+  });
 });
 const editPermissions = computed(
   () => loadedConversation.value?.editPermissions
@@ -566,13 +550,44 @@ const currentProjectLanguageProject = computed<
   };
 });
 
+function updatePostAs(selection: PostAsSettings): void {
+  if (
+    selection.postAsOrganization === postAs.value.postAsOrganization &&
+    selection.organizationName === postAs.value.organizationName
+  )
+    return;
+  const conversation = loadedConversation.value;
+  if (conversation === undefined) return;
+  const options = getEditConversationProjectSelectOptions({
+    conversation,
+    postAs: selection,
+  });
+  const target =
+    options.find((option) => option.target.kind === "no_project") ??
+    options.at(0);
+  if (target === undefined) {
+    showNotifyMessage(tProjectEdit("projectPermissionError"));
+    return;
+  }
+  if (applyProjectTarget(target.target)) postAs.value = selection;
+}
+
 function selectProject(target: ConversationProjectTarget): void {
+  const option = projectSelectOptions.value.find(
+    (option) =>
+      getConversationProjectTargetKey(option.target) ===
+      getConversationProjectTargetKey(target)
+  );
+  if (option !== undefined) applyProjectTarget(option.target);
+}
+
+function applyProjectTarget(target: ConversationProjectTarget): boolean {
   if (
     projectTarget.value !== undefined &&
     getConversationProjectTargetKey(projectTarget.value) ===
       getConversationProjectTargetKey(target)
   )
-    return;
+    return true;
   const previous = getEditConversationUpdatesReachState({
     mode: participationMode.value,
     override: conversationUpdatesOverride.value,
@@ -585,10 +600,18 @@ function selectProject(target: ConversationProjectTarget): void {
     const override = getProjectLanguageOverride({
       project: currentProjectLanguageProject.value,
       detectedLanguageCode: visibleDetectedLanguageCode.value,
+      canUseDynamicTranslation:
+        loadedConversation.value?.projectOptions
+          .find(
+            (option) =>
+              getConversationProjectTargetKey(option.target) ===
+              getConversationProjectTargetKey(target)
+          )
+          ?.premiumFeatures.includes("dynamic_translation") ?? false,
     });
     if (!override.success) {
       showNotifyMessage(tProjectEdit("detachLanguagesError"));
-      return;
+      return false;
     }
     multilingualSetting.value = override.data;
   }
@@ -603,6 +626,7 @@ function selectProject(target: ConversationProjectTarget): void {
       override: conversationUpdatesOverride.value,
     }),
   });
+  return true;
 }
 
 const canShowStoredAutoDetection = computed(() => {
@@ -756,6 +780,7 @@ function persistDetails(): void {
   if (!hasLoadedSession.value || details === undefined || session === undefined)
     return;
   session.form = getDraftSnapshot();
+  session.postAs = postAs.value;
   session.projectTarget = details.projectTarget;
   session.emailConfiguration = details.emailConfiguration;
   session.emailOverride = details.emailOverride;
@@ -870,7 +895,7 @@ async function loadConversation(): Promise<void> {
 
     loadedConversation.value = response;
     projectTarget.value = savedSession?.projectTarget ?? response.projectTarget;
-    postAs.value = {
+    postAs.value = savedSession?.postAs ?? {
       postAsOrganization: response.postAsOrganizationSlug !== undefined,
       organizationName: response.postAsOrganizationSlug ?? "",
     };
@@ -901,6 +926,7 @@ async function loadConversation(): Promise<void> {
       editStore.start({
         original: response,
         form: getDraftSnapshot(),
+        postAs: postAs.value,
         projectTarget: response.projectTarget,
         isSaving: false,
         newSeedOpinions: [],

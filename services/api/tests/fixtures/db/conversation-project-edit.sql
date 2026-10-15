@@ -33,6 +33,8 @@ CREATE TYPE "public"."moderation_reason_enum" AS ENUM('misleading', 'antisocial'
 
 CREATE TYPE "public"."organization_membership_all_project_capability_enum" AS ENUM('project_update', 'project_delete', 'project_manage_owner_organizations', 'conversation_create', 'conversation_edit', 'conversation_delete', 'conversation_view_private_results', 'conversation_export_owner_data', 'conversation_moderate', 'conversation_manage_integrations', 'conversation_email_update');
 
+CREATE TYPE "public"."organization_membership_capability_enum" AS ENUM('organization_manage_members', 'organization_manage_profile', 'project_create');
+
 CREATE TYPE "public"."participation_mode" AS ENUM('account_required', 'strong_verification', 'email_verification', 'guest');
 
 CREATE TYPE "public"."polis_voting_presentation" AS ENUM('list', 'one_at_a_time');
@@ -212,6 +214,20 @@ CREATE TABLE "conversation_translation_target_language" (
 	"deleted_at" timestamp (0)
 );
 
+CREATE TABLE "organization_localization" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "organization_localization_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"organization_id" integer NOT NULL,
+	"language_code" "display_language_code" NOT NULL,
+	"display_name" varchar(65) NOT NULL,
+	"description" varchar(280) NOT NULL,
+	"website_url" text,
+	"image_path" text,
+	"is_full_image_path" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
+	CONSTRAINT "organization_localization_organization_language_unique" UNIQUE("organization_id","language_code")
+);
+
 CREATE TABLE "organization_membership_all_project_capability" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "organization_membership_all_project_capability_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"organization_membership_id" integer NOT NULL,
@@ -222,6 +238,14 @@ CREATE TABLE "organization_membership_all_project_capability" (
 	"updated_at" timestamp (0) DEFAULT now() NOT NULL,
 	"deleted_at" timestamp (0),
 	CONSTRAINT "organization_membership_all_project_capability_revocation_check" CHECK ((("organization_membership_all_project_capability"."deleted_at" IS NULL AND "organization_membership_all_project_capability"."revoked_by_user_id" IS NULL) OR ("organization_membership_all_project_capability"."deleted_at" IS NOT NULL AND "organization_membership_all_project_capability"."revoked_by_user_id" IS NOT NULL)))
+);
+
+CREATE TABLE "organization_membership_capability" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "organization_membership_capability_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"organization_membership_id" integer NOT NULL,
+	"capability" "organization_membership_capability_enum" NOT NULL,
+	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	CONSTRAINT "organization_membership_capability_unique" UNIQUE("organization_membership_id","capability")
 );
 
 CREATE TABLE "organization_membership" (

@@ -54,9 +54,8 @@ vi.mock("src/components/ui-library/ZKSelect.vue", () => ({
   }),
 }));
 
-import ConversationProjectSelect, {
-  type ConversationProjectSelectOption,
-} from "./ConversationProjectSelect.vue";
+import type { ConversationProjectSelectOption } from "./conversationProjectSelect";
+import ConversationProjectSelect from "./ConversationProjectSelect.vue";
 
 let app: App | undefined;
 afterEach(() => {
@@ -66,11 +65,34 @@ afterEach(() => {
 });
 
 describe("ConversationProjectSelect", () => {
+  it("labels an organization default simply No project", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    app = createApp(ConversationProjectSelect, {
+      options: [{ target: { kind: "no_project", organizationSlug: "test" } }],
+      modelValue: { kind: "no_project", organizationSlug: "test" },
+      fallbackLabel: undefined,
+    });
+    app.mount(host);
+    expect(host.querySelector("button")?.textContent).toBe("noProjectLabel");
+  });
+
+  it("never uses a stale project fallback label for a default scope", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    app = createApp(ConversationProjectSelect, {
+      options: [],
+      modelValue: { kind: "no_project" },
+      fallbackLabel: "Previous project",
+    });
+    app.mount(host);
+    expect(host.querySelector("button")?.textContent).toBe("noProjectLabel");
+  });
+
   it("never emits a selection when options load, reorder, or disappear", async () => {
     const options = ref<ConversationProjectSelectOption[]>([
       {
-        kind: "project",
-        projectSlug: "current",
+        target: { kind: "project", projectSlug: "current" },
         title: "Current",
       },
     ]);
@@ -92,7 +114,7 @@ describe("ConversationProjectSelect", () => {
     );
     app.mount(host);
     options.value = [
-      { kind: "project", projectSlug: "other", title: "Other" },
+      { target: { kind: "project", projectSlug: "other" }, title: "Other" },
       ...options.value,
     ];
     await nextTick();
@@ -109,8 +131,7 @@ describe("ConversationProjectSelect", () => {
     app = createApp(ConversationProjectSelect, {
       options: [
         {
-          kind: "project",
-          projectSlug: "other",
+          target: { kind: "project", projectSlug: "other" },
           title: "Other",
         },
       ],

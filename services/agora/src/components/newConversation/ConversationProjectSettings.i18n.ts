@@ -3,7 +3,6 @@ import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 export interface ConversationProjectSettingsTranslations {
   projectLabel: string;
   noProjectLabel: string;
-  noProjectScopeLabel: string;
   projectSelectionDescription: string;
   projectLanguagesDescription: string;
   inheritProjectLanguagesTitle: string;
@@ -17,7 +16,6 @@ export interface ConversationProjectSettingsTranslations {
 const englishTranslations: ConversationProjectSettingsTranslations = {
   projectLabel: "Project",
   noProjectLabel: "No project",
-  noProjectScopeLabel: "No project · {organization}",
   projectSelectionDescription:
     "Choose the listed project this conversation belongs to, or use no project.",
   projectLanguagesDescription:
@@ -40,7 +38,6 @@ export const conversationProjectSettingsTranslations: Record<
   es: {
     projectLabel: "Proyecto",
     noProjectLabel: "Sin proyecto",
-    noProjectScopeLabel: "Sin proyecto · {organization}",
     projectSelectionDescription:
       "Elija el proyecto de la lista al que pertenece esta conversación o no seleccione ningún proyecto.",
     projectLanguagesDescription:
@@ -58,7 +55,6 @@ export const conversationProjectSettingsTranslations: Record<
   fr: {
     projectLabel: "Projet",
     noProjectLabel: "Aucun projet",
-    noProjectScopeLabel: "Aucun projet · {organization}",
     projectSelectionDescription:
       "Choisissez le projet listé auquel cette conversation appartient, ou n'utilisez aucun projet.",
     projectLanguagesDescription:
@@ -76,7 +72,6 @@ export const conversationProjectSettingsTranslations: Record<
   "zh-Hant": {
     projectLabel: "專案",
     noProjectLabel: "無專案",
-    noProjectScopeLabel: "無專案 · {organization}",
     projectSelectionDescription: "選擇此對話所屬的已列出專案，或不選擇專案。",
     projectLanguagesDescription: "選擇此對話要繼承專案語言設定，還是覆寫它們。",
     inheritProjectLanguagesTitle: "繼承專案語言",
@@ -89,7 +84,6 @@ export const conversationProjectSettingsTranslations: Record<
   "zh-Hans": {
     projectLabel: "项目",
     noProjectLabel: "无项目",
-    noProjectScopeLabel: "无项目 · {organization}",
     projectSelectionDescription: "选择此对话所属的已列出项目，或不选择项目。",
     projectLanguagesDescription: "选择此对话应继承项目语言设置，还是覆盖它们。",
     inheritProjectLanguagesTitle: "继承项目语言",
@@ -102,7 +96,6 @@ export const conversationProjectSettingsTranslations: Record<
   ja: {
     projectLabel: "プロジェクト",
     noProjectLabel: "プロジェクトなし",
-    noProjectScopeLabel: "{organization}（プロジェクトなし）",
     projectSelectionDescription:
       "この会話が属する一覧内のプロジェクトを選択するか、プロジェクトなしを選択します。",
     projectLanguagesDescription:
@@ -119,7 +112,6 @@ export const conversationProjectSettingsTranslations: Record<
   ar: {
     projectLabel: "المشروع",
     noProjectLabel: "بدون مشروع",
-    noProjectScopeLabel: "بدون مشروع · {organization}",
     projectSelectionDescription:
       "اختر المشروع المدرج الذي تنتمي إليه هذه المحادثة، أو لا تختر أي مشروع.",
     projectLanguagesDescription:
@@ -136,7 +128,6 @@ export const conversationProjectSettingsTranslations: Record<
   fa: {
     projectLabel: "پروژه",
     noProjectLabel: "بدون پروژه",
-    noProjectScopeLabel: "بدون پروژه · {organization}",
     projectSelectionDescription:
       "پروژه فهرست‌شده‌ای را که این گفتگو به آن تعلق دارد انتخاب کنید، یا هیچ پروژه‌ای انتخاب نکنید.",
     projectLanguagesDescription:
@@ -153,7 +144,6 @@ export const conversationProjectSettingsTranslations: Record<
   he: {
     projectLabel: "פרויקט",
     noProjectLabel: "ללא פרויקט",
-    noProjectScopeLabel: "ללא פרויקט · {organization}",
     projectSelectionDescription:
       "בחרו את הפרויקט מהרשימה שאליו שייכת השיחה הזו, או אל תבחרו פרויקט.",
     projectLanguagesDescription:
@@ -170,7 +160,6 @@ export const conversationProjectSettingsTranslations: Record<
   ky: {
     projectLabel: "Долбоор",
     noProjectLabel: "Долбоор жок",
-    noProjectScopeLabel: "Долбоор жок · {organization}",
     projectSelectionDescription:
       "Бул талкуу тизмедеги кайсы долбоорго таандык экенин тандаңыз же долбоорсуз калтырыңыз.",
     projectLanguagesDescription:
@@ -187,7 +176,6 @@ export const conversationProjectSettingsTranslations: Record<
   ru: {
     projectLabel: "Проект",
     noProjectLabel: "Без проекта",
-    noProjectScopeLabel: "Без проекта · {organization}",
     projectSelectionDescription:
       "Выберите проект из списка, к которому относится это обсуждение, либо не указывайте проект.",
     projectLanguagesDescription:

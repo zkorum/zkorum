@@ -1,12 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
+import { storeToRefs } from "pinia";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { UpdateConversationRequest } from "src/shared/types/dto";
 import { useAuthenticationStore } from "src/stores/authentication";
+import { useLanguageStore } from "src/stores/language";
+import { useUserStore } from "src/stores/user";
 import { cacheCreatedSeedOpinions } from "src/utils/api/comment/createdOpinionCache";
+import type { OpinionQueryScope } from "src/utils/api/comment/opinionQueryScope";
 import { invalidateConversationContentQueries } from "src/utils/api/contentTranslation/conversationContentQuery";
 import { applyConversationProjectAssignment } from "src/utils/api/post/conversationProjectCache";
 import { useBackendPostApi } from "src/utils/api/post/post";
 import { useBackendPostEditApi } from "src/utils/api/post/postEdit";
+import { createSavedSeedOpinionChanges } from "src/utils/api/post/savedSeedOpinionChanges";
 import {
   type ConversationMutationsTranslations,
   conversationMutationsTranslations,
@@ -14,6 +19,7 @@ import {
 import { updateConversationQueryCache } from "src/utils/api/post/useConversationQuery";
 import { useViewerQueryScope } from "src/utils/query/viewerScope";
 import { useNotify } from "src/utils/ui/notify";
+import { onScopeDispose, watch } from "vue";
 
 export function useCloseConversationMutation() {
   const queryClient = useQueryClient();
@@ -177,12 +183,52 @@ export function useUpdateConversationMutation() {
   const { updateConversation, refreshConversationMetadata } =
     useBackendPostEditApi();
   const viewerScope = useViewerQueryScope();
+  const userStore = useUserStore();
+  const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
+  let seedSaveGeneration = 0;
+  watch(
+    [
+      () => auth.userId,
+      () => auth.isLoggedIn,
+      displayLanguage,
+      spokenLanguages,
+    ],
+    () => {
+      seedSaveGeneration += 1;
+    },
+    { flush: "sync", deep: true }
+  );
+  onScopeDispose(() => {
+    seedSaveGeneration += 1;
+  });
 
   return useMutation({
     mutationFn: (data: UpdateConversationRequest) => updateConversation(data),
 
     onMutate: async (variables) => {
       const viewerUserId = auth.userId;
+      const generation = seedSaveGeneration;
+      const changedSeedSlugs = new Set(
+        (variables.seedOpinionChanges ?? []).map((change) => change.slugId)
+      );
+      const profileBeforeSave = new Map(
+        (changedSeedSlugs.size === 0
+          ? []
+          : userStore.profileData.userCommentList
+        )
+          .filter((item) =>
+            changedSeedSlugs.has(item.opinionItem.opinionSlugId)
+          )
+          .map((item) => [
+            item.opinionItem.opinionSlugId,
+            { ...item.opinionItem },
+          ])
+      );
+      const opinionScope: OpinionQueryScope = {
+        viewerUserId,
+        displayLanguage: displayLanguage.value,
+        spokenLanguages: [...spokenLanguages.value],
+      };
       const polisSettings =
         variables.conversationTypeConfig.conversationType === "polis"
           ? variables.conversationTypeConfig
@@ -230,7 +276,13 @@ export function useUpdateConversationMutation() {
         },
       });
 
-      return { previousConversations, viewerUserId };
+      return {
+        previousConversations,
+        viewerUserId,
+        opinionScope,
+        generation,
+        profileBeforeSave,
+      };
     },
 
     onSuccess: async (data, variables, context) => {
@@ -241,7 +293,12 @@ export function useUpdateConversationMutation() {
           opinions: data.addedOpinions ?? [],
           viewerUserId: context?.viewerUserId,
         });
-        if ((data.addedSeedOpinions?.length ?? 0) > 0) {
+        const hasExistingSeedChanges =
+          (variables.seedOpinionChanges?.length ?? 0) > 0;
+        if (
+          (data.addedSeedOpinions?.length ?? 0) > 0 ||
+          hasExistingSeedChanges
+        ) {
           for (const family of [
             "commentStats",
             "analysisFrameManifest",
@@ -257,10 +314,38 @@ export function useUpdateConversationMutation() {
           void queryClient.invalidateQueries({
             queryKey: ["comments", variables.conversationSlugId],
             predicate: ({ queryKey, state }) =>
+              hasExistingSeedChanges ||
               state.data === undefined ||
               !["discover", "new"].includes(String(queryKey[2])),
             refetchType: "none",
           });
+          if (hasExistingSeedChanges) {
+            for (const change of variables.seedOpinionChanges ?? []) {
+              void queryClient.invalidateQueries({
+                queryKey: ["opinionTarget", change.slugId],
+                refetchType: "none",
+              });
+            }
+            if (
+              context !== undefined &&
+              context.generation === seedSaveGeneration &&
+              auth.userId === context.viewerUserId
+            ) {
+              const saved = createSavedSeedOpinionChanges({
+                changes: variables.seedOpinionChanges ?? [],
+                opinions: data.updatedOpinions ?? [],
+              });
+              saved.updateCache({
+                queryClient,
+                conversationSlugId: variables.conversationSlugId,
+                scope: context.opinionScope,
+              });
+              userStore.profileData.userCommentList = saved.updateProfile({
+                items: userStore.profileData.userCommentList,
+                beforeSave: context.profileBeforeSave,
+              });
+            }
+          }
         }
         await invalidateConversationContentQueries({
           queryClient,

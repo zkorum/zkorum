@@ -65,11 +65,7 @@
           :hidden-opinion-count="
             loadedConversationData.metadata.hiddenOpinionCount
           "
-          @changed-algorithm="
-            (filter: CommentFilterOptions) => {
-              commentFilter = filter;
-            }
-          "
+          @changed-algorithm="selectCommentFilter"
         />
       </template>
 
@@ -245,6 +241,7 @@ const {
   isCurrentTabLoading,
   moderationHistoryTrigger,
   commentFilter,
+  selectCommentFilter,
   actionBarElement,
   onViewAnalysis,
   navigateToDiscoverTab,

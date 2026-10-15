@@ -73,9 +73,8 @@
 import Button from "primevue/button";
 import Card from "primevue/card";
 import ConversationProjectLanguageSettings from "src/components/newConversation/ConversationProjectLanguageSettings.vue";
-import ConversationProjectSelect, {
-  type ConversationProjectSelectOption,
-} from "src/components/newConversation/ConversationProjectSelect.vue";
+import type { ConversationProjectSelectOption } from "src/components/newConversation/conversationProjectSelect";
+import ConversationProjectSelect from "src/components/newConversation/ConversationProjectSelect.vue";
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 import type {
   ConversationMultilingualSetting,
@@ -202,10 +201,9 @@ const languageProject = computed(() =>
       }
 );
 const projectOptions = computed<ConversationProjectSelectOption[]>(() => [
-  { kind: "no_project", organizationSlug: "demo-org", title: undefined },
+  { target: { kind: "no_project", organizationSlug: "demo-org" } },
   ...actualProjects.value.map<ConversationProjectSelectOption>((project) => ({
-    kind: "project",
-    projectSlug: project.slug,
+    target: { kind: "project", projectSlug: project.slug },
     title: project.title,
   })),
 ]);

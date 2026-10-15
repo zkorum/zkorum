@@ -173,74 +173,81 @@ export async function getOrCreatePersonalOrganization({
     userId: string;
     autoProvisionedDefaultLanguage: SupportedDisplayLanguageCodes;
 }): Promise<{ organizationId: number }> {
-    const existingRows = await db
-        .select({ organizationId: organizationTable.id })
-        .from(organizationTable)
-        .where(eq(organizationTable.autoProvisionedForUserId, userId))
-        .limit(1);
-    const existing = existingRows.at(0);
-    if (existing !== undefined) {
-        const membershipId = await getOrCreateMembership({
-            db,
-            userId,
-            organizationId: existing.organizationId,
-        });
-        await ensureBaselineCapabilities({
-            db,
-            organizationMembershipId: membershipId,
-        });
-        return existing;
-    }
+    return await getPrimaryDatabase(db).transaction(async (tx) => {
+        // All personal-scope creation paths share this lock, including edits.
+        const user = (
+            await tx
+                .select({ id: userTable.id, username: userTable.username })
+                .from(userTable)
+                .where(
+                    and(
+                        eq(userTable.id, userId),
+                        eq(userTable.isDeleted, false),
+                    ),
+                )
+                .for("no key update")
+        ).at(0);
+        if (user === undefined) throw httpErrors.notFound("User not found");
 
-    const userRows = await db
-        .select({ username: userTable.username })
-        .from(userTable)
-        .where(eq(userTable.id, userId))
-        .limit(1);
-    const user = userRows.at(0);
-    if (user === undefined) {
-        throw httpErrors.notFound("User not found");
-    }
+        const existingRows = await tx
+            .select({ organizationId: organizationTable.id })
+            .from(organizationTable)
+            .where(eq(organizationTable.autoProvisionedForUserId, userId))
+            .limit(1);
+        const existing = existingRows.at(0);
+        if (existing !== undefined) {
+            const membershipId = await getOrCreateMembership({
+                db: tx,
+                userId,
+                organizationId: existing.organizationId,
+            });
+            await ensureBaselineCapabilities({
+                db: tx,
+                organizationMembershipId: membershipId,
+            });
+            return existing;
+        }
 
-    const insertedRows = await db
-        .insert(organizationTable)
-        .values({
-            slug: personalOrganizationSlug(userId),
+        const insertedRows = await tx
+            .insert(organizationTable)
+            .values({
+                slug: personalOrganizationSlug(userId),
+                displayName: user.username,
+                defaultLanguageCode: autoProvisionedDefaultLanguage,
+                directoryVisibility: "unlisted",
+                autoProvisionedForUserId: userId,
+                imagePath: null,
+                isFullImagePath: false,
+            })
+            .returning({ organizationId: organizationTable.id });
+        const inserted = insertedRows.at(0);
+        if (inserted === undefined) {
+            throw httpErrors.internalServerError(
+                "Failed to create personal organization",
+            );
+        }
+
+        await tx.insert(organizationLocalizationTable).values({
+            organizationId: inserted.organizationId,
+            languageCode: autoProvisionedDefaultLanguage,
             displayName: user.username,
-            defaultLanguageCode: autoProvisionedDefaultLanguage,
-            directoryVisibility: "unlisted",
-            autoProvisionedForUserId: userId,
+            description: "",
+            websiteUrl: null,
             imagePath: null,
             isFullImagePath: false,
-        })
-        .returning({ organizationId: organizationTable.id });
-    const inserted = insertedRows.at(0);
-    if (inserted === undefined) {
-        throw httpErrors.internalServerError(
-            "Failed to create personal organization",
-        );
-    }
+        });
 
-    await db.insert(organizationLocalizationTable).values({
-        organizationId: inserted.organizationId,
-        languageCode: autoProvisionedDefaultLanguage,
-        displayName: user.username,
-        description: "",
-        websiteUrl: null,
-        imagePath: null,
-        isFullImagePath: false,
+        const membershipId = await getOrCreateMembership({
+            db: tx,
+            userId,
+            organizationId: inserted.organizationId,
+        });
+        await ensureBaselineCapabilities({
+            db: tx,
+            organizationMembershipId: membershipId,
+        });
+        return inserted;
     });
-
-    const membershipId = await getOrCreateMembership({
-        db,
-        userId,
-        organizationId: inserted.organizationId,
-    });
-    await ensureBaselineCapabilities({
-        db,
-        organizationMembershipId: membershipId,
-    });
-    return inserted;
 }
 
 export async function getOrCreateDefaultProjectForOrganization({

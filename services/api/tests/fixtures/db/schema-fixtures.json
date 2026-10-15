@@ -1,6 +1,6 @@
 {
     "conversation-project-edit": [
-        "user", "organization", "organization_membership", "organization_membership_all_project_capability",
+        "user", "organization", "organization_localization", "organization_membership", "organization_membership_capability", "organization_membership_all_project_capability",
         "project", "project_content", "project_organization_ownership", "project_contact", "project_translation_target_language",
         "premium_feature_entitlement", "polis_conversation_config", "ranking_conversation_config", "conversation", "conversation_content", "conversation_moderation", "conversation_translation_target_language",
         "survey_config", "survey_question", "survey_question_content", "survey_question_option", "survey_question_option_content",
@@ -16,12 +16,13 @@
         "polis_conversation_config", "ranking_conversation_config",
         "opinion", "opinion_content", "opinion_content_translation", "opinion_moderation", "vote", "vote_content", "analysis_snapshot_opinion",
         "ranking_item", "ranking_item_content", "ranking_item_external_source",
+        "maxdiff_result", "maxdiff_comparison",
         "survey_config", "survey_question", "survey_question_content",
         "survey_question_option", "survey_question_option_content", "survey_response",
         "survey_answer", "survey_answer_option", "opinion_group_spec",
         "conversation_view_snapshot", "analysis_snapshot_result", "analysis_work_state",
         "conversation_email_update", "conversation_email_update_delivery",
-        "realtime_event_outbox", "content_translation_work"
+        "realtime_event_outbox", "realtime_event_outbox_topic", "content_translation_work"
     ],
     "survey-option-text": [
         "user",
@@ -200,6 +201,7 @@
         "polis_conversation_config",
         "conversation",
         "conversation_content",
+        "conversation_translation_target_language",
         "opinion",
         "opinion_content",
         "opinion_content_translation",

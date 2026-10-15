@@ -52,7 +52,8 @@ export const zodConversationProjectTarget = z.discriminatedUnion("kind", [
     z
         .object({
             kind: z.literal("no_project"),
-            organizationSlug: zodOrganizationSlug,
+            // Omission selects the authenticated user's personal scope.
+            organizationSlug: zodOrganizationSlug.optional(),
         })
         .strict(),
 ]);
