@@ -38,7 +38,42 @@ export interface EditConversationDetails {
 export interface EditConversationSession extends EditConversationDetails {
   postAs: PostAsSettings;
   newSeedOpinions: string[];
+  existingSeedOpinions: ExistingSeedOpinionDraft[];
   isSaving: boolean;
+}
+
+export interface ExistingSeedOpinionDraft {
+  slugId: string;
+  sourceVersion: string;
+  originalContent: string;
+  content: string;
+  deleted: boolean;
+  editing: EditableConversation["seedOpinions"][number]["editing"];
+}
+
+function hasExistingSeedOpinionChanges(
+  session: EditConversationSession
+): boolean {
+  return session.existingSeedOpinions.some(
+    (opinion) => opinion.deleted || opinion.content !== opinion.originalContent
+  );
+}
+
+export function buildSeedOpinionChanges(
+  session: EditConversationSession
+): NonNullable<UpdateConversationRequest["seedOpinionChanges"]> {
+  return session.existingSeedOpinions.flatMap<
+    NonNullable<UpdateConversationRequest["seedOpinionChanges"]>[number]
+  >((opinion) => {
+    const identity = {
+      slugId: opinion.slugId,
+      sourceVersion: opinion.sourceVersion,
+    };
+    if (opinion.deleted) return [{ ...identity, action: "delete" }];
+    if (opinion.content !== opinion.originalContent)
+      return [{ ...identity, action: "edit", content: opinion.content }];
+    return [];
+  });
 }
 
 export function createEditConversationForm(
@@ -142,11 +177,24 @@ export const useEditConversationStore = defineStore("editConversation", () => {
     () =>
       session.value !== undefined &&
       (session.value.newSeedOpinions.length > 0 ||
+        hasExistingSeedOpinionChanges(session.value) ||
         hasEditConversationDetailsChanges(session.value))
   );
 
-  function start(value: EditConversationSession): void {
-    session.value = value;
+  function start(
+    value: Omit<EditConversationSession, "existingSeedOpinions">
+  ): void {
+    session.value = {
+      ...value,
+      existingSeedOpinions: value.original.seedOpinions.map((opinion) => ({
+        slugId: opinion.slugId,
+        sourceVersion: opinion.sourceVersion,
+        originalContent: opinion.content,
+        content: opinion.content,
+        deleted: false,
+        editing: opinion.editing,
+      })),
+    };
   }
   function clear(): void {
     session.value = undefined;

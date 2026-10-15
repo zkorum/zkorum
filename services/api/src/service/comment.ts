@@ -179,7 +179,7 @@ type ResolveOpinionDisplayContentPreferences = ({
     db: PostgresJsDatabase;
 }) => Promise<AnalysisOpinionDisplayContentPreferences>;
 
-interface OpinionDisplayContentViewerPreferences {
+export interface OpinionDisplayContentViewerPreferences {
     viewerUserId: string | undefined;
     displayLanguage: SupportedDisplayLanguageCodes;
     spokenLanguages: SupportedSpokenLanguageCodes[];

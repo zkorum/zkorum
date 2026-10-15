@@ -1,9 +1,10 @@
-import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, eq, exists, isNotNull, isNull, sql } from "drizzle-orm";
 import { httpErrors } from "@fastify/sensible";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import {
     opinionContentTable,
     opinionTable,
+    opinionModerationTable,
     rankingItemContentTable,
     rankingItemTable,
     userTable,
@@ -17,20 +18,23 @@ import type {
     EventSlug,
     ParticipationMode,
 } from "@/shared/types/zod.js";
-import type { GoogleCloudCredentials } from "@/shared-backend/googleCloudAuth.js";
 import {
     normalizeUserRichTextInput,
     type NormalizedUserRichText,
 } from "./richText.js";
 import type { UpdateConversationResponse } from "@/shared/types/dto.js";
 import {
-    resolveContentLanguageMetadata,
     type ContentLanguageMetadata,
+    type ContentLanguageMetadataResolver,
 } from "./contentLanguageMetadata.js";
 import { postNewOpinion } from "./comment.js";
 import { createRankingItem } from "./rankingItem.js";
 import { lockRankingScoringConfig } from "./maxdiff.js";
 import type { RankingItemContentSource } from "./contentTranslation.js";
+import {
+    rankingSeedHasVotes,
+    seedOpinionHasVotes,
+} from "./seedOpinionEditability.js";
 const LANGUAGE_DETECTION_BATCH_SIZE = 5;
 
 export function normalizeSeedOpinionList(
@@ -65,7 +69,7 @@ export async function appendConversationSeedOpinions({
     opinions,
     conversation,
     userId,
-    googleCloudCredentials,
+    resolveLanguageMetadata,
     useGoogleLanguageDetection,
     now,
 }: {
@@ -82,7 +86,7 @@ export async function appendConversationSeedOpinions({
         requiresEventTicket: EventSlug | undefined;
     };
     userId: string;
-    googleCloudCredentials: GoogleCloudCredentials | undefined;
+    resolveLanguageMetadata: ContentLanguageMetadataResolver;
     useGoogleLanguageDetection: boolean;
     now: Date;
 }): Promise<{
@@ -111,12 +115,10 @@ export async function appendConversationSeedOpinions({
                 .slice(offset, offset + LANGUAGE_DETECTION_BATCH_SIZE)
                 .map(async (content) => ({
                     ...content,
-                    sourceLanguageMetadata:
-                        await resolveContentLanguageMetadata({
-                            text: content.plainText,
-                            googleCloudCredentials,
-                            useGoogleLanguageDetection,
-                        }),
+                    sourceLanguageMetadata: await resolveLanguageMetadata({
+                        text: content.plainText,
+                        useGoogleLanguageDetection,
+                    }),
                 })),
         );
         prepared.push(...batch);
@@ -204,7 +206,10 @@ export async function appendConversationSeedOpinions({
     return { addedSeedOpinions, addedOpinions, rankingItemSources };
 }
 
-export type ConversationSeedOpinion = Extract<
+type ConversationSeedOpinion = NonNullable<
+    Extract<UpdateConversationResponse, { success: true }>["addedSeedOpinions"]
+>[number];
+type EditableSeedOpinion = Extract<
     GetConversationForEditResponse,
     { success: true }
 >["seedOpinions"][number];
@@ -219,12 +224,18 @@ export async function fetchConversationSeedOpinions({
     conversationId: number;
     conversationType: ConversationType;
     externalSourceManaged?: boolean;
-}): Promise<ConversationSeedOpinion[]> {
+}): Promise<EditableSeedOpinion[]> {
     if (conversationType === "ranking") {
-        return await db
+        const opinions = await db
             .select({
                 slugId: rankingItemTable.slugId,
                 content: rankingItemContentTable.title,
+                sourceVersion: rankingItemContentTable.publicId,
+                hasVotes: rankingSeedHasVotes({
+                    db,
+                    conversationId,
+                    slugId: rankingItemTable.slugId,
+                }),
             })
             .from(rankingItemTable)
             .innerJoin(
@@ -244,11 +255,36 @@ export async function fetchConversationSeedOpinions({
                 ),
             )
             .orderBy(asc(rankingItemTable.id));
+        return opinions.map(({ hasVotes, ...opinion }) => ({
+            ...opinion,
+            editing: hasVotes
+                ? { allowed: false, reason: "has_votes" }
+                : externalSourceManaged
+                  ? { allowed: false, reason: "not_allowed" }
+                  : { allowed: true },
+        }));
     }
-    return await db
+    const opinions = await db
         .select({
             slugId: opinionTable.slugId,
             content: opinionContentTable.content,
+            sourceVersion: opinionContentTable.publicId,
+            hasVotes: seedOpinionHasVotes({ db, opinionId: opinionTable.id }),
+            isHidden: exists(
+                db
+                    .select({ id: opinionModerationTable.id })
+                    .from(opinionModerationTable)
+                    .where(
+                        and(
+                            eq(
+                                opinionModerationTable.opinionId,
+                                opinionTable.id,
+                            ),
+                            eq(opinionModerationTable.moderationAction, "hide"),
+                            isNull(opinionModerationTable.deletedAt),
+                        ),
+                    ),
+            ).mapWith(Boolean),
         })
         .from(opinionTable)
         .innerJoin(
@@ -265,4 +301,12 @@ export async function fetchConversationSeedOpinions({
             ),
         )
         .orderBy(asc(opinionTable.id));
+    return opinions.map(({ hasVotes, isHidden, ...opinion }) => ({
+        ...opinion,
+        editing: hasVotes
+            ? { allowed: false, reason: "has_votes" }
+            : isHidden
+              ? { allowed: false, reason: "not_allowed" }
+              : { allowed: true },
+    }));
 }

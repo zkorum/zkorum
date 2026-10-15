@@ -31,7 +31,7 @@
         <p class="description">
           {{
             session.original.externalSourceConfig === null
-              ? t("readOnlyDescription")
+              ? t("draftDescription")
               : t("sourceManaged")
           }}
         </p>
@@ -41,18 +41,12 @@
         >
           {{ t("emptyExisting") }}
         </p>
-        <ZKCard
-          v-for="opinion in session.original.seedOpinions"
-          :key="opinion.slugId"
-          padding="1rem"
-        >
-          <ZKHtmlContent
-            :html-body="opinion.content"
-            :compact-mode="false"
-            :enable-links="true"
-            :collapsible="false"
-          />
-        </ZKCard>
+        <ExistingSeedOpinionListEditor
+          ref="existingSeedEditor"
+          v-model="existingSeedOpinions"
+          :editable="session.original.canAddSeedOpinions"
+          :disabled="isSaving"
+        />
       </section>
 
       <section
@@ -63,9 +57,7 @@
         <SeedOpinionListEditor
           ref="seedEditor"
           v-model="newSeedOpinions"
-          :existing-opinions="
-            session.original.seedOpinions.map((opinion) => opinion.content)
-          "
+          :existing-opinions="survivingSeedOpinions"
           :disabled="isSaving"
         />
       </section>
@@ -95,16 +87,17 @@ import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue"
 import { conversationProjectEditTranslations } from "src/components/newConversation/conversationProjectEdit.i18n";
 import { createConversationUpdatesSettingsTranslations } from "src/components/newConversation/CreateConversationUpdatesSettings.i18n";
 import EditConversationRouteGuard from "src/components/newConversation/EditConversationRouteGuard.vue";
+import ExistingSeedOpinionListEditor from "src/components/newConversation/ExistingSeedOpinionListEditor.vue";
 import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
 import SeedOpinionListEditor from "src/components/newConversation/SeedOpinionListEditor.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import ZKHtmlContent from "src/components/ui-library/ZKHtmlContent.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { UpdateConversationResponse } from "src/shared/types/dto";
 import { useAuthenticationStore } from "src/stores/authentication";
 import {
   buildEditConversationRequest,
-  hasEditConversationDetailsChanges,
+  buildSeedOpinionChanges,
+  type ExistingSeedOpinionDraft,
   useEditConversationStore,
 } from "src/stores/editConversation";
 import { useUpdateConversationMutation } from "src/utils/api/post/useConversationMutations";
@@ -145,6 +138,8 @@ const { showNotifyMessage } = useNotify();
 const mutation = useUpdateConversationMutation();
 const isSaving = computed(() => session.value?.isSaving ?? false);
 const seedEditor = ref<InstanceType<typeof SeedOpinionListEditor>>();
+const existingSeedEditor =
+  ref<InstanceType<typeof ExistingSeedOpinionListEditor>>();
 const routeGuard = ref<InstanceType<typeof EditConversationRouteGuard>>();
 const detailsRoute = computed(() => ({
   name: "/conversation/[conversationSlugId]/edit/" as const,
@@ -157,11 +152,19 @@ const newSeedOpinions = computed({
     if (session.value !== undefined) session.value.newSeedOpinions = value;
   },
 });
+const existingSeedOpinions = computed({
+  get: () => session.value?.existingSeedOpinions ?? [],
+  set: (value: ExistingSeedOpinionDraft[]) => {
+    if (session.value !== undefined) session.value.existingSeedOpinions = value;
+  },
+});
+const survivingSeedOpinions = computed(() =>
+  existingSeedOpinions.value
+    .filter((opinion) => !opinion.deleted)
+    .map((opinion) => opinion.content)
+);
 const hasUnsavedChanges = computed(
-  () =>
-    session.value !== undefined &&
-    (hasEditConversationDetailsChanges(session.value) ||
-      session.value.newSeedOpinions.length > 0)
+  () => session.value !== undefined && store.hasUnsavedChanges
 );
 const isSaveDisabled = computed(
   () => isSaving.value || !hasUnsavedChanges.value
@@ -207,7 +210,15 @@ function showSaveFailure(
       showNotifyMessage(projectT("projectChangedError"));
       return;
     case "invalid_seed_opinion":
-      seedEditor.value?.showFailure(response.seedOpinionFailure);
+      if (response.seedOpinionSlugId !== undefined) {
+        existingSeedEditor.value?.showFailure({
+          slugId: response.seedOpinionSlugId,
+          failure: response.seedOpinionFailure,
+        });
+      } else seedEditor.value?.showFailure(response.seedOpinionFailure);
+      return;
+    case "seed_opinion_change_rejected":
+      existingSeedEditor.value?.showChangeFailure(response);
       return;
     case "not_found":
       showNotifyMessage(editT("notFoundError"));
@@ -248,7 +259,8 @@ async function save(): Promise<void> {
   if (current === undefined || isSaveDisabled.value) return;
   if (
     current.original.canAddSeedOpinions &&
-    seedEditor.value?.validate() !== true
+    (existingSeedEditor.value?.validate() !== true ||
+      seedEditor.value?.validate() !== true)
   )
     return;
   current.isSaving = true;
@@ -256,6 +268,7 @@ async function save(): Promise<void> {
     const response = await mutation.mutateAsync({
       ...buildEditConversationRequest(current),
       newSeedOpinionList: [...current.newSeedOpinions],
+      seedOpinionChanges: buildSeedOpinionChanges(current),
     });
     if (session.value !== current) return;
     if (!response.success) {

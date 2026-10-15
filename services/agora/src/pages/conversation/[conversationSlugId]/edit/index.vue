@@ -170,10 +170,7 @@
     <EditConversationRouteGuard
       :conversation-slug-id="conversationSlugId"
       :navigation-pending="editStore.isSaving"
-      :has-unsaved-changes="
-        hasUnsavedChanges ||
-        (editStore.session?.newSeedOpinions.length ?? 0) > 0
-      "
+      :has-unsaved-changes="hasUnsavedChanges || editStore.hasUnsavedChanges"
     />
   </NewConversationLayout>
 </template>

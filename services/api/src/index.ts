@@ -5329,6 +5329,19 @@ server.after(() => {
                 },
             );
 
+            const preferences = (request.body.seedOpinionChanges ?? []).some(
+                (change) => change.action === "edit",
+            )
+                ? await getLanguagePreferences({
+                      db,
+                      userId: deviceStatus.userId,
+                      request: {
+                          currentDisplayLanguage: getRequestDisplayLanguage({
+                              request,
+                          }),
+                      },
+                  })
+                : undefined;
             const updateResult = await postEditService.updateConversation({
                 db: db,
                 userId: deviceStatus.userId,
@@ -5336,6 +5349,15 @@ server.after(() => {
                 googleCloudCredentials,
                 valkey: queueValkeyRef.current,
                 data: request.body,
+                voteBuffer,
+                displayContentViewerPreferences:
+                    preferences === undefined
+                        ? undefined
+                        : {
+                              viewerUserId: deviceStatus.userId,
+                              displayLanguage: preferences.displayLanguage,
+                              spokenLanguages: preferences.spokenLanguages,
+                          },
             });
 
             if (updateResult.success) {
@@ -5361,6 +5383,7 @@ server.after(() => {
                     success: true,
                     addedSeedOpinions: updateResult.addedSeedOpinions,
                     addedOpinions: updateResult.addedOpinions,
+                    updatedOpinions: updateResult.updatedOpinions,
                     projectAssignment: updateResult.projectAssignment,
                 });
                 return;

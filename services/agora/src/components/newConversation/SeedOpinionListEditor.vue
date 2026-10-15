@@ -39,6 +39,7 @@ import { type ComponentPublicInstance, nextTick, ref, watch } from "vue";
 import ConversationControlButton from "./ConversationControlButton.vue";
 import SeedOpinionItem from "./SeedOpinionItem.vue";
 import { seedOpinionsTranslations } from "./SeedOpinions.i18n";
+import { useSeedOpinionValidationMessages } from "./useSeedOpinionValidationMessages";
 
 const props = defineProps<{
   modelValue: string[];
@@ -47,6 +48,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ "update:modelValue": [value: string[]] }>();
 const { t } = useComponentI18n(seedOpinionsTranslations);
+const { getFailureMessage } = useSeedOpinionValidationMessages();
 let nextItemId = 0;
 const items = ref(props.modelValue.map(createItem));
 const errors = ref<Record<string, string | undefined>>({});
@@ -134,22 +136,6 @@ function removeItem(id: string): void {
   itemRefs.delete(id);
   errors.value = {};
   syncItems();
-}
-
-function getFailureMessage(failure: SeedOpinionValidationFailure): string {
-  switch (failure.reason) {
-    case "duplicate":
-      return t("opinionDuplicate");
-    case "plain_text_empty":
-      return t("opinionCannotBeEmpty");
-    case "html_too_long":
-      return t("opinionHtmlTooLong");
-    case "plain_text_too_long":
-      return t("opinionExceedsLimit", {
-        limit: failure.limit,
-        count: failure.count,
-      });
-  }
 }
 
 function showFailure(failure: SeedOpinionValidationFailure): void {

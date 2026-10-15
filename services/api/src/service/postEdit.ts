@@ -58,8 +58,6 @@ import {
     queueConversationSurveyUpdatedEvent,
 } from "@/service/realtimeEventOutbox.js";
 import {
-    buildConversationLanguageDetectionCorpus,
-    buildGoogleConversationLanguageDetectionCorpus,
     conversationContentSourceMetadataToContentLanguageMetadataOutput,
     conversationContentSourceMetadataToLanguageSettingOutput,
 } from "@/service/conversationLanguage.js";
@@ -68,12 +66,9 @@ import {
     upsertConversationMultilingualSetting,
 } from "@/service/conversationMultilingual.js";
 import {
-    buildContentBlockLanguageDetectionCorpus,
-    buildSurveyLanguageDetectionCorpus,
     contentLanguageMetadataUpdateValues,
     refreshCurrentConversationOwnedContentLanguageMetadata,
     type ContentLanguageMetadata,
-    resolveContentLanguageMetadata,
 } from "./contentLanguageMetadata.js";
 import { getImplicitDefaultDisplayLanguage } from "./projectLanguage.js";
 import {
@@ -95,6 +90,17 @@ import {
     normalizeSeedOpinionList,
 } from "./conversationSeedOpinions.js";
 import type { RealtimeSSEManager } from "./realtimeSSE.js";
+import type { VoteBuffer } from "./voteBuffer.js";
+import {
+    fetchOpinionsByOpinionSlugIdList,
+    type OpinionDisplayContentViewerPreferences,
+} from "./comment.js";
+import {
+    prepareSeedOpinionChanges,
+    applySeedOpinionChanges,
+    assertSeedOpinionEditsHaveNoVotes,
+    withSeedOpinionChangeRollback,
+} from "./conversationSeedOpinionChanges.js";
 import { projectConversationTypeConfig } from "@/shared/utils/conversationTypeConfig.js";
 import {
     updateConversationEmailUpdateOverrideInTransaction,
@@ -113,6 +119,10 @@ import {
     type ConversationContentSource,
     type SurveyQuestionContentSource,
 } from "./contentTranslation.js";
+import {
+    buildConversationEditLanguageInput,
+    prepareConversationEditLanguages,
+} from "./conversationEditLanguagePreparation.js";
 
 interface GetConversationForEditProps {
     db: PostgresDatabase;
@@ -409,6 +419,8 @@ interface UpdateConversationProps {
     googleCloudCredentials?: GoogleCloudCredentials;
     valkey?: Valkey;
     data: UpdateConversationRequest;
+    voteBuffer?: VoteBuffer;
+    displayContentViewerPreferences?: OpinionDisplayContentViewerPreferences;
 }
 
 type UpdateConversationServiceResponse =
@@ -424,6 +436,8 @@ export async function updateConversation({
     googleCloudCredentials,
     valkey,
     data,
+    voteBuffer,
+    displayContentViewerPreferences,
 }: UpdateConversationProps): Promise<UpdateConversationServiceResponse> {
     const {
         conversationSlugId,
@@ -438,6 +452,7 @@ export async function updateConversation({
         surveyConfig,
         conversationEmailUpdateEnabledOverride,
         newSeedOpinionList = [],
+        seedOpinionChanges = [],
         projectChange,
     } = data;
     const aiLabelingEnabled =
@@ -541,7 +556,23 @@ export async function updateConversation({
               });
     if (projectChange !== undefined && destination === undefined)
         return { success: false, reason: "project_not_available" };
-    const result = await primaryDb.transaction(async (tx) => {
+    const languagePreparation = await withSeedOpinionChangeRollback({
+        operation: () =>
+            prepareConversationEditLanguages({
+                db: primaryDb,
+                userId,
+                data,
+                destinationProjectId: destination?.projectId,
+                normalizedSeeds: normalizedSeedOpinions,
+                sanitizedBody,
+                bodyPlainText,
+                googleCloudCredentials,
+                voteBuffer,
+            }),
+    });
+    if (!languagePreparation.success) return languagePreparation;
+    const { resolveLanguageMetadata } = languagePreparation;
+    const updateInTransaction = async (tx: PostgresDatabase) => {
         const now = new Date();
         const initialConversation = (
             await tx
@@ -759,7 +790,10 @@ export async function updateConversation({
         }
 
         const conversationId = conversation.conversationId;
-        if (normalizedSeedOpinions.length > 0) {
+        if (
+            normalizedSeedOpinions.length > 0 ||
+            seedOpinionChanges.length > 0
+        ) {
             if (
                 conversation.isImporting ||
                 conversation.externalSourceConfig !== null
@@ -769,26 +803,55 @@ export async function updateConversation({
                     reason: "seed_opinions_not_allowed",
                 } satisfies UpdateConversationServiceResponse;
             }
+        }
+        const preparedChanges = await prepareSeedOpinionChanges({
+            db: tx,
+            conversationId,
+            conversationType: conversation.conversationType,
+            changes: seedOpinionChanges,
+            voteBuffer,
+            lockTargets: true,
+        });
+        if (!preparedChanges.success) return preparedChanges;
+        const seedStatementsChanged =
+            normalizedSeedOpinions.length > 0 ||
+            preparedChanges.changes.length > 0;
+        if (seedStatementsChanged) {
             const existingOpinions = await fetchConversationSeedOpinions({
                 db: tx,
                 conversationId,
                 conversationType: conversation.conversationType,
             });
+            const changedSlugs = new Set(
+                preparedChanges.changes.map((change) => change.target.slugId),
+            );
+            const editedOpinions = preparedChanges.changes.filter(
+                (change) => change.action === "edit",
+            );
+            const submittedOpinions = [
+                ...editedOpinions.map((change) => change.content),
+                ...normalizedSeedOpinions,
+            ];
             const duplicateIndex = getDuplicateSeedOpinionIndexes({
-                opinions: normalizedSeedOpinions.map((opinion, index) => ({
+                opinions: submittedOpinions.map((opinion, index) => ({
                     index,
                     plainText: opinion.plainText,
                 })),
-                existingOpinions: existingOpinions.map((opinion) =>
-                    htmlToCountedText(opinion.content),
-                ),
+                existingOpinions: existingOpinions
+                    .filter((opinion) => !changedSlugs.has(opinion.slugId))
+                    .map((opinion) => htmlToCountedText(opinion.content)),
             }).at(0);
             if (duplicateIndex !== undefined) {
                 return {
                     success: false,
                     reason: "invalid_seed_opinion",
+                    seedOpinionSlugId:
+                        editedOpinions[duplicateIndex]?.target.slugId,
                     seedOpinionFailure: {
-                        index: duplicateIndex,
+                        index:
+                            duplicateIndex < editedOpinions.length
+                                ? duplicateIndex
+                                : duplicateIndex - editedOpinions.length,
                         reason: "duplicate",
                     },
                 } satisfies UpdateConversationServiceResponse;
@@ -807,10 +870,6 @@ export async function updateConversation({
                       conversationId,
                   })) ?? null)
                 : surveyConfig;
-        const surveyLanguageDetectionCorpus =
-            buildSurveyLanguageDetectionCorpus({
-                surveyConfig: effectiveSurveyConfig,
-            });
         const requestedTranslation: ConversationTranslationSelection =
             languageSettingsSource === "project_inherited"
                 ? {
@@ -822,7 +881,10 @@ export async function updateConversation({
                           },
                       ),
                   }
-                : { source: "conversation_override", multilingualSetting };
+                : {
+                      source: "conversation_override",
+                      multilingualSetting,
+                  };
         const subject = getPremiumEntitlementSubjectForConversation({
             conversation: { projectId: destinationProjectId, userId },
         });
@@ -933,33 +995,18 @@ export async function updateConversation({
             | undefined;
         const getBlockSourceLanguageMetadata =
             (): Promise<ContentLanguageMetadata> => {
-                blockSourceLanguageMetadataPromise ??=
-                    resolveContentLanguageMetadata({
-                        text: buildContentBlockLanguageDetectionCorpus({
-                            conversationCorpus:
-                                buildConversationLanguageDetectionCorpus({
-                                    conversationTitle,
-                                    bodyPlainText,
-                                }),
-                            surveyConfig: effectiveSurveyConfig,
-                        }),
-                        googleText:
-                            buildGoogleConversationLanguageDetectionCorpus({
-                                conversationTitle,
-                                bodyPlainText,
-                                supplementalPlainText:
-                                    surveyLanguageDetectionCorpus,
-                            }),
-                        googleCloudCredentials,
-                        useGoogleLanguageDetection: translationWorkEnabled,
-                    });
+                blockSourceLanguageMetadataPromise ??= resolveLanguageMetadata({
+                    ...buildConversationEditLanguageInput({
+                        title: conversationTitle,
+                        bodyPlainText,
+                        surveyConfig: effectiveSurveyConfig,
+                    }),
+                    useGoogleLanguageDetection: translationWorkEnabled,
+                });
                 return blockSourceLanguageMetadataPromise;
             };
 
-        if (
-            !projectChanged &&
-            (contentChanged || normalizedSeedOpinions.length > 0)
-        ) {
+        if (!projectChanged && (contentChanged || seedStatementsChanged)) {
             const premiumFeatures = await getPremiumFeaturesInConversation({
                 db: tx,
                 conversation: {
@@ -1114,7 +1161,10 @@ export async function updateConversation({
                 });
             if (!emailUpdateResult.success) {
                 if (emailUpdateResult.reason === "target_not_found") {
-                    return { success: false, reason: "not_found" } as const;
+                    return {
+                        success: false,
+                        reason: "not_found",
+                    } as const;
                 }
                 return {
                     success: false,
@@ -1206,7 +1256,7 @@ export async function updateConversation({
                 db: tx,
                 opinions: normalizedSeedOpinions,
                 userId,
-                googleCloudCredentials,
+                resolveLanguageMetadata,
                 useGoogleLanguageDetection: translationWorkEnabled,
                 now,
                 conversation: {
@@ -1220,6 +1270,21 @@ export async function updateConversation({
                     requiresEventTicket,
                 },
             });
+        rankingItemSources.push(
+            ...(await applySeedOpinionChanges({
+                db: tx,
+                changes: preparedChanges.changes,
+                conversation: {
+                    id: conversationId,
+                    slugId: conversationSlugId,
+                    contentId: newContentId ?? conversation.currentContentId,
+                },
+                userId,
+                resolveLanguageMetadata,
+                useGoogleLanguageDetection: translationWorkEnabled,
+                now,
+            })),
+        );
 
         let surveySources: SurveyQuestionContentSource[] = [];
         let analysisRefreshScheduled = false;
@@ -1232,7 +1297,6 @@ export async function updateConversation({
                 conversationId,
                 surveyConfig: surveyConfig ?? null,
                 now,
-                googleCloudCredentials,
                 useGoogleLanguageDetection: translationWorkEnabled,
                 sourceLanguageMetadata,
             });
@@ -1284,7 +1348,7 @@ export async function updateConversation({
                         {
                             db: tx,
                             conversationId,
-                            googleCloudCredentials,
+                            resolveLanguageMetadata,
                             useGoogleLanguageDetection: translationWorkEnabled,
                         },
                     );
@@ -1336,21 +1400,21 @@ export async function updateConversation({
         if (
             contentChanged ||
             surveyConfig !== undefined ||
-            addedSeedOpinions.length > 0
+            seedStatementsChanged
         ) {
             await createConversationViewSnapshotsFromCurrentState({
                 db: tx,
                 conversationId,
                 viewReason:
-                    contentChanged || addedSeedOpinions.length > 0
+                    contentChanged || seedStatementsChanged
                         ? "conversation_content_updated"
                         : "survey_refreshed",
                 emitCommentStatsRealtimeEvent:
-                    addedSeedOpinions.length > 0 &&
+                    seedStatementsChanged &&
                     conversation.conversationType === "polis",
             });
         }
-        if (addedSeedOpinions.length > 0) {
+        if (seedStatementsChanged) {
             analysisRefreshScheduled =
                 (await scheduleConversationAnalysisForSurveyChange({
                     db: tx,
@@ -1446,15 +1510,36 @@ export async function updateConversation({
                 settings: conversationSettings,
             });
         }
+        const updatedOpinions =
+            displayContentViewerPreferences === undefined ||
+            conversation.conversationType !== "polis"
+                ? undefined
+                : await fetchOpinionsByOpinionSlugIdList({
+                      db: tx,
+                      opinionSlugIdList: preparedChanges.changes
+                          .filter((change) => change.action === "edit")
+                          .map((change) => change.target.slugId),
+                      displayContentViewerPreferences,
+                  });
+        await assertSeedOpinionEditsHaveNoVotes({
+            db: tx,
+            conversationId,
+            changes: preparedChanges.changes,
+            voteBuffer,
+        });
         return {
             success: true,
             eagerContentTranslationWorkIds,
             projectAssignment,
             addedSeedOpinions,
             addedOpinions,
+            updatedOpinions,
             analysisRefreshScheduled,
             surveyAnalysisRefreshContext,
         } as const;
+    };
+    const result = await withSeedOpinionChangeRollback({
+        operation: () => primaryDb.transaction(updateInTransaction),
     });
 
     if (!result.success) {
@@ -1488,5 +1573,6 @@ export async function updateConversation({
         projectAssignment: result.projectAssignment,
         addedSeedOpinions: result.addedSeedOpinions,
         addedOpinions: result.addedOpinions,
+        updatedOpinions: result.updatedOpinions,
     };
 }

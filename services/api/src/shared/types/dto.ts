@@ -1899,6 +1899,20 @@ export class Dto {
             content: z.string(),
         })
         .strict();
+    static editableConversationSeedOpinion = Dto.conversationSeedOpinion
+        .extend({
+            sourceVersion: z.uuid(),
+            editing: z.discriminatedUnion("allowed", [
+                z.object({ allowed: z.literal(true) }).strict(),
+                z
+                    .object({
+                        allowed: z.literal(false),
+                        reason: z.enum(["has_votes", "not_allowed"]),
+                    })
+                    .strict(),
+            ]),
+        })
+        .strict();
     static getConversationForEditResponse = z.discriminatedUnion("success", [
         z
             .object({
@@ -1927,7 +1941,7 @@ export class Dto {
                 updatedAt: zodDateTimeFlexible,
                 isLocked: z.boolean(),
                 editPermissions: zodConversationEditPermissions,
-                seedOpinions: z.array(Dto.conversationSeedOpinion),
+                seedOpinions: z.array(Dto.editableConversationSeedOpinion),
                 canAddSeedOpinions: z.boolean(),
                 externalSourceConfig: zodExternalSourceConfig.nullable(),
             })
@@ -1978,6 +1992,28 @@ export class Dto {
                 .array(zodOpinionContentInput)
                 .max(MAX_SEED_OPINIONS_PER_SUBMISSION)
                 .optional(),
+            seedOpinionChanges: z
+                .array(
+                    z.discriminatedUnion("action", [
+                        z
+                            .object({
+                                action: z.literal("edit"),
+                                slugId: zodSlugId,
+                                sourceVersion: z.uuid(),
+                                content: zodOpinionContentInput,
+                            })
+                            .strict(),
+                        z
+                            .object({
+                                action: z.literal("delete"),
+                                slugId: zodSlugId,
+                                sourceVersion: z.uuid(),
+                            })
+                            .strict(),
+                    ]),
+                )
+                .max(MAX_SEED_OPINIONS_PER_SUBMISSION)
+                .optional(),
             conversationEmailUpdateEnabledOverride: z
                 .boolean()
                 .nullable()
@@ -2009,6 +2045,7 @@ export class Dto {
                     .array(Dto.conversationSeedOpinion)
                     .optional(),
                 addedOpinions: z.array(zodDisplayedOpinionItem).optional(),
+                updatedOpinions: z.array(zodDisplayedOpinionItem).optional(),
             })
             .strict(),
         z.discriminatedUnion("reason", [
@@ -2040,6 +2077,20 @@ export class Dto {
                     success: z.literal(false),
                     reason: z.literal("invalid_seed_opinion"),
                     seedOpinionFailure: Dto.seedOpinionValidationFailure,
+                    seedOpinionSlugId: zodSlugId.optional(),
+                })
+                .strict(),
+            z
+                .object({
+                    success: z.literal(false),
+                    reason: z.literal("seed_opinion_change_rejected"),
+                    seedOpinionSlugId: zodSlugId,
+                    changeFailure: z.enum([
+                        "not_found",
+                        "version_conflict",
+                        "has_votes",
+                        "not_allowed",
+                    ]),
                 })
                 .strict(),
         ]),
