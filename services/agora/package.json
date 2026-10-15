@@ -15,7 +15,7 @@
     "format:check": "prettier . --check",
     "prepare": "quasar prepare",
     "test": "vitest run",
-    "test:nginx": "node --test scripts/nginx-conversation-indexing.test.mjs",
+    "test:nginx": "tsc --project scripts/tsconfig.nginx.json && node --test scripts/nginx-conversation-indexing.test.mjs ../../scripts/infra/update-agora.test.mjs",
     "test:watch": "vitest",
     "dev": "env-cmd -f .env.dev -- quasar dev",
     "start": "serve dist/spa",

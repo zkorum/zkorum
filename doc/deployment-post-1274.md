@@ -1,8 +1,15 @@
 # Deployment after PR #1274
 
-Prepared October 13, 2026. Confirmed deployment landmark: PR #1274, commit
-`461465718ee43cff90a04ac14e56cb87e42e470d`, is already deployed. Release target:
-`d05f5ef0c732a9d1a5812ed855e13eba4a8e7758` (upstream main at preparation time).
+Updated October 15, 2026 after PR #1280 merged. Confirmed deployment landmark:
+PR #1274, commit `461465718ee43cff90a04ac14e56cb87e42e470d`, is already deployed.
+The merged release baseline is `de4289adb24a9061536d15fbb575bc7844e3bd3c`
+(upstream main at this review). No intervening production deployment has taken place.
+
+The full deployment target must also include the indexing-availability fix and
+deployment-tooling changes in this change set. After merging, build the resulting
+main commit with a fresh image tag; an unchanged `de4289ad` frontend image does not
+contain the fallback fix. The build commands derive the tag from the checked-out
+release commit, replacing the earlier fixed `d05f5ef0`/`de4289ad` build examples.
 
 This runbook assumes the existing production Docker Compose topology and a
 maintenance-window cutover. It initially keeps phone registration closed and AI
@@ -35,10 +42,67 @@ and worker was deployed to the same commit.
   disabled by default.
 - [#1279](https://github.com/zkorum/agora/pull/1279): agent documentation;
   no runtime deployment.
+- [#1280](https://github.com/zkorum/agora/pull/1280), merged October 15: phone
+  request/loading/navigation fixes; editable posting identity and personal
+  No project provisioning; inherited/expired language-setting fixes; atomic staged
+  seed additions, revisions and soft-deletions with Undo and navigation protection;
+  language-provider preparation before write locks; one-at-a-time prefetch;
+  authenticated My statements pagination and ownership-aware statement links;
+  updated Privacy Policy and Terms in all display languages. Deploy API and Agora
+  together. No additional production migration or environment variable.
+- **This indexing-availability change:** serve the frontend independently of API
+  startup and lookup failures, fail closed for exact indexing policies, suppress
+  lookup authentication challenges, fix Turnstile names in the Compose example,
+  and harden `update-agora.sh`. Rebuild Agora and apply the deployment configuration
+  and helper. No additional migration or API application change.
 
 #1272's description predates final hardening. Use the merged code and current API
 README: production AI generation requires Turnstile and available Valkey, and the
 Turnstile environment names have changed.
+
+### What changed since the previous deployment review
+
+The only new merged PR after `d05f5ef0` is #1280 (`de4289ad`). Its final merge
+includes more changes than the initial phone-feedback and identity-editing work:
+
+- Conversation-edit responses now require seed revision UUIDs and explicit
+  editability states. Save can apply up to 50 existing-statement edit/delete
+  operations atomically alongside additions. Stale/voted/hidden/source-managed
+  edits are rejected, with buffered votes checked again under writer locks.
+- Statement lookup now returns `{ opinion, conversationSlugId, isOwn }` per target.
+  The paginated endpoint accepts the authenticated `my_statements` filter.
+  Coordinate API/frontend replacement during maintenance; old/new DTO shapes
+  are incompatible for these flows.
+- Google language detection for eligible saves is prepared outside write locks,
+  deduplicated and limited to five concurrent inputs per request. Preserve the
+  existing Google provider configuration. A concurrent change needing an
+  unprepared provider input returns HTTP 409 and rolls back the save.
+- The frontend prefetches one next statement, handles repeated Undo/refill races,
+  and pauses background activity while KeepAlive pages are inactive.
+- Legal pages publish the October 14 policy revision. This PR introduces no
+  deletion-worker service or new purge/recovery migration; the policy text itself
+  is not evidence that those infrastructure processes were deployed.
+
+The cumulative migration count is still **16**, with V0105 the highest version.
+The existing nine-image rebuild and Turnstile/SMS configuration changes still apply.
+Build a release commit containing both #1280 and this indexing-availability change.
+Older images built for `d05f5ef0` lack #1280; an unchanged `de4289ad` frontend lacks
+the indexing fallback and review fixes.
+
+### Additional indexing-availability fix
+
+Indexing lookup failures now serve the SPA shell with HTTP 200 and
+`X-Robots-Tag: noindex, nofollow`. DNS, connection, request-send and response-read
+waits each have a one-second timeout, with upstream retries disabled. These are
+per-phase/idle timeouts, not a single total deadline. Only an explicit
+HTTP 200 plus exactly lowercase `X-Conversation-Indexing: index` permits indexing.
+Duplicate/invalid policies fail closed, and provider authentication challenges
+are kept off the HTML response. The frontend can start without the API, so the
+proposed Compose healthcheck and hard dependency
+have been removed. API content authorization is unchanged.
+
+This change is baked into the Agora frontend image. Rebuild that image even if a
+frontend image from the merged baseline was already built earlier in the rollout.
 
 ### Service/image mapping
 
@@ -86,25 +150,36 @@ NODE_ENV=production
 PHONE_AUTH_MODE=disabled
 THROTTLE_SMS_SECONDS_INTERVAL=30
 PHONE_SMS_COST_CENTS_BY_COUNTRY={}
-TURNSTILE_ENABLED=false
+TURNSTILE_ENABLED=true
 TURNSTILE_SECRET_KEY=<production widget secret>
 TURNSTILE_ALLOWED_HOSTNAMES=agoracitizen.app,www.agoracitizen.app
-PHONE_SMS_BUDGET_ALERT_EMAIL=<operator mailbox>
-AI_SUGGESTIONS_ENABLED=false
-AI_SUGGESTIONS_SOURCE=bedrock
-CONVERSATION_EMAIL_UPDATE_SNS_SIMULATOR_ENABLED=false
+# Optional: configure an SES-deliverable operator mailbox.
+# PHONE_SMS_BUDGET_ALERT_EMAIL=<operator mailbox>
 ```
 
 These are values to add to the service's runtime environment/secret injection,
 not literal shell commands. Supply the actual widget hostnames served in production.
+Turnstile stays configured/enforced throughout this maintenance-window rollout;
+the separate `PHONE_AUTH_MODE=disabled` setting keeps phone flows shut until the
+matching frontend, budget policy and incident restrictions are ready.
+
+These API settings can be omitted for the initial release because their defaults
+already express the desired behavior:
+
+- `AI_SUGGESTIONS_ENABLED`: defaults to `false`.
+- `AI_SUGGESTIONS_SOURCE`: defaults to `bedrock`; `simulated` is the only other
+  source and is rejected in production. Disabled suggestions require no Bedrock
+  permission setup solely for this feature.
+- `CONVERSATION_EMAIL_UPDATE_SNS_SIMULATOR_ENABLED`: defaults to `false` and cannot
+  be enabled in production. It does not control real SES/SNS event processing.
 
 - **Replace and remove** `PHONE_TURNSTILE_ENABLED`,
   `PHONE_TURNSTILE_SECRET_KEY`, and `PHONE_TURNSTILE_ALLOWED_HOSTNAMES` with
   `TURNSTILE_ENABLED`, `TURNSTILE_SECRET_KEY`, and `TURNSTILE_ALLOWED_HOSTNAMES`.
   Even obsolete names with empty/false values fail API validation.
-- `scripts/infra/docker-compose-production.yml` still contains obsolete names.
-  Correct the environment keys and any `${...}` secret references in the actual
-  Compose file before starting the new API.
+- The updated `scripts/infra/docker-compose-production.yml` example uses the new
+  names. Correct the environment keys and any `${...}` secret references in an
+  older server-side Compose file before starting the new API.
 - Set `PHONE_AUTH_ALLOWED_COUNTRIES` and
   `PHONE_REGISTRATION_ALLOWED_COUNTRIES` to the reviewed lists in
   `services/api/env.example`, or retain the canonical defaults by omitting them.
@@ -120,7 +195,9 @@ not literal shell commands. Supply the actual widget hostnames served in product
 - Alerts use the API's existing `EMAIL_FROM_ADDRESS`, `AWS_SES_REGION`, AWS
   credentials/IAM role and email transport. Confirm SES sender permission and
   recipient delivery. `PHONE_SMS_BUDGET_ALERT_EMAIL` is optional; omit it entirely
-  if alert delivery is not configured. Budget enforcement still works.
+  if alert delivery is not configured. The Compose example requires the mailbox
+  through `${...:?}`; remove that environment entry in the actual file if choosing
+  to omit alerts. Budget enforcement still works.
 - Confirm `SERVER_URL_PROD` matches the canonical public origin and existing
   `SERVER_DID_PROD`/frontend API audience settings. Preserve the existing identity.
 - Keep production test auth overrides absent and `TEST_CODE=0`.
@@ -156,8 +233,9 @@ The production image build also requires the existing ignored
 
 ## 3. Build and publish the images
 
-Use a clean build checkout at the pinned release commit with its committed synced
-sources/generated artifacts and production build configuration. Use a unique tag
+Use a clean build checkout at the reviewed release commit, including the additional
+indexing-availability fix, with its committed synced sources/generated artifacts
+and production build configuration. Use a unique tag
 for all nine images. These examples target the repository's production `linux/amd64`
 platform and push directly, including Python images whose Makefile buildx targets
 do not explicitly load images into the local Docker image store.
@@ -167,7 +245,7 @@ login and buildx setup. Stop on a failed build:
 
 ```bash
 set -e
-export TAG=post1274-d05f5ef0
+export TAG="post1274-$(git rev-parse --short=8 HEAD)"
 
 docker buildx build --platform linux/amd64 --push \
   -f services/api/Dockerfile \
@@ -201,6 +279,11 @@ production scoring deployment uses one. Validate the built release in staging,
 including phone/Turnstile on real staging hostnames and the application checks in
 section 8, before the production maintenance window.
 
+Record the source commit and published image digests. Use the same source release
+for API and frontend, including #1280's regenerated clients and shared DTOs. The
+service image references in the production Compose file must all point to the
+newly published tags/digests rather than the example's existing version numbers.
+
 ## 4. Prepare production and drain old writers
 
 1. Record current image tags/digests and save the current production configuration.
@@ -209,7 +292,7 @@ section 8, before the production maintenance window.
    existing production Compose project and file location so the asset volume stays
    attached to the same project.
 3. Correct the environment configuration from section 2, initially with phone auth
-   disabled, Turnstile enforcement off and AI suggestions off.
+   disabled, Turnstile configured/enforced and AI suggestions off.
 4. Validate and pull before stopping traffic. From the server directory containing
    the actual production Compose file:
 
@@ -351,38 +434,50 @@ were missed.
 ## 6. Bring up the updated API, frontend and workers
 
 Keep ingress in maintenance and phone auth disabled. From the production Compose
-directory, first start only the updated API:
+directory, start the services using the updated helper:
 
 ```bash
-docker compose -f docker-compose-production.yml up -d --no-deps api
-docker compose -f docker-compose-production.yml ps api
+./update-agora.sh
+docker compose -f docker-compose-production.yml ps
 docker compose -f docker-compose-production.yml logs --since 10m api
 ```
 
-Confirm startup succeeds and the indexing endpoint is available. The new frontend
-container must resolve `api:8080` on its Docker network; its nginx performs a POST
-lookup for conversation HTML. Verify this network alias if the actual deployment
-differs from the checked-in topology.
-
-Then start the updated Vue frontend and workers:
-
-```bash
-docker compose -f docker-compose-production.yml up -d --no-deps \
-  app import-worker math-updater scoring-worker \
-  conversation-email-update-worker content-translation-worker \
-  ai-description-retry-worker description-translation-retry-worker
-
-docker exec agora_nginx nginx -t
-docker exec agora_nginx nginx -s reload
-```
+Confirm API startup succeeds and the indexing endpoint is available. For successful
+policy lookups, the frontend container resolves `api:8080` on its Docker network;
+verify that network alias if production differs from the checked-in topology.
+API startup order is not a prerequisite for serving the frontend HTML: failed,
+unreachable or unresolved policy lookups serve the shell with noindex headers.
 
 The updated import worker normalizes event timestamps to UTC; it must replace the
 old producer before imports resume with the stricter API parser. All notification
 writers now need the new transactional implementation.
 
-`update-agora.sh` only runs Compose `up -d` and reloads ingress nginx. It neither
-pulls images nor runs migrations; the explicit pull/migration steps above are
-necessary even when using the helper for the final startup.
+Keep public API traffic drained until both API and frontend are replaced: #1280
+changes conversation-edit responses, versioned seed Save operations and statement
+lookup response shapes. Have active clients reload into the new frontend when
+traffic resumes. Preserved old assets prevent missing-chunk errors, but do not
+make old API contracts compatible with the new server.
+
+### Using `update-agora.sh` for startup
+
+After completing the pull, drained-writer migrations and initial configuration
+steps, use `./update-agora.sh`. The helper runs from its own directory so Compose
+and its default environment-file lookup use the deployment directory even when
+invoked elsewhere. It stops on startup failures,
+tests ingress nginx configuration and then reloads it through the Compose `nginx`
+service. Apply the updated helper and relevant Compose changes to the actual
+server deployment, preserving production values and image references.
+
+The helper still does not pull images or run migrations. Its plain `up -d` starts
+all configured services, so retain the existing production service settings and
+gates. Keep maintenance active until the matching API/frontend and workers are
+verified. There is no frontend `depends_on: api` gate or indexing-specific API
+healthcheck. End-to-end application checks remain necessary before resuming traffic.
+
+The `api` hostname comes from normal
+[Compose service discovery](https://docs.docker.com/compose/how-tos/networking/).
+The optional indexing subrequest controls crawler policy, not access to the SPA
+shell. Actual authentication/content authorization remains the API's responsibility.
 
 ### Incident restrictions, if deploying the incident blocklist
 
@@ -516,8 +611,9 @@ Use the existing workload IAM role with `bedrock:InvokeModel` on the selected mo
 for the defaults:
 `arn:aws:bedrock:us-east-1::foundation-model/mistral.mistral-large-3-675b-instruct`.
 Verify model access on Agora's AWS account; startup credential resolution alone does
-not prove model authorization. Confirm the feature's privacy-policy wording and
-translated labels before public activation, as noted in #1272.
+not prove model authorization. #1280 updates the privacy policy's AI/provider
+disclosures; confirm the deployed wording and suggestion labels match the intended
+feature activation.
 
 The empty allowlists mean unrestricted access within the org-only rule; use actual
 pilot slugs if restricting the initial release. The quota is 5 generations/minute
@@ -575,15 +671,31 @@ curl --fail-with-body -sS -D - -o /dev/null \
   tokens. Verify alert delivery in staging with a deliberately small allowance.
 - **Indexing:** unlisted HTML has `X-Robots-Tag: noindex, nofollow`; public indexed
   conversations render successfully; project-scoped and embedded routes work.
-  Conversation HTML lookup failures can produce nginx errors, so check connectivity
-  as well as indexing headers. Browser translation is allowed when dynamic
-  translation is disabled.
+  In staging, stop the API and verify that conversation GET/HEAD requests still
+  return the shell with HTTP 200, no-store and noindex headers; also start the
+  frontend while API DNS is unavailable. Verify policy recovery after API service
+  resumes. Browser translation is allowed when dynamic translation is disabled.
 - **Voting:** Polis list/one-at-a-time settings, repeated Undo, completion/progress,
-  guest first participation, new statements preserving the current card, BWS
-  vote/Undo/restart and score refresh.
-- **Editing:** project reassignment, append-only seed additions, authorized statement
-  edits and version conflicts, current permissions, translated caches, 150-character
-  titles/350-character statements.
+  guest first participation, instant next-card prefetch, rapid voting and delayed
+  refills, Undo during a refill, new statements preserving the current card,
+  KeepAlive back-navigation, BWS vote/Undo/restart and score refresh.
+- **Identity/project editing:** switch personal/organization posting identity,
+  filter project choices, detach to personal No project for an account that has
+  never created a personal scope, navigate Back/Next, and verify authorization
+  isolation. Test inherited-language detachment and retaining/reducing language
+  settings after premium access expires.
+- **Seed/statement editing:** stage seed additions, edits and deletions, use both
+  Undo actions, leave/return through the edit steps, and verify nothing persists
+  before Save. Check atomic Save, version conflicts, vote/moderation restrictions,
+  rejected-draft retention, viewer/language-scoped caches, ordinary statement
+  editing, 150-character titles and 350-character statements. Stage a stale edit in
+  staging to verify conflict handling; concurrent language-preparation changes may
+  intentionally return HTTP 409 rather than partially saving.
+- **Statement links:** profile links and manually entered/project-scoped statement
+  URLs highlight the correct target. Own statements use My statements in
+  one-at-a-time conversations and Discover in list conversations. Test filter
+  changes, back-navigation, account/language changes, unavailable targets, and
+  hidden/deleted exclusion.
 - **Surveys/exports:** choice annotations and drafts, owner-only response exports,
   CSV/ZIP readiness and retries, notification completion/mark-read.
 - **Workers:** imports complete with UTC events, analysis persists without retry
@@ -592,7 +704,9 @@ curl --fail-with-body -sS -D - -o /dev/null \
 - **AI (if enabled):** generation, Add/Discard, duplicate/forged acceptance rejection,
   correct Turnstile action and cross-instance quota behavior.
 - **Deployment assets:** a browser tab opened before cutover can still fetch its old
-  chunks after the update.
+  chunks after the update and loads the matching frontend after refreshing.
+- **Legal pages:** Privacy Policy and Terms display the October 14 revision in
+  the deployed languages; verify RTL rendering and links.
 
 Resume ingress traffic after these checks pass, then monitor API/database errors,
 worker progress/leases, budget reservations/alerts and actual provider spending.
@@ -622,7 +736,7 @@ as a recovery shortcut.
 
 ### References used
 
-- Merged commits for #1270, #1275, #1276, #1277, #1278, #1272 and #1279.
+- Merged commits for #1270, #1275, #1276, #1277, #1278, #1272, #1279 and #1280.
 - `services/api/README.md`, `services/api/env.example`, `services/api/src/app.ts`.
 - `services/api/database/flyway/V0093*` through `V0105*`.
 - `services/agora/README.md`, `services/agora/src/utils/processEnv.ts`, nginx and
