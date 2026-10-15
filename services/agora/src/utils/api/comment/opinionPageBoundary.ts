@@ -40,6 +40,7 @@ export function initialOpinionPageRequest({
       return { conversationSlugId, filter, cursor: null };
     case "new":
     case "moderated":
+    case "my_statements":
       return { conversationSlugId, filter, cursor: null };
   }
 }
@@ -96,6 +97,7 @@ export function parseOpinionPageResponse({
       };
     }
     case "new":
+    case "my_statements":
     case "moderated": {
       const response = createdPageResponse.parse(rawResponse);
       return {

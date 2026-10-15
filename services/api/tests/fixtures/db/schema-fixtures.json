@@ -201,6 +201,7 @@
         "polis_conversation_config",
         "conversation",
         "conversation_content",
+        "conversation_translation_target_language",
         "opinion",
         "opinion_content",
         "opinion_content_translation",

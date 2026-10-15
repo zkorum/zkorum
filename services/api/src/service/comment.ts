@@ -48,6 +48,7 @@ import type {
     FetchCommentStatsResponse,
     GetOpinionBySlugIdListResponse,
     OpinionPageCursor,
+    OpinionListFilter,
 } from "@/shared/types/dto.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import {
@@ -496,14 +497,7 @@ interface FetchOpinionsProps {
     db: PostgresJsDatabase;
     postSlugId: SlugId;
     personalizationUserId?: string;
-    filterTarget:
-        | "new"
-        | "moderated"
-        | "hidden"
-        | "discover"
-        | "my_votes"
-        | "unanswered_discover"
-        | "unanswered_new";
+    filterTarget: OpinionListFilter | "unanswered_discover" | "unanswered_new";
     limit: number;
     excludedOpinionSlugIds: string[];
     cursor: OpinionPageCursor | null;
@@ -533,6 +527,23 @@ function getUnansweredOpinionFilter({
     );
 }
 
+function getPersonalOpinionFilter({
+    filter,
+    userId,
+}: {
+    filter: FetchOpinionsProps["filterTarget"];
+    userId: string | undefined;
+}): SQL | undefined {
+    if (filter !== "my_statements" && filter !== "my_votes") return undefined;
+    if (userId === undefined)
+        throw httpErrors.unauthorized(
+            "Authentication required for personal statement filters",
+        );
+    return filter === "my_statements"
+        ? eq(opinionTable.authorId, userId)
+        : isNotNull(voteTable.currentContentId);
+}
+
 export async function fetchOpinionsByPostId({
     db,
     postId,
@@ -546,12 +557,10 @@ export async function fetchOpinionsByPostId({
     items: DisplayedOpinionItemPerSlugId;
     cursorsByOpinionSlugId: Map<string, OpinionPageCursor>;
 }> {
-    // Require authentication early for my_votes filter (prevent spam)
-    if (filterTarget === "my_votes" && !personalizationUserId) {
-        throw httpErrors.unauthorized(
-            "Authentication required for my_votes filter",
-        );
-    }
+    const personalOpinionFilter = getPersonalOpinionFilter({
+        filter: filterTarget,
+        userId: personalizationUserId,
+    });
 
     const latestCountSnapshot =
         await fetchLatestConversationOpinionCountSnapshot({
@@ -570,6 +579,7 @@ export async function fetchOpinionsByPostId({
     let whereClause: SQL | undefined = and(
         eq(opinionTable.conversationId, postId),
         isNotNull(opinionTable.currentContentId),
+        personalOpinionFilter,
     );
     let orderByClause = [desc(opinionTable.createdAt), desc(opinionTable.id)]; // default value, shouldn't be needed but ts doesn't understand how to terminate nested switch
     let shouldJoinVoteTable = false;
@@ -594,6 +604,16 @@ export async function fetchOpinionsByPostId({
         }
         case "new": {
             whereClause = and(whereClause, isNull(opinionModerationTable.id));
+            break;
+        }
+        case "my_statements": {
+            whereClause = and(
+                whereClause,
+                or(
+                    isNull(opinionModerationTable.id),
+                    ne(opinionModerationTable.moderationAction, "hide"),
+                ),
+            );
             break;
         }
         case "unanswered_new": {
@@ -678,13 +698,11 @@ export async function fetchOpinionsByPostId({
             break;
         }
         case "my_votes": {
-            // TypeScript knows personalizationUserId is defined here due to early check
             shouldJoinVoteTable = true;
             // Show only visible voted opinions. Hidden opinions are moderator-only.
             // Filter by currentContentId to exclude cancelled votes (currentContentId = NULL when cancelled)
             whereClause = and(
                 whereClause,
-                isNotNull(voteTable.currentContentId),
                 or(
                     isNull(opinionModerationTable.id),
                     ne(opinionModerationTable.moderationAction, "hide"),
@@ -1219,6 +1237,19 @@ export async function fetchOpinionsByOpinionSlugIdList({
     db,
     opinionSlugIdList,
     displayContentViewerPreferences,
+}: FetchOpinionsByOpinionSlugIdListProps): Promise<DisplayedOpinionItem[]> {
+    const targets = await fetchOpinionTargetsBySlugIdList({
+        db,
+        opinionSlugIdList,
+        displayContentViewerPreferences,
+    });
+    return targets.map((target) => target.opinion);
+}
+
+export async function fetchOpinionTargetsBySlugIdList({
+    db,
+    opinionSlugIdList,
+    displayContentViewerPreferences,
 }: FetchOpinionsByOpinionSlugIdListProps): Promise<GetOpinionBySlugIdListResponse> {
     if (opinionSlugIdList.length === 0) {
         return [];
@@ -1228,6 +1259,7 @@ export async function fetchOpinionsByOpinionSlugIdList({
         .select({
             opinionId: opinionTable.id,
             conversationId: opinionTable.conversationId,
+            conversationSlugId: conversationTable.slugId,
             projectId: conversationTable.projectId,
             languageSettingsSource: conversationTable.languageSettingsSource,
             dynamicTranslationEnabled:
@@ -1337,7 +1369,7 @@ export async function fetchOpinionsByOpinionSlugIdList({
             ),
         );
 
-    const opinionItemList: DisplayedOpinionItem[] = [];
+    const targets: GetOpinionBySlugIdListResponse = [];
     const managementBySlugId = await getOpinionManagementCapabilities({
         db,
         opinionSlugIds: results.map((opinion) => opinion.commentSlugId),
@@ -1408,7 +1440,7 @@ export async function fetchOpinionsByOpinionSlugIdList({
                     displayContentViewerPreferences.displayLanguage,
             });
 
-        opinionItemList.push({
+        const opinion: DisplayedOpinionItem = {
             opinion: commentResponse.comment,
             sourceLanguageCode: commentResponse.sourceLanguageCode,
             opinionSlugId: commentResponse.commentSlugId,
@@ -1466,10 +1498,17 @@ export async function fetchOpinionsByOpinionSlugIdList({
                 spokenLanguages:
                     displayContentViewerPreferences.spokenLanguages,
             }),
+        };
+        targets.push({
+            opinion,
+            conversationSlugId: commentResponse.conversationSlugId,
+            isOwn:
+                commentResponse.authorId ===
+                displayContentViewerPreferences.viewerUserId,
         });
     }
 
-    return opinionItemList;
+    return targets;
 }
 
 const ANALYSIS_OPINION_LIMIT = 3000;

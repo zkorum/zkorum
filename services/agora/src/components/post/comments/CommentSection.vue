@@ -47,44 +47,33 @@
 
 <script setup lang="ts">
 import { useQueryClient } from "@tanstack/vue-query";
-import { storeToRefs } from "pinia";
 import NewContentPill from "src/components/feed/NewContentPill.vue";
 import AsyncStateHandler from "src/components/ui/AsyncStateHandler.vue";
-import { useOpinionPagination } from "src/composables/opinion/useOpinionPagination";
 import { useOpinionVoting } from "src/composables/opinion/useOpinionVoting";
 import { useTargetOpinion } from "src/composables/opinion/useTargetOpinion";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { useComputedPagination } from "src/composables/ui/useComputedPagination";
 import type {
+  ConversationTypeConfig,
   DisplayedOpinionItem,
   EventSlug,
   ParticipationMode,
   SurveyGateSummary,
 } from "src/shared/types/zod";
 import { useOpinionUpdatesStore } from "src/stores/opinionUpdates";
-import { useUserStore } from "src/stores/user";
 import { useBackendCommentApi } from "src/utils/api/comment/comment";
-import {
-  useInvalidateCommentQueries,
-  usePagedCommentsQuery,
-} from "src/utils/api/comment/useCommentQueries";
+import { useInvalidateCommentQueries } from "src/utils/api/comment/useCommentQueries";
+import { usePagedCommentsQuery } from "src/utils/api/comment/usePagedCommentsQuery";
 import type { CommentFilterOptions } from "src/utils/component/opinion";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
-import { useNotify } from "src/utils/ui/notify";
-import {
-  computed,
-  inject,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  ref,
-  watch,
-} from "vue";
+import { computed, inject, onActivated, onDeactivated, ref, watch } from "vue";
 
 import {
   type CommentSectionTranslations,
   commentSectionTranslations,
 } from "./CommentSection.i18n";
 import CommentGroup from "./group/CommentGroup.vue";
+import { resolveLinkedOpinionFilter } from "./opinionPresentation";
 
 const props = defineProps<{
   postSlugId: string;
@@ -97,22 +86,17 @@ const props = defineProps<{
   isVotingDisabled: boolean;
   conversationRouteContext: ConversationRouteContext;
   filter: CommentFilterOptions;
+  conversationTypeConfig: ConversationTypeConfig;
   editingOpinion: DisplayedOpinionItem | undefined;
 }>();
 
 const emit = defineEmits<{
   deleted: [];
   editOpinion: [opinion: DisplayedOpinionItem];
-  participantCountDelta: [delta: number];
-  ticketVerified: [
-    payload: { userIdChanged: boolean; needsCacheRefresh: boolean },
-  ];
 }>();
 
-const isComponentMounted = ref(false);
 const isCommentTabActive = ref(true);
-const isInitialActivation = ref(true);
-const currentFilter = ref<CommentFilterOptions>(props.filter);
+const selectedFilter = ref<CommentFilterOptions>(props.filter);
 const showNewStatementsPill = ref(false);
 let isCheckingForNewStatements = false;
 
@@ -120,8 +104,6 @@ const { t } = useComponentI18n<CommentSectionTranslations>(
   commentSectionTranslations
 );
 
-const { profileData } = storeToRefs(useUserStore());
-const { showNotifyMessage } = useNotify();
 const opinionUpdatesStore = useOpinionUpdatesStore();
 const queryClient = useQueryClient();
 const { fetchOpinionPage } = useBackendCommentApi();
@@ -134,9 +116,30 @@ const scrollToActionBar = inject<
 // Get invalidation utilities
 const { invalidateAll } = useInvalidateCommentQueries();
 
+const {
+  targetOpinion,
+  highlightState,
+  isResolvingLink,
+  clearHighlight,
+  highlightOpinion,
+  captureHighlight,
+} = useTargetOpinion({ conversationSlugId: () => props.postSlugId });
+
+const currentFilter = computed<CommentFilterOptions>(() => {
+  const target = highlightState.value;
+  return target.kind !== "linked"
+    ? selectedFilter.value
+    : resolveLinkedOpinionFilter({
+        metadata: props.conversationTypeConfig,
+        target,
+        filterSelection: target.filterSelection,
+      });
+});
+
 const activeQuery = usePagedCommentsQuery({
   conversationSlugId: () => props.postSlugId,
   filter: currentFilter,
+  enabled: () => isCommentTabActive.value && !isResolvingLink.value,
 });
 const currentOpinionData = computed(() => {
   const items =
@@ -145,7 +148,9 @@ const currentOpinionData = computed(() => {
 });
 const customIsEmpty = computed(() => currentOpinionData.value.length === 0);
 const listQueryState = {
-  isPending: activeQuery.isPending,
+  isPending: computed(
+    () => isResolvingLink.value || activeQuery.isPending.value
+  ),
   isError: computed(() => activeQuery.isError.value && customIsEmpty.value),
   error: activeQuery.error,
   isRefetching: activeQuery.isRefetching,
@@ -156,17 +161,15 @@ const listQueryState = {
 watch(
   () => props.filter,
   (filter) => {
-    currentFilter.value = filter;
+    if (filter !== currentFilter.value) clearHighlight();
+    selectedFilter.value = filter;
   }
 );
 
 function handleUserFilterChange(filter: CommentFilterOptions): void {
-  currentFilter.value = filter;
+  clearHighlight();
+  selectedFilter.value = filter;
   showNewStatementsPill.value = false;
-}
-
-function handleRetryLoadComments(): void {
-  void activeQuery.refetch();
 }
 
 const refreshData = async (): Promise<void> => {
@@ -175,58 +178,28 @@ const refreshData = async (): Promise<void> => {
 };
 
 const {
-  targetOpinion,
-  setupHighlightFromRoute,
-  clearRouteQueryParameters,
-  highlightOpinion,
-  getCachedOpinion,
-} = useTargetOpinion({
-  onModeratedOpinionDetected: (opinion) => {
-    if (opinion.moderation.status !== "moderated") {
-      return;
-    }
-    if (opinion.moderation.action === "move") {
-      currentFilter.value = "moderated";
-    } else if (opinion.moderation.action === "hide") {
-      if (profileData.value.isSiteModerator) {
-        currentFilter.value = "hidden";
-      } else {
-        showNotifyMessage(t("statementRemovedByModerator"));
-        targetOpinion.value = null;
-      }
-    }
-  },
-});
-
-const {
-  visibleOpinions,
+  visibleItems: visibleOpinions,
   hasMore: hasMoreLocally,
-  onLoad: revealMore,
-  triggerLoadMore,
-} = useOpinionPagination({
-  currentOpinionData,
-  currentFilter,
-  isComponentMounted,
-  targetOpinion,
-});
+  loadMore,
+  resetPagination,
+} = useComputedPagination(currentOpinionData);
+watch(currentFilter, resetPagination);
 
-let previousHighlightedOpinion: DisplayedOpinionItem | null = null;
+let restorePreviousHighlight = () => {};
 watch(
   () => props.editingOpinion,
   (opinion, previous) => {
+    const current = highlightState.value;
     if (opinion !== undefined) {
-      if (previous === undefined)
-        previousHighlightedOpinion = targetOpinion.value;
+      if (previous === undefined) restorePreviousHighlight = captureHighlight();
       highlightOpinion(opinion);
     } else if (
       previous !== undefined &&
-      targetOpinion.value?.displayContent.sourceVersion ===
+      current.kind !== "none" &&
+      current.opinion.displayContent.sourceVersion ===
         previous.displayContent.sourceVersion
     ) {
-      targetOpinion.value =
-        previousHighlightedOpinion === null
-          ? null
-          : getCachedOpinion(previousHighlightedOpinion);
+      restorePreviousHighlight();
     }
   },
   { immediate: true }
@@ -235,15 +208,15 @@ const hasMore = computed(
   () => hasMoreLocally.value || activeQuery.hasNextPage.value
 );
 
-async function onLoad(index: number, done: () => void): Promise<void> {
-  if (hasMoreLocally.value) {
-    revealMore(index, done);
-    return;
-  }
+async function onLoad(_index: number, done: () => void): Promise<void> {
   try {
+    if (hasMoreLocally.value) {
+      loadMore();
+      return;
+    }
     if (activeQuery.hasNextPage.value && !activeQuery.isFetching.value) {
       const result = await activeQuery.fetchNextPage();
-      if (!result.isError) triggerLoadMore();
+      if (!result.isError) loadMore();
     }
   } finally {
     done();
@@ -262,11 +235,12 @@ const emptyTextByFilter: Record<
   new: "emptyNew",
   moderated: "emptyModerated",
   my_votes: "emptyMyVotes",
+  my_statements: "emptyMyStatements",
   hidden: "emptyHidden",
 };
 
 const isCommentListEmpty = computed(
-  () => customIsEmpty.value && targetOpinion.value === null
+  () => customIsEmpty.value && highlightState.value.kind === "none"
 );
 
 const newOpinionSignalVersion = computed(() =>
@@ -363,21 +337,9 @@ const asyncStateConfig = computed(() => ({
   },
 }));
 
-onMounted(async (): Promise<void> => {
-  await setupHighlightFromRoute();
-  await clearRouteQueryParameters();
-  isComponentMounted.value = true;
-});
-
-onActivated(async (): Promise<void> => {
+onActivated((): void => {
   isCommentTabActive.value = true;
   showNewStatementsPill.value = false;
-  if (isInitialActivation.value) {
-    isInitialActivation.value = false;
-    return;
-  }
-  await setupHighlightFromRoute();
-  await clearRouteQueryParameters();
 });
 
 onDeactivated((): void => {
@@ -391,18 +353,14 @@ watch(
     if (newSlugId && newSlugId !== oldSlugId) {
       lastCheckedSignalVersion = newOpinionSignalVersion.value;
       showNewStatementsPill.value = false;
-      // Reset component state for new conversation
-      isComponentMounted.value = false;
+      resetPagination();
       await fetchUserVotingData();
-      await setupHighlightFromRoute();
-      await clearRouteQueryParameters();
-      isComponentMounted.value = true;
     }
   }
 );
 
 function openModerationHistory(): void {
-  currentFilter.value = "moderated";
+  handleUserFilterChange("moderated");
 }
 
 async function handleOpinionMuted(): Promise<void> {
@@ -411,8 +369,12 @@ async function handleOpinionMuted(): Promise<void> {
 
 function handleOpinionDeleted(opinionSlugId: string): void {
   // If the deleted opinion is the currently highlighted one, clear it
-  if (targetOpinion.value?.opinionSlugId === opinionSlugId) {
-    targetOpinion.value = null;
+  const current = highlightState.value;
+  if (
+    current.kind !== "none" &&
+    current.opinion.opinionSlugId === opinionSlugId
+  ) {
+    clearHighlight();
   }
   emit("deleted");
 }
@@ -420,14 +382,15 @@ function handleOpinionDeleted(opinionSlugId: string): void {
 defineExpose({
   openModerationHistory,
   highlightOpinion,
-  triggerLoadMore,
-  handleRetryLoadComments,
   refreshData,
   refetchActiveQuery: () => activeQuery.refetch(),
   targetOpinion,
   currentFilter,
-  handleUserFilterChange,
-  isLoading: computed(() => activeQuery.isPending.value && customIsEmpty.value),
+  isLoading: computed(
+    () =>
+      isResolvingLink.value ||
+      (activeQuery.isPending.value && customIsEmpty.value)
+  ),
 });
 </script>
 

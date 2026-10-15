@@ -83,6 +83,7 @@
           :is-voting-disabled="isVotingDisabled"
           :conversation-route-context="conversationRouteContext"
           filter="discover"
+          :conversation-type-config="conversationData.metadata"
           :editing-opinion="editingOpinion"
           @edit-opinion="beginEditOpinion"
         />

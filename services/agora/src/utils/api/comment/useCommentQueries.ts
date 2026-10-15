@@ -1,7 +1,5 @@
 import {
-  type InfiniteData,
   type QueryClient,
-  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -51,7 +49,7 @@ import { useNotify } from "../../ui/notify";
 import { getErrorMessage } from "../common";
 import { classifyApiError } from "../error";
 import { updateConversationQueryCache } from "../post/useConversationQuery";
-import type { AnalysisData, CommentTabFilters } from "./comment";
+import type { AnalysisData } from "./comment";
 import {
   buildAnalysisDataFromFrame,
   buildEmptyAnalysisDataFromManifest,
@@ -66,11 +64,6 @@ import {
   removeCachedOpinion,
 } from "./opinionCache";
 import {
-  initialOpinionPageRequest,
-  type OpinionPageRequest,
-  type OpinionPageResult,
-} from "./opinionPageBoundary";
-import {
   isOpinionQueryForScope,
   type OpinionQueryScope,
 } from "./opinionQueryScope";
@@ -79,50 +72,6 @@ import {
   type UseCommentQueriesTranslations,
   useCommentQueriesTranslations,
 } from "./useCommentQueries.i18n";
-
-export function usePagedCommentsQuery({
-  conversationSlugId,
-  filter,
-}: {
-  conversationSlugId: MaybeRefOrGetter<string>;
-  filter: MaybeRefOrGetter<CommentTabFilters>;
-}) {
-  const { fetchOpinionPage } = useBackendCommentApi();
-  const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
-  const { userId } = storeToRefs(useAuthenticationStore());
-
-  return useInfiniteQuery<
-    OpinionPageResult,
-    Error,
-    InfiniteData<OpinionPageResult, OpinionPageRequest>,
-    readonly unknown[],
-    OpinionPageRequest
-  >({
-    queryKey: [
-      "comments",
-      computed(() => toValue(conversationSlugId)),
-      computed(() => toValue(filter)),
-      computed(() => userId.value),
-      displayLanguage,
-      computed(() => [...spokenLanguages.value].sort()),
-    ],
-    queryFn: ({ pageParam, signal }) =>
-      fetchOpinionPage({
-        ...pageParam,
-        signal,
-      }),
-    enabled: computed(() => toValue(conversationSlugId) !== ""),
-    initialPageParam: computed(() =>
-      initialOpinionPageRequest({
-        conversationSlugId: toValue(conversationSlugId),
-        filter: toValue(filter),
-      })
-    ),
-    getNextPageParam: (lastPage) => lastPage.nextRequest,
-    staleTime: 30_000,
-    retry: false,
-  });
-}
 
 export function useCommentStatsQuery({
   conversationSlugId,

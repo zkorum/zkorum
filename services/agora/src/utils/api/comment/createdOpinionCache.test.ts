@@ -67,6 +67,7 @@ describe("cacheCreatedSeedOpinions", () => {
       ["comments", "conversation", "discover", "user"],
       ["comments", "conversation", "new", "user"],
       ["comments", "conversation", "my_votes", "user"],
+      ["comments", "conversation", "my_statements", "user"],
       ["comments", "conversation", "new", "other-user"],
     ];
     for (const key of keys)
@@ -109,7 +110,10 @@ describe("cacheCreatedOpinion", () => {
       ["en"],
     ];
     const cursor: NonNullable<
-      Extract<OpinionPageRequest, { filter: "new" | "moderated" }>["cursor"]
+      Extract<
+        OpinionPageRequest,
+        { filter: "new" | "moderated" | "my_statements" }
+      >["cursor"]
     > = {
       kind: "created",
       opinionSlugId: "last-op",
@@ -221,6 +225,7 @@ describe("cacheCreatedOpinion", () => {
       "discover",
       "new",
       "my_votes",
+      "my_statements",
     ];
     const updatedKeys: CommentsTestKey[] = filters.map((filter) => [
       "comments",
@@ -235,6 +240,7 @@ describe("cacheCreatedOpinion", () => {
       ["comments", "conversation", "hidden"],
       // A different participant's personalized list must not receive this vote.
       ["comments", "conversation", "my_votes", "other-user", "en", ["en"]],
+      ["comments", "conversation", "my_statements", "other-user", "en", ["en"]],
       ["comments", "other-conversation", "new"],
     ];
     const otherUserVotesKey = ["userVotes", "conversation", "other-user"];

@@ -12,6 +12,8 @@ export interface CommentSortingSelectorTranslations {
   hiddenDescription: string;
   myVotes: string;
   myVotesDescription: string;
+  myStatements: string;
+  myStatementsDescription: string;
 }
 
 export const commentSortingSelectorTranslations: Record<
@@ -32,6 +34,8 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "Statements removed by moderators",
     myVotes: "My Votes",
     myVotesDescription: "Statements you've voted on",
+    myStatements: "My statements",
+    myStatementsDescription: "Statements you've submitted in this conversation",
   },
   ar: {
     filterTitle: "تصفية المقترحات حسب:",
@@ -47,6 +51,8 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "مقترحات أزالها المشرفون",
     myVotes: "أصواتي",
     myVotesDescription: "مقترحات صوّتَ عليها",
+    myStatements: "مقترحاتي",
+    myStatementsDescription: "المقترحات التي قدّمتها في هذه المحادثة",
   },
   es: {
     filterTitle: "Filtrar proposiciones por:",
@@ -62,6 +68,9 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "Proposiciones eliminadas por moderadores",
     myVotes: "Mis Votos",
     myVotesDescription: "Proposiciones en las que ha votado",
+    myStatements: "Mis proposiciones",
+    myStatementsDescription:
+      "Proposiciones que ha enviado en esta conversación",
   },
   fa: {
     filterTitle: "فیلتر گزاره‌ها بر اساس:",
@@ -77,6 +86,8 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "گزاره‌هایی که توسط مدیران حذف شده‌اند",
     myVotes: "رأی‌های من",
     myVotesDescription: "گزاره‌هایی که به آنها رأی داده‌اید",
+    myStatements: "گزاره‌های من",
+    myStatementsDescription: "گزاره‌هایی که در این گفتگو ارسال کرده‌اید",
   },
   fr: {
     filterTitle: "Filtrer les propositions par :",
@@ -92,6 +103,9 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "Propositions supprimées par les modérateurs",
     myVotes: "Mes Votes",
     myVotesDescription: "Propositions pour lesquelles vous avez voté",
+    myStatements: "Mes propositions",
+    myStatementsDescription:
+      "Propositions que vous avez soumises dans cette conversation",
   },
   "zh-Hans": {
     filterTitle: "按以下方式筛选意见：",
@@ -105,6 +119,8 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "被管理员移除的意见",
     myVotes: "我的投票",
     myVotesDescription: "你已投票的意见",
+    myStatements: "我的意见",
+    myStatementsDescription: "你在此对话中提交的意见",
   },
   "zh-Hant": {
     filterTitle: "按以下方式篩選意見：",
@@ -118,6 +134,8 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "被管理員移除的意見",
     myVotes: "我的投票",
     myVotesDescription: "你已投票的意見",
+    myStatements: "我的意見",
+    myStatementsDescription: "你在此對話中提交的意見",
   },
   he: {
     filterTitle: "סינון הצהרות לפי:",
@@ -133,6 +151,8 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "הצהרות שהוסרו על ידי מנהלים",
     myVotes: "ההצבעות שלי",
     myVotesDescription: "הצהרות שהצבעת עליהן",
+    myStatements: "ההצהרות שלי",
+    myStatementsDescription: "הצהרות ששלחת בשיחה הזו",
   },
   ja: {
     filterTitle: "意見を以下でフィルター：",
@@ -148,6 +168,8 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "モデレーターが削除した意見",
     myVotes: "自分の投票",
     myVotesDescription: "投票した意見",
+    myStatements: "自分の意見",
+    myStatementsDescription: "この会話で投稿した意見",
   },
   ky: {
     filterTitle: "Пикирлерди чыпкалоо:",
@@ -163,6 +185,8 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "Модераторлор тарабынан алынып салынган пикирлер",
     myVotes: "Менин добуштарым",
     myVotesDescription: "Добуш берген пикирлериңиз",
+    myStatements: "Менин пикирлерим",
+    myStatementsDescription: "Бул баарлашууда жөнөткөн пикирлериңиз",
   },
   ru: {
     filterTitle: "Фильтр высказываний:",
@@ -178,5 +202,7 @@ export const commentSortingSelectorTranslations: Record<
     hiddenDescription: "Высказывания, удалённые модераторами",
     myVotes: "Мои голоса",
     myVotesDescription: "Высказывания, по которым вы голосовали",
+    myStatements: "Мои высказывания",
+    myStatementsDescription: "Высказывания, которые вы отправили в этой беседе",
   },
 };

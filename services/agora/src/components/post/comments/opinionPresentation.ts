@@ -1,3 +1,5 @@
+import type { OpinionFilterSelection } from "src/composables/opinion/opinionLinkRoute";
+import type { OpinionTarget } from "src/shared/types/dto";
 import type { ConversationTypeConfig } from "src/shared/types/zod";
 import type { CommentFilterOptions } from "src/utils/component/opinion";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
@@ -10,16 +12,21 @@ export function resolveOpinionView({
   metadata,
   routeContext,
   filter,
+  hasOpinionTarget,
 }: {
   metadata: ConversationTypeConfig;
   routeContext: ConversationRouteContext;
   filter: CommentFilterOptions;
+  hasOpinionTarget: boolean;
 }): OpinionView {
   if (metadata.conversationType !== "polis") {
     return { kind: "list", filter };
   }
   if (routeContext.kind === "embed") {
     return { kind: "one_at_a_time", order: "discover" };
+  }
+  if (hasOpinionTarget) {
+    return { kind: "list", filter };
   }
   if (
     metadata.votingPresentation === "one_at_a_time" &&
@@ -28,4 +35,24 @@ export function resolveOpinionView({
     return { kind: "one_at_a_time", order: filter };
   }
   return { kind: "list", filter };
+}
+
+export function resolveLinkedOpinionFilter({
+  metadata,
+  target,
+  filterSelection,
+}: {
+  metadata: ConversationTypeConfig;
+  target: OpinionTarget;
+  filterSelection: OpinionFilterSelection;
+}): CommentFilterOptions {
+  if (target.opinion.moderation.status === "moderated") {
+    return target.opinion.moderation.action === "hide" ? "hidden" : "moderated";
+  }
+  if (filterSelection.kind === "explicit") return filterSelection.filter;
+  return metadata.conversationType === "polis" &&
+    metadata.votingPresentation === "one_at_a_time" &&
+    target.isOwn
+    ? "my_statements"
+    : "discover";
 }

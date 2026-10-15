@@ -8373,6 +8373,11 @@ export const ApiV1OpinionFetchAnalysisFrameOpinionListByFramePostRequestKindEnum
 
 export type ApiV1OpinionFetchAnalysisFrameOpinionListByFramePostRequestKindEnum = typeof ApiV1OpinionFetchAnalysisFrameOpinionListByFramePostRequestKindEnum[keyof typeof ApiV1OpinionFetchAnalysisFrameOpinionListByFramePostRequestKindEnum];
 
+export interface ApiV1OpinionFetchBySlugIdListPost200ResponseInner {
+    'opinion': ApiV1OpinionEditPost200ResponseOneOfDisplayedOpinionItem;
+    'conversationSlugId': string;
+    'isOwn': boolean;
+}
 export interface ApiV1OpinionFetchBySlugIdListPostRequest {
     'opinionSlugIdList': Array<string>;
 }
@@ -8494,6 +8499,7 @@ export interface ApiV1OpinionFetchPagePostRequestOneOf2 {
 export const ApiV1OpinionFetchPagePostRequestOneOf2FilterEnum = {
     New: 'new',
     Moderated: 'moderated',
+    MyStatements: 'my_statements',
 } as const;
 
 export type ApiV1OpinionFetchPagePostRequestOneOf2FilterEnum = typeof ApiV1OpinionFetchPagePostRequestOneOf2FilterEnum[keyof typeof ApiV1OpinionFetchPagePostRequestOneOf2FilterEnum];
@@ -17513,7 +17519,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest: ApiV1OpinionFetchBySlugIdListPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1OpinionEditPost200ResponseOneOfDisplayedOpinionItem>>> {
+        async apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest: ApiV1OpinionFetchBySlugIdListPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApiV1OpinionFetchBySlugIdListPost200ResponseInner>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1OpinionFetchBySlugIdListPost']?.[localVarOperationServerIndex]?.url;
@@ -19071,7 +19077,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest: ApiV1OpinionFetchBySlugIdListPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<ApiV1OpinionEditPost200ResponseOneOfDisplayedOpinionItem>> {
+        apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest: ApiV1OpinionFetchBySlugIdListPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<ApiV1OpinionFetchBySlugIdListPost200ResponseInner>> {
             return localVarFp.apiV1OpinionFetchBySlugIdListPost(apiV1OpinionFetchBySlugIdListPostRequest, options).then((request) => request(axios, basePath));
         },
         /**

@@ -1,37 +1,32 @@
-import { Dto } from "src/shared/types/dto";
+import { zodDisplayedOpinionItem } from "src/shared/types/zod";
 import { describe, expect, it } from "vitest";
 
 import { applyOpinionContentUpdate } from "./opinionContentUpdate";
 
 const originalVersion = "00000000-0000-4000-8000-000000000001";
 const editedVersion = "00000000-0000-4000-8000-000000000002";
-const item = Dto.getOpinionBySlugIdListResponse
-  .parse([
-    {
-      opinionSlugId: "edited01",
-      opinion: "<p>Original statement</p>",
-      sourceLanguageCode: "en",
-      createdAt: "2026-10-10T10:00:00Z",
-      updatedAt: "2026-10-10T10:00:00Z",
-      username: "author",
-      isSeed: false,
-      isEdited: false,
-      numParticipants: 1,
-      numAgrees: 1,
-      numDisagrees: 0,
-      numPasses: 0,
-      moderation: { status: "unmoderated" },
-      displayContent: {
-        sourceVersion: originalVersion,
-        status: "available",
-        mode: "translated",
-        content: { content: "<p>Ancienne traduction</p>" },
-        translationControl: null,
-      },
-    },
-  ])
-  .at(0);
-if (item === undefined) throw new Error("Missing statement fixture");
+const item = zodDisplayedOpinionItem.parse({
+  opinionSlugId: "edited01",
+  opinion: "<p>Original statement</p>",
+  sourceLanguageCode: "en",
+  createdAt: "2026-10-10T10:00:00Z",
+  updatedAt: "2026-10-10T10:00:00Z",
+  username: "author",
+  isSeed: false,
+  isEdited: false,
+  numParticipants: 1,
+  numAgrees: 1,
+  numDisagrees: 0,
+  numPasses: 0,
+  moderation: { status: "unmoderated" },
+  displayContent: {
+    sourceVersion: originalVersion,
+    status: "available",
+    mode: "translated",
+    content: { content: "<p>Ancienne traduction</p>" },
+    translationControl: null,
+  },
+});
 const event = {
   conversationSlugId: "editconv",
   opinionSlugId: "edited01",

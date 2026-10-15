@@ -21,6 +21,7 @@ import {
 } from "../src/shared-backend/schema.js";
 import {
     countUnansweredOpinions,
+    fetchOpinionTargetsBySlugIdList,
     fetchOpinionsByPostSlugId,
 } from "../src/service/comment.js";
 import { readDbFixtureSql } from "./dbFixture.js";
@@ -66,7 +67,7 @@ describe("opinion paging and unanswered progress", () => {
 
     beforeEach(async () => {
         await sqlClient.unsafe(`
-            TRUNCATE TABLE "analysis_snapshot", "vote_content", "vote", "user_mute_preference",
+            TRUNCATE TABLE "analysis_snapshot", "vote_content", "vote", "user_mute_preference", "opinion_moderation",
                 "opinion_content", "opinion", "conversation_view_snapshot",
                 "conversation_content", "conversation", "polis_conversation_config", "user"
             RESTART IDENTITY;
@@ -164,6 +165,173 @@ describe("opinion paging and unanswered progress", () => {
         if (cursor === undefined) throw new Error("Missing page cursor");
         const second = await fetchPage({ db, cursor, limit: 2 });
         expect([...second.items.keys()]).toEqual(["opinion1"]);
+    });
+
+    it("paginates only the viewer's statements without requiring a vote", async () => {
+        const first = await fetchPage({
+            db,
+            cursor: null,
+            limit: 1,
+            filter: "my_statements",
+            viewerId: authorId,
+        });
+        expect([...first.items.keys()]).toEqual(["opinion3"]);
+        const cursor = first.cursorsByOpinionSlugId.get("opinion3");
+        if (cursor === undefined) throw new Error("Missing page cursor");
+        const second = await fetchPage({
+            db,
+            cursor,
+            limit: 2,
+            filter: "my_statements",
+            viewerId: authorId,
+        });
+        expect([...second.items.keys()]).toEqual(["opinion2"]);
+        const otherViewer = await fetchPage({
+            db,
+            cursor: null,
+            limit: 3,
+            filter: "my_statements",
+        });
+        expect([...otherViewer.items.keys()]).toEqual([]);
+    });
+
+    it("keeps moved statements visible in My statements but excludes hidden and deleted statements", async () => {
+        await db.insert(opinionModerationTable).values([
+            {
+                opinionId: opinionIds.opinion2,
+                moderationAction: "move",
+                moderationReason: "spam",
+            },
+            {
+                opinionId: opinionIds.opinion3,
+                moderationAction: "hide",
+                moderationReason: "spam",
+            },
+        ]);
+        const page = await fetchPage({
+            db,
+            cursor: null,
+            limit: 3,
+            filter: "my_statements",
+            viewerId: authorId,
+        });
+        expect([...page.items.keys()]).toEqual(["opinion2"]);
+        await db
+            .update(opinionTable)
+            .set({ currentContentId: null })
+            .where(eq(opinionTable.id, opinionIds.opinion2));
+        const afterDeletion = await fetchPage({
+            db,
+            cursor: null,
+            limit: 3,
+            filter: "my_statements",
+            viewerId: authorId,
+        });
+        expect([...afterDeletion.items.keys()]).toEqual([]);
+    });
+
+    it("requires authentication for My statements", async () => {
+        await expect(
+            fetchOpinionsByPostSlugId({
+                db,
+                postSlugId: conversationSlugId,
+                filterTarget: "my_statements",
+                limit: 3,
+                excludedOpinionSlugIds: [],
+                cursor: null,
+                displayContentPreferences: {
+                    displayLanguage: "en",
+                    targetLanguage: "en",
+                    spokenLanguages: ["en"],
+                    translationAllowed: false,
+                    viewerUserId: undefined,
+                },
+            }),
+        ).rejects.toMatchObject({ statusCode: 401 });
+    });
+
+    it("returns server-owned authorship and conversation facts without exposing author IDs", async () => {
+        const targets = await fetchOpinionTargetsBySlugIdList({
+            db,
+            opinionSlugIdList: ["opinion1", "opinion2"],
+            displayContentViewerPreferences: {
+                viewerUserId: authorId,
+                displayLanguage: "en",
+                spokenLanguages: ["en"],
+            },
+        });
+        expect(
+            targets.map((target) => ({
+                slugId: target.opinion.opinionSlugId,
+                isOwn: target.isOwn,
+                conversationSlugId: target.conversationSlugId,
+            })),
+        ).toEqual([
+            { slugId: "opinion2", isOwn: true, conversationSlugId },
+            { slugId: "opinion1", isOwn: false, conversationSlugId },
+        ]);
+        for (const target of targets) {
+            expect(target).not.toHaveProperty("authorId");
+            expect(target.opinion).not.toHaveProperty("authorId");
+        }
+        const anonymous = await fetchOpinionTargetsBySlugIdList({
+            db,
+            opinionSlugIdList: ["opinion2"],
+            displayContentViewerPreferences: {
+                viewerUserId: undefined,
+                displayLanguage: "en",
+                spokenLanguages: ["en"],
+            },
+        });
+        expect(anonymous.at(0)?.isOwn).toBe(false);
+    });
+
+    it("does not return hidden or deleted statement targets even to their author", async () => {
+        await db
+            .insert(opinionModerationTable)
+            .values({
+                opinionId: opinionIds.opinion2,
+                moderationAction: "hide",
+                moderationReason: "spam",
+            });
+        await db
+            .update(opinionTable)
+            .set({ currentContentId: null })
+            .where(eq(opinionTable.id, opinionIds.opinion3));
+        const targets = await fetchOpinionTargetsBySlugIdList({
+            db,
+            opinionSlugIdList: ["opinion2", "opinion3", "missing"],
+            displayContentViewerPreferences: {
+                viewerUserId: authorId,
+                displayLanguage: "en",
+                spokenLanguages: ["en"],
+            },
+        });
+        expect(targets).toEqual([]);
+    });
+
+    it("uses stable ID tie-breaking when My statements share a creation timestamp", async () => {
+        await db
+            .update(opinionTable)
+            .set({ createdAt: new Date("2026-01-01T00:00:00Z") });
+        const first = await fetchPage({
+            db,
+            cursor: null,
+            limit: 1,
+            filter: "my_statements",
+            viewerId: authorId,
+        });
+        expect([...first.items.keys()]).toEqual(["opinion3"]);
+        const cursor = first.cursorsByOpinionSlugId.get("opinion3");
+        if (cursor === undefined) throw new Error("Missing page cursor");
+        const second = await fetchPage({
+            db,
+            cursor,
+            limit: 1,
+            filter: "my_statements",
+            viewerId: authorId,
+        });
+        expect([...second.items.keys()]).toEqual(["opinion2"]);
     });
 
     it("includes a statement created after a participant reached the end", async () => {
@@ -421,16 +589,20 @@ function fetchPage({
     db,
     cursor,
     limit,
+    filter = "new",
+    viewerId = readerId,
 }: {
     db: PostgresJsDatabase;
     cursor: OpinionPageCursor | null;
     limit: number;
+    filter?: "new" | "my_statements";
+    viewerId?: string;
 }) {
     return fetchOpinionsByPostSlugId({
         db,
         postSlugId: conversationSlugId,
-        personalizationUserId: readerId,
-        filterTarget: "new",
+        personalizationUserId: viewerId,
+        filterTarget: filter,
         limit,
         excludedOpinionSlugIds: [],
         cursor,
@@ -439,7 +611,7 @@ function fetchPage({
             targetLanguage: "en",
             spokenLanguages: ["en"],
             translationAllowed: false,
-            viewerUserId: readerId,
+            viewerUserId: viewerId,
         },
     });
 }

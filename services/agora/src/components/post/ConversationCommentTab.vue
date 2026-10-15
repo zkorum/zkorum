@@ -1,7 +1,7 @@
 <template>
   <div v-if="conversationData !== undefined">
     <OneAtATimeSection
-      v-if="opinionView?.kind === 'one_at_a_time'"
+      v-if="opinionView.kind === 'one_at_a_time'"
       :key="`${conversationData.metadata.conversationSlugId}:${props.commentFilter}`"
       ref="oneAtATimeRef"
       :post-slug-id="conversationData.metadata.conversationSlugId"
@@ -21,6 +21,7 @@
     />
     <CommentSection
       v-else
+      :key="conversationData.metadata.conversationSlugId"
       ref="opinionSectionRef"
       :post-slug-id="conversationData.metadata.conversationSlugId"
       :conversation-author-username="conversationData.metadata.authorUsername"
@@ -34,6 +35,7 @@
       :is-voting-disabled="isVotingDisabled"
       :conversation-route-context="props.conversationRouteContext"
       :filter="props.commentFilter"
+      :conversation-type-config="conversationData.metadata"
       :editing-opinion="editingOpinion"
       @edit-opinion="emit('editOpinion', $event)"
     />
@@ -46,6 +48,7 @@ import type {
   RegisterChildRefreshHandler,
   SubmittedCommentData,
 } from "src/composables/conversation/useConversationParentState";
+import { getLinkedOpinionSlugId } from "src/composables/opinion/opinionLinkRoute";
 import type {
   DisplayedOpinionItem,
   ExtendedConversationDisplayData,
@@ -65,10 +68,14 @@ import {
   ref,
   watch,
 } from "vue";
+import { useRoute } from "vue-router";
 
 import CommentSection from "./comments/CommentSection.vue";
 import OneAtATimeSection from "./comments/OneAtATimeSection.vue";
-import { resolveOpinionView } from "./comments/opinionPresentation";
+import {
+  type OpinionView,
+  resolveOpinionView,
+} from "./comments/opinionPresentation";
 
 // Props from parent
 const props = defineProps<{
@@ -108,6 +115,7 @@ const registerSubmittedCommentHandler = inject<
 
 const opinionSectionRef = ref<InstanceType<typeof CommentSection>>();
 const oneAtATimeRef = ref<InstanceType<typeof OneAtATimeSection>>();
+const route = useRoute();
 const isTabActive = ref(true);
 let unregisterChildRefreshHandler: (() => void) | undefined;
 
@@ -117,22 +125,20 @@ const userStore = useUserStore();
 
 const { profileData } = storeToRefs(userStore);
 
-// Route transitions can temporarily omit data; inert inputs keep queries disabled.
-const conversationSlugId = computed(
-  () => props.conversationData?.metadata.conversationSlugId ?? ""
-);
-const opinionView = computed(() =>
-  props.conversationData === undefined
-    ? undefined
-    : resolveOpinionView({
-        metadata: props.conversationData.metadata,
-        routeContext: props.conversationRouteContext,
-        filter: props.commentFilter,
-      })
-);
-const isOneAtATime = computed(
-  () => opinionView.value?.kind === "one_at_a_time"
-);
+const opinionView = computed<OpinionView | { kind: "unavailable" }>(() => {
+  const data = props.conversationData;
+  if (data === undefined) return { kind: "unavailable" };
+  return resolveOpinionView({
+    metadata: data.metadata,
+    routeContext: props.conversationRouteContext,
+    filter: props.commentFilter,
+    hasOpinionTarget:
+      getLinkedOpinionSlugId({
+        route,
+        conversationSlugId: data.metadata.conversationSlugId,
+      }) !== undefined,
+  });
+});
 
 // Compute voting disabled state for drilling to CommentActionBar
 const isVotingDisabled = computed(() => {
@@ -150,7 +156,8 @@ const isVotingDisabled = computed(() => {
 const isLoading = computed(
   () =>
     isTabActive.value &&
-    (isOneAtATime.value
+    opinionView.value.kind !== "unavailable" &&
+    (opinionView.value.kind === "one_at_a_time"
       ? (oneAtATimeRef.value?.isLoading ?? false)
       : (opinionSectionRef.value?.isLoading ?? false))
 );
@@ -159,19 +166,6 @@ const isLoading = computed(
 watch(isLoading, (loading) => {
   setCurrentTabLoading(loading);
 });
-
-// Sync filter: when parent changes filter (user clicked sorting selector), tell CommentSection
-watch(
-  () => props.commentFilter,
-  (newFilter) => {
-    if (
-      opinionSectionRef.value &&
-      opinionSectionRef.value.currentFilter !== newFilter
-    ) {
-      opinionSectionRef.value.handleUserFilterChange(newFilter);
-    }
-  }
-);
 
 // Sync filter: when CommentSection changes filter internally (e.g. openModerationHistory), tell parent
 watch(
@@ -184,8 +178,7 @@ watch(
 );
 
 async function submittedComment(data: SubmittedCommentData): Promise<void> {
-  const currentConversation = props.conversationData;
-  if (currentConversation === undefined) {
+  if (props.conversationData === undefined) {
     return;
   }
 
@@ -194,7 +187,9 @@ async function submittedComment(data: SubmittedCommentData): Promise<void> {
   }
   if (oneAtATimeRef.value) {
     if (data.kind === "edited")
-      await oneAtATimeRef.value.acknowledgeEditedOpinion(data.displayedOpinionItem);
+      await oneAtATimeRef.value.acknowledgeEditedOpinion(
+        data.displayedOpinionItem
+      );
     else
       await oneAtATimeRef.value.acknowledgeCreatedOpinion(
         data.displayedOpinionItem.opinionSlugId
@@ -224,9 +219,10 @@ async function handleChildRefresh(): Promise<void> {
     return;
   }
   const section = opinionSectionRef.value;
-  if (!section) return;
+  const data = props.conversationData;
+  if (!section || data === undefined) return;
   await Promise.all([
-    markCommentsAsStale(conversationSlugId.value),
+    markCommentsAsStale(data.metadata.conversationSlugId),
     section.refetchActiveQuery(),
   ]);
 }

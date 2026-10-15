@@ -144,6 +144,14 @@ CREATE TABLE "conversation" (
 	CONSTRAINT "conversation_email_update_override_audit_check" CHECK (("conversation"."conversation_email_update_override_updated_at" IS NULL) = ("conversation"."conversation_email_update_override_updated_by_user_id" IS NULL))
 );
 
+CREATE TABLE "conversation_translation_target_language" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "conversation_translation_target_language_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"conversation_id" integer NOT NULL,
+	"language_code" "display_language_code" NOT NULL,
+	"created_at" timestamp (0) DEFAULT now() NOT NULL,
+	"deleted_at" timestamp (0)
+);
+
 CREATE TABLE "conversation_view_snapshot" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "conversation_view_snapshot_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"conversation_id" integer NOT NULL,
@@ -315,6 +323,8 @@ CREATE INDEX "conversation_type_importing_idx" ON "conversation" USING btree ("i
 CREATE INDEX "conversation_project_id_idx" ON "conversation" USING btree ("project_id");
 
 CREATE INDEX "conversation_project_timeline_idx" ON "conversation" USING btree ("project_id","is_importing","created_at" DESC,"id" DESC) WHERE "conversation"."current_content_id" is not null;
+
+CREATE UNIQUE INDEX "conversation_translation_target_language_active_unique" ON "conversation_translation_target_language" USING btree ("conversation_id","language_code") WHERE "conversation_translation_target_language"."deleted_at" is null;
 
 CREATE INDEX "conversation_view_snapshot_latest_idx" ON "conversation_view_snapshot" USING btree ("conversation_id","created_at" DESC,"id" DESC);
 

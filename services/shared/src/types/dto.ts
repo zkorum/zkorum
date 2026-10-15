@@ -1171,6 +1171,15 @@ const zodConversationEmailUpdateActionMutationResponse = z.discriminatedUnion(
     ],
 );
 
+export const zodOpinionListFilter = z.enum([
+    "discover",
+    "new",
+    "moderated",
+    "hidden",
+    "my_votes",
+    "my_statements",
+]);
+
 export const zodCreatedOpinionPageCursor = z
     .object({
         kind: z.literal("created"),
@@ -1244,21 +1253,25 @@ export class Dto {
         z
             .object({
                 conversationSlugId: zodSlugId,
-                filter: z.literal("discover"),
+                filter: zodOpinionListFilter.extract(["discover"]),
                 cursor: zodDiscoverOpinionPageCursor.nullable(),
             })
             .strict(),
         z
             .object({
                 conversationSlugId: zodSlugId,
-                filter: z.literal("my_votes"),
+                filter: zodOpinionListFilter.extract(["my_votes"]),
                 cursor: zodVotedOpinionPageCursor.nullable(),
             })
             .strict(),
         z
             .object({
                 conversationSlugId: zodSlugId,
-                filter: z.enum(["new", "moderated"]),
+                filter: zodOpinionListFilter.extract([
+                    "new",
+                    "moderated",
+                    "my_statements",
+                ]),
                 cursor: zodCreatedOpinionPageCursor.nullable(),
             })
             .strict(),
@@ -2490,7 +2503,14 @@ export class Dto {
             opinionSlugIdList: z.array(zodSlugId),
         })
         .strict();
-    static getOpinionBySlugIdListResponse = z.array(zodDisplayedOpinionItem);
+    static opinionTarget = z
+        .object({
+            opinion: zodDisplayedOpinionItem,
+            conversationSlugId: zodSlugId,
+            isOwn: z.boolean(),
+        })
+        .strict();
+    static getOpinionBySlugIdListResponse = z.array(Dto.opinionTarget);
     static getOpinionModerationStatusRequest = z
         .object({
             opinionSlugId: zodSlugId,
@@ -4709,6 +4729,8 @@ export type GetMutedUsersResponse = z.infer<typeof Dto.getMutedUsersResponse>;
 export type GetOpinionBySlugIdListRequest = z.infer<
     typeof Dto.getOpinionBySlugIdListRequest
 >;
+export type OpinionListFilter = z.infer<typeof zodOpinionListFilter>;
+export type OpinionTarget = z.infer<typeof Dto.opinionTarget>;
 export type GetOpinionBySlugIdListResponse = z.infer<
     typeof Dto.getOpinionBySlugIdListResponse
 >;

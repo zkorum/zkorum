@@ -1,6 +1,7 @@
+import type { OpinionListFilter } from "src/shared/types/dto";
 import type { PolisClusters, PolisKey } from "src/shared/types/zod";
 
-export type CommentFilterOptions = "new" | "moderated" | "hidden" | "discover" | "my_votes";
+export type CommentFilterOptions = OpinionListFilter;
 
 /** Mirrors the default minimum vote threshold used by opinion-group analysis. */
 export const MIN_VOTES_FOR_CLUSTER = 7;
@@ -17,8 +18,7 @@ const POLIS_KEYS = ["0", "1", "2", "3", "4", "5"] satisfies PolisKey[];
 /** Returns true when cluster sizes are imbalanced (CV > 0.9). */
 export function isClustersImbalanced(clusterSizes: number[]): boolean {
   if (clusterSizes.length < 2) return false;
-  const mean =
-    clusterSizes.reduce((a, b) => a + b, 0) / clusterSizes.length;
+  const mean = clusterSizes.reduce((a, b) => a + b, 0) / clusterSizes.length;
   if (mean === 0) return false;
   const variance =
     clusterSizes.reduce((sum, s) => sum + (s - mean) ** 2, 0) /

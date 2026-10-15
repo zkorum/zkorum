@@ -156,7 +156,7 @@ import {
     fetchOpinionsByPostSlugId,
     countUnansweredOpinions,
     requirePolisConversation,
-    fetchOpinionsByOpinionSlugIdList,
+    fetchOpinionTargetsBySlugIdList,
     isPersonalNonSeedOpinionAuthoredByUser,
     postNewOpinion,
 } from "./service/comment.js";
@@ -4251,7 +4251,7 @@ server.after(() => {
                       displayLanguage: headerDisplayLanguage,
                       spokenLanguages: [headerDisplayLanguage],
                   };
-            return await fetchOpinionsByOpinionSlugIdList({
+            return await fetchOpinionTargetsBySlugIdList({
                 db: db,
                 opinionSlugIdList: request.body.opinionSlugIdList,
                 displayContentViewerPreferences: {

@@ -16,16 +16,16 @@
         <div class="optionListStyle">
           <div
             v-for="optionItem in currentOptionList"
-            :key="optionItem.name"
+            :key="optionItem.value"
             class="optionItemStyle"
           >
             <ZKGradientButton
               :label="optionItem.name"
               :label-color="
-                currentFilterAlgorithm == optionItem.name ? '#FFFFFF' : '#6B4EFF'
+                filterValue === optionItem.value ? '#FFFFFF' : '#6B4EFF'
               "
               :gradient-background="
-                currentFilterAlgorithm == optionItem.name
+                filterValue === optionItem.value
                   ? 'linear-gradient(114.81deg, #6B4EFF 76.45%, #4F92F6 100.1%)'
                   : 'linear-gradient(114.81deg, #e7e4f7 76.45%, #E8F1FF 100.1%)'
               "
@@ -59,7 +59,7 @@ import {
 } from "./CommentSortingSelector.i18n";
 
 const props = defineProps<{
-  filterValue: string;
+  filterValue: CommentFilterOptions;
   moderatedOpinionCount: number;
   hiddenOpinionCount: number;
 }>();
@@ -97,36 +97,48 @@ const hiddenLabel = computed(() => {
     : base;
 });
 
-const baseOptions = computed((): OptionItem[] => {
+const currentOptionList = computed((): OptionItem[] => {
   const options: OptionItem[] = [
-    { name: t("discover"), description: t("discoverDescription"), value: "discover" },
+    {
+      name: t("discover"),
+      description: t("discoverDescription"),
+      value: "discover",
+    },
     { name: t("new"), description: t("newDescription"), value: "new" },
-    { name: moderationHistoryLabel.value, description: t("moderationHistoryDescription"), value: "moderated" },
+    {
+      name: moderationHistoryLabel.value,
+      description: t("moderationHistoryDescription"),
+      value: "moderated",
+    },
   ];
 
-  // Add "My Votes" option only for logged in users
   if (isGuestOrLoggedIn.value) {
-    options.push({ name: t("myVotes"), description: t("myVotesDescription"), value: "my_votes" });
+    options.push({
+      name: t("myVotes"),
+      description: t("myVotesDescription"),
+      value: "my_votes",
+    });
+    options.push({
+      name: t("myStatements"),
+      description: t("myStatementsDescription"),
+      value: "my_statements",
+    });
+  }
+
+  if (profileData.value.isSiteModerator) {
+    options.push({
+      name: hiddenLabel.value,
+      description: t("hiddenDescription"),
+      value: "hidden",
+    });
   }
 
   return options;
 });
 
-const extendedOptions = computed((): OptionItem[] =>
-  baseOptions.value.concat([{ name: hiddenLabel.value, description: t("hiddenDescription"), value: "hidden" }])
-);
-
-const currentOptionList = computed((): OptionItem[] => {
-  if (profileData.value.isSiteModerator) {
-    return extendedOptions.value;
-  } else {
-    return baseOptions.value;
-  }
-});
-
 const currentFilterAlgorithm = computed(() => {
   for (const optionItem of currentOptionList.value) {
-    if (optionItem.value == props.filterValue) {
+    if (optionItem.value === props.filterValue) {
       return optionItem.name;
     }
   }
@@ -158,7 +170,6 @@ function selectedAlgorithm(filterValue: CommentFilterOptions) {
   line-height: 1.3;
   min-height: calc(2 * 0.8rem * 1.3);
   color: $color-text-weak;
-  padding-left: 0.5rem;
+  padding-inline-start: 0.5rem;
 }
-
 </style>

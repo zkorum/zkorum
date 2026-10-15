@@ -20,6 +20,7 @@ import type {
   FetchAnalysisCheckpointsResponse,
   FetchCommentStatsResponse,
   FetchNextUnansweredOpinionResponse,
+  GetOpinionBySlugIdListResponse,
 } from "src/shared/types/dto";
 import { Dto } from "src/shared/types/dto";
 import type {
@@ -47,8 +48,6 @@ export {
   hasManifestFrame,
   mergeLiveAnalysisSnapshotMetadata,
 } from "./analysisData";
-
-export type CommentTabFilters = OpinionPageRequest["filter"];
 
 type CreateNewCommentResult =
   | {
@@ -260,40 +259,33 @@ export function useBackendCommentApi() {
     return Dto.editOpinionResponse.parse(response.data);
   }
 
-  async function fetchOpinionsBySlugIdList(
-    opinionSlugIdList: string[]
-  ): Promise<DisplayedOpinionItem[]> {
+  async function fetchOpinionsBySlugIdList({
+    opinionSlugIdList,
+    signal,
+  }: {
+    opinionSlugIdList: string[];
+    signal?: AbortSignal;
+  }): Promise<GetOpinionBySlugIdListResponse> {
     const params: ApiV1OpinionFetchBySlugIdListPostRequest = {
       opinionSlugIdList: opinionSlugIdList,
     };
 
     await waitForAuthInitialization();
 
-    if (isGuestOrLoggedIn.value) {
-      const { url, options } =
-        await DefaultApiAxiosParamCreator().apiV1OpinionFetchBySlugIdListPost(
-          params
-        );
-      const encodedUcan = await buildEncodedUcan(url, options);
-      const response = await DefaultApiFactory(
-        undefined,
-        undefined,
-        api
-      ).apiV1OpinionFetchBySlugIdListPost(
-        params,
-        createRawAxiosRequestConfig({ encodedUcan: encodedUcan })
+    const { url, options } =
+      await DefaultApiAxiosParamCreator().apiV1OpinionFetchBySlugIdListPost(
+        params
       );
-
-      return Dto.getOpinionBySlugIdListResponse.parse(response.data);
-    }
-
+    const encodedUcan = isGuestOrLoggedIn.value
+      ? await buildEncodedUcan(url, options)
+      : undefined;
     const response = await DefaultApiFactory(
       undefined,
       undefined,
       api
     ).apiV1OpinionFetchBySlugIdListPost(
       params,
-      createRawAxiosRequestConfig({})
+      createRawAxiosRequestConfig({ encodedUcan, signal })
     );
 
     return Dto.getOpinionBySlugIdListResponse.parse(response.data);
