@@ -1,5 +1,6 @@
-import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { SqlExpression } from "@/utils/sqlExpression.js";
 import {
     conversationTable,
     conversationViewSnapshotTable,
@@ -21,21 +22,24 @@ export interface ConversationDisplayCounts {
     hiddenOpinionCount: number;
 }
 
-export async function fetchConversationDisplayCountsByConversationId({
-    db,
-    conversationIds,
+export function conversationDisplayCount({
+    rankingCount,
+    snapshotCount,
 }: {
-    db: PostgresJsDatabase;
-    conversationIds: number[];
-}): Promise<Map<number, ConversationDisplayCounts>> {
-    const uniqueConversationIds = Array.from(new Set(conversationIds));
-    if (uniqueConversationIds.length === 0) {
-        return new Map();
-    }
+    rankingCount: SqlExpression<number>;
+    snapshotCount: SqlExpression<number>;
+}) {
+    // PostgreSQL CASE/greatest have no Drizzle helpers. Imported ranking counts
+    // retain the snapshot baseline only until the first completed scoring pass.
+    return sql<number>`case when ${conversationTable.conversationType} = 'ranking' then
+        case when ${rankingConversationConfigTable.processedScoringInputRevision} >= 0
+            then ${rankingCount} else greatest(${rankingCount}, ${snapshotCount}) end
+        else ${snapshotCount} end`.mapWith(Number);
+}
 
-    const latestSnapshot = db
-        .selectDistinctOn([conversationViewSnapshotTable.conversationId], {
-            conversationId: conversationViewSnapshotTable.conversationId,
+export function latestConversationDisplaySnapshot(db: PostgresJsDatabase) {
+    return db
+        .select({
             conversationViewSnapshotId: conversationViewSnapshotTable.id,
             opinionCount: conversationViewSnapshotTable.opinionCount,
             voteCount: conversationViewSnapshotTable.voteCount,
@@ -52,79 +56,93 @@ export async function fetchConversationDisplayCountsByConversationId({
         .from(conversationViewSnapshotTable)
         .where(
             and(
-                inArray(
+                eq(
                     conversationViewSnapshotTable.conversationId,
-                    uniqueConversationIds,
+                    conversationTable.id,
                 ),
                 isNotNull(conversationViewSnapshotTable.activatedAt),
             ),
         )
         .orderBy(
-            conversationViewSnapshotTable.conversationId,
             desc(conversationViewSnapshotTable.createdAt),
             desc(conversationViewSnapshotTable.id),
         )
+        .limit(1)
         .as("latest_conversation_display_snapshot");
+}
+
+function buildConversationDisplayCountsQuery({
+    db,
+    conversationIds,
+}: {
+    db: PostgresJsDatabase;
+    conversationIds: readonly number[];
+}) {
+    const latestSnapshot = latestConversationDisplaySnapshot(db);
     const latestRankingSnapshot = db
-        .selectDistinctOn(
-            [rankingConversationStatsSnapshotTable.conversationId],
-            {
-                conversationId:
-                    rankingConversationStatsSnapshotTable.conversationId,
-                rankingStatsSnapshotId:
-                    rankingConversationStatsSnapshotTable.id,
-            },
-        )
+        .select({
+            rankingStatsSnapshotId: rankingConversationStatsSnapshotTable.id,
+        })
         .from(rankingConversationStatsSnapshotTable)
         .where(
             and(
-                inArray(
+                eq(
                     rankingConversationStatsSnapshotTable.conversationId,
-                    uniqueConversationIds,
+                    conversationTable.id,
                 ),
+                eq(conversationTable.conversationType, "ranking"),
                 isNull(rankingConversationStatsSnapshotTable.deletedAt),
             ),
         )
         .orderBy(
-            rankingConversationStatsSnapshotTable.conversationId,
             desc(rankingConversationStatsSnapshotTable.createdAt),
             desc(rankingConversationStatsSnapshotTable.id),
         )
+        .limit(1)
         .as("latest_ranking_stats_snapshot");
-    const rows = await db
+    return db
         .select({
             conversationId: conversationTable.id,
-            conversationType: conversationTable.conversationType,
             conversationViewSnapshotId:
                 latestSnapshot.conversationViewSnapshotId,
             rankingStatsSnapshotId:
                 latestRankingSnapshot.rankingStatsSnapshotId,
-            snapshotOpinionCount: latestSnapshot.opinionCount,
-            snapshotVoteCount: latestSnapshot.voteCount,
-            snapshotParticipantCount: latestSnapshot.participantCount,
-            snapshotTotalOpinionCount: latestSnapshot.totalOpinionCount,
-            snapshotTotalVoteCount: latestSnapshot.totalVoteCount,
-            snapshotTotalParticipantCount: latestSnapshot.totalParticipantCount,
-            snapshotModeratedOpinionCount: latestSnapshot.moderatedOpinionCount,
-            snapshotHiddenOpinionCount: latestSnapshot.hiddenOpinionCount,
-            rankingItemCount: rankingConversationConfigTable.itemCount,
-            rankingTotalItemCount:
-                rankingConversationConfigTable.totalItemCount,
-            rankingVoteCount: rankingConversationConfigTable.voteCount,
-            rankingTotalVoteCount:
-                rankingConversationConfigTable.totalVoteCount,
-            rankingParticipantCount:
-                rankingConversationConfigTable.participantCount,
-            rankingTotalParticipantCount:
-                rankingConversationConfigTable.totalParticipantCount,
-            rankingProcessedScoringInputRevision:
-                rankingConversationConfigTable.processedScoringInputRevision,
+            opinionCount: conversationDisplayCount({
+                rankingCount: rankingConversationConfigTable.itemCount,
+                snapshotCount: latestSnapshot.opinionCount,
+            }),
+            voteCount: conversationDisplayCount({
+                rankingCount: rankingConversationConfigTable.voteCount,
+                snapshotCount: latestSnapshot.voteCount,
+            }),
+            participantCount: conversationDisplayCount({
+                rankingCount: rankingConversationConfigTable.participantCount,
+                snapshotCount: latestSnapshot.participantCount,
+            }),
+            totalOpinionCount: conversationDisplayCount({
+                rankingCount: rankingConversationConfigTable.totalItemCount,
+                snapshotCount: latestSnapshot.totalOpinionCount,
+            }),
+            totalVoteCount: conversationDisplayCount({
+                rankingCount: rankingConversationConfigTable.totalVoteCount,
+                snapshotCount: latestSnapshot.totalVoteCount,
+            }),
+            totalParticipantCount: conversationDisplayCount({
+                rankingCount:
+                    rankingConversationConfigTable.totalParticipantCount,
+                snapshotCount: latestSnapshot.totalParticipantCount,
+            }),
+            moderatedOpinionCount:
+                sql<number>`case when ${conversationTable.conversationType} = 'ranking' then 0 else ${latestSnapshot.moderatedOpinionCount} end`.mapWith(
+                    Number,
+                ),
+            hiddenOpinionCount:
+                sql<number>`case when ${conversationTable.conversationType} = 'ranking' then 0 else ${latestSnapshot.hiddenOpinionCount} end`.mapWith(
+                    Number,
+                ),
         })
         .from(conversationTable)
-        .leftJoin(
-            latestSnapshot,
-            eq(latestSnapshot.conversationId, conversationTable.id),
-        )
+        .innerJoinLateral(latestSnapshot, sql`true`)
         .leftJoin(
             rankingConversationConfigTable,
             eq(
@@ -132,100 +150,29 @@ export async function fetchConversationDisplayCountsByConversationId({
                 conversationTable.rankingConfigId,
             ),
         )
-        .leftJoin(
-            latestRankingSnapshot,
-            eq(latestRankingSnapshot.conversationId, conversationTable.id),
-        )
-        .where(inArray(conversationTable.id, uniqueConversationIds));
+        .leftJoinLateral(latestRankingSnapshot, sql`true`)
+        .where(inArray(conversationTable.id, conversationIds));
+}
+
+export async function fetchConversationDisplayCountsByConversationId({
+    db,
+    conversationIds,
+}: {
+    db: PostgresJsDatabase;
+    conversationIds: number[];
+}): Promise<Map<number, ConversationDisplayCounts>> {
+    const uniqueConversationIds = Array.from(new Set(conversationIds));
+    if (uniqueConversationIds.length === 0) return new Map();
+    const rows = await buildConversationDisplayCountsQuery({
+        db,
+        conversationIds: uniqueConversationIds,
+    });
 
     const countsByConversationId = new Map<number, ConversationDisplayCounts>();
     for (const row of rows) {
-        if (row.conversationViewSnapshotId === null) {
-            continue;
-        }
-        if (row.conversationType === "ranking") {
-            if (
-                row.rankingItemCount === null ||
-                row.rankingTotalItemCount === null ||
-                row.rankingVoteCount === null ||
-                row.rankingTotalVoteCount === null ||
-                row.rankingParticipantCount === null ||
-                row.rankingTotalParticipantCount === null
-            ) {
-                continue;
-            }
-            const hasProcessedRankingCounts =
-                row.rankingProcessedScoringInputRevision !== null &&
-                row.rankingProcessedScoringInputRevision >= 0;
-            countsByConversationId.set(row.conversationId, {
-                conversationId: row.conversationId,
-                conversationViewSnapshotId: row.conversationViewSnapshotId,
-                rankingStatsSnapshotId: row.rankingStatsSnapshotId ?? undefined,
-                opinionCount: hasProcessedRankingCounts
-                    ? row.rankingItemCount
-                    : Math.max(
-                          row.rankingItemCount,
-                          row.snapshotOpinionCount ?? 0,
-                      ),
-                totalOpinionCount: hasProcessedRankingCounts
-                    ? row.rankingTotalItemCount
-                    : Math.max(
-                          row.rankingTotalItemCount,
-                          row.snapshotTotalOpinionCount ?? 0,
-                      ),
-                voteCount: hasProcessedRankingCounts
-                    ? row.rankingVoteCount
-                    : Math.max(
-                          row.rankingVoteCount,
-                          row.snapshotVoteCount ?? 0,
-                      ),
-                totalVoteCount: hasProcessedRankingCounts
-                    ? row.rankingTotalVoteCount
-                    : Math.max(
-                          row.rankingTotalVoteCount,
-                          row.snapshotTotalVoteCount ?? 0,
-                      ),
-                participantCount: hasProcessedRankingCounts
-                    ? row.rankingParticipantCount
-                    : Math.max(
-                          row.rankingParticipantCount,
-                          row.snapshotParticipantCount ?? 0,
-                      ),
-                totalParticipantCount: hasProcessedRankingCounts
-                    ? row.rankingTotalParticipantCount
-                    : Math.max(
-                          row.rankingTotalParticipantCount,
-                          row.snapshotTotalParticipantCount ?? 0,
-                      ),
-                moderatedOpinionCount: 0,
-                hiddenOpinionCount: 0,
-            });
-            continue;
-        }
-        if (
-            row.snapshotOpinionCount === null ||
-            row.snapshotVoteCount === null ||
-            row.snapshotParticipantCount === null ||
-            row.snapshotTotalOpinionCount === null ||
-            row.snapshotTotalVoteCount === null ||
-            row.snapshotTotalParticipantCount === null ||
-            row.snapshotModeratedOpinionCount === null ||
-            row.snapshotHiddenOpinionCount === null
-        ) {
-            continue;
-        }
         countsByConversationId.set(row.conversationId, {
-            conversationId: row.conversationId,
-            conversationViewSnapshotId: row.conversationViewSnapshotId,
-            rankingStatsSnapshotId: undefined,
-            opinionCount: row.snapshotOpinionCount,
-            voteCount: row.snapshotVoteCount,
-            participantCount: row.snapshotParticipantCount,
-            totalOpinionCount: row.snapshotTotalOpinionCount,
-            totalVoteCount: row.snapshotTotalVoteCount,
-            totalParticipantCount: row.snapshotTotalParticipantCount,
-            moderatedOpinionCount: row.snapshotModeratedOpinionCount,
-            hiddenOpinionCount: row.snapshotHiddenOpinionCount,
+            ...row,
+            rankingStatsSnapshotId: row.rankingStatsSnapshotId ?? undefined,
         });
     }
     return countsByConversationId;

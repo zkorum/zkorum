@@ -1,5 +1,4 @@
 import {
-  type ApiV1ConversationFetchRecentPostRequest,
   type ApiV1ModerationConversationWithdrawPostRequest,
   DefaultApiAxiosParamCreator,
   DefaultApiFactory,
@@ -15,6 +14,8 @@ import type {
   ImportCsvConversationResponse,
 } from "src/shared/types/dto";
 import type {
+  FetchFeedHeadResponse,
+  FetchFeedRequest,
   FetchFeedResponse,
   GetActiveImportResponse,
   GetConversationImportStatusResponse,
@@ -40,16 +41,17 @@ import { useNotify } from "../../ui/notify";
 import { api, axiosInstance } from "../client";
 import type { AxiosErrorResponse, AxiosSuccessResponse } from "../common";
 import { useCommonApi } from "../common";
-import {
-  type PostApiTranslations,
-  postApiTranslations,
-} from "./post.i18n";
+import { parseFeedPage } from "./feedPageBoundary";
+import { type PostApiTranslations, postApiTranslations } from "./post.i18n";
 
 type ReadyConversationResponse = Extract<
   GetConversationResponse,
   { status: "ready" }
 >;
-type FetchConversationBySlugIdResult = Omit<ReadyConversationResponse, "status">;
+type FetchConversationBySlugIdResult = Omit<
+  ReadyConversationResponse,
+  "status"
+>;
 
 export function useBackendPostApi() {
   const {
@@ -123,65 +125,64 @@ export function useBackendPostApi() {
     }
   }
 
-  type FetchRecentPostSuccessResponse = AxiosSuccessResponse<FetchFeedResponse>;
-
-  type FetchRecentPostResponse =
-    | FetchRecentPostSuccessResponse
-    | AxiosErrorResponse;
-
-  interface FetchRecentPostProps {
+  async function fetchFeedPage({
+    request,
+    loadPersonalizedData,
+    signal,
+  }: {
+    request: FetchFeedRequest;
     loadPersonalizedData: boolean;
-    sortAlgorithm: FeedSortAlgorithm;
-    includeDisplayContent: boolean;
+    signal: AbortSignal;
+  }): Promise<FetchFeedResponse> {
+    const params = Dto.fetchFeedRequest.parse(request);
+    const { url, options } =
+      await DefaultApiAxiosParamCreator().apiV1ConversationFetchRecentPost(
+        params
+      );
+    const encodedUcan = loadPersonalizedData
+      ? await buildEncodedUcan(url, options)
+      : undefined;
+    const response = await DefaultApiFactory(
+      undefined,
+      undefined,
+      api
+    ).apiV1ConversationFetchRecentPost(params, {
+      signal,
+      headers:
+        encodedUcan === undefined
+          ? undefined
+          : buildAuthorizationHeader(encodedUcan),
+    });
+    return parseFeedPage({ request: params, rawResponse: response.data });
   }
 
-  async function fetchRecentPost({
-    loadPersonalizedData,
+  async function fetchFeedHead({
     sortAlgorithm,
-    includeDisplayContent,
-  }: FetchRecentPostProps): Promise<FetchRecentPostResponse> {
-    try {
-      const params: ApiV1ConversationFetchRecentPostRequest = {
-        sortAlgorithm: sortAlgorithm,
-        includeDisplayContent,
-      };
-
-      if (!loadPersonalizedData) {
-        const response = await DefaultApiFactory(
-          undefined,
-          undefined,
-          api
-        ).apiV1ConversationFetchRecentPost(params, {});
-
-        return {
-          status: "success",
-          data: Dto.fetchFeedResponse.parse(response.data),
-        };
-      } else {
-        const { url, options } =
-          await DefaultApiAxiosParamCreator().apiV1ConversationFetchRecentPost(
-            params
-          );
-        const encodedUcan = await buildEncodedUcan(url, options);
-        const response = await DefaultApiFactory(
-          undefined,
-          undefined,
-          api
-        ).apiV1ConversationFetchRecentPost(params, {
-          headers: {
-            ...buildAuthorizationHeader(encodedUcan),
-          },
-        });
-
-        return {
-          status: "success",
-          data: Dto.fetchFeedResponse.parse(response.data),
-        };
-      }
-    } catch (e) {
-      console.error(e);
-      return createAxiosErrorResponse(e);
-    }
+    loadPersonalizedData,
+    signal,
+  }: {
+    sortAlgorithm: FeedSortAlgorithm;
+    loadPersonalizedData: boolean;
+    signal: AbortSignal;
+  }): Promise<FetchFeedHeadResponse> {
+    const params = Dto.fetchFeedHeadRequest.parse({ sortAlgorithm });
+    const { url, options } =
+      await DefaultApiAxiosParamCreator().apiV1ConversationFeedHeadPost(params);
+    const encodedUcan = loadPersonalizedData
+      ? await buildEncodedUcan(url, options)
+      : undefined;
+    const response = await DefaultApiFactory(
+      undefined,
+      undefined,
+      api
+    ).apiV1ConversationFeedHeadPost(params, {
+      signal,
+      headers:
+        encodedUcan === undefined
+          ? undefined
+          : buildAuthorizationHeader(encodedUcan),
+    });
+    return Dto.fetchFeedHeadResponse.parse(response.data);
   }
 
   async function fetchConversationCreateProjectOptions({
@@ -549,7 +550,8 @@ export function useBackendPostApi() {
 
   return {
     createNewPost,
-    fetchRecentPost,
+    fetchFeedPage,
+    fetchFeedHead,
     fetchConversationBySlugIdWithDisplayContent,
     deletePostBySlugId,
     importConversation,

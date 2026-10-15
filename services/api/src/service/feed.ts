@@ -4,16 +4,21 @@ import type {
     SupportedDisplayLanguageCodes,
     SupportedSpokenLanguageCodes,
 } from "@/shared/languages.js";
-import { and, eq, isNotNull, SQL } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import { type PostgresJsDatabase as PostgresDatabase } from "drizzle-orm/postgres-js";
 import { useCommonPost } from "./common.js";
 import { fetchConversationFeedDisplayContentBySlugId } from "./conversationFeedDisplayContent.js";
-import { getConversationEngagementScore } from "./recommendationSystem.js";
 import type {
     ConversationContentFetchResponse,
+    FetchFeedRequest,
     FetchFeedResponse,
+    FetchFeedHeadResponse,
 } from "@/shared/types/dto.js";
-import { fetchConversationDisplayCountsByConversationId } from "./conversationDisplayCounts.js";
+import {
+    selectedFeedConversations,
+    selectFeedCandidates,
+} from "./feedSelection.js";
+import { FEED_PAGE_SIZE } from "@/shared/types/dto.js";
 
 function compactFeedDisplayContent({
     displayContent,
@@ -77,70 +82,69 @@ export async function getPostSlugIdLastCursor({
     return lastCursor;
 }
 
-interface FetchFeedProps {
+interface FetchFeedPageProps {
     db: PostgresDatabase;
-    personalizationUserId?: string;
+    viewerId: string | undefined;
     baseImageServiceUrl: string;
-    sortAlgorithm: FeedSortAlgorithm;
+    request: FetchFeedRequest;
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
     spokenLanguages: SupportedSpokenLanguageCodes[];
-    includeDisplayContent: boolean;
 }
 
-export async function fetchFeed({
+export async function fetchFeedPage({
     db,
-    personalizationUserId,
+    viewerId,
     baseImageServiceUrl,
-    sortAlgorithm,
+    request,
     currentDisplayLanguage,
     spokenLanguages,
-    includeDisplayContent,
-}: FetchFeedProps): Promise<FetchFeedResponse> {
-    const targetFetchLimit = 1000;
-
-    // Exclude conversations that are still importing (isImporting=true)
-    const whereClause: SQL | undefined = and(
-        eq(conversationTable.isIndexed, true),
-        eq(conversationTable.isImporting, false),
-        isNotNull(conversationTable.currentContentId),
-    );
-
+}: FetchFeedPageProps): Promise<FetchFeedResponse> {
+    const selection = await selectFeedCandidates({
+        db,
+        viewerId,
+        request,
+        purpose: "page",
+    });
+    const candidates = selection.rows.slice(0, FEED_PAGE_SIZE);
+    if (candidates.length === 0) {
+        return request.sortAlgorithm === "new"
+            ? { sortAlgorithm: "new", feedItemList: [], nextCursor: null }
+            : {
+                  sortAlgorithm: "following",
+                  feedItemList: [],
+                  nextCursor: null,
+              };
+    }
     const { createCompactHtmlBody, fetchPostItems } = useCommonPost();
-
     const postItems = await fetchPostItems({
         db: db,
-        limit: targetFetchLimit,
-        where: whereClause,
+        limit: FEED_PAGE_SIZE,
+        where: selectedFeedConversations({
+            db,
+            viewerId,
+            conversationIds: candidates.map((row) => row.conversationId),
+        }),
         enableCompactBody: true,
-        personalizedUserId: personalizationUserId,
-        excludeLockedPosts: true,
-        removeMutedAuthors: true,
+        personalizedUserId: viewerId,
         baseImageServiceUrl,
-        sortAlgorithm,
         currentDisplayLanguage,
     });
-
-    const topSlugIdList = Array.from(postItems.keys()).slice(
-        0,
-        Math.min(10, postItems.size),
-    );
-    const displayContentBySlugId = includeDisplayContent
-        ? await fetchConversationFeedDisplayContentBySlugId({
-              db,
-              conversationContentIds: Array.from(
-                  postItems.values(),
-                  (postItem) => postItem.conversationContentId,
-              ),
-              displayLanguage: currentDisplayLanguage,
-              spokenLanguages,
-          })
-        : new Map<string, ConversationContentFetchResponse>();
-    const feedItemList = Array.from(
-        postItems,
-        ([conversationSlugId, postItem]) => {
-            const displayContent =
-                displayContentBySlugId.get(conversationSlugId);
-            return {
+    const displayContentBySlugId =
+        await fetchConversationFeedDisplayContentBySlugId({
+            db,
+            conversationContentIds: Array.from(
+                postItems.values(),
+                (postItem) => postItem.conversationContentId,
+            ),
+            displayLanguage: currentDisplayLanguage,
+            spokenLanguages,
+        });
+    const feedItemList = candidates.flatMap(({ slugId }) => {
+        const postItem = postItems.get(slugId);
+        if (postItem === undefined) return [];
+        const displayContent = displayContentBySlugId.get(slugId);
+        return [
+            {
                 conversationData: postItem.conversationData,
                 ...(displayContent === undefined
                     ? {}
@@ -150,62 +154,61 @@ export async function fetchFeed({
                               createCompactHtmlBody,
                           }),
                       }),
-            };
-        },
-    );
-
+            },
+        ];
+    });
+    if (selection.sortAlgorithm === "following") {
+        const last =
+            selection.rows.length > FEED_PAGE_SIZE
+                ? selection.rows.at(FEED_PAGE_SIZE - 1)
+                : undefined;
+        return {
+            sortAlgorithm: "following",
+            feedItemList,
+            nextCursor:
+                last === undefined
+                    ? null
+                    : {
+                          conversationId: last.conversationId,
+                          createdAt: last.createdAt,
+                          score: last.score,
+                          rankedAt: selection.rankedAt,
+                      },
+        };
+    }
+    const last =
+        selection.rows.length > FEED_PAGE_SIZE ? candidates.at(-1) : undefined;
     return {
+        sortAlgorithm: "new",
         feedItemList,
-        topConversationSlugIdList: topSlugIdList,
+        nextCursor:
+            last === undefined
+                ? null
+                : {
+                      conversationId: last.conversationId,
+                      createdAt: last.createdAt,
+                  },
     };
 }
 
-interface GetTopEngagementSlugIdsProps {
-    db: PostgresDatabase;
-}
-
-export async function getTopEngagementSlugIds({
+export async function fetchFeedHead({
     db,
-}: GetTopEngagementSlugIdsProps): Promise<string[]> {
-    const conversationRows = await db
-        .select({
-            conversationId: conversationTable.id,
-            slugId: conversationTable.slugId,
-            createdAt: conversationTable.createdAt,
-            lastReactedAt: conversationTable.lastReactedAt,
-        })
-        .from(conversationTable)
-        .where(
-            and(
-                eq(conversationTable.isIndexed, true),
-                eq(conversationTable.isImporting, false),
-                isNotNull(conversationTable.currentContentId),
-            ),
-        );
-    const countsByConversationId =
-        await fetchConversationDisplayCountsByConversationId({
-            db,
-            conversationIds: conversationRows.map((row) => row.conversationId),
-        });
-    const conversations = conversationRows.flatMap((row) => {
-        const counts = countsByConversationId.get(row.conversationId);
-        return counts === undefined
-            ? []
-            : [
-                  {
-                      ...row,
-                      opinionCount: counts.opinionCount,
-                      voteCount: counts.voteCount,
-                      participantCount: counts.participantCount,
-                  },
-              ];
+    viewerId,
+    sortAlgorithm,
+}: {
+    db: PostgresDatabase;
+    viewerId: string | undefined;
+    sortAlgorithm: FeedSortAlgorithm;
+}): Promise<FetchFeedHeadResponse> {
+    const request: FetchFeedRequest =
+        sortAlgorithm === "new"
+            ? { sortAlgorithm: "new", cursor: null }
+            : { sortAlgorithm: "following", cursor: null };
+    const { rows } = await selectFeedCandidates({
+        db,
+        viewerId,
+        request,
+        purpose: "head",
     });
-
-    conversations.sort((a, b) => {
-        const scoreA = getConversationEngagementScore(a);
-        const scoreB = getConversationEngagementScore(b);
-        return scoreB - scoreA;
-    });
-
-    return conversations.slice(0, 10).map((c) => c.slugId);
+    return { topConversationSlugIdList: rows.map((row) => row.slugId) };
 }

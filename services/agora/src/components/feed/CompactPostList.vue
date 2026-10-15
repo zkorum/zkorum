@@ -2,14 +2,14 @@
   <div>
     <WidthWrapper :enable="true">
       <q-infinite-scroll
-        :offset="2000"
-        :disable="!canLoadMore"
+        :offset="600"
+        :disable="!canLoadNextPage"
         @load="onLoad"
       >
         <PageLoadingSpinner v-if="showLoading" />
 
         <div
-          v-if="isError && !showLoading"
+          v-if="isError && feedItems.length === 0 && !showLoading"
           class="emptyDivPadding"
         >
           <div class="centerMessage">
@@ -31,15 +31,15 @@
             <ActionButton
               v-if="!isOffline"
               variant="outline"
-              @click="refetchFeedData()"
+              @click="retryFeed"
             >
-              {{ t('retryButton') }}
+              {{ t("retryButton") }}
             </ActionButton>
           </div>
         </div>
 
         <div
-          v-else-if="partialHomeFeedList.length === 0 && !showLoading"
+          v-else-if="feedItems.length === 0 && !showLoading && !hasNextPage"
           class="emptyDivPadding"
         >
           <div class="centerMessage">
@@ -58,13 +58,10 @@
           </div>
         </div>
 
-        <div v-else-if="partialHomeFeedList.length > 0">
-          <div
-            class="postListFlex"
-            :class="{ 'loading-overlay': showLoading }"
-          >
+        <div v-else-if="feedItems.length > 0">
+          <div class="postListFlex">
             <PostListItem
-              v-for="feedItem in partialHomeFeedList"
+              v-for="feedItem in feedItems"
               :key="feedItem.conversationData.metadata.conversationSlugId"
               :conversation-data="feedItem.conversationData"
               :initial-display-content="feedItem.displayContent"
@@ -72,8 +69,20 @@
           </div>
         </div>
 
+        <PageLoadingSpinner v-if="isFetchingNextPage && feedItems.length > 0" />
+        <div v-if="isError && feedItems.length > 0" class="centerMessage">
+          <div>
+            {{
+              isOffline ? t("networkErrorDescription") : t("errorStateTitle")
+            }}
+          </div>
+          <ActionButton v-if="!isOffline" variant="outline" @click="retryFeed">
+            {{ t("retryButton") }}
+          </ActionButton>
+        </div>
+
         <div
-          v-if="!isError && partialHomeFeedList.length > 0"
+          v-if="!isError && !hasNextPage && !isFetching && feedItems.length > 0"
           class="centerMessage"
         >
           <div>
@@ -90,7 +99,7 @@
     <NewContentPill
       v-if="isActive && hasPendingCurrentTab && !showLoading"
       :label="t('newConversationsButton')"
-      @click="refreshPage(() => {})"
+      @click="refreshFromTop"
     />
   </div>
 </template>
@@ -103,7 +112,14 @@ import { isNetworkOffline } from "src/composables/useNetworkStatus";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useHomeFeedStore } from "src/stores/homeFeed";
 import { useFeedQuery } from "src/utils/api/post/useFeedQuery";
-import { computed, onActivated, onDeactivated, ref, watch } from "vue";
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  ref,
+  watch,
+  watchPostEffect,
+} from "vue";
 
 import WidthWrapper from "../navigation/WidthWrapper.vue";
 import PostListItem from "../post/list/PostListItem.vue";
@@ -115,12 +131,8 @@ import {
 } from "./CompactPostList.i18n";
 import NewContentPill from "./NewContentPill.vue";
 
-const {
-  partialHomeFeedList,
-  hasPendingCurrentTab,
-  canLoadMore,
-} = storeToRefs(useHomeFeedStore());
-const { hasNewPostCheck, loadMore, setFeedData, clearFeedData } = useHomeFeedStore();
+const { hasPendingCurrentTab } = storeToRefs(useHomeFeedStore());
+const { hasNewPostCheck } = useHomeFeedStore();
 
 const documentVisibility = useDocumentVisibility();
 
@@ -133,37 +145,61 @@ const { t } = useComponentI18n<CompactPostListTranslations>(
   compactPostListTranslations
 );
 
-// isPending: query has never resolved (waiting for auth init or first fetch).
-// isFetching: any fetch is in flight (first load or refetch).
-const { data, isPending, isError, isFetching, refetch } = useFeedQuery({
-  enabled: isAuthInitialized,
+const isActive = ref(true);
+const {
+  data,
+  isPending,
+  isError,
+  isFetching,
+  refreshFeed: refreshFeedQuery,
+  hasNextPage,
+  fetchNextPage,
+  isFetchingNextPage,
+  isFetchNextPageError,
+} = useFeedQuery({
+  enabled: computed(() => isAuthInitialized.value && isActive.value),
+});
+
+const feedItems = computed(() => {
+  // Live counts can move popular items across a cursor boundary between requests.
+  const seen = new Set<string>();
+  return (data.value?.pages ?? []).flatMap((page) =>
+    page.feedItemList.filter((item) => {
+      const slugId = item.conversationData.metadata.conversationSlugId;
+      if (seen.has(slugId)) return false;
+      seen.add(slugId);
+      return true;
+    })
+  );
 });
 
 const isOffline = isNetworkOffline;
-
-const isActive = ref(true);
+const canLoadNextPage = ref(false);
+// Quasar resumes polling before its slot patches. Enable after the cards render
+// so an empty old layout cannot trigger an unnecessary second-page request.
+watchPostEffect(() => {
+  canLoadNextPage.value =
+    hasNextPage.value &&
+    !isFetching.value &&
+    !isError.value &&
+    isActive.value &&
+    !isOffline.value;
+});
 
 watch(isOffline, (offline, wasOffline) => {
   if (!offline && wasOffline && isError.value && isActive.value) {
-    void refetch();
+    void retryFeed();
   }
 });
 
-const showLoading = computed(() =>
-  (isPending.value && !isError.value) || (isError.value && isFetching.value)
+const showLoading = computed(
+  () =>
+    feedItems.value.length === 0 &&
+    ((isPending.value && !isError.value) || isFetching.value)
 );
-
-watch(data, (newData) => {
-  if (newData && isActive.value) {
-    setFeedData(newData);
-  }
-});
 
 onActivated(async () => {
   isActive.value = true;
-  if (data.value && partialHomeFeedList.value.length === 0) {
-    setFeedData(data.value);
-  }
   await hasNewPostCheck();
 });
 
@@ -177,73 +213,37 @@ watch(documentVisibility, async () => {
   }
 });
 
-watch(
-  () => authStore.isLoggedIn,
-  (isLoggedIn) => {
-    if (!isLoggedIn) {
-      clearFeedData();
-      void refetch();
-    }
-  }
-);
-
-watch(
-  () => authStore.isGuestOrLoggedIn,
-  (isGuestOrLoggedIn) => {
-    if (!isGuestOrLoggedIn) {
-      clearFeedData();
-      void refetch();
-    }
-  }
-);
-
-function onLoad(index: number, done: () => void) {
-  if (canLoadMore.value) {
-    canLoadMore.value = loadMore();
-  }
-  done();
-}
-
-async function refetchFeedData(): Promise<void> {
-  const refetchResult = await refetch();
-
-  if (refetchResult.data) {
-    setFeedData(refetchResult.data);
-  }
-
-  canLoadMore.value = true;
-}
-
-function refreshFeed(done: () => void) {
-  if (isOffline.value) {
-    done();
-    return;
-  }
-  setTimeout(() => {
-    void (async () => {
-      try {
-        await refetchFeedData();
-      } finally {
-        done();
-      }
-    })();
-  }, 500);
-}
-
-async function refreshPage(done: () => void) {
-  if (isOffline.value) {
-    done();
-    return;
-  }
-  windowY.value = 0;
-
+async function onLoad(_index: number, done: () => void) {
   try {
-    await refetchFeedData();
+    if (hasNextPage.value && !isFetching.value && !isOffline.value) {
+      await fetchNextPage({ cancelRefetch: false });
+    }
   } finally {
-    setTimeout(() => {
-      done();
-    }, 500);
+    done();
   }
+}
+
+async function retryFeed(): Promise<void> {
+  if (isFetching.value || isOffline.value) return;
+  if (isFetchNextPageError.value) await fetchNextPage({ cancelRefetch: false });
+  else await refreshFeedQuery();
+}
+
+async function refreshFeed(done: () => void) {
+  if (isOffline.value || !isAuthInitialized.value || !isActive.value) {
+    done();
+    return;
+  }
+  try {
+    await refreshFeedQuery();
+  } finally {
+    done();
+  }
+}
+
+async function refreshFromTop(): Promise<void> {
+  windowY.value = 0;
+  await refreshFeed(() => {});
 }
 
 defineExpose({
@@ -271,10 +271,4 @@ defineExpose({
   padding-bottom: 8rem;
   flex-direction: column;
 }
-
-.loading-overlay {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
 </style>

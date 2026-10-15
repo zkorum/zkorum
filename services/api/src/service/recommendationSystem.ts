@@ -1,49 +1,37 @@
-interface GetConversationEngagementScoreProps {
-    createdAt: Date;
-    lastReactedAt: Date;
-    opinionCount: number;
-    voteCount: number;
-    participantCount: number;
-}
+import { sql } from "drizzle-orm";
+import type { SqlExpression } from "@/utils/sqlExpression.js";
 
-export function getConversationEngagementScore({
+/** The logarithm preserves the original exponential score's ordering without overflowing. */
+export function conversationEngagementScore({
     createdAt,
     lastReactedAt,
     opinionCount,
     voteCount,
     participantCount,
-}: GetConversationEngagementScoreProps) {
-    // Scores place weights between 0.01 - 1.0 the higher value the higher impact
-    const weightCreatedAt = 0.4; // Increased from 0.2 - rewards newer conversations
-    const weightLastReactedAt = 0.3; // New - rewards recent activity
-    const weightOpinionCount = 0.6;
-    const weightVoteCount = 0.5; // New - rewards vote engagement
-    const weightParticipantCount = 0.4;
-
-    const now = new Date();
-    const createdAtAgeInDays =
-        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-    const lastReactedAtAgeInDays =
-        (now.getTime() - lastReactedAt.getTime()) / (1000 * 60 * 60 * 24);
-
-    // Exponential functions for each variable
-    // createdAt: penalizes old conversations (even if they get new comments)
-    const scoreCreatedAt = Math.exp(-weightCreatedAt * createdAtAgeInDays);
-    // lastReactedAt: rewards recent activity
-    const scoreLastReactedAt = Math.exp(
-        -weightLastReactedAt * lastReactedAtAgeInDays,
+    rankedAt,
+}: {
+    createdAt: SqlExpression<Date>;
+    lastReactedAt: SqlExpression<Date>;
+    opinionCount: SqlExpression<number>;
+    voteCount: SqlExpression<number>;
+    participantCount: SqlExpression<number>;
+    rankedAt: Date;
+}) {
+    // PostgreSQL has no Drizzle helpers for log-sum-exp. Clamp negligible terms
+    // before exp(): PostgreSQL reports underflow instead of returning zero.
+    const terms = [
+        sql`-0.4 * extract(epoch from (${rankedAt.toISOString()}::timestamp - ${createdAt})) / 86400.0`,
+        sql`-0.3 * extract(epoch from (${rankedAt.toISOString()}::timestamp - ${lastReactedAt})) / 86400.0`,
+        sql`0.6 * ${opinionCount}`,
+        sql`0.5 * ${voteCount}`,
+        sql`0.4 * ${participantCount}`,
+    ];
+    const maximum = sql`greatest(${sql.join(terms, sql`, `)})`;
+    const exponentials = terms.map(
+        (term) =>
+            sql`exp(greatest(-700.0, (${term}) - (${maximum}))::double precision)`,
     );
-    const scoreOpinionCount = Math.exp(weightOpinionCount * opinionCount);
-    const scoreVoteCount = Math.exp(weightVoteCount * voteCount);
-    const scoreParticipantCount = Math.exp(
-        weightParticipantCount * participantCount,
-    );
-
-    return (
-        scoreCreatedAt +
-        scoreLastReactedAt +
-        scoreOpinionCount +
-        scoreVoteCount +
-        scoreParticipantCount
+    return sql<number>`((${maximum})::double precision + ln(${sql.join(exponentials, sql` + `)}))`.mapWith(
+        Number,
     );
 }

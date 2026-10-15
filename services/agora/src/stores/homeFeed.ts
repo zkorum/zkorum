@@ -1,195 +1,152 @@
+import { hashKey } from "@tanstack/vue-query";
 import { defineStore, storeToRefs } from "pinia";
-import type { FetchFeedResponse } from "src/shared/types/dto";
-import type {
-  ConversationProjectAssignment,
-  ExtendedConversation,
-} from "src/shared/types/zod";
-import { getConversationProjectContextFromAssignment } from "src/shared/utils/conversationProject";
+import { FEED_HEAD_SIZE } from "src/shared/types/dto";
+import type { FeedSortAlgorithm } from "src/shared/types/zod";
+import { getFeedQueryScope } from "src/utils/api/post/feedQueryKey";
 import { useBackendPostApi } from "src/utils/api/post/post";
-import { computed, ref } from "vue";
+import { useViewerQueryScope } from "src/utils/query/viewerScope";
+import { computed, type Ref, ref, watch } from "vue";
 
-import { useAuthenticationStore } from "./authentication";
+import { useLanguageStore } from "./language";
 
-const POSTS_PER_PAGE = 10;
-
-export type HomeFeedSortOption = "following" | "new";
-type HomeFeedItem = FetchFeedResponse["feedItemList"][number];
+interface FeedTabState {
+  baseline: readonly string[] | undefined;
+  pending: Ref<boolean>;
+  check: { controller: AbortController; promise: Promise<void> } | undefined;
+}
 
 export const useHomeFeedStore = defineStore("homeFeed", () => {
-  const { fetchRecentPost } = useBackendPostApi();
-
-  const { isGuestOrLoggedIn } = storeToRefs(useAuthenticationStore());
-
-  const hasPendingNewTab = ref(false);
-  const hasPendingFollowingTab = ref(false);
-
-  const hasPendingCurrentTab = computed(() =>
-    currentHomeFeedTab.value === "new"
-      ? hasPendingNewTab.value
-      : hasPendingFollowingTab.value
+  const { fetchFeedHead } = useBackendPostApi();
+  const viewerScope = useViewerQueryScope();
+  const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
+  const currentHomeFeedTab = ref<FeedSortAlgorithm>("following");
+  const tabs: Record<FeedSortAlgorithm, FeedTabState> = {
+    new: { baseline: undefined, pending: ref(false), check: undefined },
+    following: { baseline: undefined, pending: ref(false), check: undefined },
+  };
+  const hasPendingCurrentTab = computed(
+    () => tabs[currentHomeFeedTab.value].pending.value
+  );
+  const scope = computed(() =>
+    hashKey(
+      getFeedQueryScope({
+        displayLanguage: displayLanguage.value,
+        spokenLanguages: spokenLanguages.value,
+        viewerScope: viewerScope.value,
+      })
+    )
   );
 
-  const canLoadMore = ref(true);
+  watch(
+    scope,
+    () => {
+      for (const tab of Object.values(tabs)) {
+        tab.check?.controller.abort();
+        tab.check = undefined;
+        tab.baseline = undefined;
+        tab.pending.value = false;
+      }
+    },
+    { flush: "sync" }
+  );
 
-  const currentHomeFeedTab = ref<HomeFeedSortOption>("following");
-
-  let localTopSlugIds: Record<HomeFeedSortOption, string[]> = {
-    new: [],
-    following: [],
-  };
-
-  let fullHomeFeedList: HomeFeedItem[] = [];
-  const partialHomeFeedList = ref<HomeFeedItem[]>([]);
-  function applyProjectAssignment({
-    conversationSlugId,
-    assignment,
-    freshConversation,
+  function confirmFeedHead({
+    tab,
+    slugIds,
   }: {
-    conversationSlugId: string;
-    assignment: ConversationProjectAssignment;
-    freshConversation?: Pick<ExtendedConversation, "metadata" | "interaction">;
+    tab: FeedSortAlgorithm;
+    slugIds: readonly string[];
   }): void {
-    const update = (item: HomeFeedItem): HomeFeedItem =>
-      item.conversationData.metadata.conversationSlugId === conversationSlugId
-        ? {
-            ...item,
-            conversationData: {
-              ...item.conversationData,
-              interaction:
-                freshConversation?.interaction ??
-                item.conversationData.interaction,
-              metadata: freshConversation?.metadata ?? {
-                ...item.conversationData.metadata,
-                currentProjectSlug: assignment.projectSlug,
-                projectContext: getConversationProjectContextFromAssignment({
-                  assignment,
-                  conversationSlugId,
-                  currentContext: item.conversationData.metadata.projectContext,
-                }),
-              },
-            },
-          }
-        : item;
-    fullHomeFeedList = fullHomeFeedList.map(update);
-    partialHomeFeedList.value = partialHomeFeedList.value.map(update);
+    tabs[tab].check?.controller.abort();
+    tabs[tab].check = undefined;
+    tabs[tab].baseline = slugIds.slice(0, FEED_HEAD_SIZE);
+    tabs[tab].pending.value = false;
   }
 
-  function setFeedData(data: FetchFeedResponse) {
-    fullHomeFeedList = [...data.feedItemList];
-    partialHomeFeedList.value = [];
-    if (currentHomeFeedTab.value === "new") {
-      hasPendingNewTab.value = false;
-    } else {
-      hasPendingFollowingTab.value = false;
-    }
-    localTopSlugIds[currentHomeFeedTab.value] = [
-      ...data.topConversationSlugIdList,
-    ];
+  function initializeFeedHead({
+    tab,
+    slugIds,
+  }: {
+    tab: FeedSortAlgorithm;
+    slugIds: readonly string[];
+  }): void {
+    // Rebinding a cached page must not acknowledge a pending server update.
+    if (tabs[tab].baseline === undefined) confirmFeedHead({ tab, slugIds });
+  }
 
-    canLoadMore.value = true;
-    loadMore();
+  function headChanged({
+    baseline,
+    incoming,
+  }: {
+    baseline: readonly string[];
+    incoming: readonly string[];
+  }): boolean {
+    return (
+      incoming.length !== baseline.length ||
+      incoming.some((id, index) => id !== baseline[index])
+    );
   }
 
   async function hasNewPostCheck(
-    tabOverride?: HomeFeedSortOption
+    tabOverride?: FeedSortAlgorithm
   ): Promise<void> {
-    const tab = tabOverride ?? currentHomeFeedTab.value;
-    const localList = localTopSlugIds[tab];
-
-    if (localList.length === 0) {
-      return;
-    }
-
-    const pendingRef =
-      tab === "new" ? hasPendingNewTab : hasPendingFollowingTab;
-
-    try {
-      const response = await fetchRecentPost({
-        loadPersonalizedData: isGuestOrLoggedIn.value,
-        sortAlgorithm: tab,
-        includeDisplayContent: false,
-      });
-
-      if (
-        response.status == "success" &&
-        response.data.topConversationSlugIdList.length > 0
-      ) {
-        const newItems = response.data.topConversationSlugIdList.filter(
-          (slugId: string) => !localList.includes(slugId)
-        );
-        if (newItems.length > 0) {
-          localTopSlugIds[tab] = response.data.topConversationSlugIdList;
-          pendingRef.value = true;
-        } else {
-          pendingRef.value = false;
-        }
-      } else {
-        pendingRef.value = false;
+    const sortAlgorithm = tabOverride ?? currentHomeFeedTab.value;
+    const tab = tabs[sortAlgorithm];
+    const baseline = tab.baseline;
+    if (baseline === undefined) return;
+    if (tab.check !== undefined) return await tab.check.promise;
+    const requestScope = scope.value;
+    const controller = new AbortController();
+    const promise = (async () => {
+      try {
+        const response = await fetchFeedHead({
+          sortAlgorithm,
+          loadPersonalizedData: viewerScope.value.userId !== undefined,
+          signal: controller.signal,
+        });
+        if (
+          controller.signal.aborted ||
+          scope.value !== requestScope ||
+          tab.baseline !== baseline
+        )
+          return;
+        tab.pending.value = headChanged({
+          baseline,
+          incoming: response.topConversationSlugIdList,
+        });
+      } catch (error) {
+        if (!controller.signal.aborted)
+          console.error("Error checking for new posts:", error);
       }
-    } catch (error) {
-      console.error("Error checking for new posts:", error);
-      pendingRef.value = false;
+    })();
+    tab.check = { controller, promise };
+    try {
+      await promise;
+    } finally {
+      if (tab.check?.promise === promise) tab.check = undefined;
     }
   }
 
-  function loadMore(): boolean {
-    if (fullHomeFeedList.length > 0) {
-      const itemsToLoad: HomeFeedItem[] = fullHomeFeedList.splice(
-        0,
-        Math.min(POSTS_PER_PAGE, fullHomeFeedList.length)
-      );
-      partialHomeFeedList.value = partialHomeFeedList.value.concat(itemsToLoad);
+  function onPopularConversationUpdate(slugIds: string[]): void {
+    const tab = tabs.following;
+    if (tab.baseline === undefined) return;
+    const changed = headChanged({ baseline: tab.baseline, incoming: slugIds });
+    if (viewerScope.value.userId === undefined) {
+      // The public SSE head already answers the public viewer's update check.
+      tab.pending.value = changed;
+    } else if (changed || tab.pending.value) {
+      void hasNewPostCheck("following");
     }
-
-    const hasMore = fullHomeFeedList.length > 0;
-    return hasMore;
-  }
-
-  function onPopularConversationUpdate(topSlugIds: string[]): void {
-    const localList = localTopSlugIds["following"];
-    if (localList.length === 0) {
-      hasPendingFollowingTab.value = true;
-      return;
-    }
-    const TOP_N = 3;
-    const localTop = localList.slice(0, TOP_N);
-    const remoteTop = topSlugIds.slice(0, TOP_N);
-    const changed =
-      remoteTop.length !== localTop.length ||
-      remoteTop.some((id, i) => id !== localTop[i]);
-    if (changed) {
-      hasPendingFollowingTab.value = true;
-    }
-  }
-
-  function clearFeedDisplay() {
-    fullHomeFeedList = [];
-    partialHomeFeedList.value = [];
-    canLoadMore.value = true;
-  }
-
-  function clearFeedData() {
-    fullHomeFeedList = [];
-    partialHomeFeedList.value = [];
-    hasPendingNewTab.value = false;
-    hasPendingFollowingTab.value = false;
-    localTopSlugIds = { new: [], following: [] };
-    canLoadMore.value = true;
   }
 
   return {
-    applyProjectAssignment,
-    setFeedData,
-    clearFeedDisplay,
-    clearFeedData,
+    currentHomeFeedTab,
+    hasPendingNewTab: computed(() => tabs.new.pending.value),
+    hasPendingFollowingTab: computed(() => tabs.following.pending.value),
+    hasPendingCurrentTab,
+    initializeFeedHead,
+    confirmFeedHead,
     hasNewPostCheck,
     onPopularConversationUpdate,
-    loadMore,
-    partialHomeFeedList,
-    hasPendingNewTab,
-    hasPendingFollowingTab,
-    hasPendingCurrentTab,
-    currentHomeFeedTab,
-    canLoadMore,
   };
 });

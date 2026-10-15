@@ -626,10 +626,7 @@ export async function fetchPostBySlugId({
         where: eq(conversationTable.slugId, conversationSlugId),
         enableCompactBody: false,
         personalizedUserId: personalizedUserId,
-        excludeLockedPosts: false,
-        removeMutedAuthors: false,
         baseImageServiceUrl,
-        sortAlgorithm: "new",
         currentDisplayLanguage: currentDisplayLanguage ?? "en",
     });
 

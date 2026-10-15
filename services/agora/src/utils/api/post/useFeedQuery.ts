@@ -1,61 +1,130 @@
 import {
-  useQuery,
+  hashKey,
+  type InfiniteData,
+  useInfiniteQuery,
   useQueryClient,
 } from "@tanstack/vue-query";
 import { storeToRefs } from "pinia";
-import { useAuthenticationStore } from "src/stores/authentication";
+import type { FetchFeedRequest, FetchFeedResponse } from "src/shared/types/dto";
+import type { FeedSortAlgorithm } from "src/shared/types/zod";
 import { useHomeFeedStore } from "src/stores/homeFeed";
 import { useLanguageStore } from "src/stores/language";
-import { computed, type MaybeRefOrGetter, toValue } from "vue";
+import { useViewerQueryScope } from "src/utils/query/viewerScope";
+import { computed, type MaybeRefOrGetter, toValue, watch } from "vue";
 
+import { initialFeedRequest, nextFeedRequest } from "./feedPageBoundary";
+import { type FeedQueryKey, getFeedQueryKey } from "./feedQueryKey";
 import { useBackendPostApi } from "./post";
 
 export function useFeedQuery({
   enabled = true,
-}: {
-  enabled?: MaybeRefOrGetter<boolean>;
-} = {}) {
-  const { fetchRecentPost } = useBackendPostApi();
-  const { isGuestOrLoggedIn, userId } = storeToRefs(useAuthenticationStore());
-  const { currentHomeFeedTab } = storeToRefs(useHomeFeedStore());
+}: { enabled?: MaybeRefOrGetter<boolean> } = {}) {
+  const { fetchFeedPage } = useBackendPostApi();
+  const feedStore = useHomeFeedStore();
+  const { currentHomeFeedTab } = storeToRefs(feedStore);
   const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
-  const sortedSpokenLanguages = computed(() =>
-    [...spokenLanguages.value].sort()
+  const queryClient = useQueryClient();
+  const viewerScope = useViewerQueryScope();
+  const queryKey = computed(() =>
+    getFeedQueryKey({
+      sortAlgorithm: currentHomeFeedTab.value,
+      displayLanguage: displayLanguage.value,
+      spokenLanguages: spokenLanguages.value,
+      viewerScope: viewerScope.value,
+    })
   );
 
-  return useQuery({
-    queryKey: [
-      "feed",
-      computed(() => currentHomeFeedTab.value),
-      computed(() => displayLanguage.value),
-      sortedSpokenLanguages,
-      userId,
-      isGuestOrLoggedIn,
-    ],
-    queryFn: async () => {
-      const response = await fetchRecentPost({
-        loadPersonalizedData: isGuestOrLoggedIn.value,
-        sortAlgorithm: currentHomeFeedTab.value,
-        includeDisplayContent: true,
+  const query = useInfiniteQuery<
+    FetchFeedResponse,
+    Error,
+    InfiniteData<FetchFeedResponse, FetchFeedRequest>,
+    FeedQueryKey,
+    FetchFeedRequest
+  >({
+    queryKey,
+    queryFn: async ({ pageParam, signal, queryKey: requestKey }) => {
+      const page = await fetchFeedPage({
+        request: pageParam,
+        loadPersonalizedData: requestKey[4].userId !== undefined,
+        signal,
       });
-      if (response.status !== "success") {
-        throw new Error("Failed to fetch feed");
+      if (
+        pageParam.cursor === null &&
+        !signal.aborted &&
+        hashKey(requestKey) === hashKey(queryKey.value)
+      ) {
+        feedStore.confirmFeedHead({
+          tab: page.sortAlgorithm,
+          slugIds: page.feedItemList.map(
+            (item) => item.conversationData.metadata.conversationSlugId
+          ),
+        });
       }
-      return response.data;
+      return page;
     },
+    initialPageParam: computed(() =>
+      initialFeedRequest(currentHomeFeedTab.value)
+    ),
+    getNextPageParam: nextFeedRequest,
     enabled: computed(() => toValue(enabled)),
     staleTime: Infinity,
+    retry: false,
   });
+
+  watch(
+    () => query.data.value?.pages[0],
+    (page) => {
+      if (page !== undefined)
+        feedStore.initializeFeedHead({
+          tab: page.sortAlgorithm,
+          slugIds: page.feedItemList.map(
+            (item) => item.conversationData.metadata.conversationSlugId
+          ),
+        });
+    },
+    { immediate: true }
+  );
+
+  const refreshes = new Map<string, Promise<void>>();
+  async function refreshFeed(): Promise<void> {
+    const key = queryKey.value;
+    const scope = hashKey(key);
+    const existing = refreshes.get(scope);
+    if (existing !== undefined) return await existing;
+    const refresh = (async () => {
+      await queryClient.cancelQueries({ queryKey: key, exact: true });
+      if (scope !== hashKey(queryKey.value)) return;
+      // A deliberate refresh starts a new traversal without re-fetching visited pages.
+      queryClient.setQueryData<
+        InfiniteData<FetchFeedResponse, FetchFeedRequest>
+      >(key, (data) =>
+        data === undefined
+          ? undefined
+          : {
+              pages: data.pages.slice(0, 1),
+              pageParams: data.pageParams.slice(0, 1),
+            }
+      );
+      await query.refetch({ cancelRefetch: false });
+    })();
+    refreshes.set(scope, refresh);
+    try {
+      await refresh;
+    } finally {
+      if (refreshes.get(scope) === refresh) refreshes.delete(scope);
+    }
+  }
+
+  return { ...query, refreshFeed };
 }
 
 export function useInvalidateFeedQuery() {
   const queryClient = useQueryClient();
-
   return {
     invalidateFeed: () => {
       void queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
-    invalidateFeedTab: (tab: string) => {
+    invalidateFeedTab: (tab: FeedSortAlgorithm) => {
       void queryClient.invalidateQueries({ queryKey: ["feed", tab] });
     },
   };

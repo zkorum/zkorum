@@ -1,11 +1,11 @@
 import type { QueryClient } from "@tanstack/vue-query";
 import type { ConversationProjectAssignment } from "src/shared/types/zod";
 import { getConversationProjectContextFromAssignment } from "src/shared/utils/conversationProject";
-import { useHomeFeedStore } from "src/stores/homeFeed";
 import { useUserStore } from "src/stores/user";
 import { getErrorLogContext } from "src/utils/api/errorLog";
 import type { ViewerQueryScope } from "src/utils/query/viewerScope";
 
+import { applyFeedProjectAssignment } from "./feedQueryCache";
 import {
   type ConversationDetailData,
   updateConversationQueryCache,
@@ -30,10 +30,12 @@ export async function applyConversationProjectAssignment({
 }): Promise<void> {
   if (isCurrent?.() === false) return;
   function apply(freshConversation?: ConversationDetailData): void {
-    useHomeFeedStore().applyProjectAssignment({
+    applyFeedProjectAssignment({
+      queryClient,
       conversationSlugId,
       assignment,
       freshConversation,
+      viewerScope,
     });
     useUserStore().applyProjectAssignment({
       conversationSlugId,
