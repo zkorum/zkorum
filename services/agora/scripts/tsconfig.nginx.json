@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "types": ["node"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "nginx-conversation-indexing.test.mjs",
+    "fixtures/nginx-indexing-api.mjs",
+    "../../../scripts/infra/update-agora.test.mjs"
+  ]
+}
