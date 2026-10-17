@@ -3,9 +3,11 @@
     :back-callback="handleBackToLastAnsweredQuestion"
     :close-callback="handleBackToConversation"
     :show-close-button="true"
+    :fixed-navigation="true"
   >
     <template #body>
       <ConversationSurveyOnboardingHero
+        density="compact"
         :conversation-data="conversationData"
         :initial-display-content="conversationDisplayContent"
       />
@@ -23,6 +25,7 @@
 
       <StepperLayout
         v-else-if="surveyForm !== undefined && surveyStatus !== undefined"
+        :fixed-navigation="true"
         :submit-call-back="handlePrimaryAction"
         :current-step="1"
         :total-steps="1"

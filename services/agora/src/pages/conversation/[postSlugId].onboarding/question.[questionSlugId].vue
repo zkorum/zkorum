@@ -3,10 +3,11 @@
     :back-callback="handleBackAction"
     :close-callback="handleCloseToConversation"
     :show-close-button="true"
-    :pin-footer-to-bottom="false"
+    :fixed-navigation="true"
   >
     <template #body>
       <ConversationSurveyOnboardingHero
+        density="compact"
         :conversation-data="conversationData"
         :initial-display-content="conversationDisplayContent"
       />
@@ -24,6 +25,7 @@
 
       <StepperLayout
         v-else-if="question !== undefined"
+        :fixed-navigation="true"
         :submit-call-back="handleNext"
         :current-step="currentSurveyStep"
         :total-steps="surveyStepTotal"
