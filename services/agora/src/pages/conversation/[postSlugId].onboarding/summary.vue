@@ -429,7 +429,6 @@ async function handleWithdraw(): Promise<void> {
       return;
     }
 
-    await refetchAll();
     await router.replace({
       path: getConversationSurveyOnboardingPath({
         conversationSlugId: conversationSlugId.value,
