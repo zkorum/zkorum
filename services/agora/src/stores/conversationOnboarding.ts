@@ -12,9 +12,10 @@ export const useConversationOnboardingStore = defineStore(
     const conversationSlugId = ref<string | null>(null);
     const returnTarget = ref<string | null>(null);
     const returnHistoryPosition = ref<number | null>(null);
-    const routeContext = ref<ConversationRouteContext>(normalConversationRouteContext);
+    const routeContext = ref<ConversationRouteContext>(
+      normalConversationRouteContext
+    );
     const isResumeMode = ref(false);
-    const justCompletedSurvey = ref(false);
     const emailUpdateConsentSkipped = ref(false);
 
     function startManualEntry({
@@ -38,7 +39,6 @@ export const useConversationOnboardingStore = defineStore(
         });
       returnHistoryPosition.value = nextReturnHistoryPosition ?? null;
       isResumeMode.value = false;
-      justCompletedSurvey.value = false;
       emailUpdateConsentSkipped.value = false;
     }
 
@@ -63,7 +63,6 @@ export const useConversationOnboardingStore = defineStore(
         });
       returnHistoryPosition.value = nextReturnHistoryPosition ?? null;
       isResumeMode.value = true;
-      justCompletedSurvey.value = false;
       emailUpdateConsentSkipped.value = false;
     }
 
@@ -71,35 +70,11 @@ export const useConversationOnboardingStore = defineStore(
       emailUpdateConsentSkipped.value = true;
     }
 
-    function markJustCompletedSurvey({
-      conversationSlugId: nextConversationSlugId,
-      routeContext: nextRouteContext,
+    function clearForConversation({
+      conversationSlugId: currentConversationSlugId,
     }: {
       conversationSlugId: string;
-      routeContext?: ConversationRouteContext;
     }): void {
-      const isSameConversation = conversationSlugId.value === nextConversationSlugId;
-
-      conversationSlugId.value = nextConversationSlugId;
-      if (nextRouteContext !== undefined) {
-        routeContext.value = nextRouteContext;
-      }
-
-      if (!isSameConversation || returnTarget.value === null) {
-        returnTarget.value = getConversationPath({
-          conversationSlugId: nextConversationSlugId,
-          routeContext: routeContext.value,
-        });
-      }
-
-      if (!isSameConversation) {
-        returnHistoryPosition.value = null;
-      }
-
-      justCompletedSurvey.value = true;
-    }
-
-    function clearForConversation({ conversationSlugId: currentConversationSlugId }: { conversationSlugId: string }): void {
       if (conversationSlugId.value !== currentConversationSlugId) {
         return;
       }
@@ -109,7 +84,6 @@ export const useConversationOnboardingStore = defineStore(
       returnHistoryPosition.value = null;
       routeContext.value = normalConversationRouteContext;
       isResumeMode.value = false;
-      justCompletedSurvey.value = false;
       emailUpdateConsentSkipped.value = false;
     }
 
@@ -119,11 +93,9 @@ export const useConversationOnboardingStore = defineStore(
       returnHistoryPosition,
       routeContext,
       isResumeMode,
-      justCompletedSurvey,
       emailUpdateConsentSkipped,
       startManualEntry,
       startResumeEntry,
-      markJustCompletedSurvey,
       markEmailUpdateConsentSkipped,
       clearForConversation,
     };

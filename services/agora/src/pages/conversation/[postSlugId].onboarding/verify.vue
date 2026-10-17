@@ -24,7 +24,10 @@ const { onboardingMode, credentialUpgradeTarget } = storeToRefs(
 const conversationOnboardingStore = useConversationOnboardingStore();
 const { exitToConversation } = useConversationOnboardingExit();
 
-if (conversationOnboardingStore.conversationSlugId !== routeConversationSlugId.value) {
+if (
+  conversationOnboardingStore.conversationSlugId !==
+  routeConversationSlugId.value
+) {
   conversationOnboardingStore.startManualEntry({
     conversationSlugId: routeConversationSlugId.value,
     routeContext: routeContext.value,
@@ -91,7 +94,6 @@ watch(
       exactVerifyRoute: exactVerifyRoute,
       isInitialLoading: loading,
       hasLoadError: loadError,
-      justCompletedSurvey: conversationOnboardingStore.justCompletedSurvey,
       conversationSlugId: conversationSlugId.value,
       conversation:
         conversation === undefined

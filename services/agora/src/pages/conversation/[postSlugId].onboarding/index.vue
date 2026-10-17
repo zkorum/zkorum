@@ -56,11 +56,8 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
-import {
-  getConversationSurveyCompletePath,
-  getConversationSurveyVerifyPath,
-} from "src/utils/survey/navigation";
-import { computed, ref, watch } from "vue";
+import { getConversationSurveyVerifyPath } from "src/utils/survey/navigation";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -69,7 +66,8 @@ import {
 } from "./index.i18n";
 
 const router = useRouter();
-const { routeConversationSlugId, routeContext } = useConversationOnboardingRoute();
+const { routeConversationSlugId, routeContext } =
+  useConversationOnboardingRoute();
 const conversationOnboardingStore = useConversationOnboardingStore();
 const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const { exitToConversation } = useConversationOnboardingExit();
@@ -91,19 +89,13 @@ const {
   conversationSlugId,
   conversationData,
   conversationDisplayContent,
-  surveyForm,
+  surveyStepTotal,
   isInitialLoading,
   hasLoadError,
   refetchAll,
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
 
 const isActing = ref(false);
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
 
 const headerTitle = computed(() => {
   return t("welcomeTitle");
@@ -112,21 +104,6 @@ const headerTitle = computed(() => {
 const headerDescription = computed(() => {
   return t("welcomeDescription");
 });
-
-watch(
-  isInitialLoading,
-  (loading) => {
-    if (!loading && conversationOnboardingStore.justCompletedSurvey) {
-        void router.replace({
-        path: getConversationSurveyCompletePath({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        }),
-      });
-    }
-  },
-  { immediate: true }
-);
 
 async function handleBackToConversation(): Promise<void> {
   credentialUpgradeTarget.value = null;

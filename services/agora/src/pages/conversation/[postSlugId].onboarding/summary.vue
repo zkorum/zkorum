@@ -24,12 +24,12 @@
       <StepperLayout
         v-else-if="surveyForm !== undefined && surveyStatus !== undefined"
         :submit-call-back="handlePrimaryAction"
-        :current-step="surveyStepTotal"
-        :total-steps="surveyStepTotal"
+        :current-step="1"
+        :total-steps="1"
         :enable-next-button="true"
         :show-next-button="true"
         :show-loading-button="false"
-        :show-stepper="showSurveyStepper"
+        :show-stepper="false"
       >
         <template #header>
           <InfoHeader
@@ -195,16 +195,6 @@ const canWithdraw = computed(() => {
       return question.currentAnswer !== undefined || question.isPassed;
     }) ?? false
   );
-});
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
-
-const showSurveyStepper = computed(() => {
-  return (surveyForm.value?.questions.length ?? 0) > 0;
 });
 
 const isWithdrawing = computed(() => withdrawMutation.isPending.value);

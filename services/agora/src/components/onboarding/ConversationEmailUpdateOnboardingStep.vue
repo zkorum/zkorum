@@ -12,7 +12,7 @@
       <InfoHeader
         :title="title"
         :description="description"
-        icon-name="mdi-check-circle-outline"
+        icon-name="mdi-email-outline"
       />
     </template>
 
@@ -21,14 +21,6 @@
         v-if="showConversationUpdatesPreference"
         v-model="conversationUpdatesChecked"
         :scope-kind="scopeKind"
-      />
-      <ZKButton
-        v-if="showReviewAnswers"
-        button-type="compactButton"
-        flat
-        color="primary"
-        :label="reviewAnswersLabel"
-        @click="emit('reviewAnswers')"
       />
       <ZKButton
         v-if="continueWithoutSavingLabel !== undefined"
@@ -52,10 +44,8 @@ import ZKButton from "src/components/ui-library/ZKButton.vue";
 defineProps<{
   title: string;
   description: string;
-  reviewAnswersLabel: string;
   continueWithoutSavingLabel: string | undefined;
   showConversationUpdatesPreference: boolean;
-  showReviewAnswers: boolean;
   scopeKind: ConversationUpdateScopeSummary["kind"];
   isSaving: boolean;
 }>();
@@ -63,7 +53,6 @@ defineProps<{
 const emit = defineEmits<{
   continue: [];
   continueWithoutSaving: [];
-  reviewAnswers: [];
 }>();
 
 const conversationUpdatesChecked = defineModel<boolean>(

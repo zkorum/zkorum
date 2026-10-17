@@ -92,7 +92,8 @@ import {
 } from "../index.i18n";
 
 const router = useRouter();
-const { routeConversationSlugId, routeContext } = useConversationOnboardingRoute();
+const { routeConversationSlugId, routeContext } =
+  useConversationOnboardingRoute();
 const conversationOnboardingStore = useConversationOnboardingStore();
 const { isLoggedIn, isAuthInitialized, credentials } = storeToRefs(
   useAuthenticationStore()
@@ -124,18 +125,12 @@ const {
   conversationSlugId,
   conversationData,
   conversationDisplayContent,
-  surveyForm,
+  surveyStepTotal,
   requirementState,
   isInitialLoading,
   hasLoadError,
   refetchAll,
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
 
 const backPath = computed(() => {
   if (

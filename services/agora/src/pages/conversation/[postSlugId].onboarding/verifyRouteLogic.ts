@@ -58,7 +58,6 @@ export function resolveVerifyRouteDecision({
   exactVerifyRoute,
   isInitialLoading,
   hasLoadError,
-  justCompletedSurvey,
   conversationSlugId,
   conversation,
   surveyStatus,
@@ -70,7 +69,6 @@ export function resolveVerifyRouteDecision({
   exactVerifyRoute: boolean;
   isInitialLoading: boolean;
   hasLoadError: boolean;
-  justCompletedSurvey: boolean;
   conversationSlugId: string;
   conversation: VerifyRouteConversationState | undefined;
   surveyStatus: SurveyStatusCheckResponse | undefined;
@@ -83,20 +81,14 @@ export function resolveVerifyRouteDecision({
     return createDecision({ navigation: { kind: "none" } });
   }
 
-  if (justCompletedSurvey) {
-    return createDecision({
-      navigation: {
-        kind: "redirect",
-        path: getConversationSurveyCompletePath({ conversationSlugId, routeContext }),
-      },
-    });
-  }
-
   if (hasLoadError) {
     return createDecision({
       navigation: {
         kind: "redirect",
-        path: getConversationSurveyOnboardingPath({ conversationSlugId, routeContext }),
+        path: getConversationSurveyOnboardingPath({
+          conversationSlugId,
+          routeContext,
+        }),
       },
     });
   }
@@ -147,11 +139,11 @@ export function resolveVerifyRouteDecision({
   if (requirementState.needsTicket) {
     return createDecision({
       navigation: {
-          kind: "redirect",
-          path: getConversationSurveyVerifyTicketPath({
-            conversationSlugId,
-            routeContext,
-          }),
+        kind: "redirect",
+        path: getConversationSurveyVerifyTicketPath({
+          conversationSlugId,
+          routeContext,
+        }),
       },
     });
   }
@@ -190,7 +182,9 @@ export function resolveVerifyRouteDecision({
     routeContext,
   });
 
-  if (continuePath === getConversationPath({ conversationSlugId, routeContext })) {
+  if (
+    continuePath === getConversationPath({ conversationSlugId, routeContext })
+  ) {
     return createDecision({ navigation: { kind: "exitToConversation" } });
   }
 
