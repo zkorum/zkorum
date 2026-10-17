@@ -2,10 +2,15 @@
   <ZKCheckbox
     v-model="checked"
     :label="checkboxLabel"
-    :description="checkboxDescription"
+    :description="undefined"
     :required="false"
     :disabled="false"
-  />
+  >
+    <template #description>
+      <strong class="email-guarantee">{{ t("emailGuarantee") }}</strong>
+      {{ checkboxDescription }}
+    </template>
+  </ZKCheckbox>
 </template>
 
 <script setup lang="ts">
@@ -17,9 +22,10 @@ import {
   type ConversationUpdateOnboardingConsentTranslations,
   conversationUpdateOnboardingConsentTranslations,
 } from "./ConversationUpdateOnboardingConsent.i18n";
+import type { ConversationUpdateScopeSummary } from "./conversationUpdateTypes";
 
 const props = defineProps<{
-  scopeKind: "no-project" | "project";
+  scopeKind: ConversationUpdateScopeSummary["kind"];
 }>();
 
 const checked = defineModel<boolean>({ required: true });
@@ -37,3 +43,11 @@ const checkboxDescription = computed(() =>
     : t("conversationDescription")
 );
 </script>
+
+<style scoped lang="scss">
+.email-guarantee {
+  display: block;
+  margin-block-end: 0.25rem;
+  color: $grey-9;
+}
+</style>

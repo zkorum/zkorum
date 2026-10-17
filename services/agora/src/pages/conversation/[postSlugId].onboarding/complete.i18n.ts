@@ -20,9 +20,9 @@ export const conversationSurveyCompleteTranslations: Record<
   en: {
     title: "Answers saved",
     description: "You can now vote on statements in this consultation.",
-    emailUpdateTitle: "Welcome to the conversation",
+    emailUpdateTitle: "Stay up to date",
     emailUpdateDescription:
-      "Choose your email update preference before continuing.",
+      "Get updates on new statements, progress, and consultation results.",
     continueLabel: "Continue",
     reviewAnswersLabel: "View my answers",
     emailUpdateSummaryLoadError:
@@ -84,9 +84,9 @@ export const conversationSurveyCompleteTranslations: Record<
     title: "Réponses enregistrées",
     description:
       "Vous pouvez maintenant voter sur les propositions de la consultation.",
-    emailUpdateTitle: "Bienvenue dans la conversation",
+    emailUpdateTitle: "Gardez le fil de la consultation",
     emailUpdateDescription:
-      "Choisissez votre préférence de suivi par e-mail avant de continuer.",
+      "Recevez les nouvelles propositions, les avancées et le bilan de la consultation.",
     continueLabel: "Continuer",
     reviewAnswersLabel: "Voir mes réponses",
     emailUpdateSummaryLoadError:
@@ -101,8 +101,7 @@ export const conversationSurveyCompleteTranslations: Record<
     title: "התשובות נשמרו",
     description: "אפשר עכשיו להצביע על הצהרות בהתייעצות הזו.",
     emailUpdateTitle: "ברוכים הבאים לשיחה",
-    emailUpdateDescription:
-      "יש לבחור את העדפת העדכונים בדוא״ל לפני שממשיכים.",
+    emailUpdateDescription: "יש לבחור את העדפת העדכונים בדוא״ל לפני שממשיכים.",
     continueLabel: "המשך",
     reviewAnswersLabel: "הצגת התשובות שלי",
     emailUpdateSummaryLoadError:

@@ -1,21 +1,11 @@
+import { QCheckbox, Quasar } from "quasar";
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { type App, createApp, defineComponent, h } from "vue";
 import { createI18n } from "vue-i18n";
 
-vi.mock("src/components/ui-library/ZKCheckbox.vue", () => ({
-  default: defineComponent({
-    props: {
-      label: { type: String, required: true },
-      description: { type: String, required: true },
-    },
-    setup(props) {
-      return () => h("label", [props.label, h("small", props.description)]);
-    },
-  }),
-}));
-
 import ConversationUpdateOnboardingConsent from "./ConversationUpdateOnboardingConsent.vue";
+import type { ConversationUpdateScopeSummary } from "./conversationUpdateTypes";
 
 const mountedApps: App[] = [];
 
@@ -27,7 +17,7 @@ afterEach(() => {
 });
 
 describe("ConversationUpdateOnboardingConsent", () => {
-  it("localizes facilitator-written consent for both scopes", () => {
+  it("explains optional email updates and highlights the no-marketing guarantee for both scopes", () => {
     const project = mountConsent({ locale: "en", scopeKind: "project" });
     const conversation = mountConsent({
       locale: "en",
@@ -35,22 +25,25 @@ describe("ConversationUpdateOnboardingConsent", () => {
     });
 
     expect(project.textContent).toContain(
-      "Email me occasional updates about this project"
+      "Receive project updates by email (optional)"
     );
     expect(conversation.textContent).toContain(
-      "Email me occasional updates about this conversation"
+      "Receive conversation updates by email (optional)"
     );
     expect(project.textContent).toContain(
-      "written and sent by project facilitators"
+      "Only project-related updates from the team running it."
     );
     expect(conversation.textContent).toContain(
-      "written and sent by conversation facilitators"
+      "Only conversation-related updates from the team running it."
+    );
+    expect(project.querySelector("strong")?.textContent).toBe(
+      "No ads or marketing emails."
+    );
+    expect(conversation.querySelector("strong")?.textContent).toBe(
+      "No ads or marketing emails."
     );
     expect(project.textContent).toContain(
-      "No advertising, fundraising, political campaigning, or unrelated promotion."
-    );
-    expect(project.textContent).toContain(
-      "You can change this anytime in email settings."
+      "You can change your preference at any time in your email settings."
     );
   });
 
@@ -71,15 +64,20 @@ describe("ConversationUpdateOnboardingConsent", () => {
       scopeKind: "no-project",
     });
 
-    expect(project.textContent).toContain("Suivre le projet par e-mail");
     expect(project.textContent).toContain(
-      "Ces nouvelles sont rédigées et envoyées par les facilitateurs du projet pour vous tenir informé et vous permettre de participer à nouveau. Aucun contenu publicitaire, appel aux dons, campagne politique ou promotion sans rapport avec le projet n’est autorisé. Vous pouvez modifier ce choix à tout moment dans les paramètres d’e-mail."
+      "Recevoir les nouvelles du projet par e-mail (facultatif)"
+    );
+    expect(project.querySelector("strong")?.textContent).toBe(
+      "Sans publicité ni communication commerciale."
+    );
+    expect(project.textContent).toContain(
+      "Uniquement des nouvelles liées au projet, envoyées par l’équipe qui l’anime. Vous pouvez modifier votre choix à tout moment dans les paramètres d’e-mail."
     );
     expect(conversation.textContent).toContain(
-      "Suivre la conversation par e-mail"
+      "Recevoir les nouvelles de la conversation par e-mail (facultatif)"
     );
     expect(conversation.textContent).toContain(
-      "Ces nouvelles sont rédigées et envoyées par les facilitateurs de la conversation pour vous tenir informé et vous permettre de participer à nouveau. Aucun contenu publicitaire, appel aux dons, campagne politique ou promotion sans rapport avec la conversation n’est autorisé. Vous pouvez modifier ce choix à tout moment dans les paramètres d’e-mail."
+      "Uniquement des nouvelles liées à la conversation, envoyées par l’équipe qui l’anime. Vous pouvez modifier votre choix à tout moment dans les paramètres d’e-mail."
     );
   });
 
@@ -96,6 +94,30 @@ describe("ConversationUpdateOnboardingConsent", () => {
     expect(text).toContain("promoción que no esté relacionada");
     expect(text).toContain("Puede cambiar esta opción");
   });
+
+  it("associates each optional checkbox with its own formatted description", () => {
+    const container = mountConsents({
+      locale: "en",
+      scopeKinds: ["project", "no-project"],
+    });
+    const [projectDescription, conversationDescription] =
+      container.querySelectorAll("small");
+    const [projectCheckbox, conversationCheckbox] =
+      container.querySelectorAll('[role="checkbox"]');
+
+    expect(container.querySelectorAll("small")).toHaveLength(2);
+    expect(container.querySelectorAll('[role="checkbox"]')).toHaveLength(2);
+    expect(projectDescription?.id).toBeTruthy();
+    expect(conversationDescription?.id).toBeTruthy();
+    expect(projectDescription?.id).not.toBe(conversationDescription?.id);
+    expect(projectCheckbox?.getAttribute("aria-describedby")).toBe(
+      projectDescription?.id
+    );
+    expect(conversationCheckbox?.getAttribute("aria-describedby")).toBe(
+      conversationDescription?.id
+    );
+    expect(projectCheckbox?.getAttribute("aria-required")).not.toBe("true");
+  });
 });
 
 function mountConsent({
@@ -103,15 +125,36 @@ function mountConsent({
   scopeKind,
 }: {
   locale: SupportedDisplayLanguageCodes;
-  scopeKind: "no-project" | "project";
+  scopeKind: ConversationUpdateScopeSummary["kind"];
+}): HTMLElement {
+  return mountConsents({ locale, scopeKinds: [scopeKind] });
+}
+
+function mountConsents({
+  locale,
+  scopeKinds,
+}: {
+  locale: SupportedDisplayLanguageCodes;
+  scopeKinds: readonly ConversationUpdateScopeSummary["kind"][];
 }): HTMLElement {
   const container = document.createElement("div");
   container.dir = locale === "ar" ? "rtl" : "ltr";
   document.body.append(container);
-  const app = createApp(ConversationUpdateOnboardingConsent, {
-    modelValue: false,
-    scopeKind,
-  });
+  const app = createApp(
+    defineComponent(
+      () => () =>
+        h(
+          "div",
+          scopeKinds.map((scopeKind) =>
+            h(ConversationUpdateOnboardingConsent, {
+              modelValue: false,
+              scopeKind,
+            })
+          )
+        )
+    )
+  );
+  app.use(Quasar, { components: { QCheckbox } });
   app.use(createI18n({ legacy: false, locale, messages: {} }));
   mountedApps.push(app);
   app.mount(container);

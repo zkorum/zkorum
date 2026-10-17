@@ -5,7 +5,7 @@
       color="primary"
       :disable="disabled"
       v-bind="requiredAttributes"
-      :aria-describedby="description === undefined ? undefined : descriptionId"
+      :aria-describedby="hasDescription() ? descriptionId : undefined"
     >
       <ZKFieldLabel
         :label="label"
@@ -13,14 +13,14 @@
         :required-text="undefined"
       />
     </q-checkbox>
-    <small v-if="description !== undefined" :id="descriptionId">{{
-      description
-    }}</small>
+    <small v-if="hasDescription()" :id="descriptionId">
+      <slot name="description">{{ description }}</slot>
+    </small>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, useId } from "vue";
+import { computed, useId, type VNode } from "vue";
 
 import ZKFieldLabel from "./ZKFieldLabel.vue";
 
@@ -31,8 +31,17 @@ const props = defineProps<{
   disabled: boolean;
 }>();
 
+const slots = defineSlots<{
+  description?: () => VNode[];
+}>();
+
 const checked = defineModel<boolean>({ required: true });
 const descriptionId = `zk-checkbox-description-${useId()}`;
+
+function hasDescription(): boolean {
+  return props.description !== undefined || slots.description !== undefined;
+}
+
 const requiredAttributes = computed(() =>
   props.required ? { "aria-required": "true" } : {}
 );
