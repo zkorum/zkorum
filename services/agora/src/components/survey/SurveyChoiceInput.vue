@@ -17,9 +17,14 @@
       @update:model-value="handleDropdownUpdate"
     />
     <div v-for="option in visibleOptions" :key="option.value">
-      <div v-if="usesDropdown" class="choice-input__text-option-label">
-        {{ option.label }}
-      </div>
+      <template v-if="usesDropdown">
+        <div
+          v-if="showDropdownOptionLabels"
+          class="choice-input__text-option-label"
+        >
+          {{ option.label }}
+        </div>
+      </template>
       <q-checkbox
         v-else-if="isMultipleSelection"
         class="choice-input__checkbox"
@@ -111,6 +116,10 @@ const dropdownModelValue = computed<string | string[] | null>(() => {
 
   return props.selectedSingleOptionSlugId;
 });
+
+const showDropdownOptionLabels = computed(
+  () => props.isMultipleSelection && props.selectedMultiOptionSlugIds.length > 2
+);
 
 const selectedOptionSlugIds = computed(
   () =>
