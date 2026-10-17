@@ -7,7 +7,6 @@ export interface PreParticipationIntentionDialogTranslations {
   titleAccountRequired: string;
   titleEmailRequired: string;
   titleStrongRequired: string;
-  messageOnboardingRequired: string;
   message: string;
   messageBothRequired: string;
   messageZupassOnly: string;
@@ -40,8 +39,6 @@ export const preParticipationIntentionDialogTranslations: Record<
     titleAccountRequired: "Log in",
     titleEmailRequired: "Verify Email",
     titleStrongRequired: "Verify your identity",
-    messageOnboardingRequired:
-      "This short setup helps keep the consultation reliable and gives us a better understanding of participants’ perspectives. You participate under a pseudonym. Your email stays private.",
     message: "Log in to participate in the discussions",
     messageBothRequired:
       "This conversation requires login and event ticket verification to participate",
@@ -70,14 +67,12 @@ export const preParticipationIntentionDialogTranslations: Record<
       "A user account is required to report user content.",
   },
   fa: {
-    titleOnboardingRequired: "ابتدا مراحل ورود را کامل کنید",
+    titleOnboardingRequired: "چند گام کوتاه پیش از مشارکت",
     title: "ورود به Agora",
     titleZupassOnly: "تأیید بلیط رویداد",
     titleAccountRequired: "ورود",
     titleEmailRequired: "تأیید ایمیل",
     titleStrongRequired: "تأیید هویت شما",
-    messageOnboardingRequired:
-      "پیش از مشارکت، مراحل ورود این گفتگو را کامل کنید.",
     message: "برای مشارکت در بحث‌ها وارد شوید",
     messageBothRequired:
       "این گفتگو برای مشارکت نیاز به ورود و تأیید بلیط رویداد دارد",
@@ -101,14 +96,12 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "برای گزارش محتوای کاربر، حساب کاربری لازم است.",
   },
   ar: {
-    titleOnboardingRequired: "أكمل خطوات الانضمام أولاً",
+    titleOnboardingRequired: "بضع خطوات سريعة قبل المشاركة",
     title: "تسجيل الدخول إلى أغورا",
     titleZupassOnly: "التحقق من تذكرة الحدث",
     titleAccountRequired: "تسجيل الدخول",
     titleEmailRequired: "تحقق من بريدك الإلكتروني",
     titleStrongRequired: "تحقق من هويتك",
-    messageOnboardingRequired:
-      "أكمل خطوات الانضمام لهذه المحادثة قبل المشاركة.",
     message: "سجّل دخولك للمشاركة في النقاشات",
     messageBothRequired:
       "تتطلب هذه المحادثة تسجيل الدخول والتحقق من تذكرة الحدث للمشاركة",
@@ -131,14 +124,12 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "يلزم حساب مستخدم للإبلاغ عن محتوى المستخدم.",
   },
   es: {
-    titleOnboardingRequired: "Complete el acceso primero",
+    titleOnboardingRequired: "Unos pasos rápidos antes de participar",
     title: "Iniciar sesión en Ágora",
     titleZupassOnly: "Verificar Boleto del Evento",
     titleAccountRequired: "Iniciar sesión",
     titleEmailRequired: "Verifique su correo",
     titleStrongRequired: "Verifique su identidad",
-    messageOnboardingRequired:
-      "Complete el flujo de acceso de esta conversación antes de participar.",
     message: "Inicie sesión para participar en las discusiones",
     messageBothRequired:
       "Esta conversación requiere inicio de sesión y verificación de boleto del evento para participar",
@@ -172,8 +163,6 @@ export const preParticipationIntentionDialogTranslations: Record<
     titleAccountRequired: "Se connecter",
     titleEmailRequired: "Vérifiez votre e-mail",
     titleStrongRequired: "Vérifiez votre identité",
-    messageOnboardingRequired:
-      "Ce court parcours aide à assurer la qualité de la consultation et à mieux comprendre les points de vue des participants. Vous participez sous pseudonyme. Votre e-mail reste privé.",
     message: "Connectez-vous pour participer aux discussions",
     messageBothRequired:
       "Cette conversation nécessite une connexion et une vérification de billet d'événement pour participer",
@@ -204,13 +193,12 @@ export const preParticipationIntentionDialogTranslations: Record<
       "Un compte utilisateur est nécessaire pour signaler du contenu.",
   },
   "zh-Hans": {
-    titleOnboardingRequired: "请先完成引导流程",
+    titleOnboardingRequired: "参与前的几个简单步骤",
     title: "登录 Agora",
     titleZupassOnly: "验证活动门票",
     titleAccountRequired: "登录",
     titleEmailRequired: "验证您的电子邮箱",
     titleStrongRequired: "验证您的身份",
-    messageOnboardingRequired: "参与前，请先完成这场对话的引导流程。",
     message: "登录以参与讨论",
     messageBothRequired: "此对话需要登录和活动门票验证才能参与",
     messageZupassOnly: "此对话需要活动门票验证才能参与",
@@ -232,13 +220,12 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "举报用户内容需要用户账户。",
   },
   "zh-Hant": {
-    titleOnboardingRequired: "請先完成引導流程",
+    titleOnboardingRequired: "參與前的幾個簡單步驟",
     title: "登入 Agora",
     titleZupassOnly: "驗證活動門票",
     titleAccountRequired: "登入",
     titleEmailRequired: "驗證您的電子郵件",
     titleStrongRequired: "驗證您的身分",
-    messageOnboardingRequired: "參與前，請先完成這場對話的引導流程。",
     message: "登入以參與討論",
     messageBothRequired: "此對話需要登入和活動門票驗證才能參與",
     messageZupassOnly: "此對話需要活動門票驗證才能參與",
@@ -260,14 +247,12 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "檢舉用戶內容需要用戶帳戶。",
   },
   he: {
-    titleOnboardingRequired: "השלימו קודם את תהליך הכניסה",
+    titleOnboardingRequired: "כמה צעדים מהירים לפני ההשתתפות",
     title: "התחברות ל-Agora",
     titleZupassOnly: "אימות כרטיס אירוע",
     titleAccountRequired: "התחברות",
     titleEmailRequired: 'אימות דוא"ל',
     titleStrongRequired: "אימות זהות",
-    messageOnboardingRequired:
-      "השלימו את תהליך הכניסה לשיחה הזו לפני ההשתתפות.",
     message: "התחברו כדי להשתתף בדיונים",
     messageBothRequired: "שיחה זו דורשת התחברות ואימות כרטיס אירוע להשתתפות",
     messageZupassOnly: "שיחה זו דורשת אימות כרטיס אירוע להשתתפות",
@@ -289,14 +274,12 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "נדרש חשבון משתמש לדיווח על תוכן משתמשים.",
   },
   ja: {
-    titleOnboardingRequired: "先にオンボーディングを完了",
+    titleOnboardingRequired: "参加する前に、いくつかの簡単なステップ",
     title: "Agora にログイン",
     titleZupassOnly: "イベントチケットの確認",
     titleAccountRequired: "ログイン",
     titleEmailRequired: "メールアドレスを確認",
     titleStrongRequired: "本人確認",
-    messageOnboardingRequired:
-      "参加する前に、この会話のオンボーディングを完了してください。",
     message: "ログインして議論に参加",
     messageBothRequired:
       "この会話に参加するにはログインとイベントチケットの確認が必要です",
@@ -322,14 +305,12 @@ export const preParticipationIntentionDialogTranslations: Record<
       "コンテンツの報告にはユーザーアカウントが必要です。",
   },
   ky: {
-    titleOnboardingRequired: "Адегенде кирүү кадамдарын бүтүрүңүз",
+    titleOnboardingRequired: "Катышуудан мурун бир нече кыска кадам",
     title: "Agora'га кирүү",
     titleZupassOnly: "Иш-чаранын билетин текшерүү",
     titleAccountRequired: "Кирүү",
     titleEmailRequired: "Электрондук почтаны текшерүү",
     titleStrongRequired: "Инсандыгыңызды текшерүү",
-    messageOnboardingRequired:
-      "Катышуудан мурун бул талкуунун кирүү кадамдарын бүтүрүңүз.",
     message: "Талкууларга катышуу үчүн кириңиз",
     messageBothRequired:
       "Бул талкууга катышуу үчүн кирүү жана иш-чара билетин текшерүү талап кылынат",
@@ -356,14 +337,12 @@ export const preParticipationIntentionDialogTranslations: Record<
       "Мазмун жөнүндө кабарлоо үчүн колдонуучу аккаунту талап кылынат.",
   },
   ru: {
-    titleOnboardingRequired: "Сначала пройдите вводные шаги",
+    titleOnboardingRequired: "Несколько простых шагов перед участием",
     title: "Войти в Agora",
     titleZupassOnly: "Проверка билета мероприятия",
     titleAccountRequired: "Войти",
     titleEmailRequired: "Подтвердите электронную почту",
     titleStrongRequired: "Подтвердите вашу личность",
-    messageOnboardingRequired:
-      "Перед участием пройдите вводные шаги этого обсуждения.",
     message: "Войдите, чтобы участвовать в обсуждениях",
     messageBothRequired:
       "Для участия в этом обсуждении требуется вход и проверка билета мероприятия",

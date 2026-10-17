@@ -30,6 +30,10 @@
 </template>
 
 <script setup lang="ts">
+import {
+  type ConversationParticipationTranslations,
+  conversationParticipationTranslations,
+} from "src/components/onboarding/conversationParticipation.i18n";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useZupassVerification } from "src/composables/zupass/useZupassVerification";
 import type { EventSlug, ParticipationMode } from "src/shared/types/zod";
@@ -63,6 +67,10 @@ const showDialog = defineModel<boolean>({ required: true });
 const { t } = useComponentI18n<PreParticipationIntentionDialogTranslations>(
   preParticipationIntentionDialogTranslations
 );
+const { t: tParticipation } =
+  useComponentI18n<ConversationParticipationTranslations>(
+    conversationParticipationTranslations
+  );
 
 const { setActiveUserIntention } = useLoginIntentionStore();
 const conversationOnboardingStore = useConversationOnboardingStore();
@@ -131,7 +139,7 @@ function getTitle(): string {
 
 function getMessage(): string {
   if (requiresConversationOnboarding()) {
-    return t("messageOnboardingRequired");
+    return tParticipation("description");
   }
 
   const hasZupassRequirement = props.requiresZupassEventSlug !== undefined;

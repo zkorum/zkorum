@@ -32,8 +32,8 @@
       >
         <template #header>
           <InfoHeader
-            :title="headerTitle"
-            :description="headerDescription"
+            :title="t('welcomeTitle')"
+            :description="tParticipation('description')"
             icon-name="mdi-clipboard-text-outline"
           />
         </template>
@@ -45,6 +45,10 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
+import {
+  type ConversationParticipationTranslations,
+  conversationParticipationTranslations,
+} from "src/components/onboarding/conversationParticipation.i18n";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -57,7 +61,7 @@ import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { getConversationSurveyVerifyPath } from "src/utils/survey/navigation";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -74,6 +78,10 @@ const { exitToConversation } = useConversationOnboardingExit();
 const { t } = useComponentI18n<ConversationSurveyOnboardingTranslations>(
   conversationSurveyOnboardingTranslations
 );
+const { t: tParticipation } =
+  useComponentI18n<ConversationParticipationTranslations>(
+    conversationParticipationTranslations
+  );
 
 if (
   conversationOnboardingStore.conversationSlugId !==
@@ -96,14 +104,6 @@ const {
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
 
 const isActing = ref(false);
-
-const headerTitle = computed(() => {
-  return t("welcomeTitle");
-});
-
-const headerDescription = computed(() => {
-  return t("welcomeDescription");
-});
 
 async function handleBackToConversation(): Promise<void> {
   credentialUpgradeTarget.value = null;

@@ -57,7 +57,13 @@ describe("PreParticipationIntentionDialog copy", () => {
     app.mount(container);
     await nextTick();
 
-    expect(document.body.textContent).toContain("Your email stays private.");
+    expect(document.body.textContent).toContain(
+      "A few quick steps before you participate"
+    );
+    expect(document.body.textContent).toContain(
+      "This short setup helps ensure the quality of the consultation. You participate under a pseudonym."
+    );
+    expect(document.body.textContent).not.toContain("email");
     expect(document.body.textContent).toContain(
       "return to this statement to cast your vote."
     );
@@ -67,7 +73,14 @@ describe("PreParticipationIntentionDialog copy", () => {
     i18n.global.locale.value = "fr";
     await nextTick();
 
-    expect(document.body.textContent).toContain("Votre e-mail reste privé.");
+    expect(document.body.textContent).toContain(
+      "Quelques étapes rapides avant de participer"
+    );
+    expect(document.body.textContent).toContain(
+      "Ce court parcours aide à assurer la qualité de la consultation. Vous participez sous pseudonyme."
+    );
+    expect(document.body.textContent).not.toContain("This short setup");
+    expect(document.body.textContent).not.toContain("e-mail");
     expect(document.body.textContent).toContain(
       "Vous retrouverez ensuite cette proposition pour voter."
     );
