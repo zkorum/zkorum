@@ -19,10 +19,15 @@ logger. Preserve the privacy hooks on child loggers and test the emitted output.
    invalid values, accessors, and arbitrary nested content are omitted. A malformed
    field does not discard valid neighboring fields.
 2. **Project errors:** `toLogError` retains approved error types/codes, status codes,
-   bounded first-party source locations, and at most four causes. Raw exception
-   messages, request/response configuration, SQL, values, absolute paths, and
-   third-party stack frames are omitted. It recognizes Node's native stack accessor
-   without calling arbitrary custom getters.
+   and at most four causes. `frames` and a readable `stack` preserve bounded first-party,
+   Node runtime, and local dependency locations without absolute installation paths.
+   Known error codes receive actionable descriptions (for example, `EADDRINUSE`
+   becomes `Address is already in use`). Reviewed `errorMessageTemplates` preserve
+   source-controlled exception messages and replace runtime substitutions with
+   `[value]`. Unreviewed messages, request/response configuration, SQL, and private
+   values remain omitted. Native stack accessors are recognized without calling
+   arbitrary custom getters. Stack text is rebuilt from projected fields at the final
+   write boundary rather than trusting a previously serialized stack string.
 3. **Project messages:** the API admits reviewed messages/templates from
    `services/api/src/logging/messages.ts`. Template substitutions become `[value]`;
    interpolation arguments never reach Pino. Unknown messages become
@@ -73,6 +78,12 @@ The raw error is projected by the configured logger. Existing Pino overloads suc
 as `log.error(error)` and `log.error({ err: error }, message)` are also handled;
 the error's message must not leak into the top-level `msg` field.
 
+Register useful first-party exception messages in `errorMessageTemplates` in
+`services/api/src/logging/messages.ts`. Use separate template parts around runtime
+values; do not register provider bodies, SQL, or user text. API startup failures use
+`server_start_failed`, and a successful listener emits `server_ready`, so failed
+startup is distinguishable from an idle server.
+
 Ranking `AGORA_LOAD_EVENT` records have a dedicated schema. Approved event names,
 outcomes, correlation IDs, and numeric performance metadata are retained; extra
 metadata is removed. Malformed markers are replaced with a generic event rather
@@ -88,6 +99,12 @@ The worker retains its existing schema-derived structured-event model and error
 categories. It reuses the shared field/output projection for persistent context
 and final output. Its service/environment/worker identity and approved delivery
 event fields remain available. The development exercise uses this same logger.
+
+Exception diagnostics are produced and re-projected by the same shared
+`createLogErrorProjector` used by the API. The worker's `diagnostics.kind`
+distinguishes an actual `exception` (with required shared diagnostics) from a
+`provider_result` that has no exception stack. Its retry/category classification
+remains service-specific; stack parsing and message redaction are not duplicated.
 
 Never place recipient information, tokens, bodies, or raw provider responses in
 logger bindings. Do not override the privacy hooks/serializers in a child logger

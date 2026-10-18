@@ -1,5 +1,6 @@
 <template>
   <StepperLayout
+    fixed-navigation
     :submit-call-back="handleContinue"
     :current-step="1"
     :total-steps="1"

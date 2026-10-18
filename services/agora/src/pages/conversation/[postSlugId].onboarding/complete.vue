@@ -1,39 +1,30 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
+    :sheet="sheet"
     :back-callback="handleDismiss"
     :close-callback="handleDismiss"
-    :show-close-button="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
-
-    <template #footer>
-      <ErrorRetryBlock
-        v-if="summaryLoadState === 'transient_error'"
-        compact
-        :title="t('emailUpdateSummaryLoadError')"
-        :retry-label="t('retryLabel')"
-        @retry="loadConversationUpdateSummary"
-      />
-      <ConversationEmailUpdateOnboardingStep
-        v-model:conversation-updates-checked="conversationUpdatesChecked"
-        :title="t('emailUpdateTitle')"
-        :description="t('emailUpdateDescription')"
-        :continue-without-saving-label="continueWithoutSavingLabel"
-        :show-conversation-updates-preference="
-          onboardingPreferenceAction !== undefined
-        "
-        :scope-kind="conversationUpdateScopeKind"
-        :is-saving="isBusy"
-        @continue="handleContinue"
-        @continue-without-saving="continueWithoutSaving"
-      />
-    </template>
-  </OnboardingLayout>
+    <ErrorRetryBlock
+      v-if="summaryLoadState === 'transient_error'"
+      compact
+      :title="t('emailUpdateSummaryLoadError')"
+      :retry-label="t('retryLabel')"
+      @retry="loadConversationUpdateSummary"
+    />
+    <ConversationEmailUpdateOnboardingStep
+      v-model:conversation-updates-checked="conversationUpdatesChecked"
+      :title="t('emailUpdateTitle')"
+      :description="t('emailUpdateDescription')"
+      :continue-without-saving-label="continueWithoutSavingLabel"
+      :show-conversation-updates-preference="
+        onboardingPreferenceAction !== undefined
+      "
+      :scope-kind="conversationUpdateScopeKind"
+      :is-saving="isBusy"
+      @continue="handleContinue"
+      @continue-without-saving="continueWithoutSaving"
+    />
+  </ConversationOnboardingLayout>
 </template>
 
 <script setup lang="ts">
@@ -41,7 +32,6 @@ import {
   type EmailUpdateResumeNotificationTranslations,
   emailUpdateResumeNotificationTranslations,
 } from "src/components/conversationUpdates/emailUpdateResumeNotification.i18n";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import ConversationEmailUpdateOnboardingStep from "src/components/onboarding/ConversationEmailUpdateOnboardingStep.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
@@ -49,7 +39,7 @@ import { useConversationOnboardingRoute } from "src/composables/conversation/use
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavigation";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import type { ConversationEmailUpdatePreferenceUpdateResponse } from "src/shared/types/dto";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { useBackendConversationEmailUpdatesApi } from "src/utils/api/conversationUpdates/conversationEmailUpdates";
@@ -58,6 +48,7 @@ import {
   useConversationEmailUpdateSummaryQuery,
   useRemoveConversationEmailUpdateSummaryQueries,
 } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, ref, watch } from "vue";
 
@@ -66,6 +57,7 @@ import {
   conversationEmailUpdateOnboardingTranslations,
 } from "./complete.i18n";
 
+defineProps<{ sheet: DismissalController }>();
 const { t } = useComponentI18n<ConversationEmailUpdateOnboardingTranslations>(
   conversationEmailUpdateOnboardingTranslations
 );
@@ -81,8 +73,7 @@ const { showNotifyMessage } = useNotify();
 const { routeConversationSlugId: conversationSlugId, routeContext } =
   useConversationOnboardingRoute();
 
-const { conversationData, conversationDisplayContent, surveyStatus } =
-  useConversationSurveyState({ conversationSlugId });
+const { surveyStatus } = useConversationSurveyState({ conversationSlugId });
 const emailUpdateSummaryQuery = useConversationEmailUpdateSummaryQuery({
   conversationSlugId,
   enabled: true,

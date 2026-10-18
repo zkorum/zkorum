@@ -1,82 +1,71 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
+    :sheet="sheet"
     :back-callback="handleBackToWelcome"
     :close-callback="handleBackToConversation"
-    :show-close-button="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
+    <PageLoadingSpinner v-if="isInitialLoading" />
 
-    <template #footer>
-      <PageLoadingSpinner v-if="isInitialLoading" />
+    <ErrorRetryBlock
+      v-else-if="hasLoadError"
+      :title="tCommon('failedToLoadSurveyTitle')"
+      :retry-label="tCommon('tryAgainLabel')"
+      @retry="refetchAll"
+    />
 
-      <ErrorRetryBlock
-        v-else-if="hasLoadError"
-        :title="tCommon('failedToLoadSurveyTitle')"
-        :retry-label="tCommon('tryAgainLabel')"
-        @retry="refetchAll"
-      />
+    <StepperLayout
+      v-else
+      fixed-navigation
+      :submit-call-back="() => {}"
+      :current-step="2"
+      :total-steps="surveyStepTotal"
+      :enable-next-button="true"
+      :show-next-button="false"
+      :show-loading-button="false"
+    >
+      <template #header>
+        <InfoHeader
+          :title="t('title')"
+          :description="t('description')"
+          icon-name="mdi-account-check"
+        />
+      </template>
 
-      <StepperLayout
-        v-else
-        :submit-call-back="() => {}"
-        :current-step="2"
-        :total-steps="surveyStepTotal"
-        :enable-next-button="true"
-        :show-next-button="false"
-        :show-loading-button="false"
-      >
-        <template #header>
-          <InfoHeader
-            :title="t('title')"
-            :description="t('description')"
-            icon-name="mdi-account-check"
+      <template #body>
+        <div class="buttons">
+          <ZKGradientButton
+            :label="t('verifyWithRarimo')"
+            @click="goToPassport()"
           />
-        </template>
 
-        <template #body>
-          <div class="buttons">
-            <ZKGradientButton
-              :label="t('verifyWithRarimo')"
-              @click="goToPassport()"
-            />
+          <ZKGradientButton
+            v-if="phoneAuthAvailability.available"
+            :label="t('verifyWithPhone')"
+            gradient-background="#E7E7FF"
+            label-color="#6b4eff"
+            @click="goToPhone()"
+          />
+          <PhoneAuthUnavailableNotice
+            v-else-if="phoneAuthAvailability.reason === 'technical_unavailable'"
+            :reason="phoneAuthAvailability.reason"
+          />
 
-            <ZKGradientButton
-              v-if="phoneAuthAvailability.available"
-              :label="t('verifyWithPhone')"
-              gradient-background="#E7E7FF"
-              label-color="#6b4eff"
-              @click="goToPhone()"
-            />
-            <PhoneAuthUnavailableNotice
-              v-else-if="
-                phoneAuthAvailability.reason === 'technical_unavailable'
-              "
-              :reason="phoneAuthAvailability.reason"
-            />
+          <ZKGradientButton
+            :label="t('verifyWithEmail')"
+            gradient-background="#E7E7FF"
+            label-color="#6b4eff"
+            @click="goToEmail()"
+          />
+        </div>
 
-            <ZKGradientButton
-              :label="t('verifyWithEmail')"
-              gradient-background="#E7E7FF"
-              label-color="#6b4eff"
-              @click="goToEmail()"
-            />
-          </div>
-
-          <p v-if="!isLoggedIn"><SignupAgreement variant="login" /></p>
-        </template>
-      </StepperLayout>
-    </template>
-  </OnboardingLayout>
+        <p v-if="!isLoggedIn"><SignupAgreement variant="login" /></p>
+      </template>
+    </StepperLayout>
+  </ConversationOnboardingLayout>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import SignupAgreement from "src/components/onboarding/ui/SignupAgreement.vue";
@@ -88,7 +77,7 @@ import { useConversationOnboardingExit } from "src/composables/conversation/useC
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import {
   type VerifyHardTranslations,
   verifyHardTranslations,
@@ -105,6 +94,7 @@ import {
   getConversationSurveyVerifyPath,
   getConversationSurveyVerifyPhonePath,
 } from "src/utils/survey/navigation";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { computed, watch } from "vue";
 import { useRouter } from "vue-router";
 
@@ -113,6 +103,7 @@ import {
   conversationSurveyOnboardingTranslations,
 } from "../index.i18n";
 
+defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
@@ -145,8 +136,6 @@ if (
 
 const {
   conversationSlugId,
-  conversationData,
-  conversationDisplayContent,
   surveyStepTotal,
   requirementState,
   isInitialLoading,

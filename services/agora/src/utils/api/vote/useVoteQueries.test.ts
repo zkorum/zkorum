@@ -52,7 +52,8 @@ vi.mock(
 vi.mock("src/composables/conversation/useParticipationGate", () => ({
   useParticipationGate: () => ({
     needsAuth: false,
-    shouldOpenParticipationModal: () => Promise.resolve(false),
+    needsParticipationOnboarding: () => Promise.resolve(false),
+    openParticipationOnboarding: vi.fn(),
   }),
 }));
 vi.mock("src/composables/auth/useConversationLoginIntentions", () => ({

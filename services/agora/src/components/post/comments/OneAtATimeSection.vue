@@ -123,7 +123,7 @@ const actionGuard = useVotingActionGuard();
 const session = usePolisVotingSession();
 const { currentOpinion, remainingCount, fetchExcludedOpinionSlugIds, canUndo } =
   session;
-const { shouldOpenParticipationModal, openParticipationOnboarding } =
+const { needsParticipationOnboarding, openParticipationOnboarding } =
   useParticipationGate({
     conversationSlugId: computed(() => props.postSlugId),
     participationMode: computed(() => props.participationMode),
@@ -301,7 +301,7 @@ async function undoVote(): Promise<void> {
   try {
     await actionGuard.run(async (isCurrent) => {
       if (!canUndo.value || props.isVotingDisabled) return;
-      if (await shouldOpenParticipationModal()) {
+      if (await needsParticipationOnboarding()) {
         if (isCurrent()) await openParticipationOnboarding();
         return;
       }

@@ -7,6 +7,8 @@ export const logMessageTemplates: readonly LogMessageTemplate[] = [
     { parts: ["request completed"] },
     { parts: ["request errored"] },
     { parts: ["Application event"] },
+    { parts: ["API server failed to start"] },
+    { parts: ["API server ready"] },
     { parts: ["AGORA_AI_SUGGESTION_EVENT"] },
     { parts: ["Log details omitted"] },
     { parts: ["Email deliverability check failed"] },
@@ -85,4 +87,10 @@ export const logMessageTemplates: readonly LogMessageTemplate[] = [
     { parts: ["[Account] Reconciling counters for conversation: ", ""] },
     { parts: ["[Account] Completed counter reconciliation for user: ", ""] },
     { parts: ["[Merge] Starting guest-to-verified user merge"] },
+];
+
+export const errorMessageTemplates: readonly LogMessageTemplate[] = [
+    { parts: ["Cannot convert undefined or null to object"] },
+    { parts: ["Maximum call stack size exceeded"] },
+    { parts: ["Invalid time value"] },
 ];

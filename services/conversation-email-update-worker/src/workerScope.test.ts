@@ -4,7 +4,7 @@ import postgres from "postgres";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as emailRenderer from "@/generated/email/render.js";
 import type { ConversationEmailWorkerConfig } from "./config.js";
-import { structuredEventSchema } from "./observability.js";
+import { normalizeError, structuredEventSchema } from "./observability.js";
 import type {
     ConversationEmailProvider,
     ConversationEmailProviderMessage,
@@ -177,13 +177,12 @@ describe("conversation-scoped worker", () => {
     ])(
         "identifies the failing $lane lane and its safe cause",
         async ({ lane, operation }) => {
-            operation.mockRejectedValueOnce(
-                new Error("private SQL and parameters", {
-                    cause: Object.assign(new Error("private database host"), {
-                        code: "CONNECT_TIMEOUT",
-                    }),
+            const failure = new Error("private SQL and parameters", {
+                cause: Object.assign(new Error("private database host"), {
+                    code: "CONNECT_TIMEOUT",
                 }),
-            );
+            });
+            operation.mockRejectedValueOnce(failure);
             const worker = createConversationEmailUpdateWorker({
                 db: database(),
                 provider: { send: vi.fn() },
@@ -205,6 +204,8 @@ describe("conversation-scoped worker", () => {
                                 name: "ApplicationError",
                                 code: "UnknownError",
                                 category: "application",
+                                diagnostics:
+                                    normalizeError(failure).diagnostics,
                                 causes: [
                                     {
                                         name: "DatabaseError",
@@ -864,6 +865,7 @@ describe("conversation-scoped worker", () => {
                         name: "ProviderError",
                         code: "MessageRejected",
                         category: "permanent",
+                        diagnostics: { kind: "provider_result" },
                     },
                 }),
             );

@@ -1,57 +1,48 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
+    :sheet="sheet"
     :back-callback="handleBackToAuthChoice"
     :close-callback="handleBackToConversation"
-    :show-close-button="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
+    <WidthWrapper :enable="true">
+      <StepperLayout
+        fixed-navigation
+        :submit-call-back="() => {}"
+        :current-step="2"
+        :total-steps="surveyStepTotal"
+        :enable-next-button="true"
+        :show-next-button="false"
+        :show-loading-button="false"
+      >
+        <template #header>
+          <InfoHeader
+            :title="t('title')"
+            :description="t('description')"
+            icon-name="mdi-wallet"
+          />
+        </template>
 
-    <template #footer>
-      <WidthWrapper :enable="true">
-        <StepperLayout
-          :submit-call-back="() => {}"
-          :current-step="2"
-          :total-steps="surveyStepTotal"
-          :enable-next-button="true"
-          :show-next-button="false"
-          :show-loading-button="false"
-        >
-          <template #header>
-            <InfoHeader
-              :title="t('title')"
-              :description="t('description')"
-              icon-name="mdi-wallet"
+        <template #body>
+          <RarimoVerificationForm />
+
+          <div class="alternativeLogins">
+            <ZKButton
+              v-if="phoneAuthAvailability.available"
+              button-type="largeButton"
+              :label="t('preferPhoneVerification')"
+              text-color="primary"
+              @click="goToPhoneVerification()"
             />
-          </template>
-
-          <template #body>
-            <RarimoVerificationForm />
-
-            <div class="alternativeLogins">
-              <ZKButton
-                v-if="phoneAuthAvailability.available"
-                button-type="largeButton"
-                :label="t('preferPhoneVerification')"
-                text-color="primary"
-                @click="goToPhoneVerification()"
-              />
-            </div>
-          </template>
-        </StepperLayout>
-      </WidthWrapper>
-    </template>
-  </OnboardingLayout>
+          </div>
+        </template>
+      </StepperLayout>
+    </WidthWrapper>
+  </ConversationOnboardingLayout>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import WidthWrapper from "src/components/navigation/WidthWrapper.vue";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
@@ -61,7 +52,7 @@ import { useConversationOnboardingRoute } from "src/composables/conversation/use
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useVerificationComplete } from "src/composables/verification/useVerificationComplete";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import {
   type VerifyPassportTranslations,
   verifyPassportTranslations,
@@ -78,9 +69,12 @@ import {
   getConversationSurveyVerifyPath,
   getConversationSurveyVerifyPhonePath,
 } from "src/utils/survey/navigation";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
+
+defineProps<{ sheet: DismissalController }>();
 
 const { t } = useComponentI18n<VerifyPassportTranslations>(
   verifyPassportTranslations
@@ -116,7 +110,6 @@ if (
 const {
   conversationSlugId,
   conversationData,
-  conversationDisplayContent,
   surveyStepTotal,
   requirementState,
   isInitialLoading,
@@ -203,6 +196,7 @@ async function handleBackToConversation(): Promise<void> {
     routeContext: routeContext.value,
   });
 }
+
 </script>
 
 <style scoped lang="scss">

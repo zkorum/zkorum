@@ -1,52 +1,43 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
     v-if="!skipPhoneRegistration"
+    :sheet="sheet"
     :back-callback="changePhoneNumber"
     :close-callback="handleBackToConversation"
-    :show-close-button="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
+    <form class="formStyle" @submit.prevent="onSubmit">
+      <StepperLayout
+        fixed-navigation
+        :submit-call-back="onSubmit"
+        :current-step="2.5"
+        :total-steps="surveyStepTotal"
+        :enable-next-button="phoneOtpFormRef?.isCodeComplete?.() ?? false"
+        :show-next-button="phoneOtpFormRef?.isAvailable ?? false"
+        :show-loading-button="phoneOtpFormRef?.isSubmitButtonLoading ?? false"
+      >
+        <template #header>
+          <InfoHeader
+            :title="t('title')"
+            description=""
+            icon-name="mdi-phone"
+          />
+        </template>
 
-    <template #footer>
-      <form class="formStyle" @submit.prevent="onSubmit">
-        <StepperLayout
-          :submit-call-back="onSubmit"
-          :current-step="2.5"
-          :total-steps="surveyStepTotal"
-          :enable-next-button="phoneOtpFormRef?.isCodeComplete?.() ?? false"
-          :show-next-button="phoneOtpFormRef?.isAvailable ?? false"
-          :show-loading-button="phoneOtpFormRef?.isSubmitButtonLoading ?? false"
-        >
-          <template #header>
-            <InfoHeader
-              :title="t('title')"
-              description=""
-              icon-name="mdi-phone"
-            />
-          </template>
-
-          <template #body>
-            <PhoneOtpForm
-              ref="phoneOtpFormRef"
-              :purpose="phoneAuthPurpose"
-              @change-identifier="changePhoneNumber"
-            />
-          </template>
-        </StepperLayout>
-      </form>
-    </template>
-  </OnboardingLayout>
+        <template #body>
+          <PhoneOtpForm
+            ref="phoneOtpFormRef"
+            :purpose="phoneAuthPurpose"
+            @change-identifier="changePhoneNumber"
+          />
+        </template>
+      </StepperLayout>
+    </form>
+  </ConversationOnboardingLayout>
   <PageLoadingSpinner v-else />
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
@@ -56,7 +47,7 @@ import { useConversationOnboardingRoute } from "src/composables/conversation/use
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useSkipUnavailablePhoneRegistration } from "src/composables/verification/useSkipUnavailablePhoneRegistration";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import {
   type VerifyPhoneCodeTranslations,
   verifyPhoneCodeTranslations,
@@ -69,8 +60,11 @@ import {
   getConversationSurveyVerifyPath,
   getConversationSurveyVerifyPhonePath,
 } from "src/utils/survey/navigation";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
+
+defineProps<{ sheet: DismissalController }>();
 
 const { t } = useComponentI18n<VerifyPhoneCodeTranslations>(
   verifyPhoneCodeTranslations
@@ -97,12 +91,9 @@ if (
   });
 }
 
-const {
-  conversationSlugId,
-  conversationData,
-  conversationDisplayContent,
-  surveyStepTotal,
-} = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
+const { conversationSlugId, surveyStepTotal } = useConversationSurveyState({
+  conversationSlugId: routeConversationSlugId,
+});
 const skipPhoneRegistration = useSkipUnavailablePhoneRegistration({
   availability: usePhoneAuthAvailability(phoneAuthPurpose),
   ready: isAuthInitialized,
@@ -142,6 +133,7 @@ async function handleBackToConversation(): Promise<void> {
     routeContext: routeContext.value,
   });
 }
+
 </script>
 
 <style scoped lang="scss">

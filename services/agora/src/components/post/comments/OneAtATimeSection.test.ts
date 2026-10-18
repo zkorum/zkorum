@@ -52,7 +52,7 @@ vi.mock("src/utils/api/common", () => ({
 }));
 vi.mock("src/composables/conversation/useParticipationGate", () => ({
   useParticipationGate: () => ({
-    shouldOpenParticipationModal: () => Promise.resolve(false),
+    needsParticipationOnboarding: () => Promise.resolve(false),
     openParticipationOnboarding: vi.fn(),
   }),
 }));

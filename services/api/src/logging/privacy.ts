@@ -4,7 +4,7 @@ import {
     createLogPrivacy,
     logContextSchema,
 } from "../shared-backend/logPrivacy.js";
-import { logMessageTemplates } from "./messages.js";
+import { logMessageTemplates, errorMessageTemplates } from "./messages.js";
 import type { SeedSuggestionEvent } from "../service/seedSuggestion.js";
 
 const count = z.number().nonnegative().optional();
@@ -76,6 +76,7 @@ export function createApiLogPrivacy(sourceRoot: URL) {
     const privacy = createLogPrivacy({
         sourceRoot,
         messageTemplates: logMessageTemplates,
+        errorMessageTemplates,
         loadEventSchema,
         serializeRequest(value) {
             try {
@@ -107,6 +108,7 @@ export function createApiLogPrivacy(sourceRoot: URL) {
 type ApiErrorEvent =
     | { event: "email_deliverability_check_failed"; provider: "reacher" }
     | { event: "application_error" }
+    | { event: "server_start_failed" }
     | {
           event: "seed_suggestion_failed";
           seedSuggestion: Extract<SeedSuggestionEvent, { event: "failed" }>;
@@ -129,6 +131,8 @@ export function logApiError({
             ? "Email deliverability check failed"
             : event.event === "seed_suggestion_failed"
               ? "AGORA_AI_SUGGESTION_EVENT"
-              : "Application event",
+              : event.event === "server_start_failed"
+                ? "API server failed to start"
+                : "Application event",
     );
 }

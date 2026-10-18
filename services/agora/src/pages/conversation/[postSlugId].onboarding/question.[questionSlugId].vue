@@ -1,169 +1,151 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
+    :sheet="sheet"
     :back-callback="handleBackAction"
     :close-callback="handleCloseToConversation"
-    :show-close-button="true"
-    :fixed-navigation="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        density="compact"
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
+    <PageLoadingSpinner v-if="isInitialLoading" />
 
-    <template #footer>
-      <PageLoadingSpinner v-if="isInitialLoading" />
+    <ErrorRetryBlock
+      v-else-if="hasLoadError"
+      :title="t('failedToLoadSurveyTitle')"
+      :retry-label="t('tryAgainLabel')"
+      @retry="refetchAll"
+    />
 
-      <ErrorRetryBlock
-        v-else-if="hasLoadError"
-        :title="t('failedToLoadSurveyTitle')"
-        :retry-label="t('tryAgainLabel')"
-        @retry="refetchAll"
-      />
+    <StepperLayout
+      v-else-if="question !== undefined"
+      :fixed-navigation="true"
+      :submit-call-back="handleNext"
+      :current-step="currentSurveyStep"
+      :total-steps="surveyStepTotal"
+      :enable-next-button="canNavigateForward"
+      :show-next-button="true"
+      :show-loading-button="isBusy"
+      density="compact"
+    >
+      <template #header>
+        <div class="survey-progress">{{ progressLabel }}</div>
+      </template>
 
-      <StepperLayout
-        v-else-if="question !== undefined"
-        :fixed-navigation="true"
-        :submit-call-back="handleNext"
-        :current-step="currentSurveyStep"
-        :total-steps="surveyStepTotal"
-        :enable-next-button="canNavigateForward"
-        :show-next-button="true"
-        :show-loading-button="isBusy"
-        density="compact"
-      >
-        <template #header>
-          <InfoHeader
-            :title="t('conversationSurveyTitle')"
-            :description="progressLabel"
-            icon-name="mdi-clipboard-edit-outline"
-            density="compact"
+      <template #body>
+        <div class="survey-card">
+          <div class="survey-card__prompt-row">
+            <div class="survey-card__prompt">{{ displayedQuestionText }}</div>
+
+            <q-chip
+              v-if="question.isStale"
+              dense
+              color="warning"
+              text-color="black"
+              :label="t('needsUpdateLabel')"
+            />
+            <q-chip
+              v-else-if="isQuestionRequired"
+              dense
+              color="primary"
+              text-color="white"
+              :label="t('requiredLabel')"
+            />
+            <q-chip
+              v-else
+              dense
+              color="grey-3"
+              text-color="black"
+              :label="t('optionalLabel')"
+            />
+          </div>
+
+          <ContentTranslationControl
+            v-if="displayedSurveyQuestionTranslationPreview !== undefined"
+            v-model="surveyQuestionTranslationMode"
+            :source-language-label="
+              displayedSurveyQuestionTranslationPreview.sourceLanguageLabel
+            "
+            :translation-status="
+              displayedSurveyQuestionTranslationPreview.translationStatus
+            "
+            class="survey-card__translation-control"
           />
-        </template>
 
-        <template #body>
-          <div class="survey-card">
-            <div class="survey-card__prompt-row">
-              <div class="survey-card__prompt">{{ displayedQuestionText }}</div>
-
-              <q-chip
-                v-if="question.isStale"
-                dense
-                color="warning"
-                text-color="black"
-                :label="t('needsUpdateLabel')"
-              />
-              <q-chip
-                v-else-if="isQuestionRequired"
-                dense
-                color="primary"
-                text-color="white"
-                :label="t('requiredLabel')"
-              />
-              <q-chip
-                v-else
-                dense
-                color="grey-3"
-                text-color="black"
-                :label="t('optionalLabel')"
-              />
+          <div
+            v-if="questionDescription || showPublicAggregateSuppressionNotice"
+            class="survey-card__copy-stack"
+          >
+            <div v-if="questionDescription" class="survey-card__description">
+              {{ questionDescription }}
             </div>
 
-            <ContentTranslationControl
-              v-if="displayedSurveyQuestionTranslationPreview !== undefined"
-              v-model="surveyQuestionTranslationMode"
-              :source-language-label="
-                displayedSurveyQuestionTranslationPreview.sourceLanguageLabel
-              "
-              :translation-status="
-                displayedSurveyQuestionTranslationPreview.translationStatus
-              "
-              class="survey-card__translation-control"
+            <div
+              v-if="showPublicAggregateSuppressionNotice"
+              class="survey-card__privacy-note"
+            >
+              {{ t("publicAggregateSuppressionNotice") }}
+            </div>
+          </div>
+
+          <SurveyChoiceInput
+            v-if="question.questionType === 'choice'"
+            :choice-display="question.choiceDisplay"
+            :is-multiple-selection="!isSingleSelectionQuestion"
+            :is-required="isQuestionRequired"
+            :options="choiceOptions"
+            :option-text-values="optionTextValues"
+            :selected-single-option-slug-id="selectedSingleOptionSlugId"
+            :selected-multi-option-slug-ids="selectedMultiOptionSlugIds"
+            :select-option-label="t('selectOptionLabel')"
+            :max-selections="question.constraints.maxSelections"
+            density="compact"
+            @update:selected-single-option-slug-id="
+              selectedSingleOptionSlugId = $event
+            "
+            @update:selected-multi-option-slug-ids="
+              selectedMultiOptionSlugIds = $event
+            "
+            @update:option-text-values="optionTextValues = $event"
+          />
+
+          <div v-else class="survey-card__editor">
+            <ZKDigitsInput
+              v-if="isIntegerQuestion"
+              v-model="textValueHtml"
+              :placeholder="t('writeAnswerPlaceholder')"
+              :error="isFreeTextInvalid"
+              :hide-bottom-space="true"
+            />
+
+            <Editor
+              v-else
+              v-model="textValueHtml"
+              v-model:plain-text="textValuePlain"
+              :placeholder="t('writeAnswerPlaceholder')"
+              min-height="8rem"
+              :show-toolbar="true"
+              :single-line="false"
+              :disabled="false"
+              :max-length="freeTextMaxLength"
+              :show-character-count="false"
             />
 
             <div
-              v-if="questionDescription || showPublicAggregateSuppressionNotice"
-              class="survey-card__copy-stack"
+              class="survey-card__help-text"
+              :class="{
+                'survey-card__help-text--invalid': isFreeTextInvalid,
+              }"
             >
-              <div v-if="questionDescription" class="survey-card__description">
-                {{ questionDescription }}
-              </div>
-
-              <div
-                v-if="showPublicAggregateSuppressionNotice"
-                class="survey-card__privacy-note"
-              >
-                {{ t("publicAggregateSuppressionNotice") }}
-              </div>
-            </div>
-
-            <SurveyChoiceInput
-              v-if="question.questionType === 'choice'"
-              :choice-display="question.choiceDisplay"
-              :is-multiple-selection="!isSingleSelectionQuestion"
-              :is-required="isQuestionRequired"
-              :options="choiceOptions"
-              :option-text-values="optionTextValues"
-              :selected-single-option-slug-id="selectedSingleOptionSlugId"
-              :selected-multi-option-slug-ids="selectedMultiOptionSlugIds"
-              :select-option-label="t('selectOptionLabel')"
-              :max-selections="question.constraints.maxSelections"
-              density="compact"
-              @update:selected-single-option-slug-id="
-                selectedSingleOptionSlugId = $event
-              "
-              @update:selected-multi-option-slug-ids="
-                selectedMultiOptionSlugIds = $event
-              "
-              @update:option-text-values="optionTextValues = $event"
-            />
-
-            <div v-else class="survey-card__editor">
-              <ZKDigitsInput
-                v-if="isIntegerQuestion"
-                v-model="textValueHtml"
-                :placeholder="t('writeAnswerPlaceholder')"
-                :error="isFreeTextInvalid"
-                :hide-bottom-space="true"
-              />
-
-              <Editor
-                v-else
-                v-model="textValueHtml"
-                v-model:plain-text="textValuePlain"
-                :placeholder="t('writeAnswerPlaceholder')"
-                min-height="8rem"
-                :show-toolbar="true"
-                :single-line="false"
-                :disabled="false"
-                :max-length="freeTextMaxLength"
-                :show-character-count="false"
-              />
-
-              <div
-                class="survey-card__help-text"
-                :class="{
-                  'survey-card__help-text--invalid': isFreeTextInvalid,
-                }"
-              >
-                {{ freeTextHelpText }}
-              </div>
+              {{ freeTextHelpText }}
             </div>
           </div>
-        </template>
-      </StepperLayout>
-    </template>
-  </OnboardingLayout>
+        </div>
+      </template>
+    </StepperLayout>
+  </ConversationOnboardingLayout>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import Editor from "src/components/editor/Editor.vue";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
-import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import SurveyChoiceInput from "src/components/survey/SurveyChoiceInput.vue";
 import ContentTranslationControl from "src/components/translation/ContentTranslationControl.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -175,7 +157,7 @@ import { useConversationSurveyState } from "src/composables/conversation/useConv
 import { useSurveyAnswerDraft } from "src/composables/conversation/useSurveyAnswerDraft";
 import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavigation";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import type { SurveyAnswerSaveResponse } from "src/shared/types/dto";
 import type { ParticipationBlockedReason } from "src/shared/types/zod";
 import { useLanguageStore } from "src/stores/language";
@@ -204,6 +186,7 @@ import {
 import { surveyTemplateTextTranslations } from "src/utils/survey/templates.i18n";
 import { getConversationLanguageSettingSourceLanguageCode } from "src/utils/translation/contentTranslation";
 import { useSurveyQuestionDisplayContent } from "src/utils/translation/useSurveyQuestionDisplayContent";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -223,6 +206,7 @@ type SurveyDraftSaveResult =
   | { kind: "blocked"; reason: ParticipationBlockedReason }
   | { kind: "failed" };
 
+defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { route, routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
@@ -238,7 +222,6 @@ const { t } = useComponentI18n<ConversationSurveyQuestionTranslations>(
 
 const {
   conversationData,
-  conversationDisplayContent,
   conversationSlugId,
   surveyStatus,
   surveyForm,
@@ -829,6 +812,11 @@ async function handleNext(): Promise<void> {
 </script>
 
 <style scoped lang="scss">
+.survey-progress {
+  color: $color-text-weak;
+  font-size: 0.85rem;
+}
+
 .survey-card {
   display: flex;
   flex-direction: column;

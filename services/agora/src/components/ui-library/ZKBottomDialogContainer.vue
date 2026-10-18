@@ -1,7 +1,10 @@
 <template>
   <div
     class="dialogContainer"
-    :class="{ 'dialogContainer--dragging': dragState !== undefined }"
+    :class="{
+      'dialogContainer--dragging': dragState !== undefined,
+      'dialogContainer--expanded': variant === 'expanded',
+    }"
     :style="dragStyle"
   >
     <button
@@ -58,11 +61,13 @@ withDefaults(
     title?: string;
     subtitle?: string;
     showCloseButton?: boolean;
+    variant?: "default" | "expanded";
   }>(),
   {
     title: undefined,
     subtitle: undefined,
     showCloseButton: false,
+    variant: "default",
   }
 );
 
@@ -238,6 +243,35 @@ onBeforeUnmount(() => {
 
   @media (min-width: $breakpoint-sm-min) {
     gap: 1rem;
+  }
+}
+
+.q-dialog__inner.q-dialog__inner--minimized > .dialogContainer--expanded {
+  width: min(40rem, 100%);
+  max-width: 40rem;
+  min-height: min(26rem, calc(var(--visible-viewport-height, 100dvh) * 0.7));
+  max-height: calc(var(--visible-viewport-height, 100dvh) * 0.7);
+  padding: 0.75rem 0 0;
+  gap: 0;
+  box-shadow: 0 -8px 40px rgb(0 0 0 / 12%);
+
+  .dialog-drag-handle {
+    margin: 0;
+    min-height: 1.25rem;
+  }
+
+  .dialog-body {
+    overflow: hidden;
+    gap: 0;
+  }
+
+  @media (min-width: $breakpoint-sm-min) {
+    max-height: calc(var(--visible-viewport-height, 100dvh) * 0.8);
+  }
+
+  @media (max-height: 600px) {
+    min-height: 0;
+    max-height: calc(var(--visible-viewport-height, 100dvh) * 0.9);
   }
 }
 

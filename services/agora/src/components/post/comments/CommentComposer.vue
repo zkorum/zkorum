@@ -109,16 +109,6 @@
       @confirm="discardEditAndLeave"
     />
 
-    <PreParticipationIntentionDialog
-      v-model="showLoginDialog"
-      :ok-callback="onLoginCallback"
-      active-intention="newOpinion"
-      :conversation-slug-id="props.postSlugId"
-      :requires-zupass-event-slug="props.requiresEventTicket"
-      :needs-auth="needsLogin"
-      :participation-mode="props.participationMode"
-    />
-
     <OpinionWritingGuidelinesDialog v-model="showGuidelinesDialog" />
   </div>
 </template>
@@ -131,7 +121,6 @@ import {
   useWindowScroll,
 } from "@vueuse/core";
 import Button from "primevue/button";
-import PreParticipationIntentionDialog from "src/components/authentication/intention/PreParticipationIntentionDialog.vue";
 import ExitRoutePrompt from "src/components/routeGuard/ExitRoutePrompt.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
@@ -276,15 +265,18 @@ const { saveOpinionDraft, getOpinionDraft, deleteOpinionDraft } =
   useNewOpinionDraftsStore();
 const userStore = useUserStore();
 
-const { createNewOpinionIntention, clearNewOpinionIntention } =
-  useLoginIntentionStore();
+const {
+  createNewOpinionIntention,
+  clearNewOpinionIntention,
+  setActiveUserIntention,
+} = useLoginIntentionStore();
 
 const createCommentMutation = useCreateCommentMutation();
 const editMutation = useEditOpinionMutation(props.postSlugId);
 const { t: editT } = useComponentI18n(opinionEditingTranslations);
 
 const { showNotifyMessage } = useNotify();
-const { needsAuth: isAuthBlocked, shouldOpenParticipationModal } =
+const { needsParticipationOnboarding, openParticipationOnboarding } =
   useParticipationGate({
     conversationSlugId: computed(() => props.postSlugId),
     participationMode: computed(() => props.participationMode),
@@ -293,11 +285,6 @@ const { needsAuth: isAuthBlocked, shouldOpenParticipationModal } =
   });
 
 const { invalidateConversation } = useInvalidateConversationQuery();
-
-// Check if user needs login/verification based on participation mode
-const needsLogin = computed(() => {
-  return isAuthBlocked.value;
-});
 
 const hideComposerForRoute = computed(() => {
   const routePath = route.path;
@@ -328,7 +315,6 @@ const hasVisibleOpinionText = computed(() =>
   hasVisiblePlainText(opinionPlainText.value)
 );
 
-const showLoginDialog = ref(false);
 const showGuidelinesDialog = ref(false);
 
 const editorRef = useTemplateRef<InstanceType<typeof Editor>>("editorRef");
@@ -569,19 +555,19 @@ function isSameConversationTabRoute(to: RouteGuardDestination): boolean {
   return postSlugId === props.postSlugId;
 }
 
-function onLoginCallback() {
+async function openOnboarding(): Promise<void> {
   // Save draft before any async operations
   saveOpinionDraft(props.postSlugId, opinionBody.value);
 
-  // Don't unlock route yet - keep draft protected until verification completes
   createNewOpinionIntention(
     props.postSlugId,
     opinionBody.value,
     conversationRouteContext.value,
     props.requiresEventTicket
   );
-
+  setActiveUserIntention("newOpinion");
   unlockRoute();
+  await openParticipationOnboarding();
 }
 
 function discardDraft(): void {
@@ -643,8 +629,8 @@ function onCharacterCountUpdate(count: number) {
 }
 
 async function submitPostClicked() {
-  if (await shouldOpenParticipationModal()) {
-    showLoginDialog.value = true;
+  if (await needsParticipationOnboarding()) {
+    await openOnboarding();
     return;
   }
 
@@ -687,17 +673,17 @@ async function submitPostClicked() {
             // Backend says ticket required, but our local state might be stale
             // Refresh user profile to get latest verified tickets, then show dialog
             await userStore.loadUserProfile();
-            showLoginDialog.value = true;
+            await openOnboarding();
             break;
           case "account_required":
           case "strong_verification_required":
           case "email_verification_required":
             // User lacks required verification for this conversation
-            showLoginDialog.value = true;
+            await openOnboarding();
             break;
           case "survey_required":
           case "survey_outdated":
-            showLoginDialog.value = true;
+            await openOnboarding();
             break;
           case "plain_text_empty":
           case "plain_text_too_long":

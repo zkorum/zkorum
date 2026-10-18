@@ -1,4 +1,5 @@
 import { QueryClient, VueQueryPlugin } from "@tanstack/vue-query";
+import { createDismissalController } from "src/utils/ui/dismissalController";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type App, createApp, defineComponent, h, ref } from "vue";
 
@@ -101,11 +102,7 @@ vi.mock("src/components/ui/ErrorRetryBlock.vue", () => ({
     },
   }),
 }));
-vi.mock(
-  "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue",
-  () => ({ default: defineComponent(() => () => null) })
-);
-vi.mock("src/layouts/OnboardingLayout.vue", () => ({
+vi.mock("src/layouts/ConversationOnboardingLayout.vue", () => ({
   default: defineComponent({
     name: "OnboardingLayout",
     props: {
@@ -118,7 +115,7 @@ vi.mock("src/layouts/OnboardingLayout.vue", () => ({
           h("button", { onClick: () => props.backCallback() }, "Back"),
           h("button", { onClick: () => props.closeCallback() }, "Close"),
           slots.body?.(),
-          slots.footer?.(),
+          slots.default?.(),
         ]);
     },
   }),
@@ -545,7 +542,11 @@ describe("conversation Email Update onboarding", () => {
 function mountComponent(): HTMLElement {
   const container = document.createElement("div");
   document.body.append(container);
-  const app = createApp(ConversationOnboardingComplete);
+  const app = createApp(ConversationOnboardingComplete, {
+    sheet: createDismissalController({
+      fallbackDismiss: () => Promise.resolve(),
+    }),
+  });
   app.use(VueQueryPlugin, { queryClient: new QueryClient() });
   mountedApps.push(app);
   app.mount(container);

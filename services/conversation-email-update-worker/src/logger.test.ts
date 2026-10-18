@@ -112,24 +112,15 @@ describe("privacy-safe structured logging", () => {
             expect.objectContaining({
                 event: "iteration_failed",
                 lane: "recipientSends",
-                error: {
-                    name: "ApplicationError",
-                    code: "UnknownError",
-                    category: "application",
-                    causes: [
-                        {
-                            name: "DatabaseError",
-                            code: "CONNECT_TIMEOUT",
-                            category: "retryable",
-                        },
-                    ],
-                },
+                error: normalizeError(error),
             }),
         ]);
         for (const value of Object.values(privateData)) {
             expect(lines.join("")).not.toContain(value);
         }
-        expect(lines.join("")).not.toContain("stack");
+        expect(lines.join("")).toContain(
+            "Caused by: Error [CONNECT_TIMEOUT]: Connection timed out",
+        );
     });
 
     it("filters nested error metadata and rejects non-allowlisted lanes and causes", () => {
@@ -223,6 +214,7 @@ describe("privacy-safe structured logging", () => {
         });
 
         log.error(unsafeError, forbidden.join(" "));
+        log.error({ err: unsafeError, body: forbidden }, forbidden.join(" "));
         log.info({
             event: "worker_started",
             outcome: "started",
@@ -255,11 +247,7 @@ describe("privacy-safe structured logging", () => {
                     event: "unclassified_log",
                     outcome: "failure",
                     severity: "error",
-                    error: {
-                        name: "DatabaseError",
-                        code: "ETIMEDOUT",
-                        category: "ambiguous",
-                    },
+                    error: normalizeError(unsafeError),
                 }),
                 expect.objectContaining({
                     event: "iteration_failed",
@@ -335,11 +323,7 @@ describe("privacy-safe structured logging", () => {
                 operation: "connect",
                 role: "primary",
                 retrying: true,
-                error: {
-                    name: "DatabaseError",
-                    code: "PostgresSqlState",
-                    category: "database",
-                },
+                error: normalizeError(postgresError),
             }),
             expect.objectContaining({
                 event: "dependency_failed",
@@ -355,7 +339,7 @@ describe("privacy-safe structured logging", () => {
             }),
         ]);
         const serialized = lines.join("");
-        expect(serialized).not.toContain("23505");
+        expect(serialized).toContain("23505");
         expect(serialized).not.toContain("private SQL constraint details");
         expect(serialized).not.toContain("unknown private dependency context");
     });

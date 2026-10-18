@@ -1,29 +1,26 @@
 import { QBtn, QDialog, QIcon, Quasar } from "quasar";
 import type { PossibleIntentions } from "src/stores/loginIntention";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type App, createApp, defineComponent, h, nextTick, ref } from "vue";
 import { createI18n } from "vue-i18n";
 
-vi.mock("src/composables/zupass/useZupassVerification", () => ({
-  useZupassVerification: () => ({ isVerifying: ref(false) }),
-}));
-vi.mock("src/stores/conversationOnboarding", () => ({
-  useConversationOnboardingStore: () => ({ startResumeEntry: vi.fn() }),
-}));
+const push = vi.hoisted(() => vi.fn());
+const setActiveUserIntention = vi.hoisted(() => vi.fn());
+
 vi.mock("src/stores/loginIntention", () => ({
-  useLoginIntentionStore: () => ({ setActiveUserIntention: vi.fn() }),
-}));
-vi.mock("src/stores/onboarding/flow", () => ({
-  onboardingFlowStore: () => ({}),
+  useLoginIntentionStore: () => ({ setActiveUserIntention }),
 }));
 vi.mock("vue-router", () => ({
-  useRoute: () => ({ fullPath: "/", name: undefined, params: {} }),
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push }),
 }));
 
 import PreParticipationIntentionDialog from "./PreParticipationIntentionDialog.vue";
 
 const mountedApps: App[] = [];
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 afterEach(() => {
   for (const app of mountedApps.splice(0)) {
@@ -46,7 +43,6 @@ describe("PreParticipationIntentionDialog copy", () => {
           h(PreParticipationIntentionDialog, {
             modelValue: true,
             activeIntention: activeIntention.value,
-            conversationSlugId: "conversation-one",
             okCallback: vi.fn(),
           })
       )
@@ -57,27 +53,23 @@ describe("PreParticipationIntentionDialog copy", () => {
     app.mount(container);
     await nextTick();
 
+    expect(document.body.textContent).toContain("Log in to Agora");
     expect(document.body.textContent).toContain(
-      "A few quick steps before you participate"
-    );
-    expect(document.body.textContent).toContain(
-      "This short setup helps ensure the quality of the consultation. You participate under a pseudonym."
+      "Log in to participate in the discussions"
     );
     expect(document.body.textContent).not.toContain("email");
     expect(document.body.textContent).toContain(
       "return to this statement to cast your vote."
     );
-    expect(document.body.textContent).toContain("Get started");
-    expect(document.body.textContent).toContain("Not now");
+    expect(document.body.textContent).toContain("Log In");
+    expect(document.body.textContent).toContain("Cancel");
 
     i18n.global.locale.value = "fr";
     await nextTick();
 
+    expect(document.body.textContent).toContain("Se connecter à Agora");
     expect(document.body.textContent).toContain(
-      "Quelques étapes rapides avant de participer"
-    );
-    expect(document.body.textContent).toContain(
-      "Ce court parcours aide à assurer la qualité de la consultation. Vous participez sous pseudonyme."
+      "Connectez-vous pour participer aux discussions"
     );
     expect(document.body.textContent).not.toContain("This short setup");
     expect(document.body.textContent).not.toContain("e-mail");

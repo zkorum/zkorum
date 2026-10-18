@@ -42,6 +42,12 @@ const loadEventSchema = z.object({
 
 const projectBindings = createLogFieldProjector(bindingSchema);
 const projectMessage = createLogFieldProjector(z.object({ msg: z.string() }));
+const projectErrorArgument = createLogFieldProjector(
+    z.object({
+        err: z.unknown().optional(),
+        error: z.unknown().optional(),
+    }),
+);
 const projectDiscriminator = createLogFieldProjector(
     z.object({ event: z.string().max(100) }),
 );
@@ -88,7 +94,7 @@ function knownDependencyEvent({
     error,
 }: {
     args: readonly unknown[];
-    error: Error | undefined;
+    error: unknown;
 }): StructuredEvent | undefined {
     const message = args.find(
         (argument): argument is string => typeof argument === "string",
@@ -296,10 +302,14 @@ export function createStructuredLogger({
                         method.call(this, event.data);
                         return;
                     }
-                    const errorSource = args.find(
-                        (argument): argument is Error =>
-                            argument instanceof Error,
-                    );
+                    const errorFields = projectErrorArgument(first);
+                    const errorSource =
+                        args.find(
+                            (argument): argument is Error =>
+                                argument instanceof Error,
+                        ) ??
+                        errorFields.err ??
+                        errorFields.error;
                     const dependencyEvent = knownDependencyEvent({
                         args,
                         error: errorSource,

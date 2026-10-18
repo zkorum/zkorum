@@ -69,22 +69,11 @@
         </a>
       </div>
     </div>
-
-    <PreParticipationIntentionDialog
-      v-model="showLoginDialog"
-      :ok-callback="onLoginCallback"
-      active-intention="agreement"
-      :conversation-slug-id="props.postSlugId"
-      :requires-zupass-event-slug="props.requiresEventTicket"
-      :needs-auth="needsLogin"
-      :participation-mode="props.participationMode"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useQueryClient } from "@tanstack/vue-query";
-import PreParticipationIntentionDialog from "src/components/authentication/intention/PreParticipationIntentionDialog.vue";
 import VotingButton from "src/components/features/opinion/VotingButton.vue";
 import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
@@ -131,14 +120,13 @@ const props = defineProps<{
   showVoteResults: boolean;
 }>();
 
-const showLoginDialog = ref(false);
 let latestVoteAction: symbol | undefined;
 onUnmounted(() => {
   latestVoteAction = undefined;
 });
 const hasVotedThisSession = ref(false);
 const { setOpinionAgreementIntention } = useConversationLoginIntentions();
-const { needsAuth: isAuthBlocked, shouldOpenParticipationModal } =
+const { needsParticipationOnboarding, openParticipationOnboarding } =
   useParticipationGate({
     conversationSlugId: computed(() => props.postSlugId),
     participationMode: computed(() => props.participationMode),
@@ -184,11 +172,6 @@ const userIsClusteredFromCache = computed(() => {
   );
 });
 
-// Check if user needs login/verification based on participation mode
-const needsLogin = computed(() => {
-  return isAuthBlocked.value;
-});
-
 // Computed properties from TanStack Query cache (no local state)
 const userVoteAction = computed(() => {
   const existingVote = props.votingUtilities.userVotes.find(
@@ -222,12 +205,12 @@ const relativeTotalPercentagePasses = computed(() => {
   return calculatePercentage(localNumPasses.value, totalVotes.value);
 });
 
-function onLoginCallback() {
-  // Store the intention with eventSlug
+async function openOnboarding(): Promise<void> {
   setOpinionAgreementIntention(
     props.commentItem.opinionSlugId,
     props.requiresEventTicket
   );
+  await openParticipationOnboarding();
 }
 
 async function castPersonalVote({
@@ -239,8 +222,8 @@ async function castPersonalVote({
   latestVoteAction = action;
   const isCurrent = () => latestVoteAction === action;
   if (props.isVotingDisabled) return;
-  if (await shouldOpenParticipationModal()) {
-    if (isCurrent()) showLoginDialog.value = true;
+  if (await needsParticipationOnboarding()) {
+    if (isCurrent()) await openOnboarding();
     return;
   }
   if (!isCurrent()) return;
@@ -278,12 +261,12 @@ async function castPersonalVote({
         result.reason === "strong_verification_required" ||
         result.reason === "email_verification_required"
       ) {
-        showLoginDialog.value = true;
+        await openOnboarding();
       } else if (
         result.reason === "survey_required" ||
         result.reason === "survey_outdated"
       ) {
-        showLoginDialog.value = true;
+        await openOnboarding();
       } else {
         showNotifyMessage(t("voteFailed"));
       }

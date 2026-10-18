@@ -9,6 +9,8 @@
     <div
       v-show="isActive"
       ref="bottomBar"
+      :inert="isOnboarding || undefined"
+      :aria-hidden="isOnboarding || undefined"
       class="bottomBar"
       :style="{
         ...barStyle,
@@ -31,6 +33,7 @@ import { useQuasar } from "quasar";
 import { useNavigationStore } from "src/stores/navigation";
 import { useVisibleViewport } from "src/utils/html/viewPort";
 import {
+  isConversationOnboardingRouteName,
   isConversationOnboardingRoutePath,
   isConversationRoutePath,
 } from "src/utils/router/conversationRouteContext";
@@ -42,7 +45,7 @@ import {
   useTemplateRef,
   watch,
 } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const props = withDefaults(
   defineProps<{
@@ -54,6 +57,10 @@ const props = withDefaults(
 
 const $q = useQuasar();
 const route = useRoute();
+const router = useRouter();
+const isOnboarding = computed(() =>
+  isConversationOnboardingRouteName(router.currentRoute.value.name)
+);
 const { drawerBehavior, drawerWidth } = storeToRefs(useNavigationStore());
 const anchorRect = ref<DOMRectReadOnly | undefined>(undefined);
 const bottomBar = useTemplateRef<HTMLElement>("bottomBar");

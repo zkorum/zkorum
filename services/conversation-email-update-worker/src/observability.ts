@@ -1,5 +1,9 @@
 import type { BaseLogger } from "pino";
 import { z } from "zod";
+import {
+    createLogErrorProjector,
+    type LogError,
+} from "./shared-backend/logPrivacy.js";
 
 export const OBSERVABILITY_SERVICE = "conversation-email-update-worker";
 
@@ -63,9 +67,19 @@ const errorSummarySchema = z.object({
 });
 
 const MAX_ERROR_CAUSES = 4;
+const projectLogError = createLogErrorProjector({
+    sourceRoot: new URL("./", import.meta.url),
+});
 
 export const safeErrorSchema = errorSummarySchema.extend({
     causes: z.array(errorSummarySchema).max(MAX_ERROR_CAUSES).optional(),
+    diagnostics: z.discriminatedUnion("kind", [
+        z.object({
+            kind: z.literal("exception"),
+            error: z.unknown().transform(projectLogError),
+        }),
+        z.object({ kind: z.literal("provider_result") }),
+    ]),
 });
 
 export type SafeError = z.infer<typeof safeErrorSchema>;
@@ -147,7 +161,9 @@ function summarizeError(error: unknown): z.infer<typeof errorSummarySchema> {
     return { name: "ApplicationError", code, category: "application" };
 }
 
-export function normalizeError(error: unknown): SafeError {
+export function normalizeError(
+    error: unknown,
+): SafeError & { diagnostics: { kind: "exception"; error: LogError } } {
     const summary = summarizeError(error);
     const causes: z.infer<typeof errorSummarySchema>[] = [];
     const visited = new Set<unknown>([error]);
@@ -165,7 +181,11 @@ export function normalizeError(error: unknown): SafeError {
         current = cause;
     }
 
-    return causes.length === 0 ? summary : { ...summary, causes };
+    return {
+        ...summary,
+        diagnostics: { kind: "exception", error: projectLogError(error) },
+        ...(causes.length === 0 ? {} : { causes }),
+    };
 }
 
 export function normalizeProviderError({
@@ -178,6 +198,7 @@ export function normalizeProviderError({
     const parsedCode = safeErrorCodeSchema.safeParse(code);
     return {
         name: "ProviderError",
+        diagnostics: { kind: "provider_result" },
         code: parsedCode.success ? parsedCode.data : "ProviderError",
         category:
             outcome === "retryable_rejected"

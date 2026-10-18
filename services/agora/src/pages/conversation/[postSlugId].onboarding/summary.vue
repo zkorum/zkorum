@@ -1,120 +1,108 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
+    :sheet="sheet"
     :back-callback="handleBackToLastAnsweredQuestion"
     :close-callback="handleBackToConversation"
-    :show-close-button="true"
-    :fixed-navigation="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        density="compact"
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
+    <PageLoadingSpinner v-if="isInitialLoading" />
 
-    <template #footer>
-      <PageLoadingSpinner v-if="isInitialLoading" />
+    <ErrorRetryBlock
+      v-else-if="hasLoadError"
+      :title="t('failedToLoadSurveyTitle')"
+      :retry-label="t('tryAgainLabel')"
+      @retry="refetchAll"
+    />
 
-      <ErrorRetryBlock
-        v-else-if="hasLoadError"
-        :title="t('failedToLoadSurveyTitle')"
-        :retry-label="t('tryAgainLabel')"
-        @retry="refetchAll"
-      />
+    <StepperLayout
+      v-else-if="surveyForm !== undefined && surveyStatus !== undefined"
+      :fixed-navigation="true"
+      :submit-call-back="handlePrimaryAction"
+      :current-step="1"
+      :total-steps="1"
+      :enable-next-button="true"
+      :show-next-button="true"
+      :show-loading-button="false"
+      :show-stepper="false"
+    >
+      <template #header>
+        <InfoHeader
+          :title="headerTitle"
+          :description="headerDescription"
+          icon-name="mdi-clipboard-check-outline"
+        />
+      </template>
 
-      <StepperLayout
-        v-else-if="surveyForm !== undefined && surveyStatus !== undefined"
-        :fixed-navigation="true"
-        :submit-call-back="handlePrimaryAction"
-        :current-step="1"
-        :total-steps="1"
-        :enable-next-button="true"
-        :show-next-button="true"
-        :show-loading-button="false"
-        :show-stepper="false"
-      >
-        <template #header>
-          <InfoHeader
-            :title="headerTitle"
-            :description="headerDescription"
-            icon-name="mdi-clipboard-check-outline"
-          />
-        </template>
-
-        <template #body>
-          <div class="survey-card">
-            <q-list bordered separator class="survey-question-list">
-              <q-item
-                v-for="entry in surveyQuestionEntries"
-                :key="entry.question.questionSlugId"
-                class="survey-question-item"
-              >
-                <q-item-section class="survey-question-item__section">
-                  <q-item-label class="survey-question-item__question">
-                    {{ entry.question.questionText }}
+      <template #body>
+        <div class="survey-card">
+          <q-list bordered separator class="survey-question-list">
+            <q-item
+              v-for="entry in surveyQuestionEntries"
+              :key="entry.question.questionSlugId"
+              class="survey-question-item"
+            >
+              <q-item-section class="survey-question-item__section">
+                <q-item-label class="survey-question-item__question">
+                  {{ entry.question.questionText }}
+                </q-item-label>
+                <div class="survey-question-item__review-row">
+                  <q-item-label
+                    :caption="entry.isStatusFallback"
+                    class="survey-question-item__answer"
+                    :class="{
+                      'survey-question-item__answer--status':
+                        entry.isStatusFallback,
+                    }"
+                  >
+                    {{ entry.answerPreview }}
                   </q-item-label>
-                  <div class="survey-question-item__review-row">
-                    <q-item-label
-                      :caption="entry.isStatusFallback"
-                      class="survey-question-item__answer"
-                      :class="{
-                        'survey-question-item__answer--status':
-                          entry.isStatusFallback,
-                      }"
-                    >
-                      {{ entry.answerPreview }}
-                    </q-item-label>
 
-                    <q-btn
-                      flat
-                      no-caps
-                      color="primary"
-                      class="survey-question-item__edit-button"
-                      :label="t('editAnswerLabel')"
-                      @click="handleEditQuestion({ question: entry.question })"
-                    />
-                  </div>
-                </q-item-section>
-              </q-item>
-            </q-list>
+                  <q-btn
+                    flat
+                    no-caps
+                    color="primary"
+                    class="survey-question-item__edit-button"
+                    :label="t('editAnswerLabel')"
+                    @click="handleEditQuestion({ question: entry.question })"
+                  />
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
 
-            <div class="survey-card__actions">
-              <q-btn
-                v-if="canWithdraw"
-                flat
-                no-caps
-                color="negative"
-                :label="t('withdrawResponseLabel')"
-                :loading="isWithdrawing"
-                @click="handleOpenWithdrawDialog"
-              />
-            </div>
+          <div class="survey-card__actions">
+            <q-btn
+              v-if="canWithdraw"
+              flat
+              no-caps
+              color="negative"
+              :label="t('withdrawResponseLabel')"
+              :loading="isWithdrawing"
+              @click="handleOpenWithdrawDialog"
+            />
           </div>
-        </template>
-      </StepperLayout>
+        </div>
+      </template>
+    </StepperLayout>
 
-      <ZKConfirmDialog
-        v-model="showWithdrawDialog"
-        :message="t('confirmWithdrawMessage')"
-        :actions="{
-          cancel: {
-            label: t('withdrawDialogCancelLabel'),
-            appearance: 'secondary-outlined',
-          },
-          confirm: {
-            label: t('confirmWithdrawButtonLabel'),
-            appearance: 'danger',
-          },
-        }"
-        @confirm="handleWithdraw"
-      />
-    </template>
-  </OnboardingLayout>
+    <ZKConfirmDialog
+      v-model="showWithdrawDialog"
+      :message="t('confirmWithdrawMessage')"
+      :actions="{
+        cancel: {
+          label: t('withdrawDialogCancelLabel'),
+          appearance: 'secondary-outlined',
+        },
+        confirm: {
+          label: t('confirmWithdrawButtonLabel'),
+          appearance: 'danger',
+        },
+      }"
+      @confirm="handleWithdraw"
+    />
+  </ConversationOnboardingLayout>
 </template>
 
 <script setup lang="ts">
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -125,7 +113,7 @@ import { useConversationOnboardingRoute } from "src/composables/conversation/use
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavigation";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import { htmlToCountedText } from "src/shared/richText";
 import {
   getSurveyOptionText,
@@ -143,6 +131,7 @@ import {
   getConversationSurveyOnboardingPath,
   getConversationSurveyQuestionPath,
 } from "src/utils/survey/navigation";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -152,6 +141,7 @@ import {
   conversationSurveySummaryTranslations,
 } from "./summary.i18n";
 
+defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
@@ -165,8 +155,6 @@ const { t } = useComponentI18n<ConversationSurveySummaryTranslations>(
 );
 
 const {
-  conversationData,
-  conversationDisplayContent,
   conversationSlugId,
   surveyStatus,
   surveyForm,

@@ -1,7 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { normalizeError, safeErrorSchema } from "./observability.js";
+import { createLogErrorProjector } from "./shared-backend/logPrivacy.js";
 
 describe("safe error causes", () => {
+    it("uses the shared exception projector and reconstructs forged stack/message fields", () => {
+        const error = Object.assign(new Error("private host address"), {
+            code: "EADDRINUSE",
+        });
+        error.stack = `${error.message}\n    at Server.setupListenHandle (node:net:1940:16)`;
+        const normalized = normalizeError(error);
+        const project = createLogErrorProjector({
+            sourceRoot: new URL("./", import.meta.url),
+        });
+        expect(normalized.diagnostics.error).toEqual(project(error));
+        expect(normalized.diagnostics.error.stack).toBe(
+            "Error [EADDRINUSE]: Address is already in use\n    at node:net:1940:16",
+        );
+        const parsed = safeErrorSchema.parse({
+            ...normalized,
+            diagnostics: {
+                kind: "exception",
+                error: {
+                    ...normalized.diagnostics.error,
+                    message: "private forged message",
+                    stack: "private forged stack",
+                },
+            },
+        });
+        expect(parsed.diagnostics).toEqual(normalized.diagnostics);
+        expect(JSON.stringify(parsed)).not.toContain("private");
+    });
+
     it.each([
         { code: "CONNECT_TIMEOUT", category: "retryable" },
         { code: "CONNECTION_CLOSED", category: "ambiguous" },
@@ -16,9 +45,9 @@ describe("safe error causes", () => {
     ])("classifies direct and wrapped $code", ({ code, category }) => {
         const driverError = Object.assign(new Error("private host"), { code });
         const expected = { name: "DatabaseError", code, category };
-        expect(normalizeError(driverError)).toEqual(expected);
+        expect(normalizeError(driverError)).toMatchObject(expected);
         const wrapped = new Error("private query", { cause: driverError });
-        expect(normalizeError(wrapped)).toEqual({
+        expect(normalizeError(wrapped)).toMatchObject({
             name: "ApplicationError",
             code: "UnknownError",
             category: "application",
@@ -36,7 +65,7 @@ describe("safe error causes", () => {
                 cause: { code: "private-nested-code@example.com" },
             },
         });
-        expect(normalizeError(error)).toEqual({
+        expect(normalizeError(error)).toMatchObject({
             name: "ApplicationError",
             code: "UnknownError",
             category: "application",
@@ -92,7 +121,7 @@ describe("safe error causes", () => {
     it.each([undefined, null, "private thrown string", 42])(
         "handles non-error thrown values without exposing them",
         (error) => {
-            expect(normalizeError(error)).toEqual({
+            expect(normalizeError(error)).toMatchObject({
                 name: "ApplicationError",
                 code: "UnknownError",
                 category: "application",

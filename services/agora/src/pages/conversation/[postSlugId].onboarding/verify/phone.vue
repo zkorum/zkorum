@@ -1,68 +1,59 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
     v-if="!skipPhoneRegistration"
+    :sheet="sheet"
     :back-callback="handleBackToAuthChoice"
     :close-callback="handleBackToConversation"
-    :show-close-button="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
+    <PageLoadingSpinner v-if="isInitialLoading" />
 
-    <template #footer>
-      <PageLoadingSpinner v-if="isInitialLoading" />
+    <ErrorRetryBlock
+      v-else-if="hasLoadError"
+      :title="tCommon('failedToLoadSurveyTitle')"
+      :retry-label="tCommon('tryAgainLabel')"
+      @retry="refetchAll"
+    />
 
-      <ErrorRetryBlock
-        v-else-if="hasLoadError"
-        :title="tCommon('failedToLoadSurveyTitle')"
-        :retry-label="tCommon('tryAgainLabel')"
-        @retry="refetchAll"
-      />
+    <form v-else @submit.prevent="onSubmit">
+      <StepperLayout
+        fixed-navigation
+        :submit-call-back="onSubmit"
+        :current-step="2"
+        :total-steps="surveyStepTotal"
+        :enable-next-button="
+          phoneAuthAvailability.available &&
+          !isLoading &&
+          nextCodeWaitSeconds === 0
+        "
+        :show-next-button="phoneAuthAvailability.available"
+        :show-loading-button="isLoading"
+      >
+        <template #header>
+          <InfoHeader
+            :title="t('title')"
+            description=""
+            icon-name="mdi-phone"
+          />
+        </template>
 
-      <form v-else @submit.prevent="onSubmit">
-        <StepperLayout
-          :submit-call-back="onSubmit"
-          :current-step="2"
-          :total-steps="surveyStepTotal"
-          :enable-next-button="
-            phoneAuthAvailability.available &&
-            !isLoading &&
-            nextCodeWaitSeconds === 0
-          "
-          :show-next-button="phoneAuthAvailability.available"
-          :show-loading-button="isLoading"
-        >
-          <template #header>
-            <InfoHeader
-              :title="t('title')"
-              description=""
-              icon-name="mdi-phone"
-            />
-          </template>
-
-          <template #body>
-            <PhoneInputForm
-              ref="phoneInputFormRef"
-              :purpose="phoneAuthPurpose"
-              :is-loading="isLoading"
-              :disabled="nextCodeWaitSeconds > 0"
-              @submit="submitPhone"
-            />
-            <p v-if="!isLoggedIn"><SignupAgreement variant="verify" /></p>
-          </template>
-        </StepperLayout>
-      </form>
-    </template>
-  </OnboardingLayout>
+        <template #body>
+          <PhoneInputForm
+            ref="phoneInputFormRef"
+            :purpose="phoneAuthPurpose"
+            :is-loading="isLoading"
+            :disabled="nextCodeWaitSeconds > 0"
+            @submit="submitPhone"
+          />
+          <p v-if="!isLoggedIn"><SignupAgreement variant="verify" /></p>
+        </template>
+      </StepperLayout>
+    </form>
+  </ConversationOnboardingLayout>
   <PageLoadingSpinner v-else />
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import SignupAgreement from "src/components/onboarding/ui/SignupAgreement.vue";
@@ -76,7 +67,7 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { usePhoneSubmit } from "src/composables/verification/usePhoneSubmit";
 import { useSkipUnavailablePhoneRegistration } from "src/composables/verification/useSkipUnavailablePhoneRegistration";
 import { useVerificationComplete } from "src/composables/verification/useVerificationComplete";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import {
   type VerifyPhoneTranslations,
   verifyPhoneTranslations,
@@ -92,6 +83,7 @@ import {
   getConversationSurveyVerifyPath,
   getConversationSurveyVerifyPhoneCodePath,
 } from "src/utils/survey/navigation";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -101,6 +93,7 @@ import {
   conversationSurveyOnboardingTranslations,
 } from "../index.i18n";
 
+defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
@@ -138,7 +131,6 @@ if (
 const {
   conversationSlugId,
   conversationData,
-  conversationDisplayContent,
   surveyStepTotal,
   requirementState,
   isInitialLoading,
@@ -252,4 +244,5 @@ async function handleBackToConversation(): Promise<void> {
     routeContext: routeContext.value,
   });
 }
+
 </script>
