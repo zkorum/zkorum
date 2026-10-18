@@ -1,62 +1,51 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
+    :sheet="sheet"
     :back-callback="handleBackToAuthChoice"
     :close-callback="handleBackToConversation"
-    :show-close-button="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-        :density="$q.screen.lt.sm ? 'compact' : 'comfortable'"
-      />
-    </template>
+    <PageLoadingSpinner v-if="isInitialLoading" />
 
-    <template #footer>
-      <PageLoadingSpinner v-if="isInitialLoading" />
+    <ErrorRetryBlock
+      v-else-if="hasLoadError"
+      :title="tCommon('failedToLoadSurveyTitle')"
+      :retry-label="tCommon('tryAgainLabel')"
+      @retry="refetchAll"
+    />
 
-      <ErrorRetryBlock
-        v-else-if="hasLoadError"
-        :title="tCommon('failedToLoadSurveyTitle')"
-        :retry-label="tCommon('tryAgainLabel')"
-        @retry="refetchAll"
-      />
+    <form v-else @submit.prevent="onSubmit">
+      <StepperLayout
+        fixed-navigation
+        :submit-call-back="onSubmit"
+        :current-step="2"
+        :total-steps="surveyStepTotal"
+        :enable-next-button="
+          (emailInputFormRef?.getIsValid() ?? true) &&
+          !isLoading &&
+          nextCodeWaitSeconds === 0
+        "
+        :show-next-button="true"
+        :show-loading-button="isLoading"
+      >
+        <template #header>
+          <InfoHeader
+            :title="t('title')"
+            description=""
+            icon-name="mdi-email"
+          />
+        </template>
 
-      <form v-else @submit.prevent="onSubmit">
-        <StepperLayout
-          :submit-call-back="onSubmit"
-          :current-step="2"
-          :total-steps="surveyStepTotal"
-          :enable-next-button="
-            (emailInputFormRef?.getIsValid() ?? true) &&
-            !isLoading &&
-            nextCodeWaitSeconds === 0
-          "
-          :show-next-button="true"
-          :show-loading-button="isLoading"
-        >
-          <template #header>
-            <InfoHeader
-              :title="t('title')"
-              description=""
-              icon-name="mdi-email"
-            />
-          </template>
-
-          <template #body>
-            <EmailInputForm ref="emailInputFormRef" @submit="submitEmail" />
-            <p v-if="!isLoggedIn"><SignupAgreement variant="verify" /></p>
-          </template>
-        </StepperLayout>
-      </form>
-    </template>
-  </OnboardingLayout>
+        <template #body>
+          <EmailInputForm ref="emailInputFormRef" @submit="submitEmail" />
+          <p v-if="!isLoggedIn"><SignupAgreement variant="verify" /></p>
+        </template>
+      </StepperLayout>
+    </form>
+  </ConversationOnboardingLayout>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { useQuasar } from "quasar";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import SignupAgreement from "src/components/onboarding/ui/SignupAgreement.vue";
@@ -69,7 +58,7 @@ import { useConversationSurveyState } from "src/composables/conversation/useConv
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useEmailSubmit } from "src/composables/verification/useEmailSubmit";
 import { useVerificationComplete } from "src/composables/verification/useVerificationComplete";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import {
   type VerifyEmailTranslations,
   verifyEmailTranslations,
@@ -84,6 +73,7 @@ import {
   getConversationSurveyVerifyHardPath,
   getConversationSurveyVerifyPath,
 } from "src/utils/survey/navigation";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -93,8 +83,8 @@ import {
   conversationSurveyOnboardingTranslations,
 } from "../index.i18n";
 
+defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
-const $q = useQuasar();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
 const conversationOnboardingStore = useConversationOnboardingStore();
@@ -127,7 +117,6 @@ if (
 const {
   conversationSlugId,
   conversationData,
-  conversationDisplayContent,
   surveyStepTotal,
   requirementState,
   isInitialLoading,
@@ -227,4 +216,5 @@ async function handleBackToConversation(): Promise<void> {
     routeContext: routeContext.value,
   });
 }
+
 </script>

@@ -7872,7 +7872,12 @@ server.after(() => {
 
 server.ready((e) => {
     if (e) {
-        log.error(e);
+        logApiError({
+            logger: log,
+            level: "error",
+            event: { event: "server_start_failed" },
+            error: e,
+        });
         process.exit(1);
     }
     if (config.NODE_ENV === "development") {
@@ -7891,9 +7896,15 @@ const host =
 
 server.listen({ port: config.PORT, host: host }, (err) => {
     if (err) {
-        log.error(err);
+        logApiError({
+            logger: log,
+            level: "error",
+            event: { event: "server_start_failed" },
+            error: err,
+        });
         process.exit(1);
     }
+    log.info({ event: "server_ready" }, "API server ready");
 });
 
 // Graceful shutdown handling

@@ -1,5 +1,7 @@
 <template>
-  <router-view />
+  <router-view v-slot="{ Component }">
+    <component :is="Component" :sheet="sheet" />
+  </router-view>
 </template>
 
 <script setup lang="ts">
@@ -10,11 +12,13 @@ import { useConversationSurveyState } from "src/composables/conversation/useConv
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { useConversationEmailUpdateSummaryQuery } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { computed, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import { resolveVerifyRouteDecision } from "./verifyRouteLogic";
 
+defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { route, routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();

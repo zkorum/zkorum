@@ -1,14 +1,14 @@
 <template>
-  <PersistentLayout v-if="isDrawerLayout">
-    <router-view v-slot="{ Component }">
-      <keep-alive :include="keepAliveRoutes">
-        <component :is="Component" />
-      </keep-alive>
-    </router-view>
-  </PersistentLayout>
-
-  <!-- Non-drawer pages (onboarding, project, embed, welcome, survey onboarding, 404) render their own layout -->
-  <router-view v-else />
+  <div
+    :inert="isOnboarding || undefined"
+    :aria-hidden="isOnboarding || undefined"
+  >
+    <ApplicationRouteView
+      v-if="background.kind === 'ready'"
+      :route="background.route"
+    />
+  </div>
+  <router-view v-if="isOnboarding" />
 
   <ConversationPageMetadata
     v-if="metadataConversationSlugId !== undefined"
@@ -30,13 +30,14 @@ import { useRoute } from "vue-router";
 import { type AppTranslations, appTranslations } from "./App.i18n";
 import EmbeddedBrowserWarningDialog from "./components/embeddedBrowser/EmbeddedBrowserWarningDialog.vue";
 import ConversationPageMetadata from "./components/metadata/ConversationPageMetadata.vue";
+import ApplicationRouteView from "./components/navigation/ApplicationRouteView.vue";
 import PostSignupPreferencesDialog from "./components/onboarding/dialogs/PostSignupPreferencesDialog.vue";
+import { useOnboardingBackgroundRoute } from "./composables/conversation/useOnboardingBackgroundRoute";
 import { createOfflineNotificationController } from "./composables/offlineNotification";
 import { useComponentI18n } from "./composables/ui/useComponentI18n";
 import { isNetworkOffline } from "./composables/useNetworkStatus";
 import { useRealtimeSSE } from "./composables/useRealtimeSSE";
 import { useZupassVerification } from "./composables/zupass/useZupassVerification";
-import PersistentLayout from "./layouts/PersistentLayout.vue";
 import {
   buildContentTranslationTopic,
   buildProjectContentTranslationTopic,
@@ -46,7 +47,6 @@ import { useLanguageStore } from "./stores/language";
 import { useBackendAuthApi } from "./utils/api/auth";
 import { createAuthInitializationController } from "./utils/auth/authInitialization";
 import { useHtmlNodeCssPatch } from "./utils/css/htmlNodeCssPatch";
-import { shouldUseDrawerLayout } from "./utils/router/appLayout";
 import { getConversationMetadataSlugId } from "./utils/router/conversationMetadataRoute";
 import {
   isConversationRouteName,
@@ -58,7 +58,7 @@ import { useNotify } from "./utils/ui/notify";
 
 const { t } = useComponentI18n<AppTranslations>(appTranslations);
 
-const keepAliveRoutes = ["HomePage", "NotificationPage", "UserProfilePage"];
+const { background, isOnboarding } = useOnboardingBackgroundRoute();
 
 const authenticationApi = useBackendAuthApi();
 const authenticationStore = useAuthenticationStore();
@@ -137,7 +137,6 @@ useRealtimeSSE({
   subscribedConversationSlugId: realtimeConversationSlugId,
   subscribedTopics: realtimeTopics,
 });
-const isDrawerLayout = computed(() => shouldUseDrawerLayout(route.name));
 
 const { showNotifyMessage, showPersistentNotifyMessage } = useNotify();
 

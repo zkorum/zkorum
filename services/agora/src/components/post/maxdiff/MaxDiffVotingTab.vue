@@ -92,7 +92,11 @@
               'step-done': selectedBest !== undefined,
             }"
           >
-            <q-icon v-if="selectedBest !== undefined" name="check" size="0.8rem" />
+            <q-icon
+              v-if="selectedBest !== undefined"
+              name="check"
+              size="0.8rem"
+            />
             <span v-else>1</span>
           </div>
           <span
@@ -110,7 +114,8 @@
           <div
             class="step-circle step-circle-worst"
             :class="{
-              'step-active': selectedBest !== undefined && selectedWorst === undefined,
+              'step-active':
+                selectedBest !== undefined && selectedWorst === undefined,
             }"
           >
             <span>2</span>
@@ -143,9 +148,15 @@
               'selected-best': selectedBest === item.slugId,
               'selected-worst': selectedWorst === item.slugId,
             }"
-            @click="handleCandidateAction({ slugId: item.slugId, allowDialog: true })"
-            @keydown.enter.prevent="handleCandidateAction({ slugId: item.slugId, allowDialog: true })"
-            @keydown.space.prevent="handleCandidateAction({ slugId: item.slugId, allowDialog: true })"
+            @click="
+              handleCandidateAction({ slugId: item.slugId, allowDialog: true })
+            "
+            @keydown.enter.prevent="
+              handleCandidateAction({ slugId: item.slugId, allowDialog: true })
+            "
+            @keydown.space.prevent="
+              handleCandidateAction({ slugId: item.slugId, allowDialog: true })
+            "
           >
             <MaxDiffCandidateCardContent
               ref="candidateContentComponents"
@@ -190,18 +201,6 @@
       :vote-color="dialogVoteColor"
       :vote-flat="dialogVoteFlat"
       :on-vote="dialogVoteCallback"
-    />
-
-    <PreParticipationIntentionDialog
-      v-model="showLoginDialog"
-      :ok-callback="onLoginCallback"
-      active-intention="voting"
-      :conversation-slug-id="conversationData.metadata.conversationSlugId"
-      :requires-zupass-event-slug="
-        conversationData.metadata.requiresEventTicket
-      "
-      :needs-auth="needsLogin"
-      :participation-mode="conversationData.metadata.participationMode"
     />
 
     <q-dialog v-model="showLearnMoreDialog" position="bottom">
@@ -262,7 +261,6 @@
 import { useQueryClient } from "@tanstack/vue-query";
 import { storeToRefs } from "pinia";
 import { useQuasar } from "quasar";
-import PreParticipationIntentionDialog from "src/components/authentication/intention/PreParticipationIntentionDialog.vue";
 import AnalysisActionButton from "src/components/post/analysis/common/AnalysisActionButton.vue";
 import VotingSessionToolbar from "src/components/post/voting/VotingSessionToolbar.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -299,7 +297,11 @@ import {
   retryMaxDiffCandidateResolution,
 } from "src/utils/maxdiffCandidateDisplay";
 import { getMaxDiffProgressPercent } from "src/utils/maxdiffProgress";
-import { haveSameMaxDiffComparisons, type MaxDiffSelection, reconcileMaxDiffItems } from "src/utils/maxdiffSession";
+import {
+  haveSameMaxDiffComparisons,
+  type MaxDiffSelection,
+  reconcileMaxDiffItems,
+} from "src/utils/maxdiffSession";
 import { getMaxDiffLoadQueryKey } from "src/utils/query/conversationQueryKeys";
 import { useViewerQueryScope } from "src/utils/query/viewerScope";
 import { getRankingItemDisplayText } from "src/utils/translation/rankingItemDisplayText";
@@ -353,7 +355,7 @@ const isParticipationDisabled = computed(() => {
     (moderation.status === "moderated" && moderation.action === "lock")
   );
 });
-const { needsAuth: isAuthBlocked, shouldOpenParticipationModal } =
+const { needsParticipationOnboarding, openParticipationOnboarding } =
   useParticipationGate({
     conversationSlugId,
     participationMode: computed(
@@ -377,15 +379,10 @@ const registerChildRefreshHandler = inject<RegisterChildRefreshHandler>(
 );
 let unregisterChildRefreshHandler: (() => void) | undefined;
 
-const needsLogin = computed(() => {
-  return isAuthBlocked.value;
-});
-
 const { setVotingIntention } = useConversationLoginIntentions();
-const showLoginDialog = ref(false);
-
-function onLoginCallback() {
+async function openOnboarding(): Promise<void> {
   setVotingIntention(props.conversationData.metadata.requiresEventTicket);
+  await openParticipationOnboarding();
 }
 
 function handleBlockedSave(reason: ParticipationBlockedReason): void {
@@ -395,12 +392,12 @@ function handleBlockedSave(reason: ParticipationBlockedReason): void {
     reason === "strong_verification_required" ||
     reason === "email_verification_required"
   ) {
-    showLoginDialog.value = true;
+    void openOnboarding();
     return;
   }
 
   if (reason === "survey_required" || reason === "survey_outdated") {
-    showLoginDialog.value = true;
+    void openOnboarding();
     return;
   }
 
@@ -532,13 +529,21 @@ const saveMutation = useMaxDiffSaveMutation({
 const instance = shallowRef<MaxDiffInstance>();
 const isInitializingEngine = ref(true);
 const isLoadingCandidates = ref(false);
-const isComplete = computed(() => instance.value !== undefined &&
-  instance.value.itemCount >= 2 && instance.value.complete);
+const isComplete = computed(
+  () =>
+    instance.value !== undefined &&
+    instance.value.itemCount >= 2 &&
+    instance.value.complete
+);
 const finalRanking = computed(() => instance.value?.result ?? []);
 const candidates = ref<string[]>([]);
 const selection = shallowRef<MaxDiffSelection>({ kind: "none" });
-const selectedBest = computed(() => selection.value.kind === "none" ? undefined : selection.value.best);
-const selectedWorst = computed(() => selection.value.kind === "comparison" ? selection.value.worst : undefined);
+const selectedBest = computed(() =>
+  selection.value.kind === "none" ? undefined : selection.value.best
+);
+const selectedWorst = computed(() =>
+  selection.value.kind === "comparison" ? selection.value.worst : undefined
+);
 const isTransitioning = ref(false);
 const showTransitionSpinner = ref(false);
 let transitionSpinnerTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -598,7 +603,8 @@ function openVotingDialog(slugId: string): void {
   }
 
   dialogVoteCallback.value = () => {
-    if (isCurrentDialog()) void handleCandidateAction({ slugId, allowDialog: false });
+    if (isCurrentDialog())
+      void handleCandidateAction({ slugId, allowDialog: false });
   };
 
   showStatementDialog.value = true;
@@ -751,12 +757,16 @@ watch(
   { immediate: true }
 );
 
-function reconcileEngineItems({ preserveCandidates }: { preserveCandidates: boolean }): void {
+function reconcileEngineItems({
+  preserveCandidates,
+}: {
+  preserveCandidates: boolean;
+}): void {
   const current = instance.value;
   if (current === undefined || itemsQuery.data.value === undefined) return;
   const restored = reconcileMaxDiffItems({
     instance: current,
-    items: itemList.value.map(item => item.slugId),
+    items: itemList.value.map((item) => item.slugId),
   });
   const changed = restored !== current;
   if (changed) {
@@ -769,7 +779,10 @@ function reconcileEngineItems({ preserveCandidates }: { preserveCandidates: bool
     candidates.value = [];
     candidateItems.value = [];
     candidateResolutionError.value = false;
-  } else if (candidates.value.length < 2 || candidates.value.some(id => !itemBySlugId.value.has(id))) {
+  } else if (
+    candidates.value.length < 2 ||
+    candidates.value.some((id) => !itemBySlugId.value.has(id))
+  ) {
     candidates.value = restored.getCandidates();
     replacedCandidates = true;
   }
@@ -785,30 +798,50 @@ async function refreshCandidateRouting(): Promise<void> {
   isLoadingCandidates.value = true;
   try {
     const response = await loadMaxDiffResult({ conversationSlugId: slugId });
-    if (!isCurrent() || refreshVersion !== routingRefreshVersion ||
-         !canRefreshCandidateItemSnapshot.value || instance.value === undefined || response.status !== "success") return;
-    if (!haveSameMaxDiffComparisons({
-      left: instance.value.exportState().comparisons,
-      right: response.data.comparisons ?? [],
-    })) return;
+    if (
+      !isCurrent() ||
+      refreshVersion !== routingRefreshVersion ||
+      !canRefreshCandidateItemSnapshot.value ||
+      instance.value === undefined ||
+      response.status !== "success"
+    )
+      return;
+    if (
+      !haveSameMaxDiffComparisons({
+        left: instance.value.exportState().comparisons,
+        right: response.data.comparisons ?? [],
+      })
+    )
+      return;
     const nextCandidates = response.data.candidateSets[0];
-    if (nextCandidates === undefined || nextCandidates.some(id => !itemBySlugId.value.has(id))) return;
+    if (
+      nextCandidates === undefined ||
+      nextCandidates.some((id) => !itemBySlugId.value.has(id))
+    )
+      return;
     queryClient.setQueryData(
-      getMaxDiffLoadQueryKey({ conversationSlugId: slugId, viewerScope: viewerScope.value }),
+      getMaxDiffLoadQueryKey({
+        conversationSlugId: slugId,
+        viewerScope: viewerScope.value,
+      }),
       response.data
     );
     candidates.value = nextCandidates;
   } finally {
-    if (isCurrent() && refreshVersion === routingRefreshVersion) isLoadingCandidates.value = false;
+    if (isCurrent() && refreshVersion === routingRefreshVersion)
+      isLoadingCandidates.value = false;
   }
 }
 
-async function applySavedCandidates({ candidateSets, isCurrent }: {
+async function applySavedCandidates({
+  candidateSets,
+  isCurrent,
+}: {
   candidateSets: string[][];
   isCurrent: () => boolean;
 }): Promise<void> {
   const nextCandidates = candidateSets[0] ?? [];
-  if (nextCandidates.some(id => !itemBySlugId.value.has(id))) {
+  if (nextCandidates.some((id) => !itemBySlugId.value.has(id))) {
     const refreshed = await itemsQuery.refetch();
     if (!isCurrent()) return;
     if (refreshed.isError) {
@@ -821,12 +854,16 @@ async function applySavedCandidates({ candidateSets, isCurrent }: {
 }
 
 watch([itemList, canRefreshCandidateItemSnapshot], ([, canRefresh]) => {
-  if (canRefresh && engineInitialized.value) reconcileEngineItems({ preserveCandidates: false });
+  if (canRefresh && engineInitialized.value)
+    reconcileEngineItems({ preserveCandidates: false });
 });
 
-watch(() => props.conversationData.metadata.opinionCount, (count, previous) => {
-  if (count !== previous) void itemsQuery.refetch();
-});
+watch(
+  () => props.conversationData.metadata.opinionCount,
+  (count, previous) => {
+    if (count !== previous) void itemsQuery.refetch();
+  }
+);
 
 function resetVotingSession(): void {
   actionGuard.invalidate();
@@ -842,10 +879,15 @@ function resetVotingSession(): void {
   showStatementDialog.value = false;
 }
 
-watch(userId, (nextId, previousId) => {
-  if (previousId === undefined && nextId !== undefined && authStore.isGuest) return;
-  resetVotingSession();
-}, { flush: "sync" });
+watch(
+  userId,
+  (nextId, previousId) => {
+    if (previousId === undefined && nextId !== undefined && authStore.isGuest)
+      return;
+    resetVotingSession();
+  },
+  { flush: "sync" }
+);
 watch(conversationSlugId, resetVotingSession, { flush: "sync" });
 
 async function retryInitialize(): Promise<void> {
@@ -863,11 +905,22 @@ async function retryInitialize(): Promise<void> {
   }
 }
 
-async function handleCandidateAction({ slugId, allowDialog }: { slugId: string; allowDialog: boolean }): Promise<void> {
+async function handleCandidateAction({
+  slugId,
+  allowDialog,
+}: {
+  slugId: string;
+  allowDialog: boolean;
+}): Promise<void> {
   await actionGuard.run(async (isCurrent) => {
-    if (isParticipationDisabled.value || isLoadingCandidates.value || !candidates.value.includes(slugId)) return;
-    if (await shouldOpenParticipationModal()) {
-      if (isCurrent()) showLoginDialog.value = true;
+    if (
+      isParticipationDisabled.value ||
+      isLoadingCandidates.value ||
+      !candidates.value.includes(slugId)
+    )
+      return;
+    if (await needsParticipationOnboarding()) {
+      if (isCurrent()) await openOnboarding();
       return;
     }
     if (!isCurrent()) return;
@@ -879,7 +932,10 @@ async function handleCandidateAction({ slugId, allowDialog }: { slugId: string; 
   });
 }
 
-async function selectCandidate({ slugId, isCurrent }: {
+async function selectCandidate({
+  slugId,
+  isCurrent,
+}: {
   slugId: string;
   isCurrent: () => boolean;
 }): Promise<void> {
@@ -896,22 +952,38 @@ async function selectCandidate({ slugId, isCurrent }: {
     return;
   }
 
-  const comparison = { kind: "comparison", best: currentSelection.best, worst: slugId } satisfies MaxDiffSelection;
+  const comparison = {
+    kind: "comparison",
+    best: currentSelection.best,
+    worst: slugId,
+  } satisfies MaxDiffSelection;
   selection.value = comparison;
   await recordVote({ comparison, isCurrent });
 }
 
-function captureSaveContext({ engine, isCurrent }: { engine: MaxDiffInstance; isCurrent: () => boolean }): MaxDiffSaveContext {
-  return { previousState: engine.exportState(), previousCandidates: [...candidates.value], isCurrent };
+function captureSaveContext({
+  engine,
+  isCurrent,
+}: {
+  engine: MaxDiffInstance;
+  isCurrent: () => boolean;
+}): MaxDiffSaveContext {
+  return {
+    previousState: engine.exportState(),
+    previousCandidates: [...candidates.value],
+    isCurrent,
+  };
 }
 
-async function recordVote({ comparison, isCurrent }: {
+async function recordVote({
+  comparison,
+  isCurrent,
+}: {
   comparison: Extract<MaxDiffSelection, { kind: "comparison" }>;
   isCurrent: () => boolean;
 }): Promise<void> {
-
   reconcileEngineItems({ preserveCandidates: true });
-  if (candidates.value.some(id => !itemBySlugId.value.has(id))) {
+  if (candidates.value.some((id) => !itemBySlugId.value.has(id))) {
     selection.value = { kind: "none" };
     reconcileEngineItems({ preserveCandidates: false });
     showNotifyMessage(t("itemsChanged"));
@@ -933,7 +1005,6 @@ async function recordVote({ comparison, isCurrent }: {
   });
   triggerRef(instance);
 
-
   isTransitioning.value = true;
 
   // Show spinner if fetch takes longer than 2s
@@ -953,10 +1024,13 @@ async function recordVote({ comparison, isCurrent }: {
   try {
     const [saveResult] = await Promise.all([
       saveMutation.mutateAsync(saveParams),
-      new Promise<void>(resolve => setTimeout(resolve, 400)),
+      new Promise<void>((resolve) => setTimeout(resolve, 400)),
     ]);
     if (isCurrent() && saveResult.success) {
-      await applySavedCandidates({ candidateSets: saveResult.candidateSets, isCurrent });
+      await applySavedCandidates({
+        candidateSets: saveResult.candidateSets,
+        isCurrent,
+      });
     }
   } catch {
     // The mutation has already restored the previous candidates.
@@ -996,8 +1070,13 @@ async function undoLastVote(isCurrent: () => boolean): Promise<void> {
   instance.value = restored;
   selection.value = { kind: "none" };
 
-  const restoredCandidates = removedComparison.set.filter(id => itemBySlugId.value.has(id));
-  candidates.value = restoredCandidates.length >= 2 ? restoredCandidates : restored.getCandidates();
+  const restoredCandidates = removedComparison.set.filter((id) =>
+    itemBySlugId.value.has(id)
+  );
+  candidates.value =
+    restoredCandidates.length >= 2
+      ? restoredCandidates
+      : restored.getCandidates();
 
   try {
     await saveMutation.mutateAsync({
@@ -1014,8 +1093,8 @@ async function undoLastVote(isCurrent: () => boolean): Promise<void> {
 async function handleUndoClick(): Promise<void> {
   await actionGuard.run(async (isCurrent) => {
     if (isParticipationDisabled.value || !canUndo.value) return;
-    if (await shouldOpenParticipationModal()) {
-      if (isCurrent()) showLoginDialog.value = true;
+    if (await needsParticipationOnboarding()) {
+      if (isCurrent()) await openOnboarding();
       return;
     }
     if (isCurrent()) await undoLastVote(isCurrent);
@@ -1025,17 +1104,19 @@ async function handleUndoClick(): Promise<void> {
 async function handleRedoRanking(): Promise<void> {
   await actionGuard.run(async (isCurrent) => {
     if (isParticipationDisabled.value || instance.value === undefined) return;
-    if (await shouldOpenParticipationModal()) {
-      if (isCurrent()) showLoginDialog.value = true;
+    if (await needsParticipationOnboarding()) {
+      if (isCurrent()) await openOnboarding();
       return;
     }
-    const confirmed = await new Promise<boolean>(resolve => {
+    const confirmed = await new Promise<boolean>((resolve) => {
       $q.dialog({
         title: t("redoConfirmTitle"),
         message: t("redoConfirmMessage"),
         cancel: true,
         persistent: true,
-      }).onOk(() => resolve(true)).onDismiss(() => resolve(false));
+      })
+        .onOk(() => resolve(true))
+        .onDismiss(() => resolve(false));
     });
     if (!confirmed || !isCurrent() || instance.value === undefined) return;
     // Snapshot for rollback
@@ -1048,13 +1129,16 @@ async function handleRedoRanking(): Promise<void> {
     // Save empty state, use candidateSets from response
     try {
       const result = await saveMutation.mutateAsync({
-          ranking: null,
-          comparisons: [],
-          isComplete: false,
-          context,
+        ranking: null,
+        comparisons: [],
+        isComplete: false,
+        context,
       });
       if (result.success && isCurrent()) {
-        await applySavedCandidates({ candidateSets: result.candidateSets, isCurrent });
+        await applySavedCandidates({
+          candidateSets: result.candidateSets,
+          isCurrent,
+        });
       }
     } catch {
       // Rollback and notification are owned by the mutation.

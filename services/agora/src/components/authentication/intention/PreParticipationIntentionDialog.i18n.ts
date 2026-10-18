@@ -1,26 +1,10 @@
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 
 export interface PreParticipationIntentionDialogTranslations {
-  titleOnboardingRequired: string;
   title: string;
-  titleZupassOnly: string;
-  titleAccountRequired: string;
-  titleEmailRequired: string;
-  titleStrongRequired: string;
   message: string;
-  messageBothRequired: string;
-  messageZupassOnly: string;
-  messageAccountRequired: string;
-  messageEmailRequired: string;
-  messageStrongRequired: string;
   labelOk: string;
-  labelOkZupass: string;
-  labelOkAccount: string;
-  labelOkEmail: string;
-  labelOkStrong: string;
   labelCancel: string;
-  labelStartOnboarding: string;
-  labelPostponeOnboarding: string;
   subMessageStatementDraft: string;
   subMessageConversationDraft: string;
   subMessageReturnToStatement: string;
@@ -33,30 +17,10 @@ export const preParticipationIntentionDialogTranslations: Record<
   PreParticipationIntentionDialogTranslations
 > = {
   en: {
-    titleOnboardingRequired: "A few quick steps before you participate",
     title: "Log in to Agora",
-    titleZupassOnly: "Verify Event Ticket",
-    titleAccountRequired: "Log in",
-    titleEmailRequired: "Verify Email",
-    titleStrongRequired: "Verify your identity",
     message: "Log in to participate in the discussions",
-    messageBothRequired:
-      "This conversation requires login and event ticket verification to participate",
-    messageZupassOnly:
-      "This conversation requires event ticket verification to participate",
-    messageAccountRequired: "Log in to participate in this conversation",
-    messageEmailRequired:
-      "Verify your email to participate in this conversation",
-    messageStrongRequired:
-      "Verify your phone or identity to participate in this conversation",
     labelOk: "Log In",
-    labelOkZupass: "Verify Ticket",
-    labelOkAccount: "Continue",
-    labelOkEmail: "Verify Email",
-    labelOkStrong: "Verify",
     labelCancel: "Cancel",
-    labelStartOnboarding: "Get started",
-    labelPostponeOnboarding: "Not now",
     subMessageStatementDraft: "Your statement draft will be saved.",
     subMessageConversationDraft: "Your conversation draft will be saved.",
     subMessageReturnToStatement:
@@ -67,28 +31,10 @@ export const preParticipationIntentionDialogTranslations: Record<
       "A user account is required to report user content.",
   },
   fa: {
-    titleOnboardingRequired: "چند گام کوتاه پیش از مشارکت",
     title: "ورود به Agora",
-    titleZupassOnly: "تأیید بلیط رویداد",
-    titleAccountRequired: "ورود",
-    titleEmailRequired: "تأیید ایمیل",
-    titleStrongRequired: "تأیید هویت شما",
     message: "برای مشارکت در بحث‌ها وارد شوید",
-    messageBothRequired:
-      "این گفتگو برای مشارکت نیاز به ورود و تأیید بلیط رویداد دارد",
-    messageZupassOnly: "این گفتگو برای مشارکت نیاز به تأیید بلیط رویداد دارد",
-    messageAccountRequired: "برای مشارکت در این گفتگو وارد شوید",
-    messageEmailRequired: "برای مشارکت در این گفتگو ایمیل خود را تأیید کنید",
-    messageStrongRequired:
-      "برای مشارکت در این گفتگو تلفن یا هویت خود را تأیید کنید",
     labelOk: "ورود",
-    labelOkZupass: "تأیید بلیط",
-    labelOkAccount: "ادامه",
-    labelOkEmail: "تأیید ایمیل",
-    labelOkStrong: "تأیید",
     labelCancel: "لغو",
-    labelStartOnboarding: "شروع",
-    labelPostponeOnboarding: "فعلاً نه",
     subMessageStatementDraft: "پیش‌نویس گزاره شما ذخیره خواهد شد.",
     subMessageConversationDraft: "پیش‌نویس گفتگوی شما ذخیره خواهد شد.",
     subMessageReturnToStatement: "شما به این گزاره بازگردانده خواهید شد.",
@@ -96,27 +42,10 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "برای گزارش محتوای کاربر، حساب کاربری لازم است.",
   },
   ar: {
-    titleOnboardingRequired: "بضع خطوات سريعة قبل المشاركة",
     title: "تسجيل الدخول إلى أغورا",
-    titleZupassOnly: "التحقق من تذكرة الحدث",
-    titleAccountRequired: "تسجيل الدخول",
-    titleEmailRequired: "تحقق من بريدك الإلكتروني",
-    titleStrongRequired: "تحقق من هويتك",
     message: "سجّل دخولك للمشاركة في النقاشات",
-    messageBothRequired:
-      "تتطلب هذه المحادثة تسجيل الدخول والتحقق من تذكرة الحدث للمشاركة",
-    messageZupassOnly: "تتطلب هذه المحادثة التحقق من تذكرة الحدث للمشاركة",
-    messageAccountRequired: "سجّل دخولك للمشاركة في هذه المحادثة",
-    messageEmailRequired: "تحقق من بريدك الإلكتروني للمشاركة في هذه المحادثة",
-    messageStrongRequired: "تحقق من هاتفك أو هويتك للمشاركة في هذه المحادثة",
     labelOk: "تسجيل الدخول",
-    labelOkZupass: "التحقق من التذكرة",
-    labelOkAccount: "متابعة",
-    labelOkEmail: "تحقق من البريد",
-    labelOkStrong: "تحقق",
     labelCancel: "إلغاء",
-    labelStartOnboarding: "ابدأ",
-    labelPostponeOnboarding: "ليس الآن",
     subMessageStatementDraft: "سيتم حفظ مسودة الاقتراح الخاص بك.",
     subMessageConversationDraft: "سيتم حفظ مسودة المحادثة الخاصة بك.",
     subMessageReturnToStatement: "ستتم إعادتك إلى هذا الاقتراح.",
@@ -124,31 +53,10 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "يلزم حساب مستخدم للإبلاغ عن محتوى المستخدم.",
   },
   es: {
-    titleOnboardingRequired: "Unos pasos rápidos antes de participar",
     title: "Iniciar sesión en Ágora",
-    titleZupassOnly: "Verificar Boleto del Evento",
-    titleAccountRequired: "Iniciar sesión",
-    titleEmailRequired: "Verifique su correo",
-    titleStrongRequired: "Verifique su identidad",
     message: "Inicie sesión para participar en las discusiones",
-    messageBothRequired:
-      "Esta conversación requiere inicio de sesión y verificación de boleto del evento para participar",
-    messageZupassOnly:
-      "Esta conversación requiere verificación de boleto del evento para participar",
-    messageAccountRequired:
-      "Inicie sesión para participar en esta conversación",
-    messageEmailRequired:
-      "Verifique su correo electrónico para participar en esta conversación",
-    messageStrongRequired:
-      "Verifique su teléfono o identidad para participar en esta conversación",
     labelOk: "Iniciar Sesión",
-    labelOkZupass: "Verificar Boleto",
-    labelOkAccount: "Continuar",
-    labelOkEmail: "Verificar correo",
-    labelOkStrong: "Verificar",
     labelCancel: "Cancelar",
-    labelStartOnboarding: "Comenzar",
-    labelPostponeOnboarding: "Ahora no",
     subMessageStatementDraft: "Su borrador de proposición se guardará.",
     subMessageConversationDraft: "Su borrador de conversación se guardará.",
     subMessageReturnToStatement: "Volverá a esta proposición.",
@@ -157,31 +65,10 @@ export const preParticipationIntentionDialogTranslations: Record<
       "Se requiere una cuenta de usuario para reportar contenido.",
   },
   fr: {
-    titleOnboardingRequired: "Quelques étapes rapides avant de participer",
     title: "Se connecter à Agora",
-    titleZupassOnly: "Vérifier le Billet d'Événement",
-    titleAccountRequired: "Se connecter",
-    titleEmailRequired: "Vérifiez votre e-mail",
-    titleStrongRequired: "Vérifiez votre identité",
     message: "Connectez-vous pour participer aux discussions",
-    messageBothRequired:
-      "Cette conversation nécessite une connexion et une vérification de billet d'événement pour participer",
-    messageZupassOnly:
-      "Cette conversation nécessite une vérification de billet d'événement pour participer",
-    messageAccountRequired:
-      "Connectez-vous pour participer à cette conversation",
-    messageEmailRequired:
-      "Vérifiez votre e-mail pour participer à cette conversation",
-    messageStrongRequired:
-      "Vérifiez votre téléphone ou identité pour participer à cette conversation",
     labelOk: "Se Connecter",
-    labelOkZupass: "Vérifier le Billet",
-    labelOkAccount: "Continuer",
-    labelOkEmail: "Vérifier l'e-mail",
-    labelOkStrong: "Vérifier",
     labelCancel: "Annuler",
-    labelStartOnboarding: "Commencer",
-    labelPostponeOnboarding: "Plus tard",
     subMessageStatementDraft: "Votre brouillon de proposition sera sauvegardé.",
     subMessageConversationDraft:
       "Votre brouillon de conversation sera sauvegardé.",
@@ -193,26 +80,10 @@ export const preParticipationIntentionDialogTranslations: Record<
       "Un compte utilisateur est nécessaire pour signaler du contenu.",
   },
   "zh-Hans": {
-    titleOnboardingRequired: "参与前的几个简单步骤",
     title: "登录 Agora",
-    titleZupassOnly: "验证活动门票",
-    titleAccountRequired: "登录",
-    titleEmailRequired: "验证您的电子邮箱",
-    titleStrongRequired: "验证您的身份",
     message: "登录以参与讨论",
-    messageBothRequired: "此对话需要登录和活动门票验证才能参与",
-    messageZupassOnly: "此对话需要活动门票验证才能参与",
-    messageAccountRequired: "登录以参与此对话",
-    messageEmailRequired: "验证您的电子邮箱以参与此对话",
-    messageStrongRequired: "验证您的手机或身份以参与此对话",
     labelOk: "登录",
-    labelOkZupass: "验证门票",
-    labelOkAccount: "继续",
-    labelOkEmail: "验证邮箱",
-    labelOkStrong: "验证",
     labelCancel: "取消",
-    labelStartOnboarding: "开始",
-    labelPostponeOnboarding: "暂时不要",
     subMessageStatementDraft: "您的意见草稿将被保存。",
     subMessageConversationDraft: "您的对话草稿将被保存。",
     subMessageReturnToStatement: "您将返回到该意见。",
@@ -220,26 +91,10 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "举报用户内容需要用户账户。",
   },
   "zh-Hant": {
-    titleOnboardingRequired: "參與前的幾個簡單步驟",
     title: "登入 Agora",
-    titleZupassOnly: "驗證活動門票",
-    titleAccountRequired: "登入",
-    titleEmailRequired: "驗證您的電子郵件",
-    titleStrongRequired: "驗證您的身分",
     message: "登入以參與討論",
-    messageBothRequired: "此對話需要登入和活動門票驗證才能參與",
-    messageZupassOnly: "此對話需要活動門票驗證才能參與",
-    messageAccountRequired: "登入以參與此對話",
-    messageEmailRequired: "驗證您的電子郵件以參與此對話",
-    messageStrongRequired: "驗證您的手機或身分以參與此對話",
     labelOk: "登入",
-    labelOkZupass: "驗證門票",
-    labelOkAccount: "繼續",
-    labelOkEmail: "驗證郵件",
-    labelOkStrong: "驗證",
     labelCancel: "取消",
-    labelStartOnboarding: "開始",
-    labelPostponeOnboarding: "暫時不要",
     subMessageStatementDraft: "您的意見草稿將被儲存。",
     subMessageConversationDraft: "您的對話草稿將被儲存。",
     subMessageReturnToStatement: "您將返回到該意見。",
@@ -247,26 +102,10 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "檢舉用戶內容需要用戶帳戶。",
   },
   he: {
-    titleOnboardingRequired: "כמה צעדים מהירים לפני ההשתתפות",
     title: "התחברות ל-Agora",
-    titleZupassOnly: "אימות כרטיס אירוע",
-    titleAccountRequired: "התחברות",
-    titleEmailRequired: 'אימות דוא"ל',
-    titleStrongRequired: "אימות זהות",
     message: "התחברו כדי להשתתף בדיונים",
-    messageBothRequired: "שיחה זו דורשת התחברות ואימות כרטיס אירוע להשתתפות",
-    messageZupassOnly: "שיחה זו דורשת אימות כרטיס אירוע להשתתפות",
-    messageAccountRequired: "התחברו כדי להשתתף בשיחה זו",
-    messageEmailRequired: 'אמתו את הדוא"ל שלכם כדי להשתתף בשיחה זו',
-    messageStrongRequired: "אמתו את הטלפון או הזהות שלכם כדי להשתתף בשיחה זו",
     labelOk: "התחברות",
-    labelOkZupass: "אימות כרטיס",
-    labelOkAccount: "המשך",
-    labelOkEmail: 'אימות דוא"ל',
-    labelOkStrong: "אימות",
     labelCancel: "ביטול",
-    labelStartOnboarding: "מתחילים",
-    labelPostponeOnboarding: "לא עכשיו",
     subMessageStatementDraft: "טיוטת ההצהרה שלך תישמר.",
     subMessageConversationDraft: "טיוטת השיחה שלך תישמר.",
     subMessageReturnToStatement: "תוחזרו להצהרה זו.",
@@ -274,29 +113,10 @@ export const preParticipationIntentionDialogTranslations: Record<
     subMessageReportRequired: "נדרש חשבון משתמש לדיווח על תוכן משתמשים.",
   },
   ja: {
-    titleOnboardingRequired: "参加する前に、いくつかの簡単なステップ",
     title: "Agora にログイン",
-    titleZupassOnly: "イベントチケットの確認",
-    titleAccountRequired: "ログイン",
-    titleEmailRequired: "メールアドレスを確認",
-    titleStrongRequired: "本人確認",
     message: "ログインして議論に参加",
-    messageBothRequired:
-      "この会話に参加するにはログインとイベントチケットの確認が必要です",
-    messageZupassOnly: "この会話に参加するにはイベントチケットの確認が必要です",
-    messageAccountRequired: "この会話に参加するにはログインが必要です",
-    messageEmailRequired:
-      "この会話に参加するにはメールアドレスの確認が必要です",
-    messageStrongRequired:
-      "この会話に参加するには電話番号または本人確認が必要です",
     labelOk: "ログイン",
-    labelOkZupass: "チケット確認",
-    labelOkAccount: "続ける",
-    labelOkEmail: "メール確認",
-    labelOkStrong: "確認",
     labelCancel: "キャンセル",
-    labelStartOnboarding: "始める",
-    labelPostponeOnboarding: "後で",
     subMessageStatementDraft: "あなたの意見の下書きは保存されます。",
     subMessageConversationDraft: "あなたの会話の下書きは保存されます。",
     subMessageReturnToStatement: "この意見に戻ります。",
@@ -305,30 +125,10 @@ export const preParticipationIntentionDialogTranslations: Record<
       "コンテンツの報告にはユーザーアカウントが必要です。",
   },
   ky: {
-    titleOnboardingRequired: "Катышуудан мурун бир нече кыска кадам",
     title: "Agora'га кирүү",
-    titleZupassOnly: "Иш-чаранын билетин текшерүү",
-    titleAccountRequired: "Кирүү",
-    titleEmailRequired: "Электрондук почтаны текшерүү",
-    titleStrongRequired: "Инсандыгыңызды текшерүү",
     message: "Талкууларга катышуу үчүн кириңиз",
-    messageBothRequired:
-      "Бул талкууга катышуу үчүн кирүү жана иш-чара билетин текшерүү талап кылынат",
-    messageZupassOnly:
-      "Бул талкууга катышуу үчүн иш-чара билетин текшерүү талап кылынат",
-    messageAccountRequired: "Бул талкууга катышуу үчүн кириңиз",
-    messageEmailRequired:
-      "Бул талкууга катышуу үчүн электрондук почтаңызды текшериңиз",
-    messageStrongRequired:
-      "Бул талкууга катышуу үчүн телефонуңузду же инсандыгыңызды текшериңиз",
     labelOk: "Кирүү",
-    labelOkZupass: "Билетти текшерүү",
-    labelOkAccount: "Улантуу",
-    labelOkEmail: "Почтаны текшерүү",
-    labelOkStrong: "Текшерүү",
     labelCancel: "Жокко чыгаруу",
-    labelStartOnboarding: "Баштоо",
-    labelPostponeOnboarding: "Азыр эмес",
     subMessageStatementDraft: "Пикириңиздин черновиги сакталат.",
     subMessageConversationDraft: "Талкуу черновигиңиз сакталат.",
     subMessageReturnToStatement: "Сиз бул пикирге кайтарыласыз.",
@@ -337,30 +137,10 @@ export const preParticipationIntentionDialogTranslations: Record<
       "Мазмун жөнүндө кабарлоо үчүн колдонуучу аккаунту талап кылынат.",
   },
   ru: {
-    titleOnboardingRequired: "Несколько простых шагов перед участием",
     title: "Войти в Agora",
-    titleZupassOnly: "Проверка билета мероприятия",
-    titleAccountRequired: "Войти",
-    titleEmailRequired: "Подтвердите электронную почту",
-    titleStrongRequired: "Подтвердите вашу личность",
     message: "Войдите, чтобы участвовать в обсуждениях",
-    messageBothRequired:
-      "Для участия в этом обсуждении требуется вход и проверка билета мероприятия",
-    messageZupassOnly:
-      "Для участия в этом обсуждении требуется проверка билета мероприятия",
-    messageAccountRequired: "Войдите для участия в этом обсуждении",
-    messageEmailRequired:
-      "Подтвердите электронную почту для участия в этом обсуждении",
-    messageStrongRequired:
-      "Подтвердите телефон или личность для участия в этом обсуждении",
     labelOk: "Войти",
-    labelOkZupass: "Проверить билет",
-    labelOkAccount: "Продолжить",
-    labelOkEmail: "Подтвердить почту",
-    labelOkStrong: "Подтвердить",
     labelCancel: "Отмена",
-    labelStartOnboarding: "Начать",
-    labelPostponeOnboarding: "Не сейчас",
     subMessageStatementDraft: "Черновик вашего высказывания будет сохранён.",
     subMessageConversationDraft: "Черновик вашего обсуждения будет сохранён.",
     subMessageReturnToStatement: "Вы вернётесь к этому высказыванию.",

@@ -3,7 +3,6 @@ import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 export interface ConversationSurveyQuestionTranslations {
   failedToLoadSurveyTitle: string;
   tryAgainLabel: string;
-  conversationSurveyTitle: string;
   questionProgress: string;
   needsUpdateLabel: string;
   requiredLabel: string;
@@ -35,7 +34,6 @@ export const conversationSurveyQuestionTranslations: Record<
   en: {
     failedToLoadSurveyTitle: "Failed to load survey",
     tryAgainLabel: "Try again",
-    conversationSurveyTitle: "Conversation survey",
     questionProgress: "Question {current} of {total}",
     needsUpdateLabel: "Needs update",
     requiredLabel: "Required",
@@ -66,7 +64,6 @@ export const conversationSurveyQuestionTranslations: Record<
   ar: {
     failedToLoadSurveyTitle: "فشل تحميل الاستبيان",
     tryAgainLabel: "حاول مرة أخرى",
-    conversationSurveyTitle: "استبيان المحادثة",
     questionProgress: "السؤال {current} من {total}",
     needsUpdateLabel: "يحتاج إلى تحديث",
     requiredLabel: "مطلوب",
@@ -96,7 +93,6 @@ export const conversationSurveyQuestionTranslations: Record<
   es: {
     failedToLoadSurveyTitle: "No se pudo cargar la encuesta",
     tryAgainLabel: "Intentar de nuevo",
-    conversationSurveyTitle: "Encuesta de la conversación",
     questionProgress: "Pregunta {current} de {total}",
     needsUpdateLabel: "Necesita actualización",
     requiredLabel: "Obligatoria",
@@ -127,7 +123,6 @@ export const conversationSurveyQuestionTranslations: Record<
   fa: {
     failedToLoadSurveyTitle: "بارگیری نظرسنجی انجام نشد",
     tryAgainLabel: "تلاش دوباره",
-    conversationSurveyTitle: "نظرسنجی گفتگو",
     questionProgress: "پرسش {current} از {total}",
     needsUpdateLabel: "نیاز به به‌روزرسانی دارد",
     requiredLabel: "الزامی",
@@ -157,7 +152,6 @@ export const conversationSurveyQuestionTranslations: Record<
   fr: {
     failedToLoadSurveyTitle: "Impossible de charger le questionnaire",
     tryAgainLabel: "Réessayer",
-    conversationSurveyTitle: "Questionnaire de la conversation",
     questionProgress: "Question {current} sur {total}",
     needsUpdateLabel: "À mettre à jour",
     requiredLabel: "Requis",
@@ -188,7 +182,6 @@ export const conversationSurveyQuestionTranslations: Record<
   he: {
     failedToLoadSurveyTitle: "טעינת הסקר נכשלה",
     tryAgainLabel: "לנסות שוב",
-    conversationSurveyTitle: "סקר השיחה",
     questionProgress: "שאלה {current} מתוך {total}",
     needsUpdateLabel: "דורש עדכון",
     requiredLabel: "נדרש",
@@ -218,7 +211,6 @@ export const conversationSurveyQuestionTranslations: Record<
   ja: {
     failedToLoadSurveyTitle: "アンケートを読み込めませんでした",
     tryAgainLabel: "もう一度試す",
-    conversationSurveyTitle: "会話アンケート",
     questionProgress: "質問 {current} / {total}",
     needsUpdateLabel: "更新が必要",
     requiredLabel: "必須",
@@ -251,7 +243,6 @@ export const conversationSurveyQuestionTranslations: Record<
   ky: {
     failedToLoadSurveyTitle: "Сурамжылоону жүктөө ишке ашкан жок",
     tryAgainLabel: "Кайра аракет кылуу",
-    conversationSurveyTitle: "Сүйлөшүүнүн сурамжылоосу",
     questionProgress: "Суроо {current} / {total}",
     needsUpdateLabel: "Жаңыртуу керек",
     requiredLabel: "Милдеттүү",
@@ -282,7 +273,6 @@ export const conversationSurveyQuestionTranslations: Record<
   ru: {
     failedToLoadSurveyTitle: "Не удалось загрузить опрос",
     tryAgainLabel: "Попробовать снова",
-    conversationSurveyTitle: "Опрос беседы",
     questionProgress: "Вопрос {current} из {total}",
     needsUpdateLabel: "Требует обновления",
     requiredLabel: "Обязательный",
@@ -312,7 +302,6 @@ export const conversationSurveyQuestionTranslations: Record<
   "zh-Hans": {
     failedToLoadSurveyTitle: "无法加载问卷",
     tryAgainLabel: "重试",
-    conversationSurveyTitle: "对话问卷",
     questionProgress: "第 {current} 题，共 {total} 题",
     needsUpdateLabel: "需要更新",
     requiredLabel: "必答",
@@ -341,7 +330,6 @@ export const conversationSurveyQuestionTranslations: Record<
   "zh-Hant": {
     failedToLoadSurveyTitle: "無法載入問卷",
     tryAgainLabel: "重試",
-    conversationSurveyTitle: "對話問卷",
     questionProgress: "第 {current} 題，共 {total} 題",
     needsUpdateLabel: "需要更新",
     requiredLabel: "必答",

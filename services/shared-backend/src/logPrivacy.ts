@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { isAbsolute, relative } from "node:path";
+import { isAbsolute, relative, resolve } from "node:path";
 import type { LoggerOptions } from "pino";
 import { z } from "zod";
 
@@ -13,6 +13,13 @@ export interface LogRequestMetadata {
 }
 
 const errorCodeSchema = z.enum([
+    "EADDRINUSE",
+    "EADDRNOTAVAIL",
+    "EACCES",
+    "EPERM",
+    "ENOENT",
+    "EMFILE",
+    "ENOSPC",
     "ECONNREFUSED",
     "ECONNRESET",
     "ENOTFOUND",
@@ -41,6 +48,42 @@ const errorCodeSchema = z.enum([
     "TooManyRequestsException",
     "MessageRejected",
 ]);
+const errorCodeMessages: Record<z.infer<typeof errorCodeSchema>, string> = {
+    EADDRINUSE: "Address is already in use",
+    EADDRNOTAVAIL: "Requested address is not available",
+    EACCES: "Permission denied",
+    EPERM: "Operation not permitted",
+    ENOENT: "File or directory does not exist",
+    EMFILE: "Too many open files",
+    ENOSPC: "No space left on device",
+    ECONNREFUSED: "Connection refused",
+    ECONNRESET: "Connection reset by peer",
+    ENOTFOUND: "Host could not be resolved",
+    EAI_AGAIN: "Temporary name resolution failure",
+    EPIPE: "Broken pipe",
+    ETIMEDOUT: "Operation timed out",
+    ECONNABORTED: "Connection aborted",
+    ERR_NETWORK: "Network request failed",
+    ERR_BAD_RESPONSE: "Provider returned an unsuccessful response",
+    ERR_BAD_REQUEST: "Provider rejected the request",
+    ERR_CANCELED: "Request cancelled",
+    ERR_INVALID_URL: "Invalid URL",
+    CONNECT_TIMEOUT: "Connection timed out",
+    CONNECTION_CLOSED: "Connection closed",
+    CONNECTION_DESTROYED: "Connection destroyed",
+    CONNECTION_ENDED: "Connection ended",
+    "23505": "Unique constraint violated",
+    "23503": "Foreign key constraint violated",
+    "23502": "Not-null constraint violated",
+    "23514": "Check constraint violated",
+    "40001": "Transaction serialization failure",
+    "40P01": "Database deadlock detected",
+    "53300": "Too many database connections",
+    "57P01": "Database shutting down",
+    ThrottlingException: "Provider throttled the request",
+    TooManyRequestsException: "Provider request limit exceeded",
+    MessageRejected: "Email provider rejected the message",
+};
 const errorTypeSchema = z.enum([
     "Error",
     "TypeError",
@@ -71,13 +114,15 @@ const frameSchema = z.object({
     file: z
         .string()
         .max(200)
-        .regex(/^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_.-]+\.(?:[cm]?[jt]s|vue)$/),
+        .regex(
+            /^(?:node:[A-Za-z0-9_/-]+|(?:[A-Za-z0-9_@.-]+\/)*[A-Za-z0-9_.-]+\.(?:[cm]?[jt]s|vue))$/,
+        ),
     line: z.number().int().positive(),
     column: z.number().int().positive(),
 });
 const errorSummarySchema = z.object({
     type: errorTypeSchema,
-    message: z.literal("Error details omitted"),
+    message: z.string().max(1024),
     code: errorCodeSchema.optional(),
     statusCode: z.number().int().min(100).max(599).optional(),
     frames: z.array(frameSchema).max(12),
@@ -85,7 +130,7 @@ const errorSummarySchema = z.object({
 const logErrorSchema = errorSummarySchema.extend({
     causes: z.array(errorSummarySchema).max(4),
 });
-export type LogError = z.infer<typeof logErrorSchema>;
+export type LogError = z.infer<typeof logErrorSchema> & { stack: string };
 
 const nativeErrorKinds: readonly {
     type: LogError["type"];
@@ -151,6 +196,8 @@ export const logContextSchema = z.object({
             "email_deliverability_check_failed",
             "application_error",
             "application_event",
+            "server_start_failed",
+            "server_ready",
             "seed_suggestion",
             "seed_suggestion_failed",
             "database_query",
@@ -314,15 +361,14 @@ function stackFrames({
     // Never include the message line, cause messages, absolute paths, or function arguments.
     for (const line of stack.slice(0, 16_384).split("\n").slice(1, 33)) {
         const match =
-            /(?:\(|\s)((?:file:\/\/\/|\/)[^\n)]+):(\d+):(\d+)\)?$/.exec(line);
+            /(?:\(|\s)((?:node:|file:\/\/\/|\/)[^\n)]+):(\d+):(\d+)\)?$/.exec(
+                line,
+            );
         const location = match?.at(1);
         if (location === undefined) continue;
         try {
-            const file = location.startsWith("file:")
-                ? fileURLToPath(new URL(location))
-                : location;
-            const localPath = relative(root, file);
-            if (isAbsolute(localPath) || localPath.startsWith("..")) continue;
+            const localPath = stackFramePath({ location, root });
+            if (localPath === undefined) continue;
             const parsed = frameSchema.safeParse({
                 file: localPath,
                 line: Number(match?.at(2)),
@@ -337,19 +383,65 @@ function stackFrames({
     return frames;
 }
 
+function stackFramePath({
+    location,
+    root,
+}: {
+    location: string;
+    root: string;
+}): string | undefined {
+    if (location.startsWith("node:")) return location;
+    const file = location.startsWith("file:")
+        ? fileURLToPath(new URL(location))
+        : location;
+    const localPath = relative(root, file);
+    if (!isAbsolute(localPath) && !localPath.startsWith("..")) return localPath;
+
+    const dependencyPath = relative(resolve(root, "..", "node_modules"), file);
+    if (isAbsolute(dependencyPath) || dependencyPath.startsWith(".."))
+        return undefined;
+    // pnpm paths contain an inner node_modules segment. Keep package-relative
+    // locations rather than machine-specific install paths or usernames.
+    const packagePath = dependencyPath.slice(
+        dependencyPath.lastIndexOf("node_modules/") + "node_modules/".length,
+    );
+    return `node_modules/${dependencyPath.includes("node_modules/") ? packagePath : dependencyPath}`;
+}
+
+function withErrorStack(error: z.infer<typeof logErrorSchema>): LogError {
+    const summaries = [error, ...error.causes];
+    const stack = summaries
+        .map((summary, index) => {
+            const code = summary.code === undefined ? "" : ` [${summary.code}]`;
+            const prefix = index === 0 ? "" : "Caused by: ";
+            const frames = summary.frames.map(
+                ({ file, line, column }) =>
+                    `    at ${file}:${line.toString()}:${column.toString()}`,
+            );
+            return [
+                `${prefix}${summary.type}${code}: ${summary.message}`,
+                ...frames,
+            ].join("\n");
+        })
+        .join("\n");
+    return { ...error, stack };
+}
+
 export function toLogError({
     error,
     sourceRoot,
+    formatMessage = () => "Error details omitted",
 }: {
     error: unknown;
     sourceRoot: URL;
+    formatMessage?: (message: unknown) => string;
 }): LogError {
-    const empty: LogError = {
+    const empty = withErrorStack({
         type: "Error",
         message: "Error details omitted",
         frames: [],
         causes: [],
-    };
+    });
     try {
         const summarize = (
             value: unknown,
@@ -380,7 +472,11 @@ export function toLogError({
                     ? type.data
                     : (nativeErrorKinds.find(({ matches }) => matches(value))
                           ?.type ?? "Error"),
-                message: "Error details omitted",
+                message:
+                    (code?.success
+                        ? errorCodeMessages[code.data]
+                        : undefined) ??
+                    formatMessage(ownValue({ value, key: "message" })),
                 code: code?.success ? code.data : undefined,
                 statusCode: status?.success ? status.data : undefined,
                 frames: stackFrames({
@@ -400,7 +496,7 @@ export function toLogError({
             causes.push(summarize(cause));
             current = cause;
         }
-        return { ...summary, causes };
+        return withErrorStack({ ...summary, causes });
     } catch {
         return empty;
     }
@@ -433,21 +529,14 @@ function matchesTemplate({
     );
 }
 
-export function createLogPrivacy({
+function createMessageFormatter({
     messageTemplates,
-    sourceRoot,
-    serializeRequest,
-    loadEventSchema,
+    fallback,
 }: {
     messageTemplates: readonly LogMessageTemplate[];
-    sourceRoot: URL;
-    serializeRequest?: (value: unknown) => LogRequestMetadata;
-    loadEventSchema?: z.ZodType;
-}) {
-    const approvedMessages = new Set<string>([
-        "Application event",
-        "Log details omitted",
-    ]);
+    fallback: string;
+}): (value: unknown) => string {
+    const approvedMessages = new Set([fallback]);
     const templates: CompiledMessageTemplate[] = [];
     for (const { parts } of messageTemplates) {
         if (parts.length === 1) {
@@ -469,6 +558,78 @@ export function createLogPrivacy({
             output,
         });
     }
+    return (value) => {
+        if (typeof value !== "string" || value.length > 8192) return fallback;
+        if (approvedMessages.has(value)) return value;
+        return (
+            templates.find((template) =>
+                matchesTemplate({ message: value, template }),
+            )?.output ?? fallback
+        );
+    };
+}
+
+export function createLogErrorProjector({
+    sourceRoot,
+    errorMessageTemplates = [],
+}: {
+    sourceRoot: URL;
+    errorMessageTemplates?: readonly LogMessageTemplate[];
+}): (error: unknown) => LogError {
+    const formatErrorMessage = createMessageFormatter({
+        messageTemplates: errorMessageTemplates,
+        fallback: "Error details omitted",
+    });
+    return (error) => {
+        const parsed = logErrorSchema.safeParse(projectError(error));
+        if (parsed.success) {
+            const sanitizeSummary = (
+                summary: z.infer<typeof errorSummarySchema>,
+            ) => ({
+                ...summary,
+                message:
+                    (summary.code === undefined
+                        ? undefined
+                        : errorCodeMessages[summary.code]) ??
+                    formatErrorMessage(summary.message),
+            });
+            return withErrorStack({
+                ...sanitizeSummary(parsed.data),
+                causes: parsed.data.causes.map(sanitizeSummary),
+            });
+        }
+        return toLogError({
+            error,
+            sourceRoot,
+            formatMessage: formatErrorMessage,
+        });
+    };
+}
+
+export function createLogPrivacy({
+    messageTemplates,
+    sourceRoot,
+    serializeRequest,
+    loadEventSchema,
+    errorMessageTemplates = [],
+}: {
+    messageTemplates: readonly LogMessageTemplate[];
+    sourceRoot: URL;
+    serializeRequest?: (value: unknown) => LogRequestMetadata;
+    loadEventSchema?: z.ZodType;
+    errorMessageTemplates?: readonly LogMessageTemplate[];
+}) {
+    const formatMessage = createMessageFormatter({
+        messageTemplates: [
+            ...messageTemplates,
+            { parts: ["Log details omitted"] },
+        ],
+        fallback: "Application event",
+    });
+    const safeError = createLogErrorProjector({
+        sourceRoot,
+        errorMessageTemplates,
+    });
     const loadPrefix = "AGORA_LOAD_EVENT ";
     const safeLoadMessage = (value: unknown): string | undefined => {
         if (
@@ -496,21 +657,7 @@ export function createLogPrivacy({
                 "Application event"
             );
         }
-        if (approvedMessages.has(value)) return value;
-        const template = templates.find((template) =>
-            matchesTemplate({ message: value, template }),
-        );
-        return template === undefined ? "Application event" : template.output;
-    };
-    const safeError = (error: unknown): LogError => {
-        if (
-            ownValue({ value: error, key: "message" }) ===
-            "Error details omitted"
-        ) {
-            const parsed = logErrorSchema.safeParse(projectError(error));
-            if (parsed.success) return parsed.data;
-        }
-        return toLogError({ error, sourceRoot });
+        return formatMessage(value);
     };
     const fields = (value: unknown): Record<string, unknown> => {
         try {
@@ -568,7 +715,7 @@ export function createLogPrivacy({
                         typeof first === "string" ? first : args.at(1);
                     const output =
                         first instanceof Error
-                            ? { err: toLogError({ error: first, sourceRoot }) }
+                            ? { err: safeError(first) }
                             : fields(first);
                     // Never pass interpolation arguments through: they can bypass
                     // field redaction and be embedded directly in Pino's `msg`.
@@ -588,15 +735,9 @@ export function createLogPrivacy({
             // Avoid reinterpreting an already-projected error as a raw exception.
             err(error: unknown) {
                 try {
-                    return {
-                        ...safeError(error),
-                        stack: "Stack details omitted",
-                    };
+                    return safeError(error);
                 } catch {
-                    return {
-                        ...toLogError({ error: undefined, sourceRoot }),
-                        stack: "Stack details omitted",
-                    };
+                    return toLogError({ error: undefined, sourceRoot });
                 }
             },
             req: projectRequest,

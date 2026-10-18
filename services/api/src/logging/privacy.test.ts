@@ -33,6 +33,36 @@ function captureServer() {
 }
 
 describe("API logging privacy", () => {
+    it("emits actionable startup failures with redacted Node stack traces", async () => {
+        const capture = captureServer();
+        const error = Object.assign(
+            new Error(
+                "listen EADDRINUSE: address already in use 192.0.2.1:8084",
+            ),
+            { code: "EADDRINUSE" },
+        );
+        error.stack = `${error.message}\n    at Server.setupListenHandle (node:net:1940:16)\n    at listenInCluster (node:net:1997:12)`;
+        try {
+            logApiError({
+                logger: capture.server.log,
+                level: "error",
+                event: { event: "server_start_failed" },
+                error,
+            });
+            expect(capture.records().at(0)).toMatchObject({
+                event: "server_start_failed",
+                msg: "API server failed to start",
+                err: {
+                    code: "EADDRINUSE",
+                    message: "Address is already in use",
+                    stack: "Error [EADDRINUSE]: Address is already in use\n    at node:net:1940:16\n    at node:net:1997:12",
+                },
+            });
+            expect(capture.lines.join("")).not.toContain("192.0.2.1");
+        } finally {
+            await capture.server.close();
+        }
+    });
     it("keeps approved Bedrock diagnostics while omitting provider text and metadata", async () => {
         const capture = captureServer();
         const error = new Error("private-provider-message private-credential");

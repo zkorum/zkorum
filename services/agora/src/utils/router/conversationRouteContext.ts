@@ -1,4 +1,8 @@
-import type { LocationQueryRaw, RouteLocationRaw, RouteRecordName } from "vue-router";
+import type {
+  LocationQueryRaw,
+  RouteLocationRaw,
+  RouteRecordName,
+} from "vue-router";
 
 export interface NormalConversationRouteContext {
   kind: "normal";
@@ -30,7 +34,17 @@ export function isConversationRoutePath(path: string): boolean {
 }
 
 export function isConversationOnboardingRoutePath(path: string): boolean {
-  return isConversationRoutePath(path) && path.includes("/onboarding");
+  return /^\/(?:conversation\/[^/]+|project\/[^/]+\/conversation\/[^/]+)(?:\/embed)?\/onboarding(?:\/|$)/u.test(
+    path
+  );
+}
+
+export function isConversationOnboardingRouteName(name: unknown): boolean {
+  return (
+    typeof name === "string" &&
+    (name === "/conversation/[postSlugId].onboarding" ||
+      name.startsWith("/conversation/[postSlugId].onboarding/"))
+  );
 }
 
 export function isConversationRouteName(name: unknown): boolean {
@@ -139,7 +153,10 @@ export function getConversationSurveyBasePath({
   conversationSlugId: string;
   routeContext?: ConversationRouteContext;
 }): string {
-  const conversationPath = getConversationPath({ conversationSlugId, routeContext });
+  const conversationPath = getConversationPath({
+    conversationSlugId,
+    routeContext,
+  });
   const normalizedConversationPath = conversationPath.endsWith("/")
     ? conversationPath.slice(0, -1)
     : conversationPath;

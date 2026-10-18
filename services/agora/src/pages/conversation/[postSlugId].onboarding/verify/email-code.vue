@@ -1,49 +1,40 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
+    :sheet="sheet"
     :back-callback="changeEmail"
     :close-callback="handleBackToConversation"
-    :show-close-button="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
+    <form class="formStyle" @submit.prevent="onSubmit">
+      <StepperLayout
+        fixed-navigation
+        :submit-call-back="onSubmit"
+        :current-step="2.5"
+        :total-steps="surveyStepTotal"
+        :enable-next-button="emailOtpFormRef?.isCodeComplete?.() ?? false"
+        :show-next-button="true"
+        :show-loading-button="emailOtpFormRef?.isSubmitButtonLoading ?? false"
+      >
+        <template #header>
+          <InfoHeader
+            :title="t('title')"
+            description=""
+            icon-name="mdi-email"
+          />
+        </template>
 
-    <template #footer>
-      <form class="formStyle" @submit.prevent="onSubmit">
-        <StepperLayout
-          :submit-call-back="onSubmit"
-          :current-step="2.5"
-          :total-steps="surveyStepTotal"
-          :enable-next-button="emailOtpFormRef?.isCodeComplete?.() ?? false"
-          :show-next-button="true"
-          :show-loading-button="emailOtpFormRef?.isSubmitButtonLoading ?? false"
-        >
-          <template #header>
-            <InfoHeader
-              :title="t('title')"
-              description=""
-              icon-name="mdi-email"
-            />
-          </template>
-
-          <template #body>
-            <EmailOtpForm
-              ref="emailOtpFormRef"
-              @change-identifier="changeEmail"
-            />
-          </template>
-        </StepperLayout>
-      </form>
-    </template>
-  </OnboardingLayout>
+        <template #body>
+          <EmailOtpForm
+            ref="emailOtpFormRef"
+            @change-identifier="changeEmail"
+          />
+        </template>
+      </StepperLayout>
+    </form>
+  </ConversationOnboardingLayout>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import EmailOtpForm from "src/components/verification/EmailOtpForm.vue";
@@ -51,7 +42,7 @@ import { useConversationOnboardingExit } from "src/composables/conversation/useC
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import {
   type VerifyEmailCodeTranslations,
   verifyEmailCodeTranslations,
@@ -59,8 +50,11 @@ import {
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { getConversationSurveyVerifyEmailPath } from "src/utils/survey/navigation";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+
+defineProps<{ sheet: DismissalController }>();
 
 const { t } = useComponentI18n<VerifyEmailCodeTranslations>(
   verifyEmailCodeTranslations
@@ -83,12 +77,9 @@ if (
   });
 }
 
-const {
-  conversationSlugId,
-  conversationData,
-  conversationDisplayContent,
-  surveyStepTotal,
-} = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
+const { conversationSlugId, surveyStepTotal } = useConversationSurveyState({
+  conversationSlugId: routeConversationSlugId,
+});
 
 const emailOtpFormRef = ref<{
   nextButtonClicked: () => void;
@@ -116,6 +107,7 @@ async function handleBackToConversation(): Promise<void> {
     routeContext: routeContext.value,
   });
 }
+
 </script>
 
 <style scoped lang="scss">

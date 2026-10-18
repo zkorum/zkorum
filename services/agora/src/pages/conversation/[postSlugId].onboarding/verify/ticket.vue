@@ -1,61 +1,52 @@
 <template>
-  <OnboardingLayout
+  <ConversationOnboardingLayout
+    :sheet="sheet"
     :back-callback="handleBackToWelcome"
     :close-callback="handleBackToConversation"
-    :show-close-button="true"
   >
-    <template #body>
-      <ConversationSurveyOnboardingHero
-        :conversation-data="conversationData"
-        :initial-display-content="conversationDisplayContent"
-      />
-    </template>
+    <PageLoadingSpinner v-if="isInitialLoading" />
 
-    <template #footer>
-      <PageLoadingSpinner v-if="isInitialLoading" />
+    <ErrorRetryBlock
+      v-else-if="hasLoadError"
+      :title="t('failedToLoadSurveyTitle')"
+      :retry-label="t('tryAgainLabel')"
+      @retry="refetchAll"
+    />
 
-      <ErrorRetryBlock
-        v-else-if="hasLoadError"
-        :title="t('failedToLoadSurveyTitle')"
-        :retry-label="t('tryAgainLabel')"
-        @retry="refetchAll"
-      />
+    <StepperLayout
+      v-else
+      fixed-navigation
+      :submit-call-back="handlePrimaryAction"
+      :current-step="2"
+      :total-steps="surveyStepTotal"
+      :enable-next-button="true"
+      :show-next-button="true"
+      :show-loading-button="isActing"
+    >
+      <template #header>
+        <InfoHeader
+          :title="t('verifyTicketTitle')"
+          :description="t('verifyTicketDescription')"
+          icon-name="mdi-ticket-confirmation-outline"
+        />
+      </template>
 
-      <StepperLayout
-        v-else
-        :submit-call-back="handlePrimaryAction"
-        :current-step="2"
-        :total-steps="surveyStepTotal"
-        :enable-next-button="true"
-        :show-next-button="true"
-        :show-loading-button="isActing"
-      >
-        <template #header>
-          <InfoHeader
-            :title="t('verifyTicketTitle')"
-            :description="t('verifyTicketDescription')"
-            icon-name="mdi-ticket-confirmation-outline"
-          />
-        </template>
-
-        <template #body>
-          <q-btn
-            flat
-            no-caps
-            color="primary"
-            class="ticket-card__secondary-action"
-            :label="t('backToConversationLabel')"
-            @click="handleBackToConversation"
-          />
-        </template>
-      </StepperLayout>
-    </template>
-  </OnboardingLayout>
+      <template #body>
+        <q-btn
+          flat
+          no-caps
+          color="primary"
+          class="ticket-card__secondary-action"
+          :label="t('backToConversationLabel')"
+          @click="handleBackToConversation"
+        />
+      </template>
+    </StepperLayout>
+  </ConversationOnboardingLayout>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -65,7 +56,7 @@ import { useConversationOnboardingRoute } from "src/composables/conversation/use
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useTicketVerificationFlow } from "src/composables/zupass/useTicketVerificationFlow";
-import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
@@ -73,6 +64,7 @@ import {
   getConversationSurveyOnboardingPath,
   getConversationSurveyVerifyPath,
 } from "src/utils/survey/navigation";
+import type { DismissalController } from "src/utils/ui/dismissalController";
 import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
@@ -81,6 +73,7 @@ import {
   conversationSurveyOnboardingTranslations,
 } from "../index.i18n";
 
+defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
@@ -106,7 +99,6 @@ if (
 const {
   conversationSlugId,
   conversationData,
-  conversationDisplayContent,
   surveyStepTotal,
   requirementState,
   isInitialLoading,

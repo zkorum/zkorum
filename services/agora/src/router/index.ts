@@ -1,5 +1,9 @@
-import { isChunkLoadError, reloadForChunkError } from "src/utils/error/chunkError";
+import {
+  isChunkLoadError,
+  reloadForChunkError,
+} from "src/utils/error/chunkError";
 import { useRouterGuard } from "src/utils/router/guard";
+import { shouldPreserveOnboardingScroll } from "src/utils/router/onboardingScroll";
 import { getSingleRouteParam } from "src/utils/router/params";
 import { getConversationSurveyOnboardingPath } from "src/utils/survey/navigation";
 import {
@@ -150,8 +154,10 @@ function isConversationTabSwitch({
     return false;
   }
 
-  const toProjectSlug = "projectSlug" in toParams ? toParams.projectSlug : undefined;
-  const fromProjectSlug = "projectSlug" in fromParams ? fromParams.projectSlug : undefined;
+  const toProjectSlug =
+    "projectSlug" in toParams ? toParams.projectSlug : undefined;
+  const fromProjectSlug =
+    "projectSlug" in fromParams ? fromParams.projectSlug : undefined;
 
   return (
     toParams.postSlugId === fromParams.postSlugId &&
@@ -180,6 +186,11 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
   const Router = createRouter({
     scrollBehavior: (to, from, savedPosition) => {
+      if (
+        shouldPreserveOnboardingScroll({ to, from, conversationTabRouteNames })
+      ) {
+        return false;
+      }
       if (isConversationTabSwitch({ to, from })) {
         return false;
       }
@@ -194,7 +205,9 @@ export default defineRouter(function (/* { store, ssrContext } */) {
         const stored = sessionStorage.getItem(key);
         if (stored) {
           sessionStorage.removeItem(key);
-          const scroll = z.object({ top: z.number().optional() }).parse(JSON.parse(stored));
+          const scroll = z
+            .object({ top: z.number().optional() })
+            .parse(JSON.parse(stored));
           return { left: 0, top: scroll.top ?? 0 };
         }
       } catch {

@@ -73,16 +73,16 @@ export function useParticipationGate({
   surveyGate: MaybeRefOrGetter<SurveyGateSummary | undefined>;
 }) {
   const route = useRoute();
-  const { isAuthInitialized, isLoggedIn, hasStrongVerification, hasEmailVerification } = storeToRefs(
-    useAuthenticationStore()
-  );
+  const {
+    isAuthInitialized,
+    isLoggedIn,
+    hasStrongVerification,
+    hasEmailVerification,
+  } = storeToRefs(useAuthenticationStore());
   const { verifiedEventTickets } = storeToRefs(useUserStore());
   const conversationOnboardingStore = useConversationOnboardingStore();
-  const {
-    navigateToSurveyRoot,
-    navigateToNextSurveyStep,
-    navigateToSurveySummary,
-  } = useSurveyNavigation();
+  const { navigateToSurveyRoot, navigateToNextSurveyStep } =
+    useSurveyNavigation();
   const surveyStatusQuery = useSurveyStatusQuery({
     conversationSlugId: computed(() => toValue(conversationSlugId)),
     enabled: computed(() => isAuthInitialized.value),
@@ -146,13 +146,18 @@ export function useParticipationGate({
     });
   }
 
-  async function shouldOpenParticipationModal(): Promise<boolean> {
-    if (requirementState.value.needsAuth || requirementState.value.needsTicket) {
+  async function needsParticipationOnboarding(): Promise<boolean> {
+    if (
+      requirementState.value.needsAuth ||
+      requirementState.value.needsTicket
+    ) {
       return true;
     }
 
     resolveEmailUpdates.value = true;
-    const emailUpdateStatus = (await emailUpdateSummaryQuery.resolveOnboarding()).status;
+    const emailUpdateStatus = (
+      await emailUpdateSummaryQuery.resolveOnboarding()
+    ).status;
     if (
       emailUpdateStatus === "required" ||
       emailUpdateStatus === "transient_error"
@@ -173,20 +178,6 @@ export function useParticipationGate({
 
   async function openParticipationOnboarding(): Promise<void> {
     startResumeEntry();
-
-    const gate = effectiveSurveyGate.value;
-    if (
-      gate?.hasSurvey === true &&
-      gate.status === "complete_valid" &&
-      !requirementState.value.needsAuth &&
-      !requirementState.value.needsTicket
-    ) {
-      await navigateToSurveySummary({
-        conversationSlugId: toValue(conversationSlugId),
-      });
-      return;
-    }
-
     await navigateToSurveyRoot({
       conversationSlugId: toValue(conversationSlugId),
     });
@@ -230,7 +221,7 @@ export function useParticipationGate({
     openParticipationOnboarding,
     openNextSurveyStep,
     handleBlockedReason,
-    shouldOpenParticipationModal,
+    needsParticipationOnboarding,
   } satisfies ParticipationGateState & {
     openParticipationOnboarding: () => Promise<void>;
     openNextSurveyStep: () => Promise<void>;
@@ -239,6 +230,6 @@ export function useParticipationGate({
     }: {
       reason: ParticipationBlockedReason;
     }) => Promise<"handled">;
-    shouldOpenParticipationModal: () => Promise<boolean>;
+    needsParticipationOnboarding: () => Promise<boolean>;
   };
 }

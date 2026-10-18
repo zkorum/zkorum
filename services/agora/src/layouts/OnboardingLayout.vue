@@ -13,7 +13,6 @@
               class="baseLayer"
               :class="{
                 'baseLayer--bodyBehindFooter': bodyBehindFooter,
-                'baseLayer--fixedNavigation': fixedNavigation,
               }"
             >
               <button
@@ -23,14 +22,6 @@
                 @click="handleBack"
               >
                 <q-icon name="mdi-arrow-left" size="1.2rem" />
-              </button>
-              <button
-                v-if="showCloseButton"
-                class="closeButton"
-                :aria-label="t('close')"
-                @click="handleClose"
-              >
-                <q-icon name="mdi-close" size="1.2rem" />
               </button>
               <div class="containerPaddings">
                 <slot name="body" />
@@ -67,18 +58,12 @@ const props = withDefaults(
   defineProps<{
     showBackButton?: boolean;
     backCallback?: () => void;
-    showCloseButton?: boolean;
-    closeCallback?: () => void;
     bodyBehindFooter?: boolean;
-    fixedNavigation?: boolean;
   }>(),
   {
     showBackButton: true,
     backCallback: undefined,
-    showCloseButton: false,
-    closeCallback: undefined,
     bodyBehindFooter: false,
-    fixedNavigation: false,
   }
 );
 
@@ -91,14 +76,6 @@ const { t } = useComponentI18n<OnboardingLayoutTranslations>(
 function handleBack() {
   if (props.backCallback) {
     props.backCallback();
-  } else {
-    router.back();
-  }
-}
-
-function handleClose() {
-  if (props.closeCallback) {
-    props.closeCallback();
   } else {
     router.back();
   }
@@ -123,64 +100,10 @@ function handleClose() {
   overflow: hidden;
 }
 
-.baseLayer--fixedNavigation {
-  height: calc(100dvh - var(--visible-viewport-bottom-inset, 0px));
-  min-height: 0;
-  overflow: hidden;
-
-  .containerPaddings {
-    flex: 0 1 auto;
-    min-height: 0;
-    overflow: clip;
-  }
-
-  .topLayer {
-    // Reserve navigation space even when the banner needs to shrink.
-    flex: 1 0 calc(5rem + env(safe-area-inset-bottom, 0px));
-    min-height: 0;
-    margin-top: 0;
-    align-items: stretch;
-    overflow: hidden;
-  }
-
-  .widthLimiter {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-}
-
 .backButton {
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.7);
-  color: rgba(0, 0, 0, 0.7);
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.9);
-  }
-
-  &:active {
-    background-color: rgba(255, 255, 255, 1);
-  }
-}
-
-.closeButton {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
   z-index: 10;
   display: flex;
   align-items: center;

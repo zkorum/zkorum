@@ -2,18 +2,14 @@
   <div>
     <DialogContainer
       v-model="showDialog"
-      :title="getTitle()"
-      :message="getMessage()"
+      :title="t('title')"
+      :message="t('message')"
       :show-cancel-dialog="true"
       :ok-callback="okButtonClicked"
       :cancel-callback="() => {}"
-      :label-ok="getLabelOk()"
-      :label-cancel="
-        requiresConversationOnboarding()
-          ? t('labelPostponeOnboarding')
-          : t('labelCancel')
-      "
-      :ok-loading="isVerifyingZupass"
+      :label-ok="t('labelOk')"
+      :label-cancel="t('labelCancel')"
+      :ok-loading="false"
     >
       <template #body>
         <div v-if="subMessage" class="shadowBoxStyle">
@@ -30,22 +26,11 @@
 </template>
 
 <script setup lang="ts">
-import {
-  type ConversationParticipationTranslations,
-  conversationParticipationTranslations,
-} from "src/components/onboarding/conversationParticipation.i18n";
+import { useParticipationIntentionMessage } from "src/composables/conversation/useParticipationIntentionMessage";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import { useZupassVerification } from "src/composables/zupass/useZupassVerification";
-import type { EventSlug, ParticipationMode } from "src/shared/types/zod";
-import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import type { PossibleIntentions } from "src/stores/loginIntention";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
-import { getHistoryPosition } from "src/utils/nav/historyBack";
-import { getConversationRouteContextFromRoute } from "src/utils/router/conversationRouteContext";
-import { getConversationSurveyVerifyPath } from "src/utils/survey/navigation";
-import { computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 
 import DialogContainer from "./DialogContainer.vue";
 import {
@@ -56,10 +41,6 @@ import {
 const props = defineProps<{
   okCallback: () => void;
   activeIntention: PossibleIntentions;
-  conversationSlugId?: string;
-  requiresZupassEventSlug?: EventSlug;
-  needsAuth?: boolean;
-  participationMode?: ParticipationMode;
 }>();
 
 const showDialog = defineModel<boolean>({ required: true });
@@ -67,181 +48,19 @@ const showDialog = defineModel<boolean>({ required: true });
 const { t } = useComponentI18n<PreParticipationIntentionDialogTranslations>(
   preParticipationIntentionDialogTranslations
 );
-const { t: tParticipation } =
-  useComponentI18n<ConversationParticipationTranslations>(
-    conversationParticipationTranslations
-  );
 
 const { setActiveUserIntention } = useLoginIntentionStore();
-const conversationOnboardingStore = useConversationOnboardingStore();
-const route = useRoute();
 
-const flowStore = onboardingFlowStore();
-
-const { isVerifying: isVerifyingZupass } = useZupassVerification();
-
-const subMessageKeys = {
-  none: undefined,
-  emailUpdates: undefined,
-  settings: undefined,
-  newOpinion: "subMessageStatementDraft",
-  newConversation: "subMessageConversationDraft",
-  agreement: "subMessageReturnToStatement",
-  reportUserContent: "subMessageReportRequired",
-  voting: "subMessageReturnToConversation",
-} satisfies Record<
-  PossibleIntentions,
-  keyof PreParticipationIntentionDialogTranslations | undefined
->;
-
-const subMessage = computed(() => {
-  const key = subMessageKeys[props.activeIntention];
-  return key === undefined ? "" : t(key);
-});
+const subMessage = useParticipationIntentionMessage(
+  () => props.activeIntention
+);
 
 const router = useRouter();
 
-function hasCredentialUpgradeMode(): boolean {
-  return (
-    props.needsAuth === true &&
-    props.participationMode !== undefined &&
-    props.participationMode !== "guest"
-  );
-}
-
-function requiresConversationOnboarding(): boolean {
-  return props.conversationSlugId !== undefined;
-}
-
-function getTitle(): string {
-  if (requiresConversationOnboarding()) {
-    return t("titleOnboardingRequired");
-  }
-
-  const hasZupassRequirement = props.requiresZupassEventSlug !== undefined;
-
-  if (hasCredentialUpgradeMode()) {
-    if (props.participationMode === "account_required") {
-      return t("titleAccountRequired");
-    }
-    if (props.participationMode === "email_verification") {
-      return t("titleEmailRequired");
-    }
-    return t("titleStrongRequired");
-  }
-
-  if (hasZupassRequirement && !props.needsAuth) {
-    return t("titleZupassOnly");
-  }
-
-  return t("title");
-}
-
-function getMessage(): string {
-  if (requiresConversationOnboarding()) {
-    return tParticipation("description");
-  }
-
-  const hasZupassRequirement = props.requiresZupassEventSlug !== undefined;
-
-  if (hasCredentialUpgradeMode()) {
-    if (props.participationMode === "account_required") {
-      return t("messageAccountRequired");
-    }
-    if (props.participationMode === "email_verification") {
-      return t("messageEmailRequired");
-    }
-    return t("messageStrongRequired");
-  }
-
-  if (hasZupassRequirement && props.needsAuth) {
-    return t("messageBothRequired");
-  } else if (hasZupassRequirement && !props.needsAuth) {
-    return t("messageZupassOnly");
-  }
-
-  return t("message");
-}
-
-function getLabelOk(): string {
-  if (requiresConversationOnboarding()) {
-    return t("labelStartOnboarding");
-  }
-
-  const hasZupassRequirement = props.requiresZupassEventSlug !== undefined;
-
-  if (hasCredentialUpgradeMode()) {
-    if (props.participationMode === "account_required") {
-      return t("labelOkAccount");
-    }
-    if (props.participationMode === "email_verification") {
-      return t("labelOkEmail");
-    }
-    return t("labelOkStrong");
-  }
-
-  if (hasZupassRequirement && !props.needsAuth) {
-    return t("labelOkZupass");
-  }
-
-  return t("labelOk");
-}
-
 async function okButtonClicked() {
-  if (props.conversationSlugId !== undefined) {
-    props.okCallback();
-    setActiveUserIntention(props.activeIntention);
-    conversationOnboardingStore.startResumeEntry({
-      conversationSlugId: props.conversationSlugId,
-      returnTarget: route.fullPath,
-      returnHistoryPosition: getHistoryPosition({
-        historyState: window.history.state,
-      }),
-      routeContext: getConversationRouteContextFromRoute({
-        name: route.name,
-        params: route.params,
-      }),
-    });
-    await router.push({
-      path: getConversationSurveyVerifyPath({
-        conversationSlugId: props.conversationSlugId,
-        routeContext: getConversationRouteContextFromRoute({
-          name: route.name,
-          params: route.params,
-        }),
-      }),
-    });
-    return;
-  }
-
-  const hasZupassRequirement = props.requiresZupassEventSlug !== undefined;
-
-  if (props.needsAuth) {
-    props.okCallback();
-    setActiveUserIntention(props.activeIntention);
-
-    if (props.participationMode === "account_required") {
-      flowStore.credentialUpgradeTarget = "hard";
-      flowStore.onboardingMode = "LOGIN";
-      await router.push({ name: "/verify/hard/" });
-    } else if (props.participationMode === "email_verification") {
-      flowStore.credentialUpgradeTarget = "email";
-      flowStore.onboardingMode = "LOGIN";
-      await router.push({ name: "/verify/email/" });
-    } else if (props.participationMode === "strong_verification") {
-      flowStore.credentialUpgradeTarget = "strong";
-      flowStore.onboardingMode = "LOGIN";
-      await router.push({ name: "/verify/identity/" });
-    } else {
-      await router.push({ name: "/welcome/" });
-    }
-  } else if (hasZupassRequirement) {
-    props.okCallback();
-  } else {
-    props.okCallback();
-    setActiveUserIntention(props.activeIntention);
-    await router.push({ name: "/welcome/" });
-  }
+  props.okCallback();
+  setActiveUserIntention(props.activeIntention);
+  await router.push({ name: "/welcome/" });
 }
 </script>
 

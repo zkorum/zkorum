@@ -1,4 +1,6 @@
 import { DrizzleQueryError } from "drizzle-orm";
+import { createServer } from "node:net";
+import { once } from "node:events";
 import pino from "pino";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
@@ -28,6 +30,10 @@ function captureLogger() {
             { parts: ["Provider request failed"] },
             { parts: ["Processing conversation ", " completed"] },
             { parts: ["Provider request failed: ", ""] },
+        ],
+        errorMessageTemplates: [
+            { parts: ["Internal invariant failed"] },
+            { parts: ["Unable to process account ", ": invalid state"] },
         ],
     });
     const log = pino(
@@ -86,7 +92,7 @@ describe("log privacy", () => {
             err: {
                 type: "AxiosError",
                 code: "ERR_BAD_RESPONSE",
-                message: "Error details omitted",
+                message: "Provider returned an unsuccessful response",
                 frames: [{ file: "service/email.ts", line: 12, column: 3 }],
             },
         });
@@ -201,6 +207,89 @@ describe("log privacy", () => {
         expect(safe.frames).toHaveLength(12);
         expect(error.stack).toBe(original);
         expect(JSON.stringify(safe)).not.toContain("private-otp-marker");
+    });
+
+    it("retains an actual address-in-use error code and native stack without the bound address", async () => {
+        const server = createServer();
+        const competing = createServer();
+        try {
+            server.listen(0, "127.0.0.1");
+            await once(server, "listening");
+            const address = server.address();
+            if (address === null || typeof address === "string")
+                throw new Error("Missing test server address");
+            const error = await new Promise<Error>((resolve) => {
+                competing.once("error", resolve);
+                competing.listen(address.port, "127.0.0.1");
+            });
+            const capture = captureLogger();
+            capture.log.error(error, "Provider request failed");
+            expect(capture.records().at(0)).toMatchObject({
+                err: {
+                    code: "EADDRINUSE",
+                    message: "Address is already in use",
+                },
+            });
+            const record = z
+                .object({
+                    err: z.object({
+                        frames: z.array(z.object({ file: z.string() })),
+                    }),
+                })
+                .parse(capture.records().at(0));
+            expect(
+                record.err.frames.some(({ file }) => file === "node:net"),
+            ).toBe(true);
+            expect(capture.lines.join("")).toContain(
+                "Error [EADDRINUSE]: Address is already in use\\n    at node:net:",
+            );
+            expect(capture.lines.join("")).not.toContain("127.0.0.1");
+        } finally {
+            competing.close();
+            await new Promise<void>((resolve, reject) => {
+                server.close((error) => {
+                    if (error) reject(error);
+                    else resolve();
+                });
+            });
+        }
+    });
+
+    it("keeps reviewed exception messages and redacts their substitutions through child loggers", () => {
+        const capture = captureLogger();
+        const error = new Error("Internal invariant failed", {
+            cause: new Error(
+                "Unable to process account person@example.invalid: invalid state",
+            ),
+        });
+        error.stack =
+            "Error: Internal invariant failed\n    at run (file:///application/src/service/work.ts:20:4)\n    at dependency (/application/node_modules/.pnpm/pkg@1/node_modules/pkg/index.js:11:2)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)";
+        capture.log.child({ reqId: "req-2" }).error(error);
+        expect(capture.records().at(0)).toMatchObject({
+            err: {
+                message: "Internal invariant failed",
+                frames: [
+                    { file: "service/work.ts", line: 20, column: 4 },
+                    { file: "node_modules/pkg/index.js", line: 11, column: 2 },
+                    {
+                        file: "node:internal/process/task_queues",
+                        line: 105,
+                        column: 5,
+                    },
+                ],
+                causes: [
+                    expect.objectContaining({
+                        message:
+                            "Unable to process account [value]: invalid state",
+                    }),
+                ],
+            },
+        });
+        expect(capture.lines.join("")).not.toContain("person@example.invalid");
+        expect(capture.lines.join("")).not.toContain("/application/");
+        expect(capture.lines.join("")).toContain(
+            "Caused by: Error: Unable to process account [value]: invalid state",
+        );
     });
 
     it("does not accept arbitrary error codes or names as safe identifiers", () => {

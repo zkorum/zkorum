@@ -7,6 +7,7 @@ import type {
   SurveyFormData,
   useSurveyAnswerSaveMutation,
 } from "src/utils/api/survey/useSurveyQueries";
+import { createDismissalController } from "src/utils/ui/dismissalController";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type App, createApp, defineComponent, h, ref } from "vue";
 
@@ -108,11 +109,7 @@ vi.mock("src/utils/translation/useSurveyQuestionDisplayContent", () => ({
 vi.mock("src/components/editor/Editor.vue", () => ({
   default: defineComponent(() => () => null),
 }));
-vi.mock(
-  "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue",
-  () => ({ default: defineComponent(() => () => null) })
-);
-vi.mock("src/layouts/OnboardingLayout.vue", () => ({
+vi.mock("src/layouts/ConversationOnboardingLayout.vue", () => ({
   default: defineComponent({
     name: "OnboardingLayout",
     props: { closeCallback: { type: Function, required: true } },
@@ -120,7 +117,7 @@ vi.mock("src/layouts/OnboardingLayout.vue", () => ({
       return () =>
         h("main", [
           h("button", { onClick: props.closeCallback }, "Close"),
-          slots.footer?.(),
+          slots.default?.(),
         ]);
     },
   }),
@@ -236,7 +233,11 @@ afterEach(() => {
 function mountQuestion(): HTMLElement {
   const target = document.createElement("div");
   document.body.append(target);
-  const app = createApp(SurveyQuestion);
+  const app = createApp(SurveyQuestion, {
+    sheet: createDismissalController({
+      fallbackDismiss: () => Promise.resolve(),
+    }),
+  });
   app.config.errorHandler = handleVueError;
   app.component("QChip", (props: { label: string }) => h("span", props.label));
   apps.push(app);
