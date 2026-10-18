@@ -29157,12 +29157,6 @@
                                         {
                                             "type": "object",
                                             "properties": {
-                                                "success": {
-                                                    "type": "boolean",
-                                                    "enum": [
-                                                        true
-                                                    ]
-                                                },
                                                 "surveyGate": {
                                                     "type": "object",
                                                     "properties": {
@@ -29193,11 +29187,72 @@
                                                         "status"
                                                     ],
                                                     "additionalProperties": false
+                                                },
+                                                "routeResolution": {
+                                                    "oneOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "kind": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "none"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "kind"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "kind": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "question"
+                                                                    ]
+                                                                },
+                                                                "questionSlugId": {
+                                                                    "type": "string",
+                                                                    "maxLength": 10
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "kind",
+                                                                "questionSlugId"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "kind": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "summary"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "kind"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
+                                                    ]
+                                                },
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "enum": [
+                                                        true
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "success",
-                                                "surveyGate"
+                                                "surveyGate",
+                                                "routeResolution",
+                                                "success"
                                             ],
                                             "additionalProperties": false
                                         },

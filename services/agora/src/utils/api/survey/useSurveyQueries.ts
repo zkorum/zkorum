@@ -64,7 +64,7 @@ function deriveSurveyRouteResolutionFromForm({
     return { kind: "summary" };
   }
   if (surveyForm === undefined) {
-    return surveyGate.status === "not_started" ? { kind: "none" } : undefined;
+    return undefined;
   }
 
   const incompleteQuestion = surveyForm.questions.find((question) => {
@@ -112,22 +112,25 @@ function updateSurveyStatusCache({
   queryClient,
   conversationSlugId,
   surveyGate,
+  routeResolution,
   viewerScope,
 }: {
   queryClient: QueryClient;
   conversationSlugId: string;
   surveyGate: SurveyGateSummary;
+  routeResolution: SurveyRouteResolution | undefined;
   viewerScope: ViewerQueryScope;
 }): void {
-  const cachedSurveyForm = getCachedSurveyForm({
-    queryClient,
-    conversationSlugId,
-    viewerScope,
-  });
-  const routeResolution = deriveSurveyRouteResolutionFromForm({
-    surveyGate,
-    surveyForm: cachedSurveyForm,
-  });
+  const resolvedRouteResolution =
+    routeResolution ??
+    deriveSurveyRouteResolutionFromForm({
+      surveyGate,
+      surveyForm: getCachedSurveyForm({
+        queryClient,
+        conversationSlugId,
+        viewerScope,
+      }),
+    });
 
   queryClient.setQueriesData<SurveyStatusCheckResponse>(
     {
@@ -142,7 +145,7 @@ function updateSurveyStatusCache({
       return {
         ...oldData,
         surveyGate,
-        routeResolution: routeResolution ?? oldData.routeResolution,
+        routeResolution: resolvedRouteResolution ?? oldData.routeResolution,
       };
     }
   );
@@ -152,17 +155,20 @@ function updateSurveyGateViewerCaches({
   queryClient,
   conversationSlugId,
   surveyGate,
+  routeResolution,
   viewerScope,
 }: {
   queryClient: QueryClient;
   conversationSlugId: string;
   surveyGate: SurveyGateSummary;
+  routeResolution: SurveyRouteResolution | undefined;
   viewerScope: ViewerQueryScope;
 }): void {
   updateSurveyStatusCache({
     queryClient,
     conversationSlugId,
     surveyGate,
+    routeResolution,
     viewerScope,
   });
 
@@ -565,6 +571,7 @@ export function useSurveyAnswerSaveMutation({
         queryClient,
         conversationSlugId: slugId,
         surveyGate: data.surveyGate,
+        routeResolution: undefined,
         viewerScope: viewerScope.value,
       });
       await markSurveyQueriesStale({
@@ -632,6 +639,7 @@ export function useSurveyWithdrawMutation({
         queryClient,
         conversationSlugId: slugId,
         surveyGate: data.surveyGate,
+        routeResolution: data.routeResolution,
         viewerScope,
       });
       await markSurveyResultQueriesStale({
@@ -679,6 +687,7 @@ export function useSurveyConfigUpdateMutation({
         queryClient,
         conversationSlugId: slugId,
         surveyGate: data.surveyGate,
+        routeResolution: undefined,
         viewerScope: viewerScope.value,
       });
 
@@ -717,6 +726,7 @@ export function useSurveyConfigDeleteMutation({
         queryClient,
         conversationSlugId: slugId,
         surveyGate: data.surveyGate,
+        routeResolution: undefined,
         viewerScope: viewerScope.value,
       });
       await markSurveyQueriesStale({

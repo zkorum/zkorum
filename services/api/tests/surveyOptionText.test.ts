@@ -1,4 +1,5 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
+import { withReplicas } from "drizzle-orm/pg-core";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { readFileSync } from "node:fs";
@@ -33,6 +34,7 @@ import type {
     SurveyConfig,
 } from "../src/shared/types/zod.js";
 import { readDbFixtureSql } from "./dbFixture.js";
+import { Dto } from "../src/shared/types/dto.js";
 import { MAX_BYTES_SURVEY_OPTION_HTML } from "../src/shared/shared.js";
 
 process.env.NODE_ENV = "test";
@@ -178,14 +180,16 @@ describe("optional choice text persistence", () => {
         questionCount = 1,
         allowsText = false,
         maxSelections = 1,
+        isOptional = false,
     }: {
         questionCount?: number;
         allowsText?: boolean;
         maxSelections?: number;
+        isOptional?: boolean;
     } = {}) {
         const { setSurveyConfigForConversation } = await surveyModulePromise;
         const surveyConfig: SurveyConfig = {
-            isOptional: false,
+            isOptional,
             questions: Array.from({ length: questionCount }, (_, index) => ({
                 questionType: "choice",
                 choiceDisplay: "list",
@@ -912,6 +916,85 @@ describe("optional choice text persistence", () => {
                 },
             }),
         ).rejects.toThrow("does not allow text");
+    });
+
+    it.each([false, true])(
+        "returns writer-owned restart routing after withdrawal (optional=%s)",
+        async (isOptional) => {
+            const { withdrawSurveyResponse } = await surveyModulePromise;
+            await configure({ isOptional });
+            const { question, first } = await firstQuestion();
+            await save({
+                questionSlugId: question.slugId,
+                answer: {
+                    questionType: "choice",
+                    optionSlugIds: [first.slugId],
+                },
+            });
+            const selectReplica = vi.fn(() => db);
+            const request = {
+                db: withReplicas(db, [db], selectReplica),
+                conversationSlugId,
+                didWrite: "did:test:survey",
+                userAgent: "Vitest",
+                now,
+                currentDisplayLanguage: "en",
+            } satisfies Parameters<typeof withdrawSurveyResponse>[0];
+
+            const result = await withdrawSurveyResponse(request);
+
+            expect(Dto.surveyResponseWithdrawResponse.parse(result)).toEqual({
+                success: true,
+                surveyGate: {
+                    hasSurvey: true,
+                    isOptional,
+                    canParticipate: isOptional,
+                    status: "not_started",
+                },
+                routeResolution: {
+                    kind: "question",
+                    questionSlugId: question.slugId,
+                },
+            });
+            expect(selectReplica).not.toHaveBeenCalled();
+            const state = await loadState();
+            expect(state.answersByQuestionId.size).toBe(0);
+            expect(state.response?.withdrawnAt).toEqual(now);
+            expect(await withdrawSurveyResponse(request)).toEqual(result);
+            expect(selectReplica).not.toHaveBeenCalled();
+        },
+    );
+
+    it("returns restart routing from the writer when no response exists", async () => {
+        const { withdrawSurveyResponse } = await surveyModulePromise;
+        await configure();
+        const { question } = await firstQuestion();
+        const selectReplica = vi.fn(() => db);
+
+        const result = await withdrawSurveyResponse({
+            db: withReplicas(db, [db], selectReplica),
+            conversationSlugId,
+            didWrite: "did:test:survey",
+            userAgent: "Vitest",
+            now,
+            currentDisplayLanguage: "en",
+        });
+
+        expect(Dto.surveyResponseWithdrawResponse.parse(result)).toEqual({
+            success: true,
+            surveyGate: {
+                hasSurvey: true,
+                isOptional: false,
+                canParticipate: false,
+                status: "not_started",
+            },
+            routeResolution: {
+                kind: "question",
+                questionSlugId: question.slugId,
+            },
+        });
+        expect(selectReplica).not.toHaveBeenCalled();
+        expect(await db.select().from(surveyResponseTable)).toHaveLength(0);
     });
 
     it("soft-deletes accompanying text on deselection and withdrawal", async () => {

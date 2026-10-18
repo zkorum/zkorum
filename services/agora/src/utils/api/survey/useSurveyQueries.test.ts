@@ -149,7 +149,11 @@ function mountWithdrawal() {
   apps.push(app);
   api.withdrawSurveyResponse.mockResolvedValue({
     status: "success",
-    data: { success: true, surveyGate: withdrawnGate },
+    data: {
+      success: true,
+      surveyGate: withdrawnGate,
+      routeResolution: { kind: "question", questionSlugId: "question-one" },
+    },
   });
   if (withdraw === undefined) throw new Error("Withdrawal was not mounted");
   return { queryClient, withdraw, activeConversationSlugId, activeViewerScope };
@@ -242,9 +246,33 @@ describe("survey withdrawal cache", () => {
       queryClient.getQueryData<SurveyStatusCheckResponse>(statusKey)
     ).toEqual({
       surveyGate: withdrawnGate,
-      routeResolution: { kind: "none" },
+      routeResolution: { kind: "question", questionSlugId: "question-one" },
     });
     expect(queryClient.getQueryData(formKey)).toBeUndefined();
+  });
+
+  it("uses the backend route even when cached questions suggest a different destination", async () => {
+    const { queryClient, withdraw } = mountWithdrawal();
+    api.withdrawSurveyResponse.mockResolvedValue({
+      status: "success",
+      data: {
+        success: true,
+        surveyGate: withdrawnGate,
+        routeResolution: {
+          kind: "question",
+          questionSlugId: "server-question",
+        },
+      },
+    });
+
+    await withdraw();
+
+    expect(
+      queryClient.getQueryData<SurveyStatusCheckResponse>(statusKey)
+    ).toEqual({
+      surveyGate: withdrawnGate,
+      routeResolution: { kind: "question", questionSlugId: "server-question" },
+    });
   });
 
   it("updates the request's conversation and viewer if navigation or identity changes", async () => {
@@ -282,7 +310,11 @@ describe("survey withdrawal cache", () => {
     activeViewerScope.value = otherViewer;
     response.resolve({
       status: "success",
-      data: { success: true, surveyGate: withdrawnGate },
+      data: {
+        success: true,
+        surveyGate: withdrawnGate,
+        routeResolution: { kind: "question", questionSlugId: "question-one" },
+      },
     });
     await pending;
 
@@ -345,7 +377,11 @@ describe("survey withdrawal cache", () => {
     });
     api.withdrawSurveyResponse.mockResolvedValue({
       status: "success",
-      data: { success: true, surveyGate: optionalWithdrawnGate },
+      data: {
+        success: true,
+        surveyGate: optionalWithdrawnGate,
+        routeResolution: { kind: "question", questionSlugId: "question-one" },
+      },
     });
 
     await withdraw();

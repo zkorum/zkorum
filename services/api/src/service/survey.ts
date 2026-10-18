@@ -89,6 +89,7 @@ import {
     type SurveyRouteResolution,
 } from "@/shared/types/zod.js";
 import type { SupportedDisplayLanguageCodes } from "@/shared/languages.js";
+import type { SurveyResponseWithdrawResponse } from "@/shared/types/dto.js";
 import { log } from "@/app.js";
 import type { GoogleCloudCredentials } from "@/shared-backend/googleCloudAuth.js";
 import { getConversationViewAccessLevelForConversation } from "@/service/conversationAccess.js";
@@ -3244,16 +3245,7 @@ export async function withdrawSurveyResponse({
     now: Date;
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
     valkey?: Valkey;
-}): Promise<
-    | {
-          success: true;
-          surveyGate: SurveyGateSummary;
-      }
-    | {
-          success: false;
-          reason: ParticipationBlockedReason;
-      }
-> {
+}): Promise<SurveyResponseWithdrawResponse> {
     const participationCheck = await checkConversationParticipation({
         db,
         conversationSlugId,
@@ -3275,28 +3267,34 @@ export async function withdrawSurveyResponse({
         rankingMode: participationCheck.rankingMode,
     });
 
-    const previousSurveyState = await loadSurveyParticipantState({
-        db,
-        conversationId: conversation.conversationId,
-        participantId,
-    });
-    const previousSurveyGate = deriveSurveyGate({
-        surveyState: previousSurveyState,
-        participantId,
-    });
-    const activeSurveyConfig = previousSurveyState.activeSurveyConfig;
-    if (activeSurveyConfig === undefined) {
-        throw httpErrors.notFound("Survey not found");
-    }
-    if (previousSurveyState.response === undefined) {
-        return {
-            success: true,
-            surveyGate: toSurveyGateDto({ surveyGate: previousSurveyGate }),
-        };
-    }
-    const surveyResponseId = previousSurveyState.response.id;
-
     const surveyTransition = await db.transaction(async (tx) => {
+        // The absence check must use the writer too: replica lag must not turn
+        // withdrawal of an existing response into a successful no-op.
+        const previousSurveyState = await loadSurveyParticipantState({
+            db: tx,
+            conversationId: conversation.conversationId,
+            participantId,
+        });
+        const previousSurveyGate = deriveSurveyGate({
+            surveyState: previousSurveyState,
+            participantId,
+        });
+        const activeSurveyConfig = previousSurveyState.activeSurveyConfig;
+        if (activeSurveyConfig === undefined) {
+            throw httpErrors.notFound("Survey not found");
+        }
+        if (previousSurveyState.response === undefined) {
+            return {
+                surveyGate: toSurveyGateDto({ surveyGate: previousSurveyGate }),
+                routeResolution: deriveSurveyRouteResolution({
+                    surveyState: previousSurveyState,
+                    participantId,
+                }),
+                analysisRefreshScheduled: false,
+            };
+        }
+        const surveyResponseId = previousSurveyState.response.id;
+
         await softDeleteSurveyResponseAnswers({
             db: tx,
             surveyResponseId,
@@ -3338,10 +3336,17 @@ export async function withdrawSurveyResponse({
                       },
                   )
                 : false;
-        return { nextSurveyGate, analysisRefreshScheduled };
+        return {
+            surveyGate: toSurveyGateDto({ surveyGate: nextSurveyGate }),
+            routeResolution: deriveSurveyRouteResolution({
+                surveyState: nextSurveyState,
+                participantId,
+            }),
+            analysisRefreshScheduled,
+        };
     });
 
-    const { nextSurveyGate, analysisRefreshScheduled } = surveyTransition;
+    const { analysisRefreshScheduled, ...surveyStatus } = surveyTransition;
 
     if (analysisRefreshScheduled) {
         await wakeScheduledConversationAnalysisForSurveyChange({
@@ -3352,7 +3357,7 @@ export async function withdrawSurveyResponse({
 
     return {
         success: true,
-        surveyGate: toSurveyGateDto({ surveyGate: nextSurveyGate }),
+        ...surveyStatus,
     };
 }
 

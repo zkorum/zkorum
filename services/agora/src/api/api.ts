@@ -9495,6 +9495,10 @@ export interface ApiV1SurveyCompletionCountsPost200ResponseCounts {
     'notStarted': number;
     'inProgress': number;
 }
+export interface ApiV1SurveyConfigDeletePost200Response {
+    'success': boolean;
+    'surveyGate': ApiV1ConversationFetchRecentPost200ResponseOneOfFeedItemListInnerConversationDataInteractionSurveyGate;
+}
 export interface ApiV1SurveyConfigUpdatePost200Response {
     'currentRevision': number;
     'surveyGate': ApiV1ConversationFetchRecentPost200ResponseOneOfFeedItemListInnerConversationDataInteractionSurveyGate;
@@ -9733,8 +9737,9 @@ export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneO
 export type ApiV1SurveyResponseWithdrawPost200Response = ApiV1RankingBwsSavePost200ResponseOneOf1 | ApiV1SurveyResponseWithdrawPost200ResponseOneOf;
 
 export interface ApiV1SurveyResponseWithdrawPost200ResponseOneOf {
-    'success': boolean;
     'surveyGate': ApiV1ConversationFetchRecentPost200ResponseOneOfFeedItemListInnerConversationDataInteractionSurveyGate;
+    'routeResolution': ApiV1SurveyStatusCheckPost200ResponseRouteResolution;
+    'success': boolean;
 }
 export interface ApiV1SurveyResultsAggregatedPost200Response {
     'hasSurvey': boolean;
@@ -17803,7 +17808,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1SurveyConfigDeletePost(apiV1ModerationConversationWithdrawPostRequest: ApiV1ModerationConversationWithdrawPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1SurveyResponseWithdrawPost200ResponseOneOf>> {
+        async apiV1SurveyConfigDeletePost(apiV1ModerationConversationWithdrawPostRequest: ApiV1ModerationConversationWithdrawPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1SurveyConfigDeletePost200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SurveyConfigDeletePost(apiV1ModerationConversationWithdrawPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1SurveyConfigDeletePost']?.[localVarOperationServerIndex]?.url;
@@ -19277,7 +19282,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SurveyConfigDeletePost(apiV1ModerationConversationWithdrawPostRequest: ApiV1ModerationConversationWithdrawPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1SurveyResponseWithdrawPost200ResponseOneOf> {
+        apiV1SurveyConfigDeletePost(apiV1ModerationConversationWithdrawPostRequest: ApiV1ModerationConversationWithdrawPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1SurveyConfigDeletePost200Response> {
             return localVarFp.apiV1SurveyConfigDeletePost(apiV1ModerationConversationWithdrawPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
