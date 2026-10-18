@@ -45,7 +45,6 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useSkipUnavailablePhoneRegistration } from "src/composables/verification/useSkipUnavailablePhoneRegistration";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { usePhoneAuthAvailability } from "src/utils/auth/phoneAuthMode";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -61,7 +60,6 @@ const { t } = useComponentI18n<VerifyPhoneCodeTranslations>(
 
 const router = useRouter();
 const { isAuthInitialized, isLoggedIn } = storeToRefs(useAuthenticationStore());
-const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const phoneAuthPurpose = computed(() =>
   !isAuthInitialized.value || isLoggedIn.value ? "credential" : "login"
 );
@@ -70,10 +68,7 @@ const skipPhoneRegistration = useSkipUnavailablePhoneRegistration({
   ready: isAuthInitialized,
   redirect: () =>
     router.replace({
-      name:
-        credentialUpgradeTarget.value === "strong"
-          ? "/verify/identity/"
-          : "/verify/hard/",
+      name: "/verify/hard/",
     }),
 });
 

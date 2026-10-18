@@ -2,8 +2,11 @@ import {
   isChunkLoadError,
   reloadForChunkError,
 } from "src/utils/error/chunkError";
+import { getConversationRouteContextFromRoute } from "src/utils/router/conversationRouteContext";
 import { useRouterGuard } from "src/utils/router/guard";
-import { shouldPreserveOnboardingScroll } from "src/utils/router/onboardingScroll";
+import { withOnboardingAliases } from "src/utils/router/onboardingAliases";
+import { registerOnboardingNavigation } from "src/utils/router/onboardingNavigation";
+import { createOnboardingScrollPreservation } from "src/utils/router/onboardingScroll";
 import { getSingleRouteParam } from "src/utils/router/params";
 import { getConversationSurveyOnboardingPath } from "src/utils/survey/navigation";
 import {
@@ -13,7 +16,6 @@ import {
   createWebHistory,
   type RouteLocationNormalized,
   type RouteLocationNormalizedLoaded,
-  type RouteRecordRaw,
 } from "vue-router";
 import { type RouteNamedMap, routes } from "vue-router/auto-routes";
 import { z } from "zod";
@@ -32,99 +34,6 @@ const conversationTabRouteNames: ReadonlySet<string> = new Set<
   "/project/[projectSlug]/conversation/[postSlugId]/",
   "/project/[projectSlug]/conversation/[postSlugId]/analysis",
 ]);
-
-const projectOnboardingRouteAliases = {
-  "/conversation/[postSlugId].onboarding":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding",
-  "/conversation/[postSlugId].onboarding/":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/",
-  "/conversation/[postSlugId].onboarding/complete":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/complete",
-  "/conversation/[postSlugId].onboarding/question.[questionSlugId]":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/question/:questionSlugId",
-  "/conversation/[postSlugId].onboarding/summary":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/summary",
-  "/conversation/[postSlugId].onboarding/verify":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify",
-  "/conversation/[postSlugId].onboarding/verify/email":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify/email",
-  "/conversation/[postSlugId].onboarding/verify/email-code":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify/email-code",
-  "/conversation/[postSlugId].onboarding/verify/hard":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify/hard",
-  "/conversation/[postSlugId].onboarding/verify/identity":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify/identity",
-  "/conversation/[postSlugId].onboarding/verify/passport":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify/passport",
-  "/conversation/[postSlugId].onboarding/verify/phone":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify/phone",
-  "/conversation/[postSlugId].onboarding/verify/phone-code":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify/phone-code",
-  "/conversation/[postSlugId].onboarding/verify/ticket":
-    "/project/:projectSlug/conversation/:postSlugId/onboarding/verify/ticket",
-} satisfies Partial<Record<keyof RouteNamedMap, string>>;
-
-function getProjectOnboardingAlias({
-  routeName,
-}: {
-  routeName: unknown;
-}): string | undefined {
-  if (typeof routeName !== "string") {
-    return undefined;
-  }
-
-  for (const [name, alias] of Object.entries(projectOnboardingRouteAliases)) {
-    if (routeName === name) {
-      return alias;
-    }
-  }
-
-  return undefined;
-}
-
-function mergeRouteAliases({
-  existingAlias,
-  nextAlias,
-}: {
-  existingAlias: string | string[] | undefined;
-  nextAlias: string;
-}): string | string[] {
-  if (existingAlias === undefined) {
-    return nextAlias;
-  }
-
-  if (Array.isArray(existingAlias)) {
-    return existingAlias.includes(nextAlias)
-      ? existingAlias
-      : [...existingAlias, nextAlias];
-  }
-
-  if (existingAlias === nextAlias) {
-    return existingAlias;
-  }
-
-  return [existingAlias, nextAlias];
-}
-
-function addProjectOnboardingAliases({
-  routeRecords,
-}: {
-  routeRecords: readonly RouteRecordRaw[];
-}): void {
-  for (const routeRecord of routeRecords) {
-    const alias = getProjectOnboardingAlias({ routeName: routeRecord.name });
-    if (alias !== undefined) {
-      routeRecord.alias = mergeRouteAliases({
-        existingAlias: routeRecord.alias,
-        nextAlias: alias,
-      });
-    }
-
-    if (routeRecord.children !== undefined) {
-      addProjectOnboardingAliases({ routeRecords: routeRecord.children });
-    }
-  }
-}
 
 function isConversationTabSwitch({
   to,
@@ -176,7 +85,6 @@ function isConversationTabSwitch({
 
 export default defineRouter(function (/* { store, ssrContext } */) {
   const { conversationGuard, loggedInGuard } = useRouterGuard();
-  addProjectOnboardingAliases({ routeRecords: routes });
 
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -184,11 +92,12 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       ? createWebHistory
       : createWebHashHistory;
 
+  const onboardingScroll = createOnboardingScrollPreservation({
+    conversationTabRouteNames,
+  });
   const Router = createRouter({
     scrollBehavior: (to, from, savedPosition) => {
-      if (
-        shouldPreserveOnboardingScroll({ to, from, conversationTabRouteNames })
-      ) {
+      if (onboardingScroll.shouldPreserveScroll({ to, from })) {
         return false;
       }
       if (isConversationTabSwitch({ to, from })) {
@@ -215,12 +124,14 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       }
       return { left: 0, top: 0 };
     },
-    routes,
+    routes: withOnboardingAliases(routes),
     // Leave this as is and make changes in quasar.conf.js instead!
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
+
+  registerOnboardingNavigation(Router);
 
   Router.beforeEach((to, from) => {
     if (
@@ -253,18 +164,14 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     }
 
     if (to.name === "/conversation/[postSlugId].onboarding") {
-      if ("projectSlug" in to.params) {
+      const context = getConversationRouteContextFromRoute(to);
+      if (context.kind !== "normal") {
         return {
           path: getConversationSurveyOnboardingPath({
             conversationSlugId: getSingleRouteParam(
               "postSlugId" in to.params ? to.params.postSlugId : undefined
             ),
-            routeContext: {
-              kind: "project",
-              projectSlug: getSingleRouteParam(
-                "projectSlug" in to.params ? to.params.projectSlug : undefined
-              ),
-            },
+            routeContext: context,
           }),
           query: to.query,
           hash: to.hash,

@@ -58,14 +58,10 @@ import {
   verifyPassportTranslations,
 } from "src/pages/verify/passport/index.i18n";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { usePhoneAuthAvailability } from "src/utils/auth/phoneAuthMode";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
 import {
-  getConversationSurveyOnboardingPath,
-  getConversationSurveyVerifyHardPath,
-  getConversationSurveyVerifyIdentityPath,
+  getConversationCredentialChoicePath,
   getConversationSurveyVerifyPath,
   getConversationSurveyVerifyPhonePath,
 } from "src/utils/survey/navigation";
@@ -83,7 +79,6 @@ const { t } = useComponentI18n<VerifyPassportTranslations>(
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const conversationOnboardingStore = useConversationOnboardingStore();
 const { isAuthInitialized, isLoggedIn, credentials } = storeToRefs(
   useAuthenticationStore()
 );
@@ -93,19 +88,8 @@ const phoneAuthPurpose = computed(() =>
 const phoneAuthAvailability = usePhoneAuthAvailability(phoneAuthPurpose);
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { exitToConversation } = useConversationOnboardingExit();
-const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const { completeVerification } = useVerificationComplete();
 const { showNotifyMessage } = useNotify();
-
-if (
-  conversationOnboardingStore.conversationSlugId !==
-  routeConversationSlugId.value
-) {
-  conversationOnboardingStore.startManualEntry({
-    conversationSlugId: routeConversationSlugId.value,
-    routeContext: routeContext.value,
-  });
-}
 
 const {
   conversationSlugId,
@@ -113,34 +97,18 @@ const {
   surveyStepTotal,
   requirementState,
   isInitialLoading,
-} = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
+} = useConversationSurveyState({
+  conversationSlugId: routeConversationSlugId,
+  requireAccount: true,
+});
 
-const backPath = computed(() => {
-  if (
-    credentialUpgradeTarget.value === "strong" ||
-    conversationData.value?.metadata.participationMode === "strong_verification"
-  ) {
-    return getConversationSurveyVerifyIdentityPath({
-      conversationSlugId: conversationSlugId.value,
-      routeContext: routeContext.value,
-    });
-  }
-
-  if (
-    credentialUpgradeTarget.value === "hard" ||
-    conversationData.value?.metadata.participationMode === "account_required"
-  ) {
-    return getConversationSurveyVerifyHardPath({
-      conversationSlugId: conversationSlugId.value,
-      routeContext: routeContext.value,
-    });
-  }
-
-  return getConversationSurveyOnboardingPath({
+const backPath = computed(() =>
+  getConversationCredentialChoicePath({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
-  });
-});
+    participationMode: conversationData.value?.metadata.participationMode,
+  })
+);
 
 watch(
   [isInitialLoading, requirementState],
@@ -190,13 +158,11 @@ async function goToPhoneVerification() {
 }
 
 async function handleBackToConversation(): Promise<void> {
-  credentialUpgradeTarget.value = null;
   await exitToConversation({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
   });
 }
-
 </script>
 
 <style scoped lang="scss">

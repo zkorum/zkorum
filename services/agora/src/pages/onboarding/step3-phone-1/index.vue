@@ -42,7 +42,6 @@
               />
 
               <ZKGradientButton
-                v-if="credentialUpgradeTarget !== 'strong'"
                 :label="t('preferEmailLogin')"
                 variant="text"
                 label-color="#6B4EFF"
@@ -88,9 +87,7 @@ const router = useRouter();
 const { showNotifyMessage } = useNotify();
 const { completeVerification } = useVerificationComplete();
 
-const { credentialUpgradeTarget, onboardingMode } = storeToRefs(
-  onboardingFlowStore()
-);
+const { onboardingMode } = storeToRefs(onboardingFlowStore());
 const phoneAuthPurpose = computed(() =>
   onboardingMode.value === "SIGNUP" ? "registration" : "login"
 );

@@ -252,7 +252,6 @@ import type { GetConversationCreateProjectOptionsResponse } from "src/shared/typ
 import type { ConversationProjectTarget } from "src/shared/types/zod";
 import type { ParticipationMode } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { useNewPostDraftsStore } from "src/stores/newConversationDrafts";
 import { useUserStore } from "src/stores/user";
 import { useCommonApi } from "src/utils/api/common";
@@ -574,7 +573,6 @@ const titleInputRef = ref<HTMLDivElement | null>(null);
 const { conversationDraft } = storeToRefs(useNewPostDraftsStore());
 const { profileData } = storeToRefs(useUserStore());
 
-const { createNewConversationIntention } = useLoginIntentionStore();
 const { isLoggedIn } = storeToRefs(useAuthenticationStore());
 const { handleAxiosErrorStatusCodes } = useCommonApi();
 const { showNotifyMessage } = useNotify();
@@ -747,7 +745,6 @@ function onLoginCallback() {
   // Unlock route to prevent ExitRoutePrompt from showing
   // The user already saw "Your draft will be restored" in the login dialog
   routeGuardRef.value?.unlockRoute();
-  createNewConversationIntention();
 }
 
 function scrollToTitleInput() {

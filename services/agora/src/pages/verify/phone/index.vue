@@ -60,7 +60,6 @@ import { useVerificationComplete } from "src/composables/verification/useVerific
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -77,7 +76,6 @@ const { t } = useComponentI18n<VerifyPhoneTranslations>(
 const { isLoggedIn, isAuthInitialized, credentials } = storeToRefs(
   useAuthenticationStore()
 );
-const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const { completeVerification } = useVerificationComplete();
 const { showNotifyMessage } = useNotify();
 const router = useRouter();
@@ -112,10 +110,7 @@ const skipPhoneRegistration = useSkipUnavailablePhoneRegistration({
   ready: isAuthInitialized,
   redirect: () =>
     router.replace({
-      name:
-        credentialUpgradeTarget.value === "strong"
-          ? "/verify/identity/"
-          : "/verify/hard/",
+      name: "/verify/hard/",
     }),
 });
 

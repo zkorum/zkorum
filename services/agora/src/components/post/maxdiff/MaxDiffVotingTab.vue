@@ -266,7 +266,6 @@ import VotingSessionToolbar from "src/components/post/voting/VotingSessionToolba
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
 import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import ZKBottomDialogContainer from "src/components/ui-library/ZKBottomDialogContainer.vue";
-import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
 import type { RegisterChildRefreshHandler } from "src/composables/conversation/useConversationParentState";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
 import { useVotingActionGuard } from "src/composables/opinion/useVotingActionGuard";
@@ -379,9 +378,7 @@ const registerChildRefreshHandler = inject<RegisterChildRefreshHandler>(
 );
 let unregisterChildRefreshHandler: (() => void) | undefined;
 
-const { setVotingIntention } = useConversationLoginIntentions();
 async function openOnboarding(): Promise<void> {
-  setVotingIntention(props.conversationData.metadata.requiresEventTicket);
   await openParticipationOnboarding();
 }
 

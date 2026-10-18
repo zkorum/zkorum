@@ -32,25 +32,17 @@ export interface VerifyRouteDecision {
     | { kind: "none" }
     | { kind: "redirect"; path: string }
     | { kind: "exitToConversation" };
-  credentialUpgradeTarget: "hard" | "email" | "strong" | null;
-  onboardingMode: "LOGIN" | null;
 }
 
 interface CreateDecisionParams {
   navigation: VerifyRouteDecision["navigation"];
-  credentialUpgradeTarget?: "hard" | "email" | "strong" | null;
-  onboardingMode?: "LOGIN" | null;
 }
 
 function createDecision({
   navigation,
-  credentialUpgradeTarget = null,
-  onboardingMode = null,
 }: CreateDecisionParams): VerifyRouteDecision {
   return {
     navigation,
-    credentialUpgradeTarget,
-    onboardingMode,
   };
 }
 
@@ -101,7 +93,6 @@ export function resolveVerifyRouteDecision({
     if (conversation.participationMode === "guest") {
       return createDecision({
         navigation: { kind: "none" },
-        onboardingMode: "LOGIN",
       });
     }
 
@@ -131,8 +122,6 @@ export function resolveVerifyRouteDecision({
 
     return createDecision({
       navigation: { kind: "redirect", path: redirectPath },
-      credentialUpgradeTarget: destination.target,
-      onboardingMode: "LOGIN",
     });
   }
 

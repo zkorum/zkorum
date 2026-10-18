@@ -34,7 +34,6 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import EmailOtpForm from "src/components/verification/EmailOtpForm.vue";
@@ -47,8 +46,6 @@ import {
   type VerifyEmailCodeTranslations,
   verifyEmailCodeTranslations,
 } from "src/pages/verify/email-code/index.i18n";
-import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { getConversationSurveyVerifyEmailPath } from "src/utils/survey/navigation";
 import type { DismissalController } from "src/utils/ui/dismissalController";
 import { ref } from "vue";
@@ -63,19 +60,7 @@ const { t } = useComponentI18n<VerifyEmailCodeTranslations>(
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const conversationOnboardingStore = useConversationOnboardingStore();
-const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const { exitToConversation } = useConversationOnboardingExit();
-
-if (
-  conversationOnboardingStore.conversationSlugId !==
-  routeConversationSlugId.value
-) {
-  conversationOnboardingStore.startManualEntry({
-    conversationSlugId: routeConversationSlugId.value,
-    routeContext: routeContext.value,
-  });
-}
 
 const { conversationSlugId, surveyStepTotal } = useConversationSurveyState({
   conversationSlugId: routeConversationSlugId,
@@ -101,13 +86,11 @@ async function changeEmail() {
 }
 
 async function handleBackToConversation(): Promise<void> {
-  credentialUpgradeTarget.value = null;
   await exitToConversation({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
   });
 }
-
 </script>
 
 <style scoped lang="scss">

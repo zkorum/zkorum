@@ -31,7 +31,7 @@
       <template #body>
         <div class="survey-card">
           <div class="survey-card__prompt-row">
-            <div class="survey-card__prompt">{{ displayedQuestionText }}</div>
+            <h1 class="survey-card__prompt">{{ displayedQuestionText }}</h1>
 
             <q-chip
               v-if="question.isStale"
@@ -109,6 +109,7 @@
             <ZKDigitsInput
               v-if="isIntegerQuestion"
               v-model="textValueHtml"
+              :label="displayedQuestionText"
               :placeholder="t('writeAnswerPlaceholder')"
               :error="isFreeTextInvalid"
               :hide-bottom-space="true"
@@ -831,6 +832,8 @@ async function handleNext(): Promise<void> {
 }
 
 .survey-card__prompt {
+  margin: 0;
+  letter-spacing: normal;
   font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.4;

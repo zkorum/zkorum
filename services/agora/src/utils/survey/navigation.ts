@@ -1,4 +1,7 @@
-import type { SurveyRouteResolution } from "src/shared/types/zod";
+import type {
+  ParticipationMode,
+  SurveyRouteResolution,
+} from "src/shared/types/zod";
 import {
   type ConversationRouteContext,
   getConversationPath as getScopedConversationPath,
@@ -24,6 +27,36 @@ export function getConversationSurveyOnboardingPath({
   routeContext?: ConversationRouteContext;
 }): string {
   return `${getConversationSurveyBasePath({ conversationSlugId, routeContext })}/`;
+}
+
+export function getConversationCredentialChoicePath({
+  conversationSlugId,
+  routeContext,
+  participationMode,
+}: {
+  conversationSlugId: string;
+  routeContext: ConversationRouteContext;
+  participationMode: ParticipationMode | undefined;
+}): string {
+  switch (participationMode) {
+    case "strong_verification":
+      return getConversationSurveyVerifyIdentityPath({
+        conversationSlugId,
+        routeContext,
+      });
+    case "account_required":
+    case "guest":
+      return getConversationSurveyVerifyHardPath({
+        conversationSlugId,
+        routeContext,
+      });
+    case "email_verification":
+    case undefined:
+      return getConversationSurveyOnboardingPath({
+        conversationSlugId,
+        routeContext,
+      });
+  }
 }
 
 export function getConversationSurveyQuestionPath({
@@ -165,9 +198,15 @@ export function getConversationSurveyRoutePath({
         routeContext,
       });
     case "summary":
-      return getConversationSurveySummaryPath({ conversationSlugId, routeContext });
+      return getConversationSurveySummaryPath({
+        conversationSlugId,
+        routeContext,
+      });
     case "none":
-      return getConversationSurveyOnboardingPath({ conversationSlugId, routeContext });
+      return getConversationSurveyOnboardingPath({
+        conversationSlugId,
+        routeContext,
+      });
   }
 }
 

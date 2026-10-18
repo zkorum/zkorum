@@ -112,7 +112,7 @@
 
     <PreParticipationIntentionDialog
       v-model="showLoginDialog"
-      :ok-callback="onLoginCallback"
+      :ok-callback="() => {}"
       active-intention="newConversation"
     />
   </NewConversationLayout>
@@ -140,7 +140,6 @@ import { usePublishConversationDraft } from "src/composables/conversation/usePub
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { validateRichTextInput } from "src/shared/richText";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { useNewPostDraftsStore } from "src/stores/newConversationDrafts";
 import { useMaxDiffApi } from "src/utils/api/maxdiff/maxdiff";
 import {
@@ -207,7 +206,6 @@ const isLoadingPreview = ref(false);
 const previewError = ref(false);
 const githubPreviewItems = ref<GitHubPreviewItem[]>([]);
 
-const { createNewConversationIntention } = useLoginIntentionStore();
 const { t } = useComponentI18n<SeedOpinionsTranslations>(
   seedOpinionsTranslations
 );
@@ -237,10 +235,6 @@ onMounted(async () => {
     await fetchGitHubPreview();
   }
 });
-
-function onLoginCallback() {
-  createNewConversationIntention();
-}
 
 async function fetchGitHubPreview(): Promise<void> {
   const config = conversationDraft.value.externalSourceConfig;

@@ -33,7 +33,7 @@ afterEach(() => {
 describe("PreParticipationIntentionDialog copy", () => {
   it("updates the entire dialog when the language or participation intention changes", async () => {
     vi.spyOn(window, "scrollTo").mockImplementation(() => {});
-    const activeIntention = ref<PossibleIntentions>("agreement");
+    const activeIntention = ref<PossibleIntentions>("newConversation");
     const i18n = createI18n({ legacy: false, locale: "en", messages: {} });
     const container = document.createElement("div");
     document.body.append(container);
@@ -59,7 +59,7 @@ describe("PreParticipationIntentionDialog copy", () => {
     );
     expect(document.body.textContent).not.toContain("email");
     expect(document.body.textContent).toContain(
-      "return to this statement to cast your vote."
+      "Your conversation draft will be saved."
     );
     expect(document.body.textContent).toContain("Log In");
     expect(document.body.textContent).toContain("Cancel");
@@ -74,18 +74,15 @@ describe("PreParticipationIntentionDialog copy", () => {
     expect(document.body.textContent).not.toContain("This short setup");
     expect(document.body.textContent).not.toContain("e-mail");
     expect(document.body.textContent).toContain(
-      "Vous retrouverez ensuite cette proposition pour voter."
+      "Votre brouillon de conversation sera sauvegardé."
     );
     expect(document.body.textContent).not.toContain("cast your vote");
 
-    activeIntention.value = "newOpinion";
+    activeIntention.value = "none";
     await nextTick();
 
-    expect(document.body.textContent).toContain(
-      "Votre brouillon de proposition sera sauvegardé."
-    );
     expect(document.body.textContent).not.toContain(
-      "cette proposition pour voter"
+      "Votre brouillon de conversation sera sauvegardé."
     );
   });
 });

@@ -171,8 +171,6 @@ describe("resolveVerifyRouteDecision", () => {
       kind: "redirect",
       path: "/conversation/qlWQFzY/onboarding/verify/hard",
     });
-    expect(decision.credentialUpgradeTarget).toBe("hard");
-    expect(decision.onboardingMode).toBe("LOGIN");
   });
 
   it("routes backend-authored email consent before starting a required survey", () => {

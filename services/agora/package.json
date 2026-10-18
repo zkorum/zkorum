@@ -78,6 +78,7 @@
     "qrcode": "^1.5.4",
     "quasar": "2.22.0",
     "sanitize-html": "2.17.5",
+    "tabbable": "^6.5.0",
     "tweetnacl": "^1.0.3",
     "uint8arrays": "^5.1.1",
     "vue": "^3.5.34",

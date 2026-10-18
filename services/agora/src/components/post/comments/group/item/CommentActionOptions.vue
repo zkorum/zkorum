@@ -11,12 +11,6 @@
         size="1rem"
       />
     </ZKButton>
-
-    <PreParticipationIntentionDialog
-      v-model="showLoginDialog"
-      :ok-callback="onLoginConfirmationOk"
-      active-intention="reportUserContent"
-    />
   </div>
 
   <q-dialog v-model="showReportDialog">
@@ -56,13 +50,11 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { copyToClipboard } from "quasar";
-import PreParticipationIntentionDialog from "src/components/authentication/intention/PreParticipationIntentionDialog.vue";
 import ReportContentDialog from "src/components/report/ReportContentDialog.vue";
 import ZKActionDialog from "src/components/ui-library/ZKActionDialog.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
 import ZKIcon from "src/components/ui-library/ZKIcon.vue";
-import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
 import { useShareActions } from "src/composables/share/useShareActions";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { DisplayedOpinionItem, OpinionItem } from "src/shared/types/zod";
@@ -75,6 +67,7 @@ import {
   type ConversationRouteContext,
   getOpinionShareUrl,
 } from "src/utils/router/conversationRouteContext";
+import { getConversationSurveyVerifyHardPath } from "src/utils/survey/navigation";
 import { useNotify } from "src/utils/ui/notify";
 import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -115,23 +108,20 @@ const router = useRouter();
 const { muteUser } = useBackendUserMuteApi();
 const deleteCommentMutation = useDeleteCommentMutation();
 
-const showLoginDialog = ref(false);
-
-const { setReportIntention } = useConversationLoginIntentions();
-
 const { t } = useComponentI18n<CommentActionOptionsTranslations>(
   commentActionOptionsTranslations
 );
 
-function onLoginConfirmationOk() {
-  setReportIntention(props.commentItem.opinionSlugId);
-}
-
-function reportContentCallback() {
+async function reportContentCallback() {
   if (isLoggedIn.value) {
     showReportDialog.value = true;
   } else {
-    showLoginDialog.value = true;
+    await router.push({
+      path: getConversationSurveyVerifyHardPath({
+        conversationSlugId: props.postSlugId,
+        routeContext: props.conversationRouteContext,
+      }),
+    });
   }
 }
 
@@ -206,7 +196,9 @@ function optionButtonClicked() {
     conversationOrganizationName: props.conversationOrganizationName,
     callbacks: {
       deleteCommentCallback,
-      reportCommentCallback: reportContentCallback,
+      reportCommentCallback: () => {
+        void reportContentCallback();
+      },
       openUserReportsCallback,
       muteUserCallback,
       moderateCommentCallback,
