@@ -40,6 +40,12 @@ from agora_analysis_worker_shared.generated_models import (
     PolisConversationConfig,
     PolisVotingPresentation,
     RealtimeEventOutbox,
+    SurveyAggregateSnapshot,
+    SurveyChoiceDisplay,
+    SurveyConfig,
+    SurveyQuestion,
+    SurveyQuestionContent,
+    SurveyQuestionType,
 )
 from agora_analysis_worker_shared.input_snapshot import VoteInputRow, prepare_input_snapshot
 
@@ -71,8 +77,10 @@ def _create_engine() -> Engine:
     return engine
 
 
+@pytest.mark.parametrize("with_survey", [False, True])
 def test_empty_vote_matrix_publishes_activated_zero_count_snapshot(
     monkeypatch: pytest.MonkeyPatch,
+    with_survey: bool,
 ) -> None:
     def current_analysis_generation() -> ColumnElement[int]:
         return literal(2)
@@ -84,6 +92,39 @@ def test_empty_vote_matrix_publishes_activated_zero_count_snapshot(
     engine = _create_engine()
     lease_token = "empty-matrix-token"
     with Session(engine) as session:
+        if with_survey:
+            session.add_all(
+                [
+                    SurveyConfig(
+                        id=1, conversation_id=10, is_optional=False, created_at=NOW, updated_at=NOW
+                    ),
+                    SurveyQuestion(
+                        id=1,
+                        slug_id="question",
+                        survey_config_id=1,
+                        conversation_id=10,
+                        question_type=SurveyQuestionType.free_text,
+                        choice_display=SurveyChoiceDisplay.auto,
+                        current_content_id=1,
+                        is_required=True,
+                        display_order=0,
+                        created_at=NOW,
+                        updated_at=NOW,
+                    ),
+                    SurveyQuestionContent(
+                        id=1,
+                        public_id=UUID(int=1),
+                        survey_question_id=1,
+                        question_text="Explain your answer",
+                        constraints={
+                            "type": "free_text",
+                            "maxPlainTextLength": 100,
+                            "maxHtmlLength": 1000,
+                        },
+                        created_at=NOW,
+                    ),
+                ]
+            )
         session.add(
             PolisConversationConfig(
                 id=10,
@@ -223,6 +264,13 @@ def test_empty_vote_matrix_publishes_activated_zero_count_snapshot(
     assert published_snapshot.view_reason == ConversationViewSnapshotReasonEnum.analysis_completed
     assert published_snapshot.vote_count == 0
     assert published_snapshot.participant_count == 0
+    if with_survey:
+        with Session(engine) as session:
+            aggregate_snapshot = session.scalar(select(SurveyAggregateSnapshot))
+            assert aggregate_snapshot is not None
+            assert published_snapshot.survey_aggregate_snapshot_id == aggregate_snapshot.id
+    else:
+        assert published_snapshot.survey_aggregate_snapshot_id is None
     assert published_snapshot.activated_at is not None
     assert len(events) == 1
     assert events[0].event_type == "conversation_analysis_updated"

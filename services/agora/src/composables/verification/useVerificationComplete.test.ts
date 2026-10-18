@@ -4,7 +4,11 @@ import { emailVerificationStore } from "src/stores/onboarding/email";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "vue";
-import { createMemoryHistory, createRouter } from "vue-router";
+import {
+  createMemoryHistory,
+  createRouter,
+  NavigationFailureType,
+} from "vue-router";
 
 const auth = vi.hoisted(() => ({
   getDeviceLoginStatus: vi.fn(() => Promise.resolve({ isKnown: false })),
@@ -73,6 +77,43 @@ async function setup(path: string) {
 }
 
 describe("verification completion navigation", () => {
+  it("allows retrying an authenticated handoff after a navigation guard blocks it", async () => {
+    const { router, completeVerification, hasCompletionFailed } = await setup(
+      "/conversation/example/onboarding/verify/email-code"
+    );
+    const removeGuard = router.beforeEach(() => false);
+    await expect(completeVerification()).rejects.toMatchObject({
+      cause: { type: NavigationFailureType.aborted },
+    });
+    expect(hasCompletionFailed.value).toBe(true);
+    removeGuard();
+    await completeVerification();
+    expect(hasCompletionFailed.value).toBe(false);
+    expect(router.currentRoute.value.path).toBe(
+      "/conversation/example/onboarding/verify"
+    );
+  });
+
+  it("clears the completion loading state when refreshing authentication fails", async () => {
+    const {
+      completeVerification,
+      isCompletingVerification,
+      hasCompletionFailed,
+    } = await setup("/verify/email/");
+    const pending = Promise.withResolvers<{ isKnown: false }>();
+    auth.getDeviceLoginStatus.mockReturnValueOnce(pending.promise);
+    const completion = completeVerification();
+    expect(isCompletingVerification.value).toBe(true);
+    pending.reject(new Error("Authentication refresh failed"));
+    await expect(completion).rejects.toThrow("Authentication refresh failed");
+    expect(isCompletingVerification.value).toBe(false);
+    expect(routeUserAfterLogin).not.toHaveBeenCalled();
+    expect(hasCompletionFailed.value).toBe(true);
+    await completeVerification();
+    expect(hasCompletionFailed.value).toBe(false);
+    expect(routeUserAfterLogin).toHaveBeenCalledOnce();
+  });
+
   it.each([
     "/conversation/example/onboarding/verify",
     "/project/test/conversation/example/onboarding/verify",

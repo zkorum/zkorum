@@ -99,6 +99,7 @@ const {
   isInitialLoading,
 } = useConversationSurveyState({
   conversationSlugId: routeConversationSlugId,
+  formLoadMode: "incomplete",
   requireAccount: true,
 });
 

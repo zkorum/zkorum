@@ -152,6 +152,7 @@ import ContentTranslationControl from "src/components/translation/ContentTransla
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
 import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import ZKDigitsInput from "src/components/ui-library/ZKDigitsInput.vue";
+import { useConversationOnboardingCompletion } from "src/composables/conversation/useConversationOnboardingCompletion";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
@@ -214,6 +215,7 @@ const { route, routeConversationSlugId, routeContext } =
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { showNotifyMessage } = useNotify();
 const { exitToConversation } = useConversationOnboardingExit();
+const { completeOnboarding } = useConversationOnboardingCompletion();
 const { navigateToNextSurveyStep, navigateToSurveyRoot } =
   useSurveyNavigation();
 const { displayLanguage } = storeToRefs(useLanguageStore());
@@ -231,7 +233,10 @@ const {
   isInitialLoading,
   hasLoadError,
   refetchAll,
-} = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
+} = useConversationSurveyState({
+  conversationSlugId: routeConversationSlugId,
+  formLoadMode: "all",
+});
 
 const saveMutation = useSurveyAnswerSaveMutation({ conversationSlugId });
 
@@ -779,10 +784,9 @@ async function handleNavigation(
       justCompleted ||
       (action === "next" && isLastQuestion && gate?.status === "complete_valid")
     ) {
-      await handleBackToConversation();
-      showNotifyMessage({
-        message: t("answersSavedMessage"),
-        icon: "mdi-check-circle-outline",
+      await completeOnboarding({
+        conversationSlugId: conversationSlugId.value,
+        routeContext: routeContext.value,
       });
       return;
     }

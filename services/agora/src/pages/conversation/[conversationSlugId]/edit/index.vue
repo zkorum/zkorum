@@ -136,6 +136,7 @@
 
           <Editor
             v-model="title"
+            outlined
             :placeholder="t('titlePlaceholder')"
             :show-toolbar="false"
             :single-line="true"
@@ -143,7 +144,6 @@
             :max-length="MAX_LENGTH_CONVERSATION_TITLE"
             :show-character-count="true"
             min-height="auto"
-            class="title-editor"
             @update:model-value="updateTitle"
             @update:is-over-limit="(v: boolean) => (isTitleOverLimit = v)"
           />
@@ -153,6 +153,7 @@
           <div class="editor-style">
             <Editor
               v-model="content"
+              outlined
               :placeholder="t('bodyPlaceholder')"
               min-height="5rem"
               :show-toolbar="true"
@@ -966,12 +967,6 @@ watch(
 </script>
 
 <style scoped lang="scss">
-.title-editor,
-.editor-style {
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-}
-
 .editor-style {
   margin-bottom: 2rem;
   font-size: 1rem;

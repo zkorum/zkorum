@@ -1,8 +1,9 @@
 <template>
   <div class="option-text-input">
-    <div :id="labelId">
+    <div :id="labelId" hidden>
       {{ props.optionLabel }}: {{ t("pleaseSpecifyOptional") }}
     </div>
+    <div v-if="props.showOptionLabel">{{ props.optionLabel }}</div>
     <div
       v-if="props.readOnly"
       class="option-text-input__read-only"
@@ -12,6 +13,7 @@
     </div>
     <Editor
       v-else
+      outlined
       :model-value="htmlValue"
       :placeholder="t('pleaseSpecifyOptional')"
       :aria-labelledby="labelId"
@@ -49,6 +51,7 @@ import {
 
 const props = defineProps<{
   optionLabel: string;
+  showOptionLabel: boolean;
   textValue: SurveyOptionText;
   readOnly: boolean;
 }>();

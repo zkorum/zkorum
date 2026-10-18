@@ -79,6 +79,7 @@ const { exitToConversation } = useConversationOnboardingExit();
 
 const { conversationSlugId, surveyStepTotal } = useConversationSurveyState({
   conversationSlugId: routeConversationSlugId,
+  formLoadMode: "incomplete",
 });
 const skipPhoneRegistration = useSkipUnavailablePhoneRegistration({
   availability: usePhoneAuthAvailability(phoneAuthPurpose),

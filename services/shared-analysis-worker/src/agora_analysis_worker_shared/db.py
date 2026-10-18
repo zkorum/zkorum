@@ -79,12 +79,14 @@ from agora_analysis_worker_shared.survey_aggregates import (
     PUBLIC_AGGREGATE_SUPPRESSION_THRESHOLD,
     SurveyAggregateBuildResult,
     SurveyAggregateGroupMembership,
+    SurveyAggregatePopulation,
     SurveyAnswerSnapshot,
     SurveyConfigSnapshot,
     SurveyOptionSnapshot,
     SurveyQuestionSnapshot,
     SurveyResponseSnapshot,
     build_suppressed_survey_aggregates,
+    is_survey_response_complete_valid,
 )
 
 STRING_OBJECT_DICT_ADAPTER = TypeAdapter(dict[str, object])
@@ -967,8 +969,35 @@ def _fetch_vote_input_rows_batch(
         conversation_id: [] for conversation_id in conversation_ids
     }
     rows = session.execute(query).all()
+    if not rows:
+        return rows_by_conversation_id
+
+    configs_by_conversation_id = _fetch_active_survey_configs(
+        session, conversation_ids=conversation_ids, required_for_analysis_only=True
+    )
+    gated_conversation_ids = list(configs_by_conversation_id)
+    responses_by_conversation_id = _fetch_survey_responses(
+        session,
+        conversation_ids=gated_conversation_ids,
+        analysis_voters_only=True,
+    )
+    eligible_participant_ids_by_conversation_id = {
+        conversation_id: {
+            response.participant_id
+            for response in responses_by_conversation_id.get(conversation_id, [])
+            if is_survey_response_complete_valid(
+                config=configs_by_conversation_id[conversation_id], response=response
+            )
+        }
+        for conversation_id in gated_conversation_ids
+    }
 
     for row in rows:
+        eligible_participant_ids = eligible_participant_ids_by_conversation_id.get(
+            row.conversation_id
+        )
+        if eligible_participant_ids is not None and row.author_id not in eligible_participant_ids:
+            continue
         rows_by_conversation_id[row.conversation_id].append(
             VoteInputRow(
                 conversation_id=row.conversation_id,
@@ -1625,8 +1654,7 @@ def _select_eager_ai_candidate_ids(
         (
             option
             for option in options
-            if option.group_count == preferred_group_count
-            and option.selection_score is not None
+            if option.group_count == preferred_group_count and option.selection_score is not None
         ),
         None,
     )
@@ -2771,11 +2799,7 @@ def persist_survey_aggregate_snapshots(
     *,
     claims: list[ClaimedWorkItem],
     snapshot_id_by_conversation_id: dict[int, int],
-    prepared_input_snapshots_by_conversation_id: dict[int, PreparedInputSnapshot],
-    bundles_by_conversation_id: dict[int, ComputedAnalysisBundle],
-    candidate_id_by_conversation_variant: dict[tuple[int, int], int],
-    artifact_candidate_ids_by_pair: dict[tuple[int, int], set[int]],
-    group_id_by_candidate_key: dict[tuple[int, str], int],
+    populations_by_conversation_id: dict[int, SurveyAggregatePopulation],
 ) -> dict[int, int]:
     configs_by_conversation_id = _fetch_active_survey_configs(
         session,
@@ -2793,30 +2817,15 @@ def persist_survey_aggregate_snapshots(
         config = configs_by_conversation_id.get(claim.conversation_id)
         if config is None:
             continue
-        counted_participant_ids = {
-            participant.user_id
-            for participant in prepared_input_snapshots_by_conversation_id[
-                claim.conversation_id
-            ].participants
-        }
+        population = populations_by_conversation_id[claim.conversation_id]
         aggregate_by_conversation_id[claim.conversation_id] = build_suppressed_survey_aggregates(
             config=config,
             responses=[
                 response
                 for response in responses_by_conversation_id.get(claim.conversation_id, [])
-                if response.participant_id in counted_participant_ids
+                if response.participant_id in population.participant_ids
             ],
-            group_memberships=_survey_group_memberships(
-                claim=claim,
-                snapshot=prepared_input_snapshots_by_conversation_id[claim.conversation_id],
-                bundle=bundles_by_conversation_id[claim.conversation_id],
-                candidate_id_by_conversation_variant=(candidate_id_by_conversation_variant),
-                allowed_candidate_ids=artifact_candidate_ids_by_pair.get(
-                    (claim.conversation_id, claim.opinion_group_spec_id),
-                    set(),
-                ),
-                group_id_by_candidate_key=group_id_by_candidate_key,
-            )
+            group_memberships=list(population.group_memberships),
         )
 
     if not aggregate_by_conversation_id:
@@ -3005,29 +3014,42 @@ def _fetch_active_survey_configs(
     session: Session,
     *,
     conversation_ids: list[int],
+    required_for_analysis_only: bool = False,
 ) -> dict[int, SurveyConfigSnapshot]:
     if not conversation_ids:
         return {}
-    config_rows = session.execute(
-        select(
-            SurveyConfig.id,
-            SurveyConfig.conversation_id,
-            SurveyConfig.current_revision,
-            SurveyConfig.is_optional,
-        )
+    required_question_exists = (
+        select(SurveyQuestion.id)
         .where(
-            and_(
-                SurveyConfig.conversation_id.in_(sorted(set(conversation_ids))),
-                SurveyConfig.deleted_at.is_(None),
-            )
+            SurveyQuestion.survey_config_id == SurveyConfig.id,
+            SurveyQuestion.current_content_id.is_not(None),
+            SurveyQuestion.is_required.is_(True),
         )
-        .order_by(SurveyConfig.conversation_id, SurveyConfig.id)
+        .exists()
+    )
+    config_query = select(
+        SurveyConfig.id,
+        SurveyConfig.conversation_id,
+        SurveyConfig.current_revision,
+        SurveyConfig.is_optional,
+    ).where(
+        and_(
+            SurveyConfig.conversation_id.in_(sorted(set(conversation_ids))),
+            SurveyConfig.deleted_at.is_(None),
+        )
+    )
+    if required_for_analysis_only:
+        config_query = config_query.where(
+            SurveyConfig.is_optional.is_(False), required_question_exists
+        )
+    config_rows = session.execute(
+        config_query.order_by(SurveyConfig.conversation_id, SurveyConfig.id)
     ).all()
     config_by_conversation_id = {row.conversation_id: row for row in config_rows}
     if not config_by_conversation_id:
         return {}
 
-    question_rows = session.execute(
+    question_query = (
         select(
             SurveyQuestion.id,
             SurveyQuestion.survey_config_id,
@@ -3052,7 +3074,11 @@ def _fetch_active_survey_configs(
                 SurveyQuestion.current_content_id.is_not(None),
             )
         )
-        .order_by(SurveyQuestion.survey_config_id, SurveyQuestion.display_order)
+    )
+    if required_for_analysis_only:
+        question_query = question_query.where(SurveyQuestion.is_required.is_(True))
+    question_rows = session.execute(
+        question_query.order_by(SurveyQuestion.survey_config_id, SurveyQuestion.display_order)
     ).all()
     question_ids = [row.id for row in question_rows]
     options_by_question_id: dict[int, list[SurveyOptionSnapshot]] = {}
@@ -3126,10 +3152,11 @@ def _fetch_survey_responses(
     session: Session,
     *,
     conversation_ids: list[int],
+    analysis_voters_only: bool = False,
 ) -> dict[int, list[SurveyResponseSnapshot]]:
     if not conversation_ids:
         return {}
-    response_rows = session.execute(
+    response_query = (
         select(
             SurveyResponse.id,
             SurveyResponse.conversation_id,
@@ -3143,7 +3170,23 @@ def _fetch_survey_responses(
                 User.is_deleted.is_(False),
             )
         )
-    ).all()
+    )
+    if analysis_voters_only:
+        response_query = response_query.where(
+            select(Vote.id)
+            .join(Opinion, Opinion.id == Vote.opinion_id)
+            .outerjoin(OpinionModeration, OpinionModeration.opinion_id == Opinion.id)
+            .where(
+                Vote.author_id == SurveyResponse.participant_id,
+                Opinion.conversation_id == SurveyResponse.conversation_id,
+                Vote.current_content_id.is_not(None),
+                Opinion.current_content_id.is_not(None),
+                OpinionModeration.id.is_(None),
+            )
+            .exists()
+        )
+    response_ids_query = response_query.with_only_columns(SurveyResponse.id)
+    response_rows = session.execute(response_query).all()
     response_ids = [row.id for row in response_rows]
     answers_by_response_id: dict[int, dict[int, SurveyAnswerSnapshot]] = {
         response_id: {} for response_id in response_ids
@@ -3156,9 +3199,10 @@ def _fetch_survey_responses(
                 SurveyAnswer.survey_question_id,
                 SurveyAnswer.answered_question_semantic_version,
                 SurveyAnswer.text_value_html,
+                SurveyAnswer.text_value_plain_text,
             ).where(
                 and_(
-                    SurveyAnswer.survey_response_id.in_(response_ids),
+                    SurveyAnswer.survey_response_id.in_(response_ids_query),
                     SurveyAnswer.deleted_at.is_(None),
                 )
             )
@@ -3177,9 +3221,11 @@ def _fetch_survey_responses(
                     SurveyQuestionOption,
                     SurveyAnswerOption.survey_question_option_id == SurveyQuestionOption.id,
                 )
+                .join(SurveyAnswer, SurveyAnswer.id == SurveyAnswerOption.survey_answer_id)
                 .where(
                     and_(
-                        SurveyAnswerOption.survey_answer_id.in_(answer_ids),
+                        SurveyAnswer.survey_response_id.in_(response_ids_query),
+                        SurveyAnswer.deleted_at.is_(None),
                         SurveyAnswerOption.deleted_at.is_(None),
                     )
                 )
@@ -3196,6 +3242,7 @@ def _fetch_survey_responses(
                 answered_question_semantic_version=(row.answered_question_semantic_version),
                 option_slug_ids=option_slug_ids_by_answer_id.get(row.id, []),
                 text_value_html=row.text_value_html,
+                text_value_plain_text=row.text_value_plain_text,
             )
 
     responses_by_conversation_id: dict[int, list[SurveyResponseSnapshot]] = {
@@ -3339,6 +3386,17 @@ def persist_empty_vote_matrix_results_batch(
         )
         session.execute(candidate_insert)
 
+        survey_aggregate_snapshot_id_by_conversation_id = persist_survey_aggregate_snapshots(
+            session,
+            claims=claims,
+            snapshot_id_by_conversation_id=snapshot_id_by_conversation_id,
+            populations_by_conversation_id={
+                claim.conversation_id: SurveyAggregatePopulation(
+                    participant_ids=frozenset(), group_memberships=()
+                )
+                for claim in claims
+            },
+        )
         pairs = [(claim.conversation_id, claim.opinion_group_spec_id) for claim in claims]
         persisted_view_snapshots_by_pair = _persist_conversation_view_snapshot_rows(
             session,
@@ -3357,7 +3415,9 @@ def persist_empty_vote_matrix_results_batch(
                 for claim in claims
             },
             selected_by_pair={pair: None for pair in pairs},
-            survey_aggregate_snapshot_id_by_conversation_id={},
+            survey_aggregate_snapshot_id_by_conversation_id=(
+                survey_aggregate_snapshot_id_by_conversation_id
+            ),
             premium_analysis_conversation_ids=premium_analysis_conversation_ids,
             ai_generation_expected=False,
         )
@@ -3412,21 +3472,14 @@ def persist_empty_vote_matrix_results_batch(
         completed_rows = session.execute(work_state_update).all()
         session.commit()
 
-    newer_generation_count = sum(
-        1 for row in completed_rows if row.newer_generation_exists
-    )
+    newer_generation_count = sum(1 for row in completed_rows if row.newer_generation_exists)
     if newer_generation_count:
         log.info(
-            "[MathUpdaterDB] Empty-matrix completion found newer math generation rows=%d "
-            "claims=%s",
+            "[MathUpdaterDB] Empty-matrix completion found newer math generation rows=%d claims=%s",
             newer_generation_count,
             _format_claims_for_log(claims),
         )
-    return [
-        row.conversation_id
-        for row in completed_rows
-        if row.newer_generation_exists
-    ]
+    return [row.conversation_id for row in completed_rows if row.newer_generation_exists]
 
 
 def persist_computed_analysis_results_batch(
@@ -3896,11 +3949,31 @@ def persist_computed_analysis_results_batch(
             session,
             claims=claims,
             snapshot_id_by_conversation_id=snapshot_id_by_conversation_id,
-            prepared_input_snapshots_by_conversation_id=prepared_input_snapshots_by_conversation_id,
-            bundles_by_conversation_id=bundles_by_conversation_id,
-            candidate_id_by_conversation_variant=candidate_id_by_conversation_variant,
-            artifact_candidate_ids_by_pair=allowed_candidate_ids_by_pair,
-            group_id_by_candidate_key=group_id_by_candidate_key,
+            populations_by_conversation_id={
+                claim.conversation_id: SurveyAggregatePopulation(
+                    participant_ids=frozenset(
+                        participant.user_id
+                        for participant in prepared_input_snapshots_by_conversation_id[
+                            claim.conversation_id
+                        ].participants
+                    ),
+                    group_memberships=tuple(
+                        _survey_group_memberships(
+                            claim=claim,
+                            snapshot=prepared_input_snapshots_by_conversation_id[
+                                claim.conversation_id
+                            ],
+                            bundle=bundles_by_conversation_id[claim.conversation_id],
+                            candidate_id_by_conversation_variant=candidate_id_by_conversation_variant,
+                            allowed_candidate_ids=allowed_candidate_ids_by_pair.get(
+                                (claim.conversation_id, claim.opinion_group_spec_id), set()
+                            ),
+                            group_id_by_candidate_key=group_id_by_candidate_key,
+                        )
+                    ),
+                )
+                for claim in claims
+            },
         )
         log.info(
             "[MathUpdaterDB] Persisted survey aggregate snapshots=%d",
@@ -4124,8 +4197,7 @@ def complete_computed_analysis_work_items_batch(
 
     newer_generation_count = len(newer_generation_conversation_ids)
     log.info(
-        "[MathUpdaterDB] Completed computed analysis work rows=%d newer_generation=%d "
-        "claims=%s",
+        "[MathUpdaterDB] Completed computed analysis work rows=%d newer_generation=%d claims=%s",
         len(completed_rows),
         newer_generation_count,
         _format_claims_for_log(claims),
@@ -4190,16 +4262,12 @@ def release_retryable_work_items_batch(
 
     if rows:
         log.info(
-            "[MathUpdaterDB] Released retryable analysis work rows=%d "
-            "error_code=%s claims=%s",
+            "[MathUpdaterDB] Released retryable analysis work rows=%d error_code=%s claims=%s",
             len(rows),
             error_code,
             _format_claims_for_log(claims),
         )
-    return [
-        row.conversation_id
-        for row in rows
-    ]
+    return [row.conversation_id for row in rows]
 
 
 def mark_non_retryable_work_items_batch(
@@ -4273,8 +4341,4 @@ def mark_non_retryable_work_items_batch(
             error_code,
             _format_claims_for_log(claims),
         )
-    return [
-        row.conversation_id
-        for row in rows
-        if row.newer_generation_exists
-    ]
+    return [row.conversation_id for row in rows if row.newer_generation_exists]

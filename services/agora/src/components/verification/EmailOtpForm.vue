@@ -1,18 +1,14 @@
 <template>
   <div>
-    <div class="instructions">
+    <div>
       {{ t("instructions") }}
-      <span class="emailStyle">{{ verificationEmail }}</span
+      <span class="emailStyle">{{ displayedVerificationEmail }}</span
       >.
     </div>
 
     <div class="otpDiv">
       <div class="codeInput" @keydown.enter.prevent.stop="handleEnterKey">
-        <ZKInputOtp
-          v-model="verificationCode"
-          :length="6"
-          integer-only
-        />
+        <ZKInputOtp v-model="verificationCode" :length="6" integer-only />
       </div>
 
       <div
@@ -43,10 +39,7 @@
         button-type="largeButton"
         :label="
           verificationNextCodeSeconds > 0
-            ? t('resendCodeIn') +
-              ' ' +
-              verificationNextCodeSeconds +
-              's'
+            ? t('resendCodeIn') + ' ' + verificationNextCodeSeconds + 's'
             : t('resendCode')
         "
         :disable="verificationNextCodeSeconds > 0 || isInteractionLocked"
@@ -63,10 +56,7 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { createRequestGate } from "src/composables/verification/createRequestGate";
 import { useOtpTimers } from "src/composables/verification/useOtpTimers";
 import { useVerificationComplete } from "src/composables/verification/useVerificationComplete";
-import {
-  authenticateEmail200,
-  verifyOtp200,
-} from "src/shared/types/dto-auth";
+import { authenticateEmail200, verifyOtp200 } from "src/shared/types/dto-auth";
 import { emailVerificationStore } from "src/stores/onboarding/email";
 import { useAuthEmailApi } from "src/utils/api/auth-email";
 import { useNotify } from "src/utils/ui/notify";
@@ -90,6 +80,7 @@ const { t } = useComponentI18n<EmailOtpFormTranslations>(
 
 const emailStore = emailVerificationStore();
 const { verificationEmail, pendingOtpData } = storeToRefs(emailStore);
+const displayedVerificationEmail = verificationEmail.value;
 
 const {
   verificationCode,
@@ -103,7 +94,8 @@ const {
   clearTimers,
 } = useOtpTimers();
 
-const { completeVerification } = useVerificationComplete();
+const { completeVerification, isCompletingVerification, hasCompletionFailed } =
+  useVerificationComplete();
 
 const { sendEmailCode, verifyEmailOtp } = useAuthEmailApi();
 
@@ -116,8 +108,12 @@ onUnmounted(() => {
   clearTimers();
 });
 
-const isSubmitButtonLoading = requestGate.isBusy;
-const isInteractionLocked = computed(() => requestGate.isBusy.value);
+const isSubmitButtonLoading = computed(
+  () => requestGate.isBusy.value || isCompletingVerification.value
+);
+const isInteractionLocked = computed(
+  () => isSubmitButtonLoading.value || requestGate.isTerminated.value
+);
 
 onMounted(async () => {
   if (verificationEmail.value === "") {
@@ -145,6 +141,10 @@ function handleEnterKey() {
 }
 
 async function nextButtonClicked() {
+  if (hasCompletionFailed.value) {
+    await finishVerification();
+    return;
+  }
   const requestId = requestGate.start();
   if (requestId === null) {
     return;
@@ -163,7 +163,7 @@ async function nextButtonClicked() {
   try {
     const response = await verifyEmailOtp({
       code: validatedCode,
-      email: verificationEmail.value,
+      email: displayedVerificationEmail,
     });
 
     if (!requestGate.isCurrent(requestId)) {
@@ -180,7 +180,7 @@ async function nextButtonClicked() {
           showNotifyMessage(t("verificationSuccessful"));
         }
         emit("verified", data.accountMerged);
-        await completeVerification();
+        await finishVerification();
       } else {
         switch (data.reason) {
           case "expired_code":
@@ -199,7 +199,7 @@ async function nextButtonClicked() {
             requestGate.terminate();
             showNotifyMessage(t("alreadyHasCredential"));
             emit("verified", false);
-            await completeVerification();
+            await finishVerification();
             break;
           }
           case "verification_failed": {
@@ -227,7 +227,7 @@ async function requestCodeClicked(isRequestingNewCode: boolean) {
   try {
     const response = await sendEmailCode({
       isRequestingNewCode: isRequestingNewCode,
-      email: verificationEmail.value,
+      email: displayedVerificationEmail,
     });
     if (!requestGate.isCurrent(requestId)) {
       return;
@@ -242,7 +242,7 @@ async function requestCodeClicked(isRequestingNewCode: boolean) {
             requestGate.terminate();
             showNotifyMessage(t("alreadyHasCredential"));
             emit("verified", false);
-            await completeVerification();
+            await finishVerification();
             break;
           }
           case "throttled":
@@ -273,15 +273,20 @@ async function requestCodeClicked(isRequestingNewCode: boolean) {
 defineExpose({
   nextButtonClicked,
   isSubmitButtonLoading,
-  isCodeComplete: () => verificationCode.value.length == 6,
+  isCodeComplete: () =>
+    verificationCode.value.length === 6 || hasCompletionFailed.value,
 });
+
+async function finishVerification(): Promise<void> {
+  try {
+    await completeVerification();
+  } catch {
+    showNotifyMessage(t("somethingWrong"));
+  }
+}
 </script>
 
 <style scoped lang="scss">
-.instructions {
-  font-size: 1.1rem;
-}
-
 .emailStyle {
   font-weight: var(--font-weight-medium);
 }

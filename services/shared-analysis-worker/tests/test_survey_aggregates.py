@@ -53,9 +53,7 @@ def _config(
         is_optional=is_optional,
         questions=[
             _question(
-                is_public_aggregate_suppression_enabled=(
-                    is_public_aggregate_suppression_enabled
-                )
+                is_public_aggregate_suppression_enabled=(is_public_aggregate_suppression_enabled)
             )
         ],
     )
@@ -77,6 +75,7 @@ def _response(
                 answered_question_semantic_version=semantic_version,
                 option_slug_ids=option_slug_ids,
                 text_value_html=None,
+                text_value_plain_text=None,
             )
         },
     )
@@ -236,12 +235,14 @@ def test_required_free_text_validation_filters_choice_aggregates() -> None:
                 answered_question_semantic_version=2,
                 option_slug_ids=["a"],
                 text_value_html=None,
+                text_value_plain_text=None,
             ),
             101: SurveyAnswerSnapshot(
                 question_id=101,
                 answered_question_semantic_version=1,
                 option_slug_ids=[],
                 text_value_html="<p>\u200b</p>",
+                text_value_plain_text="\u200b",
             ),
         },
     )

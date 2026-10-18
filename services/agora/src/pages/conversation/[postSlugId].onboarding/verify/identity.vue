@@ -119,7 +119,10 @@ const {
   isInitialLoading,
   hasLoadError,
   refetchAll,
-} = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
+} = useConversationSurveyState({
+  conversationSlugId: routeConversationSlugId,
+  formLoadMode: "incomplete",
+});
 
 watch(
   [isInitialLoading, requirementState],

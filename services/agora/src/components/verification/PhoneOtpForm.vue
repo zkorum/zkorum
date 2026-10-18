@@ -12,7 +12,7 @@
     />
 
     <template v-else>
-      <div class="instructions">
+      <div>
         {{ t("instructions") }}
         <span class="phoneNumberStyle">{{ formattedPhoneNumber }}</span
         >.
@@ -167,7 +167,8 @@ const {
   clearTimers,
 } = useOtpTimers();
 
-const { completeVerification } = useVerificationComplete();
+const { completeVerification, isCompletingVerification, hasCompletionFailed } =
+  useVerificationComplete();
 
 const { sendSmsCode, verifyPhoneOtp } = useAuthPhoneApi();
 const turnstileWidget = ref<InstanceType<typeof PhoneTurnstile>>();
@@ -182,8 +183,12 @@ onUnmounted(() => {
   clearTimers();
 });
 
-const isSubmitButtonLoading = requestGate.isBusy;
-const isInteractionLocked = computed(() => requestGate.isBusy.value);
+const isSubmitButtonLoading = computed(
+  () => requestGate.isBusy.value || isCompletingVerification.value
+);
+const isInteractionLocked = computed(
+  () => isSubmitButtonLoading.value || requestGate.isTerminated.value
+);
 
 const formattedPhoneNumber = computed(
   () =>
@@ -240,6 +245,10 @@ function handleEnterKey() {
 }
 
 async function nextButtonClicked() {
+  if (hasCompletionFailed.value) {
+    await finishVerification();
+    return;
+  }
   if (!ensurePhoneAuthAvailable()) {
     return;
   }
@@ -280,7 +289,7 @@ async function nextButtonClicked() {
           showNotifyMessage(t("verificationSuccessful"));
         }
         emit("verified", data.accountMerged);
-        await completeVerification();
+        await finishVerification();
       } else {
         switch (data.reason) {
           case "expired_code":
@@ -299,7 +308,7 @@ async function nextButtonClicked() {
             requestGate.terminate();
             showNotifyMessage(t("alreadyHasCredential"));
             emit("verified", false);
-            await completeVerification();
+            await finishVerification();
             break;
           }
           case "verification_failed": {
@@ -363,7 +372,7 @@ async function requestCodeClicked(isRequestingNewCode: boolean) {
             requestGate.terminate();
             showNotifyMessage(t("alreadyHasCredential"));
             emit("verified", false);
-            await completeVerification();
+            await finishVerification();
             break;
           }
           case "throttled":
@@ -418,15 +427,20 @@ defineExpose({
   isSubmitButtonLoading,
   isAvailable: computed(() => phoneAuthAvailability.value.available),
   isCodeComplete: () =>
-    phoneAuthAvailability.value.available && verificationCode.value.length == 6,
+    phoneAuthAvailability.value.available &&
+    (verificationCode.value.length === 6 || hasCompletionFailed.value),
 });
+
+async function finishVerification(): Promise<void> {
+  try {
+    await completeVerification();
+  } catch {
+    showNotifyMessage(t("somethingWrong"));
+  }
+}
 </script>
 
 <style scoped lang="scss">
-.instructions {
-  font-size: 1.1rem;
-}
-
 .phoneNumberStyle {
   font-weight: var(--font-weight-medium);
 }

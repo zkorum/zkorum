@@ -22,7 +22,7 @@ export function useConversationOnboardingExit() {
   }: {
     conversationSlugId: string;
     routeContext?: ConversationRouteContext;
-  }): Promise<void> {
+  }): Promise<boolean> {
     const currentRoute = router.currentRoute.value;
     if (
       !isConversationOnboardingRouteName(currentRoute.name) ||
@@ -32,7 +32,7 @@ export function useConversationOnboardingExit() {
           : undefined
       ) !== conversationSlugId
     )
-      return;
+      return false;
     const hasCurrentOnboardingState =
       conversationOnboardingStore.conversationSlugId === conversationSlugId;
     const fallbackPath =
@@ -51,7 +51,7 @@ export function useConversationOnboardingExit() {
       ? conversationOnboardingStore.returnHistoryPosition
       : null;
 
-    await navigateToHistoryPositionOrReplace({
+    return await navigateToHistoryPositionOrReplace({
       router,
       fallbackRoute: fallbackPath,
       targetHistoryPosition,

@@ -1,5 +1,5 @@
 <template>
-  <div class="editor">
+  <div class="editor" :class="{ 'editor--outlined': outlined }">
     <!-- Static toolbar for desktop and adaptive mode -->
     <div
       v-if="
@@ -142,6 +142,7 @@ defineOptions({
 const props = withDefaults(
   defineProps<{
     showToolbar: boolean;
+    outlined?: boolean;
     formattingEnabled?: boolean;
     placeholder: string;
     minHeight: string;
@@ -156,6 +157,7 @@ const props = withDefaults(
   }>(),
   {
     maxLength: undefined,
+    outlined: false,
     formattingEnabled: true,
     showCharacterCount: true,
     submitOnShiftEnter: false,
@@ -499,6 +501,16 @@ function getEditorAttributes(): Record<string, string> {
 <style lang="scss" scoped>
 .editor {
   padding-bottom: 0rem;
+}
+
+.editor--outlined {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+
+  &:focus-within {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
 }
 
 .editor-wrapper {
