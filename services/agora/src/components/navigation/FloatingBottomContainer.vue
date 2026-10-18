@@ -125,11 +125,13 @@ const barStyle = computed(() => {
 
 <style scoped lang="scss">
 .bottomBar {
+  --floating-bottom-clearance: calc(0.5rem + env(safe-area-inset-bottom));
+
   box-sizing: border-box;
   position: fixed;
   inset-block-end: var(--visible-viewport-bottom-inset, 0px);
   z-index: 100;
-  padding-block-end: calc(0.5rem + env(safe-area-inset-bottom));
+  padding-block-end: var(--floating-bottom-clearance);
   padding-inline: 0.5rem;
   padding-block-start: 1.5rem;
   background: linear-gradient(

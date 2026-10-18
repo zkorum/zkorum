@@ -49,6 +49,7 @@
 import { useQueryClient } from "@tanstack/vue-query";
 import NewContentPill from "src/components/feed/NewContentPill.vue";
 import AsyncStateHandler from "src/components/ui/AsyncStateHandler.vue";
+import type { OpinionEditRequest } from "src/composables/opinion/types";
 import { useOpinionVoting } from "src/composables/opinion/useOpinionVoting";
 import { useTargetOpinion } from "src/composables/opinion/useTargetOpinion";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
@@ -92,7 +93,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: [];
-  editOpinion: [opinion: DisplayedOpinionItem];
+  editOpinion: [request: OpinionEditRequest];
 }>();
 
 const isCommentTabActive = ref(true);

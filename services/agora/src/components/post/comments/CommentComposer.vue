@@ -126,6 +126,7 @@
 <script setup lang="ts">
 import {
   onClickOutside,
+  useRafFn,
   useResizeObserver,
   useWindowScroll,
 } from "@vueuse/core";
@@ -137,6 +138,7 @@ import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
 import ZKIcon from "src/components/ui-library/ZKIcon.vue";
 import type { SubmittedCommentData } from "src/composables/conversation/useConversationParentState";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
+import type { OpinionEditRequest } from "src/composables/opinion/types";
 import { useOpinionComposerEditing } from "src/composables/opinion/useOpinionComposerEditing";
 import { useOpinionComposerViewport } from "src/composables/opinion/useOpinionComposerViewport";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
@@ -193,7 +195,7 @@ defineOptions({
 });
 
 const props = defineProps<{
-  editingOpinion: DisplayedOpinionItem | undefined;
+  editingTarget: OpinionEditRequest | undefined;
   postSlugId: string;
   participationMode: ParticipationMode;
   requiresEventTicket?: EventSlug;
@@ -211,6 +213,8 @@ const emit = defineEmits<{
     payload: { userIdChanged: boolean; needsCacheRefresh: boolean },
   ];
 }>();
+
+const editingOpinion = computed(() => props.editingTarget?.opinion);
 
 const conversationRouteContext = computed(
   () => props.conversationRouteContext ?? normalConversationRouteContext
@@ -310,7 +314,7 @@ const innerFocus = ref(false);
 
 const target = useTemplateRef<HTMLElement>("target");
 onClickOutside(target, () => {
-  if (props.editingOpinion === undefined) innerFocus.value = false;
+  if (editingOpinion.value === undefined) innerFocus.value = false;
 });
 
 const newOpinionIntention = clearNewOpinionIntention();
@@ -329,12 +333,14 @@ const showGuidelinesDialog = ref(false);
 
 const editorRef = useTemplateRef<InstanceType<typeof Editor>>("editorRef");
 const composerContent = useTemplateRef<HTMLElement>("composerContent");
-useResizeObserver(composerContent, () => {
-  editorRef.value?.scrollSelectionIntoView();
-});
+const { resume: revealCaretOnNextFrame } = useRafFn(
+  () => editorRef.value?.scrollSelectionIntoView(),
+  { immediate: false, once: true }
+);
+useResizeObserver(composerContent, revealCaretOnNextFrame);
 
 async function onEditorReady(serializedContent: string): Promise<void> {
-  if (props.editingOpinion === undefined) return;
+  if (editingOpinion.value === undefined) return;
   editSession.ready(serializedContent);
   const session = editSession.capture();
   await nextTick();
@@ -401,7 +407,7 @@ watch(showGuidelinesDialog, (isOpen, wasOpen) => {
 });
 
 watch(characterCount, (count) => {
-  if (count === 0 && props.editingOpinion === undefined) {
+  if (count === 0 && editingOpinion.value === undefined) {
     deleteOpinionDraft(props.postSlugId);
   }
 });
@@ -469,7 +475,7 @@ const {
   isRouteLockedCheck,
 } = useRouteGuard(
   () =>
-    props.editingOpinion !== undefined
+    editingOpinion.value !== undefined
       ? isEditDirty.value
       : characterCount.value > 0,
   onBeforeRouteLeaveCallback
@@ -479,7 +485,7 @@ const savedCreationDraft = getOpinionDraft(props.postSlugId);
 if (savedCreationDraft !== undefined)
   opinionBody.value = savedCreationDraft.body;
 const editSession = useOpinionComposerEditing({
-  target: () => props.editingOpinion,
+  target: editingOpinion,
   body: opinionBody,
   saveCreationDraft: (body) => {
     if (body.length > 0) saveOpinionDraft(props.postSlugId, body);
@@ -499,7 +505,7 @@ const { composerViewportStyle, revealEditingOpinion } =
   useOpinionComposerViewport({
     composer: () => target.value,
     actionBar: () => props.actionBarElement,
-    editingOpinionSlugId: () => props.editingOpinion?.opinionSlugId,
+    sourceElements: () => props.editingTarget?.sourceElements,
     enabled: () =>
       !hideComposerForRoute.value && !editSession.isInitializing.value,
   });
@@ -519,7 +525,7 @@ onMounted(() => {
 });
 
 watch(yScroll, () => {
-  if (disableAutocollapse === false && props.editingOpinion === undefined) {
+  if (disableAutocollapse === false && editingOpinion.value === undefined) {
     innerFocus.value = false;
     dummyInput.value?.focus();
   }
@@ -591,7 +597,7 @@ defineExpose({
 });
 
 function onBeforeRouteLeaveCallback(to: RouteGuardDestination): boolean {
-  if (props.editingOpinion !== undefined) {
+  if (editingOpinion.value !== undefined) {
     if (isSameConversationTabRoute(to)) return true;
     if (isEditDirty.value || editMutation.isPending.value) return false;
     cancelEdit();
@@ -719,7 +725,15 @@ async function submitPostClicked() {
 .container.focused {
   max-block-size: min(
     calc(var(--visible-viewport-height, 100dvh) * 0.65),
-    max(10rem, calc(var(--composer-available-height) - 6rem))
+    max(
+      10rem,
+      calc(
+        var(--composer-available-height) - var(--composer-context-height) - var(
+            --floating-bottom-clearance,
+            0px
+          )
+      )
+    )
   );
 }
 

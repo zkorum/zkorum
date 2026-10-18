@@ -126,12 +126,14 @@
             <ZKCard
               v-for="commentItem in commentItems"
               :id="`comment-${commentItem.opinionSlugId}`"
+              v-slot="{ element }"
               :key="commentItem.opinionSlugId"
               role="listitem"
               padding="0rem"
               class="project-conversation-layout-dev__statement-card"
             >
               <TranslatedCommentItem
+                :card-element="element"
                 :editing-opinion-slug-id="undefined"
                 :show-vote-results="true"
                 :comment-item="commentItem"

@@ -48,6 +48,7 @@ import type {
   RegisterChildRefreshHandler,
   SubmittedCommentData,
 } from "src/composables/conversation/useConversationParentState";
+import type { OpinionEditRequest } from "src/composables/opinion/types";
 import type {
   DisplayedOpinionItem,
   ExtendedConversationDisplayData,
@@ -87,7 +88,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   "update:commentFilter": [filter: CommentFilterOptions];
-  editOpinion: [opinion: DisplayedOpinionItem];
+  editOpinion: [request: OpinionEditRequest];
 }>();
 
 const setCurrentTabLoading = inject<(loading: boolean) => void>(

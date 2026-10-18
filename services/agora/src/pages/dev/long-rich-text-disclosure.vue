@@ -107,9 +107,10 @@
 
           <div class="comments-section">
             <CommentItem
-              :editing-opinion-slug-id="undefined"
               v-for="statement in displayedStatements"
               :key="statement.opinionSlugId"
+              :card-element="undefined"
+              :editing-opinion-slug-id="undefined"
               :show-vote-results="true"
               :comment-item="statement"
               post-slug-id="longtxt1"

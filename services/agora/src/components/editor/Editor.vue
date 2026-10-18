@@ -509,6 +509,7 @@ function getEditorAttributes(): Record<string, string> {
 
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
   justify-content: center;

@@ -92,7 +92,7 @@
 
     <FloatingBottomContainer v-if="!compactMode">
       <CommentComposer
-        :editing-opinion="editingOpinion"
+        :editing-target="editingTarget"
         :action-bar-element="
           conversationScrollContext.actionBarElement ?? undefined
         "
@@ -102,7 +102,7 @@
         :survey-gate="conversationData.interaction.surveyGate"
         :is-composer-disabled="isVotingDisabled"
         :conversation-route-context="conversationRouteContext"
-        @edit-cancelled="editingOpinion = undefined"
+        @edit-cancelled="finishEditOpinion"
         @edited-opinion="handleEditedOpinion"
         @submitted-comment="submittedComment"
       />
@@ -120,6 +120,7 @@ import type {
   ConversationScrollContext,
   SubmittedCommentData,
 } from "src/composables/conversation/useConversationParentState";
+import { useOpinionEditTarget } from "src/composables/opinion/useOpinionEditTarget";
 import type { ConversationContentFetchResponse } from "src/shared/types/dto";
 import type {
   DisplayedOpinionItem,
@@ -163,14 +164,12 @@ const emit = defineEmits<{
 }>();
 
 const currentTab = ref<"comment" | "analysis">("comment");
-const editingOpinion = ref<DisplayedOpinionItem>();
-function beginEditOpinion(opinion: DisplayedOpinionItem): void {
-  if (editingOpinion.value === undefined) editingOpinion.value = opinion;
-}
+const { editingTarget, editingOpinion, beginEditOpinion, finishEditOpinion } =
+  useOpinionEditTarget();
 async function handleEditedOpinion(
   opinion: DisplayedOpinionItem
 ): Promise<void> {
-  editingOpinion.value = undefined;
+  finishEditOpinion();
   await submittedComment({
     displayedOpinionItem: opinion,
     needsCacheRefresh: false,
