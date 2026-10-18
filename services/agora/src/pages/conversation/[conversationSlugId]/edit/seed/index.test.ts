@@ -3,6 +3,7 @@ import type * as QuasarModule from "quasar";
 import type { ConversationProjectSelectOption } from "src/components/newConversation/conversationProjectSelect";
 import type { PostAsSettings } from "src/composables/conversation/draft";
 import type {
+  GetConversationForEditResponse,
   UpdateConversationRequest,
   UpdateConversationResponse,
 } from "src/shared/types/dto";
@@ -21,6 +22,7 @@ import {
   type FunctionalComponent,
   h,
   nextTick,
+  ref,
 } from "vue";
 import { createMemoryHistory, createRouter, RouterView } from "vue-router";
 
@@ -28,7 +30,8 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn<
     (request: UpdateConversationRequest) => Promise<UpdateConversationResponse>
   >(),
-  getForEdit: vi.fn(),
+  getForEdit:
+    vi.fn<(slug: string) => Promise<GetConversationForEditResponse>>(),
   notify: vi.fn(),
   generateSeedSuggestions:
     vi.fn<() => Promise<GenerateSeedSuggestionsResult>>(),
@@ -83,7 +86,19 @@ vi.mock("quasar", async (importOriginal) => {
 vi.mock("src/composables/ui/useComponentI18n", () => ({
   useComponentI18n: (texts: { en: Record<string, string> }) => ({
     t: (key: string) => texts.en[key] ?? key,
+    locale: ref("en"),
   }),
+}));
+vi.mock("src/utils/api/survey/useSurveyQueries", () => ({
+  useSurveyCompletionCountsQuery: () => ({ data: ref(undefined) }),
+  useSurveyConfigDeleteMutation: () => ({ mutateAsync: vi.fn() }),
+  useSurveyConfigUpdateMutation: () => ({ mutateAsync: vi.fn() }),
+}));
+vi.mock("src/components/survey/SurveyConfigEditor.vue", () => ({
+  default: () => h("div", { "data-survey-editor": "" }),
+}));
+vi.mock("src/components/survey/SurveyCompletionCountsCard.vue", () => ({
+  default: () => null,
 }));
 vi.mock(
   "src/components/newConversation/NewConversationLayout.vue",
@@ -217,6 +232,7 @@ vi.mock("src/components/ui-library/ZKConfirmDialog.vue", async () => {
 });
 
 import DetailsPage from "../index.vue";
+import SurveyPage from "../survey/index.vue";
 import SeedPage from "./index.vue";
 
 const apps: App[] = [];
@@ -224,6 +240,7 @@ afterEach(() => {
   for (const app of apps.splice(0)) app.unmount();
   document.body.replaceChildren();
   vi.clearAllMocks();
+  mocks.getForEdit.mockReset();
   mocks.aiSuggestionsEnabled = false;
 });
 
@@ -231,18 +248,28 @@ async function mountFlow({
   newSeeds = ["New seed"],
   detailsChanged = true,
   canEditSeed = true,
+  initialSession = "cached",
+  page = "seed",
+  returnTo = "/",
 }: {
   newSeeds?: string[];
   detailsChanged?: boolean;
   canEditSeed?: boolean;
+  initialSession?: "cached" | "restoring" | "signed_out";
+  page?: "seed" | "details" | "survey";
+  returnTo?: string;
 } = {}) {
   const pinia = createPinia();
   setActivePinia(pinia);
-  useAuthenticationStore().setLoginStatus({
-    isKnown: true,
-    isLoggedIn: true,
-    userId: "00000000-0000-4000-8000-000000000001",
-  });
+  const auth = useAuthenticationStore();
+  auth.isAuthInitialized = initialSession !== "restoring";
+  if (initialSession === "cached") {
+    auth.setLoginStatus({
+      isKnown: true,
+      isLoggedIn: true,
+      userId: "00000000-0000-4000-8000-000000000001",
+    });
+  }
   const response = Dto.getConversationForEditResponse.parse({
     success: true,
     conversationSlugId: "seedtest",
@@ -321,7 +348,7 @@ async function mountFlow({
     editPermissions: {
       canEditNormalSettings: true,
       canEditConversationContent: true,
-      canEditSurvey: false,
+      canEditSurvey: page === "survey",
       canDeleteSurvey: false,
       canAddEventTicket: false,
       canChangeEventTicket: false,
@@ -346,28 +373,32 @@ async function mountFlow({
   if (!response.success) throw new Error("Invalid test fixture");
   const store = useEditConversationStore();
   const title = detailsChanged ? "Changed title" : response.conversationTitle;
-  store.start({
-    original: response,
-    form: {
-      conversationTypeConfig: response.conversationTypeConfig,
-      title,
-      content: "Original body",
-      multilingualSetting: response.multilingualSetting,
-      inheritProjectLanguages: false,
-      isPrivate: false,
-      participationMode: "account_required",
-      aiLabelingEnabled: true,
-      preferredOpinionGroupCount: null,
-      surveyConfig: null,
-    },
-    projectTarget: response.projectTarget,
-    postAs: { postAsOrganization: false, organizationName: "" },
-    isSaving: false,
-    newSeedOpinions: newSeeds,
-    emailConfiguration: undefined,
-    emailOverride: undefined,
-    originalEmailOverride: undefined,
-  });
+  if (initialSession === "cached")
+    store.start({
+      original: response,
+      form: {
+        conversationTypeConfig: response.conversationTypeConfig,
+        title,
+        content: "Original body",
+        multilingualSetting: response.multilingualSetting,
+        inheritProjectLanguages: false,
+        isPrivate: false,
+        participationMode: "account_required",
+        aiLabelingEnabled: true,
+        preferredOpinionGroupCount: null,
+        surveyConfig: null,
+      },
+      projectTarget: response.projectTarget,
+      postAs: { postAsOrganization: false, organizationName: "" },
+      isSaving: false,
+      newSeedOpinions: newSeeds,
+      emailConfiguration: undefined,
+      emailOverride: undefined,
+      originalEmailOverride: undefined,
+    });
+  if (initialSession !== "cached") {
+    mocks.getForEdit.mockResolvedValue(response);
+  }
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -382,6 +413,15 @@ async function mountFlow({
         component: SeedPage,
       },
       {
+        path: "/conversation/:conversationSlugId/edit/survey",
+        name: "/conversation/[conversationSlugId]/edit/survey/",
+        component: SurveyPage,
+      },
+      {
+        path: "/project/:projectSlug/conversation/:postSlugId",
+        component: { render: () => h("div", "Project conversation") },
+      },
+      {
         path: "/conversation/:postSlugId",
         component: { render: () => h("div", "Conversation") },
       },
@@ -392,7 +432,10 @@ async function mountFlow({
       },
     ],
   });
-  await router.push("/conversation/seedtest/edit/seed?returnTo=/");
+  await router.push({
+    path: `/conversation/seedtest/edit${page === "details" ? "" : `/${page}`}`,
+    query: { returnTo },
+  });
   const header = document.createElement("div");
   header.id = "page-header";
   document.body.append(header);
@@ -407,7 +450,7 @@ async function mountFlow({
   apps.push(app);
   app.mount(container);
   await nextTick();
-  return { store, router, container, header };
+  return { store, router, container, header, auth, response };
 }
 
 function clickButton(label: string): void {
@@ -418,6 +461,235 @@ function clickButton(label: string): void {
     throw new Error(`Missing button: ${label}`);
   button.click();
 }
+
+describe.each(["details", "survey"] as const)(
+  "%s edit-page initialization",
+  (page) => {
+    it("recovers from a confirmed denial on the initial render", async () => {
+      const { router } = await mountFlow({
+        initialSession: "signed_out",
+        page,
+      });
+      await vi.waitFor(() =>
+        expect(router.currentRoute.value.path).toBe("/conversation/seedtest/")
+      );
+      expect(mocks.notify).toHaveBeenCalledExactlyOnceWith({
+        message: "You are not the facilitator of this conversation",
+        force: true,
+      });
+      expect(mocks.getForEdit).not.toHaveBeenCalled();
+    });
+
+    it("waits for login restoration without a false denial or premature request", async () => {
+      const { auth, router, container } = await mountFlow({
+        initialSession: "restoring",
+        page,
+      });
+      expect(container.querySelector(".pageLoadingSpinner")).not.toBeNull();
+      expect(mocks.notify).not.toHaveBeenCalled();
+      expect(mocks.getForEdit).not.toHaveBeenCalled();
+
+      auth.setLoginStatus({
+        isKnown: true,
+        isLoggedIn: true,
+        userId: "restored-user",
+      });
+      await nextTick();
+      expect(mocks.getForEdit).not.toHaveBeenCalled();
+      expect(mocks.notify).not.toHaveBeenCalled();
+
+      auth.isAuthInitialized = true;
+      await vi.waitFor(() =>
+        expect(
+          container.querySelector(
+            page === "details" ? "textarea" : "[data-survey-editor]"
+          )
+        ).not.toBeNull()
+      );
+      expect(mocks.getForEdit).toHaveBeenCalledExactlyOnceWith("seedtest");
+      expect(mocks.notify).not.toHaveBeenCalled();
+      expect(router.currentRoute.value.path).toContain("/edit");
+    });
+
+    it("notifies and returns to the project conversation once signed-out status is confirmed", async () => {
+      const returnTo = "/project/test-project/conversation/seedtest/";
+      const { auth, router } = await mountFlow({
+        initialSession: "restoring",
+        page,
+        returnTo,
+      });
+      expect(mocks.notify).not.toHaveBeenCalled();
+      auth.isAuthInitialized = true;
+      await vi.waitFor(() =>
+        expect(router.currentRoute.value.path).toBe(returnTo)
+      );
+      expect(mocks.notify).toHaveBeenCalledExactlyOnceWith({
+        message: "You are not the facilitator of this conversation",
+        force: true,
+      });
+      expect(mocks.getForEdit).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      {
+        reason: "not_author",
+        message: "You are not the facilitator of this conversation",
+      },
+      { reason: "not_found", message: "Conversation not found" },
+    ] as const)(
+      "notifies and leaves the editor for $reason",
+      async ({ reason, message }) => {
+        const { auth, router, container } = await mountFlow({
+          initialSession: "restoring",
+          page,
+        });
+        mocks.getForEdit.mockResolvedValueOnce({ success: false, reason });
+        auth.setLoginStatus({
+          isKnown: true,
+          isLoggedIn: true,
+          userId: "restored-user",
+        });
+        auth.isAuthInitialized = true;
+        await vi.waitFor(() =>
+          expect(router.currentRoute.value.path).toBe("/conversation/seedtest/")
+        );
+        expect(mocks.notify).toHaveBeenCalledExactlyOnceWith({
+          message,
+          force: true,
+        });
+        expect(container.textContent).not.toContain(message);
+      }
+    );
+
+    it("notifies and returns to the conversation when it is locked", async () => {
+      const { auth, router, response } = await mountFlow({
+        initialSession: "restoring",
+        page,
+      });
+      mocks.getForEdit.mockResolvedValueOnce({ ...response, isLocked: true });
+      auth.setLoginStatus({
+        isKnown: true,
+        isLoggedIn: true,
+        userId: "restored-user",
+      });
+      auth.isAuthInitialized = true;
+      await vi.waitFor(() =>
+        expect(router.currentRoute.value.path).toBe("/conversation/seedtest/")
+      );
+      expect(mocks.notify).toHaveBeenCalledExactlyOnceWith({
+        message: "This conversation is locked and cannot be edited",
+        force: true,
+      });
+    });
+
+    it("handles rejected load requests instead of stranding the user", async () => {
+      const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const { auth, router } = await mountFlow({
+          initialSession: "restoring",
+          page,
+        });
+        mocks.getForEdit.mockRejectedValueOnce(
+          new Error("Network unavailable")
+        );
+        auth.setLoginStatus({
+          isKnown: true,
+          isLoggedIn: true,
+          userId: "restored-user",
+        });
+        auth.isAuthInitialized = true;
+        await vi.waitFor(() =>
+          expect(router.currentRoute.value.path).toBe("/conversation/seedtest/")
+        );
+        expect(mocks.notify).toHaveBeenCalledTimes(1);
+        expect(errorLog).toHaveBeenCalledTimes(1);
+      } finally {
+        errorLog.mockRestore();
+      }
+    });
+
+    it("ignores an obsolete denial after the signed-in account changes", async () => {
+      const { auth, router, container } = await mountFlow({
+        initialSession: "restoring",
+        page,
+      });
+      const pending = Promise.withResolvers<GetConversationForEditResponse>();
+      mocks.getForEdit.mockReturnValueOnce(pending.promise);
+      auth.setLoginStatus({
+        isKnown: true,
+        isLoggedIn: true,
+        userId: "first-user",
+      });
+      auth.isAuthInitialized = true;
+      await nextTick();
+      auth.setLoginStatus({
+        isKnown: true,
+        isLoggedIn: true,
+        userId: "second-user",
+      });
+      await vi.waitFor(() =>
+        expect(
+          container.querySelector(
+            page === "details" ? "textarea" : "[data-survey-editor]"
+          )
+        ).not.toBeNull()
+      );
+      auth.setLoginStatus({
+        isKnown: true,
+        isLoggedIn: true,
+        userId: "first-user",
+      });
+      await vi.waitFor(() => expect(mocks.getForEdit).toHaveBeenCalledTimes(3));
+      pending.resolve({ success: false, reason: "not_author" });
+      await nextTick();
+      expect(mocks.notify).not.toHaveBeenCalled();
+      expect(router.currentRoute.value.path).toContain("/edit");
+    });
+
+    it("does not redirect or notify after leaving during a pending request", async () => {
+      const { auth, router } = await mountFlow({
+        initialSession: "restoring",
+        page,
+      });
+      const pending = Promise.withResolvers<GetConversationForEditResponse>();
+      mocks.getForEdit.mockReturnValueOnce(pending.promise);
+      auth.setLoginStatus({
+        isKnown: true,
+        isLoggedIn: true,
+        userId: "restored-user",
+      });
+      auth.isAuthInitialized = true;
+      await nextTick();
+      await router.push("/");
+      pending.resolve({ success: false, reason: "not_author" });
+      await nextTick();
+      expect(router.currentRoute.value.path).toBe("/");
+      expect(mocks.notify).not.toHaveBeenCalled();
+    });
+  }
+);
+
+describe("edit loading and unsaved changes", () => {
+  it("protects cached edits while a survey loads, then allows failure recovery", async () => {
+    const pending = Promise.withResolvers<GetConversationForEditResponse>();
+    mocks.getForEdit.mockReturnValueOnce(pending.promise);
+    const { router, store } = await mountFlow({ page: "survey" });
+    expect(store.hasUnsavedChanges).toBe(true);
+    await router.push("/");
+    expect(router.currentRoute.value.path).toBe(
+      "/conversation/seedtest/edit/survey"
+    );
+    expect(document.body.textContent).toContain("Discard changes");
+
+    pending.resolve({ success: false, reason: "not_author" });
+    await vi.waitFor(() =>
+      expect(router.currentRoute.value.path).toBe("/conversation/seedtest/")
+    );
+    expect(store.session).toBeUndefined();
+    expect(document.body.textContent).not.toContain("Discard changes");
+    expect(mocks.notify).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe("edit conversation statement step", () => {
   it("generates and adds AI statements to an edit without saving automatically", async () => {

@@ -1,38 +1,24 @@
 <template>
-  <NewConversationLayout v-slot="{ isActive }">
-    <Teleport v-if="isActive" to="#page-header">
-      <DefaultMenuBar :click-to-scroll-top="false">
-        <template #left>
-          <BackButton />
-        </template>
-        <template #right>
-          <PrimeButton
-            v-if="isNextButtonDisabled"
-            :label="seedT('nextButton')"
-            disabled
-          />
-          <SpaLink v-else :to="seedRoute" deferred @click="onNext">
-            <PrimeButton as="span" :label="seedT('nextButton')" />
-          </SpaLink>
-        </template>
-      </DefaultMenuBar>
-    </Teleport>
+  <EditConversationLayout
+    ref="editLayout"
+    :conversation-slug-id="conversationSlugId"
+    :is-loading="!hasLoadedSession"
+    :has-unsaved-changes="hasUnsavedChanges || editStore.hasUnsavedChanges"
+    :navigation-pending="editStore.isSaving"
+    :fallback-route="conversationReturnPath"
+  >
+    <template #actions>
+      <PrimeButton
+        v-if="isNextButtonDisabled"
+        :label="seedT('nextButton')"
+        disabled
+      />
+      <SpaLink v-else :to="seedRoute" deferred @click="onNext">
+        <PrimeButton as="span" :label="seedT('nextButton')" />
+      </SpaLink>
+    </template>
 
-    <div v-if="loadError" class="error-container">
-      <ZKCard class="error-card" padding="1.5rem">
-        <div class="error-content">
-          <q-icon name="mdi-alert-circle" class="error-icon" />
-          <div class="error-text">
-            <div class="error-title">{{ errorTitle }}</div>
-            <div class="error-message">{{ errorMessage }}</div>
-          </div>
-        </div>
-      </ZKCard>
-    </div>
-
-    <PageLoadingSpinner v-else-if="!hasLoadedSession" />
-
-    <div v-else class="container">
+    <div class="container">
       <NewConversationControlBar
         v-model:is-private="isPrivate"
         v-model:requires-event-ticket="requiresEventTicket"
@@ -168,19 +154,12 @@
         </div>
       </div>
     </div>
-    <EditConversationRouteGuard
-      :conversation-slug-id="conversationSlugId"
-      :navigation-pending="editStore.isSaving"
-      :has-unsaved-changes="hasUnsavedChanges || editStore.hasUnsavedChanges"
-    />
-  </NewConversationLayout>
+  </EditConversationLayout>
 </template>
 
 <script setup lang="ts">
 import Button from "primevue/button";
 import Editor from "src/components/editor/Editor.vue";
-import BackButton from "src/components/navigation/buttons/BackButton.vue";
-import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
 import {
   type ConversationProjectEditTranslations,
   conversationProjectEditTranslations,
@@ -199,15 +178,13 @@ import {
   resolvePartialEmailReachAction,
 } from "src/components/newConversation/conversationUpdatesPartialEmailReachLogic";
 import CreateConversationUpdatesSettings from "src/components/newConversation/CreateConversationUpdatesSettings.vue";
+import EditConversationLayout from "src/components/newConversation/EditConversationLayout.vue";
 import {
   getEditConversationPostAsOptions,
   getEditConversationProjectSelectOptions,
 } from "src/components/newConversation/editConversationProjectOptions";
-import EditConversationRouteGuard from "src/components/newConversation/EditConversationRouteGuard.vue";
 import NewConversationControlBar from "src/components/newConversation/NewConversationControlBar.vue";
-import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
 import { seedOpinionsTranslations } from "src/components/newConversation/SeedOpinions.i18n";
-import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import SpaLink from "src/components/ui-library/SpaLink.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import {
@@ -215,21 +192,25 @@ import {
   useConversationDraft,
   type ValidationErrorField,
 } from "src/composables/conversation/draft";
+import {
+  type EditConversationLoadContext,
+  type EditConversationLoadFailure,
+  useEditConversationLoader,
+} from "src/composables/conversation/useEditConversationLoader";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import {
   MAX_LENGTH_CONVERSATION_BODY,
   MAX_LENGTH_CONVERSATION_TITLE,
 } from "src/shared/shared";
-import type { GetConversationForEditResponse } from "src/shared/types/dto";
 import type {
   ConversationProjectTarget,
   ParticipationMode,
 } from "src/shared/types/zod";
 import { getConversationProjectTargetKey } from "src/shared/utils/conversationProject";
-import { useAuthenticationStore } from "src/stores/authentication";
 import {
   type ConversationUpdatesConfiguration,
   createEditConversationForm,
+  type EditableConversation,
   type EditConversationDetails,
   hasEditConversationDetailsChanges,
   useEditConversationStore,
@@ -238,7 +219,7 @@ import { useBackendConversationEmailUpdatesApi } from "src/utils/api/conversatio
 import { useBackendPostEditApi } from "src/utils/api/post/postEdit";
 import { getSingleRouteParam } from "src/utils/router/params";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { computed, nextTick, ref } from "vue";
 import {
   onBeforeRouteLeave,
   onBeforeRouteUpdate,
@@ -270,7 +251,6 @@ const route = useRoute();
 const router = useRouter();
 const { getConversationForEdit } = useBackendPostEditApi();
 const editStore = useEditConversationStore();
-const auth = useAuthenticationStore();
 const { t: seedT } = useComponentI18n(seedOpinionsTranslations);
 
 const conversationSlugId = computed(() =>
@@ -284,16 +264,8 @@ const seedRoute = computed(() => ({
 }));
 const isTitleOverLimit = ref(false);
 const isBodyOverLimit = ref(false);
-const isDataLoaded = ref(false);
-const loadError = ref(false);
-const errorTitle = ref("");
-const errorMessage = ref("");
-
-type EditConversationData = Extract<
-  GetConversationForEditResponse,
-  { success: true }
->;
-const loadedConversation = ref<EditConversationData>();
+const editLayout = ref<InstanceType<typeof EditConversationLayout>>();
+const loadedConversation = ref<EditableConversation>();
 const projectTarget = ref<ConversationProjectTarget>();
 const allowedPostAs = computed(() =>
   loadedConversation.value === undefined
@@ -320,7 +292,7 @@ const editPermissions = computed(
 );
 const hasLoadedSession = computed(
   () =>
-    isDataLoaded.value &&
+    !isLoading.value &&
     editStore.session?.original.conversationSlugId === conversationSlugId.value
 );
 
@@ -537,7 +509,7 @@ function handlePartialEmailReachAction(action: PartialEmailReachAction): void {
 }
 
 const currentProjectLanguageProject = computed<
-  EditConversationData["projectLanguageProject"]
+  EditableConversation["projectLanguageProject"]
 >(() => {
   if (!hasProjectChange.value)
     return loadedConversation.value?.projectLanguageProject;
@@ -820,150 +792,112 @@ async function loadConversationUpdatesConfiguration(
       return undefined;
     }
     return response.configuration;
-  } catch (error) {
-    console.error(
-      "Failed to load conversation Email Update configuration",
-      error
-    );
+  } catch {
+    console.error("Failed to load conversation Email Update configuration");
     return undefined;
   }
 }
 
-let isAlive = true;
-onBeforeUnmount(() => {
-  isAlive = false;
-});
-
-async function loadConversation(): Promise<void> {
-  const slug = conversationSlugId.value;
-  const userId = auth.userId;
-  isDataLoaded.value = false;
-  loadError.value = false;
+function resetLoadedConversation(): void {
   loadedConversation.value = undefined;
+  projectTarget.value = undefined;
   isTitleOverLimit.value = false;
   isBodyOverLimit.value = false;
   conversationUpdatesConfiguration.value = undefined;
   conversationUpdatesOverride.value = undefined;
   originalConversationUpdatesOverride.value = undefined;
   partialEmailReachWarningMode.value = undefined;
-  try {
-    if (!slug) {
-      loadError.value = true;
-      errorTitle.value = t("notFoundErrorTitle");
-      errorMessage.value = t("notFoundErrorMessage");
-      return;
-    }
-    if (!auth.isLoggedIn || userId === undefined) {
-      loadError.value = true;
-      errorTitle.value = t("notAuthorErrorTitle");
-      errorMessage.value = t("notAuthorErrorMessage");
-      return;
-    }
-
-    const savedSession =
-      editStore.session?.original.conversationSlugId === slug
-        ? editStore.session
-        : undefined;
-    const response =
-      savedSession?.original ?? (await getConversationForEdit(slug));
-    if (
-      !isAlive ||
-      slug !== conversationSlugId.value ||
-      userId !== auth.userId ||
-      !auth.isLoggedIn
-    )
-      return;
-
-    if (!response.success) {
-      loadError.value = true;
-      if (response.reason === "not_found") {
-        errorTitle.value = t("notFoundErrorTitle");
-        errorMessage.value = t("notFoundErrorMessage");
-      } else if (response.reason === "not_author") {
-        errorTitle.value = t("notAuthorErrorTitle");
-        errorMessage.value = t("notAuthorErrorMessage");
-      }
-      return;
-    }
-
-    // Check if conversation is locked
-    if (response.isLocked) {
-      loadError.value = true;
-      errorTitle.value = t("conversationLockedErrorTitle");
-      errorMessage.value = t("conversationLockedErrorMessage");
-      return;
-    }
-
-    loadedConversation.value = response;
-    projectTarget.value = savedSession?.projectTarget ?? response.projectTarget;
-    postAs.value = savedSession?.postAs ?? {
-      postAsOrganization: response.postAsOrganizationSlug !== undefined,
-      organizationName: response.postAsOrganizationSlug ?? "",
-    };
-
-    initializeFromData(
-      savedSession?.form ?? createEditConversationForm(response)
-    );
-    externalSourceConfig.value = response.externalSourceConfig;
-
-    if (savedSession !== undefined) {
-      conversationUpdatesConfiguration.value = savedSession.emailConfiguration;
-      conversationUpdatesOverride.value = savedSession.emailOverride;
-      originalConversationUpdatesOverride.value =
-        savedSession.originalEmailOverride;
-    } else {
-      const configuration = await loadConversationUpdatesConfiguration(slug);
-      if (
-        !isAlive ||
-        slug !== conversationSlugId.value ||
-        userId !== auth.userId ||
-        !auth.isLoggedIn
-      )
-        return;
-      if (configuration !== undefined)
-        applyConversationUpdatesConfiguration(configuration);
-      originalConversationUpdatesOverride.value =
-        conversationUpdatesOverride.value;
-      editStore.start({
-        original: response,
-        form: getDraftSnapshot(),
-        postAs: postAs.value,
-        projectTarget: response.projectTarget,
-        isSaving: false,
-        newSeedOpinions: [],
-        emailConfiguration: conversationUpdatesConfiguration.value,
-        emailOverride: conversationUpdatesOverride.value,
-        originalEmailOverride: originalConversationUpdatesOverride.value,
-      });
-    }
-    acknowledgedPartialEmailReachState.value =
-      getEditConversationUpdatesReachState({
-        mode: participationMode.value,
-        override: conversationUpdatesOverride.value,
-      });
-
-    isDataLoaded.value = true;
-    if (route.query.editStep === "seed") {
-      const query = { ...route.query };
-      delete query.editStep;
-      await router.replace({ ...seedRoute.value, query });
-    }
-  } catch (error) {
-    if (!isAlive || slug !== conversationSlugId.value || userId !== auth.userId)
-      return;
-    console.error("Error loading conversation for edit:", error);
-    loadError.value = true;
-    errorTitle.value = t("loadingErrorTitle");
-    errorMessage.value = t("loadingErrorMessage");
-  }
+  acknowledgedPartialEmailReachState.value = undefined;
 }
-watch(
-  [conversationSlugId, () => auth.userId, () => auth.isLoggedIn],
-  () => {
-    void loadConversation();
+
+function getSavedSession(slug: string) {
+  return editStore.session?.original.conversationSlugId === slug
+    ? editStore.session
+    : undefined;
+}
+
+async function initializeConversation({
+  conversation,
+  isCurrent,
+}: EditConversationLoadContext): Promise<void> {
+  const savedSession = getSavedSession(conversation.conversationSlugId);
+  loadedConversation.value = conversation;
+  projectTarget.value =
+    savedSession?.projectTarget ?? conversation.projectTarget;
+  postAs.value = savedSession?.postAs ?? {
+    postAsOrganization: conversation.postAsOrganizationSlug !== undefined,
+    organizationName: conversation.postAsOrganizationSlug ?? "",
+  };
+  initializeFromData(
+    savedSession?.form ?? createEditConversationForm(conversation)
+  );
+  externalSourceConfig.value = conversation.externalSourceConfig;
+
+  if (savedSession !== undefined) {
+    conversationUpdatesConfiguration.value = savedSession.emailConfiguration;
+    conversationUpdatesOverride.value = savedSession.emailOverride;
+    originalConversationUpdatesOverride.value =
+      savedSession.originalEmailOverride;
+  } else {
+    const configuration = await loadConversationUpdatesConfiguration(
+      conversation.conversationSlugId
+    );
+    if (!isCurrent()) return;
+    if (configuration !== undefined)
+      applyConversationUpdatesConfiguration(configuration);
+    originalConversationUpdatesOverride.value =
+      conversationUpdatesOverride.value;
+    editStore.start({
+      original: conversation,
+      form: getDraftSnapshot(),
+      postAs: postAs.value,
+      projectTarget: conversation.projectTarget,
+      isSaving: false,
+      newSeedOpinions: [],
+      emailConfiguration: conversationUpdatesConfiguration.value,
+      emailOverride: conversationUpdatesOverride.value,
+      originalEmailOverride: originalConversationUpdatesOverride.value,
+    });
+  }
+  acknowledgedPartialEmailReachState.value =
+    getEditConversationUpdatesReachState({
+      mode: participationMode.value,
+      override: conversationUpdatesOverride.value,
+    });
+}
+
+const loadFailureMessageKeys = {
+  not_found: "notFoundError",
+  not_author: "notAuthorError",
+  locked: "conversationLockedError",
+  load_failed: "loadingErrorMessage",
+} satisfies Record<
+  EditConversationLoadFailure,
+  keyof EditConversationTranslations
+>;
+
+const { isLoading, conversationReturnPath } = useEditConversationLoader({
+  conversationSlugId,
+  getConversation: (slug) =>
+    getSavedSession(slug)?.original ?? getConversationForEdit(slug),
+  onReset: resetLoadedConversation,
+  onLoaded: initializeConversation,
+  onReady: async () => {
+    if (route.query.editStep !== "seed") return;
+    const query = { ...route.query };
+    delete query.editStep;
+    await router.replace({ ...seedRoute.value, query });
   },
-  { immediate: true }
-);
+  onError: async (failure) => {
+    editLayout.value?.unlockRoute();
+    editStore.clear();
+    showNotifyMessage({
+      message: t(loadFailureMessageKeys[failure]),
+      force: true,
+    });
+    await router.replace(conversationReturnPath.value);
+  },
+});
 </script>
 
 <style scoped lang="scss">
@@ -1008,46 +942,5 @@ watch(
 .titleErrorIcon {
   font-size: 1rem;
   margin-right: 0.5rem;
-}
-
-.error-container {
-  padding: 2rem;
-  display: flex;
-  justify-content: center;
-}
-
-.error-card {
-  max-width: 600px;
-  width: 100%;
-}
-
-.error-content {
-  display: flex;
-  gap: 1rem;
-  align-items: start;
-  padding: 1rem;
-}
-
-.error-icon {
-  font-size: 2rem;
-  color: $negative;
-  flex-shrink: 0;
-}
-
-.error-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.error-title {
-  font-size: 1.2rem;
-  font-weight: var(--font-weight-semibold);
-  color: $negative;
-}
-
-.error-message {
-  font-size: 1rem;
-  color: $color-text-weak;
 }
 </style>

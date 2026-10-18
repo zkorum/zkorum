@@ -46,8 +46,8 @@ defineEmits<{
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  font-weight: var(--font-weight-medium);
-  font-size: 1rem;
+  font-weight: var(--font-weight-normal);
+  font-size: 0.875rem;
   border: 1px solid transparent;
   border-radius: 12px;
   cursor: pointer;
