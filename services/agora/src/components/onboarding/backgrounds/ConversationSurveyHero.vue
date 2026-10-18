@@ -132,11 +132,11 @@ const showOwnerImage = computed(() => {
 
 .hero--compact {
   min-height: 0;
-  padding-block: 0.75rem;
+  padding-block: clamp(0.75rem, calc(4dvh - 0.5rem), 2.5rem);
   padding-inline: 2.5rem;
 
   .hero__content {
-    gap: 0.5rem;
+    gap: clamp(0.5rem, 1.5dvh, 1rem);
   }
 
   .hero__avatar {

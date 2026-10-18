@@ -124,7 +124,7 @@ function handleClose() {
 }
 
 .baseLayer--fixedNavigation {
-  height: 100dvh;
+  height: calc(100dvh - var(--visible-viewport-bottom-inset, 0px));
   min-height: 0;
   overflow: hidden;
 

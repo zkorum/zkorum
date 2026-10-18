@@ -93,7 +93,7 @@ const nextIcon = computed(() =>
 }
 
 .stepperLayout--compact {
-  --stepper-content-gap: 0.875rem;
+  --stepper-content-gap: clamp(0.875rem, 2.5dvh, 1.5rem);
 
   padding-bottom: 3rem;
 }
@@ -112,18 +112,19 @@ const nextIcon = computed(() =>
   padding: 0;
 
   .scrollContent {
-    flex: 1;
+    // Follow short questions naturally; shrink to reserve the action on long ones.
+    flex: 0 1 auto;
     min-height: 0;
-    padding: 1rem;
+    padding-block: clamp(1rem, 3dvh, 2rem);
+    padding-inline: 1rem;
     overflow-y: auto;
     overscroll-behavior-y: contain;
   }
 
   .nextButton {
     flex-shrink: 0;
-    padding: 0.75rem 1rem;
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid $secondary;
+    padding-block: 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    padding-inline: 1rem;
     background-color: white;
   }
 }

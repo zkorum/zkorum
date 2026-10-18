@@ -832,7 +832,7 @@ async function handleNext(): Promise<void> {
 .survey-card {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: clamp(0.7rem, 1.6dvh, 1rem);
 }
 
 .survey-card__prompt-row {
