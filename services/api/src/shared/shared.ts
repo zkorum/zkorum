@@ -17,6 +17,9 @@ export const MAX_LENGTH_SURVEY_QUESTION = 500;
 export const MAX_LENGTH_SURVEY_OPTION = 200;
 export const MAX_LENGTH_SURVEY_OPTION_TEXT = 300;
 export const MAX_BYTES_SURVEY_OPTION_TEXT = 16_384;
+// Any legacy DB value must fit after escaping: '&' expands to '&amp;', plus <p></p>.
+export const MAX_BYTES_SURVEY_OPTION_HTML =
+    MAX_BYTES_SURVEY_OPTION_TEXT * 5 + 7;
 export const PUBLIC_AGGREGATE_SUPPRESSION_THRESHOLD = 5;
 export const MAX_LENGTH_NAME_CREATOR = 65;
 export const MAX_LENGTH_DESCRIPTION_CREATOR = 280;
@@ -47,7 +50,8 @@ export type RichTextValidationMode =
     | "conversation_email_update"
     | "opinion"
     | "ranking_item"
-    | "survey";
+    | "survey"
+    | "survey_option";
 export const richTextSizeValidationFailureReasons = [
     "plain_text_too_long",
     "html_too_long",
@@ -164,6 +168,11 @@ function getRichTextValidationLimits(mode: RichTextValidationMode): {
             return {
                 characterLimit: undefined,
                 htmlByteLimit: MAX_BYTES_RICH_TEXT_HTML,
+            };
+        case "survey_option":
+            return {
+                characterLimit: MAX_LENGTH_SURVEY_OPTION_TEXT,
+                htmlByteLimit: MAX_BYTES_SURVEY_OPTION_HTML,
             };
     }
 }

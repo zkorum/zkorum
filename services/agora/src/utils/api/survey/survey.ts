@@ -18,7 +18,7 @@ import {
 } from "src/shared/types/dto";
 import type {
   AnalysisView,
-  SurveyAnswerSubmission,
+  SurveyAnswerClientSubmission,
   SurveyConfig,
 } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
@@ -35,9 +35,7 @@ export function useBackendSurveyApi() {
     createAxiosErrorResponse,
     createRawAxiosRequestConfig,
   } = useCommonApi();
-  const { isGuestOrLoggedIn } = storeToRefs(
-    useAuthenticationStore()
-  );
+  const { isGuestOrLoggedIn } = storeToRefs(useAuthenticationStore());
 
   async function createOptionalAuthConfig({
     url,
@@ -64,7 +62,9 @@ export function useBackendSurveyApi() {
   }: {
     conversationSlugId: string;
     signal?: AbortSignal;
-  }): Promise<AxiosSuccessResponse<SurveyFormFetchResponse> | AxiosErrorResponse> {
+  }): Promise<
+    AxiosSuccessResponse<SurveyFormFetchResponse> | AxiosErrorResponse
+  > {
     try {
       const params = { conversationSlugId };
       const { url, options } =
@@ -125,8 +125,10 @@ export function useBackendSurveyApi() {
   }: {
     conversationSlugId: string;
     questionSlugId: string;
-    answer: SurveyAnswerSubmission | null;
-  }): Promise<AxiosSuccessResponse<SurveyAnswerSaveResponse> | AxiosErrorResponse> {
+    answer: SurveyAnswerClientSubmission | null;
+  }): Promise<
+    AxiosSuccessResponse<SurveyAnswerSaveResponse> | AxiosErrorResponse
+  > {
     try {
       const params: ApiV1SurveyAnswerSavePostRequest = {
         conversationSlugId,
@@ -192,7 +194,9 @@ export function useBackendSurveyApi() {
   }: {
     conversationSlugId: string;
     surveyConfig: SurveyConfig;
-  }): Promise<AxiosSuccessResponse<SurveyConfigUpdateResponse> | AxiosErrorResponse> {
+  }): Promise<
+    AxiosSuccessResponse<SurveyConfigUpdateResponse> | AxiosErrorResponse
+  > {
     try {
       const params = Dto.surveyConfigUpdateRequest.parse({
         conversationSlugId,
@@ -220,7 +224,9 @@ export function useBackendSurveyApi() {
     conversationSlugId,
   }: {
     conversationSlugId: string;
-  }): Promise<AxiosSuccessResponse<SurveyConfigDeleteResponse> | AxiosErrorResponse> {
+  }): Promise<
+    AxiosSuccessResponse<SurveyConfigDeleteResponse> | AxiosErrorResponse
+  > {
     try {
       const params = { conversationSlugId };
       const { url, options } =
@@ -252,7 +258,9 @@ export function useBackendSurveyApi() {
     conversationSlugId: string;
     analysisView?: AnalysisView;
     checkpointViewSnapshotId?: number;
-  }): Promise<AxiosSuccessResponse<SurveyResultsAggregatedResponse> | AxiosErrorResponse> {
+  }): Promise<
+    AxiosSuccessResponse<SurveyResultsAggregatedResponse> | AxiosErrorResponse
+  > {
     try {
       const params = Dto.surveyResultsAggregatedRequest.parse({
         conversationSlugId,
@@ -260,7 +268,9 @@ export function useBackendSurveyApi() {
         checkpointViewSnapshotId,
       } satisfies z.input<typeof Dto.surveyResultsAggregatedRequest>);
       const { url, options } =
-        await DefaultApiAxiosParamCreator().apiV1SurveyResultsAggregatedPost(params);
+        await DefaultApiAxiosParamCreator().apiV1SurveyResultsAggregatedPost(
+          params
+        );
       const config = await createOptionalAuthConfig({ url, options });
       const response = await DefaultApiFactory(
         undefined,
@@ -281,11 +291,15 @@ export function useBackendSurveyApi() {
     conversationSlugId,
   }: {
     conversationSlugId: string;
-  }): Promise<AxiosSuccessResponse<SurveyCompletionCountsResponse> | AxiosErrorResponse> {
+  }): Promise<
+    AxiosSuccessResponse<SurveyCompletionCountsResponse> | AxiosErrorResponse
+  > {
     try {
       const params = { conversationSlugId };
       const { url, options } =
-        await DefaultApiAxiosParamCreator().apiV1SurveyCompletionCountsPost(params);
+        await DefaultApiAxiosParamCreator().apiV1SurveyCompletionCountsPost(
+          params
+        );
       const encodedUcan = await buildEncodedUcan(url, options);
       const response = await DefaultApiFactory(
         undefined,

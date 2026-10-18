@@ -1,3 +1,4 @@
+import { MAX_BYTES_SURVEY_OPTION_HTML } from "src/shared/shared";
 import type {
   SurveyAnswerDraft,
   SurveyQuestionFormItem,
@@ -61,7 +62,7 @@ describe("optional choice text", () => {
     ).toEqual({
       questionType: "choice",
       optionSlugIds: ["toString"],
-      optionTextValues: { toString: "" },
+      optionTextValues: { toString: { textValueHtml: "" } },
     });
   });
   it.each([1, 2])(
@@ -74,12 +75,12 @@ describe("optional choice text", () => {
         selectedMultiOptionSlugIds: ["option-a"],
         textValueHtml: "",
         textValuePlainText: "",
-        optionTextValues: { "option-a": "  " },
+        optionTextValues: { "option-a": { textValueHtml: "<p>  </p>" } },
       });
       expect(answer).toEqual({
         questionType: "choice",
         optionSlugIds: ["option-a"],
-        optionTextValues: { "option-a": "  " },
+        optionTextValues: { "option-a": { textValueHtml: "<p>  </p>" } },
       });
       expect(isSurveyAnswerSubmittable({ question, answer })).toBe(true);
     }
@@ -88,9 +89,9 @@ describe("optional choice text", () => {
   it("preserves raw text for validation and excludes deselected drafts", () => {
     const question = createChoiceQuestion(2);
     const values = {
-      "option-a": " Cargo bike ",
-      "option-b": "Electric",
-      unused: "Retained local draft",
+      "option-a": { textValueHtml: "<p> Cargo bike </p>" },
+      "option-b": { textValueHtml: "<p>Electric</p>" },
+      unused: { textValueHtml: "<p>Retained local draft</p>" },
     };
     const answer = normalizeSurveyAnswer({
       question,
@@ -103,35 +104,51 @@ describe("optional choice text", () => {
     expect(answer).toEqual({
       questionType: "choice",
       optionSlugIds: ["option-a", "option-b"],
-      optionTextValues: { "option-a": " Cargo bike ", "option-b": "Electric" },
+      optionTextValues: {
+        "option-a": { textValueHtml: "<p> Cargo bike </p>" },
+        "option-b": { textValueHtml: "<p>Electric</p>" },
+      },
     });
     if (answer === undefined) throw new Error("Expected fixture answer");
     expect(buildSurveyAnswerSubmission(answer)).toEqual(answer);
-    expect(values.unused).toBe("Retained local draft");
+    expect(values.unused).toEqual({
+      textValueHtml: "<p>Retained local draft</p>",
+    });
   });
 
   it("detects text-only edits and explicit clearing", () => {
     const original: SurveyAnswerDraft = {
       questionType: "choice",
       optionSlugIds: ["option-a"],
-      optionTextValues: { "option-a": "Cargo bike" },
+      optionTextValues: { "option-a": { textValueHtml: "<p>Cargo bike</p>" } },
     };
     expect(
       areSurveyAnswersEqual({
         left: original,
-        right: { ...original, optionTextValues: { "option-a": "Tricycle" } },
+        right: {
+          ...original,
+          optionTextValues: {
+            "option-a": { textValueHtml: "<p>Tricycle</p>" },
+          },
+        },
       })
     ).toBe(false);
     expect(
       areSurveyAnswersEqual({
         left: original,
-        right: { ...original, optionTextValues: { "option-a": "" } },
+        right: {
+          ...original,
+          optionTextValues: { "option-a": { textValueHtml: "" } },
+        },
       })
     ).toBe(false);
     expect(
       areSurveyAnswersEqual({
         left: { questionType: "choice", optionSlugIds: ["option-a"] },
-        right: { ...original, optionTextValues: { "option-a": "" } },
+        right: {
+          ...original,
+          optionTextValues: { "option-a": { textValueHtml: "" } },
+        },
       })
     ).toBe(true);
   });
@@ -141,7 +158,9 @@ describe("optional choice text", () => {
     const answer: SurveyAnswerDraft = {
       questionType: "choice",
       optionSlugIds: ["option-a"],
-      optionTextValues: { "option-a": "👨‍👩‍👧‍👦".repeat(300) },
+      optionTextValues: {
+        "option-a": { textValueHtml: `<p>${"👨‍👩‍👧‍👦".repeat(300)}</p>` },
+      },
     };
     expect(isSurveyAnswerSubmittable({ question, answer })).toBe(true);
     expect(
@@ -149,19 +168,26 @@ describe("optional choice text", () => {
         question,
         answer: {
           ...answer,
-          optionTextValues: { "option-a": "a".repeat(301) },
+          optionTextValues: {
+            "option-a": { textValueHtml: `<p>${"a".repeat(301)}</p>` },
+          },
         },
       })
     ).toBe(false);
     expect(
       isSurveyAnswerSubmittable({
         question,
-        answer: { ...answer, optionTextValues: { "option-b": "Unselected" } },
+        answer: {
+          ...answer,
+          optionTextValues: {
+            "option-b": { textValueHtml: "<p>Unselected</p>" },
+          },
+        },
       })
     ).toBe(false);
   });
 
-  it("rejects overlong whitespace instead of trimming it into a submittable draft", () => {
+  it("rejects oversized HTML even when it contains no visible text", () => {
     const question = createChoiceQuestion(1);
     const answer = normalizeSurveyAnswer({
       question,
@@ -169,7 +195,11 @@ describe("optional choice text", () => {
       selectedMultiOptionSlugIds: [],
       textValueHtml: "",
       textValuePlainText: "",
-      optionTextValues: { "option-a": " ".repeat(301) },
+      optionTextValues: {
+        "option-a": {
+          textValueHtml: " ".repeat(MAX_BYTES_SURVEY_OPTION_HTML + 1),
+        },
+      },
     });
     expect(isSurveyAnswerSubmittable({ question, answer })).toBe(false);
   });

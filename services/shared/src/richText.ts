@@ -4,6 +4,7 @@ import {
     MAX_LENGTH_CONVERSATION_BODY,
     MAX_LENGTH_CONVERSATION_EMAIL_UPDATE,
     MAX_LENGTH_OPINION,
+    MAX_LENGTH_SURVEY_OPTION_TEXT,
     countPlainTextCharacters,
     type RichTextValidationFailure,
     type RichTextValidationMode,
@@ -184,6 +185,8 @@ function getRichTextCharacterLimit(
             return MAX_LENGTH_OPINION;
         case "ranking_item":
             return MAX_LENGTH_BODY;
+        case "survey_option":
+            return MAX_LENGTH_SURVEY_OPTION_TEXT;
     }
 }
 

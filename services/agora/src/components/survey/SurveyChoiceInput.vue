@@ -17,16 +17,8 @@
       @update:model-value="handleDropdownUpdate"
     />
     <div v-for="option in visibleOptions" :key="option.value">
-      <template v-if="usesDropdown">
-        <div
-          v-if="showDropdownOptionLabels"
-          class="choice-input__text-option-label"
-        >
-          {{ option.label }}
-        </div>
-      </template>
       <q-checkbox
-        v-else-if="isMultipleSelection"
+        v-if="!usesDropdown && isMultipleSelection"
         class="choice-input__checkbox"
         :model-value="option.selected"
         :label="option.label"
@@ -40,7 +32,7 @@
         "
       />
       <SurveySelectableOption
-        v-else
+        v-else-if="!usesDropdown"
         :label="option.label"
         :selected="option.selected"
         :density="props.density"
@@ -63,7 +55,11 @@
 
 <script setup lang="ts">
 import { hasVisiblePlainText } from "src/shared/shared";
-import { getSurveyOptionText } from "src/shared/surveyChoiceText";
+import {
+  getSurveyOptionText,
+  type SurveyOptionText,
+  surveyOptionTextToPlainText,
+} from "src/shared/surveyChoiceText";
 import type { SurveyChoiceDisplay } from "src/shared/types/zod";
 import { shouldUseSurveyChoiceDropdown } from "src/utils/survey/config";
 import { computed } from "vue";
@@ -84,7 +80,7 @@ const props = withDefaults(
     isMultipleSelection: boolean;
     isRequired: boolean;
     options: readonly ChoiceOption[];
-    optionTextValues: Readonly<Record<string, string>>;
+    optionTextValues: Readonly<Record<string, SurveyOptionText>>;
     selectedSingleOptionSlugId: string | null;
     selectedMultiOptionSlugIds: readonly string[];
     selectOptionLabel: string;
@@ -99,7 +95,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   "update:selectedSingleOptionSlugId": [value: string | null];
   "update:selectedMultiOptionSlugIds": [value: string[]];
-  "update:optionTextValues": [value: Record<string, string>];
+  "update:optionTextValues": [value: Record<string, SurveyOptionText>];
 }>();
 
 const usesDropdown = computed(() => {
@@ -117,10 +113,6 @@ const dropdownModelValue = computed<string | string[] | null>(() => {
   return props.selectedSingleOptionSlugId;
 });
 
-const showDropdownOptionLabels = computed(
-  () => props.isMultipleSelection && props.selectedMultiOptionSlugIds.length > 2
-);
-
 const selectedOptionSlugIds = computed(
   () =>
     new Set(
@@ -134,17 +126,18 @@ const selectedOptionSlugIds = computed(
 const visibleOptions = computed(() => {
   const options = props.options.map((option) => {
     const selected = selectedOptionSlugIds.value.has(option.value);
-    const textValue =
-      getSurveyOptionText({
-        values: props.optionTextValues,
-        optionSlugId: option.value,
-      }) ?? "";
+    const textValue = getSurveyOptionText({
+      values: props.optionTextValues,
+      optionSlugId: option.value,
+    }) ?? { textValueHtml: "" };
     return {
       ...option,
       selected,
       textValue,
       showText:
-        selected && (option.allowsText || hasVisiblePlainText(textValue)),
+        selected &&
+        (option.allowsText ||
+          hasVisiblePlainText(surveyOptionTextToPlainText(textValue))),
     };
   });
   return usesDropdown.value
@@ -157,7 +150,7 @@ function handleOptionTextUpdate({
   textValue,
 }: {
   optionSlugId: string;
-  textValue: string;
+  textValue: SurveyOptionText;
 }): void {
   emit("update:optionTextValues", {
     ...props.optionTextValues,
@@ -220,10 +213,5 @@ function handleDropdownUpdate(value: string | string[] | null): void {
 .choice-input__checkbox {
   min-height: 2.25rem;
   width: 100%;
-}
-
-.choice-input__text-option-label {
-  margin-block-end: 0.5rem;
-  overflow-wrap: anywhere;
 }
 </style>

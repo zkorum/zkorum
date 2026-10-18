@@ -6,10 +6,12 @@ import {
   getSurveyOptionText,
   isSurveyOptionTextWithinLimit,
   normalizeSurveyOptionText,
+  type SurveyOptionText,
+  surveyOptionTextsEqual,
 } from "src/shared/surveyChoiceText";
 import type {
+  SurveyAnswerClientSubmission,
   SurveyAnswerDraft,
-  SurveyAnswerSubmission,
   SurveyQuestionFormItem,
 } from "src/shared/types/zod";
 
@@ -39,7 +41,7 @@ export function normalizeSurveyAnswer({
   selectedMultiOptionSlugIds: readonly string[];
   textValueHtml: string;
   textValuePlainText: string;
-  optionTextValues?: Readonly<Record<string, string>>;
+  optionTextValues?: Readonly<Record<string, SurveyOptionText>>;
 }): SurveyAnswerDraft | undefined {
   switch (question.questionType) {
     case "choice": {
@@ -53,7 +55,7 @@ export function normalizeSurveyAnswer({
         return undefined;
       }
 
-      const selectedTextValues: Record<string, string> = {};
+      const selectedTextValues: Record<string, SurveyOptionText> = {};
       const optionsBySlugId = new Map(
         question.options.map((option) => [option.optionSlugId, option])
       );
@@ -64,7 +66,7 @@ export function normalizeSurveyAnswer({
           optionSlugId,
         });
         if (option?.allowsText === true || textValue !== undefined) {
-          selectedTextValues[optionSlugId] = textValue ?? "";
+          selectedTextValues[optionSlugId] = textValue ?? { textValueHtml: "" };
         }
       }
 
@@ -96,7 +98,7 @@ export function normalizeSurveyAnswer({
 
 export function buildSurveyAnswerSubmission(
   answer: SurveyAnswerDraft
-): SurveyAnswerSubmission {
+): SurveyAnswerClientSubmission {
   switch (answer.questionType) {
     case "choice":
       return answer;
@@ -142,18 +144,16 @@ export function areSurveyAnswersEqual({
         leftOptionSlugIds.every((optionSlugId, index) => {
           return (
             optionSlugId === rightOptionSlugIds[index] &&
-            normalizeSurveyOptionText(
-              getSurveyOptionText({
+            surveyOptionTextsEqual({
+              left: getSurveyOptionText({
                 values: left.optionTextValues,
                 optionSlugId,
-              }) ?? ""
-            ) ===
-              normalizeSurveyOptionText(
-                getSurveyOptionText({
-                  values: right.optionTextValues,
-                  optionSlugId,
-                }) ?? ""
-              )
+              }),
+              right: getSurveyOptionText({
+                values: right.optionTextValues,
+                optionSlugId,
+              }),
+            })
           );
         })
       );
@@ -225,17 +225,23 @@ export function isSurveyAnswerSubmittable({
         ) &&
         Object.entries(answer.optionTextValues ?? {}).every(
           ([optionSlugId, textValue]) => {
+            if (
+              !selectedOptionSlugIds.has(optionSlugId) ||
+              !isSurveyOptionTextWithinLimit(textValue)
+            )
+              return false;
+            if (optionsBySlugId.get(optionSlugId)?.allowsText === true)
+              return true;
             const normalizedText = normalizeSurveyOptionText(textValue);
             return (
-              selectedOptionSlugIds.has(optionSlugId) &&
-              isSurveyOptionTextWithinLimit(textValue) &&
-              (normalizedText === undefined ||
-                optionsBySlugId.get(optionSlugId)?.allowsText === true ||
-                normalizedText ===
-                  getSurveyOptionText({
-                    values: savedTextValues,
-                    optionSlugId,
-                  }))
+              normalizedText === undefined ||
+              surveyOptionTextsEqual({
+                left: normalizedText,
+                right: getSurveyOptionText({
+                  values: savedTextValues,
+                  optionSlugId,
+                }),
+              })
             );
           }
         )

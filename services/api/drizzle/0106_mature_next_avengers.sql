@@ -1,0 +1,1 @@
+ALTER TABLE "survey_answer_option" ADD CONSTRAINT "survey_answer_option_text_pair_check" CHECK (("survey_answer_option"."text_value_html" IS NULL) = ("survey_answer_option"."text_value_plain_text" IS NULL));

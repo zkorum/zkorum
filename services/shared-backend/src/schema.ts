@@ -41,6 +41,7 @@ import {
     MAX_LENGTH_SURVEY_QUESTION,
     MAX_LENGTH_SURVEY_OPTION,
     MAX_BYTES_SURVEY_OPTION_TEXT,
+    MAX_BYTES_SURVEY_OPTION_HTML,
     MAX_LENGTH_NAME_CREATOR,
     MAX_LENGTH_DESCRIPTION_CREATOR,
     MAX_LENGTH_USERNAME,
@@ -3480,6 +3481,7 @@ export const surveyAnswerOptionTable = pgTable(
         surveyQuestionOptionId: integer("survey_question_option_id")
             .notNull()
             .references(() => surveyQuestionOptionTable.id),
+        textValueHtml: text("text_value_html"),
         textValuePlainText: text("text_value_plain_text"),
         deletedAt: timestamp("deleted_at", {
             mode: "date",
@@ -3490,6 +3492,14 @@ export const surveyAnswerOptionTable = pgTable(
         check(
             "survey_answer_option_text_byte_length_check",
             sql`octet_length(${table.textValuePlainText}) <= ${sql.raw(String(MAX_BYTES_SURVEY_OPTION_TEXT))}`,
+        ),
+        check(
+            "survey_answer_option_html_byte_length_check",
+            sql`octet_length(${table.textValueHtml}) <= ${sql.raw(String(MAX_BYTES_SURVEY_OPTION_HTML))}`,
+        ),
+        check(
+            "survey_answer_option_text_pair_check",
+            sql`(${table.textValueHtml} IS NULL) = (${table.textValuePlainText} IS NULL)`,
         ),
         uniqueIndex("survey_answer_option_answer_option_active_uidx")
             .on(table.surveyAnswerId, table.surveyQuestionOptionId)

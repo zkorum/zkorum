@@ -9456,19 +9456,34 @@ export interface ApiV1SurveyAnswerSavePostRequest {
 /**
  * @type ApiV1SurveyAnswerSavePostRequestAnswer
  */
-export type ApiV1SurveyAnswerSavePostRequestAnswer = ApiV1SurveyAnswerSavePostRequestAnswerOneOf | ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOf;
+export type ApiV1SurveyAnswerSavePostRequestAnswer = ApiV1SurveyAnswerSavePostRequestAnswerOneOf | ApiV1SurveyAnswerSavePostRequestAnswerOneOf1;
 
 export interface ApiV1SurveyAnswerSavePostRequestAnswerOneOf {
+    'optionSlugIds': Array<string>;
+    'optionTextValues'?: { [key: string]: ApiV1SurveyAnswerSavePostRequestAnswerOneOfOptionTextValuesValue; };
     'questionType': ApiV1SurveyAnswerSavePostRequestAnswerOneOfQuestionTypeEnum;
-    'textValueHtml': string;
 }
 
 export const ApiV1SurveyAnswerSavePostRequestAnswerOneOfQuestionTypeEnum = {
-    FreeText: 'free_text',
+    Choice: 'choice',
 } as const;
 
 export type ApiV1SurveyAnswerSavePostRequestAnswerOneOfQuestionTypeEnum = typeof ApiV1SurveyAnswerSavePostRequestAnswerOneOfQuestionTypeEnum[keyof typeof ApiV1SurveyAnswerSavePostRequestAnswerOneOfQuestionTypeEnum];
 
+export interface ApiV1SurveyAnswerSavePostRequestAnswerOneOf1 {
+    'questionType': ApiV1SurveyAnswerSavePostRequestAnswerOneOf1QuestionTypeEnum;
+    'textValueHtml': string;
+}
+
+export const ApiV1SurveyAnswerSavePostRequestAnswerOneOf1QuestionTypeEnum = {
+    FreeText: 'free_text',
+} as const;
+
+export type ApiV1SurveyAnswerSavePostRequestAnswerOneOf1QuestionTypeEnum = typeof ApiV1SurveyAnswerSavePostRequestAnswerOneOf1QuestionTypeEnum[keyof typeof ApiV1SurveyAnswerSavePostRequestAnswerOneOf1QuestionTypeEnum];
+
+export interface ApiV1SurveyAnswerSavePostRequestAnswerOneOfOptionTextValuesValue {
+    'textValueHtml': string;
+}
 export interface ApiV1SurveyCompletionCountsPost200Response {
     'hasSurvey': boolean;
     'counts': ApiV1SurveyCompletionCountsPost200ResponseCounts;
@@ -9687,7 +9702,7 @@ export type ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurr
 
 export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOf {
     'optionSlugIds': Array<string>;
-    'optionTextValues'?: { [key: string]: string; };
+    'optionTextValues'?: { [key: string]: ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOfOptionTextValuesValue; };
     'questionType': ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOfQuestionTypeEnum;
 }
 
@@ -9709,6 +9724,9 @@ export const ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCur
 
 export type ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOf1QuestionTypeEnum = typeof ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOf1QuestionTypeEnum[keyof typeof ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOf1QuestionTypeEnum];
 
+export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOfOptionTextValuesValue {
+    'textValueHtml': string;
+}
 /**
  * @type ApiV1SurveyResponseWithdrawPost200Response
  */

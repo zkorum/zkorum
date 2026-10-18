@@ -28149,8 +28149,17 @@
                                                                                             "optionTextValues": {
                                                                                                 "type": "object",
                                                                                                 "additionalProperties": {
-                                                                                                    "type": "string",
-                                                                                                    "maxLength": 16384
+                                                                                                    "type": "object",
+                                                                                                    "properties": {
+                                                                                                        "textValueHtml": {
+                                                                                                            "type": "string",
+                                                                                                            "maxLength": 81927
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "required": [
+                                                                                                        "textValueHtml"
+                                                                                                    ],
+                                                                                                    "additionalProperties": false
                                                                                                 }
                                                                                             },
                                                                                             "questionType": {
@@ -28353,8 +28362,17 @@
                                                                                             "optionTextValues": {
                                                                                                 "type": "object",
                                                                                                 "additionalProperties": {
-                                                                                                    "type": "string",
-                                                                                                    "maxLength": 16384
+                                                                                                    "type": "object",
+                                                                                                    "properties": {
+                                                                                                        "textValueHtml": {
+                                                                                                            "type": "string",
+                                                                                                            "maxLength": 81927
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "required": [
+                                                                                                        "textValueHtml"
+                                                                                                    ],
+                                                                                                    "additionalProperties": false
                                                                                                 }
                                                                                             },
                                                                                             "questionType": {
@@ -28945,8 +28963,25 @@
                                                     "optionTextValues": {
                                                         "type": "object",
                                                         "additionalProperties": {
-                                                            "type": "string",
-                                                            "maxLength": 16384
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string",
+                                                                    "maxLength": 16384
+                                                                },
+                                                                {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "textValueHtml": {
+                                                                            "type": "string",
+                                                                            "maxLength": 81927
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "textValueHtml"
+                                                                    ],
+                                                                    "additionalProperties": false
+                                                                }
+                                                            ]
                                                         }
                                                     },
                                                     "questionType": {

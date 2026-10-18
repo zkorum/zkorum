@@ -21,12 +21,14 @@ async function mountEditor({
   placeholder = "Write here",
   submitOnShiftEnter = false,
   onSubmit = undefined,
+  formattingEnabled = true,
 }: {
   modelValue: string;
   singleLine: boolean;
   placeholder?: string;
   submitOnShiftEnter?: boolean;
   onSubmit?: () => void;
+  formattingEnabled?: boolean;
 }): Promise<HTMLElement> {
   const container = document.createElement("div");
   document.body.append(container);
@@ -41,6 +43,7 @@ async function mountEditor({
     singleLine,
     submitOnShiftEnter,
     onSubmit,
+    formattingEnabled,
   });
   mountedApps.push(app);
   app.mount(container);
@@ -137,6 +140,26 @@ afterEach(() => {
 });
 
 describe("Editor", () => {
+  it("keeps line breaks but strips formatting when formatting is disabled", async () => {
+    const editorElement = await mountEditor({
+      modelValue:
+        "<p><strong>First</strong><br><em>Second</em></p><ul><li><p>Third</p></li></ul>",
+      singleLine: false,
+      formattingEnabled: false,
+    });
+    expect(editorElement.querySelector("strong, em, ul, li")).toBeNull();
+    expect(editorElement.querySelector("br")).not.toBeNull();
+    expect(editorElement.textContent).toBe("FirstSecondThird");
+    const event = new KeyboardEvent("keydown", {
+      key: "b",
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    editorElement.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
   it("preserves line breaks in a multiline placeholder", async () => {
     const placeholder =
       "Share an update:\n• Share results\n• Explain changes\n\nRemember the whole group.";

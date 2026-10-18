@@ -200,8 +200,11 @@ describe("buildSurveyParticipantResponseRows", () => {
             textValuePlainText: null,
             optionSlugIds: ["optYes01", "optNo001"],
             optionTextValues: {
-                optYes01: 'Cargo bike, "family"\n<literal text>',
-                optNo001: "Tricycle",
+                optYes01: {
+                    textValueHtml:
+                        '<p>Cargo bike, "family"<br>&lt;literal text&gt;</p>',
+                },
+                optNo001: { textValueHtml: "<p>Tricycle</p>" },
             },
         };
         participant.surveyState.answersByQuestionId.set(11, answer);
@@ -222,12 +225,13 @@ describe("buildSurveyParticipantResponseRows", () => {
         expect(rows.slice(0, 2)).toMatchObject([
             {
                 "option-id": 0,
-                "answer-text-html": "",
+                "answer-text-html":
+                    '<p>Cargo bike, "family"<br>&lt;literal text&gt;</p>',
                 "answer-text-plain": 'Cargo bike, "family"\n<literal text>',
             },
             {
                 "option-id": 1,
-                "answer-text-html": "",
+                "answer-text-html": "<p>Tricycle</p>",
                 "answer-text-plain": "Tricycle",
             },
         ]);

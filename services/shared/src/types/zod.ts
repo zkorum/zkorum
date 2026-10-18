@@ -5,6 +5,7 @@ import {
     MAX_LENGTH_CONVERSATION_TITLE,
     MAX_LENGTH_SURVEY_OPTION,
     MAX_BYTES_SURVEY_OPTION_TEXT,
+    MAX_BYTES_SURVEY_OPTION_HTML,
     MAX_LENGTH_SURVEY_QUESTION,
     MIN_LENGTH_USERNAME,
     MAX_LENGTH_USERNAME,
@@ -1228,22 +1229,28 @@ export const zodSurveyCompletionCounts = z
     })
     .strict();
 
-const zodSurveyChoiceAnswerDraftBase = z
+const zodSurveyOptionText = z
+    .object({
+        textValueHtml: z.string().max(MAX_BYTES_SURVEY_OPTION_HTML),
+    })
+    .strict();
+
+const zodSurveyChoiceAnswer = z
     .object({
         optionSlugIds: z.array(zodSlugId),
         optionTextValues: z
             .record(
                 zodSlugId,
                 z
-                    .string()
-                    .max(MAX_BYTES_SURVEY_OPTION_TEXT)
+                    .union([
+                        z.string().max(MAX_BYTES_SURVEY_OPTION_TEXT),
+                        zodSurveyOptionText,
+                    ])
                     .refine(isSurveyOptionTextWithinLimit),
             )
             .optional(),
     })
-    .strict();
-
-const zodSurveyChoiceAnswer = zodSurveyChoiceAnswerDraftBase
+    .strict()
     .extend({ questionType: z.literal("choice") })
     .strict()
     .superRefine((answer, ctx) => {
@@ -1275,7 +1282,14 @@ const zodSurveyFreeTextAnswerDraft = z
     .strict();
 
 export const zodSurveyAnswerDraft = z.discriminatedUnion("questionType", [
-    zodSurveyChoiceAnswer,
+    zodSurveyChoiceAnswer.safeExtend({
+        optionTextValues: z
+            .record(
+                zodSlugId,
+                zodSurveyOptionText.refine(isSurveyOptionTextWithinLimit),
+            )
+            .optional(),
+    }),
     zodSurveyFreeTextAnswerDraft,
 ]);
 
@@ -2260,6 +2274,9 @@ export type SurveyQuestionConfig = z.infer<typeof zodSurveyQuestionConfig>;
 export type SurveyConfig = z.infer<typeof zodSurveyConfig>;
 export type SurveyAnswerDraft = z.infer<typeof zodSurveyAnswerDraft>;
 export type SurveyAnswerSubmission = z.infer<typeof zodSurveyAnswerSubmission>;
+export type SurveyAnswerClientSubmission =
+    | Extract<SurveyAnswerDraft, { questionType: "choice" }>
+    | Extract<SurveyAnswerSubmission, { questionType: "free_text" }>;
 export type SurveyGateStatus = z.infer<typeof zodSurveyGateStatus>;
 export type SurveyResultsAccessLevel = z.infer<
     typeof zodSurveyResultsAccessLevel

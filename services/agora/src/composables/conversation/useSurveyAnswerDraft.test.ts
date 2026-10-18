@@ -29,7 +29,7 @@ function createQuestion(): Extract<
     currentAnswer: {
       questionType: "choice",
       optionSlugIds: ["other"],
-      optionTextValues: { other: "Saved text" },
+      optionTextValues: { other: { textValueHtml: "<p>Saved text</p>" } },
     },
     isPassed: false,
     isStale: false,
@@ -57,32 +57,42 @@ function createDraft() {
 describe("survey draft hydration", () => {
   it("keeps unsaved text during a background form refresh", async () => {
     const { question, draft } = createDraft();
-    draft.optionTextValues.value.other = "Unsaved text";
+    draft.optionTextValues.value.other = {
+      textValueHtml: "<p>Unsaved text</p>",
+    };
     question.value = { ...question.value };
     await nextTick();
-    expect(draft.optionTextValues.value.other).toBe("Unsaved text");
+    expect(draft.optionTextValues.value.other).toEqual({
+      textValueHtml: "<p>Unsaved text</p>",
+    });
     expect(draft.hasDraftChanged.value).toBe(true);
   });
 
   it("hydrates a save echo and resets the changed state", async () => {
     const { question, draft } = createDraft();
-    draft.optionTextValues.value.other = "  Updated text  ";
+    draft.optionTextValues.value.other = {
+      textValueHtml: "<p>  Updated text  </p>",
+    };
     question.value = {
       ...question.value,
       currentAnswer: {
         questionType: "choice",
         optionSlugIds: ["other"],
-        optionTextValues: { other: "Updated text" },
+        optionTextValues: { other: { textValueHtml: "<p>Updated text</p>" } },
       },
     };
     await nextTick();
-    expect(draft.optionTextValues.value.other).toBe("Updated text");
+    expect(draft.optionTextValues.value.other).toEqual({
+      textValueHtml: "<p>Updated text</p>",
+    });
     expect(draft.hasDraftChanged.value).toBe(false);
   });
 
   it("restores the saved value when an author disables a locally edited field", async () => {
     const { question, draft } = createDraft();
-    draft.optionTextValues.value.other = "Unsaved text";
+    draft.optionTextValues.value.other = {
+      textValueHtml: "<p>Unsaved text</p>",
+    };
     question.value = {
       ...question.value,
       options: question.value.options.map((option) => ({
@@ -91,13 +101,17 @@ describe("survey draft hydration", () => {
       })),
     };
     await nextTick();
-    expect(draft.optionTextValues.value.other).toBe("Saved text");
+    expect(draft.optionTextValues.value.other).toEqual({
+      textValueHtml: "<p>Saved text</p>",
+    });
     expect(draft.hasDraftChanged.value).toBe(false);
   });
 
   it("loads the new question rather than carrying text across steps", async () => {
     const { question, draft } = createDraft();
-    draft.optionTextValues.value.other = "Unsaved text";
+    draft.optionTextValues.value.other = {
+      textValueHtml: "<p>Unsaved text</p>",
+    };
     question.value = {
       ...question.value,
       questionSlugId: "question2",
@@ -111,7 +125,9 @@ describe("survey draft hydration", () => {
 
   it("clears private draft text when the viewer changes and then hydrates the new viewer's response", async () => {
     const { question, draft, viewerUserId } = createDraft();
-    draft.optionTextValues.value.other = "Private unsaved text";
+    draft.optionTextValues.value.other = {
+      textValueHtml: "<p>Private unsaved text</p>",
+    };
     viewerUserId.value = "viewer2";
     await nextTick();
     expect(draft.optionTextValues.value).toEqual({});
@@ -122,11 +138,15 @@ describe("survey draft hydration", () => {
       currentAnswer: {
         questionType: "choice",
         optionSlugIds: ["other"],
-        optionTextValues: { other: "New viewer's saved text" },
+        optionTextValues: {
+          other: { textValueHtml: "<p>New viewer's saved text</p>" },
+        },
       },
     };
     await nextTick();
-    expect(draft.optionTextValues.value.other).toBe("New viewer's saved text");
+    expect(draft.optionTextValues.value.other).toEqual({
+      textValueHtml: "<p>New viewer's saved text</p>",
+    });
     expect(draft.hasDraftChanged.value).toBe(false);
     expect(draft.isDraftReady.value).toBe(true);
   });

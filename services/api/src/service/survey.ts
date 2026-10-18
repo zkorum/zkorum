@@ -57,9 +57,11 @@ import {
 } from "@/shared/shared.js";
 import {
     getSurveyOptionText,
+    isSurveyOptionPlainTextWithinLimit,
     isSurveyOptionTextWithinLimit,
-    normalizeSurveyOptionText,
-    normalizeSurveyOptionTextValues,
+    surveyOptionTextsEqual,
+    surveyOptionTextInputToHtml,
+    type SurveyOptionText,
 } from "@/shared/surveyChoiceText.js";
 import {
     groupSurveyAnswerOptionRows,
@@ -123,6 +125,7 @@ import type { SurveyQuestionContentSource } from "./contentTranslation.js";
 import {
     htmlToCountedTextWithWarning,
     normalizeUserRichTextInput,
+    type NormalizedUserRichText,
 } from "./richText.js";
 
 interface ConversationAccessContext {
@@ -496,7 +499,7 @@ export interface StoredSurveyAnswer {
     textValueHtml: string | null;
     textValuePlainText: string | null;
     optionSlugIds: string[];
-    optionTextValues?: Record<string, string>;
+    optionTextValues?: Record<string, SurveyOptionText>;
 }
 
 function getStoredSurveyAnswerPlainText(
@@ -802,7 +805,9 @@ export function validateSurveyAnswer({
     answer,
 }: {
     question: ActiveSurveyQuestionRecord;
-    answer: SurveyAnswerDraft;
+    answer:
+        | SurveyAnswerDraft
+        | Extract<SurveyAnswerSubmission, { questionType: "choice" }>;
 }): boolean {
     if (question.questionType !== answer.questionType) {
         return false;
@@ -890,9 +895,33 @@ type SurveyAnswerForStorage =
           selectedOptions: readonly {
               id: number;
               slugId: string;
-              textValuePlainText: string | undefined;
+              text: NormalizedUserRichText | undefined;
           }[];
       };
+
+function normalizeSurveyRichTextContent({
+    textValueHtml,
+    validationMode,
+}: {
+    textValueHtml: string;
+    validationMode: "survey" | "survey_option";
+}): NormalizedUserRichText {
+    try {
+        const normalizationResult = normalizeUserRichTextInput({
+            html: textValueHtml,
+            validationMode,
+        });
+        if (!normalizationResult.success) {
+            throw httpErrors.badRequest(normalizationResult.reason);
+        }
+        return normalizationResult.content;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw httpErrors.badRequest(error.message);
+        }
+        throw httpErrors.badRequest("Error while sanitizing survey answer");
+    }
+}
 
 function normalizeSurveyAnswerForStorage({
     question,
@@ -905,67 +934,68 @@ function normalizeSurveyAnswerForStorage({
 }): SurveyAnswerForStorage {
     if (answer.questionType !== "free_text") {
         const submittedTextValues = answer.optionTextValues;
-        const retainedTextValues: Record<string, string> = {};
+        const selectedOptionSlugIds = new Set(answer.optionSlugIds);
         if (submittedTextValues !== undefined) {
-            const selectedOptionSlugIds = new Set(answer.optionSlugIds);
-            const optionsBySlugId = new Map(
-                question.options.map((option) => [option.slugId, option]),
-            );
-            for (const [optionSlugId, textValue] of Object.entries(
-                submittedTextValues,
-            )) {
-                const normalizedText = normalizeSurveyOptionText(textValue);
-                const option = optionsBySlugId.get(optionSlugId);
-                if (
-                    !selectedOptionSlugIds.has(optionSlugId) ||
-                    option === undefined
-                ) {
+            for (const optionSlugId of Object.keys(submittedTextValues)) {
+                if (!selectedOptionSlugIds.has(optionSlugId)) {
                     throw httpErrors.badRequest(
                         "Survey option text must belong to a selected option",
                     );
                 }
-                if (
-                    normalizedText !== undefined &&
-                    !option.allowsText &&
-                    normalizedText !==
-                        getSurveyOptionText({
-                            values: storedAnswer?.optionTextValues,
-                            optionSlugId,
-                        })
-                ) {
-                    throw httpErrors.badRequest(
-                        "Survey option does not allow text input",
-                    );
-                }
-            }
-        } else {
-            // Older clients omit this field; retain text for selections they keep.
-            for (const optionSlugId of answer.optionSlugIds) {
-                const storedText = getSurveyOptionText({
-                    values: storedAnswer?.optionTextValues,
-                    optionSlugId,
-                });
-                if (storedText !== undefined) {
-                    retainedTextValues[optionSlugId] = storedText;
-                }
             }
         }
-        const optionTextValues = normalizeSurveyOptionTextValues(
-            submittedTextValues ?? retainedTextValues,
-        );
-        const selectedOptionSlugIds = new Set(answer.optionSlugIds);
         return {
             questionType: "choice",
             selectedOptions: question.options
                 .filter((option) => selectedOptionSlugIds.has(option.slugId))
-                .map((option) => ({
-                    id: option.id,
-                    slugId: option.slugId,
-                    textValuePlainText: getSurveyOptionText({
-                        values: optionTextValues,
+                .map((option) => {
+                    const previousText = getSurveyOptionText({
+                        values: storedAnswer?.optionTextValues,
                         optionSlugId: option.slugId,
-                    }),
-                })),
+                    });
+                    // Omitted maps from older clients retain text; an explicit map replaces it.
+                    const input =
+                        submittedTextValues === undefined
+                            ? previousText
+                            : getSurveyOptionText({
+                                  values: submittedTextValues,
+                                  optionSlugId: option.slugId,
+                              });
+                    const content =
+                        input === undefined
+                            ? undefined
+                            : normalizeSurveyRichTextContent({
+                                  textValueHtml:
+                                      surveyOptionTextInputToHtml(input),
+                                  validationMode: "survey_option",
+                              });
+                    const text =
+                        content !== undefined &&
+                        hasVisiblePlainText(content.plainText)
+                            ? content
+                            : undefined;
+                    if (text !== undefined) {
+                        if (
+                            !isSurveyOptionPlainTextWithinLimit(text.plainText)
+                        ) {
+                            throw httpErrors.badRequest(
+                                "Invalid survey answer",
+                            );
+                        }
+                        if (
+                            !option.allowsText &&
+                            !surveyOptionTextsEqual({
+                                left: { textValueHtml: text.html },
+                                right: previousText,
+                            })
+                        ) {
+                            throw httpErrors.badRequest(
+                                "Survey option does not allow text input",
+                            );
+                        }
+                    }
+                    return { id: option.id, slugId: option.slugId, text };
+                }),
         };
     }
 
@@ -979,26 +1009,15 @@ function normalizeSurveyAnswerForStorage({
         };
     }
 
-    try {
-        const normalizationResult = normalizeUserRichTextInput({
-            html: answer.textValueHtml,
-            validationMode: "survey",
-        });
-        if (!normalizationResult.success) {
-            throw httpErrors.badRequest(normalizationResult.reason);
-        }
-
-        return {
-            questionType: "free_text",
-            textValueHtml: normalizationResult.content.html,
-            textValuePlainText: normalizationResult.content.plainText,
-        };
-    } catch (error) {
-        if (error instanceof Error) {
-            throw httpErrors.badRequest(error.message);
-        }
-        throw httpErrors.badRequest("Error while sanitizing survey answer");
-    }
+    const content = normalizeSurveyRichTextContent({
+        textValueHtml: answer.textValueHtml,
+        validationMode: "survey",
+    });
+    return {
+        questionType: "free_text",
+        textValueHtml: content.html,
+        textValuePlainText: content.plainText,
+    };
 }
 
 export function deriveSurveyQuestionFormItem({
@@ -2907,22 +2926,26 @@ async function persistSurveyAnswer({
                 surveyAnswerId: savedAnswer.id,
                 surveyQuestionId: question.id,
                 surveyQuestionOptionId: option.id,
-                textValuePlainText: option.textValuePlainText ?? null,
+                textValueHtml: option.text?.html ?? null,
+                textValuePlainText: option.text?.plainText ?? null,
             })),
         );
     }
     for (const option of selectedOptions) {
         if (
             previousSelectedSlugIds.has(option.slugId) &&
-            option.textValuePlainText !==
+            option.text?.html !==
                 getSurveyOptionText({
                     values: previousAnswer?.optionTextValues,
                     optionSlugId: option.slugId,
-                })
+                })?.textValueHtml
         ) {
             await db
                 .update(surveyAnswerOptionTable)
-                .set({ textValuePlainText: option.textValuePlainText ?? null })
+                .set({
+                    textValueHtml: option.text?.html ?? null,
+                    textValuePlainText: option.text?.plainText ?? null,
+                })
                 .where(
                     and(
                         eq(
@@ -2938,10 +2961,13 @@ async function persistSurveyAnswer({
                 );
         }
     }
-    const optionTextEntries: (readonly [string, string])[] = [];
+    const optionTextEntries: (readonly [string, SurveyOptionText])[] = [];
     for (const option of selectedOptions) {
-        if (option.textValuePlainText !== undefined)
-            optionTextEntries.push([option.slugId, option.textValuePlainText]);
+        if (option.text !== undefined)
+            optionTextEntries.push([
+                option.slugId,
+                { textValueHtml: option.text.html },
+            ]);
     }
     return {
         answerId: savedAnswer.id,
@@ -2952,7 +2978,7 @@ async function persistSurveyAnswer({
         optionTextValues:
             optionTextEntries.length === 0
                 ? undefined
-                : Object.fromEntries<string>(optionTextEntries),
+                : Object.fromEntries<SurveyOptionText>(optionTextEntries),
     };
 }
 

@@ -33,6 +33,7 @@ import type {
     SurveyConfig,
 } from "../src/shared/types/zod.js";
 import { readDbFixtureSql } from "./dbFixture.js";
+import { MAX_BYTES_SURVEY_OPTION_HTML } from "../src/shared/shared.js";
 
 process.env.NODE_ENV = "test";
 process.env.CORS_ORIGIN_LIST = "http://localhost:9000";
@@ -297,7 +298,11 @@ describe("optional choice text persistence", () => {
             expect(
                 completed.answersByQuestionId.get(question.id)
                     ?.optionTextValues,
-            ).toEqual({ [option.slugId]: question.questionText });
+            ).toEqual({
+                [option.slugId]: {
+                    textValueHtml: `<p>${question.questionText}</p>`,
+                },
+            });
         }
     });
 
@@ -447,7 +452,7 @@ describe("optional choice text persistence", () => {
         expect(
             (await loadState()).answersByQuestionId.get(question.id)
                 ?.optionTextValues,
-        ).toEqual({ [other.slugId]: "Newest text" });
+        ).toEqual({ [other.slugId]: { textValueHtml: "<p>Newest text</p>" } });
     });
 
     it.each([
@@ -564,8 +569,11 @@ describe("optional choice text persistence", () => {
             (await loadState()).answersByQuestionId.get(question.id)
                 ?.optionTextValues,
         ).toEqual({
-            [first.slugId]: "Electric",
-            [other.slugId]: 'Cargo bike, "family"\n<literal text>',
+            [first.slugId]: { textValueHtml: "<p>Electric</p>" },
+            [other.slugId]: {
+                textValueHtml:
+                    '<p>Cargo bike, "family"<br />&lt;literal text&gt;</p>',
+            },
         });
         await save({
             questionSlugId: question.slugId,
@@ -585,7 +593,10 @@ describe("optional choice text persistence", () => {
         expect(
             (await loadState()).answersByQuestionId.get(question.id)
                 ?.optionTextValues,
-        ).toEqual({ [first.slugId]: "Electric", [other.slugId]: "Tricycle" });
+        ).toEqual({
+            [first.slugId]: { textValueHtml: "<p>Electric</p>" },
+            [other.slugId]: { textValueHtml: "<p>Tricycle</p>" },
+        });
         const result = await save({
             questionSlugId: question.slugId,
             answer: {
@@ -602,6 +613,250 @@ describe("optional choice text persistence", () => {
             (await loadState()).answersByQuestionId.get(question.id)
                 ?.optionTextValues,
         ).toBeUndefined();
+    });
+
+    it("sanitizes and round-trips formatted option answers with derived plain text", async () => {
+        await configure({ allowsText: true });
+        const { question, other } = await firstQuestion();
+        const answer = {
+            questionType: "choice",
+            optionSlugIds: [other.slugId],
+            optionTextValues: {
+                [other.slugId]: {
+                    textValueHtml:
+                        '<p onclick="alert(1)"><strong>Cargo\u202E bike</strong></p><script>alert(1)</script><p></p><p></p><ul><li><p>Family</p></li></ul>',
+                },
+            },
+        } satisfies SurveyAnswerSubmission;
+        await save({ questionSlugId: question.slugId, answer });
+        const html =
+            "<p><strong>Cargo bike</strong></p><p></p><ul><li><p>Family</p></li></ul>";
+        expect(
+            (await loadState()).answersByQuestionId.get(question.id)
+                ?.optionTextValues,
+        ).toEqual({
+            [other.slugId]: { textValueHtml: html },
+        });
+        const [stored] = await db
+            .select()
+            .from(surveyAnswerOptionTable)
+            .where(isNull(surveyAnswerOptionTable.deletedAt));
+        expect(stored).toMatchObject({
+            textValueHtml: html,
+            textValuePlainText: "Cargo bike\n\n- Family",
+        });
+
+        // Formatting-only edits must be persisted even when the derived text is unchanged.
+        await save({
+            questionSlugId: question.slugId,
+            answer: {
+                ...answer,
+                optionTextValues: {
+                    [other.slugId]: {
+                        textValueHtml:
+                            "<p><em>Cargo bike</em></p><ul><li><p>Family</p></li></ul>",
+                    },
+                },
+            },
+        });
+        expect(
+            (await loadState()).answersByQuestionId.get(question.id)
+                ?.optionTextValues,
+        ).toEqual({
+            [other.slugId]: {
+                textValueHtml:
+                    "<p><em>Cargo bike</em></p><ul><li><p>Family</p></li></ul>",
+            },
+        });
+        await save({
+            questionSlugId: question.slugId,
+            answer: {
+                ...answer,
+                optionTextValues: {
+                    [other.slugId]: { textValueHtml: "<p><br></p>" },
+                },
+            },
+        });
+        expect(
+            (await loadState()).answersByQuestionId.get(question.id)
+                ?.optionTextValues,
+        ).toBeUndefined();
+        const [cleared] = await db
+            .select()
+            .from(surveyAnswerOptionTable)
+            .where(isNull(surveyAnswerOptionTable.deletedAt));
+        expect(cleared).toMatchObject({
+            textValueHtml: null,
+            textValuePlainText: null,
+        });
+    });
+
+    it.each([
+        {
+            plainText: '<literal> & "quotes"\r\nNext\rLast\nEnd',
+            html: '<p>&lt;literal&gt; &amp; "quotes"<br>Next<br>Last<br>End</p>',
+        },
+        {
+            plainText: "&" + "\u0301".repeat(8_191),
+            html: "<p>&amp;" + "\u0301".repeat(8_191) + "</p>",
+        },
+    ])(
+        "backfills legacy rows before enforcing paired content, preserving rich text and tombstones",
+        async ({ plainText, html }) => {
+            await configure({ allowsText: true, maxSelections: 2 });
+            const { question, first, other } = await firstQuestion();
+            await save({
+                questionSlugId: question.slugId,
+                answer: {
+                    questionType: "choice",
+                    optionSlugIds: [first.slugId, other.slugId],
+                    optionTextValues: {
+                        [first.slugId]: {
+                            textValueHtml:
+                                "<p><strong>Already formatted</strong></p>",
+                        },
+                        [other.slugId]: "Legacy text",
+                    },
+                },
+            });
+            // Recreate the expanded schema and legacy data, then run the actual migration files.
+            await db.execute(
+                sql`ALTER TABLE survey_answer_option DROP CONSTRAINT survey_answer_option_text_pair_check`,
+            );
+            try {
+                await db.execute(
+                    sql.raw(
+                        readFileSync(
+                            new URL(
+                                "../database/flyway/V0107__steep_skreet.sql",
+                                import.meta.url,
+                            ),
+                            "utf8",
+                        ),
+                    ),
+                );
+                await db
+                    .update(surveyAnswerOptionTable)
+                    .set({
+                        textValueHtml: null,
+                        textValuePlainText: plainText,
+                        deletedAt: now,
+                    })
+                    .where(
+                        eq(
+                            surveyAnswerOptionTable.surveyQuestionOptionId,
+                            other.id,
+                        ),
+                    );
+                await db.execute(
+                    sql.raw(
+                        readFileSync(
+                            new URL(
+                                "../database/flyway/V0107.0.1__petite_mesmero.sql",
+                                import.meta.url,
+                            ),
+                            "utf8",
+                        ),
+                    ),
+                );
+                await db.execute(
+                    sql.raw(
+                        readFileSync(
+                            new URL(
+                                "../database/flyway/V0107.1__backfill_survey_option_answer_html.sql",
+                                import.meta.url,
+                            ),
+                            "utf8",
+                        ),
+                    ),
+                );
+            } finally {
+                await db.execute(
+                    sql.raw(
+                        readFileSync(
+                            new URL(
+                                "../database/flyway/V0108__mature_next_avengers.sql",
+                                import.meta.url,
+                            ),
+                            "utf8",
+                        ),
+                    ),
+                );
+            }
+            const rows = await db.select().from(surveyAnswerOptionTable);
+            expect(
+                rows.find((row) => row.surveyQuestionOptionId === first.id),
+            ).toMatchObject({
+                textValueHtml: "<p><strong>Already formatted</strong></p>",
+                textValuePlainText: "Already formatted",
+                deletedAt: null,
+            });
+            expect(
+                rows.find((row) => row.surveyQuestionOptionId === other.id),
+            ).toMatchObject({
+                textValueHtml: html,
+                textValuePlainText: plainText,
+                deletedAt: now,
+            });
+        },
+    );
+
+    it("round-trips valid legacy Unicode whose escaped HTML exceeds the generic rich-text limit", async () => {
+        await configure({ allowsText: true });
+        const { question, other } = await firstQuestion();
+        const text = "&" + "\u0301".repeat(8_191);
+        await save({
+            questionSlugId: question.slugId,
+            answer: {
+                questionType: "choice",
+                optionSlugIds: [other.slugId],
+                optionTextValues: { [other.slugId]: text },
+            },
+        });
+        const state = await loadState();
+        expect(
+            state.answersByQuestionId.get(question.id)?.optionTextValues,
+        ).toEqual({
+            [other.slugId]: {
+                textValueHtml: "<p>&amp;" + "\u0301".repeat(8_191) + "</p>",
+            },
+        });
+        const { deriveSurveyGate } = await surveyModulePromise;
+        expect(
+            deriveSurveyGate({ surveyState: state, participantId }).status,
+        ).toBe("complete_valid");
+    });
+
+    it("rejects incomplete content pairs and oversized HTML in the database", async () => {
+        await configure({ allowsText: true });
+        const { question, other } = await firstQuestion();
+        await save({
+            questionSlugId: question.slugId,
+            answer: {
+                questionType: "choice",
+                optionSlugIds: [other.slugId],
+                optionTextValues: {
+                    [other.slugId]: { textValueHtml: "<p>Valid</p>" },
+                },
+            },
+        });
+        for (const invalidContent of [
+            { textValueHtml: null },
+            { textValuePlainText: null },
+            { textValueHtml: "é".repeat(MAX_BYTES_SURVEY_OPTION_HTML) },
+        ]) {
+            await expect(
+                db
+                    .update(surveyAnswerOptionTable)
+                    .set(invalidContent)
+                    .where(
+                        eq(
+                            surveyAnswerOptionTable.surveyQuestionOptionId,
+                            other.id,
+                        ),
+                    ),
+            ).rejects.toMatchObject({ cause: { code: "23514" } });
+        }
     });
 
     it("preserves collected text after disabling the field, but rejects new text on it", async () => {
@@ -647,7 +902,7 @@ describe("optional choice text persistence", () => {
             state.answersByQuestionId.get(question.id)?.optionTextValues?.[
                 other.slugId
             ],
-        ).toBe("Cargo bike");
+        ).toEqual({ textValueHtml: "<p>Cargo bike</p>" });
         await expect(
             save({
                 questionSlugId: question.slugId,
@@ -830,7 +1085,7 @@ describe("optional choice text persistence", () => {
                 "question-id": 0,
                 "option-id": 1,
                 "answer-text-plain": "Cargo bike",
-                "answer-text-html": "",
+                "answer-text-html": "<p>Cargo bike</p>",
             },
         ]);
         queries.length = 0;
