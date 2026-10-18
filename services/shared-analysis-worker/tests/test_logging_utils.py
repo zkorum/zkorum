@@ -1,6 +1,14 @@
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING
+
 from sqlalchemy.exc import DBAPIError
 
-from agora_analysis_worker_shared.logging_utils import database_error_summary
+from agora_analysis_worker_shared.logging_utils import database_error_summary, log_worker_error
+
+if TYPE_CHECKING:
+    import pytest
 
 
 class DriverError(Exception):
@@ -65,3 +73,36 @@ def test_database_error_summary_rejects_log_injection_in_identifiers() -> None:
         "type=DBAPIError dbapi_type=DriverDiagnosticError "
         "connection_invalidated=false sqlstate=23502"
     )
+
+
+def test_worker_error_omits_sql_and_parameters(caplog: pytest.LogCaptureFixture) -> None:
+    error = DBAPIError(
+        "private SQL", {"password": "private password"}, DriverError("private error")
+    )
+    log_worker_error(
+        logger=logging.getLogger("test-worker"),
+        message="Work failed",
+        error=error,
+        context={"conversation_id": 10},
+    )
+
+    assert "Work failed (conversation_id=10)" in caplog.text
+    assert "sqlstate=08006" in caplog.text
+    assert "private" not in caplog.text
+    assert caplog.records[0].exc_info is None
+
+
+def test_worker_error_preserves_unexpected_exception_diagnostics(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    error = RuntimeError("unexpected failure")
+    log_worker_error(
+        logger=logging.getLogger("test-worker"),
+        message="Work failed",
+        error=error,
+        context={"conversation_id": 10},
+    )
+
+    assert "Work failed (conversation_id=10)" in caplog.text
+    assert "RuntimeError: unexpected failure" in caplog.text
+    assert caplog.records[0].exc_info is not None

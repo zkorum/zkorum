@@ -55,6 +55,38 @@ Failures after computed-result persistence commits retain the persisted result
 and lease-recovery path; they must not clear the persisted marker and rerun the
 same computation.
 
+## Diagnosing a pause after queue pop
+
+`Popped ... queued conversation(s)` precedes all math computation. The following
+INFO logs distinguish non-processable-work cleanup, PostgreSQL work claiming,
+and vote-input loading. `Claimed ...` is emitted only after the claim/input
+transaction commits. A pause before that message is not evidence of slow
+red-dwarf computation or a Bedrock call.
+
+Database statements time out after 30 seconds by default, including lock waits.
+Cleanup/claim failures roll back and requeue the popped IDs. Explicit connection
+string `options` take precedence over the configured timeout defaults.
+
+While the production worker is paused, run this read-only diagnostic on the
+primary database:
+
+```sql
+SELECT pid, application_name, state, wait_event_type, wait_event,
+       clock_timestamp() - query_start AS query_age,
+       pg_blocking_pids(pid) AS blocking_pids
+FROM pg_stat_activity
+WHERE datname = current_database()
+  AND pid <> pg_backend_pid()
+  AND (application_name ILIKE '%mathupdater%'
+       OR cardinality(pg_blocking_pids(pid)) > 0)
+ORDER BY query_start;
+```
+
+`wait_event_type = 'Lock'` with blocking PIDs identifies lock contention; an
+active backend without blockers needs query-plan/resource investigation. No
+rows can also mean an older deployment or connection-string override uses a
+different `application_name`. Use a database role with activity visibility.
+
 ## Configuration
 
 Environment variables use the `MATH_UPDATER_` prefix.
@@ -63,6 +95,8 @@ Environment variables use the `MATH_UPDATER_` prefix.
 | ------------------------------------------------ | ------------------------- | ------------------------------------ |
 | `MATH_UPDATER_CONNECTION_STRING`                 | Required                  | PostgreSQL primary DSN               |
 | `MATH_UPDATER_CONNECTION_STRING_READ`            | Same as primary           | PostgreSQL read replica DSN          |
+| `MATH_UPDATER_DB_STATEMENT_TIMEOUT_SECONDS`      | `30`                      | Cancel slow statements, including lock waits, on primary and read connections |
+| `MATH_UPDATER_DB_IDLE_TRANSACTION_TIMEOUT_SECONDS` | `60`                    | Terminate connections left idle inside a transaction |
 | `MATH_UPDATER_VALKEY_URL`                        | `valkey://localhost:6379` | Valkey connection URL                |
 | `MATH_UPDATER_DB_CLAIM_BATCH_SIZE`               | `8`                       | Max conversations popped and claimed per cycle |
 | `MATH_UPDATER_DB_WRITE_BATCH_SIZE`               | `10`                      | Max results persisted per DB batch   |

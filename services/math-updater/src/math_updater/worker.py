@@ -77,6 +77,7 @@ from agora_analysis_worker_shared.logging_utils import (
     LOG_FORMAT,
     configure_worker_logging,
     log_database_error,
+    log_worker_error,
 )
 from agora_analysis_worker_shared.postgres_engine import create_ready_postgres_engine
 from agora_analysis_worker_shared.simulation_providers import (
@@ -412,10 +413,12 @@ def _start_lease_heartbeat(
                     _format_ids(lease_extension.extended_work_state_ids),
                     _format_claims(claims),
                 )
-            except Exception:
-                log.exception(
-                    "[MathUpdater] Lease heartbeat failed claims=%s",
-                    _format_claims(claims),
+            except Exception as error:
+                log_worker_error(
+                    logger=log,
+                    message="[MathUpdater] Lease heartbeat failed",
+                    error=error,
+                    context={"claims": _format_claims(claims)},
                 )
 
     heartbeat_thread = Thread(
@@ -654,14 +657,17 @@ def _process_ai_description_conversation_ids(
                 error,
             )
         else:
-            log.exception(
-                "[MathUpdater] Retryable %s failure for "
-                "conversationSlugId=%s locale=%s %s",
-                _ai_description_claim_kind(claim),
-                claim.conversation_slug_id,
-                claim.locale,
-                _ai_description_claim_target_log(claim),
-        )
+            log_worker_error(
+                logger=log,
+                message="[MathUpdater] Retryable AI description work failure",
+                error=error,
+                context={
+                    "kind": _ai_description_claim_kind(claim),
+                    "conversationSlugId": claim.conversation_slug_id,
+                    "locale": claim.locale,
+                    **_ai_description_claim_target_metadata(claim),
+                },
+            )
         is_timeout = _is_timeout_error(error)
         is_first_pass_timeout = is_first_pass_scope and is_timeout
         schedule = retry_ai_description_locale_work_item(
@@ -839,13 +845,16 @@ def _process_ai_description_conversation_ids(
                                     **_ai_description_claim_target_metadata(claim),
                                 },
                             )
-                except Exception:
-                    log.exception(
-                        "[MathUpdater] Failed to finalize AI description retry state claims=%s",
-                        ", ".join(
-                            f"{claim.conversation_slug_id}:{claim.locale}:{claim.lineage_id}"
-                            for claim in claims_for_candidate
-                        ),
+                except Exception as error:
+                    log_worker_error(
+                        logger=log,
+                        message="[MathUpdater] Failed to finalize AI description retry state",
+                        error=error,
+                        context={
+                            "conversation_ids": _format_ids(
+                                [claim.conversation_id for claim in claims_for_candidate]
+                            )
+                        },
                     )
 
         translation_claim_batches = description_translation_work_claim_batches(
@@ -878,14 +887,18 @@ def _process_ai_description_conversation_ids(
                                         **_ai_description_claim_target_metadata(claim),
                                     },
                                 )
-                    except Exception:
-                        log.exception(
-                            "[MathUpdater] Failed to finalize translation batch retry state "
-                            "claims=%s",
-                            ", ".join(
-                                f"{claim.conversation_slug_id}:{claim.locale}:{claim.description_id}"
-                                for claim in claims
+                    except Exception as error:
+                        log_worker_error(
+                            logger=log,
+                            message=(
+                                "[MathUpdater] Failed to finalize translation batch retry state"
                             ),
+                            error=error,
+                            context={
+                                "conversation_ids": _format_ids(
+                                    [claim.conversation_id for claim in claims]
+                                )
+                            },
                         )
 
         work_log(
@@ -1147,10 +1160,12 @@ def process_or_finalize_ai_description_first_pass_after_persist(
             checkpoint_activation_context=persist_result.checkpoint_activation_context,
         )
         return True
-    except Exception:
-        log.exception(
-            "[MathUpdater] AI description first pass failed after math persist claims=%s",
-            _format_claims(analysis_claims),
+    except Exception as error:
+        log_worker_error(
+            logger=log,
+            message="[MathUpdater] AI description first pass failed after math persist",
+            error=error,
+            context={"claims": _format_claims(analysis_claims)},
         )
         return False
 
@@ -1213,7 +1228,8 @@ def _run_worker_once() -> None:
     worker_id = f"math-updater:{uuid.uuid4()}"
     log.info(
         "[MathUpdater] Starting worker_id=%s claim_batch=%d compute=%d ai=%d "
-        "lease_ttl=%ds heartbeat=%ds recovery=%ds",
+        "lease_ttl=%ds heartbeat=%ds recovery=%ds db_statement_timeout=%ds "
+        "db_idle_transaction_timeout=%ds",
         worker_id,
         settings.db_claim_batch_size,
         settings.max_compute_concurrency,
@@ -1221,6 +1237,8 @@ def _run_worker_once() -> None:
         settings.lease_ttl_seconds,
         settings.heartbeat_interval_seconds,
         settings.running_recovery_interval_seconds,
+        settings.db_statement_timeout_seconds,
+        settings.db_idle_transaction_timeout_seconds,
     )
 
     try:
@@ -1239,6 +1257,8 @@ def _run_worker_once() -> None:
     primary_engine = create_ready_postgres_engine(
         connection_string=settings.connection_string,
         role="primary",
+        statement_timeout_seconds=settings.db_statement_timeout_seconds,
+        idle_transaction_timeout_seconds=settings.db_idle_transaction_timeout_seconds,
         logger=log,
         log_prefix="[MathUpdater]",
         retry_interval_seconds=settings.valkey_retry_interval_seconds,
@@ -1253,6 +1273,8 @@ def _run_worker_once() -> None:
     read_engine = create_ready_postgres_engine(
         connection_string=settings.read_dsn,
         role="read",
+        statement_timeout_seconds=settings.db_statement_timeout_seconds,
+        idle_transaction_timeout_seconds=settings.db_idle_transaction_timeout_seconds,
         logger=log,
         log_prefix="[MathUpdater]",
         retry_interval_seconds=settings.valkey_retry_interval_seconds,
@@ -1327,8 +1349,12 @@ def _run_worker_once() -> None:
                         len(claimable_ids),
                         _format_ids(claimable_ids),
                     )
-            except Exception:
-                log.exception("[MathUpdater] Reconciliation failed")
+            except Exception as error:
+                log_worker_error(
+                    logger=log,
+                    message="[MathUpdater] Reconciliation failed",
+                    error=error,
+                )
             last_reconcile = monotonic_now
 
         if monotonic_now - last_recover >= settings.running_recovery_interval_seconds:
@@ -1353,8 +1379,12 @@ def _run_worker_once() -> None:
                         "[MathUpdater] Recovered %d expired running/first-pass items",
                         len(recovered_ids),
                     )
-            except Exception:
-                log.exception("[MathUpdater] Running-work recovery failed")
+            except Exception as error:
+                log_worker_error(
+                    logger=log,
+                    message="[MathUpdater] Running-work recovery failed",
+                    error=error,
+                )
             last_recover = monotonic_now
 
         pop_current_ms = now_ms()
@@ -1366,11 +1396,12 @@ def _run_worker_once() -> None:
             time.sleep(settings.worker_poll_idle_sleep_seconds)
             continue
 
+        queued_conversation_ids = [item.conversation_id for item in queued_items]
         log.info(
             "[MathUpdater] Popped %d queued conversation(s) that may need math work ids=%s "
             "queue_lag_ms=%s depth_after=%d",
             len(queued_items),
-            _format_ids([item.conversation_id for item in queued_items]),
+            _format_ids(queued_conversation_ids),
             format_queue_lag_ms(queued_items, current_time_ms=pop_current_ms),
             queue_depth(vk),
         )
@@ -1380,17 +1411,19 @@ def _run_worker_once() -> None:
             log.info(
                 "[MathUpdater] Requeued unprocessed conversation(s) ids=%s "
                 "reason=shutdown_before_processing",
-                _format_ids([item.conversation_id for item in queued_items]),
+                _format_ids(queued_conversation_ids),
             )
             break
 
         batch_started_at = time.perf_counter()
-        processable_queue_items = queued_items
-
+        log.info(
+            "[MathUpdater] Checking non-processable analysis work ids=%s",
+            _format_ids(queued_conversation_ids),
+        )
         try:
             completed_non_processable_ids = complete_non_processable_work_items_batch(
                 primary_engine,
-                conversation_ids=[item.conversation_id for item in processable_queue_items],
+                conversation_ids=queued_conversation_ids,
             )
         except SQLAlchemyError as error:
             log_database_error(
@@ -1398,12 +1431,10 @@ def _run_worker_once() -> None:
                 message="[MathUpdater] Failed to complete non-processable analysis work",
                 error=error,
                 context={
-                    "conversation_ids": _format_ids(
-                        [item.conversation_id for item in processable_queue_items]
-                    ),
+                    "conversation_ids": _format_ids(queued_conversation_ids),
                 },
             )
-            requeue_conversations(vk, conversations=processable_queue_items)
+            requeue_conversations(vk, conversations=queued_items)
             continue
         if completed_non_processable_ids:
             log.info(
@@ -1415,7 +1446,7 @@ def _run_worker_once() -> None:
         non_processable_id_set = set(completed_non_processable_ids)
         processable_items = [
             item
-            for item in processable_queue_items
+            for item in queued_items
             if item.conversation_id not in non_processable_id_set
         ]
         if not processable_items:
@@ -1454,8 +1485,12 @@ def _run_worker_once() -> None:
                     limit=settings.db_claim_batch_size,
                     analysis_engine_epoch=settings.analysis_engine_epoch,
                 )
-            except Exception:
-                log.exception("[MathUpdater] Failed primary claimable diagnostic after zero claim")
+            except Exception as error:
+                log_worker_error(
+                    logger=log,
+                    message="[MathUpdater] Failed primary claimable diagnostic after zero claim",
+                    error=error,
+                )
             log.info(
                 "[MathUpdater] No math work processable for queued conversation(s) "
                 "ids=%s primaryClaimableCount=%d primaryClaimableIds=%s "
@@ -1546,8 +1581,12 @@ def _run_worker_once() -> None:
                         conversation_ids=[claim.conversation_id for claim in persisted_claims],
                         conversation_view_snapshot_ids=persisted_view_snapshot_ids,
                     )
-            except Exception:
-                log.exception("[MathUpdater] Resumed AI description first pass failed")
+            except Exception as error:
+                log_worker_error(
+                    logger=log,
+                    message="[MathUpdater] Resumed AI description first pass failed",
+                    error=error,
+                )
                 ready_to_complete_persisted_claims = False
             if ready_to_complete_persisted_claims:
                 try:
@@ -2118,11 +2157,13 @@ def main() -> None:
             _stop_lease_heartbeats()
             log.error("[MathUpdater] Invalid configuration errorType=ValidationError")
             raise SystemExit(1) from None
-        except Exception:
+        except Exception as error:
             _stop_lease_heartbeats()
-            log.exception(
-                "[MathUpdater] Worker crashed; restarting in %.1fs",
-                STARTUP_RETRY_INTERVAL_SECONDS,
+            log_worker_error(
+                logger=log,
+                message="[MathUpdater] Worker crashed; restarting",
+                error=error,
+                context={"retry_interval_seconds": STARTUP_RETRY_INTERVAL_SECONDS},
             )
             _sleep_before_retry(STARTUP_RETRY_INTERVAL_SECONDS)
 

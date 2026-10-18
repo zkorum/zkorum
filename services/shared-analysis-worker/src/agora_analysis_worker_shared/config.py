@@ -196,6 +196,8 @@ class Settings(BaseSettings):
 
     db_claim_batch_size: int = Field(default=8, ge=1)
     db_write_batch_size: int = Field(default=10, ge=1)
+    db_statement_timeout_seconds: int = Field(default=30, ge=1)
+    db_idle_transaction_timeout_seconds: int = Field(default=60, ge=1)
     max_compute_concurrency: int = Field(default=4, ge=1)
     max_ai_description_concurrency: int = Field(default=4, ge=1)
     lease_ttl_seconds: int = Field(default=45, ge=1)
@@ -361,8 +363,6 @@ class _LayeredPythonWorkerSettings(Settings):
 
 class AiDescriptionWorkerSettings(_LayeredPythonWorkerSettings):
     worker_env_prefix: ClassVar[str] = "AI_DESCRIPTION_RETRY_WORKER_"
-    db_statement_timeout_seconds: int = Field(default=30, ge=1)
-    db_idle_transaction_timeout_seconds: int = Field(default=60, ge=1)
     db_materialization_interval_seconds: float = Field(default=5.0, gt=0, allow_inf_nan=False)
     aws_ai_label_summary_read_timeout_seconds: float = Field(
         default=DEFAULT_AWS_RETRY_WORKER_READ_TIMEOUT_SECONDS,

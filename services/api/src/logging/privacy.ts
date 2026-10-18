@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
     createLogPrivacy,
     logContextSchema,
+    type LogContext,
 } from "../shared-backend/logPrivacy.js";
 import { logMessageTemplates, errorMessageTemplates } from "./messages.js";
 import type { SeedSuggestionEvent } from "../service/seedSuggestion.js";
@@ -108,11 +109,23 @@ export function createApiLogPrivacy(sourceRoot: URL) {
 type ApiErrorEvent =
     | { event: "email_deliverability_check_failed"; provider: "reacher" }
     | { event: "application_error" }
+    | {
+          event: "vote_buffer";
+          voteBufferOperation: NonNullable<LogContext["voteBufferOperation"]>;
+      }
     | { event: "server_start_failed" }
     | {
           event: "seed_suggestion_failed";
           seedSuggestion: Extract<SeedSuggestionEvent, { event: "failed" }>;
       };
+
+const apiErrorMessages = {
+    email_deliverability_check_failed: "Email deliverability check failed",
+    application_error: "Application event",
+    vote_buffer: "Vote buffer operation failed",
+    server_start_failed: "API server failed to start",
+    seed_suggestion_failed: "AGORA_AI_SUGGESTION_EVENT",
+} satisfies Record<ApiErrorEvent["event"], string>;
 
 export function logApiError({
     logger,
@@ -126,13 +139,7 @@ export function logApiError({
     level: "error" | "warn";
 }): void {
     logger[level](
-        { ...event, err: error },
-        event.event === "email_deliverability_check_failed"
-            ? "Email deliverability check failed"
-            : event.event === "seed_suggestion_failed"
-              ? "AGORA_AI_SUGGESTION_EVENT"
-              : event.event === "server_start_failed"
-                ? "API server failed to start"
-                : "Application event",
+        { ...event, err: error } satisfies LogContext & { err: unknown },
+        apiErrorMessages[event.event],
     );
 }
