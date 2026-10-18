@@ -73,6 +73,22 @@ def test_ai_retry_database_bounds_cannot_be_disabled(
         AiDescriptionWorkerSettings(connection_string=VALID_DSN)
 
 
+@pytest.mark.parametrize(
+    "setting", ["DB_STATEMENT_TIMEOUT_SECONDS", "DB_IDLE_TRANSACTION_TIMEOUT_SECONDS"]
+)
+@pytest.mark.parametrize("value", ["0", "inf", "nan"])
+def test_math_database_bounds_cannot_be_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    setting: str,
+    value: str,
+) -> None:
+    isolate_settings_env(monkeypatch, tmp_path)
+    monkeypatch.setenv(f"{ENV_PREFIX}{setting}", value)
+    with pytest.raises(ValidationError):
+        Settings(connection_string=VALID_DSN)
+
+
 def test_settings_rejects_unknown_config_keys(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

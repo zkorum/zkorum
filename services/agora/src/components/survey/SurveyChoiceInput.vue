@@ -15,6 +15,8 @@
       :counter="isMultipleSelection"
       :max-values="maxSelections"
       @update:model-value="handleDropdownUpdate"
+      @popup-show="handleDropdownShow"
+      @popup-hide="handleDropdownHide"
     />
     <div v-for="option in visibleOptions" :key="option.value">
       <q-checkbox
@@ -38,18 +40,24 @@
         :density="props.density"
         @select="handleSingleSelect({ optionSlugId: option.value })"
       />
-      <SurveyOptionTextInput
+      <div
         v-if="option.showText"
+        :id="`${optionTextId}-${option.value}`"
+        ref="optionTextElements"
+        class="choice-input__text-reveal"
         :class="{ 'choice-input__option-text': !usesDropdown }"
-        :option-label="option.label"
-        :show-option-label="usesDropdown && visibleOptions.length > 1"
-        :text-value="option.textValue"
-        :read-only="!option.allowsText"
-        @update:text-value="
-          (textValue) =>
-            handleOptionTextUpdate({ optionSlugId: option.value, textValue })
-        "
-      />
+      >
+        <SurveyOptionTextInput
+          :option-label="option.label"
+          :show-option-label="usesDropdown && visibleOptions.length > 1"
+          :text-value="option.textValue"
+          :read-only="!option.allowsText"
+          @update:text-value="
+            (textValue) =>
+              handleOptionTextUpdate({ optionSlugId: option.value, textValue })
+          "
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -63,7 +71,7 @@ import {
 } from "src/shared/surveyChoiceText";
 import type { SurveyChoiceDisplay } from "src/shared/types/zod";
 import { shouldUseSurveyChoiceDropdown } from "src/utils/survey/config";
-import { computed } from "vue";
+import { computed, nextTick, useId, useTemplateRef } from "vue";
 
 import ZKSelect from "../ui-library/ZKSelect.vue";
 import SurveyOptionTextInput from "./SurveyOptionTextInput.vue";
@@ -98,6 +106,9 @@ const emit = defineEmits<{
   "update:selectedMultiOptionSlugIds": [value: string[]];
   "update:optionTextValues": [value: Record<string, SurveyOptionText>];
 }>();
+const optionTextElements = useTemplateRef<HTMLElement[]>("optionTextElements");
+const optionTextId = useId();
+let dropdownSelectionOnOpen: ReadonlySet<string> = new Set();
 
 const usesDropdown = computed(() => {
   return shouldUseSurveyChoiceDropdown({
@@ -159,26 +170,58 @@ function handleOptionTextUpdate({
   });
 }
 
-function handleSingleSelect({ optionSlugId }: { optionSlugId: string }): void {
+async function revealOptionText(optionSlugId: string): Promise<void> {
+  if (
+    !props.options.some(
+      (option) => option.value === optionSlugId && option.allowsText
+    )
+  ) {
+    return;
+  }
+  await nextTick();
+  // Tiptap mounts its editable content after the option itself has rendered.
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  const element = optionTextElements.value?.find(
+    (element) => element.id === `${optionTextId}-${optionSlugId}`
+  );
+  // Reveal only the newly selected field, without opening the mobile keyboard
+  // or scrolling past choices the user may still want to select.
+  element?.scrollIntoView({
+    block: "nearest",
+    inline: "nearest",
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "instant"
+      : "smooth",
+  });
+}
+
+async function handleSingleSelect({
+  optionSlugId,
+}: {
+  optionSlugId: string;
+}): Promise<void> {
   if (!props.isRequired && props.selectedSingleOptionSlugId === optionSlugId) {
     emit("update:selectedSingleOptionSlugId", null);
     return;
   }
 
+  const isNewSelection = props.selectedSingleOptionSlugId !== optionSlugId;
   emit("update:selectedSingleOptionSlugId", optionSlugId);
+  if (isNewSelection) await revealOptionText(optionSlugId);
 }
 
-function handleMultiToggle({
+async function handleMultiToggle({
   optionSlugId,
   selected,
 }: {
   optionSlugId: string;
   selected: boolean;
-}): void {
+}): Promise<void> {
   const selection = new Set(props.selectedMultiOptionSlugIds);
   if (selected) selection.add(optionSlugId);
   else selection.delete(optionSlugId);
   emit("update:selectedMultiOptionSlugIds", [...selection]);
+  if (selected) await revealOptionText(optionSlugId);
 }
 
 function handleDropdownUpdate(value: string | string[] | null): void {
@@ -195,6 +238,20 @@ function handleDropdownUpdate(value: string | string[] | null): void {
     Array.isArray(value) ? null : value
   );
 }
+
+function handleDropdownShow(): void {
+  dropdownSelectionOnOpen = selectedOptionSlugIds.value;
+}
+
+async function handleDropdownHide(): Promise<void> {
+  const newTextOption = props.options.findLast(
+    (option) =>
+      option.allowsText &&
+      selectedOptionSlugIds.value.has(option.value) &&
+      !dropdownSelectionOnOpen.has(option.value)
+  );
+  if (newTextOption !== undefined) await revealOptionText(newTextOption.value);
+}
 </script>
 
 <style scoped lang="scss">
@@ -209,6 +266,10 @@ function handleDropdownUpdate(value: string | string[] | null): void {
 
 .choice-input__option-text {
   margin-inline-start: 2.225rem;
+}
+
+.choice-input__text-reveal {
+  scroll-margin-block: 0.75rem;
 }
 
 .choice-input__checkbox {

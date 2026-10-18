@@ -14,6 +14,7 @@ import {
 import type { Valkey } from "./valkey.js";
 import { VALKEY_QUEUE_KEYS } from "./valkeyQueues.js";
 import { nowZeroMs } from "./util.js";
+import type { LogContext } from "./logPrivacy.js";
 
 export interface AnalysisSchedule {
     conversationId: number;
@@ -39,17 +40,14 @@ interface HasSurveyResponsesForMathWorkParams {
 }
 
 interface EnqueueConversationForMathWorkParams {
-    valkey: Valkey | undefined;
-    schedule: Pick<
-        AnalysisSchedule,
-        "conversationId" | "conversationSlugId"
-    >;
+    valkey: Pick<Valkey, "zadd"> | undefined;
+    schedule: Pick<AnalysisSchedule, "conversationId" | "conversationSlugId">;
     log: AnalysisSchedulerLogger;
 }
 
 interface EnqueueScheduledConversationForMathWorkParams {
     db: PostgresJsDatabase;
-    valkey: Valkey | undefined;
+    valkey: Pick<Valkey, "zadd"> | undefined;
     conversationId: number;
     log: AnalysisSchedulerLogger;
 }
@@ -135,7 +133,10 @@ export async function scheduleAnalysisUpdate({
             .from(conversationTable)
             .leftJoin(
                 polisConversationConfigTable,
-                eq(polisConversationConfigTable.id, conversationTable.polisConfigId),
+                eq(
+                    polisConversationConfigTable.id,
+                    conversationTable.polisConfigId,
+                ),
             )
             .where(eq(conversationTable.id, conversationId))
             // FK checks from analysis workers take KEY SHARE on conversation.
@@ -150,19 +151,24 @@ export async function scheduleAnalysisUpdate({
 
         const conversation = conversations[0];
         log.info(
-            `[AnalysisScheduler] Scheduling analysis start conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId}`,
+            {
+                event: "analysis_schedule",
+                conversationId,
+                conversationSlugId: conversation.conversationSlugId,
+            } satisfies LogContext,
+            "[AnalysisScheduler] Scheduling analysis start",
         );
 
-        let skipReason: string | null = null;
-        if (conversation.currentContentId === null) {
-            skipReason = "deleted";
-        } else if (conversation.conversationType !== "polis") {
-            skipReason = `type:${conversation.conversationType}`;
-        }
-
-        if (skipReason !== null) {
+        if (
+            conversation.currentContentId === null ||
+            conversation.conversationType !== "polis"
+        ) {
             log.info(
-                `[AnalysisScheduler] Skipping analysis schedule conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId} reason=${skipReason}`,
+                {
+                    event: "analysis_schedule",
+                    conversationId,
+                } satisfies LogContext,
+                "[AnalysisScheduler] Skipping deleted or non-Polis conversation",
             );
             return {
                 conversationId,
@@ -183,15 +189,23 @@ export async function scheduleAnalysisUpdate({
 
         const dataGeneration = conversation.analysisDataGeneration + 1;
         log.info(
-            `[AnalysisScheduler] Incrementing analysis generation conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId} from=${String(conversation.analysisDataGeneration)} to=${String(dataGeneration)}`,
+            {
+                event: "analysis_schedule",
+                conversationId,
+                dataGeneration,
+            } satisfies LogContext,
+            "[AnalysisScheduler] Incrementing analysis generation",
         );
         await tx
             .update(polisConversationConfigTable)
             .set({ analysisDataGeneration: dataGeneration })
-            .where(eq(polisConversationConfigTable.id, conversation.polisConfigId));
+            .where(
+                eq(polisConversationConfigTable.id, conversation.polisConfigId),
+            );
 
         log.info(
-            `[AnalysisScheduler] Fetching current opinion-group specs conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId}`,
+            { event: "analysis_schedule", conversationId } satisfies LogContext,
+            "[AnalysisScheduler] Fetching current opinion-group specs",
         );
         const specRows = await tx
             .select({
@@ -205,7 +219,12 @@ export async function scheduleAnalysisUpdate({
             );
         const currentSpecIds = getCurrentOpinionGroupSpecIds(specRows);
         log.info(
-            `[AnalysisScheduler] Current opinion-group specs conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId} count=${String(currentSpecIds.length)} ids=${currentSpecIds.join(",")}`,
+            {
+                event: "analysis_schedule",
+                conversationId,
+                specCount: currentSpecIds.length,
+            } satisfies LogContext,
+            "[AnalysisScheduler] Loaded current opinion-group specs",
         );
 
         if (currentSpecIds.length === 0) {
@@ -218,7 +237,12 @@ export async function scheduleAnalysisUpdate({
         }
 
         log.info(
-            `[AnalysisScheduler] Ensuring analysis work-state rows conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId} specs=${String(currentSpecIds.length)}`,
+            {
+                event: "analysis_schedule",
+                conversationId,
+                specCount: currentSpecIds.length,
+            } satisfies LogContext,
+            "[AnalysisScheduler] Ensuring analysis work-state rows",
         );
         await tx
             .insert(analysisWorkStateTable)
@@ -238,7 +262,8 @@ export async function scheduleAnalysisUpdate({
             });
 
         log.info(
-            `[AnalysisScheduler] Loading analysis work-state rows conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId}`,
+            { event: "analysis_schedule", conversationId } satisfies LogContext,
+            "[AnalysisScheduler] Loading analysis work-state rows",
         );
         const workStateRows = await tx
             .select({
@@ -257,7 +282,12 @@ export async function scheduleAnalysisUpdate({
             )
             .for("update");
         log.info(
-            `[AnalysisScheduler] Updating analysis work-state rows conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId} rows=${String(workStateRows.length)}`,
+            {
+                event: "analysis_schedule",
+                conversationId,
+                count: workStateRows.length,
+            } satisfies LogContext,
+            "[AnalysisScheduler] Updating analysis work-state rows",
         );
 
         for (const row of workStateRows) {
@@ -273,7 +303,13 @@ export async function scheduleAnalysisUpdate({
         }
 
         log.info(
-            `[AnalysisScheduler] Scheduling analysis complete conversationId=${String(conversationId)} conversationSlugId=${conversation.conversationSlugId} generation=${String(dataGeneration)} rows=${String(workStateRows.length)}`,
+            {
+                event: "analysis_schedule",
+                conversationId,
+                dataGeneration,
+                count: workStateRows.length,
+            } satisfies LogContext,
+            "[AnalysisScheduler] Scheduling analysis complete",
         );
         return {
             conversationId,
@@ -290,12 +326,7 @@ export async function getAnalysisQueueConversation({
 }: {
     db: PostgresJsDatabase;
     conversationId: number;
-}): Promise<
-    Pick<
-        AnalysisSchedule,
-        "conversationId" | "conversationSlugId"
-    >
-> {
+}): Promise<Pick<AnalysisSchedule, "conversationId" | "conversationSlugId">> {
     const rows = await db
         .select({ conversationSlugId: conversationTable.slugId })
         .from(conversationTable)
@@ -321,13 +352,23 @@ export function enqueueConversationForMathWork({
     const member = String(schedule.conversationId);
     if (valkey === undefined) {
         log.info(
-            `[AnalysisScheduler] Skipped queueing conversation for math work conversationId=${member} conversationSlugId=${schedule.conversationSlugId} queue=${VALKEY_QUEUE_KEYS.ANALYSIS_DIRTY}: valkey not configured`,
+            {
+                event: "math_queue",
+                conversationId: schedule.conversationId,
+                valkeyAvailable: false,
+            } satisfies LogContext,
+            "[AnalysisScheduler] Skipped math queueing because Valkey is unavailable",
         );
         return;
     }
     const score = Date.now();
     log.info(
-        `[AnalysisScheduler] Queueing conversation for math work conversationId=${member} conversationSlugId=${schedule.conversationSlugId} queue=${VALKEY_QUEUE_KEYS.ANALYSIS_DIRTY} score=${String(score)}`,
+        {
+            event: "math_queue",
+            conversationId: schedule.conversationId,
+            conversationSlugId: schedule.conversationSlugId,
+        } satisfies LogContext,
+        "[AnalysisScheduler] Queueing conversation for math work",
     );
     void (async () => {
         try {
@@ -335,12 +376,21 @@ export function enqueueConversationForMathWork({
                 [member]: score,
             });
             log.info(
-                `[AnalysisScheduler] Queued conversation for math work conversationId=${member} conversationSlugId=${schedule.conversationSlugId} queue=${VALKEY_QUEUE_KEYS.ANALYSIS_DIRTY} result=${String(result)}`,
+                {
+                    event: "math_queue",
+                    conversationId: schedule.conversationId,
+                    count: result,
+                } satisfies LogContext,
+                "[AnalysisScheduler] Queued conversation for math work",
             );
         } catch (error: unknown) {
             log.error(
-                error,
-                `[AnalysisScheduler] Failed to queue conversation for math work conversationId=${member} conversationSlugId=${schedule.conversationSlugId} queue=${VALKEY_QUEUE_KEYS.ANALYSIS_DIRTY}`,
+                {
+                    event: "math_queue",
+                    conversationId: schedule.conversationId,
+                    err: error,
+                } satisfies LogContext & { err: unknown },
+                "[AnalysisScheduler] Failed to queue conversation for math work",
             );
         }
     })();
@@ -353,12 +403,5 @@ export async function enqueueScheduledConversationForMathWork({
     log,
 }: EnqueueScheduledConversationForMathWorkParams): Promise<void> {
     const schedule = await getAnalysisQueueConversation({ db, conversationId });
-    if (valkey === undefined) {
-        log.info(
-            `[AnalysisScheduler] Skipped queueing scheduled math work conversationId=${String(conversationId)} conversationSlugId=${schedule.conversationSlugId}: valkey not configured`,
-        );
-        return;
-    }
-
     enqueueConversationForMathWork({ valkey, schedule, log });
 }

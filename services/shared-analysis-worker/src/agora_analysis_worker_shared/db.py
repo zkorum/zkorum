@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 import uuid
 from collections import Counter
 from dataclasses import dataclass
@@ -549,6 +550,11 @@ def claim_work_items_and_fetch_inputs_batch(
     limit: int,
     analysis_engine_epoch: int,
 ) -> ClaimedInputBatch:
+    started_at = time.perf_counter()
+    log.info(
+        "[MathUpdaterDB] Claiming analysis work conversation_ids=%s",
+        conversation_ids,
+    )
     with Session(engine) as session:
         session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
         claims = _claim_work_items_batch(
@@ -559,9 +565,21 @@ def claim_work_items_and_fetch_inputs_batch(
             limit=limit,
             analysis_engine_epoch=analysis_engine_epoch,
         )
+        log.info(
+            "[MathUpdaterDB] Loading vote inputs claimed=%d claim_ms=%.1f",
+            len(claims),
+            (time.perf_counter() - started_at) * 1000,
+        )
+        input_started_at = time.perf_counter()
         rows_by_conversation_id = _fetch_vote_input_rows_batch(
             session,
             conversation_ids=[claim.conversation_id for claim in claims],
+        )
+        log.info(
+            "[MathUpdaterDB] Committing analysis claims conversations=%d rows=%d input_ms=%.1f",
+            len(rows_by_conversation_id),
+            sum(len(rows) for rows in rows_by_conversation_id.values()),
+            (time.perf_counter() - input_started_at) * 1000,
         )
         session.commit()
 

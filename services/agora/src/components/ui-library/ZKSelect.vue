@@ -23,6 +23,7 @@
     :virtual-scroll-sticky-size-start="multiple ? popupActionsHeight : 0"
     @update:model-value="emit('update:modelValue', $event)"
     @filter="handleFilter"
+    @popup-show="emit('popupShow')"
     @popup-hide="handlePopupHide"
   >
     <template v-if="multiple" #before-options>
@@ -92,6 +93,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | string[] | null];
+  popupShow: [];
+  popupHide: [];
 }>();
 
 const select = useTemplateRef<QSelect>("select");
@@ -143,6 +146,7 @@ function handlePopupHide(): void {
   if (props.multiple && props.searchable) {
     select.value?.updateInputValue("", true);
   }
+  emit("popupHide");
 }
 
 function closePopup(): void {

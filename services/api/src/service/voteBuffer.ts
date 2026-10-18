@@ -82,6 +82,7 @@ import { zodVotingAction, type VotingOption } from "@/shared/types/zod.js";
 import { z } from "zod";
 import { log } from "@/app.js";
 import { logApiError } from "@/logging/privacy.js";
+import type { LogContext } from "@/shared-backend/logPrivacy.js";
 import { nowZeroMs } from "@/shared/util.js";
 import type { Valkey } from "@/shared-backend/valkey.js";
 import { VALKEY_QUEUE_KEYS } from "@/shared-backend/valkeyQueues.js";
@@ -335,7 +336,10 @@ export function createVoteBuffer({
                 logApiError({
                     logger: log,
                     level: "error",
-                    event: { event: "application_error" },
+                    event: {
+                        event: "vote_buffer",
+                        voteBufferOperation: "enqueue",
+                    },
                     error,
                 });
             }
@@ -347,14 +351,21 @@ export function createVoteBuffer({
         if (previous === undefined || vote.timestamp >= previous.timestamp)
             pendingVotes.set(key, vote);
 
-        // Log vote addition/update
         if (wasExisting) {
             log.info(
-                `[VoteBuffer] Updated buffered vote (${vote.vote}) for user ${vote.userId} on opinion ${String(vote.opinionId)} (duplicate within flush window)`,
+                {
+                    event: "vote_buffer",
+                    count: pendingVotes.size,
+                } satisfies LogContext,
+                "[VoteBuffer] Updated locally buffered vote",
             );
         } else {
             log.info(
-                `[VoteBuffer] Added vote (${vote.vote}) for user ${vote.userId} on opinion ${String(vote.opinionId)} (buffer size: ${String(pendingVotes.size)})`,
+                {
+                    event: "vote_buffer",
+                    count: pendingVotes.size,
+                } satisfies LogContext,
+                "[VoteBuffer] Added locally buffered vote",
             );
         }
     };
@@ -414,9 +425,7 @@ export function createVoteBuffer({
             if (result.success) {
                 validLocalVotes.push(result.data);
             } else {
-                log.warn(
-                    `[VoteBuffer] Skipping invalid local vote: ${result.error.message}`,
-                );
+                log.warn("[VoteBuffer] Skipping invalid local vote");
             }
         }
 
@@ -470,25 +479,34 @@ export function createVoteBuffer({
                                 }
                             } else {
                                 log.warn(
-                                    `[VoteBuffer] Skipping invalid Valkey vote: ${result.error.message}`,
+                                    "[VoteBuffer] Skipping invalid Valkey vote",
                                 );
                             }
                         } catch {
                             log.warn(
-                                `[VoteBuffer] Skipping malformed JSON in Valkey: ${member}`,
+                                "[VoteBuffer] Skipping malformed JSON in Valkey",
                             );
                         }
                     }
 
                     log.info(
-                        `[VoteBuffer] Fetched ${String(entries.length)} votes from Valkey`,
+                        {
+                            event: "vote_buffer",
+                            voteCount: entries.length,
+                        } satisfies LogContext,
+                        "[VoteBuffer] Fetched votes from Valkey",
                     );
                 }
             } catch (error: unknown) {
-                log.error(
+                logApiError({
+                    logger: log,
+                    level: "error",
+                    event: {
+                        event: "vote_buffer",
+                        voteBufferOperation: "fetch",
+                    },
                     error,
-                    "[VoteBuffer] Failed to fetch votes from Valkey",
-                );
+                });
             }
         }
 
@@ -499,7 +517,14 @@ export function createVoteBuffer({
             return;
         }
 
-        log.info(`[VoteBuffer] Flushing ${String(batch.length)} votes`);
+        const flushStartedAt = performance.now();
+        log.info(
+            {
+                event: "vote_buffer",
+                voteCount: batch.length,
+            } satisfies LogContext,
+            "[VoteBuffer] Flushing votes",
+        );
 
         // PostgreSQL parameter limit: ~65,535
         // vote_content: 3 columns, vote_table: 3 columns
@@ -512,7 +537,12 @@ export function createVoteBuffer({
         }
 
         log.info(
-            `[VoteBuffer] Processing ${String(batch.length)} votes in ${String(batches.length)} transaction(s)`,
+            {
+                event: "vote_buffer",
+                voteCount: batch.length,
+                transactionCount: batches.length,
+            } satisfies LogContext,
+            "[VoteBuffer] Processing vote transactions",
         );
 
         // Track genuinely new voters per opinion across all transaction batches.
@@ -526,8 +556,15 @@ export function createVoteBuffer({
 
         try {
             for (const [batchIndex, voteBatch] of batches.entries()) {
+                const transactionStartedAt = performance.now();
                 log.info(
-                    `[VoteBuffer] Processing transaction ${String(batchIndex + 1)}/${String(batches.length)} with ${String(voteBatch.length)} votes`,
+                    {
+                        event: "vote_buffer",
+                        transactionIndex: batchIndex + 1,
+                        transactionCount: batches.length,
+                        voteCount: voteBatch.length,
+                    } satisfies LogContext,
+                    "[VoteBuffer] Processing transaction",
                 );
 
                 await db.transaction(async (tx) => {
@@ -624,7 +661,12 @@ export function createVoteBuffer({
                         }
 
                         log.info(
-                            `[VoteBuffer] Bulk check: ${String(existingVotesMap.size)} existing votes found out of ${String(voteBatch.length)} in batch`,
+                            {
+                                event: "vote_buffer",
+                                count: existingVotesMap.size,
+                                voteCount: voteBatch.length,
+                            } satisfies LogContext,
+                            "[VoteBuffer] Checked existing votes",
                         );
                     }
 
@@ -654,7 +696,12 @@ export function createVoteBuffer({
                     }
 
                     log.info(
-                        `[VoteBuffer] Vote breakdown: ${String(newVotes.length)} new, ${String(existingVotes.length)} updates`,
+                        {
+                            event: "vote_buffer",
+                            newVoteCount: newVotes.length,
+                            updatedVoteCount: existingVotes.length,
+                        } satisfies LogContext,
+                        "[VoteBuffer] Vote breakdown",
                     );
 
                     // Step 2: Bulk INSERT new vote_table rows with conflict handling
@@ -685,7 +732,11 @@ export function createVoteBuffer({
                             const conflictCount =
                                 newVotes.length - newVoteTableResults.length;
                             log.warn(
-                                `[VoteBuffer] Race condition: ${String(conflictCount)} vote(s) skipped (already inserted by concurrent batch)`,
+                                {
+                                    event: "vote_buffer",
+                                    voteCount: conflictCount,
+                                } satisfies LogContext,
+                                "[VoteBuffer] Concurrent vote inserts skipped",
                             );
                         }
 
@@ -849,7 +900,12 @@ export function createVoteBuffer({
                     }
 
                     log.info(
-                        `[VoteBuffer] Updated opinion counters for ${String(opinionsUpdated)} opinion(s) out of ${String(counterDeltas.size)} with changes`,
+                        {
+                            event: "vote_buffer",
+                            opinionCount: opinionsUpdated,
+                            count: counterDeltas.size,
+                        } satisfies LogContext,
+                        "[VoteBuffer] Updated opinion counters",
                     );
 
                     if (conversationIds.size > 0) {
@@ -864,7 +920,11 @@ export function createVoteBuffer({
                             );
 
                         log.info(
-                            `[VoteBuffer] Updated lastReactedAt for ${String(conversationIds.size)} conversation(s)`,
+                            {
+                                event: "vote_buffer",
+                                count: conversationIds.size,
+                            } satisfies LogContext,
+                            "[VoteBuffer] Updated conversation activity",
                         );
 
                         for (const conversationId of conversationIds) {
@@ -895,7 +955,11 @@ export function createVoteBuffer({
 
                     // Schedule opinion-group analysis once per affected conversation.
                     log.info(
-                        `[VoteBuffer] Scheduling analysis for ${String(conversationIds.size)} affected conversation(s)`,
+                        {
+                            event: "vote_buffer",
+                            count: conversationIds.size,
+                        } satisfies LogContext,
+                        "[VoteBuffer] Scheduling analysis",
                     );
                     for (const conversationId of conversationIds) {
                         const analysisSchedule = await scheduleAnalysisUpdate({
@@ -904,7 +968,15 @@ export function createVoteBuffer({
                             log,
                         });
                         log.info(
-                            `[VoteBuffer] Scheduled analysis for conversationId=${String(conversationId)} conversationSlugId=${analysisSchedule.conversationSlugId} dataGeneration=${String(analysisSchedule.dataGeneration)} specs=${String(analysisSchedule.scheduledSpecCount)}`,
+                            {
+                                event: "vote_buffer",
+                                conversationId,
+                                conversationSlugId:
+                                    analysisSchedule.conversationSlugId,
+                                dataGeneration: analysisSchedule.dataGeneration,
+                                specCount: analysisSchedule.scheduledSpecCount,
+                            } satisfies LogContext,
+                            "[VoteBuffer] Scheduled analysis",
                         );
                         analysisSchedules.push(analysisSchedule);
                     }
@@ -938,18 +1010,36 @@ export function createVoteBuffer({
                     );
 
                 log.info(
-                    `[VoteBuffer] Transaction ${String(batchIndex + 1)}/${String(batches.length)} completed`,
+                    {
+                        event: "vote_buffer",
+                        transactionIndex: batchIndex + 1,
+                        transactionCount: batches.length,
+                        durationMs: performance.now() - transactionStartedAt,
+                    } satisfies LogContext,
+                    "[VoteBuffer] Transaction completed",
                 );
             }
 
             log.info(
-                `[VoteBuffer] Successfully flushed ${String(batch.length)} votes across ${String(batches.length)} transaction(s)`,
+                {
+                    event: "vote_buffer",
+                    voteCount: batch.length,
+                    transactionCount: batches.length,
+                    durationMs: performance.now() - flushStartedAt,
+                } satisfies LogContext,
+                "[VoteBuffer] Successfully flushed votes",
             );
 
             for (const schedule of analysisSchedules) {
                 const valkey = getValkey();
                 log.info(
-                    `[VoteBuffer] Queueing scheduled math work conversationId=${String(schedule.conversationId)} conversationSlugId=${schedule.conversationSlugId} valkey=${valkey === undefined ? "missing" : "connected"}`,
+                    {
+                        event: "math_queue",
+                        conversationId: schedule.conversationId,
+                        conversationSlugId: schedule.conversationSlugId,
+                        valkeyAvailable: valkey !== undefined,
+                    } satisfies LogContext,
+                    "[VoteBuffer] Queueing scheduled math work",
                 );
                 enqueueConversationForMathWork({
                     valkey,
@@ -1057,14 +1147,23 @@ export function createVoteBuffer({
                     }
 
                     log.info(
-                        `[VoteBuffer] Created vote notifications for ${String(votesPerOpinion.size)} opinion(s)`,
+                        {
+                            event: "vote_buffer",
+                            opinionCount: votesPerOpinion.size,
+                        } satisfies LogContext,
+                        "[VoteBuffer] Created vote notifications",
                     );
                 }
             } catch (notifError: unknown) {
-                log.error(
-                    notifError,
-                    "[VoteBuffer] Failed to create vote notifications (votes were flushed successfully)",
-                );
+                logApiError({
+                    logger: log,
+                    level: "error",
+                    event: {
+                        event: "vote_buffer",
+                        voteBufferOperation: "notify",
+                    },
+                    error: notifError,
+                });
             }
 
             // At-least-once: Delete from Valkey only after successful processing
@@ -1093,17 +1192,32 @@ export function createVoteBuffer({
                     );
 
                     log.info(
-                        `[VoteBuffer] Cleaned up ${String(deletedCount)} entries from Valkey (${String(processedValkeyEntries.length)} attempted)`,
+                        {
+                            event: "vote_buffer",
+                            count: deletedCount,
+                            voteCount: processedValkeyEntries.length,
+                        } satisfies LogContext,
+                        "[VoteBuffer] Cleaned up Valkey entries",
                     );
                 } catch (error: unknown) {
-                    log.error(
+                    logApiError({
+                        logger: log,
+                        level: "error",
+                        event: {
+                            event: "vote_buffer",
+                            voteBufferOperation: "cleanup",
+                        },
                         error,
-                        "[VoteBuffer] Failed to cleanup Valkey entries (will be retried on next flush)",
-                    );
+                    });
                 }
             }
         } catch (error: unknown) {
-            log.error(error, "[VoteBuffer] Failed to flush votes");
+            logApiError({
+                logger: log,
+                level: "error",
+                event: { event: "vote_buffer", voteBufferOperation: "flush" },
+                error,
+            });
             for (const [key, vote] of inFlightVotes) {
                 if (sharedPayloads.has(key)) continue;
                 const pending = pendingVotes.get(key);
@@ -1170,7 +1284,7 @@ export function createVoteBuffer({
             logApiError({
                 logger: log,
                 level: "error",
-                event: { event: "application_error" },
+                event: { event: "vote_buffer", voteBufferOperation: "flush" },
                 error,
             });
         }

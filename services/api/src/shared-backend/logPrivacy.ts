@@ -177,6 +177,16 @@ export const logContextSchema = z.object({
     participantCount: counter.optional(),
     opinionCount: counter.optional(),
     voteCount: counter.optional(),
+    dataGeneration: counter.optional(),
+    specCount: counter.optional(),
+    transactionIndex: counter.optional(),
+    transactionCount: counter.optional(),
+    newVoteCount: counter.optional(),
+    updatedVoteCount: counter.optional(),
+    valkeyAvailable: z.boolean().optional(),
+    voteBufferOperation: z
+        .enum(["enqueue", "fetch", "flush", "notify", "cleanup"])
+        .optional(),
     parameterCount: counter.optional(),
     durationMs: counter.optional(),
     responseTime: counter.optional(),
@@ -202,6 +212,9 @@ export const logContextSchema = z.object({
             "seed_suggestion",
             "seed_suggestion_failed",
             "database_query",
+            "vote_buffer",
+            "analysis_schedule",
+            "math_queue",
             "log_sanitization_failed",
         ])
         .optional(),
@@ -229,6 +242,8 @@ export const logContextSchema = z.object({
         })
         .optional(),
 });
+
+export type LogContext = z.infer<typeof logContextSchema>;
 
 function ownValue({ value, key }: { value: unknown; key: string }): unknown {
     if (typeof value !== "object" || value === null) return undefined;

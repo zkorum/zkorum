@@ -1,9 +1,12 @@
 import Fastify from "fastify";
 import { AxiosError, AxiosHeaders } from "axios";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { createApiLogPrivacy, logApiError } from "./privacy.js";
 import { logSeedSuggestionEvent } from "../service/seedSuggestion.js";
+import { enqueueConversationForMathWork } from "../shared-backend/analysisScheduler.js";
+import type { Valkey } from "../shared-backend/valkey.js";
+import { VALKEY_QUEUE_KEYS } from "../shared-backend/valkeyQueues.js";
 
 function captureServer() {
     const lines: string[] = [];
@@ -33,6 +36,172 @@ function captureServer() {
 }
 
 describe("API logging privacy", () => {
+    it.each([false, true])(
+        "retains actual math queue completion diagnostics (failure=%s)",
+        async (fails) => {
+            const capture = captureServer();
+            const queueCalls: Parameters<Valkey["zadd"]>[] = [];
+            const valkey = {
+                zadd(...args: Parameters<Valkey["zadd"]>) {
+                    queueCalls.push(args);
+                    if (fails)
+                        return Promise.reject(
+                            new Error("private-valkey-provider-response"),
+                        );
+                    return Promise.resolve(0);
+                },
+            } satisfies Pick<Valkey, "zadd">;
+            try {
+                enqueueConversationForMathWork({
+                    valkey,
+                    log: capture.server.log,
+                    schedule: {
+                        conversationId: 459,
+                        conversationSlugId: "abcd1234",
+                    },
+                });
+                await vi.waitFor(() => {
+                    expect(capture.records()).toHaveLength(2);
+                });
+                expect(queueCalls).toHaveLength(1);
+                expect(queueCalls.at(0)?.[0]).toBe(
+                    VALKEY_QUEUE_KEYS.ANALYSIS_DIRTY,
+                );
+                z.object({ "459": z.number().nonnegative() })
+                    .strict()
+                    .parse(queueCalls.at(0)?.[1]);
+                expect(capture.records().at(0)).toMatchObject({
+                    event: "math_queue",
+                    conversationId: 459,
+                    conversationSlugId: "abcd1234",
+                    msg: "[AnalysisScheduler] Queueing conversation for math work",
+                });
+                expect(capture.records().at(1)).toMatchObject(
+                    fails
+                        ? {
+                              level: 50,
+                              event: "math_queue",
+                              conversationId: 459,
+                              msg: "[AnalysisScheduler] Failed to queue conversation for math work",
+                              err: { type: "Error" },
+                          }
+                        : {
+                              event: "math_queue",
+                              conversationId: 459,
+                              count: 0,
+                              msg: "[AnalysisScheduler] Queued conversation for math work",
+                          },
+                );
+                expect(capture.lines.join("")).not.toContain("private-");
+            } finally {
+                await capture.server.close();
+            }
+        },
+    );
+
+    it("rejects invalid new diagnostic fields from child loggers", async () => {
+        const capture = captureServer();
+        try {
+            const child = capture.server.log.child({
+                event: "vote_buffer",
+                voteBufferOperation: "private-operation",
+                dataGeneration: "private-generation",
+                specCount: -1,
+                transactionIndex: Number.POSITIVE_INFINITY,
+                voteCount: 8,
+            });
+            child.info("[VoteBuffer] Flushing votes");
+            expect(capture.records().at(0)).toMatchObject({
+                event: "vote_buffer",
+                voteCount: 8,
+                msg: "[VoteBuffer] Flushing votes",
+            });
+            for (const key of [
+                "voteBufferOperation",
+                "dataGeneration",
+                "specCount",
+                "transactionIndex",
+            ])
+                expect(capture.records().at(0)).not.toHaveProperty(key);
+            expect(capture.lines.join("")).not.toContain("private-");
+        } finally {
+            await capture.server.close();
+        }
+    });
+
+    it("retains vote flush and math scheduling diagnostics at the emitted boundary", async () => {
+        const capture = captureServer();
+        try {
+            capture.server.log.info(
+                {
+                    event: "vote_buffer",
+                    voteCount: 8,
+                    transactionIndex: 1,
+                    transactionCount: 2,
+                    durationMs: 42,
+                    vote: "private-vote-choice",
+                    body: "private-statement-text",
+                },
+                "[VoteBuffer] Transaction completed",
+            );
+            capture.server.log.info(
+                {
+                    event: "analysis_schedule",
+                    conversationId: 459,
+                    dataGeneration: 12,
+                    specCount: 1,
+                },
+                "[AnalysisScheduler] Scheduling analysis complete",
+            );
+            enqueueConversationForMathWork({
+                valkey: undefined,
+                log: capture.server.log,
+                schedule: {
+                    conversationId: 459,
+                    conversationSlugId: "abcd1234",
+                },
+            });
+            logApiError({
+                logger: capture.server.log,
+                level: "error",
+                event: { event: "vote_buffer", voteBufferOperation: "flush" },
+                error: new Error("private-provider-message"),
+            });
+            expect(capture.records()).toEqual([
+                expect.objectContaining({
+                    msg: "[VoteBuffer] Transaction completed",
+                    event: "vote_buffer",
+                    voteCount: 8,
+                    transactionIndex: 1,
+                    transactionCount: 2,
+                    durationMs: 42,
+                }),
+                expect.objectContaining({
+                    msg: "[AnalysisScheduler] Scheduling analysis complete",
+                    conversationId: 459,
+                    dataGeneration: 12,
+                    specCount: 1,
+                }),
+                expect.objectContaining({
+                    msg: "[AnalysisScheduler] Skipped math queueing because Valkey is unavailable",
+                    event: "math_queue",
+                    conversationId: 459,
+                    valkeyAvailable: false,
+                }),
+                expect.objectContaining({
+                    msg: "Vote buffer operation failed",
+                    event: "vote_buffer",
+                    voteBufferOperation: "flush",
+                }),
+            ]);
+            expect(capture.records().at(3)).toMatchObject({
+                err: { type: "Error" },
+            });
+            expect(capture.lines.join("")).not.toContain("private-");
+        } finally {
+            await capture.server.close();
+        }
+    });
     it("emits actionable startup failures with redacted Node stack traces", async () => {
         const capture = captureServer();
         const error = Object.assign(

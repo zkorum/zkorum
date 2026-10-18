@@ -68,6 +68,12 @@ def database_error_summary(error: BaseException) -> str:
     return " ".join(parts)
 
 
+def _context_suffix(context: Mapping[str, object] | None) -> str:
+    if not context:
+        return ""
+    return f" ({' '.join(f'{key}={value}' for key, value in context.items())})"
+
+
 def log_database_error(
     *,
     logger: logging.Logger,
@@ -75,13 +81,23 @@ def log_database_error(
     error: BaseException,
     context: Mapping[str, object] | None = None,
 ) -> None:
-    context_parts = []
-    if context is not None:
-        context_parts = [f"{key}={value}" for key, value in context.items()]
-
     logger.error(
         "%s%s: %s",
         message,
-        f" ({' '.join(context_parts)})" if context_parts else "",
+        _context_suffix(context),
         database_error_summary(error),
     )
+
+
+def log_worker_error(
+    *,
+    logger: logging.Logger,
+    message: str,
+    error: Exception,
+    context: Mapping[str, object] | None = None,
+) -> None:
+    # SQLAlchemy tracebacks include SQL even when hide_parameters is enabled.
+    if isinstance(error, SQLAlchemyError):
+        log_database_error(logger=logger, message=message, error=error, context=context)
+        return
+    logger.error("%s%s", message, _context_suffix(context), exc_info=error)

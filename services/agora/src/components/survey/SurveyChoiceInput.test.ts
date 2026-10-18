@@ -1,18 +1,40 @@
 import { QCheckbox, QSelect, Quasar } from "quasar";
 import type { SurveyOptionText } from "src/shared/surveyChoiceText";
 import type { SurveyChoiceDisplay } from "src/shared/types/zod";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type App, createApp, defineComponent, h, nextTick, ref } from "vue";
 import { createI18n } from "vue-i18n";
 
 import SurveyChoiceInput from "./SurveyChoiceInput.vue";
 
 const mounted: Array<{ app: App; target: HTMLElement }> = [];
+const originalScrollIntoView = Object.getOwnPropertyDescriptor(
+  Element.prototype,
+  "scrollIntoView"
+);
+beforeEach(() => {
+  // jsdom has no layout or media-query implementation.
+  Element.prototype.scrollIntoView = vi.fn();
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false }))
+  );
+});
 afterEach(() => {
   for (const { app, target } of mounted.splice(0)) {
     app.unmount();
     target.remove();
   }
+  if (originalScrollIntoView === undefined) {
+    Reflect.deleteProperty(Element.prototype, "scrollIntoView");
+  } else {
+    Object.defineProperty(
+      Element.prototype,
+      "scrollIntoView",
+      originalScrollIntoView
+    );
+  }
+  vi.unstubAllGlobals();
 });
 
 async function mountChoice({
