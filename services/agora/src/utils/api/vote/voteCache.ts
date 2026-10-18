@@ -8,16 +8,18 @@ import type { UserVotesQueryKey } from "src/utils/query/conversationQueryKeys";
 
 import { mapCachedOpinions, type OpinionCache } from "../comment/opinionCache";
 
-type VoteCounts = Pick<
-  DisplayedOpinionItem,
-  "numAgrees" | "numDisagrees" | "numPasses"
+type VoteCounts = Readonly<
+  Pick<DisplayedOpinionItem, "numAgrees" | "numDisagrees" | "numPasses">
 >;
 
 export interface VoteCacheSnapshot {
   readonly opinionSlugId: string;
   readonly before: UserVote | undefined;
   readonly after: UserVote | undefined;
-  readonly counts: readonly { before: VoteCounts; after: VoteCounts }[];
+  readonly counts: readonly {
+    readonly before: VoteCounts;
+    readonly after: VoteCounts;
+  }[];
 }
 
 function countsOf(opinion: DisplayedOpinionItem): VoteCounts {
@@ -40,6 +42,37 @@ function sameCounts({
     left.numDisagrees === right.numDisagrees &&
     left.numPasses === right.numPasses
   );
+}
+
+function changeVoteCounts({
+  counts,
+  before,
+  after,
+}: {
+  counts: VoteCounts;
+  before: UserVote | undefined;
+  after: UserVote | undefined;
+}): VoteCounts {
+  return {
+    numAgrees: Math.max(
+      0,
+      counts.numAgrees +
+        Number(after?.votingAction === "agree") -
+        Number(before?.votingAction === "agree")
+    ),
+    numDisagrees: Math.max(
+      0,
+      counts.numDisagrees +
+        Number(after?.votingAction === "disagree") -
+        Number(before?.votingAction === "disagree")
+    ),
+    numPasses: Math.max(
+      0,
+      counts.numPasses +
+        Number(after?.votingAction === "pass") -
+        Number(before?.votingAction === "pass")
+    ),
+  };
 }
 
 function setVote({
@@ -78,17 +111,6 @@ export function applyOptimisticVote({
           opinionSlugId: params.opinionSlugId,
           votingAction: params.voteAction,
         };
-  const delta = {
-    numAgrees:
-      Number(after?.votingAction === "agree") -
-      Number(before?.votingAction === "agree"),
-    numDisagrees:
-      Number(after?.votingAction === "disagree") -
-      Number(before?.votingAction === "disagree"),
-    numPasses:
-      Number(after?.votingAction === "pass") -
-      Number(before?.votingAction === "pass"),
-  };
   const counts: Array<{ before: VoteCounts; after: VoteCounts }> = [];
   queryClient.setQueryData(
     votesKey,
@@ -99,21 +121,17 @@ export function applyOptimisticVote({
     })
   );
   queryClient.setQueriesData<OpinionCache>(
-    { queryKey: ["comments", conversationSlugId] },
+    {
+      queryKey: ["comments", conversationSlugId],
+      predicate: (query) => query.queryKey[3] === votesKey[2],
+    },
     (cache) =>
       mapCachedOpinions({
         cache,
         mapOpinion: (opinion) => {
           if (opinion.opinionSlugId !== params.opinionSlugId) return opinion;
           const previous = countsOf(opinion);
-          const next = {
-            numAgrees: Math.max(0, previous.numAgrees + delta.numAgrees),
-            numDisagrees: Math.max(
-              0,
-              previous.numDisagrees + delta.numDisagrees
-            ),
-            numPasses: Math.max(0, previous.numPasses + delta.numPasses),
-          };
+          const next = changeVoteCounts({ counts: previous, before, after });
           counts.push({ before: previous, after: next });
           return { ...opinion, ...next };
         },
@@ -126,29 +144,37 @@ export function restoreVoteCache({
   queryClient,
   votesKey,
   snapshot,
+  vote,
 }: {
   queryClient: QueryClient;
   votesKey: UserVotesQueryKey;
   snapshot: VoteCacheSnapshot;
+  vote: UserVote | undefined;
 }): void {
   const conversationSlugId = votesKey[1];
   const votes = queryClient.getQueryData<UserVote[]>(votesKey);
-  const currentVote = votes?.find(
+  // Auth cleanup may have discarded this viewer's cache while saving.
+  if (votes === undefined) return;
+  const currentVote = votes.find(
     (vote) => vote.opinionSlugId === snapshot.opinionSlugId
   );
   // A newer vote or refetch may already have replaced this optimistic value.
   if (currentVote?.votingAction !== snapshot.after?.votingAction) return;
-  queryClient.setQueryData<UserVote[]>(votesKey, (votes) =>
+  queryClient.setQueryData<UserVote[]>(
+    votesKey,
     setVote({
-      votes: votes ?? [],
+      votes,
       opinionSlugId: snapshot.opinionSlugId,
-      vote: snapshot.before,
+      vote,
     })
   );
   // Restore this statement only. Whole-page snapshots would erase other votes
   // or live updates that arrived while the request was in flight.
   queryClient.setQueriesData<OpinionCache>(
-    { queryKey: ["comments", conversationSlugId] },
+    {
+      queryKey: ["comments", conversationSlugId],
+      predicate: (query) => query.queryKey[3] === votesKey[2],
+    },
     (cache) =>
       mapCachedOpinions({
         cache,
@@ -157,9 +183,17 @@ export function restoreVoteCache({
           const previous = snapshot.counts.find((counts) =>
             sameCounts({ left: counts.after, right: opinion })
           );
-          return previous === undefined
-            ? opinion
-            : { ...opinion, ...previous.before };
+          if (previous === undefined) return opinion;
+          // Earlier optimistic choices may have failed too. Restore the last
+          // acknowledged vote rather than another unconfirmed choice.
+          return {
+            ...opinion,
+            ...changeVoteCounts({
+              counts: previous.before,
+              before: snapshot.before,
+              after: vote,
+            }),
+          };
         },
       })
   );

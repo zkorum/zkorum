@@ -60,6 +60,81 @@ function opinionCache(items: DisplayedOpinionItem[]): OpinionCache {
 }
 
 describe("statement-scoped vote rollback", () => {
+  it("does not recreate discarded viewer data when rolling back a cancellation", () => {
+    const queryClient = new QueryClient();
+    applyOptimisticVote({
+      queryClient,
+      votesKey: viewerVotesKey,
+      params: { opinionSlugId: "first", voteAction: "agree" },
+    });
+    const snapshot = applyOptimisticVote({
+      queryClient,
+      votesKey: viewerVotesKey,
+      params: { opinionSlugId: "first", voteAction: "cancel" },
+    });
+    queryClient.removeQueries({ queryKey: viewerVotesKey, exact: true });
+    restoreVoteCache({
+      queryClient,
+      votesKey: viewerVotesKey,
+      snapshot,
+      vote: snapshot.before,
+    });
+    expect(queryClient.getQueryData(viewerVotesKey)).toBeUndefined();
+    queryClient.clear();
+  });
+
+  it("limits optimistic changes and rollback to the vote owner's comment caches", () => {
+    const queryClient = new QueryClient();
+    const viewerKey = [
+      "comments",
+      "conversation",
+      "new",
+      "viewer",
+      "en",
+      ["en"],
+    ];
+    const otherKey = ["comments", "conversation", "new", "other", "en", ["en"]];
+    const anonymousKey = [
+      "comments",
+      "conversation",
+      "new",
+      undefined,
+      "en",
+      ["en"],
+    ];
+    for (const key of [viewerKey, otherKey, anonymousKey]) {
+      queryClient.setQueryData(key, opinionCache([opinion]));
+    }
+    const snapshot = applyOptimisticVote({
+      queryClient,
+      votesKey: viewerVotesKey,
+      params: { opinionSlugId: "first", voteAction: "agree" },
+    });
+    expect(
+      queryClient.getQueryData<OpinionCache>(viewerKey)?.pages[0]?.items[0]
+        ?.numAgrees
+    ).toBe(1);
+    for (const key of [otherKey, anonymousKey]) {
+      expect(
+        queryClient.getQueryData<OpinionCache>(key)?.pages[0]?.items[0]
+          ?.numAgrees
+      ).toBe(0);
+    }
+    restoreVoteCache({
+      queryClient,
+      votesKey: viewerVotesKey,
+      snapshot,
+      vote: undefined,
+    });
+    for (const key of [viewerKey, otherKey, anonymousKey]) {
+      expect(
+        queryClient.getQueryData<OpinionCache>(key)?.pages[0]?.items[0]
+          ?.numAgrees
+      ).toBe(0);
+    }
+    queryClient.clear();
+  });
+
   it("retains another successful vote and rolls back a failed vote after guest promotion", () => {
     const queryClient = new QueryClient();
     const anonymousKey = [
@@ -97,6 +172,7 @@ describe("statement-scoped vote rollback", () => {
       queryClient,
       votesKey: guestVotesKey,
       snapshot: failed,
+      vote: failed.before,
     });
     expect(
       queryClient.getQueryData(["userVotes", "conversation", "guest"])
@@ -144,7 +220,12 @@ describe("statement-scoped vote rollback", () => {
       key,
       opinionCache([{ ...opinion, numAgrees: 20 }])
     );
-    restoreVoteCache({ queryClient, votesKey: viewerVotesKey, snapshot });
+    restoreVoteCache({
+      queryClient,
+      votesKey: viewerVotesKey,
+      snapshot,
+      vote: snapshot.before,
+    });
     expect(
       queryClient.getQueryData<OpinionCache>(key)?.pages[0]?.items[0]?.numAgrees
     ).toBe(20);
@@ -168,6 +249,7 @@ describe("statement-scoped vote rollback", () => {
       queryClient,
       votesKey: viewerVotesKey,
       snapshot: failed,
+      vote: failed.before,
     });
 
     expect(queryClient.getQueryData(viewerVotesKey)).toEqual([
