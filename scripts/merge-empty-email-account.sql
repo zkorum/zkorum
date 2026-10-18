@@ -78,6 +78,9 @@ BEGIN
     IF keep_user.username <> keep_username OR keep_user.is_deleted OR source_user.is_deleted THEN
         RAISE EXCEPTION 'Both accounts must be active and the retained username must still match';
     END IF;
+    IF keep_user.auth_restricted_at IS NOT NULL OR source_user.auth_restricted_at IS NOT NULL THEN
+        RAISE EXCEPTION 'Both accounts must be unrestricted for authentication';
+    END IF;
     IF (expected_keep_user_id IS NOT NULL AND keep_user.id <> expected_keep_user_id)
         OR (expected_source_user_id IS NOT NULL AND source_user.id <> expected_source_user_id) THEN
         RAISE EXCEPTION 'Resolved account IDs do not match the configured IDs';
