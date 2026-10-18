@@ -1,4 +1,8 @@
-import type { RouteLocationRaw, Router } from "vue-router";
+import {
+  isNavigationFailure,
+  type RouteLocationRaw,
+  type Router,
+} from "vue-router";
 
 function normalizeHistoryPath(path: string): string {
   const parsedUrl = new URL(path, "https://example.test");
@@ -128,19 +132,24 @@ export async function navigateToHistoryPositionOrReplace({
   targetHistoryPosition,
   currentHistoryPosition,
 }: {
-  router: Pick<Router, "go" | "replace">;
+  router: Pick<Router, "go" | "replace" | "afterEach">;
   fallbackRoute: RouteLocationRaw;
   targetHistoryPosition: number | null;
   currentHistoryPosition: number | null;
-}): Promise<void> {
+}): Promise<boolean> {
   if (
     targetHistoryPosition !== null &&
     currentHistoryPosition !== null &&
     targetHistoryPosition < currentHistoryPosition
   ) {
-    router.go(targetHistoryPosition - currentHistoryPosition);
-    return;
+    return await new Promise<boolean>((resolve) => {
+      const stop = router.afterEach((_to, _from, failure) => {
+        stop();
+        resolve(!isNavigationFailure(failure));
+      });
+      router.go(targetHistoryPosition - currentHistoryPosition);
+    });
   }
 
-  await router.replace(fallbackRoute);
+  return !isNavigationFailure(await router.replace(fallbackRoute));
 }

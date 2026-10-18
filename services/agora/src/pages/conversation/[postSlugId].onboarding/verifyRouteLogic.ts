@@ -10,7 +10,6 @@ import {
   getConversationPath,
   getConversationSurveyCompletePath,
   getConversationSurveyContinuePath,
-  getConversationSurveyOnboardingPath,
   getConversationSurveyVerifyEmailPath,
   getConversationSurveyVerifyHardPath,
   getConversationSurveyVerifyIdentityPath,
@@ -69,20 +68,8 @@ export function resolveVerifyRouteDecision({
   emailUpdateResolution: ConversationEmailUpdateOnboardingResolution;
   routeContext?: ConversationRouteContext;
 }): VerifyRouteDecision {
-  if (!exactVerifyRoute || isInitialLoading) {
+  if (!exactVerifyRoute || isInitialLoading || hasLoadError) {
     return createDecision({ navigation: { kind: "none" } });
-  }
-
-  if (hasLoadError) {
-    return createDecision({
-      navigation: {
-        kind: "redirect",
-        path: getConversationSurveyOnboardingPath({
-          conversationSlugId,
-          routeContext,
-        }),
-      },
-    });
   }
 
   if (conversation === undefined || surveyStatus === undefined) {
@@ -156,7 +143,10 @@ export function resolveVerifyRouteDecision({
     });
   }
 
-  if (!surveyStatus.surveyGate.hasSurvey) {
+  if (
+    !surveyStatus.surveyGate.hasSurvey ||
+    surveyStatus.surveyGate.status === "complete_valid"
+  ) {
     return createDecision({ navigation: { kind: "exitToConversation" } });
   }
 

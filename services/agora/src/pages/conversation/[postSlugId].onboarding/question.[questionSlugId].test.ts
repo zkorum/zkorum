@@ -59,7 +59,8 @@ vi.mock("src/utils/ui/notify", () => ({
 }));
 vi.mock("src/composables/ui/useComponentI18n", () => ({
   useComponentI18n: () => ({
-    t: (key: string) => (key === "answersSavedMessage" ? "Answers saved" : key),
+    t: (key: string) =>
+      key === "onboardingComplete" ? "You’re all set!" : key,
   }),
 }));
 vi.mock("src/utils/api/survey/useSurveyQueries", () => ({
@@ -223,7 +224,7 @@ beforeEach(() => {
   state.completed = false;
   state.hasNextQuestion = false;
   saveAnswer.mockResolvedValue(createSaveResponse());
-  exitToConversation.mockResolvedValue(undefined);
+  exitToConversation.mockResolvedValue(true);
 });
 afterEach(() => {
   for (const app of apps.splice(0)) app.unmount();
@@ -261,6 +262,14 @@ async function clickButton({
 }
 
 describe("questionnaire completion", () => {
+  it("does not announce completion when the onboarding exit is ignored", async () => {
+    exitToConversation.mockResolvedValueOnce(false);
+    state.completed = true;
+    const target = mountQuestion();
+    await clickButton({ target, label: "Next" });
+    expect(showNotifyMessage).not.toHaveBeenCalled();
+  });
+
   it("returns directly to the consultation after the final answer is saved", async () => {
     const target = mountQuestion();
     await clickButton({ target, label: "Bicycle" });
@@ -276,7 +285,7 @@ describe("questionnaire completion", () => {
     });
     expect(exitToConversation).toHaveBeenCalledAfter(saveAnswer);
     expect(showNotifyMessage).toHaveBeenCalledWith({
-      message: "Answers saved",
+      message: "You’re all set!",
       icon: "mdi-check-circle-outline",
     });
     expect(push).not.toHaveBeenCalled();

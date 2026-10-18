@@ -1,24 +1,22 @@
 <template>
-  <NewConversationLayout v-slot="{ isActive }">
-    <Teleport v-if="isActive" to="#page-header">
-      <DefaultMenuBar :click-to-scroll-top="false">
-        <template #left>
-          <BackButton />
-        </template>
-        <template #right>
-          <PrimeButton
-            :label="t('saveButton')"
-            :loading="isSaving"
-            :disabled="isSaveDisabled"
-            @click="saveSurvey"
-          />
-        </template>
-      </DefaultMenuBar>
-    </Teleport>
+  <EditConversationLayout
+    ref="editLayout"
+    :conversation-slug-id="conversationSlugId"
+    :is-loading="!hasLoadedSurvey"
+    :has-unsaved-changes="hasUnsavedChanges || editStore.hasUnsavedChanges"
+    :navigation-pending="isSaving || isDeleting"
+    :fallback-route="conversationReturnPath"
+  >
+    <template #actions>
+      <PrimeButton
+        :label="t('saveButton')"
+        :loading="isSaving"
+        :disabled="isSaveDisabled"
+        @click="saveSurvey"
+      />
+    </template>
 
-    <PageLoadingSpinner v-if="isLoading" />
-
-    <div v-else class="container">
+    <div class="container">
       <SurveyConfigEditor
         v-model:survey-config="surveyConfig"
         body-card
@@ -102,40 +100,34 @@
       </SurveyConfigEditor>
     </div>
 
-    <ZKConfirmDialog
-      v-model="showDeleteDialog"
-      :message="t('confirmDeleteMessage')"
-      :actions="{
-        cancel: {
-          label: t('cancelLabel'),
-          appearance: 'secondary-outlined',
-        },
-        confirm: { label: t('deleteButton'), appearance: 'danger' },
-      }"
-      @confirm="deleteSurvey"
-    />
-    <EditConversationRouteGuard
-      v-if="
-        editStore.session?.original.conversationSlugId === conversationSlugId
-      "
-      :conversation-slug-id="conversationSlugId"
-      :has-unsaved-changes="hasUnsavedChanges || editStore.hasUnsavedChanges"
-      :navigation-pending="isSaving || isDeleting"
-    />
-  </NewConversationLayout>
+    <template #dialogs>
+      <ZKConfirmDialog
+        v-model="showDeleteDialog"
+        :message="t('confirmDeleteMessage')"
+        :actions="{
+          cancel: {
+            label: t('cancelLabel'),
+            appearance: 'secondary-outlined',
+          },
+          confirm: { label: t('deleteButton'), appearance: 'danger' },
+        }"
+        @confirm="deleteSurvey"
+      />
+    </template>
+  </EditConversationLayout>
 </template>
 
 <script setup lang="ts">
 import Button from "primevue/button";
-import BackButton from "src/components/navigation/buttons/BackButton.vue";
-import DefaultMenuBar from "src/components/navigation/header/DefaultMenuBar.vue";
-import EditConversationRouteGuard from "src/components/newConversation/EditConversationRouteGuard.vue";
-import NewConversationLayout from "src/components/newConversation/NewConversationLayout.vue";
+import EditConversationLayout from "src/components/newConversation/EditConversationLayout.vue";
 import SurveyCompletionCountsCard from "src/components/survey/SurveyCompletionCountsCard.vue";
 import SurveyConfigEditor from "src/components/survey/SurveyConfigEditor.vue";
-import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
+import {
+  type EditConversationLoadFailure,
+  useEditConversationLoader,
+} from "src/composables/conversation/useEditConversationLoader";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { GetConversationForEditResponse } from "src/shared/types/dto";
 import type { SurveyConfig } from "src/shared/types/zod";
@@ -155,9 +147,10 @@ import {
   summarizeSurveyConfigChanges,
 } from "src/utils/survey/config";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+import { editConversationTranslations } from "../index.i18n";
 import {
   type EditSurveyTranslations,
   editSurveyTranslations,
@@ -173,6 +166,7 @@ const { t, locale } = useComponentI18n<EditSurveyTranslations>(
   editSurveyTranslations
 );
 const { showNotifyMessage } = useNotify();
+const { t: editT } = useComponentI18n(editConversationTranslations);
 const route = useRoute();
 const router = useRouter();
 const { getConversationForEdit } = useBackendPostEditApi();
@@ -181,7 +175,7 @@ const editStore = useEditConversationStore();
 const conversationSlugId = computed(() =>
   getSingleRouteParam(route.params.conversationSlugId)
 );
-const isLoading = ref(true);
+const editLayout = ref<InstanceType<typeof EditConversationLayout>>();
 const isSaving = ref(false);
 const isDeleting = ref(false);
 const showDeleteDialog = ref(false);
@@ -194,15 +188,65 @@ type EditPermissions = Extract<
 >["editPermissions"];
 const editPermissions = ref<EditPermissions | null>(null);
 const canEditSurvey = computed(() => {
-  return editPermissions.value?.canEditSurvey ?? true;
+  return editPermissions.value?.canEditSurvey === true;
 });
 const canDeleteSurvey = computed(() => {
-  return editPermissions.value?.canDeleteSurvey ?? true;
+  return editPermissions.value?.canDeleteSurvey === true;
 });
+const { isLoading, conversationReturnPath } = useEditConversationLoader({
+  conversationSlugId,
+  getConversation: getConversationForEdit,
+  onReset: () => {
+    editPermissions.value = null;
+    surveyConfig.value = null;
+    originalSurveyConfig.value = null;
+    surveyValidationErrorMessage.value = null;
+    showDeleteDialog.value = false;
+  },
+  onLoaded: ({ conversation }) => {
+    editPermissions.value = conversation.editPermissions;
+    surveyConfig.value = cloneSurveyConfig({
+      surveyConfig: conversation.surveyConfig ?? null,
+    });
+    originalSurveyConfig.value = cloneSurveyConfig({
+      surveyConfig: conversation.surveyConfig ?? null,
+    });
+  },
+  onReady: async () => {
+    if (
+      canEditSurvey.value ||
+      (surveyConfig.value !== null && canDeleteSurvey.value)
+    )
+      return;
+    await router.replace({
+      name: "/conversation/[conversationSlugId]/edit/",
+      params: { conversationSlugId: conversationSlugId.value },
+      query: route.query,
+    });
+  },
+  onError: async (failure) => {
+    const messages = {
+      not_found: editT("notFoundError"),
+      not_author: editT("notAuthorError"),
+      locked: editT("conversationLockedError"),
+      load_failed: t("loadError"),
+    } satisfies Record<EditConversationLoadFailure, string>;
+    editLayout.value?.unlockRoute();
+    editStore.clear();
+    showNotifyMessage({ message: messages[failure], force: true });
+    await router.replace(conversationReturnPath.value);
+  },
+});
+const hasLoadedSurvey = computed(
+  () =>
+    !isLoading.value &&
+    (canEditSurvey.value ||
+      (surveyConfig.value !== null && canDeleteSurvey.value))
+);
 
 const completionCountsQuery = useSurveyCompletionCountsQuery({
   conversationSlugId,
-  enabled: computed(() => !isLoading.value),
+  enabled: hasLoadedSurvey,
 });
 const updateSurveyConfigMutation = useSurveyConfigUpdateMutation({
   conversationSlugId,
@@ -284,52 +328,6 @@ const surveyEditorTexts = computed(() => ({
   optionSemanticChangeLabel: t("optionSemanticChangeLabel"),
   optionSemanticChangeHint: t("optionSemanticChangeHint"),
 }));
-
-let isAlive = true;
-onBeforeUnmount(() => {
-  isAlive = false;
-});
-watch(
-  conversationSlugId,
-  async (slug) => {
-    isLoading.value = true;
-    const response = await getConversationForEdit(slug);
-    if (!isAlive || slug !== conversationSlugId.value) return;
-
-    if (!response.success) {
-      showNotifyMessage(t("loadError"));
-      await router.replace({
-        name: "/conversation/[conversationSlugId]/edit/",
-        params: { conversationSlugId: slug },
-        query: route.query,
-      });
-      return;
-    }
-
-    editPermissions.value = response.editPermissions;
-    if (
-      !response.editPermissions.canEditSurvey &&
-      (response.surveyConfig == null ||
-        !response.editPermissions.canDeleteSurvey)
-    ) {
-      await router.replace({
-        name: "/conversation/[conversationSlugId]/edit/",
-        params: { conversationSlugId: slug },
-        query: route.query,
-      });
-      return;
-    }
-
-    surveyConfig.value = cloneSurveyConfig({
-      surveyConfig: response.surveyConfig ?? null,
-    });
-    originalSurveyConfig.value = cloneSurveyConfig({
-      surveyConfig: response.surveyConfig ?? null,
-    });
-    isLoading.value = false;
-  },
-  { immediate: true }
-);
 
 function clearSurveyValidationError(): void {
   surveyValidationErrorMessage.value = null;

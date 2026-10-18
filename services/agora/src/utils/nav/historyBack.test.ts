@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { createMemoryHistory, createRouter } from "vue-router";
 
 import {
   getHistoryPosition,
@@ -277,27 +278,58 @@ describe("navigateBackOrReplace", () => {
 });
 
 describe("navigateToHistoryPositionOrReplace", () => {
-  it("uses router.go when the target history entry is earlier in the stack", async () => {
-    const router = {
-      go: vi.fn(),
-      replace: vi.fn(),
-    };
+  it("reports a blocked navigation instead of a successful exit", async () => {
+    const component = { render: () => null };
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: "/", component },
+        { path: "/blocked", component },
+      ],
+    });
+    await router.push("/");
+    router.beforeEach(() => false);
+    const didExit = await navigateToHistoryPositionOrReplace({
+      router,
+      fallbackRoute: "/blocked",
+      targetHistoryPosition: null,
+      currentHistoryPosition: null,
+    });
+    expect(didExit).toBe(false);
+    expect(router.currentRoute.value.path).toBe("/");
+  });
 
-    await navigateToHistoryPositionOrReplace({
+  it("uses router.go when the target history entry is earlier in the stack", async () => {
+    const component = { render: () => null };
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: ["/", "/one", "/two", "/three"].map((path) => ({
+        path,
+        component,
+      })),
+    });
+    for (const path of ["/", "/one", "/two", "/three"]) await router.push(path);
+    const go = vi.spyOn(router, "go");
+    const replace = vi.spyOn(router, "replace");
+
+    const didExit = await navigateToHistoryPositionOrReplace({
       router,
       fallbackRoute: "/conversation/abc123/",
       targetHistoryPosition: 4,
       currentHistoryPosition: 7,
     });
 
-    expect(router.go).toHaveBeenCalledWith(-3);
-    expect(router.replace).not.toHaveBeenCalled();
+    expect(go).toHaveBeenCalledWith(-3);
+    expect(replace).not.toHaveBeenCalled();
+    expect(didExit).toBe(true);
+    expect(router.currentRoute.value.path).toBe("/");
   });
 
   it("uses router.replace when there is no earlier history entry to restore", async () => {
     const router = {
       go: vi.fn(),
       replace: vi.fn().mockResolvedValue(undefined),
+      afterEach: vi.fn(),
     };
     const fallbackRoute = "/conversation/abc123/";
 

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import html
-import logging
 import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -18,7 +16,6 @@ if TYPE_CHECKING:
     from uuid import UUID
 
 PUBLIC_AGGREGATE_SUPPRESSION_THRESHOLD = 5
-log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -57,6 +54,7 @@ class SurveyAnswerSnapshot:
     answered_question_semantic_version: int
     option_slug_ids: list[str]
     text_value_html: str | None
+    text_value_plain_text: str | None
 
 
 @dataclass(frozen=True)
@@ -71,6 +69,12 @@ class SurveyAggregateGroupMembership:
     candidate_id: int
     group_id: int
     user_ids: frozenset[UUID]
+
+
+@dataclass(frozen=True)
+class SurveyAggregatePopulation:
+    participant_ids: frozenset[UUID]
+    group_memberships: tuple[SurveyAggregateGroupMembership, ...]
 
 
 @dataclass(frozen=True)
@@ -164,7 +168,10 @@ def _build_survey_aggregates(
         response
         for response in responses
         if not response.withdrawn
-        and (config.is_optional or _is_complete_valid_response(config=config, response=response))
+        and (
+            config.is_optional
+            or is_survey_response_complete_valid(config=config, response=response)
+        )
     ]
     questions = [_question_record(question) for question in choice_questions]
     options = [
@@ -236,9 +243,7 @@ def _question_record(question: SurveyQuestionSnapshot) -> SurveyAggregateQuestio
         question_type=question.question_type,
         question_text=question.question_text,
         is_required=question.is_required,
-        is_public_aggregate_suppression_enabled=(
-            question.is_public_aggregate_suppression_enabled
-        ),
+        is_public_aggregate_suppression_enabled=(question.is_public_aggregate_suppression_enabled),
         question_semantic_version=question.current_semantic_version,
     )
 
@@ -342,12 +347,12 @@ def _format_percentage(*, numerator: int, denominator: int) -> float | None:
     return round((numerator / denominator) * 100, 2)
 
 
-def _is_complete_valid_response(
+def is_survey_response_complete_valid(
     *,
     config: SurveyConfigSnapshot,
     response: SurveyResponseSnapshot,
 ) -> bool:
-    return all(
+    return not response.withdrawn and all(
         _is_question_completed(question=question, response=response)
         for question in config.questions
         if question.is_required
@@ -365,58 +370,6 @@ def _is_question_completed(
     if question.question_type == SurveyQuestionType.choice:
         return _is_valid_choice_answer(question=question, answer=answer)
     return _is_valid_free_text_answer(question=question, answer=answer)
-
-
-def _normalize_counted_text(value: str) -> str:
-    return re.sub(r"\n+", "\n", value).strip("\n")
-
-
-def _convert_html_to_counted_text(value: str) -> str:
-    text_with_newlines = re.sub(
-        r"</(?:p|li|div|h[1-6])>",
-        "\n",
-        value,
-        flags=re.IGNORECASE,
-    )
-    text_with_newlines = re.sub(
-        r"<br\s*/?>",
-        "\n",
-        text_with_newlines,
-        flags=re.IGNORECASE,
-    )
-    plain_text = re.sub(r"<[^>]*>", "", text_with_newlines)
-    plain_text = re.sub(r"<[^>]*$", "", plain_text)
-    return _normalize_counted_text(html.unescape(plain_text))
-
-
-def _convert_html_to_counted_text_fallback(value: str) -> str:
-    text_with_newlines = re.sub(
-        r"</(?:p|li|div|h[1-6])>",
-        "\n",
-        value,
-        flags=re.IGNORECASE,
-    )
-    text_with_newlines = re.sub(
-        r"<br\s*/?>",
-        "\n",
-        text_with_newlines,
-        flags=re.IGNORECASE,
-    )
-    plain_text = re.sub(r"<[^>]*>", "", text_with_newlines)
-    plain_text = re.sub(r"<[^>]*$", "", plain_text)
-    return _normalize_counted_text(plain_text)
-
-
-def _html_to_counted_text(value: str) -> str:
-    try:
-        return _convert_html_to_counted_text(value)
-    except Exception:
-        log.warning(
-            "HTML-to-text conversion failed; using best-effort text (HTML length: %d)",
-            len(value),
-            exc_info=True,
-        )
-        return _convert_html_to_counted_text_fallback(value)
 
 
 def _is_valid_free_text_answer(
@@ -438,8 +391,10 @@ def _is_valid_free_text_answer(
             return False
         min_value = _optional_int(constraints.get("minValue"))
         max_value = _optional_int(constraints.get("maxValue"))
-        return min_value is not None and parsed_value >= min_value and (
-            max_value is None or parsed_value <= max_value
+        return (
+            min_value is not None
+            and parsed_value >= min_value
+            and (max_value is None or parsed_value <= max_value)
         )
 
     max_html_length = _optional_int(constraints.get("maxHtmlLength"))
@@ -448,7 +403,7 @@ def _is_valid_free_text_answer(
         return False
     if len(text_value_html.encode("utf-16-le")) // 2 > max_html_length:
         return False
-    plain_text = _html_to_counted_text(text_value_html)
+    plain_text = answer.text_value_plain_text or ""
     visible_text = regex.sub(
         r"[\p{Cc}\p{Default_Ignorable_Code_Point}]",
         "",
@@ -480,8 +435,14 @@ def _is_valid_choice_answer(
         return False
 
     constraints = question.constraints
-    min_selections = _optional_int(constraints.get("minSelections")) or 1
+    if constraints.get("type") != "choice":
+        return False
+    min_selections = _optional_int(constraints.get("minSelections"))
+    if min_selections is None or min_selections < 1:
+        return False
     max_selections = _optional_int(constraints.get("maxSelections"))
+    if constraints.get("maxSelections") is not None and max_selections is None:
+        return False
     selected_count = len(answer.option_slug_ids)
     if selected_count < min_selections:
         return False
@@ -489,6 +450,6 @@ def _is_valid_choice_answer(
 
 
 def _optional_int(value: object) -> int | None:
-    if isinstance(value, int):
+    if isinstance(value, int) and not isinstance(value, bool):
         return value
     return None

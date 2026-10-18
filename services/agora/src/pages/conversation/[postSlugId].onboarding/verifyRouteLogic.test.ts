@@ -99,42 +99,77 @@ describe("resolveVerifyRouteDecision", () => {
     expect(decision.navigation).toEqual({ kind: "exitToConversation" });
   });
 
-  it("exits through the intention-aware path when the survey flow resolves to the conversation", () => {
-    const surveyForm: SurveyFormData = {
-      success: true,
-      currentRevision: 1,
-      questions: [],
+  it.each(["none", "summary"] as const)(
+    "exits for current saved responses even when the backend route is %s",
+    (kind) => {
+      const surveyForm: SurveyFormData = {
+        success: true,
+        currentRevision: 1,
+        questions: [],
+        surveyGate: {
+          hasSurvey: true,
+          isOptional: false,
+          canParticipate: true,
+          status: "complete_valid",
+        },
+      };
+
+      const decision = resolveVerifyRouteDecision({
+        exactVerifyRoute: true,
+        isInitialLoading: false,
+        hasLoadError: false,
+        conversationSlugId: "qlWQFzY",
+        conversation: {
+          participationMode: "guest",
+        },
+        surveyStatus: {
+          surveyGate: surveyForm.surveyGate,
+          routeResolution: {
+            kind,
+          },
+        },
+        surveyForm,
+        requirementState: {
+          needsAuth: false,
+          needsTicket: false,
+        },
+        emailUpdateResolution: { status: "not_required" },
+      });
+
+      expect(decision.navigation).toEqual({ kind: "exitToConversation" });
+    }
+  );
+
+  it("does not skip an outdated survey after login", () => {
+    const surveyStatus: SurveyStatusCheckResponse = {
       surveyGate: {
         hasSurvey: true,
         isOptional: false,
-        canParticipate: true,
-        status: "complete_valid",
+        canParticipate: false,
+        status: "needs_update",
       },
+      routeResolution: { kind: "question", questionSlugId: "changed-question" },
     };
-
     const decision = resolveVerifyRouteDecision({
       exactVerifyRoute: true,
       isInitialLoading: false,
       hasLoadError: false,
       conversationSlugId: "qlWQFzY",
-      conversation: {
-        participationMode: "guest",
+      conversation: { participationMode: "email_verification" },
+      surveyStatus,
+      surveyForm: {
+        success: true,
+        currentRevision: 2,
+        questions: [],
+        surveyGate: surveyStatus.surveyGate,
       },
-      surveyStatus: {
-        surveyGate: surveyForm.surveyGate,
-        routeResolution: {
-          kind: "none",
-        },
-      },
-      surveyForm,
-      requirementState: {
-        needsAuth: false,
-        needsTicket: false,
-      },
+      requirementState: { needsAuth: false, needsTicket: false },
       emailUpdateResolution: { status: "not_required" },
     });
-
-    expect(decision.navigation).toEqual({ kind: "exitToConversation" });
+    expect(decision.navigation).toEqual({
+      kind: "redirect",
+      path: "/conversation/qlWQFzY/onboarding/question/changed-question",
+    });
   });
 
   it("routes auth-gated conversations before checking ticket or survey completion", () => {

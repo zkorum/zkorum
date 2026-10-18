@@ -3,6 +3,7 @@
     <Editor
       v-model="body"
       v-model:plain-text="plainText"
+      outlined
       :placeholder="placeholder"
       min-height="12rem"
       :show-toolbar="true"
@@ -31,8 +32,6 @@ const isOverLimit = defineModel<boolean>("isOverLimit", { required: true });
 
 <style scoped lang="scss">
 .project-body-editor {
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
   font-size: 1rem;
 }
 </style>

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { getConversationEditReturnPath } from "./conversationEditReturn";
+import {
+  getConversationEditFallbackPath,
+  getConversationEditReturnPath,
+} from "./conversationEditReturn";
 
 describe("getConversationEditReturnPath", () => {
   it("keeps a project-scoped return route when the assignment is unchanged", () => {
@@ -95,5 +98,51 @@ describe("getConversationEditReturnPath", () => {
         returnTo: "https://example.com/conversation/abc123",
       })
     ).toBe("/conversation/abc123/");
+  });
+});
+
+describe("getConversationEditFallbackPath", () => {
+  it("preserves the project but returns to the main view with navigation", () => {
+    expect(
+      getConversationEditFallbackPath({
+        conversationSlugId: "abc123",
+        returnTo:
+          "/project/source/conversation/abc123/analysis?view=groups#top",
+      })
+    ).toBe("/project/source/conversation/abc123/");
+  });
+
+  it.each(
+    [
+      "/conversation/abc123/onboarding/verify",
+      "/conversation/abc123/edit/survey",
+      "/conversation/abc123/%65dit",
+      "/conversation/abc123.embed/analysis?embedded=true",
+      "/conversation/other/",
+      "https://example.com/conversation/abc123/",
+      "//example.com/conversation/abc123/",
+      "/\\example.com/conversation/abc123/",
+      "/\\invalid:port/conversation/abc123/",
+      "javascript:alert(1)",
+      ["/conversation/abc123/", "https://example.com/"],
+      null,
+      undefined,
+    ].map((returnTo) => ({ returnTo }))
+  )("uses a normal same-conversation view for $returnTo", ({ returnTo }) => {
+    expect(
+      getConversationEditFallbackPath({
+        conversationSlugId: "abc123",
+        returnTo,
+      })
+    ).toBe("/conversation/abc123/");
+  });
+
+  it("returns home when there is no conversation identifier", () => {
+    expect(
+      getConversationEditFallbackPath({
+        conversationSlugId: "",
+        returnTo: "/conversation/abc123/",
+      })
+    ).toBe("/");
   });
 });

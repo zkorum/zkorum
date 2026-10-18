@@ -7,10 +7,8 @@ import pytest
 from sqlalchemy import DefaultClause, MetaData, create_engine, func, select
 from sqlalchemy.orm import Session
 
-from agora_analysis_worker_shared.analysis_compute import ComputedAnalysisBundle
 from agora_analysis_worker_shared.db import ClaimedWorkItem, persist_survey_aggregate_snapshots
 from agora_analysis_worker_shared.generated_models import (
-    AnalysisResultOutcomeEnum,
     Base,
     SurveyAggregateOption,
     SurveyAggregateQuestion,
@@ -18,8 +16,8 @@ from agora_analysis_worker_shared.generated_models import (
     SurveyAggregateSnapshot,
     SurveyQuestionType,
 )
-from agora_analysis_worker_shared.input_snapshot import prepare_input_snapshot
 from agora_analysis_worker_shared.survey_aggregates import (
+    SurveyAggregatePopulation,
     SurveyConfigSnapshot,
     SurveyOptionSnapshot,
     SurveyQuestionSnapshot,
@@ -107,33 +105,17 @@ def test_survey_aggregates_commit_without_default_row_inserts(
         )
         for conversation_id in configs
     ]
-    prepared = {
-        conversation_id: prepare_input_snapshot(
-            conversation_id=conversation_id, data_generation=1, rows=[]
-        )
-        for conversation_id in configs
-    }
-    bundles = {
-        conversation_id: ComputedAnalysisBundle(
-            conversation_id=conversation_id,
-            data_generation=1,
-            outcome=AnalysisResultOutcomeEnum.insufficient_data,
-            outcome_reason=None,
-            candidates=[],
-            snapshot_opinions=[],
-        )
-        for conversation_id in configs
-    }
     with Session(engine) as session:
         snapshot_ids = persist_survey_aggregate_snapshots(
             session,
             claims=claims,
             snapshot_id_by_conversation_id={conversation_id: 1 for conversation_id in configs},
-            prepared_input_snapshots_by_conversation_id=prepared,
-            bundles_by_conversation_id=bundles,
-            candidate_id_by_conversation_variant={},
-            artifact_candidate_ids_by_pair={},
-            group_id_by_candidate_key={},
+            populations_by_conversation_id={
+                conversation_id: SurveyAggregatePopulation(
+                    participant_ids=frozenset(), group_memberships=()
+                )
+                for conversation_id in configs
+            },
         )
         session.commit()
 

@@ -42,6 +42,7 @@
         v-if="option.showText"
         :class="{ 'choice-input__option-text': !usesDropdown }"
         :option-label="option.label"
+        :show-option-label="usesDropdown && visibleOptions.length > 1"
         :text-value="option.textValue"
         :read-only="!option.allowsText"
         @update:text-value="

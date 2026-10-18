@@ -9,14 +9,7 @@ export interface EditConversationTranslations {
   notFoundError: string;
   notAuthorError: string;
   conversationLockedError: string;
-  notFoundErrorTitle: string;
-  notFoundErrorMessage: string;
-  notAuthorErrorTitle: string;
-  notAuthorErrorMessage: string;
-  conversationLockedErrorTitle: string;
-  conversationLockedErrorMessage: string;
   invalidAccessSettingsError: string;
-  loadingErrorTitle: string;
   loadingErrorMessage: string;
   createSurveyButton: string;
   editSurveyButton: string;
@@ -38,17 +31,8 @@ export const editConversationTranslations: Record<
     notFoundError: "Conversation not found",
     notAuthorError: "You are not the facilitator of this conversation",
     conversationLockedError: "This conversation is locked and cannot be edited",
-    notFoundErrorTitle: "Conversation not found",
-    notFoundErrorMessage: "Failed to load conversation",
-    notAuthorErrorTitle: "You are not the facilitator of this conversation",
-    notAuthorErrorMessage: "Only the facilitator can edit this conversation",
-    conversationLockedErrorTitle:
-      "This conversation is locked and cannot be edited",
-    conversationLockedErrorMessage:
-      "Please contact a moderator if you need this conversation to be unlocked",
     invalidAccessSettingsError:
       "Invalid access settings. Login cannot be required for private conversations.",
-    loadingErrorTitle: "Failed to load conversation",
     loadingErrorMessage: "An error occurred while loading the conversation",
     createSurveyButton: "Create survey",
     editSurveyButton: "Edit survey",
@@ -68,19 +52,8 @@ export const editConversationTranslations: Record<
     notAuthorError: "Vous n'êtes pas le facilitateur de cette conversation",
     conversationLockedError:
       "Cette conversation est verrouillée et ne peut pas être modifiée",
-    notFoundErrorTitle: "Conversation introuvable",
-    notFoundErrorMessage: "Échec du chargement de la conversation",
-    notAuthorErrorTitle:
-      "Vous n'êtes pas le facilitateur de cette conversation",
-    notAuthorErrorMessage:
-      "Seul le facilitateur peut modifier cette conversation",
-    conversationLockedErrorTitle:
-      "Cette conversation est verrouillée et ne peut pas être modifiée",
-    conversationLockedErrorMessage:
-      "Veuillez contacter un modérateur si vous avez besoin de déverrouiller cette conversation",
     invalidAccessSettingsError:
       "Paramètres d'accès invalides. La connexion ne peut pas être requise pour les conversations privées.",
-    loadingErrorTitle: "Échec du chargement de la conversation",
     loadingErrorMessage:
       "Une erreur s'est produite lors du chargement de la conversation",
     createSurveyButton: "Créer un questionnaire",
@@ -101,17 +74,8 @@ export const editConversationTranslations: Record<
     notAuthorError: "No es el facilitador de esta conversación",
     conversationLockedError:
       "Esta conversación está bloqueada y no se puede editar",
-    notFoundErrorTitle: "Conversación no encontrada",
-    notFoundErrorMessage: "Error al cargar la conversación",
-    notAuthorErrorTitle: "No es el facilitador de esta conversación",
-    notAuthorErrorMessage: "Solo el facilitador puede editar esta conversación",
-    conversationLockedErrorTitle:
-      "Esta conversación está bloqueada y no se puede editar",
-    conversationLockedErrorMessage:
-      "Por favor contacte a un moderador si necesita desbloquear esta conversación",
     invalidAccessSettingsError:
       "Configuración de acceso inválida. No se puede requerir inicio de sesión para conversaciones privadas.",
-    loadingErrorTitle: "Error al cargar la conversación",
     loadingErrorMessage: "Ocurrió un error al cargar la conversación",
     createSurveyButton: "Crear encuesta",
     editSurveyButton: "Editar encuesta",
@@ -130,16 +94,8 @@ export const editConversationTranslations: Record<
     notFoundError: "گفتگو یافت نشد",
     notAuthorError: "شما تسهیل‌گر این گفتگو نیستید",
     conversationLockedError: "این گفتگو قفل شده و قابل ویرایش نیست",
-    notFoundErrorTitle: "گفتگو یافت نشد",
-    notFoundErrorMessage: "بارگذاری گفتگو ناموفق بود",
-    notAuthorErrorTitle: "شما تسهیل‌گر این گفتگو نیستید",
-    notAuthorErrorMessage: "فقط تسهیل‌گر می‌تواند این گفتگو را ویرایش کند",
-    conversationLockedErrorTitle: "این گفتگو قفل شده و قابل ویرایش نیست",
-    conversationLockedErrorMessage:
-      "در صورت نیاز به باز کردن قفل این گفتگو، لطفاً با مدیر محتوا تماس بگیرید",
     invalidAccessSettingsError:
       "تنظیمات دسترسی نامعتبر است. ورود به سیستم برای گفتگوهای خصوصی الزامی نیست.",
-    loadingErrorTitle: "بارگذاری گفتگو ناموفق بود",
     loadingErrorMessage: "هنگام بارگذاری گفتگو خطایی رخ داد",
     createSurveyButton: "ایجاد نظرسنجی",
     editSurveyButton: "ویرایش نظرسنجی",
@@ -157,16 +113,8 @@ export const editConversationTranslations: Record<
     notFoundError: "השיחה לא נמצאה",
     notAuthorError: "אינך המנחה של שיחה זו",
     conversationLockedError: "שיחה זו נעולה ולא ניתן לערוך אותה",
-    notFoundErrorTitle: "השיחה לא נמצאה",
-    notFoundErrorMessage: "טעינת השיחה נכשלה",
-    notAuthorErrorTitle: "אינך המנחה של שיחה זו",
-    notAuthorErrorMessage: "רק המנחה יכול/ה לערוך שיחה זו",
-    conversationLockedErrorTitle: "שיחה זו נעולה ולא ניתן לערוך אותה",
-    conversationLockedErrorMessage:
-      "אנא פנו למנהל/ת התוכן אם יש צורך לפתוח את נעילת שיחה זו",
     invalidAccessSettingsError:
       "הגדרות גישה לא תקינות. לא ניתן לדרוש התחברות עבור שיחות פרטיות.",
-    loadingErrorTitle: "טעינת השיחה נכשלה",
     loadingErrorMessage: "אירעה שגיאה בעת טעינת השיחה",
     createSurveyButton: "יצירת סקר",
     editSurveyButton: "עריכת סקר",
@@ -184,14 +132,7 @@ export const editConversationTranslations: Record<
     notFoundError: "未找到对话",
     notAuthorError: "你不是此对话的主持人",
     conversationLockedError: "此对话已锁定，无法编辑",
-    notFoundErrorTitle: "未找到对话",
-    notFoundErrorMessage: "加载对话失败",
-    notAuthorErrorTitle: "你不是此对话的主持人",
-    notAuthorErrorMessage: "只有主持人可以编辑此对话",
-    conversationLockedErrorTitle: "此对话已锁定，无法编辑",
-    conversationLockedErrorMessage: "如需解锁此对话，请联系管理员",
     invalidAccessSettingsError: "访问设置无效。私人对话不能要求登录。",
-    loadingErrorTitle: "加载对话失败",
     loadingErrorMessage: "加载对话时发生错误",
     createSurveyButton: "创建问卷",
     editSurveyButton: "编辑问卷",
@@ -209,14 +150,7 @@ export const editConversationTranslations: Record<
     notFoundError: "未找到對話",
     notAuthorError: "你不是此對話的主持人",
     conversationLockedError: "此對話已鎖定，無法編輯",
-    notFoundErrorTitle: "未找到對話",
-    notFoundErrorMessage: "載入對話失敗",
-    notAuthorErrorTitle: "你不是此對話的主持人",
-    notAuthorErrorMessage: "只有主持人可以編輯此對話",
-    conversationLockedErrorTitle: "此對話已鎖定，無法編輯",
-    conversationLockedErrorMessage: "如需解鎖此對話，請聯絡管理員",
     invalidAccessSettingsError: "存取設定無效。私人對話不能要求登入。",
-    loadingErrorTitle: "載入對話失敗",
     loadingErrorMessage: "載入對話時發生錯誤",
     createSurveyButton: "建立問卷",
     editSurveyButton: "編輯問卷",
@@ -234,16 +168,8 @@ export const editConversationTranslations: Record<
     notFoundError: "会話が見つかりません",
     notAuthorError: "あなたはこの会話のファシリテーターではありません",
     conversationLockedError: "この会話はロックされており、編集できません",
-    notFoundErrorTitle: "会話が見つかりません",
-    notFoundErrorMessage: "会話の読み込みに失敗しました",
-    notAuthorErrorTitle: "あなたはこの会話のファシリテーターではありません",
-    notAuthorErrorMessage: "ファシリテーターのみがこの会話を編集できます",
-    conversationLockedErrorTitle: "この会話はロックされており、編集できません",
-    conversationLockedErrorMessage:
-      "この会話のロックを解除する必要がある場合は、モデレーターにお問い合わせください",
     invalidAccessSettingsError:
       "アクセス設定が無効です。プライベートな会話ではログインを要求できません。",
-    loadingErrorTitle: "会話の読み込みに失敗しました",
     loadingErrorMessage: "会話の読み込み中にエラーが発生しました",
     createSurveyButton: "アンケートを作成",
     editSurveyButton: "アンケートを編集",
@@ -262,16 +188,8 @@ export const editConversationTranslations: Record<
     notFoundError: "لم يتم العثور على المحادثة",
     notAuthorError: "أنت لست ميسر هذه المحادثة",
     conversationLockedError: "هذه المحادثة مقفلة ولا يمكن تعديلها",
-    notFoundErrorTitle: "لم يتم العثور على المحادثة",
-    notFoundErrorMessage: "فشل تحميل المحادثة",
-    notAuthorErrorTitle: "أنت لست ميسر هذه المحادثة",
-    notAuthorErrorMessage: "يمكن للميسر فقط تعديل هذه المحادثة",
-    conversationLockedErrorTitle: "هذه المحادثة مقفلة ولا يمكن تعديلها",
-    conversationLockedErrorMessage:
-      "يرجى الاتصال بمشرف إذا كنت بحاجة إلى إلغاء قفل هذه المحادثة",
     invalidAccessSettingsError:
       "إعدادات الوصول غير صالحة. لا يمكن طلب تسجيل الدخول للمحادثات الخاصة.",
-    loadingErrorTitle: "فشل تحميل المحادثة",
     loadingErrorMessage: "حدث خطأ أثناء تحميل المحادثة",
     createSurveyButton: "إنشاء استبيان",
     editSurveyButton: "تعديل الاستبيان",
@@ -289,16 +207,8 @@ export const editConversationTranslations: Record<
     notFoundError: "Талкуу табылган жок",
     notAuthorError: "Сиз бул талкуунун фасилитатору эмессиз",
     conversationLockedError: "Бул талкуу кулпуланган жана түзөтүлбөйт",
-    notFoundErrorTitle: "Талкуу табылган жок",
-    notFoundErrorMessage: "Талкууну жүктөө ишке ашкан жок",
-    notAuthorErrorTitle: "Сиз бул талкуунун фасилитатору эмессиз",
-    notAuthorErrorMessage: "Бул талкууну фасилитатор гана түзөтө алат",
-    conversationLockedErrorTitle: "Бул талкуу кулпуланган жана түзөтүлбөйт",
-    conversationLockedErrorMessage:
-      "Бул талкуунун кулпусун ачуу керек болсо, модераторго кайрылыңыз",
     invalidAccessSettingsError:
       "Жеткиликтүүлүк жөндөөлөрү жараксыз. Жеке талкуулар үчүн кирүүнү талап кылуу мүмкүн эмес.",
-    loadingErrorTitle: "Талкууну жүктөө ишке ашкан жок",
     loadingErrorMessage: "Талкууну жүктөөдө ката кетти",
     createSurveyButton: "Сурамжылоо түзүү",
     editSurveyButton: "Сурамжылоону түзөтүү",
@@ -319,18 +229,8 @@ export const editConversationTranslations: Record<
     notAuthorError: "Вы не являетесь фасилитатором этого обсуждения",
     conversationLockedError:
       "Это обсуждение заблокировано и не может быть отредактировано",
-    notFoundErrorTitle: "Обсуждение не найдено",
-    notFoundErrorMessage: "Не удалось загрузить обсуждение",
-    notAuthorErrorTitle: "Вы не являетесь фасилитатором этого обсуждения",
-    notAuthorErrorMessage:
-      "Только фасилитатор может редактировать это обсуждение",
-    conversationLockedErrorTitle:
-      "Это обсуждение заблокировано и не может быть отредактировано",
-    conversationLockedErrorMessage:
-      "Свяжитесь с модератором, если вам нужно разблокировать это обсуждение",
     invalidAccessSettingsError:
       "Недопустимые настройки доступа. Для приватных обсуждений нельзя требовать авторизацию.",
-    loadingErrorTitle: "Не удалось загрузить обсуждение",
     loadingErrorMessage: "Произошла ошибка при загрузке обсуждения",
     createSurveyButton: "Создать опрос",
     editSurveyButton: "Редактировать опрос",

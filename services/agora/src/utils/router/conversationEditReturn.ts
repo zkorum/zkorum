@@ -1,7 +1,7 @@
 import type { ConversationProjectAssignment } from "src/shared/types/zod";
 import type { LocationQueryValue } from "vue-router";
 
-type ReturnToQueryValue = LocationQueryValue | LocationQueryValue[];
+type ReturnToQueryValue = LocationQueryValue | LocationQueryValue[] | undefined;
 
 interface GetConversationEditReturnPathParams {
   conversationSlugId: string;
@@ -38,7 +38,12 @@ export function getConversationEditReturnPath({
     return getDefaultConversationPath(conversationSlugId);
   }
 
-  const returnUrl = new URL(returnTo, "https://agora.local");
+  let returnUrl: URL;
+  try {
+    returnUrl = new URL(returnTo, "https://agora.local");
+  } catch {
+    return getDefaultConversationPath(conversationSlugId);
+  }
   if (returnUrl.origin !== "https://agora.local")
     return getDefaultConversationPath(conversationSlugId);
   const pathSegments = returnUrl.pathname.split("/");
@@ -77,4 +82,26 @@ export function getConversationEditReturnPath({
     return `${base}${suffix}${returnUrl.search}${returnUrl.hash}`;
   }
   return `${returnUrl.pathname}${returnUrl.search}${returnUrl.hash}`;
+}
+
+export function getConversationEditFallbackPath({
+  conversationSlugId,
+  returnTo,
+}: Pick<
+  GetConversationEditReturnPathParams,
+  "conversationSlugId" | "returnTo"
+>): string {
+  if (!conversationSlugId) return "/";
+  const safePath = getConversationEditReturnPath({
+    conversationSlugId,
+    returnTo,
+  });
+  const segments = new URL(safePath, "https://agora.local").pathname.split("/");
+  const projectSlug = segments[2];
+  // Error recovery always returns to the main view, never another edit,
+  // onboarding, or embedded route that may lack normal navigation.
+  if (segments[1] === "project" && projectSlug !== undefined) {
+    return `/project/${projectSlug}/conversation/${encodeURIComponent(conversationSlugId)}/`;
+  }
+  return getDefaultConversationPath(conversationSlugId);
 }

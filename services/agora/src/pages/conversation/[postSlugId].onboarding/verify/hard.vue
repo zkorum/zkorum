@@ -127,6 +127,7 @@ const {
   refetchAll,
 } = useConversationSurveyState({
   conversationSlugId: routeConversationSlugId,
+  formLoadMode: "incomplete",
   requireAccount: true,
 });
 

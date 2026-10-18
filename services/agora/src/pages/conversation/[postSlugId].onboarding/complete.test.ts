@@ -1,7 +1,7 @@
 import { QueryClient, VueQueryPlugin } from "@tanstack/vue-query";
 import { createDismissalController } from "src/utils/ui/dismissalController";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type App, createApp, defineComponent, h, ref } from "vue";
+import { type App, computed, createApp, defineComponent, h, ref } from "vue";
 
 const emailUpdatesApi = vi.hoisted(() => ({
   getConversationSummary: vi.fn(),
@@ -10,6 +10,7 @@ const emailUpdatesApi = vi.hoisted(() => ({
 const exitToConversation = vi.hoisted(() => vi.fn());
 const showNotifyMessage = vi.hoisted(() => vi.fn());
 const navigateToNextSurveyStep = vi.hoisted(() => vi.fn());
+const surveyStatusAvailable = ref(true);
 const onboardingState = vi.hoisted(() => ({
   emailUpdateConsentSkipped: false,
   markEmailUpdateConsentSkipped: vi.fn(),
@@ -77,10 +78,16 @@ vi.mock("src/composables/conversation/useConversationSurveyState", () => ({
       metadata: { projectContext: { projectSlug: "project-one" } },
     }),
     conversationDisplayContent: ref(undefined),
-    surveyStatus: ref({
-      surveyGate: surveyGateState.value,
-      routeResolution: { kind: "none" },
-    }),
+    surveyStatus: computed(() =>
+      surveyStatusAvailable.value
+        ? {
+            surveyGate: surveyGateState.value,
+            routeResolution: { kind: "none" },
+          }
+        : undefined
+    ),
+    hasLoadError: ref(false),
+    refetchAll: vi.fn(),
   }),
 }));
 vi.mock("src/composables/conversation/useSurveyNavigation", () => ({
@@ -183,6 +190,7 @@ import ConversationOnboardingComplete from "./complete.vue";
 const mountedApps: App[] = [];
 
 beforeEach(() => {
+  surveyStatusAvailable.value = true;
   emailUpdatesApi.getConversationSummary.mockReset();
   emailUpdatesApi.updatePreference.mockReset();
   exitToConversation.mockReset();
@@ -196,7 +204,7 @@ beforeEach(() => {
     canParticipate: true,
     status: "no_survey",
   };
-  exitToConversation.mockResolvedValue(undefined);
+  exitToConversation.mockResolvedValue(true);
 });
 
 afterEach(() => {
@@ -207,6 +215,20 @@ afterEach(() => {
 });
 
 describe("conversation Email Update onboarding", () => {
+  it("waits for survey eligibility before announcing onboarding completion", async () => {
+    surveyStatusAvailable.value = false;
+    emailUpdatesApi.getConversationSummary.mockResolvedValue({
+      success: true,
+      authoringAction: "none",
+    });
+    const container = mountComponent();
+    await flushPromises();
+    getButton(container, "Continue").click();
+    await flushPromises();
+    expect(exitToConversation).not.toHaveBeenCalled();
+    expect(showNotifyMessage).not.toHaveBeenCalled();
+  });
+
   it("shows project consent and saves it before exiting", async () => {
     emailUpdatesApi.getConversationSummary.mockResolvedValue({
       success: true,

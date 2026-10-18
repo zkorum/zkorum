@@ -5,6 +5,13 @@
     :close-callback="handleDismiss"
   >
     <ErrorRetryBlock
+      v-if="surveyStatus === undefined && hasLoadError"
+      compact
+      :title="tSurvey('failedToLoadSurveyTitle')"
+      :retry-label="tSurvey('tryAgainLabel')"
+      @retry="refetchAll"
+    />
+    <ErrorRetryBlock
       v-if="summaryLoadState === 'transient_error'"
       compact
       :title="t('emailUpdateSummaryLoadError')"
@@ -34,6 +41,7 @@ import {
 } from "src/components/conversationUpdates/emailUpdateResumeNotification.i18n";
 import ConversationEmailUpdateOnboardingStep from "src/components/onboarding/ConversationEmailUpdateOnboardingStep.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
+import { useConversationOnboardingCompletion } from "src/composables/conversation/useConversationOnboardingCompletion";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
@@ -56,16 +64,21 @@ import {
   type ConversationEmailUpdateOnboardingTranslations,
   conversationEmailUpdateOnboardingTranslations,
 } from "./complete.i18n";
+import { conversationSurveyOnboardingTranslations } from "./index.i18n";
 
 defineProps<{ sheet: DismissalController }>();
 const { t } = useComponentI18n<ConversationEmailUpdateOnboardingTranslations>(
   conversationEmailUpdateOnboardingTranslations
+);
+const { t: tSurvey } = useComponentI18n(
+  conversationSurveyOnboardingTranslations
 );
 const { t: tEmailUpdateResume } =
   useComponentI18n<EmailUpdateResumeNotificationTranslations>(
     emailUpdateResumeNotificationTranslations
   );
 const { exitToConversation } = useConversationOnboardingExit();
+const { completeOnboarding } = useConversationOnboardingCompletion();
 const conversationOnboardingStore = useConversationOnboardingStore();
 const conversationEmailUpdatesApi = useBackendConversationEmailUpdatesApi();
 const { navigateToNextSurveyStep } = useSurveyNavigation();
@@ -73,7 +86,10 @@ const { showNotifyMessage } = useNotify();
 const { routeConversationSlugId: conversationSlugId, routeContext } =
   useConversationOnboardingRoute();
 
-const { surveyStatus } = useConversationSurveyState({ conversationSlugId });
+const { surveyStatus, hasLoadError, refetchAll } = useConversationSurveyState({
+  conversationSlugId,
+  formLoadMode: "none",
+});
 const emailUpdateSummaryQuery = useConversationEmailUpdateSummaryQuery({
   conversationSlugId,
   enabled: true,
@@ -108,6 +124,7 @@ const conversationUpdateScopeKind = computed(() =>
 );
 const isBusy = computed(
   () =>
+    surveyStatus.value === undefined ||
     summaryLoadState.value === "loading" ||
     summaryLoadState.value === "transient_error" ||
     isSavingConversationUpdatePreference.value
@@ -242,7 +259,10 @@ function showPreferenceSaveError(): void {
 }
 
 async function continueWithoutSaving(): Promise<void> {
-  if (isSavingConversationUpdatePreference.value) {
+  if (
+    isSavingConversationUpdatePreference.value ||
+    surveyStatus.value === undefined
+  ) {
     return;
   }
   conversationOnboardingStore.markEmailUpdateConsentSkipped();
@@ -251,8 +271,9 @@ async function continueWithoutSaving(): Promise<void> {
 
 async function continueOnboarding(): Promise<void> {
   const surveyGate = surveyStatus.value?.surveyGate;
+  if (surveyGate === undefined) return;
   if (
-    surveyGate?.hasSurvey === true &&
+    surveyGate.hasSurvey &&
     !surveyGate.isOptional &&
     !surveyGate.canParticipate
   ) {
@@ -262,7 +283,7 @@ async function continueOnboarding(): Promise<void> {
     });
     return;
   }
-  await exitToConversation({
+  await completeOnboarding({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
   });

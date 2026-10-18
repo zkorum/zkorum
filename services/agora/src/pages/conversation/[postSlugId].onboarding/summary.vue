@@ -162,7 +162,10 @@ const {
   isInitialLoading,
   hasLoadError,
   refetchAll,
-} = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
+} = useConversationSurveyState({
+  conversationSlugId: routeConversationSlugId,
+  formLoadMode: "all",
+});
 
 const withdrawMutation = useSurveyWithdrawMutation({ conversationSlugId });
 const showWithdrawDialog = ref(false);

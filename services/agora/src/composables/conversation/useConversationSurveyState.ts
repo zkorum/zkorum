@@ -9,14 +9,20 @@ import {
 import { deriveSurveyRequirementState } from "src/utils/survey/requirements";
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
 
-import { resolveSurveyForm, shouldFetchSurveyForm } from "./surveyStateLogic";
+import {
+  resolveSurveyForm,
+  shouldFetchSurveyForm,
+  type SurveyFormLoadMode,
+} from "./surveyStateLogic";
 
 export function useConversationSurveyState({
   conversationSlugId,
   requireAccount = false,
+  formLoadMode,
 }: {
   conversationSlugId: MaybeRefOrGetter<string>;
   requireAccount?: boolean;
+  formLoadMode: SurveyFormLoadMode;
 }) {
   const conversationSlugIdValue = computed(() => toValue(conversationSlugId));
   const {
@@ -36,14 +42,17 @@ export function useConversationSurveyState({
     enabled: computed(() => isAuthInitialized.value),
   });
   const surveyStatus = computed(() => surveyStatusQuery.data.value);
+  const shouldLoadSurveyForm = computed(() =>
+    shouldFetchSurveyForm({
+      surveyStatus: surveyStatus.value,
+      mode: formLoadMode,
+    })
+  );
   const surveyFormQuery = useSurveyFormQuery({
     conversationSlugId: conversationSlugIdValue,
-    enabled: computed(() => {
-      return (
-        isAuthInitialized.value &&
-        shouldFetchSurveyForm({ surveyStatus: surveyStatus.value })
-      );
-    }),
+    enabled: computed(
+      () => isAuthInitialized.value && shouldLoadSurveyForm.value
+    ),
   });
 
   const conversationData = computed(
@@ -58,9 +67,23 @@ export function useConversationSurveyState({
       surveyForm: surveyFormQuery.data.value,
     });
   });
-  const surveyStepTotal = computed(
-    () => (surveyForm.value?.questions.length ?? 0) + 2
-  );
+  const surveyProgress = computed<{
+    conversationSlugId: string;
+    total: number;
+  }>((previous) => ({
+    conversationSlugId: conversationSlugIdValue.value,
+    // Account-scoped answers refresh after login; the progress bar must not
+    // briefly treat the same questionnaire as having zero questions.
+    total:
+      surveyForm.value !== undefined
+        ? surveyForm.value.questions.length + 2
+        : surveyStatus.value?.surveyGate.hasSurvey === false
+          ? 2
+          : previous?.conversationSlugId === conversationSlugIdValue.value
+            ? previous.total
+            : 2,
+  }));
+  const surveyStepTotal = computed(() => surveyProgress.value.total);
 
   const requirementState = computed(() => {
     const conversation = conversationData.value;
@@ -92,7 +115,7 @@ export function useConversationSurveyState({
       (conversationQuery.isPending.value &&
         conversationData.value === undefined) ||
       (surveyStatusQuery.isPending.value && surveyStatus.value === undefined) ||
-      (shouldFetchSurveyForm({ surveyStatus: surveyStatus.value }) &&
+      (shouldLoadSurveyForm.value &&
         surveyFormQuery.isPending.value &&
         surveyForm.value === undefined)
     );
@@ -102,8 +125,7 @@ export function useConversationSurveyState({
     return (
       conversationQuery.isError.value ||
       surveyStatusQuery.isError.value ||
-      (shouldFetchSurveyForm({ surveyStatus: surveyStatus.value }) &&
-        surveyFormQuery.isError.value)
+      (shouldLoadSurveyForm.value && surveyFormQuery.isError.value)
     );
   });
 
@@ -113,7 +135,12 @@ export function useConversationSurveyState({
       surveyStatusQuery.refetch(),
     ]);
 
-    if (shouldFetchSurveyForm({ surveyStatus: surveyStatusResult.data })) {
+    if (
+      shouldFetchSurveyForm({
+        surveyStatus: surveyStatusResult.data,
+        mode: formLoadMode,
+      })
+    ) {
       await surveyFormQuery.refetch();
     }
   }

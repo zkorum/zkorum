@@ -177,7 +177,6 @@ import { useTabScrollRestoration } from "src/composables/conversation/useTabScro
 import { usePageLayout } from "src/composables/layout/usePageLayout";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useStickyObserver } from "src/composables/ui/useStickyObserver";
-import { useAuthenticationStore } from "src/stores/authentication";
 import { useLayoutHeaderStore } from "src/stores/layout/header";
 import { useNavigationStore } from "src/stores/navigation";
 import { useNewPostDraftsStore } from "src/stores/newConversationDrafts";
@@ -218,8 +217,6 @@ const navigationStore = useNavigationStore();
 const { resetDraft } = useNewPostDraftsStore();
 const { safeNavigateBack } = useGoBackButtonHandler();
 
-const authStore = useAuthenticationStore();
-const { userId } = storeToRefs(authStore);
 const { reveal: headerRevealed } = storeToRefs(useLayoutHeaderStore());
 const commentComposerRef = ref<InstanceType<typeof CommentComposer>>();
 const pausedAnalysisActionBarStats = ref<
@@ -260,7 +257,6 @@ const {
   handleTicketVerified,
   handleSubmittedComment,
   handleRefresh,
-  invalidateUserVotes,
   scrollToActionBar,
   conversationScrollContext,
   pendingScrollOverride,
@@ -437,22 +433,6 @@ function handleConversationDeleted(): void {
 onMounted(() => {
   if (navigationStore.cameFromConversationCreation) {
     resetDraft();
-  }
-});
-
-// Watch for userId changes to detect account merges
-watch(userId, async (newUserId, oldUserId) => {
-  if (
-    oldUserId !== undefined &&
-    newUserId !== undefined &&
-    oldUserId !== newUserId
-  ) {
-    if (conversationData.value) {
-      void invalidateUserVotes(
-        conversationData.value.metadata.conversationSlugId
-      );
-    }
-    await conversationQuery.refetch();
   }
 });
 

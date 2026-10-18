@@ -2,12 +2,25 @@ import type { SurveyStatusCheckResponse } from "src/shared/types/dto";
 import type { SurveyFormData } from "src/utils/api/survey/useSurveyQueries";
 import { describe, expect, it } from "vitest";
 
-import {
-  resolveSurveyForm,
-  shouldFetchSurveyForm,
-} from "./surveyStateLogic";
+import { resolveSurveyForm, shouldFetchSurveyForm } from "./surveyStateLogic";
 
 describe("shouldFetchSurveyForm", () => {
+  it("does not load completed answers just to finish verification", () => {
+    const surveyStatus: SurveyStatusCheckResponse = {
+      surveyGate: {
+        hasSurvey: true,
+        isOptional: false,
+        canParticipate: true,
+        status: "complete_valid",
+      },
+      routeResolution: { kind: "summary" },
+    };
+    expect(shouldFetchSurveyForm({ surveyStatus, mode: "incomplete" })).toBe(
+      false
+    );
+    expect(shouldFetchSurveyForm({ surveyStatus })).toBe(true);
+  });
+
   it("returns false before survey status is known", () => {
     expect(shouldFetchSurveyForm({ surveyStatus: undefined })).toBe(false);
   });
