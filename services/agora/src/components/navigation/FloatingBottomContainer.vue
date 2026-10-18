@@ -1,20 +1,47 @@
 <template>
+  <div
+    v-if="!hideBottomBarForRoute"
+    v-show="isActive"
+    aria-hidden="true"
+    :style="{ blockSize: `${barHeight}px` }"
+  />
   <Teleport v-if="!hideBottomBarForRoute" to="body">
-    <div class="bottomBar" :style="barStyle">
+    <div
+      v-show="isActive"
+      ref="bottomBar"
+      class="bottomBar"
+      :style="{
+        ...barStyle,
+        ...viewportStyle,
+      }"
+    >
       <slot />
     </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
+import {
+  useElementSize,
+  useEventListener,
+  useResizeObserver,
+} from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import { useQuasar } from "quasar";
 import { useNavigationStore } from "src/stores/navigation";
+import { useVisibleViewport } from "src/utils/html/viewPort";
 import {
   isConversationOnboardingRoutePath,
   isConversationRoutePath,
 } from "src/utils/router/conversationRouteContext";
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  ref,
+  useTemplateRef,
+  watch,
+} from "vue";
 import { useRoute } from "vue-router";
 
 const props = withDefaults(
@@ -29,35 +56,35 @@ const $q = useQuasar();
 const route = useRoute();
 const { drawerBehavior, drawerWidth } = storeToRefs(useNavigationStore());
 const anchorRect = ref<DOMRectReadOnly | undefined>(undefined);
-let resizeObserver: ResizeObserver | undefined;
-
+const bottomBar = useTemplateRef<HTMLElement>("bottomBar");
+const isActive = ref(true);
+const { viewportStyle } = useVisibleViewport();
+const { height: barHeight } = useElementSize(bottomBar, undefined, {
+  box: "border-box",
+});
+onActivated(() => {
+  isActive.value = true;
+});
+onDeactivated(() => {
+  isActive.value = false;
+});
 function updateAnchorRect(): void {
-  anchorRect.value = props.anchorElement?.getBoundingClientRect();
+  anchorRect.value = isActive.value
+    ? props.anchorElement?.getBoundingClientRect()
+    : undefined;
 }
 
-watch(
-  () => props.anchorElement,
-  (anchorElement) => {
-    window.removeEventListener("resize", updateAnchorRect);
-    resizeObserver?.disconnect();
-    resizeObserver = undefined;
-    if (anchorElement === undefined) {
-      anchorRect.value = undefined;
-      return;
-    }
-
-    updateAnchorRect();
-    window.addEventListener("resize", updateAnchorRect, { passive: true });
-    resizeObserver = new ResizeObserver(updateAnchorRect);
-    resizeObserver.observe(anchorElement);
-  },
-  { immediate: true }
+const activeAnchor = computed(() =>
+  isActive.value ? props.anchorElement : undefined
 );
-
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", updateAnchorRect);
-  resizeObserver?.disconnect();
-});
+useResizeObserver(activeAnchor, updateAnchorRect);
+useEventListener(
+  () => (activeAnchor.value === undefined ? undefined : window),
+  "resize",
+  updateAnchorRect,
+  { passive: true }
+);
+watch(activeAnchor, updateAnchorRect, { immediate: true, flush: "post" });
 
 const hideBottomBarForRoute = computed(() => {
   const routePath = route.path;
@@ -98,18 +125,27 @@ const barStyle = computed(() => {
 
 <style scoped lang="scss">
 .bottomBar {
+  --floating-bottom-clearance: calc(0.5rem + env(safe-area-inset-bottom));
+
   box-sizing: border-box;
   position: fixed;
-  bottom: 0rem;
+  inset-block-end: var(--visible-viewport-bottom-inset, 0px);
   z-index: 100;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  padding-top: 1.5rem;
-  background: linear-gradient(to bottom, transparent 0%, $app-background-color 40%);
+  padding-block-end: var(--floating-bottom-clearance);
+  padding-inline: 0.5rem;
+  padding-block-start: 1.5rem;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    $app-background-color 40%
+  );
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  max-block-size: var(--visible-viewport-height, 100dvh);
 
   > * {
+    min-block-size: 0;
     pointer-events: auto;
   }
 }

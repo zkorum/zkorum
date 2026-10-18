@@ -25,13 +25,13 @@
           :conversation-route-context="props.conversationRouteContext"
           :editable-opinion="commentItem"
           :editing-opinion-slug-id="editingOpinionSlugId"
-          @edit-opinion="emit('editOpinion', $event)"
+          @edit-opinion="beginEditOpinion"
           @deleted="deletedComment()"
           @muted-comment="mutedComment()"
         />
       </div>
 
-      <div class="comment-content">
+      <div ref="contentElement" class="comment-content">
         <ContentTranslationControl
           v-if="contentTranslation?.isAvailable === true"
           :model-value="contentTranslation.mode"
@@ -83,7 +83,10 @@
 <script setup lang="ts">
 import OpinionIdentityCard from "src/components/post/comments/OpinionIdentityCard.vue";
 import ContentTranslationControl from "src/components/translation/ContentTranslationControl.vue";
-import type { OpinionVotingUtilities } from "src/composables/opinion/types";
+import type {
+  OpinionEditRequest,
+  OpinionVotingUtilities,
+} from "src/composables/opinion/types";
 import type {
   DisplayedOpinionItem,
   EventSlug,
@@ -93,7 +96,7 @@ import type {
 } from "src/shared/types/zod";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import type { ContentTranslationDisplayMode } from "src/utils/translation/contentTranslation";
-import { computed } from "vue";
+import { computed, useTemplateRef } from "vue";
 
 import ZKHtmlContent from "../../../../ui-library/ZKHtmlContent.vue";
 import CommentActionBar from "./CommentActionBar.vue";
@@ -110,6 +113,7 @@ interface CommentContentTranslationPreview {
 }
 
 const props = defineProps<{
+  cardElement: HTMLElement | undefined;
   commentItem: DisplayedOpinionItem;
   editingOpinionSlugId: string | undefined;
   postSlugId: string;
@@ -128,13 +132,25 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: [opinionSlugId: string];
-  editOpinion: [opinion: DisplayedOpinionItem];
+  editOpinion: [request: OpinionEditRequest];
   mutedComment: [];
   "update:contentTranslationMode": [mode: ContentTranslationDisplayMode];
 }>();
 
+const contentElement = useTemplateRef<HTMLElement>("contentElement");
+
+function beginEditOpinion(opinion: DisplayedOpinionItem): void {
+  const card = props.cardElement;
+  const content = contentElement.value;
+  if (card === undefined || content === null) return;
+  emit("editOpinion", { opinion, sourceElements: { card, content } });
+}
+
 const displayedOpinion = computed(() => {
-  if (props.contentTranslation?.mode === "translated" && props.contentTranslation.translationStatus === "completed") {
+  if (
+    props.contentTranslation?.mode === "translated" &&
+    props.contentTranslation.translationStatus === "completed"
+  ) {
     return props.contentTranslation.translatedOpinion;
   }
   return props.commentItem.opinion;

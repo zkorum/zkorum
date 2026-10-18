@@ -76,7 +76,7 @@ function privateState(): Record<string, unknown> {
       returnHistoryPosition: 4,
       routeContext: { kind: "project", projectSlug: "private-project" },
       isResumeMode: true,
-      justCompletedSurvey: false,
+      emailUpdateConsentSkipped: false,
     },
     pageLayout: {
       config: {

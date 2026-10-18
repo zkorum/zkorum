@@ -337,6 +337,39 @@ test("recognizes identical SQL deployed at a lower fractional version", async (t
   assert.deepEqual(await contents(f.flyway), expected);
 });
 
+test("preserves a multipart correction before a backfill without duplicating its SQL", async (t) => {
+  const f = await fixture(t);
+  const correction = await readFile(
+    new URL("../services/api/database/flyway/V0107.0.1__petite_mesmero.sql", import.meta.url),
+    "utf8"
+  );
+  const backfill = await readFile(
+    new URL("../services/api/database/flyway/V0107.1__backfill_survey_option_answer_html.sql", import.meta.url),
+    "utf8"
+  );
+  const pairedConstraint = await readFile(
+    new URL("../services/api/database/flyway/V0108__mature_next_avengers.sql", import.meta.url),
+    "utf8"
+  );
+  const historical = {
+    "V0107.0.1__petite_mesmero.sql": correction,
+    "V0107.1__backfill_survey_option_answer_html.sql": backfill,
+    "V0108__mature_next_avengers.sql": pairedConstraint,
+  };
+  await f.seed({
+    drizzle: {
+      "0107_petite_mesmero.sql": correction,
+      "0108_next_schema.sql": "SELECT 108;\n",
+    },
+    migrations: historical,
+  });
+  const expected = { ...historical, "V0109__next_schema.sql": "SELECT 108;\n" };
+  succeeded(await f.run());
+  assert.deepEqual(await contents(f.flyway), expected);
+  succeeded(await f.run());
+  assert.deepEqual(await contents(f.flyway), expected);
+});
+
 test("counts fractional major versions and ignores invalid prefixes and nested SQL", async (t) => {
   const f = await fixture(t);
   const ignored = {
@@ -344,7 +377,7 @@ test("counts fractional major versions and ignores invalid prefixes and nested S
     "V999__ignored.sql": "-- four digits required\n",
     "V99999__ignored.sql": "-- only four digits\n",
     "V9999x1__ignored.sql": "-- literal decimal point required\n",
-    "V9999.1.2__ignored.sql": "-- only one fraction\n",
+    "V9999.1.x__ignored.sql": "-- numeric version components required\n",
     "V9999_ignored.sql": "-- double underscore required\n",
     "V9999__ignored.sql.bak": "-- SQL extension required\n",
     "plain.sql": "-- no version\n",

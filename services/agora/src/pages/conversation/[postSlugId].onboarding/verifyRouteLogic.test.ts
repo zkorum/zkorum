@@ -38,7 +38,6 @@ describe("resolveVerifyRouteDecision", () => {
       exactVerifyRoute: true,
       isInitialLoading: false,
       hasLoadError: false,
-      justCompletedSurvey: false,
       conversationSlugId: "qlWQFzY",
       conversation: {
         participationMode: "guest",
@@ -63,7 +62,6 @@ describe("resolveVerifyRouteDecision", () => {
       exactVerifyRoute: true,
       isInitialLoading: false,
       hasLoadError: false,
-      justCompletedSurvey: false,
       conversationSlugId: "qlWQFzY",
       conversation: {
         participationMode: "guest",
@@ -85,7 +83,6 @@ describe("resolveVerifyRouteDecision", () => {
       exactVerifyRoute: true,
       isInitialLoading: false,
       hasLoadError: false,
-      justCompletedSurvey: false,
       conversationSlugId: "qlWQFzY",
       conversation: {
         participationMode: "guest",
@@ -119,7 +116,6 @@ describe("resolveVerifyRouteDecision", () => {
       exactVerifyRoute: true,
       isInitialLoading: false,
       hasLoadError: false,
-      justCompletedSurvey: false,
       conversationSlugId: "qlWQFzY",
       conversation: {
         participationMode: "guest",
@@ -158,7 +154,6 @@ describe("resolveVerifyRouteDecision", () => {
       exactVerifyRoute: true,
       isInitialLoading: false,
       hasLoadError: false,
-      justCompletedSurvey: false,
       conversationSlugId: "qlWQFzY",
       conversation: {
         participationMode: "account_required",
@@ -185,7 +180,6 @@ describe("resolveVerifyRouteDecision", () => {
       exactVerifyRoute: true,
       isInitialLoading: false,
       hasLoadError: false,
-      justCompletedSurvey: false,
       conversationSlugId: "qlWQFzY",
       conversation: { participationMode: "email_verification" },
       surveyStatus: createSurveyStatus(),
@@ -222,7 +216,6 @@ describe("resolveVerifyRouteDecision", () => {
       exactVerifyRoute: true,
       isInitialLoading: false,
       hasLoadError: false,
-      justCompletedSurvey: false,
       conversationSlugId: "qlWQFzY",
       conversation: { participationMode: "account_required" },
       surveyStatus: createNoSurveyStatus(),

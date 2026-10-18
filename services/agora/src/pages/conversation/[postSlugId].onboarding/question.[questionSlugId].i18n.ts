@@ -25,6 +25,7 @@ export interface ConversationSurveyQuestionTranslations {
   freeTextHelp: string;
   conversationClosedMessage: string;
   failedToSaveAnswerMessage: string;
+  answersSavedMessage: string;
 }
 
 export const conversationSurveyQuestionTranslations: Record<
@@ -45,8 +46,7 @@ export const conversationSurveyQuestionTranslations: Record<
     finishLaterLabel: "Finish later",
     nextLabel: "Next",
     reviewAnswersLabel: "Review answers",
-    multiChoiceBetweenDescription:
-      "Choose between {min} and {max} options.",
+    multiChoiceBetweenDescription: "Choose between {min} and {max} options.",
     multiChoiceAtLeastDescription: "Choose at least {min} options.",
     optionalMultiChoiceBetweenDescription:
       "Leave blank or choose between {min} and {max} options.",
@@ -57,11 +57,11 @@ export const conversationSurveyQuestionTranslations: Record<
     publicAggregateSuppressionNotice:
       "Public results may hide very small groups to protect participants' privacy.",
     writeAnswerDescription: "Write your answer below.",
-    freeTextHelp:
-      "{count} / {max} characters. Minimum {min} when answered.",
+    freeTextHelp: "{count} / {max} characters. Minimum {min} when answered.",
     conversationClosedMessage:
       "This conversation is no longer open for participation.",
     failedToSaveAnswerMessage: "Failed to save your answer.",
+    answersSavedMessage: "Answers saved",
   },
   ar: {
     failedToLoadSurveyTitle: "فشل تحميل الاستبيان",
@@ -77,8 +77,7 @@ export const conversationSurveyQuestionTranslations: Record<
     finishLaterLabel: "أكمل لاحقًا",
     nextLabel: "التالي",
     reviewAnswersLabel: "مراجعة الإجابات",
-    multiChoiceBetweenDescription:
-      "اختر بين {min} و {max} خيارات.",
+    multiChoiceBetweenDescription: "اختر بين {min} و {max} خيارات.",
     multiChoiceAtLeastDescription: "اختر {min} خيارات على الأقل.",
     optionalMultiChoiceBetweenDescription:
       "اتركه فارغًا أو اختر بين {min} و {max} خيارات.",
@@ -89,11 +88,10 @@ export const conversationSurveyQuestionTranslations: Record<
     publicAggregateSuppressionNotice:
       "قد تخفي النتائج العامة المجموعات الصغيرة جدًا لحماية خصوصية المشاركين.",
     writeAnswerDescription: "اكتب إجابتك أدناه.",
-    freeTextHelp:
-      "{count} / {max} حرفًا. الحد الأدنى {min} عند الإجابة.",
-    conversationClosedMessage:
-      "لم تعد هذه المحادثة مفتوحة للمشاركة.",
+    freeTextHelp: "{count} / {max} حرفًا. الحد الأدنى {min} عند الإجابة.",
+    conversationClosedMessage: "لم تعد هذه المحادثة مفتوحة للمشاركة.",
     failedToSaveAnswerMessage: "فشل حفظ إجابتك.",
+    answersSavedMessage: "تم حفظ الإجابات",
   },
   es: {
     failedToLoadSurveyTitle: "No se pudo cargar la encuesta",
@@ -109,8 +107,7 @@ export const conversationSurveyQuestionTranslations: Record<
     finishLaterLabel: "Terminar después",
     nextLabel: "Siguiente",
     reviewAnswersLabel: "Revisar respuestas",
-    multiChoiceBetweenDescription:
-      "Elija entre {min} y {max} opciones.",
+    multiChoiceBetweenDescription: "Elija entre {min} y {max} opciones.",
     multiChoiceAtLeastDescription: "Elija al menos {min} opciones.",
     optionalMultiChoiceBetweenDescription:
       "Déjelo en blanco o elija entre {min} y {max} opciones.",
@@ -121,11 +118,11 @@ export const conversationSurveyQuestionTranslations: Record<
     publicAggregateSuppressionNotice:
       "Los resultados públicos pueden ocultar grupos muy pequeños para proteger la privacidad de los participantes.",
     writeAnswerDescription: "Escriba su respuesta abajo.",
-    freeTextHelp:
-      "{count} / {max} caracteres. Mínimo {min} al responder.",
+    freeTextHelp: "{count} / {max} caracteres. Mínimo {min} al responder.",
     conversationClosedMessage:
       "Esta conversación ya no está abierta para participar.",
     failedToSaveAnswerMessage: "No se pudo guardar su respuesta.",
+    answersSavedMessage: "Respuestas guardadas",
   },
   fa: {
     failedToLoadSurveyTitle: "بارگیری نظرسنجی انجام نشد",
@@ -141,8 +138,7 @@ export const conversationSurveyQuestionTranslations: Record<
     finishLaterLabel: "بعداً ادامه می‌دهم",
     nextLabel: "بعدی",
     reviewAnswersLabel: "مرور پاسخ‌ها",
-    multiChoiceBetweenDescription:
-      "بین {min} تا {max} گزینه را انتخاب کنید.",
+    multiChoiceBetweenDescription: "بین {min} تا {max} گزینه را انتخاب کنید.",
     multiChoiceAtLeastDescription: "حداقل {min} گزینه را انتخاب کنید.",
     optionalMultiChoiceBetweenDescription:
       "خالی بگذارید یا بین {min} تا {max} گزینه را انتخاب کنید.",
@@ -153,11 +149,10 @@ export const conversationSurveyQuestionTranslations: Record<
     publicAggregateSuppressionNotice:
       "برای حفظ حریم خصوصی شرکت‌کنندگان، نتایج عمومی ممکن است گروه‌های بسیار کوچک را پنهان کند.",
     writeAnswerDescription: "پاسخ خود را در پایین بنویسید.",
-    freeTextHelp:
-      "{count} / {max} نویسه. حداقل {min} هنگام پاسخ‌دادن.",
-    conversationClosedMessage:
-      "این گفتگو دیگر برای مشارکت باز نیست.",
+    freeTextHelp: "{count} / {max} نویسه. حداقل {min} هنگام پاسخ‌دادن.",
+    conversationClosedMessage: "این گفتگو دیگر برای مشارکت باز نیست.",
     failedToSaveAnswerMessage: "ذخیره پاسخ شما انجام نشد.",
+    answersSavedMessage: "پاسخ‌ها ذخیره شدند",
   },
   fr: {
     failedToLoadSurveyTitle: "Impossible de charger le questionnaire",
@@ -173,8 +168,7 @@ export const conversationSurveyQuestionTranslations: Record<
     finishLaterLabel: "Terminer plus tard",
     nextLabel: "Suivant",
     reviewAnswersLabel: "Voir les réponses",
-    multiChoiceBetweenDescription:
-      "Choisissez entre {min} et {max} options.",
+    multiChoiceBetweenDescription: "Choisissez entre {min} et {max} options.",
     multiChoiceAtLeastDescription: "Choisissez au moins {min} options.",
     optionalMultiChoiceBetweenDescription:
       "Laissez vide ou choisissez entre {min} et {max} options.",
@@ -185,11 +179,11 @@ export const conversationSurveyQuestionTranslations: Record<
     publicAggregateSuppressionNotice:
       "Les résultats publics peuvent masquer les très petits groupes pour protéger la vie privée des participants.",
     writeAnswerDescription: "Écrivez votre réponse ci-dessous.",
-    freeTextHelp:
-      "{count} / {max} caractères. Minimum {min} si vous répondez.",
+    freeTextHelp: "{count} / {max} caractères. Minimum {min} si vous répondez.",
     conversationClosedMessage:
       "Cette conversation n'est plus ouverte à la participation.",
     failedToSaveAnswerMessage: "Impossible d'enregistrer votre réponse.",
+    answersSavedMessage: "Réponses enregistrées",
   },
   he: {
     failedToLoadSurveyTitle: "טעינת הסקר נכשלה",
@@ -205,8 +199,7 @@ export const conversationSurveyQuestionTranslations: Record<
     finishLaterLabel: "לסיים אחר כך",
     nextLabel: "הבא",
     reviewAnswersLabel: "עיון בתשובות",
-    multiChoiceBetweenDescription:
-      "בחרו בין {min} ל-{max} אפשרויות.",
+    multiChoiceBetweenDescription: "בחרו בין {min} ל-{max} אפשרויות.",
     multiChoiceAtLeastDescription: "בחרו לפחות {min} אפשרויות.",
     optionalMultiChoiceBetweenDescription:
       "השאירו ריק או בחרו בין {min} ל-{max} אפשרויות.",
@@ -217,11 +210,10 @@ export const conversationSurveyQuestionTranslations: Record<
     publicAggregateSuppressionNotice:
       "תוצאות ציבוריות עשויות להסתיר קבוצות קטנות מאוד כדי להגן על פרטיות המשתתפים.",
     writeAnswerDescription: "כתבו את התשובה שלכם למטה.",
-    freeTextHelp:
-      "{count} / {max} תווים. מינימום {min} כשעונים.",
-    conversationClosedMessage:
-      "השיחה הזו כבר לא פתוחה להשתתפות.",
+    freeTextHelp: "{count} / {max} תווים. מינימום {min} כשעונים.",
+    conversationClosedMessage: "השיחה הזו כבר לא פתוחה להשתתפות.",
     failedToSaveAnswerMessage: "שמירת התשובה נכשלה.",
+    answersSavedMessage: "התשובות נשמרו",
   },
   ja: {
     failedToLoadSurveyTitle: "アンケートを読み込めませんでした",
@@ -245,15 +237,16 @@ export const conversationSurveyQuestionTranslations: Record<
     optionalMultiChoiceAtLeastDescription:
       "空欄のままにするか、少なくとも {min} 個選んでください。",
     chooseOneOptionDescription: "1 つ選んでください。",
-    chooseZeroOrOneOptionDescription: "0 個または 1 個の選択肢を選んでください。",
+    chooseZeroOrOneOptionDescription:
+      "0 個または 1 個の選択肢を選んでください。",
     publicAggregateSuppressionNotice:
       "参加者のプライバシーを守るため、公開結果では非常に小さなグループが非表示になる場合があります。",
     writeAnswerDescription: "下に回答を入力してください。",
     freeTextHelp:
       "{count} / {max} 文字。回答する場合の最小文字数は {min} です。",
-    conversationClosedMessage:
-      "この会話はもう参加受付中ではありません。",
+    conversationClosedMessage: "この会話はもう参加受付中ではありません。",
     failedToSaveAnswerMessage: "回答を保存できませんでした。",
+    answersSavedMessage: "回答を保存しました",
   },
   ky: {
     failedToLoadSurveyTitle: "Сурамжылоону жүктөө ишке ашкан жок",
@@ -281,11 +274,10 @@ export const conversationSurveyQuestionTranslations: Record<
     publicAggregateSuppressionNotice:
       "Катышуучулардын купуялуулугун коргоо үчүн коомдук жыйынтыктар өтө чакан топторду жашырышы мүмкүн.",
     writeAnswerDescription: "Төмөндө жообуңузду жазыңыз.",
-    freeTextHelp:
-      "{count} / {max} белги. Жооп берсеңиз, кеминде {min} керек.",
-    conversationClosedMessage:
-      "Бул сүйлөшүү мындан ары катышууга ачык эмес.",
+    freeTextHelp: "{count} / {max} белги. Жооп берсеңиз, кеминде {min} керек.",
+    conversationClosedMessage: "Бул сүйлөшүү мындан ары катышууга ачык эмес.",
     failedToSaveAnswerMessage: "Жообуңузду сактоо ишке ашкан жок.",
+    answersSavedMessage: "Жооптор сакталды",
   },
   ru: {
     failedToLoadSurveyTitle: "Не удалось загрузить опрос",
@@ -301,10 +293,8 @@ export const conversationSurveyQuestionTranslations: Record<
     finishLaterLabel: "Закончить позже",
     nextLabel: "Далее",
     reviewAnswersLabel: "Просмотреть ответы",
-    multiChoiceBetweenDescription:
-      "Выберите от {min} до {max} вариантов.",
-    multiChoiceAtLeastDescription:
-      "Выберите как минимум {min} вариантов.",
+    multiChoiceBetweenDescription: "Выберите от {min} до {max} вариантов.",
+    multiChoiceAtLeastDescription: "Выберите как минимум {min} вариантов.",
     optionalMultiChoiceBetweenDescription:
       "Оставьте пустым или выберите от {min} до {max} вариантов.",
     optionalMultiChoiceAtLeastDescription:
@@ -314,11 +304,10 @@ export const conversationSurveyQuestionTranslations: Record<
     publicAggregateSuppressionNotice:
       "В публичных результатах очень маленькие группы могут скрываться для защиты приватности участников.",
     writeAnswerDescription: "Напишите ваш ответ ниже.",
-    freeTextHelp:
-      "{count} / {max} символов. Минимум {min}, если отвечаете.",
-    conversationClosedMessage:
-      "Эта беседа больше не открыта для участия.",
+    freeTextHelp: "{count} / {max} символов. Минимум {min}, если отвечаете.",
+    conversationClosedMessage: "Эта беседа больше не открыта для участия.",
     failedToSaveAnswerMessage: "Не удалось сохранить ваш ответ.",
+    answersSavedMessage: "Ответы сохранены",
   },
   "zh-Hans": {
     failedToLoadSurveyTitle: "无法加载问卷",
@@ -338,17 +327,16 @@ export const conversationSurveyQuestionTranslations: Record<
     multiChoiceAtLeastDescription: "请至少选择 {min} 个选项。",
     optionalMultiChoiceBetweenDescription:
       "可留空，或选择 {min} 到 {max} 个选项。",
-    optionalMultiChoiceAtLeastDescription:
-      "可留空，或至少选择 {min} 个选项。",
+    optionalMultiChoiceAtLeastDescription: "可留空，或至少选择 {min} 个选项。",
     chooseOneOptionDescription: "请选择一个选项。",
     chooseZeroOrOneOptionDescription: "请选择零个或一个选项。",
     publicAggregateSuppressionNotice:
       "为保护参与者隐私，公开结果可能会隐藏非常小的群体。",
     writeAnswerDescription: "请在下方填写你的回答。",
-    freeTextHelp:
-      "{count} / {max} 个字符。作答时最少需要 {min} 个字符。",
+    freeTextHelp: "{count} / {max} 个字符。作答时最少需要 {min} 个字符。",
     conversationClosedMessage: "这场对话已不再开放参与。",
     failedToSaveAnswerMessage: "无法保存你的回答。",
+    answersSavedMessage: "回答已保存",
   },
   "zh-Hant": {
     failedToLoadSurveyTitle: "無法載入問卷",
@@ -368,16 +356,15 @@ export const conversationSurveyQuestionTranslations: Record<
     multiChoiceAtLeastDescription: "請至少選擇 {min} 個選項。",
     optionalMultiChoiceBetweenDescription:
       "可留空，或選擇 {min} 到 {max} 個選項。",
-    optionalMultiChoiceAtLeastDescription:
-      "可留空，或至少選擇 {min} 個選項。",
+    optionalMultiChoiceAtLeastDescription: "可留空，或至少選擇 {min} 個選項。",
     chooseOneOptionDescription: "請選擇一個選項。",
     chooseZeroOrOneOptionDescription: "請選擇零個或一個選項。",
     publicAggregateSuppressionNotice:
       "為保護參與者隱私，公開結果可能會隱藏非常小的群體。",
     writeAnswerDescription: "請在下方填寫你的回答。",
-    freeTextHelp:
-      "{count} / {max} 個字元。作答時最少需要 {min} 個字元。",
+    freeTextHelp: "{count} / {max} 個字元。作答時最少需要 {min} 個字元。",
     conversationClosedMessage: "這場對話已不再開放參與。",
     failedToSaveAnswerMessage: "無法儲存你的回答。",
+    answersSavedMessage: "回答已儲存",
   },
 };

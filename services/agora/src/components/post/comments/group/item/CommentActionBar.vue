@@ -5,7 +5,7 @@
         vote-type="disagree"
         :label="t('disagree')"
         :is-selected="userVoteAction === 'disagree'"
-        :disabled="isVotingDisabled || isCastingVote"
+        :disabled="isVotingDisabled"
         :set-aria-label="`${t('disagreeAriaLabel')} ${localNumDisagrees}`"
         :vote-count="localNumDisagrees"
         :percentage="formatPercentage(relativeTotalPercentageDisagrees)"
@@ -23,7 +23,7 @@
         vote-type="pass"
         :label="t('pass')"
         :is-selected="userVoteAction === 'pass'"
-        :disabled="isVotingDisabled || isCastingVote"
+        :disabled="isVotingDisabled"
         :set-aria-label="`${t('passAriaLabel')} ${localNumPasses}`"
         :vote-count="localNumPasses"
         :percentage="formatPercentage(relativeTotalPercentagePasses)"
@@ -41,7 +41,7 @@
         vote-type="agree"
         :label="t('agree')"
         :is-selected="userVoteAction === 'agree'"
-        :disabled="isVotingDisabled || isCastingVote"
+        :disabled="isVotingDisabled"
         :set-aria-label="`${t('agreeAriaLabel')} ${localNumAgrees}`"
         :vote-count="localNumAgrees"
         :percentage="formatPercentage(relativeTotalPercentageAgrees)"
@@ -92,7 +92,6 @@ import type {
   OpinionVoteParams,
   OpinionVotingUtilities,
 } from "src/composables/opinion/types";
-import { useVotingActionGuard } from "src/composables/opinion/useVotingActionGuard";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import {
   type EventSlug,
@@ -133,9 +132,10 @@ const props = defineProps<{
 }>();
 
 const showLoginDialog = ref(false);
-const actionGuard = useVotingActionGuard();
-const isCastingVote = actionGuard.isPending;
-onUnmounted(actionGuard.invalidate);
+let latestVoteAction: symbol | undefined;
+onUnmounted(() => {
+  latestVoteAction = undefined;
+});
 const hasVotedThisSession = ref(false);
 const { setOpinionAgreementIntention } = useConversationLoginIntentions();
 const { needsAuth: isAuthBlocked, shouldOpenParticipationModal } =
@@ -235,73 +235,67 @@ async function castPersonalVote({
   voteAction,
   sourceVersion,
 }: OpinionVoteParams): Promise<void> {
-  await actionGuard.run(async (isCurrent) => {
-    if (props.isVotingDisabled) return;
-    if (await shouldOpenParticipationModal()) {
-      if (isCurrent()) showLoginDialog.value = true;
-      return;
-    }
-    if (!isCurrent()) return;
+  const action = Symbol();
+  latestVoteAction = action;
+  const isCurrent = () => latestVoteAction === action;
+  if (props.isVotingDisabled) return;
+  if (await shouldOpenParticipationModal()) {
+    if (isCurrent()) showLoginDialog.value = true;
+    return;
+  }
+  if (!isCurrent()) return;
 
-    // Allow re-clicking the same vote to cancel it
-    // If already voted and clicking same button, treat as cancel
-    const isCancellation = userVoteAction.value === voteAction;
-    if (isCancellation) {
-      voteAction = "cancel";
-      // Hide banner immediately for cancellations to prevent flash
-      hasVotedThisSession.value = false;
-    }
+  // Re-clicking the selected vote cancels it, including while it is pending.
+  if (userVoteAction.value === voteAction) {
+    voteAction = "cancel";
+  }
+  hasVotedThisSession.value = voteAction !== "cancel";
 
-    // Cast vote - TanStack Query handles optimistic updates automatically
-    try {
-      const result = await props.votingUtilities.castVote({
-        opinionSlugId,
-        voteAction,
-        sourceVersion,
-      });
+  try {
+    const result = await props.votingUtilities.castVote({
+      opinionSlugId,
+      voteAction,
+      sourceVersion,
+    });
 
-      if (result === undefined || !isCurrent()) return;
+    if (result === undefined || !isCurrent()) return;
 
-      if (result.success) {
-        // Detect clustering for the first time this mount
-        if (result.userIsClustered === true && !userClusteredThisMount.value) {
-          userClusteredThisMount.value = true;
-        }
-
-        // Show banner for actual votes (not cancellations)
-        if (!isCancellation) {
-          hasVotedThisSession.value = true;
-        }
-      } else {
-        // Show specific error message based on reason
-        if (result.reason === "conversation_closed") {
-          showNotifyMessage(t("conversationClosed"));
-        } else if (result.reason === "conversation_locked") {
-          showNotifyMessage(t("voteFailed"));
-        } else if (
-          result.reason === "event_ticket_required" ||
-          result.reason === "account_required" ||
-          result.reason === "strong_verification_required" ||
-          result.reason === "email_verification_required"
-        ) {
-          showLoginDialog.value = true;
-        } else if (
-          result.reason === "survey_required" ||
-          result.reason === "survey_outdated"
-        ) {
-          showLoginDialog.value = true;
-        } else {
-          showNotifyMessage(t("voteFailed"));
-        }
-
-        // Invalidate conversation for ANY conversation state error to refresh UI
-        // This handles: conversation_closed, conversation_locked, or if conversation was reopened
-        invalidateConversation(props.postSlugId);
+    if (result.success) {
+      // Detect clustering for the first time this mount
+      if (result.userIsClustered === true && !userClusteredThisMount.value) {
+        userClusteredThisMount.value = true;
       }
-    } catch {
-      if (isCurrent()) showNotifyMessage(t("voteFailed"));
+    } else {
+      hasVotedThisSession.value = userCastedVote.value;
+      // Show specific error message based on reason
+      if (result.reason === "conversation_closed") {
+        showNotifyMessage(t("conversationClosed"));
+      } else if (result.reason === "conversation_locked") {
+        showNotifyMessage(t("voteFailed"));
+      } else if (
+        result.reason === "event_ticket_required" ||
+        result.reason === "account_required" ||
+        result.reason === "strong_verification_required" ||
+        result.reason === "email_verification_required"
+      ) {
+        showLoginDialog.value = true;
+      } else if (
+        result.reason === "survey_required" ||
+        result.reason === "survey_outdated"
+      ) {
+        showLoginDialog.value = true;
+      } else {
+        showNotifyMessage(t("voteFailed"));
+      }
+
+      // Invalidate conversation for ANY conversation state error to refresh UI
+      // This handles: conversation_closed, conversation_locked, or if conversation was reopened
+      invalidateConversation(props.postSlugId);
     }
-  });
+  } catch {
+    // The mutation owns rollback and technical-error notifications.
+    if (isCurrent()) hasVotedThisSession.value = userCastedVote.value;
+  }
 }
 
 // Vote banner logic (3 states): uses pure function for testability
@@ -330,11 +324,9 @@ const showViewAnalysisLink = computed(
   () => bannerState.value === "celebration"
 );
 
-const shouldShowBanner = computed(() => {
-  // Show banner whenever user has voted this session
-  // Message will be "Keep voting" or "You have been assigned a group!" based on clustering status
-  return hasVotedThisSession.value;
-});
+const shouldShowBanner = computed(
+  () => hasVotedThisSession.value && userCastedVote.value
+);
 
 function handleViewAnalysisClick() {
   props.onViewAnalysis();

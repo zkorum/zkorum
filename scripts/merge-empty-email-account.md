@@ -65,6 +65,8 @@ psql "$CONNECTION_STRING" -v ON_ERROR_STOP=1 -f /private/path/merge-empty-email-
 ## Preconditions
 
 - Both accounts are active and distinct; the retained username must match exactly.
+- Neither account has an authentication restriction (`auth_restricted_at` must be
+  `NULL` on both accounts).
 - The source email is its account's sole email row and an active primary login.
 - The retained account has no active email and, by default, has an active phone.
 - Optional phone hash, calling code, and last-two-digit checks must match the
@@ -101,8 +103,9 @@ transaction and commit/rollback promptly to release the account locks. Session
 and OTP expiry use UTC whole-second timestamps, matching the API regardless of
 the SQL editor's timezone.
 
-An already-linked email returns without writes only after checking the active
-account, primary email, configured UUIDs, and phone conditions. The
+An already-linked email returns without writes only after checking that the
+account is active and unrestricted for authentication, along with the primary
+email, configured UUIDs, and phone conditions. The
 `expected_source_user_id` assertion always refers to the **current** owner of the
 email. Consequently, a rerun pinned to the original source UUID fails after a
 successful merge. Independently verify the result before clearing that assertion
@@ -120,5 +123,6 @@ pnpm test run tests/mergeEmptyEmailAccount.test.ts
 The TypeScript tests reuse the generated auth fixture and the API's
 `authStateChangedPayload` schema. They start and remove their own PostgreSQL 16
 Docker container and exercise rollback, successful transfer, repeat execution,
-maintenance/identity guards, timezone-independent expiry, activity discovery,
-credential conflicts, and immediate/deferred composite email foreign keys.
+maintenance/identity/authentication-restriction guards, timezone-independent
+expiry, activity discovery, credential conflicts, and immediate/deferred
+composite email foreign keys.

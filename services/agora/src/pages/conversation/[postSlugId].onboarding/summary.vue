@@ -3,9 +3,11 @@
     :back-callback="handleBackToLastAnsweredQuestion"
     :close-callback="handleBackToConversation"
     :show-close-button="true"
+    :fixed-navigation="true"
   >
     <template #body>
       <ConversationSurveyOnboardingHero
+        density="compact"
         :conversation-data="conversationData"
         :initial-display-content="conversationDisplayContent"
       />
@@ -23,13 +25,14 @@
 
       <StepperLayout
         v-else-if="surveyForm !== undefined && surveyStatus !== undefined"
+        :fixed-navigation="true"
         :submit-call-back="handlePrimaryAction"
-        :current-step="surveyStepTotal"
-        :total-steps="surveyStepTotal"
+        :current-step="1"
+        :total-steps="1"
         :enable-next-button="true"
         :show-next-button="true"
         :show-loading-button="false"
-        :show-stepper="showSurveyStepper"
+        :show-stepper="false"
       >
         <template #header>
           <InfoHeader
@@ -124,7 +127,10 @@ import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavig
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
 import { htmlToCountedText } from "src/shared/richText";
-import { getSurveyOptionText } from "src/shared/surveyChoiceText";
+import {
+  getSurveyOptionText,
+  surveyOptionTextToPlainText,
+} from "src/shared/surveyChoiceText";
 import type {
   ParticipationBlockedReason,
   SurveyQuestionFormItem,
@@ -195,16 +201,6 @@ const canWithdraw = computed(() => {
       return question.currentAnswer !== undefined || question.isPassed;
     }) ?? false
   );
-});
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
-
-const showSurveyStepper = computed(() => {
-  return (surveyForm.value?.questions.length ?? 0) > 0;
 });
 
 const isWithdrawing = computed(() => withdrawMutation.isPending.value);
@@ -320,10 +316,14 @@ function getQuestionAnswerPreview({
       const selectedOptionTexts = currentAnswer.optionSlugIds
         .map((optionSlugId) => {
           const optionText = optionTextBySlugId.get(optionSlugId);
-          const textValue = getSurveyOptionText({
+          const optionAnswer = getSurveyOptionText({
             values: currentAnswer.optionTextValues,
             optionSlugId,
           });
+          const textValue =
+            optionAnswer === undefined
+              ? undefined
+              : surveyOptionTextToPlainText(optionAnswer);
           return optionText === undefined
             ? undefined
             : textValue === undefined || textValue.length === 0
@@ -439,7 +439,6 @@ async function handleWithdraw(): Promise<void> {
       return;
     }
 
-    await refetchAll();
     await router.replace({
       path: getConversationSurveyOnboardingPath({
         conversationSlugId: conversationSlugId.value,

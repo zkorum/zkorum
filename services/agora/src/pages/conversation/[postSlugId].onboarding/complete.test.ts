@@ -10,7 +10,6 @@ const exitToConversation = vi.hoisted(() => vi.fn());
 const showNotifyMessage = vi.hoisted(() => vi.fn());
 const navigateToNextSurveyStep = vi.hoisted(() => vi.fn());
 const onboardingState = vi.hoisted(() => ({
-  justCompletedSurvey: false,
   emailUpdateConsentSkipped: false,
   markEmailUpdateConsentSkipped: vi.fn(),
 }));
@@ -102,12 +101,6 @@ vi.mock("src/components/ui/ErrorRetryBlock.vue", () => ({
     },
   }),
 }));
-vi.mock("vue-router", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
-}));
-vi.mock("src/utils/survey/navigation", () => ({
-  getConversationSurveySummaryPath: () => "/summary",
-}));
 vi.mock(
   "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue",
   () => ({ default: defineComponent(() => () => null) })
@@ -131,22 +124,21 @@ vi.mock("src/layouts/OnboardingLayout.vue", () => ({
   }),
 }));
 vi.mock(
-  "src/components/onboarding/ConversationOnboardingCompleteStep.vue",
+  "src/components/onboarding/ConversationEmailUpdateOnboardingStep.vue",
   () => ({
     default: defineComponent({
-      name: "ConversationOnboardingCompleteStep",
+      name: "ConversationEmailUpdateOnboardingStep",
       props: {
         conversationUpdatesChecked: { type: Boolean, required: true },
         showConversationUpdatesPreference: { type: Boolean, required: true },
         scopeKind: { type: String, required: true },
         isSaving: { type: Boolean, required: true },
         continueWithoutSavingLabel: { type: String, default: undefined },
-        showReviewAnswers: { type: Boolean, required: true },
+        title: { type: String, required: true },
       },
       emits: [
         "continue",
         "continueWithoutSaving",
-        "reviewAnswers",
         "update:conversationUpdatesChecked",
       ],
       setup(props, { emit }) {
@@ -160,6 +152,7 @@ vi.mock(
               ),
               "data-scope-kind": props.scopeKind,
               "data-saving": String(props.isSaving),
+              "data-title": props.title,
             },
             [
               h("button", { onClick: () => emit("continue") }, "Continue"),
@@ -198,7 +191,6 @@ beforeEach(() => {
   exitToConversation.mockReset();
   showNotifyMessage.mockReset();
   navigateToNextSurveyStep.mockReset();
-  onboardingState.justCompletedSurvey = false;
   onboardingState.emailUpdateConsentSkipped = false;
   onboardingState.markEmailUpdateConsentSkipped.mockReset();
   surveyGateState.value = {
@@ -217,7 +209,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe("conversation onboarding completion", () => {
+describe("conversation Email Update onboarding", () => {
   it("shows project consent and saves it before exiting", async () => {
     emailUpdatesApi.getConversationSummary.mockResolvedValue({
       success: true,
@@ -248,6 +240,7 @@ describe("conversation onboarding completion", () => {
     const step = getStep(container);
     expect(step.dataset.showPreference).toBe("true");
     expect(step.dataset.scopeKind).toBe("project");
+    expect(step.dataset.title).toBe("emailUpdateTitle");
 
     getButton(container, "Continue").click();
     await flushPromises();
@@ -307,7 +300,9 @@ describe("conversation onboarding completion", () => {
     ).click();
     await flushPromises();
     expect(emailUpdatesApi.updatePreference).toHaveBeenCalledOnce();
-    expect(onboardingState.markEmailUpdateConsentSkipped).toHaveBeenCalledOnce();
+    expect(
+      onboardingState.markEmailUpdateConsentSkipped
+    ).toHaveBeenCalledOnce();
     expect(exitToConversation).toHaveBeenCalledOnce();
   });
 
@@ -424,9 +419,8 @@ describe("conversation onboarding completion", () => {
     expect(exitToConversation).not.toHaveBeenCalled();
   });
 
-  it("does not repeat skipped consent after a required survey", async () => {
+  it("does not repeat consent skipped during this onboarding flow", async () => {
     onboardingState.emailUpdateConsentSkipped = true;
-    onboardingState.justCompletedSurvey = true;
     emailUpdatesApi.getConversationSummary.mockResolvedValue({
       success: true,
       authoringAction: "none",
@@ -541,7 +535,9 @@ describe("conversation onboarding completion", () => {
       "Continue without saving an Email Update choice"
     ).click();
     await flushPromises();
-    expect(onboardingState.markEmailUpdateConsentSkipped).toHaveBeenCalledOnce();
+    expect(
+      onboardingState.markEmailUpdateConsentSkipped
+    ).toHaveBeenCalledOnce();
     expect(exitToConversation).toHaveBeenCalledOnce();
   });
 });

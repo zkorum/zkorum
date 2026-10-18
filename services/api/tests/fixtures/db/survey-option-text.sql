@@ -271,9 +271,12 @@ CREATE TABLE "survey_answer_option" (
 	"survey_answer_id" integer NOT NULL,
 	"survey_question_id" integer NOT NULL,
 	"survey_question_option_id" integer NOT NULL,
+	"text_value_html" text,
 	"text_value_plain_text" text,
 	"deleted_at" timestamp (0),
-	CONSTRAINT "survey_answer_option_text_byte_length_check" CHECK (octet_length("survey_answer_option"."text_value_plain_text") <= 16384)
+	CONSTRAINT "survey_answer_option_text_byte_length_check" CHECK (octet_length("survey_answer_option"."text_value_plain_text") <= 16384),
+	CONSTRAINT "survey_answer_option_html_byte_length_check" CHECK (octet_length("survey_answer_option"."text_value_html") <= 81927),
+	CONSTRAINT "survey_answer_option_text_pair_check" CHECK (("survey_answer_option"."text_value_html" IS NULL) = ("survey_answer_option"."text_value_plain_text" IS NULL))
 );
 
 CREATE TABLE "survey_answer" (

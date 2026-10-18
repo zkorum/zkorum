@@ -1,4 +1,7 @@
-import { getSurveyOptionText } from "src/shared/surveyChoiceText";
+import {
+  getSurveyOptionText,
+  type SurveyOptionText,
+} from "src/shared/surveyChoiceText";
 import type { SurveyQuestionFormItem } from "src/shared/types/zod";
 import {
   areSurveyAnswersEqual,
@@ -23,7 +26,7 @@ export function useSurveyAnswerDraft({
 }) {
   const selectedSingleOptionSlugId = ref<string | null>(null);
   const selectedMultiOptionSlugIds = ref<string[]>([]);
-  const optionTextValues = ref<Record<string, string>>({});
+  const optionTextValues = ref<Record<string, SurveyOptionText>>({});
   const textValueHtml = ref("");
   const textValuePlain = ref("");
   const hydratedQuestion = shallowRef<SurveyQuestionFormItem>();
@@ -110,11 +113,12 @@ export function useSurveyAnswerDraft({
               option.optionSlugId !== undefined &&
               option.allowsText !== true
             ) {
-              optionTextValues.value[option.optionSlugId] =
-                getSurveyOptionText({
+              optionTextValues.value[option.optionSlugId] = getSurveyOptionText(
+                {
                   values: savedTextValues,
                   optionSlugId: option.optionSlugId,
-                }) ?? "";
+                }
+              ) ?? { textValueHtml: "" };
             }
           }
         }

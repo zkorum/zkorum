@@ -19,21 +19,18 @@
         :retry-label="t('retryLabel')"
         @retry="loadConversationUpdateSummary"
       />
-      <ConversationOnboardingCompleteStep
+      <ConversationEmailUpdateOnboardingStep
         v-model:conversation-updates-checked="conversationUpdatesChecked"
-        :title="completionTitle"
-        :description="completionDescription"
-        :review-answers-label="t('reviewAnswersLabel')"
+        :title="t('emailUpdateTitle')"
+        :description="t('emailUpdateDescription')"
         :continue-without-saving-label="continueWithoutSavingLabel"
         :show-conversation-updates-preference="
           onboardingPreferenceAction !== undefined
         "
-        :show-review-answers="showReviewAnswers"
         :scope-kind="conversationUpdateScopeKind"
         :is-saving="isBusy"
         @continue="handleContinue"
         @continue-without-saving="continueWithoutSaving"
-        @review-answers="handleReviewAnswers"
       />
     </template>
   </OnboardingLayout>
@@ -45,7 +42,7 @@ import {
   emailUpdateResumeNotificationTranslations,
 } from "src/components/conversationUpdates/emailUpdateResumeNotification.i18n";
 import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
-import ConversationOnboardingCompleteStep from "src/components/onboarding/ConversationOnboardingCompleteStep.vue";
+import ConversationEmailUpdateOnboardingStep from "src/components/onboarding/ConversationEmailUpdateOnboardingStep.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
@@ -61,24 +58,21 @@ import {
   useConversationEmailUpdateSummaryQuery,
   useRemoveConversationEmailUpdateSummaryQueries,
 } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
-import { getConversationSurveySummaryPath } from "src/utils/survey/navigation";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, ref, watch } from "vue";
-import { useRouter } from "vue-router";
 
 import {
-  type ConversationSurveyCompleteTranslations,
-  conversationSurveyCompleteTranslations,
+  type ConversationEmailUpdateOnboardingTranslations,
+  conversationEmailUpdateOnboardingTranslations,
 } from "./complete.i18n";
 
-const { t } = useComponentI18n<ConversationSurveyCompleteTranslations>(
-  conversationSurveyCompleteTranslations
+const { t } = useComponentI18n<ConversationEmailUpdateOnboardingTranslations>(
+  conversationEmailUpdateOnboardingTranslations
 );
 const { t: tEmailUpdateResume } =
   useComponentI18n<EmailUpdateResumeNotificationTranslations>(
     emailUpdateResumeNotificationTranslations
   );
-const router = useRouter();
 const { exitToConversation } = useConversationOnboardingExit();
 const conversationOnboardingStore = useConversationOnboardingStore();
 const conversationEmailUpdatesApi = useBackendConversationEmailUpdatesApi();
@@ -132,20 +126,6 @@ const continueWithoutSavingLabel = computed(() =>
     ? t("continueWithoutSavingLabel")
     : undefined
 );
-const showReviewAnswers = computed(
-  () => conversationOnboardingStore.justCompletedSurvey
-);
-const completionTitle = computed(() =>
-  conversationOnboardingStore.justCompletedSurvey
-    ? t("title")
-    : t("emailUpdateTitle")
-);
-const completionDescription = computed(() =>
-  conversationOnboardingStore.justCompletedSurvey
-    ? t("description")
-    : t("emailUpdateDescription")
-);
-
 watch(
   onboardingPreferenceActionKey,
   () => {
@@ -215,15 +195,18 @@ async function handleContinue(): Promise<void> {
 
 async function saveConversationUpdatePreference(
   action: ConversationEmailUpdateOnboardingAction
-): Promise<{
-  saved: false;
-} | {
-  saved: true;
-  result: Extract<
-    ConversationEmailUpdatePreferenceUpdateResponse,
-    { success: true }
-  >["result"];
-}> {
+): Promise<
+  | {
+      saved: false;
+    }
+  | {
+      saved: true;
+      result: Extract<
+        ConversationEmailUpdatePreferenceUpdateResponse,
+        { success: true }
+      >["result"];
+    }
+> {
   if (action.operation === "set_project_preference") {
     const response = await conversationEmailUpdatesApi.updatePreference({
       operation: action.operation,
@@ -291,15 +274,6 @@ async function continueOnboarding(): Promise<void> {
   await exitToConversation({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
-  });
-}
-
-async function handleReviewAnswers(): Promise<void> {
-  await router.replace({
-    path: getConversationSurveySummaryPath({
-      conversationSlugId: conversationSlugId.value,
-      routeContext: routeContext.value,
-    }),
   });
 }
 </script>

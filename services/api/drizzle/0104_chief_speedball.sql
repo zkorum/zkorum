@@ -1,0 +1,2 @@
+ALTER TABLE "survey_answer_option" ADD COLUMN "text_value_html" text;--> statement-breakpoint
+ALTER TABLE "survey_answer_option" ADD CONSTRAINT "survey_answer_option_html_byte_length_check" CHECK (octet_length("survey_answer_option"."text_value_html") <= 3000);

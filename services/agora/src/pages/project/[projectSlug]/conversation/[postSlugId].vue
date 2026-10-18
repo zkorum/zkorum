@@ -108,7 +108,10 @@
       :respect-drawer-offset="false"
     >
       <CommentComposer
-        :editing-opinion="editingOpinion"
+        :editing-target="editingTarget"
+        :action-bar-element="
+          conversationScrollContext.actionBarElement ?? undefined
+        "
         :post-slug-id="loadedConversationData.metadata.conversationSlugId"
         :participation-mode="loadedConversationData.metadata.participationMode"
         :requires-event-ticket="
@@ -235,6 +238,7 @@ const {
   loadedConversationDisplayContent,
   currentTab,
   editingOpinion,
+  editingTarget,
   beginEditOpinion,
   finishEditOpinion,
   handleEditedOpinion,

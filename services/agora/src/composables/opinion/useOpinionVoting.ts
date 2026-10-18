@@ -1,5 +1,4 @@
 import type { CastVoteResponse } from "src/shared/types/dto";
-import { useAuthenticationStore } from "src/stores/authentication";
 import {
   useUserVotesQuery,
   useVoteMutation,
@@ -25,15 +24,6 @@ export function useOpinionVoting({
   postSlugId,
   captureAction,
 }: UseOpinionVotingParams): UseOpinionVotingReturn {
-  const authStore = useAuthenticationStore();
-  function captureVotingAction(): () => boolean {
-    const voterId = authStore.userId;
-    const isCurrentView = captureAction?.() ?? (() => true);
-    return () =>
-      isCurrentView() &&
-      (authStore.userId === voterId ||
-        (voterId === undefined && authStore.isGuest));
-  }
   // Use TanStack Query for vote data
   const userVotesQuery = useUserVotesQuery({
     postSlugId,
@@ -42,17 +32,16 @@ export function useOpinionVoting({
   // Use TanStack Query mutation for voting
   const voteMutation = useVoteMutation(postSlugId);
 
-  // User votes - directly use server data for simplicity
-  const userVotes = computed<readonly UserVote[]>(() => {
-    return userVotesQuery.data.value || [];
-  });
+  const userVotes = computed<readonly UserVote[]>(
+    () => userVotesQuery.data.value ?? []
+  );
 
   async function castVote({
     opinionSlugId,
     voteAction,
     sourceVersion,
   }: OpinionVoteParams): Promise<CastVoteResponse | undefined> {
-    const isCurrent = captureVotingAction();
+    const isCurrent = captureAction?.() ?? (() => true);
     const result = await voteMutation.mutateAsync({
       opinionSlugId,
       voteAction,

@@ -1,5 +1,6 @@
 <template>
   <q-select
+    ref="select"
     :model-value="modelValue"
     outlined
     emit-value
@@ -19,14 +20,39 @@
     :hide-selected="searchable && !multiple"
     :fill-input="searchable && !multiple"
     :input-debounce="searchable ? 0 : undefined"
+    :virtual-scroll-sticky-size-start="multiple ? popupActionsHeight : 0"
     @update:model-value="emit('update:modelValue', $event)"
     @filter="handleFilter"
     @popup-hide="handlePopupHide"
-  />
+  >
+    <template v-if="multiple" #before-options>
+      <ZKSelectPopupActions
+        :label="t('done')"
+        :min-height="popupActionsHeight"
+        @close="closePopup"
+      />
+    </template>
+    <template v-if="multiple" #no-option>
+      <ZKSelectPopupActions
+        :label="t('done')"
+        :min-height="popupActionsHeight"
+        @close="closePopup"
+      />
+      <div class="q-pa-md text-grey-7">{{ t("noResults") }}</div>
+    </template>
+  </q-select>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import type { QSelect } from "quasar";
+import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { computed, ref, useTemplateRef, watch } from "vue";
+
+import {
+  type ZKSelectTranslations,
+  zkSelectTranslations,
+} from "./ZKSelect.i18n";
+import ZKSelectPopupActions from "./ZKSelectPopupActions.vue";
 
 interface ZKSelectOption {
   label: string;
@@ -68,6 +94,9 @@ const emit = defineEmits<{
   "update:modelValue": [value: string | string[] | null];
 }>();
 
+const select = useTemplateRef<QSelect>("select");
+const popupActionsHeight = 56;
+const { t } = useComponentI18n<ZKSelectTranslations>(zkSelectTranslations);
 const filteredOptions = ref<readonly ZKSelectOption[]>(props.options);
 
 watch(
@@ -111,5 +140,13 @@ function handleFilter(
 
 function handlePopupHide(): void {
   filteredOptions.value = props.options;
+  if (props.multiple && props.searchable) {
+    select.value?.updateInputValue("", true);
+  }
+}
+
+function closePopup(): void {
+  select.value?.hidePopup();
+  select.value?.blur();
 }
 </script>

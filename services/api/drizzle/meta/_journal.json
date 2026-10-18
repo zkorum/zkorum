@@ -729,6 +729,34 @@
       "when": 1791652255185,
       "tag": "0103_secret_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1792254309436,
+      "tag": "0104_chief_speedball",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1792254710602,
+      "tag": "0105_steep_skreet",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1792254869574,
+      "tag": "0106_mature_next_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1792256588408,
+      "tag": "0107_petite_mesmero",
+      "breakpoints": true
     }
   ]
 }

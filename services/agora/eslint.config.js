@@ -218,6 +218,14 @@ export default defineConfigWithVueTs(
   },
 
   {
+    files: ["**/*.test.ts"],
+    rules: {
+      // Component tests legitimately define multiple isolated Vue stubs.
+      "vue/one-component-per-file": "off",
+    },
+  },
+
+  {
     files: ["src-pwa/custom-service-worker.ts"],
     languageOptions: {
       globals: {

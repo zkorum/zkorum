@@ -26,6 +26,7 @@
 <script setup lang="ts">
 import ConversationCommentTab from "src/components/post/ConversationCommentTab.vue";
 import MaxDiffVotingTab from "src/components/post/maxdiff/MaxDiffVotingTab.vue";
+import type { OpinionEditRequest } from "src/composables/opinion/types";
 import type {
   DisplayedOpinionItem,
   ExtendedConversationDisplayData,
@@ -51,7 +52,7 @@ const {
 }>();
 
 const emit = defineEmits<{
-  editOpinion: [opinion: DisplayedOpinionItem];
+  editOpinion: [request: OpinionEditRequest];
   "update:commentFilter": [filter: CommentFilterOptions];
 }>();
 </script>

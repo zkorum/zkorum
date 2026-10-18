@@ -69,9 +69,7 @@ import {
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
-import {
-  usePhoneAuthAvailability,
-} from "src/utils/auth/phoneAuthMode";
+import { usePhoneAuthAvailability } from "src/utils/auth/phoneAuthMode";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
 import {
   getConversationSurveyOnboardingPath,
@@ -119,16 +117,10 @@ const {
   conversationSlugId,
   conversationData,
   conversationDisplayContent,
-  surveyForm,
+  surveyStepTotal,
   requirementState,
   isInitialLoading,
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
 
 const backPath = computed(() => {
   if (

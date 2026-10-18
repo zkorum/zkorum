@@ -1,0 +1,2 @@
+ALTER TABLE "survey_answer_option" DROP CONSTRAINT "survey_answer_option_html_byte_length_check";--> statement-breakpoint
+ALTER TABLE "survey_answer_option" ADD CONSTRAINT "survey_answer_option_html_byte_length_check" CHECK (octet_length("survey_answer_option"."text_value_html") <= 16384);

@@ -8,7 +8,11 @@
       :ok-callback="okButtonClicked"
       :cancel-callback="() => {}"
       :label-ok="getLabelOk()"
-      :label-cancel="t('labelCancel')"
+      :label-cancel="
+        requiresConversationOnboarding()
+          ? t('labelPostponeOnboarding')
+          : t('labelCancel')
+      "
       :ok-loading="isVerifyingZupass"
     >
       <template #body>
@@ -26,6 +30,10 @@
 </template>
 
 <script setup lang="ts">
+import {
+  type ConversationParticipationTranslations,
+  conversationParticipationTranslations,
+} from "src/components/onboarding/conversationParticipation.i18n";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useZupassVerification } from "src/composables/zupass/useZupassVerification";
 import type { EventSlug, ParticipationMode } from "src/shared/types/zod";
@@ -36,7 +44,7 @@ import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { getHistoryPosition } from "src/utils/nav/historyBack";
 import { getConversationRouteContextFromRoute } from "src/utils/router/conversationRouteContext";
 import { getConversationSurveyVerifyPath } from "src/utils/survey/navigation";
-import { ref } from "vue";
+import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import DialogContainer from "./DialogContainer.vue";
@@ -59,6 +67,10 @@ const showDialog = defineModel<boolean>({ required: true });
 const { t } = useComponentI18n<PreParticipationIntentionDialogTranslations>(
   preParticipationIntentionDialogTranslations
 );
+const { t: tParticipation } =
+  useComponentI18n<ConversationParticipationTranslations>(
+    conversationParticipationTranslations
+  );
 
 const { setActiveUserIntention } = useLoginIntentionStore();
 const conversationOnboardingStore = useConversationOnboardingStore();
@@ -68,29 +80,24 @@ const flowStore = onboardingFlowStore();
 
 const { isVerifying: isVerifyingZupass } = useZupassVerification();
 
-function getSubMessage(): string {
-  switch (props.activeIntention) {
-    case "none":
-      return "";
-    case "newOpinion":
-      return t("subMessageStatementDraft");
-    case "newConversation":
-      return t("subMessageConversationDraft");
-    case "agreement":
-      return t("subMessageReturnToStatement");
-    case "reportUserContent":
-      return t("subMessageReportRequired");
-    case "voting":
-      return t("subMessageReturnToConversation");
-    case "emailUpdates":
-    case "settings":
-      return "";
-    default:
-      return "";
-  }
-}
+const subMessageKeys = {
+  none: undefined,
+  emailUpdates: undefined,
+  settings: undefined,
+  newOpinion: "subMessageStatementDraft",
+  newConversation: "subMessageConversationDraft",
+  agreement: "subMessageReturnToStatement",
+  reportUserContent: "subMessageReportRequired",
+  voting: "subMessageReturnToConversation",
+} satisfies Record<
+  PossibleIntentions,
+  keyof PreParticipationIntentionDialogTranslations | undefined
+>;
 
-const subMessage = ref(getSubMessage());
+const subMessage = computed(() => {
+  const key = subMessageKeys[props.activeIntention];
+  return key === undefined ? "" : t(key);
+});
 
 const router = useRouter();
 
@@ -132,7 +139,7 @@ function getTitle(): string {
 
 function getMessage(): string {
   if (requiresConversationOnboarding()) {
-    return t("messageOnboardingRequired");
+    return tParticipation("description");
   }
 
   const hasZupassRequirement = props.requiresZupassEventSlug !== undefined;
@@ -158,7 +165,7 @@ function getMessage(): string {
 
 function getLabelOk(): string {
   if (requiresConversationOnboarding()) {
-    return t("labelOkAccount");
+    return t("labelStartOnboarding");
   }
 
   const hasZupassRequirement = props.requiresZupassEventSlug !== undefined;
@@ -241,10 +248,8 @@ async function okButtonClicked() {
 <style scoped lang="scss">
 .shadowBoxStyle {
   display: grid;
-  grid-template-columns: auto auto;
-  grid-template-rows: 1fr;
-  gap: 0px 1rem;
-  grid-template-areas: ". .";
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1rem;
   padding: 0.5rem;
   color: $primary;
 }

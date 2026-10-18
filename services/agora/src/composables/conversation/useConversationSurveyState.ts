@@ -9,10 +9,7 @@ import {
 import { deriveSurveyRequirementState } from "src/utils/survey/requirements";
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
 
-import {
-  resolveSurveyForm,
-  shouldFetchSurveyForm,
-} from "./surveyStateLogic";
+import { resolveSurveyForm, shouldFetchSurveyForm } from "./surveyStateLogic";
 
 export function useConversationSurveyState({
   conversationSlugId,
@@ -20,8 +17,12 @@ export function useConversationSurveyState({
   conversationSlugId: MaybeRefOrGetter<string>;
 }) {
   const conversationSlugIdValue = computed(() => toValue(conversationSlugId));
-  const { isAuthInitialized, isLoggedIn, hasStrongVerification, hasEmailVerification } =
-    storeToRefs(useAuthenticationStore());
+  const {
+    isAuthInitialized,
+    isLoggedIn,
+    hasStrongVerification,
+    hasEmailVerification,
+  } = storeToRefs(useAuthenticationStore());
   const { verifiedEventTickets } = storeToRefs(useUserStore());
 
   const conversationQuery = useConversationQuery({
@@ -55,6 +56,9 @@ export function useConversationSurveyState({
       surveyForm: surveyFormQuery.data.value,
     });
   });
+  const surveyStepTotal = computed(
+    () => (surveyForm.value?.questions.length ?? 0) + 2
+  );
 
   const requirementState = computed(() => {
     const conversation = conversationData.value;
@@ -78,7 +82,8 @@ export function useConversationSurveyState({
 
   const isInitialLoading = computed(() => {
     return (
-      (conversationQuery.isPending.value && conversationData.value === undefined) ||
+      (conversationQuery.isPending.value &&
+        conversationData.value === undefined) ||
       (surveyStatusQuery.isPending.value && surveyStatus.value === undefined) ||
       (shouldFetchSurveyForm({ surveyStatus: surveyStatus.value }) &&
         surveyFormQuery.isPending.value &&
@@ -115,6 +120,7 @@ export function useConversationSurveyState({
     conversationDisplayContent,
     surveyStatus,
     surveyForm,
+    surveyStepTotal,
     requirementState,
     isInitialLoading,
     hasLoadError,

@@ -5,7 +5,6 @@ export interface ConversationSurveyOnboardingTranslations {
   tryAgainLabel: string;
   currentStatusLabel: string;
   welcomeTitle: string;
-  welcomeDescription: string;
   surveyStatusLoading: string;
   surveyStatusComplete: string;
   surveyStatusNeedsUpdate: string;
@@ -54,8 +53,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "Try again",
     currentStatusLabel: "Current status",
     welcomeTitle: "Welcome",
-    welcomeDescription:
-      "Continue through this conversation's onboarding before you participate.",
     surveyStatusLoading: "Loading",
     surveyStatusComplete: "Complete",
     surveyStatusNeedsUpdate: "Needs update",
@@ -110,8 +107,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "حاول مرة أخرى",
     currentStatusLabel: "الحالة الحالية",
     welcomeTitle: "مرحباً",
-    welcomeDescription:
-      "تابع خطوات الانضمام لهذه المحادثة قبل المشاركة.",
     surveyStatusLoading: "جارٍ التحميل",
     surveyStatusComplete: "مكتمل",
     surveyStatusNeedsUpdate: "يحتاج إلى تحديث",
@@ -132,14 +127,11 @@ export const conversationSurveyOnboardingTranslations: Record<
     surveyUnavailableDescription: "لا يوجد حالياً استبيان لهذه المحادثة.",
     verifyAccountDescription:
       "أكمِل خطوة تسجيل الدخول أو التحقق المطلوبة قبل فتح الاستبيان.",
-    verifyTicketDescription:
-      "تحقق من تذكرة الحدث قبل متابعة الاستبيان.",
+    verifyTicketDescription: "تحقق من تذكرة الحدث قبل متابعة الاستبيان.",
     ticketVerifiedDescription:
       "تم التحقق من تذكرة الحدث الخاصة بك لهذه المحادثة.",
-    surveyCompleteDescription:
-      "إجاباتك المحفوظة صالحة لهذه المحادثة.",
-    surveyUpdateDescription:
-      "تغير هذا الاستبيان منذ آخر إجابات محفوظة لك.",
+    surveyCompleteDescription: "إجاباتك المحفوظة صالحة لهذه المحادثة.",
+    surveyUpdateDescription: "تغير هذا الاستبيان منذ آخر إجابات محفوظة لك.",
     surveyWithdrawnDescription:
       "يمكنك إعادة فتح الاستبيان والإجابة مرة أخرى في أي وقت.",
     surveyInProgressAvailableDescription:
@@ -165,8 +157,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "Intentar de nuevo",
     currentStatusLabel: "Estado actual",
     welcomeTitle: "Bienvenido",
-    welcomeDescription:
-      "Complete el flujo de acceso de esta conversación antes de participar.",
     surveyStatusLoading: "Cargando",
     surveyStatusComplete: "Completa",
     surveyStatusNeedsUpdate: "Necesita actualización",
@@ -221,8 +211,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "تلاش دوباره",
     currentStatusLabel: "وضعیت فعلی",
     welcomeTitle: "خوش آمدید",
-    welcomeDescription:
-      "پیش از مشارکت، مراحل ورود این گفتگو را کامل کنید.",
     surveyStatusLoading: "در حال بارگیری",
     surveyStatusComplete: "کامل",
     surveyStatusNeedsUpdate: "نیاز به به‌روزرسانی دارد",
@@ -240,14 +228,12 @@ export const conversationSurveyOnboardingTranslations: Record<
     surveyInProgressTitle: "نظرسنجی خود را ادامه دهید",
     optionalSurveyTitle: "نظرسنجی اختیاری",
     requiredSurveyTitle: "نظرسنجی الزامی است",
-    surveyUnavailableDescription:
-      "این گفتگو در حال حاضر نظرسنجی ندارد.",
+    surveyUnavailableDescription: "این گفتگو در حال حاضر نظرسنجی ندارد.",
     verifyAccountDescription:
       "پیش از باز کردن نظرسنجی، مرحله ورود یا تأیید لازم را کامل کنید.",
     verifyTicketDescription:
       "پیش از ادامه به نظرسنجی، بلیت رویداد خود را تأیید کنید.",
-    ticketVerifiedDescription:
-      "بلیت رویداد شما برای این گفتگو تأیید شده است.",
+    ticketVerifiedDescription: "بلیت رویداد شما برای این گفتگو تأیید شده است.",
     surveyCompleteDescription:
       "پاسخ‌های ذخیره‌شده شما برای این گفتگو معتبر هستند.",
     surveyUpdateDescription:
@@ -277,8 +263,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "Réessayer",
     currentStatusLabel: "Statut actuel",
     welcomeTitle: "Bienvenue",
-    welcomeDescription:
-      "Terminez le parcours d'accès de cette conversation avant de participer.",
     surveyStatusLoading: "Chargement",
     surveyStatusComplete: "Terminé",
     surveyStatusNeedsUpdate: "À mettre à jour",
@@ -333,8 +317,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "לנסות שוב",
     currentStatusLabel: "מצב נוכחי",
     welcomeTitle: "ברוכים הבאים",
-    welcomeDescription:
-      "השלימו את תהליך הכניסה לשיחה הזו לפני ההשתתפות.",
     surveyStatusLoading: "טוען",
     surveyStatusComplete: "הושלם",
     surveyStatusNeedsUpdate: "דורש עדכון",
@@ -355,16 +337,12 @@ export const conversationSurveyOnboardingTranslations: Record<
     surveyUnavailableDescription: "לשיחה הזו אין כרגע סקר.",
     verifyAccountDescription:
       "השלימו את שלב ההתחברות או האימות הנדרש לפני פתיחת הסקר.",
-    verifyTicketDescription:
-      "אמתו את כרטיס האירוע לפני שתמשיכו לסקר.",
-    ticketVerifiedDescription:
-      "כרטיס האירוע שלכם אומת עבור השיחה הזו.",
-    surveyCompleteDescription:
-      "התשובות השמורות שלכם תקפות לשיחה הזו.",
+    verifyTicketDescription: "אמתו את כרטיס האירוע לפני שתמשיכו לסקר.",
+    ticketVerifiedDescription: "כרטיס האירוע שלכם אומת עבור השיחה הזו.",
+    surveyCompleteDescription: "התשובות השמורות שלכם תקפות לשיחה הזו.",
     surveyUpdateDescription:
       "הסקר הזה השתנה מאז התשובות השמורות האחרונות שלכם.",
-    surveyWithdrawnDescription:
-      "אפשר לפתוח מחדש את הסקר ולענות שוב בכל זמן.",
+    surveyWithdrawnDescription: "אפשר לפתוח מחדש את הסקר ולענות שוב בכל זמן.",
     surveyInProgressAvailableDescription:
       "אפשר להמשיך או לעיין בתשובות השמורות שלכם.",
     surveyInProgressRequiredDescription:
@@ -388,8 +366,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "もう一度試す",
     currentStatusLabel: "現在の状態",
     welcomeTitle: "ようこそ",
-    welcomeDescription:
-      "参加する前に、この会話のオンボーディングを完了してください。",
     surveyStatusLoading: "読み込み中",
     surveyStatusComplete: "完了",
     surveyStatusNeedsUpdate: "更新が必要",
@@ -407,16 +383,13 @@ export const conversationSurveyOnboardingTranslations: Record<
     surveyInProgressTitle: "アンケートを続けてください",
     optionalSurveyTitle: "任意のアンケート",
     requiredSurveyTitle: "必須アンケート",
-    surveyUnavailableDescription:
-      "この会話には現在アンケートがありません。",
+    surveyUnavailableDescription: "この会話には現在アンケートがありません。",
     verifyAccountDescription:
       "アンケートを開く前に、必要なログインまたは認証を完了してください。",
     verifyTicketDescription:
       "アンケートに進む前にイベントチケットを確認してください。",
-    ticketVerifiedDescription:
-      "この会話ではイベントチケットが確認済みです。",
-    surveyCompleteDescription:
-      "保存された回答はこの会話に対して有効です。",
+    ticketVerifiedDescription: "この会話ではイベントチケットが確認済みです。",
+    surveyCompleteDescription: "保存された回答はこの会話に対して有効です。",
     surveyUpdateDescription:
       "このアンケートは、あなたの最後の保存済み回答以降に変更されました。",
     surveyWithdrawnDescription:
@@ -444,8 +417,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "Кайра аракет кылуу",
     currentStatusLabel: "Учурдагы абал",
     welcomeTitle: "Кош келиңиз",
-    welcomeDescription:
-      "Катышуудан мурун бул сүйлөшүүнүн кирүү кадамдарын бүтүрүңүз.",
     surveyStatusLoading: "Жүктөлүүдө",
     surveyStatusComplete: "Аяктаган",
     surveyStatusNeedsUpdate: "Жаңыртуу керек",
@@ -463,8 +434,7 @@ export const conversationSurveyOnboardingTranslations: Record<
     surveyInProgressTitle: "Сурамжылоону улантыңыз",
     optionalSurveyTitle: "Ыктыярдуу сурамжылоо",
     requiredSurveyTitle: "Сурамжылоо милдеттүү",
-    surveyUnavailableDescription:
-      "Бул сүйлөшүүдө азырынча сурамжылоо жок.",
+    surveyUnavailableDescription: "Бул сүйлөшүүдө азырынча сурамжылоо жок.",
     verifyAccountDescription:
       "Сурамжылоону ачардан мурун талап кылынган кирүү же текшерүү кадамын бүтүрүңүз.",
     verifyTicketDescription:
@@ -500,8 +470,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "Попробовать снова",
     currentStatusLabel: "Текущий статус",
     welcomeTitle: "Добро пожаловать",
-    welcomeDescription:
-      "Перед участием пройдите вводные шаги этой беседы.",
     surveyStatusLoading: "Загрузка",
     surveyStatusComplete: "Завершён",
     surveyStatusNeedsUpdate: "Требует обновления",
@@ -519,8 +487,7 @@ export const conversationSurveyOnboardingTranslations: Record<
     surveyInProgressTitle: "Продолжите опрос",
     optionalSurveyTitle: "Необязательный опрос",
     requiredSurveyTitle: "Опрос обязателен",
-    surveyUnavailableDescription:
-      "У этой беседы сейчас нет опроса.",
+    surveyUnavailableDescription: "У этой беседы сейчас нет опроса.",
     verifyAccountDescription:
       "Завершите необходимый вход или проверку перед открытием опроса.",
     verifyTicketDescription:
@@ -556,8 +523,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "重试",
     currentStatusLabel: "当前状态",
     welcomeTitle: "欢迎",
-    welcomeDescription:
-      "参与前，请先完成这场对话的引导流程。",
     surveyStatusLoading: "加载中",
     surveyStatusComplete: "已完成",
     surveyStatusNeedsUpdate: "需要更新",
@@ -576,25 +541,18 @@ export const conversationSurveyOnboardingTranslations: Record<
     optionalSurveyTitle: "可选问卷",
     requiredSurveyTitle: "必须完成问卷",
     surveyUnavailableDescription: "这场对话当前没有问卷。",
-    verifyAccountDescription:
-      "打开问卷前，请先完成所需的登录或验证步骤。",
-    verifyTicketDescription:
-      "继续进入问卷前，请先验证你的活动门票。",
-    ticketVerifiedDescription:
-      "你的活动门票已为这场对话完成验证。",
+    verifyAccountDescription: "打开问卷前，请先完成所需的登录或验证步骤。",
+    verifyTicketDescription: "继续进入问卷前，请先验证你的活动门票。",
+    ticketVerifiedDescription: "你的活动门票已为这场对话完成验证。",
     surveyCompleteDescription: "你保存的回答对这场对话仍然有效。",
-    surveyUpdateDescription:
-      "此问卷在你上次保存回答之后已经发生变化。",
-    surveyWithdrawnDescription:
-      "你可以随时重新打开问卷并再次作答。",
-    surveyInProgressAvailableDescription:
-      "你可以继续或查看已保存的回答。",
+    surveyUpdateDescription: "此问卷在你上次保存回答之后已经发生变化。",
+    surveyWithdrawnDescription: "你可以随时重新打开问卷并再次作答。",
+    surveyInProgressAvailableDescription: "你可以继续或查看已保存的回答。",
     surveyInProgressRequiredDescription:
       "完成问卷后才能解锁这场对话的参与资格。",
     surveyNotStartedAvailableDescription:
       "这场对话有一份你可以随时打开的可选问卷。",
-    surveyNotStartedRequiredDescription:
-      "请先完成问卷，再参与这场对话。",
+    surveyNotStartedRequiredDescription: "请先完成问卷，再参与这场对话。",
     backToConversationLabel: "返回对话",
     continueLabel: "继续",
     verifyTicketLabel: "验证门票",
@@ -610,8 +568,6 @@ export const conversationSurveyOnboardingTranslations: Record<
     tryAgainLabel: "重試",
     currentStatusLabel: "目前狀態",
     welcomeTitle: "歡迎",
-    welcomeDescription:
-      "參與前，請先完成這場對話的引導流程。",
     surveyStatusLoading: "載入中",
     surveyStatusComplete: "已完成",
     surveyStatusNeedsUpdate: "需要更新",
@@ -630,25 +586,18 @@ export const conversationSurveyOnboardingTranslations: Record<
     optionalSurveyTitle: "可選問卷",
     requiredSurveyTitle: "必須完成問卷",
     surveyUnavailableDescription: "這場對話目前沒有問卷。",
-    verifyAccountDescription:
-      "開啟問卷前，請先完成所需的登入或驗證步驟。",
-    verifyTicketDescription:
-      "繼續進入問卷前，請先驗證你的活動門票。",
-    ticketVerifiedDescription:
-      "你的活動門票已為這場對話完成驗證。",
+    verifyAccountDescription: "開啟問卷前，請先完成所需的登入或驗證步驟。",
+    verifyTicketDescription: "繼續進入問卷前，請先驗證你的活動門票。",
+    ticketVerifiedDescription: "你的活動門票已為這場對話完成驗證。",
     surveyCompleteDescription: "你儲存的回答對這場對話仍然有效。",
-    surveyUpdateDescription:
-      "此問卷在你上次儲存回答之後已經發生變更。",
-    surveyWithdrawnDescription:
-      "你可以隨時重新開啟問卷並再次作答。",
-    surveyInProgressAvailableDescription:
-      "你可以繼續或查看已儲存的回答。",
+    surveyUpdateDescription: "此問卷在你上次儲存回答之後已經發生變更。",
+    surveyWithdrawnDescription: "你可以隨時重新開啟問卷並再次作答。",
+    surveyInProgressAvailableDescription: "你可以繼續或查看已儲存的回答。",
     surveyInProgressRequiredDescription:
       "完成問卷後才能解鎖這場對話的參與資格。",
     surveyNotStartedAvailableDescription:
       "這場對話有一份你可以隨時開啟的可選問卷。",
-    surveyNotStartedRequiredDescription:
-      "請先完成問卷，再參與這場對話。",
+    surveyNotStartedRequiredDescription: "請先完成問卷，再參與這場對話。",
     backToConversationLabel: "返回對話",
     continueLabel: "繼續",
     verifyTicketLabel: "驗證門票",

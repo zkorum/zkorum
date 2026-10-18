@@ -49,13 +49,15 @@ export function normalizeUserRichTextInput(
     >,
 ): NormalizeUserRichTextSuccess | RichTextValidationFailure;
 export function normalizeUserRichTextInput(
-    params: NormalizeUserRichTextInputParams<"conversation" | "ranking_item">,
+    params: NormalizeUserRichTextInputParams<"survey">,
+): NormalizeUserRichTextSuccess | RichTextValidationFailure<"html_too_long">;
+export function normalizeUserRichTextInput(
+    params: NormalizeUserRichTextInputParams<
+        "conversation" | "ranking_item" | "survey" | "survey_option"
+    >,
 ):
     | NormalizeUserRichTextSuccess
     | RichTextValidationFailure<RichTextSizeValidationFailureReason>;
-export function normalizeUserRichTextInput(
-    params: NormalizeUserRichTextInputParams<"survey">,
-): NormalizeUserRichTextSuccess | RichTextValidationFailure<"html_too_long">;
 export function normalizeUserRichTextInput({
     html,
     validationMode,

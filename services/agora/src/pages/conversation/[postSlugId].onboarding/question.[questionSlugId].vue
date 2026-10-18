@@ -3,10 +3,11 @@
     :back-callback="handleBackAction"
     :close-callback="handleCloseToConversation"
     :show-close-button="true"
-    :pin-footer-to-bottom="false"
+    :fixed-navigation="true"
   >
     <template #body>
       <ConversationSurveyOnboardingHero
+        density="compact"
         :conversation-data="conversationData"
         :initial-display-content="conversationDisplayContent"
       />
@@ -24,12 +25,13 @@
 
       <StepperLayout
         v-else-if="question !== undefined"
+        :fixed-navigation="true"
         :submit-call-back="handleNext"
         :current-step="currentSurveyStep"
         :total-steps="surveyStepTotal"
         :enable-next-button="canNavigateForward"
         :show-next-button="true"
-        :show-loading-button="isSaving"
+        :show-loading-button="isBusy"
         density="compact"
       >
         <template #header>
@@ -174,8 +176,8 @@ import { useSurveyAnswerDraft } from "src/composables/conversation/useSurveyAnsw
 import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavigation";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
+import type { SurveyAnswerSaveResponse } from "src/shared/types/dto";
 import type { ParticipationBlockedReason } from "src/shared/types/zod";
-import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { useLanguageStore } from "src/stores/language";
 import {
   type SurveyFormData,
@@ -194,7 +196,6 @@ import {
 } from "src/utils/survey/config";
 import {
   getConversationPath,
-  getConversationSurveyCompletePath,
   getConversationSurveyContinuePath,
   getConversationSurveyOnboardingPath,
   getConversationSurveyQuestionPath,
@@ -204,7 +205,7 @@ import { surveyTemplateTextTranslations } from "src/utils/survey/templates.i18n"
 import { getConversationLanguageSettingSourceLanguageCode } from "src/utils/translation/contentTranslation";
 import { useSurveyQuestionDisplayContent } from "src/utils/translation/useSurveyQuestionDisplayContent";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -213,6 +214,14 @@ import {
 } from "./question.[questionSlugId].i18n";
 
 type SurveyFormQuestion = SurveyFormData["questions"][number];
+type SurveyDraftSaveResult =
+  | { kind: "unchanged" }
+  | {
+      kind: "saved";
+      response: Extract<SurveyAnswerSaveResponse, { success: true }>;
+    }
+  | { kind: "blocked"; reason: ParticipationBlockedReason }
+  | { kind: "failed" };
 
 const router = useRouter();
 const { route, routeConversationSlugId, routeContext } =
@@ -222,7 +231,6 @@ const { showNotifyMessage } = useNotify();
 const { exitToConversation } = useConversationOnboardingExit();
 const { navigateToNextSurveyStep, navigateToSurveyRoot } =
   useSurveyNavigation();
-const conversationOnboardingStore = useConversationOnboardingStore();
 const { displayLanguage } = storeToRefs(useLanguageStore());
 const { t } = useComponentI18n<ConversationSurveyQuestionTranslations>(
   conversationSurveyQuestionTranslations
@@ -234,6 +242,7 @@ const {
   conversationSlugId,
   surveyStatus,
   surveyForm,
+  surveyStepTotal,
   requirementState,
   isInitialLoading,
   hasLoadError,
@@ -430,11 +439,7 @@ const canNavigateForward = computed(() => {
   });
 });
 
-const isSaving = computed(() => saveMutation.isPending.value);
-
-const surveyStepTotal = computed(() => {
-  return (surveyForm.value?.questions.length ?? 0) + 3;
-});
+const isBusy = ref(false);
 
 const currentSurveyStep = computed(() => {
   return questionIndex.value + 3;
@@ -728,114 +733,98 @@ async function handleBackToConversation(): Promise<void> {
 }
 
 async function handleCloseToConversation(): Promise<void> {
-  if (await saveCurrentDraftIfNeeded()) {
-    await handleBackToConversation();
-  }
+  await handleNavigation("close");
 }
 
-async function saveCurrentDraftIfNeeded(): Promise<boolean> {
+async function saveCurrentDraftIfNeeded(): Promise<SurveyDraftSaveResult> {
   const currentQuestion = question.value;
-
-  if (currentQuestion === undefined) {
-    return false;
+  if (currentQuestion?.questionSlugId === undefined) {
+    return { kind: "failed" };
   }
 
   if (!hasDraftChanged.value && !shouldPersistPassOnLeave.value) {
-    return true;
+    return { kind: "unchanged" };
+  }
+
+  const answer = draftAnswer.value;
+  if (
+    answer !== undefined &&
+    !isSurveyAnswerSubmittable({
+      question: currentQuestion,
+      answer,
+    })
+  ) {
+    return { kind: "failed" };
   }
 
   try {
-    if (draftAnswer.value === undefined) {
-      if (currentQuestion.questionSlugId === undefined) {
-        return false;
-      }
-
-      const response = await saveMutation.mutateAsync({
-        questionSlugId: currentQuestion.questionSlugId,
-        answer: null,
-      });
-
-      if (!response.success) {
-        await handleBlockedReason(response.reason);
-        return false;
-      }
-
-      if (response.justCompleted) {
-        conversationOnboardingStore.markJustCompletedSurvey({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        });
-        await router.push({
-          path: getConversationSurveyCompletePath({
-            conversationSlugId: conversationSlugId.value,
-            routeContext: routeContext.value,
-          }),
-        });
-        return false;
-      }
-
-      return true;
-    }
-
-    if (
-      !isSurveyAnswerSubmittable({
-        question: currentQuestion,
-        answer: draftAnswer.value,
-      })
-    ) {
-      return false;
-    }
-
-    if (currentQuestion.questionSlugId === undefined) {
-      return false;
-    }
-
     const response = await saveMutation.mutateAsync({
       questionSlugId: currentQuestion.questionSlugId,
-      answer: draftAnswer.value,
+      answer: answer ?? null,
     });
-
-    if (!response.success) {
-      await handleBlockedReason(response.reason);
-      return false;
-    }
-
-    if (response.justCompleted) {
-      conversationOnboardingStore.markJustCompletedSurvey({
-        conversationSlugId: conversationSlugId.value,
-        routeContext: routeContext.value,
-      });
-      await router.push({
-        path: getConversationSurveyCompletePath({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        }),
-      });
-      return false;
-    }
-
-    return true;
+    return response.success
+      ? { kind: "saved", response }
+      : { kind: "blocked", reason: response.reason };
   } catch {
     showNotifyMessage(t("failedToSaveAnswerMessage"));
-    return false;
+    return { kind: "failed" };
   }
 }
 
-async function handlePrevious(): Promise<void> {
-  const previousPath = getPreviousPath();
-  if (await saveCurrentDraftIfNeeded()) {
-    await safeNavigateBack({ path: previousPath });
+async function handleNavigation(
+  action: "previous" | "next" | "close"
+): Promise<void> {
+  if (isBusy.value) return;
+  isBusy.value = true;
+  try {
+    const result = await saveCurrentDraftIfNeeded();
+    if (result.kind === "failed") return;
+    if (result.kind === "blocked") {
+      await handleBlockedReason(result.reason);
+      return;
+    }
+
+    const gate =
+      result.kind === "saved"
+        ? result.response.surveyGate
+        : surveyStatus.value?.surveyGate;
+    const justCompleted =
+      result.kind === "saved" && result.response.justCompleted;
+    const isLastQuestion = nextQuestionSlugId.value === undefined;
+    if (
+      justCompleted ||
+      (action === "next" && isLastQuestion && gate?.status === "complete_valid")
+    ) {
+      await handleBackToConversation();
+      showNotifyMessage({
+        message: t("answersSavedMessage"),
+        icon: "mdi-check-circle-outline",
+      });
+      return;
+    }
+
+    switch (action) {
+      case "previous":
+        await safeNavigateBack({ path: getPreviousPath() });
+        break;
+      case "next":
+        await router.push({ path: getNextPath() });
+        break;
+      case "close":
+        await handleBackToConversation();
+        break;
+    }
+  } finally {
+    isBusy.value = false;
   }
 }
 
 async function handleBackAction(): Promise<void> {
-  await handlePrevious();
+  await handleNavigation("previous");
 }
 
 async function handleNext(): Promise<void> {
-  if (await saveCurrentDraftIfNeeded()) {
-    await router.push({ path: getNextPath() });
-  }
+  await handleNavigation("next");
 }
 </script>
 
@@ -843,7 +832,7 @@ async function handleNext(): Promise<void> {
 .survey-card {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: clamp(0.7rem, 1.6dvh, 1rem);
 }
 
 .survey-card__prompt-row {

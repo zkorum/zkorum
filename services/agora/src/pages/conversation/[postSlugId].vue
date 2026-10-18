@@ -123,7 +123,10 @@
             <FloatingBottomContainer v-if="!isMaxDiffConversation">
               <CommentComposer
                 ref="commentComposerRef"
-                :editing-opinion="editingOpinion"
+                :editing-target="editingTarget"
+                :action-bar-element="
+                  conversationScrollContext.actionBarElement ?? undefined
+                "
                 :post-slug-id="
                   loadedConversationData.metadata.conversationSlugId
                 "
@@ -242,6 +245,7 @@ const {
   loadedConversationDisplayContent,
   currentTab,
   editingOpinion,
+  editingTarget,
   beginEditOpinion,
   finishEditOpinion,
   handleEditedOpinion,

@@ -10,7 +10,10 @@ import {
     voteTable,
 } from "@/shared-backend/schema.js";
 import { PUBLIC_AGGREGATE_SUPPRESSION_THRESHOLD } from "@/shared/shared.js";
-import { getSurveyOptionText } from "@/shared/surveyChoiceText.js";
+import {
+    getSurveyOptionText,
+    surveyOptionTextToPlainText,
+} from "@/shared/surveyChoiceText.js";
 import {
     groupSurveyAnswerOptionRows,
     loadSurveyAnswerOptionRows,
@@ -1210,15 +1213,18 @@ export function buildSurveyParticipantResponseRows({
                 if (optionId === undefined) {
                     continue;
                 }
+                const textValue = getSurveyOptionText({
+                    values: currentAnswer.optionTextValues,
+                    optionSlugId,
+                });
                 rows.push({
                     ...baseRow,
                     "option-id": optionId,
-                    "answer-text-html": "",
+                    "answer-text-html": textValue?.textValueHtml ?? "",
                     "answer-text-plain":
-                        getSurveyOptionText({
-                            values: currentAnswer.optionTextValues,
-                            optionSlugId,
-                        }) ?? "",
+                        textValue === undefined
+                            ? ""
+                            : surveyOptionTextToPlainText(textValue),
                 });
             }
         }

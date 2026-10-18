@@ -101,7 +101,7 @@ const {
   conversationSlugId,
   conversationData,
   conversationDisplayContent,
-  surveyForm,
+  surveyStepTotal,
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
 const skipPhoneRegistration = useSkipUnavailablePhoneRegistration({
   availability: usePhoneAuthAvailability(phoneAuthPurpose),
@@ -113,12 +113,6 @@ const skipPhoneRegistration = useSkipUnavailablePhoneRegistration({
         routeContext: routeContext.value,
       }),
     }),
-});
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
 });
 
 const phoneOtpFormRef = ref<{

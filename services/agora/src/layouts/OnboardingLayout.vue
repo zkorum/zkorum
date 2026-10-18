@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :style="viewportStyle">
     <q-layout view="hHh lpR fFf">
       <q-page-container>
         <div
@@ -11,7 +11,10 @@
           <q-page>
             <div
               class="baseLayer"
-              :class="{ 'baseLayer--bodyBehindFooter': bodyBehindFooter }"
+              :class="{
+                'baseLayer--bodyBehindFooter': bodyBehindFooter,
+                'baseLayer--fixedNavigation': fixedNavigation,
+              }"
             >
               <button
                 v-if="showBackButton"
@@ -36,9 +39,6 @@
                 class="topLayer"
                 :class="{
                   'topLayer--overBody': bodyBehindFooter,
-                  'topLayer--pinned': pinFooterToBottom,
-                  'topLayer--fills-remaining':
-                    !pinFooterToBottom && !bodyBehindFooter,
                 }"
               >
                 <div class="widthLimiter">
@@ -55,6 +55,7 @@
 
 <script setup lang="ts">
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { useVisibleViewport } from "src/utils/html/viewPort";
 import { useRouter } from "vue-router";
 
 import {
@@ -69,7 +70,7 @@ const props = withDefaults(
     showCloseButton?: boolean;
     closeCallback?: () => void;
     bodyBehindFooter?: boolean;
-    pinFooterToBottom?: boolean;
+    fixedNavigation?: boolean;
   }>(),
   {
     showBackButton: true,
@@ -77,11 +78,12 @@ const props = withDefaults(
     showCloseButton: false,
     closeCallback: undefined,
     bodyBehindFooter: false,
-    pinFooterToBottom: true,
+    fixedNavigation: false,
   }
 );
 
 const router = useRouter();
+const { viewportStyle } = useVisibleViewport();
 const { t } = useComponentI18n<OnboardingLayoutTranslations>(
   onboardingLayoutTranslations
 );
@@ -119,6 +121,33 @@ function handleClose() {
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
+}
+
+.baseLayer--fixedNavigation {
+  height: calc(100dvh - var(--visible-viewport-bottom-inset, 0px));
+  min-height: 0;
+  overflow: hidden;
+
+  .containerPaddings {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: clip;
+  }
+
+  .topLayer {
+    // Reserve navigation space even when the banner needs to shrink.
+    flex: 1 0 calc(5rem + env(safe-area-inset-bottom, 0px));
+    min-height: 0;
+    margin-top: 0;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .widthLimiter {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
 }
 
 .backButton {
@@ -181,21 +210,13 @@ function handleClose() {
   justify-content: center;
   background-color: white;
   border-top: 1px solid $secondary;
-}
-
-.topLayer--pinned {
   margin-top: auto;
 }
 
-.topLayer--fills-remaining {
-  align-items: flex-start;
-  flex: 1 0 auto;
-}
-
 .topLayer--overBody {
-  position: absolute;
-  bottom: 0;
-  max-height: 70dvh;
+  position: fixed;
+  inset-block-end: var(--visible-viewport-bottom-inset, 0px);
+  max-height: calc(var(--visible-viewport-height, 100dvh) * 0.7);
   overflow: auto;
   scrollbar-width: none;
   margin-top: 0;

@@ -1217,6 +1217,7 @@ class SurveyAnswerOption(Base):
     survey_answer_id: Mapped[int] = mapped_column(Integer)
     survey_question_id: Mapped[int] = mapped_column(Integer)
     survey_question_option_id: Mapped[int] = mapped_column(Integer)
+    text_value_html: Mapped[str | None] = mapped_column(Text, nullable=True)
     text_value_plain_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 

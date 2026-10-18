@@ -241,6 +241,25 @@ test("rejects a destination email conflict", () => {
     assert.throws(() => merge(), /already has an active email/);
 });
 
+test.each([
+    { account: "source", userId: sourceId },
+    { account: "destination", userId: keepId },
+])(
+    "rejects an authentication-restricted $account in both modes",
+    ({ userId }) => {
+        sql(`UPDATE public."user"
+        SET auth_restricted_at = now(), auth_restriction_reason = 'test restriction'
+        WHERE id = '${userId}'`);
+        const original = snapshot();
+        assert.throws(() => merge(), /Both accounts must be unrestricted/);
+        assert.throws(
+            () => merge({ apply: true }),
+            /Both accounts must be unrestricted/,
+        );
+        assert.equal(snapshot(), original);
+    },
+);
+
 test("checks configured identity and phone conditions", () => {
     assert.throws(
         () =>
@@ -434,6 +453,20 @@ test("already-linked still requires an active primary email", () => {
     merge({ apply: true });
     sql("UPDATE email SET type = 'backup'");
     assert.throws(() => merge(), /active primary credential/);
+});
+
+test("already-linked rejects an authentication restriction in both modes", () => {
+    merge({ apply: true });
+    sql(`UPDATE public."user"
+        SET auth_restricted_at = now(), auth_restriction_reason = 'test restriction'
+        WHERE id = '${keepId}'`);
+    const original = snapshot();
+    assert.throws(() => merge(), /Both accounts must be unrestricted/);
+    assert.throws(
+        () => merge({ apply: true }),
+        /Both accounts must be unrestricted/,
+    );
+    assert.equal(snapshot(), original);
 });
 
 test("checks deferred constraints before reporting dry-run success", () => {

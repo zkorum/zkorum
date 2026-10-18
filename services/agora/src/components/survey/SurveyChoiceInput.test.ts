@@ -1,6 +1,7 @@
-import { QCheckbox, QInput, QSelect, Quasar } from "quasar";
+import { QCheckbox, QSelect, Quasar } from "quasar";
+import type { SurveyOptionText } from "src/shared/surveyChoiceText";
 import type { SurveyChoiceDisplay } from "src/shared/types/zod";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { type App, createApp, defineComponent, h, nextTick, ref } from "vue";
 import { createI18n } from "vue-i18n";
 
@@ -14,18 +15,22 @@ afterEach(() => {
   }
 });
 
-function mountChoice({
+async function mountChoice({
   multiple = false,
   display = "list",
   allowsText = true,
+  initialHtml = "<p>Saved text</p>",
 }: {
   multiple?: boolean;
   display?: SurveyChoiceDisplay;
   allowsText?: boolean;
+  initialHtml?: string;
 } = {}) {
   const single = ref<string | null>(multiple ? null : "other");
   const multi = ref<string[]>([]);
-  const texts = ref<Record<string, string>>({ other: "Saved text" });
+  const texts = ref<Record<string, SurveyOptionText>>({
+    other: { textValueHtml: initialHtml },
+  });
   const app = createApp(
     defineComponent({
       setup() {
@@ -49,14 +54,16 @@ function mountChoice({
             "onUpdate:selectedMultiOptionSlugIds": (value: string[]) => {
               multi.value = value;
             },
-            "onUpdate:optionTextValues": (value: Record<string, string>) => {
+            "onUpdate:optionTextValues": (
+              value: Record<string, SurveyOptionText>
+            ) => {
               texts.value = value;
             },
           });
       },
     })
   );
-  app.use(Quasar, { components: { QCheckbox, QInput, QSelect } });
+  app.use(Quasar, { components: { QCheckbox, QSelect } });
   app.use(
     createI18n({
       legacy: false,
@@ -68,33 +75,82 @@ function mountChoice({
   document.body.append(target);
   app.mount(target);
   mounted.push({ app, target });
+  if (!multiple && allowsText) {
+    await vi.waitUntil(() => target.querySelector(".ProseMirror") !== null);
+  }
   return { target, single, multi, texts };
 }
 
 describe("choice option text inputs", () => {
+  it("pastes text and line breaks without formatting or active HTML", async () => {
+    const { target, texts } = await mountChoice({ initialHtml: "" });
+    const input = target.querySelector(".ProseMirror");
+    if (input === null) throw new Error("Expected option editor");
+    const event = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "clipboardData", {
+      value: {
+        getData: (type: string) =>
+          type === "text/html"
+            ? '<p><strong>Pasted</strong><br><em>Next</em></p><img src="x" onerror="alert(1)">'
+            : "Pasted\nNext",
+        files: [],
+      },
+    });
+    input.dispatchEvent(event);
+    await vi.waitFor(() =>
+      expect(texts.value.other).toEqual({
+        textValueHtml: "<p>Pasted<br>Next</p>",
+      })
+    );
+    expect(input.querySelector("strong, em, img")).toBeNull();
+  });
+
+  it("keeps the submitted model consistent when the simple editor strips incoming formatting", async () => {
+    const { target, texts } = await mountChoice({
+      initialHtml: "<p><strong>First</strong><br><em>Second</em></p>",
+    });
+    await vi.waitFor(() =>
+      expect(texts.value.other).toEqual({
+        textValueHtml: "<p>First<br>Second</p>",
+      })
+    );
+    expect(
+      target.querySelector(".ProseMirror strong, .ProseMirror em")
+    ).toBeNull();
+    expect(target.querySelector(".ProseMirror br")).not.toBeNull();
+  });
+
   it.each(["list", "dropdown"] satisfies SurveyChoiceDisplay[])(
     "edits saved text in the %s layout without changing the selection",
     async (display) => {
-      const { target, single, texts } = mountChoice({ display });
-      const input = target.querySelector("textarea");
+      const { target, single, texts } = await mountChoice({ display });
+      const input = target.querySelector(".ProseMirror p");
       if (input === null) throw new Error("Expected option text input");
-      expect(input.value).toBe("Saved text");
-      expect(input.getAttribute("aria-label")).toContain("Other");
-      input.value = "Updated text";
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      await nextTick();
-      expect(texts.value.other).toBe("Updated text");
+      expect(input.textContent).toBe("Saved text");
+      expect(target.querySelector(".toolbar, .bubble-menu-content")).toBeNull();
+      const labelId = input.parentElement?.getAttribute("aria-labelledby");
+      expect(
+        labelId === null || labelId === undefined
+          ? undefined
+          : document.getElementById(labelId)?.textContent
+      ).toContain("Other");
+      input.textContent = "Updated text";
+      await vi.waitFor(() =>
+        expect(texts.value.other).toEqual({
+          textValueHtml: "<p>Updated text</p>",
+        })
+      );
       expect(single.value).toBe("other");
-      input.value = "";
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      await nextTick();
-      expect(texts.value.other).toBe("");
+      input.textContent = "";
+      await vi.waitFor(() =>
+        expect(texts.value.other).toEqual({ textValueHtml: "" })
+      );
       expect(single.value).toBe("other");
     }
   );
 
   it("keeps independent texts for checkboxes and restores drafts after reselecting", async () => {
-    const { target, multi, texts } = mountChoice({ multiple: true });
+    const { target, multi, texts } = await mountChoice({ multiple: true });
     const [bicycle, other] =
       target.querySelectorAll<HTMLElement>('[role="checkbox"]');
     if (bicycle === undefined || other === undefined)
@@ -104,43 +160,49 @@ describe("choice option text inputs", () => {
     expect(multi.value).toEqual(["other"]);
     bicycle.click();
     await nextTick();
-    expect(target.querySelectorAll("textarea")).toHaveLength(2);
-    const bicycleInput = target.querySelector(
-      'textarea[aria-label^="Bicycle"]'
+    await vi.waitUntil(
+      () => target.querySelectorAll(".ProseMirror").length === 2
     );
-    if (!(bicycleInput instanceof HTMLTextAreaElement))
-      throw new Error("Expected bicycle text input");
-    bicycleInput.value = "Electric bicycle";
-    bicycleInput.dispatchEvent(new Event("input", { bubbles: true }));
-    await nextTick();
-    expect(texts.value).toEqual({
-      other: "Saved text",
-      bicycle: "Electric bicycle",
-    });
+    const bicycleInput = target.querySelector(".ProseMirror p");
+    if (bicycleInput === null) throw new Error("Expected bicycle text input");
+    bicycleInput.textContent = "Electric bicycle";
+    await vi.waitFor(() =>
+      expect(texts.value).toEqual({
+        other: { textValueHtml: "<p>Saved text</p>" },
+        bicycle: { textValueHtml: "<p>Electric bicycle</p>" },
+      })
+    );
     other.click();
     await nextTick();
-    expect(target.querySelector('textarea[aria-label^="Other"]')).toBeNull();
+    expect(target.querySelectorAll(".ProseMirror")).toHaveLength(1);
     other.click();
     await nextTick();
-    const otherInput = target.querySelector('textarea[aria-label^="Other"]');
+    await vi.waitFor(() =>
+      expect(target.querySelectorAll(".ProseMirror")[1]?.textContent).toBe(
+        "Saved text"
+      )
+    );
+  });
+
+  it("displays collected text read-only after the author disables its field", async () => {
+    const { target, texts } = await mountChoice({ allowsText: false });
+    texts.value.other = { textValueHtml: "<p><strong>Saved text</strong></p>" };
+    await nextTick();
     expect(
-      otherInput instanceof HTMLTextAreaElement ? otherInput.value : undefined
+      target.querySelector(".option-text-input__read-only")?.textContent
     ).toBe("Saved text");
+    expect(target.querySelector("strong")).toBeNull();
+    expect(target.querySelector('[contenteditable="true"]')).toBeNull();
   });
 
-  it("displays collected text read-only after the author disables its field", () => {
-    const { target } = mountChoice({ allowsText: false });
-    const input = target.querySelector("textarea");
-    expect(input?.value).toBe("Saved text");
-    expect(input?.readOnly).toBe(true);
-  });
-
-  it("renders submitted markup literally instead of creating HTML elements", async () => {
-    const { target, texts } = mountChoice();
+  it("renders escaped literal markup without creating HTML elements", async () => {
+    const { target, texts } = await mountChoice();
     const literal = '<img data-survey-injected="yes" src="x" />';
-    texts.value.other = literal;
+    texts.value.other = {
+      textValueHtml: '<p>&lt;img data-survey-injected="yes" src="x" /&gt;</p>',
+    };
     await nextTick();
-    expect(target.querySelector("textarea")?.value).toBe(literal);
+    expect(target.querySelector(".ProseMirror")?.textContent).toBe(literal);
     expect(target.querySelector("[data-survey-injected]")).toBeNull();
   });
 });

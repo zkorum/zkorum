@@ -73,7 +73,7 @@ import {
   getConversationSurveyOnboardingPath,
   getConversationSurveyVerifyPath,
 } from "src/utils/survey/navigation";
-import { computed, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -82,7 +82,8 @@ import {
 } from "../index.i18n";
 
 const router = useRouter();
-const { routeConversationSlugId, routeContext } = useConversationOnboardingRoute();
+const { routeConversationSlugId, routeContext } =
+  useConversationOnboardingRoute();
 const conversationOnboardingStore = useConversationOnboardingStore();
 const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const { safeNavigateBack } = useGoBackButtonHandler();
@@ -106,7 +107,7 @@ const {
   conversationSlugId,
   conversationData,
   conversationDisplayContent,
-  surveyForm,
+  surveyStepTotal,
   requirementState,
   isInitialLoading,
   hasLoadError,
@@ -114,12 +115,6 @@ const {
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
 
 const isActing = ref(false);
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
 
 watch(
   [isInitialLoading, requirementState],

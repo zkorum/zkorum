@@ -4,12 +4,15 @@ import type { OpinionVoteParams } from "src/composables/opinion/types";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useAuthenticationStore } from "src/stores/authentication";
 import type { AnalysisData } from "src/utils/api/comment/analysisData";
-import { getUserVotesQueryKey } from "src/utils/query/conversationQueryKeys";
+import {
+  getUserVotesQueryKey,
+  type UserVotesQueryKey,
+} from "src/utils/query/conversationQueryKeys";
 import {
   isQueryForViewerScope,
   useViewerQueryScope,
 } from "src/utils/query/viewerScope";
-import { computed, type MaybeRefOrGetter, reactive, toValue } from "vue";
+import { computed, type MaybeRefOrGetter, reactive, toValue, watch } from "vue";
 
 import { useNotify } from "../../ui/notify";
 import { useBackendAuthApi } from "../auth";
@@ -26,6 +29,10 @@ import {
   confirmVoteCache,
   restoreVoteCache,
 } from "./voteCache";
+import {
+  getVoteSubmissionQueue,
+  type VoteSubmission,
+} from "./voteSubmissionQueue";
 
 const userClusteredInSession = reactive(new Set<string>());
 function clusterSessionKey({
@@ -81,20 +88,67 @@ export function useVoteMutation(postSlugId: string) {
   const { markAnalysisAsStale } = useInvalidateCommentQueries();
   const { getErrorMessage } = useCommonApi();
   const { ensureParticipationAuthState } = useBackendAuthApi();
-  const { userId } = storeToRefs(useAuthenticationStore());
+  const authStore = useAuthenticationStore();
+  const { userId } = storeToRefs(authStore);
   const viewerScope = useViewerQueryScope();
+  const submissions = getVoteSubmissionQueue(queryClient);
 
-  function currentVotesKey() {
-    return getUserVotesQueryKey({
-      conversationSlugId: postSlugId,
-      voterId: userId.value,
+  function captureViewer() {
+    let voterId = userId.value;
+    let isValid = true;
+    const stop = watch(
+      userId,
+      (nextVoterId) => {
+        if (
+          isValid &&
+          voterId === undefined &&
+          nextVoterId !== undefined &&
+          authStore.isGuest
+        ) {
+          voterId = nextVoterId;
+        } else if (nextVoterId !== voterId) {
+          isValid = false;
+        }
+      },
+      { flush: "sync" }
+    );
+    return {
+      isCurrent: () => isValid && userId.value === voterId,
+      // A returning account still waits for its earlier writes, although old
+      // session callbacks must remain invalid after switching away and back.
+      isSameViewer: () =>
+        userId.value === voterId && (voterId !== undefined || isValid),
+      votesKey: () =>
+        getUserVotesQueryKey({ conversationSlugId: postSlugId, voterId }),
+      stop,
+    };
+  }
+
+  type VoteVariables = Readonly<
+    OpinionVoteParams & { isCurrent: () => boolean }
+  >;
+  type SubmissionVariables = VoteVariables & {
+    isCurrentViewer: () => boolean;
+    ownerVotesKey: () => UserVotesQueryKey;
+    readsCancelled: Promise<void>;
+    submission: VoteSubmission;
+  };
+
+  function rollbackSubmission(variables: SubmissionVariables): void {
+    if (!variables.submission.isLatest()) return;
+    restoreVoteCache({
+      queryClient,
+      votesKey: variables.ownerVotesKey(),
+      snapshot: variables.submission.snapshot,
+      vote: variables.submission.confirmedVote(),
     });
   }
 
-  return useMutation({
-    mutationFn: (
-      variables: OpinionVoteParams & { isCurrent: () => boolean }
-    ) => {
+  const mutation = useMutation({
+    mutationFn: async (variables: SubmissionVariables) => {
+      await variables.readsCancelled;
+      if (!variables.isCurrent() || !variables.submission.isLatest())
+        return undefined;
       const { opinionSlugId, voteAction } = variables;
       const analysisQueryData = queryClient.getQueriesData<AnalysisData>({
         queryKey: ["analysis", postSlugId],
@@ -124,42 +178,23 @@ export function useVoteMutation(postSlugId: string) {
         cacheKnowsUserIsClustered || sessionKnowsUserIsClustered
       );
 
-      return castVoteForComment({
+      const response = await castVoteForComment({
         opinionSlugId,
         votingAction: voteAction,
         returnIsUserClustered,
         isCurrent: variables.isCurrent,
         sourceVersion: variables.sourceVersion,
       });
+      // Receipt of an accepted write matters even if its view was replaced:
+      // a newer choice may need to roll back to this vote.
+      if (response.success) variables.submission.confirm();
+      return response;
     },
 
-    onMutate: async (variables) => {
-      const { opinionSlugId, voteAction } = variables;
-      const { isCurrent } = variables;
-      await Promise.all([
-        queryClient.cancelQueries({ queryKey: ["userVotes", postSlugId] }),
-        queryClient.cancelQueries({ queryKey: ["comments", postSlugId] }),
-      ]);
-      if (!isCurrent())
-        throw new DOMException("Voting session changed", "AbortError");
-
-      const snapshot = applyOptimisticVote({
-        queryClient,
-        votesKey: currentVotesKey(),
-        params: { opinionSlugId, voteAction },
-      });
-      return { snapshot };
-    },
-
-    onError: (error: unknown, variables, context) => {
+    onError: (error: unknown, variables) => {
+      rollbackSubmission(variables);
       if (error instanceof DOMException && error.name === "AbortError") return;
-      if (!variables.isCurrent()) return;
-      if (context !== undefined)
-        restoreVoteCache({
-          queryClient,
-          votesKey: currentVotesKey(),
-          snapshot: context.snapshot,
-        });
+      if (!variables.isCurrent() || !variables.submission.isLatest()) return;
 
       const apiError = classifyApiError(error);
       if (apiError.kind === "transport") {
@@ -169,36 +204,50 @@ export function useVoteMutation(postSlugId: string) {
       }
     },
 
-    onSuccess: async (data, variables, context) => {
-      if (!variables.isCurrent()) return;
-      if (!data.success) {
-        if (context !== undefined)
-          restoreVoteCache({
-            queryClient,
-            votesKey: currentVotesKey(),
-            snapshot: context.snapshot,
-          });
-        if (data.reason === "statement_changed") {
+    onSuccess: async (data, variables) => {
+      if (data === undefined || !data.success) {
+        rollbackSubmission(variables);
+        if (!variables.isCurrentViewer()) return;
+        if (
+          variables.submission.isLatest() &&
+          data?.reason === "statement_changed"
+        ) {
+          const voterId = userId.value;
           await Promise.all([
             queryClient.invalidateQueries({
               queryKey: ["comments", postSlugId],
+              predicate: (query) => query.queryKey[3] === voterId,
             }),
             queryClient.invalidateQueries({
               queryKey: ["nextUnansweredOpinion", postSlugId],
+              predicate: (query) => query.queryKey[3] === voterId,
             }),
           ]);
         }
         return;
       }
+      if (!variables.isCurrentViewer()) return;
 
       // Guest creation may change the cache key while the vote is in flight.
-      await ensureParticipationAuthState();
-      if (!variables.isCurrent()) return;
-      const votesKey = currentVotesKey();
+      try {
+        await ensureParticipationAuthState();
+      } catch {
+        // An accepted vote remains accepted if subsequent session refresh fails.
+        if (variables.isCurrent() && variables.submission.isLatest()) {
+          showNotifyMessage(t("voteSavedSessionRefreshFailed"));
+        }
+        return;
+      }
+      if (!variables.isCurrentViewer()) return;
+      const votesKey = variables.ownerVotesKey();
       await queryClient.cancelQueries({ queryKey: votesKey });
-      if (!variables.isCurrent()) return;
-      if (context !== undefined) {
-        confirmVoteCache({ queryClient, votesKey, snapshot: context.snapshot });
+      if (!variables.isCurrentViewer()) return;
+      if (variables.submission.isLatest()) {
+        confirmVoteCache({
+          queryClient,
+          votesKey,
+          snapshot: variables.submission.snapshot,
+        });
       }
 
       if (data.userIsClustered === true) {
@@ -216,6 +265,7 @@ export function useVoteMutation(postSlugId: string) {
       if (variables.voteAction === "cancel") {
         void queryClient.invalidateQueries({
           queryKey: ["comments", postSlugId, "my_votes"],
+          predicate: (query) => query.queryKey[3] === votesKey[2],
           refetchType: "none", // Only mark stale, don't refetch immediately
         });
       }
@@ -223,6 +273,61 @@ export function useVoteMutation(postSlugId: string) {
 
     retry: false, // Disable auto-retry
   });
+
+  async function cancelVoteReads(votesKey: UserVotesQueryKey): Promise<void> {
+    await Promise.all([
+      queryClient.cancelQueries({ queryKey: votesKey, exact: true }),
+      queryClient.cancelQueries({
+        queryKey: ["comments", postSlugId],
+        predicate: (query) => query.queryKey[3] === votesKey[2],
+      }),
+    ]);
+  }
+
+  async function mutateAsync({
+    opinionSlugId,
+    voteAction,
+    sourceVersion,
+    isCurrent: isCurrentView,
+  }: VoteVariables) {
+    const params = { opinionSlugId, voteAction, sourceVersion };
+    const viewer = captureViewer();
+    const isCurrent = () => viewer.isCurrent() && isCurrentView();
+    try {
+      if (!isCurrent()) return undefined;
+      // Cancellation starts synchronously; register the tap before awaiting it
+      // so different read-completion times cannot reorder the user's choices.
+      const votesKey = viewer.votesKey();
+      const readsCancelled = cancelVoteReads(votesKey);
+      const result = await submissions.submit({
+        conversationSlugId: postSlugId,
+        snapshot: applyOptimisticVote({
+          queryClient,
+          votesKey,
+          params,
+        }),
+        // View lifetime must not break ordering for the same viewer.
+        isSameViewer: viewer.isSameViewer,
+        execute: (submission) =>
+          mutation.mutateAsync({
+            ...params,
+            isCurrent,
+            isCurrentViewer: viewer.isCurrent,
+            ownerVotesKey: viewer.votesKey,
+            readsCancelled,
+            submission,
+          }),
+      });
+      return isCurrent() ? result : undefined;
+    } catch (error) {
+      if (!isCurrent()) return undefined;
+      throw error;
+    } finally {
+      viewer.stop();
+    }
+  }
+
+  return { mutateAsync };
 }
 
 // Utility function to invalidate vote-related queries

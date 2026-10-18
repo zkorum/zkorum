@@ -23,7 +23,7 @@ rsync -av --include "[0-9][0-9][0-9][0-9]_*.sql" --exclude="*" "$directory/" "$F
 
 # Bash globs give stable bytewise order, without a pipeline subshell losing state.
 existing_files=("$FLYWAY_DIRECTORY"/*.sql)
-flyway_pattern='^V([0-9]{4})(\.[0-9]+)?__(.+)\.sql$'
+flyway_pattern='^V([0-9]{4})(\.[0-9]+)*__(.+)\.sql$'
 drizzle_pattern='^([0-9]{4})_(.+)\.sql$'
 max_version=0
 # Bash 3 treats empty arrays as unset under nounset.

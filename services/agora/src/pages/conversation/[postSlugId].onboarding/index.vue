@@ -3,9 +3,11 @@
     :back-callback="handleBackToPrevious"
     :close-callback="handleBackToConversation"
     :show-close-button="true"
+    :fixed-navigation="true"
   >
     <template #body>
       <ConversationSurveyOnboardingHero
+        density="compact"
         :conversation-data="conversationData"
         :initial-display-content="conversationDisplayContent"
       />
@@ -23,6 +25,7 @@
 
       <StepperLayout
         v-else
+        :fixed-navigation="true"
         :submit-call-back="handlePrimaryAction"
         :current-step="1"
         :total-steps="surveyStepTotal"
@@ -32,8 +35,8 @@
       >
         <template #header>
           <InfoHeader
-            :title="headerTitle"
-            :description="headerDescription"
+            :title="t('welcomeTitle')"
+            :description="tParticipation('description')"
             icon-name="mdi-clipboard-text-outline"
           />
         </template>
@@ -45,6 +48,10 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import ConversationSurveyOnboardingHero from "src/components/onboarding/backgrounds/ConversationSurveyOnboardingHero.vue";
+import {
+  type ConversationParticipationTranslations,
+  conversationParticipationTranslations,
+} from "src/components/onboarding/conversationParticipation.i18n";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -56,11 +63,8 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
-import {
-  getConversationSurveyCompletePath,
-  getConversationSurveyVerifyPath,
-} from "src/utils/survey/navigation";
-import { computed, ref, watch } from "vue";
+import { getConversationSurveyVerifyPath } from "src/utils/survey/navigation";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -69,13 +73,18 @@ import {
 } from "./index.i18n";
 
 const router = useRouter();
-const { routeConversationSlugId, routeContext } = useConversationOnboardingRoute();
+const { routeConversationSlugId, routeContext } =
+  useConversationOnboardingRoute();
 const conversationOnboardingStore = useConversationOnboardingStore();
 const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const { exitToConversation } = useConversationOnboardingExit();
 const { t } = useComponentI18n<ConversationSurveyOnboardingTranslations>(
   conversationSurveyOnboardingTranslations
 );
+const { t: tParticipation } =
+  useComponentI18n<ConversationParticipationTranslations>(
+    conversationParticipationTranslations
+  );
 
 if (
   conversationOnboardingStore.conversationSlugId !==
@@ -91,42 +100,13 @@ const {
   conversationSlugId,
   conversationData,
   conversationDisplayContent,
-  surveyForm,
+  surveyStepTotal,
   isInitialLoading,
   hasLoadError,
   refetchAll,
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
 
 const isActing = ref(false);
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
-
-const headerTitle = computed(() => {
-  return t("welcomeTitle");
-});
-
-const headerDescription = computed(() => {
-  return t("welcomeDescription");
-});
-
-watch(
-  isInitialLoading,
-  (loading) => {
-    if (!loading && conversationOnboardingStore.justCompletedSurvey) {
-        void router.replace({
-        path: getConversationSurveyCompletePath({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        }),
-      });
-    }
-  },
-  { immediate: true }
-);
 
 async function handleBackToConversation(): Promise<void> {
   credentialUpgradeTarget.value = null;

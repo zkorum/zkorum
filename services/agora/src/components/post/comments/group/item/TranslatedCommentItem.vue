@@ -1,5 +1,6 @@
 <template>
   <CommentItem
+    :card-element="cardElement"
     :comment-item="commentItem"
     :post-slug-id="postSlugId"
     :conversation-author-username="conversationAuthorUsername"
@@ -22,7 +23,10 @@
 </template>
 
 <script setup lang="ts">
-import type { OpinionVotingUtilities } from "src/composables/opinion/types";
+import type {
+  OpinionEditRequest,
+  OpinionVotingUtilities,
+} from "src/composables/opinion/types";
 import type {
   DisplayedOpinionItem,
   EventSlug,
@@ -36,6 +40,7 @@ import { computed } from "vue";
 import CommentItem from "./CommentItem.vue";
 
 const props = defineProps<{
+  cardElement: HTMLElement | undefined;
   commentItem: DisplayedOpinionItem;
   editingOpinionSlugId: string | undefined;
   postSlugId: string;
@@ -53,7 +58,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: [opinionSlugId: string];
-  editOpinion: [opinion: DisplayedOpinionItem];
+  editOpinion: [request: OpinionEditRequest];
   mutedComment: [];
 }>();
 

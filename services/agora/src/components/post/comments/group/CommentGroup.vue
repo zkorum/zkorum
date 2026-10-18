@@ -14,6 +14,7 @@
     <ZKCard
       v-for="(commentItem, index) in finalCommentList"
       :id="`comment-${commentItem.opinionSlugId}`"
+      v-slot="{ element }"
       :key="commentItem.opinionSlugId"
       :tabindex="0"
       :aria-posinset="index + 1"
@@ -46,6 +47,7 @@
       </div>
 
       <TranslatedCommentItem
+        :card-element="element"
         :comment-item="commentItem"
         :post-slug-id="postSlugId"
         :conversation-author-username="conversationAuthorUsername"
@@ -69,7 +71,10 @@
 
 <script setup lang="ts">
 import ZKCard from "src/components/ui-library/ZKCard.vue";
-import type { OpinionVotingUtilities } from "src/composables/opinion/types";
+import type {
+  OpinionEditRequest,
+  OpinionVotingUtilities,
+} from "src/composables/opinion/types";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import {
   localizedDateTimeFormatOptions,
@@ -110,7 +115,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: [opinionSlugId: string];
-  editOpinion: [opinion: DisplayedOpinionItem];
+  editOpinion: [request: OpinionEditRequest];
   mutedComment: [];
   ticketVerified: [
     payload: { userIdChanged: boolean; needsCacheRefresh: boolean },

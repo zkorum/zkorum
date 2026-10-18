@@ -4,8 +4,11 @@
     :conversation-title="displayedConversationTitle"
     :author-username="conversationData.metadata.authorUsername"
     :organization-name="conversationData.metadata.organization?.name ?? ''"
-    :organization-image-url="conversationData.metadata.organization?.imageUrl ?? ''"
+    :organization-image-url="
+      conversationData.metadata.organization?.imageUrl ?? ''
+    "
     :content-translation="translationPreview"
+    :density="density"
     @update:content-translation-mode="setTranslationMode"
   />
   <DefaultImageExample v-else />
@@ -20,10 +23,14 @@ import { computed } from "vue";
 import ConversationSurveyHero from "./ConversationSurveyHero.vue";
 import DefaultImageExample from "./DefaultImageExample.vue";
 
-const props = defineProps<{
-  conversationData?: ExtendedConversationDisplayData;
-  initialDisplayContent?: ConversationContentFetchResponse;
-}>();
+const props = withDefaults(
+  defineProps<{
+    conversationData: ExtendedConversationDisplayData | undefined;
+    initialDisplayContent: ConversationContentFetchResponse | undefined;
+    density?: "comfortable" | "compact";
+  }>(),
+  { density: "comfortable" }
+);
 
 const conversationData = computed(() => props.conversationData);
 const initialDisplayContent = computed(() => props.initialDisplayContent);

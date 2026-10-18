@@ -64,7 +64,10 @@ import VotingSessionToolbar from "src/components/post/voting/VotingSessionToolba
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
 import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
-import type { OpinionVoteParams } from "src/composables/opinion/types";
+import type {
+  OpinionEditRequest,
+  OpinionVoteParams,
+} from "src/composables/opinion/types";
 import { useOpinionVoting } from "src/composables/opinion/useOpinionVoting";
 import { usePolisVotingSession } from "src/composables/opinion/usePolisVotingSession";
 import { useVoteReconciliation } from "src/composables/opinion/useVoteReconciliation";
@@ -112,7 +115,7 @@ const props = defineProps<{
   isVotingDisabled: boolean;
   conversationRouteContext: ConversationRouteContext;
 }>();
-const emit = defineEmits<{ editOpinion: [opinion: DisplayedOpinionItem] }>();
+const emit = defineEmits<{ editOpinion: [request: OpinionEditRequest] }>();
 
 const { t } = useComponentI18n<OneAtATimeTranslations>(oneAtATimeTranslations);
 const { showNotifyMessage } = useNotify();

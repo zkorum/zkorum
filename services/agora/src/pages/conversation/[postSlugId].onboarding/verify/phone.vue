@@ -139,18 +139,12 @@ const {
   conversationSlugId,
   conversationData,
   conversationDisplayContent,
-  surveyForm,
+  surveyStepTotal,
   requirementState,
   isInitialLoading,
   hasLoadError,
   refetchAll,
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
 
 const backPath = computed(() => {
   if (

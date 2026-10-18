@@ -2258,12 +2258,7 @@ export class Dto {
         })
         .strict();
     static surveyResponseWithdrawResponse = z.discriminatedUnion("success", [
-        z
-            .object({
-                success: z.literal(true),
-                surveyGate: zodSurveyGateSummary,
-            })
-            .strict(),
+        Dto.surveyStatusCheckResponse.extend({ success: z.literal(true) }),
         z
             .object({
                 success: z.literal(false),

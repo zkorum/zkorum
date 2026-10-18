@@ -2,7 +2,9 @@
   <div class="editor">
     <!-- Static toolbar for desktop and adaptive mode -->
     <div
-      v-if="editor && showToolbar && !$q.platform.is.mobile"
+      v-if="
+        editor && showToolbar && formattingEnabled && !$q.platform.is.mobile
+      "
       class="toolbar"
       @mousedown.prevent
     >
@@ -54,7 +56,9 @@
 
     <!-- Bubble menu for mobile -->
     <BubbleMenu
-      v-if="editor && isEditorReady && $q.platform.is.mobile"
+      v-if="
+        editor && isEditorReady && formattingEnabled && $q.platform.is.mobile
+      "
       v-show="showToolbar"
       :editor="editor"
       :options="{
@@ -138,6 +142,7 @@ defineOptions({
 const props = withDefaults(
   defineProps<{
     showToolbar: boolean;
+    formattingEnabled?: boolean;
     placeholder: string;
     minHeight: string;
     disabled: boolean;
@@ -151,6 +156,7 @@ const props = withDefaults(
   }>(),
   {
     maxLength: undefined,
+    formattingEnabled: true,
     showCharacterCount: true,
     submitOnShiftEnter: false,
     ariaLabelledby: undefined,
@@ -311,9 +317,15 @@ const editor = useEditor({
       blockquote: false,
       codeBlock: false,
       horizontalRule: false,
-      bulletList: props.singleLine ? false : {},
-      orderedList: props.singleLine ? false : {},
-      listItem: props.singleLine ? false : {},
+      bold: props.formattingEnabled ? {} : false,
+      italic: props.formattingEnabled ? {} : false,
+      strike: props.formattingEnabled ? {} : false,
+      underline: props.formattingEnabled ? {} : false,
+      code: props.formattingEnabled ? {} : false,
+      link: props.formattingEnabled ? {} : false,
+      bulletList: props.singleLine || !props.formattingEnabled ? false : {},
+      orderedList: props.singleLine || !props.formattingEnabled ? false : {},
+      listItem: props.singleLine || !props.formattingEnabled ? false : {},
       // Disable hard breaks in single-line mode
       hardBreak: props.singleLine ? false : {},
       // List indentation must not create an unrelated empty paragraph.
@@ -323,9 +335,15 @@ const editor = useEditor({
       placeholder: () => props.placeholder,
     }),
     // Single-line schemas have no list nodes, so list commands must stay multiline-only.
-    props.singleLine ? BlockEnterExtension : CustomListTabKeymap,
+    ...(props.singleLine
+      ? [BlockEnterExtension]
+      : props.formattingEnabled
+        ? [CustomListTabKeymap]
+        : []),
     // Clear storedMarks on selection change for mobile (bubble menu UX)
-    ...($q.platform.is.mobile ? [ClearStoredMarksOnSelectionChange] : []),
+    ...(props.formattingEnabled && $q.platform.is.mobile
+      ? [ClearStoredMarksOnSelectionChange]
+      : []),
   ],
   editorProps: {
     attributes: getEditorAttributes(),
@@ -352,7 +370,11 @@ const editor = useEditor({
     },
   },
   onCreate: ({ editor }) => {
-    updateEditorState({ editorInstance: editor, updateModelText: false });
+    // A formatting-free schema may strip incoming marks; keep its model consistent with the visible text.
+    updateEditorState({
+      editorInstance: editor,
+      updateModelText: !props.formattingEnabled,
+    });
     emit("ready", serializedEditorContent);
   },
   onUpdate: ({ editor }) => {
@@ -384,6 +406,9 @@ defineExpose({
   },
   focus: () => {
     editor.value?.chain().focus().run();
+  },
+  scrollSelectionIntoView: () => {
+    if (editor.value?.isFocused) editor.value.commands.scrollIntoView();
   },
 });
 
@@ -484,6 +509,7 @@ function getEditorAttributes(): Record<string, string> {
 
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
   justify-content: center;

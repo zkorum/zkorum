@@ -1,5 +1,6 @@
 import { storeToRefs } from "pinia";
 import { getOpinionFilterSelection } from "src/composables/opinion/opinionLinkRoute";
+import { useOpinionEditTarget } from "src/composables/opinion/useOpinionEditTarget";
 import type { DisplayedOpinionItem } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
@@ -167,13 +168,8 @@ export function useConversationParentState({
   );
 
   const currentTab = ref<"comment" | "analysis">("comment");
-  const editingOpinion = ref<DisplayedOpinionItem>();
-  function beginEditOpinion(opinion: DisplayedOpinionItem): void {
-    if (editingOpinion.value === undefined) editingOpinion.value = opinion;
-  }
-  function finishEditOpinion(): void {
-    editingOpinion.value = undefined;
-  }
+  const { editingTarget, editingOpinion, beginEditOpinion, finishEditOpinion } =
+    useOpinionEditTarget();
   async function handleEditedOpinion(
     opinion: DisplayedOpinionItem
   ): Promise<void> {
@@ -474,6 +470,7 @@ export function useConversationParentState({
     loadedConversationData,
     loadedConversationDisplayContent,
     currentTab,
+    editingTarget,
     editingOpinion,
     beginEditOpinion,
     finishEditOpinion,

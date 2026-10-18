@@ -1,5 +1,6 @@
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { SurveyOptionText } from "@/shared/surveyChoiceText.js";
 import {
     surveyAnswerOptionTable,
     surveyQuestionOptionTable,
@@ -8,12 +9,12 @@ import {
 interface SurveyAnswerOptionRow {
     answerId: number;
     optionSlugId: string;
-    textValuePlainText: string | undefined;
+    textValueHtml: string | undefined;
 }
 
 interface SurveyAnswerOptions {
     optionSlugIds: string[];
-    optionTextValues: Record<string, string> | undefined;
+    optionTextValues: Record<string, SurveyOptionText> | undefined;
 }
 
 export async function loadSurveyAnswerOptionRows({
@@ -35,8 +36,7 @@ export async function loadSurveyAnswerOptionRows({
             includeText
                 ? {
                       ...selection,
-                      textValuePlainText:
-                          surveyAnswerOptionTable.textValuePlainText,
+                      textValueHtml: surveyAnswerOptionTable.textValueHtml,
                   }
                 : selection,
         )
@@ -62,10 +62,9 @@ export async function loadSurveyAnswerOptionRows({
     return rows.map((row) => ({
         answerId: row.answerId,
         optionSlugId: row.optionSlugId,
-        textValuePlainText:
-            "textValuePlainText" in row &&
-            typeof row.textValuePlainText === "string"
-                ? row.textValuePlainText
+        textValueHtml:
+            "textValueHtml" in row && typeof row.textValueHtml === "string"
+                ? row.textValueHtml
                 : undefined,
     }));
 }
@@ -73,17 +72,37 @@ export async function loadSurveyAnswerOptionRows({
 export function groupSurveyAnswerOptionRows(
     rows: readonly SurveyAnswerOptionRow[],
 ): Map<number, SurveyAnswerOptions> {
-    const optionsByAnswerId = new Map<number, SurveyAnswerOptions>();
-    for (const row of rows) {
-        const options: SurveyAnswerOptions = optionsByAnswerId.get(
-            row.answerId,
-        ) ?? { optionSlugIds: [], optionTextValues: undefined };
-        options.optionSlugIds.push(row.optionSlugId);
-        if (row.textValuePlainText !== undefined) {
-            options.optionTextValues ??= {};
-            options.optionTextValues[row.optionSlugId] = row.textValuePlainText;
+    const groups = new Map<
+        number,
+        {
+            optionSlugIds: string[];
+            textEntries: [string, SurveyOptionText][];
         }
-        optionsByAnswerId.set(row.answerId, options);
+    >();
+    for (const row of rows) {
+        const options = groups.get(row.answerId) ?? {
+            optionSlugIds: [],
+            textEntries: [],
+        };
+        options.optionSlugIds.push(row.optionSlugId);
+        if (row.textValueHtml !== undefined) {
+            options.textEntries.push([
+                row.optionSlugId,
+                { textValueHtml: row.textValueHtml },
+            ]);
+        }
+        groups.set(row.answerId, options);
     }
-    return optionsByAnswerId;
+    return new Map(
+        Array.from(groups, ([answerId, group]) => [
+            answerId,
+            {
+                optionSlugIds: group.optionSlugIds,
+                optionTextValues:
+                    group.textEntries.length === 0
+                        ? undefined
+                        : Object.fromEntries(group.textEntries),
+            },
+        ]),
+    );
 }

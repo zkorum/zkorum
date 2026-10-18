@@ -1,11 +1,11 @@
 <template>
-  <div class="hero">
+  <div class="hero" :class="{ 'hero--compact': density === 'compact' }">
     <div class="hero__content">
       <div v-if="showOwnerImage" class="hero__avatar">
         <DynamicProfileImage
           :user-identity="ownerIdentity"
           :organization-image-url="organizationImageUrl || undefined"
-          :size="64"
+          :size="density === 'compact' ? 40 : 64"
         />
       </div>
 
@@ -18,7 +18,9 @@
         :show-verified-text="false"
       />
 
-      <div class="hero__title">{{ conversationTitle }}</div>
+      <div class="hero__title" :title="conversationTitle">
+        {{ conversationTitle }}
+      </div>
 
       <ContentTranslationControl
         v-if="contentTranslation?.isAvailable === true"
@@ -53,6 +55,7 @@ const props = defineProps<{
   organizationName: string;
   organizationImageUrl: string;
   contentTranslation: HeroContentTranslationPreview | undefined;
+  density: "comfortable" | "compact";
 }>();
 
 const emit = defineEmits<{
@@ -64,9 +67,10 @@ const ownerIdentity = computed(() => {
 });
 
 const showOwnerImage = computed(() => {
-  return props.organizationName.length === 0 || props.organizationImageUrl.length > 0;
+  return (
+    props.organizationName.length === 0 || props.organizationImageUrl.length > 0
+  );
 });
-
 </script>
 
 <style scoped lang="scss">
@@ -123,6 +127,49 @@ const showOwnerImage = computed(() => {
 @media (max-width: 600px) {
   .hero {
     min-height: clamp(11rem, 24dvh, 15rem);
+  }
+}
+
+.hero--compact {
+  min-height: 0;
+  padding-block: clamp(0.75rem, calc(4dvh - 0.5rem), 2.5rem);
+  padding-inline: 2.5rem;
+
+  .hero__content {
+    gap: clamp(0.5rem, 1.5dvh, 1rem);
+  }
+
+  .hero__avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 0.5rem;
+  }
+
+  .hero__title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    font-size: 1.35rem;
+  }
+}
+
+@media (max-height: 500px) {
+  .hero--compact {
+    padding-block: 0.5rem;
+  }
+
+  .hero--compact .hero__content {
+    gap: 0.25rem;
+  }
+
+  .hero--compact .hero__avatar {
+    display: none;
+  }
+
+  .hero--compact .hero__title {
+    -webkit-line-clamp: 2;
+    font-size: 1.1rem;
   }
 }
 </style>

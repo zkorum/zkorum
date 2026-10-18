@@ -1,5 +1,19 @@
 import type { CastVoteResponse } from "src/shared/types/dto";
-import type { VotingAction, VotingOption } from "src/shared/types/zod";
+import type {
+  DisplayedOpinionItem,
+  VotingAction,
+  VotingOption,
+} from "src/shared/types/zod";
+
+export interface OpinionSourceElements {
+  readonly card: HTMLElement;
+  readonly content: HTMLElement;
+}
+
+export interface OpinionEditRequest {
+  readonly opinion: DisplayedOpinionItem;
+  readonly sourceElements: OpinionSourceElements;
+}
 
 export interface UserVote {
   readonly opinionSlugId: string;

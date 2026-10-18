@@ -59,7 +59,7 @@ import {
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { getConversationSurveyVerifyEmailPath } from "src/utils/survey/navigation";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 
 const { t } = useComponentI18n<VerifyEmailCodeTranslations>(
@@ -87,14 +87,8 @@ const {
   conversationSlugId,
   conversationData,
   conversationDisplayContent,
-  surveyForm,
+  surveyStepTotal,
 } = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
-
-const surveyStepTotal = computed(() => {
-  const questionCount = surveyForm.value?.questions.length ?? 0;
-
-  return questionCount > 0 ? questionCount + 3 : 2;
-});
 
 const emailOtpFormRef = ref<{
   nextButtonClicked: () => void;
