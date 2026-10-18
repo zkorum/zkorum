@@ -1,10 +1,10 @@
 # Pin the target-platform base before the native build stage resolves the same
 # multi-architecture tag. Reuse the stage so Podman cannot select the host Node
 # binary for the runtime after installing target-platform native dependencies.
-FROM node:24.14.1-trixie-slim AS runtime-base
+FROM --platform=$TARGETPLATFORM node:24.14.1-trixie-slim AS runtime-base
 
 # ---- Dependencies (production only) ----
-FROM runtime-base AS deps
+FROM --platform=$TARGETPLATFORM runtime-base AS deps
 WORKDIR /app
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
 RUN apt-get update && \
@@ -35,9 +35,13 @@ COPY src ./src
 RUN pnpm build
 
 # ---- Production ----
-FROM runtime-base AS production
+# Explicitly reset the target after the native build stage. Podman otherwise
+# carries the ARM64 v8 variant into an AMD64-labelled runtime image.
+FROM --platform=$TARGETPLATFORM runtime-base AS production
+ARG TARGETARCH
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
-RUN apt-get update && \
+RUN test "$(dpkg --print-architecture)" = "$TARGETARCH" && \
+    apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates tini && \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app

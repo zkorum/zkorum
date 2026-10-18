@@ -15,7 +15,8 @@ FROM deps AS build
 RUN pnpm run build:staging
 
 # ---- Production ----
-FROM nginx:stable-alpine
+# Reset the target after the native build stage, including its CPU variant.
+FROM --platform=$TARGETPLATFORM nginx:stable-alpine
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/spa /usr/share/nginx/html
 EXPOSE 80
