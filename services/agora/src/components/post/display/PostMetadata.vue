@@ -40,12 +40,6 @@
     />
   </q-dialog>
 
-  <PreParticipationIntentionDialog
-    v-model="showLoginDialog"
-    :ok-callback="() => onLoginConfirmationOk()"
-    active-intention="reportUserContent"
-  />
-
   <!-- Action Dialog -->
   <ZKActionDialog
     v-model="postActions.dialogState.value.isVisible"
@@ -103,7 +97,6 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { copyToClipboard, useQuasar } from "quasar";
-import PreParticipationIntentionDialog from "src/components/authentication/intention/PreParticipationIntentionDialog.vue";
 import {
   createConversationUpdatePreferenceAction,
   resolveEmailUpdatePreferenceChoiceEnabled,
@@ -121,7 +114,6 @@ import ReportContentDialog from "src/components/report/ReportContentDialog.vue";
 import ZKActionDialog from "src/components/ui-library/ZKActionDialog.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
-import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
 import { useShareActions } from "src/composables/share/useShareActions";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { ConversationEmailUpdateConversationSummaryResponse } from "src/shared/types/dto";
@@ -147,6 +139,7 @@ import {
   type ConversationRouteContext,
   normalConversationRouteContext,
 } from "src/utils/router/conversationRouteContext";
+import { getConversationSurveyVerifyHardPath } from "src/utils/survey/navigation";
 import { useEmbedMode } from "src/utils/ui/embedMode";
 import { useNotify } from "src/utils/ui/notify";
 import { useConversationUrl } from "src/utils/url/conversationUrl";
@@ -214,11 +207,8 @@ const { t: tEmailUpdateResume } =
   );
 
 const showReportDialog = ref(false);
-const showLoginDialog = ref(false);
 const showCloseDialog = ref(false);
 const showReopenDialog = ref(false);
-
-const { setReportIntention } = useConversationLoginIntentions();
 
 const $q = useQuasar();
 const notify = useNotify();
@@ -241,15 +231,16 @@ const conversationRouteContext = computed<ConversationRouteContext>(() => {
   return normalConversationRouteContext;
 });
 
-function onLoginConfirmationOk() {
-  setReportIntention("");
-}
-
-function reportContentCallback() {
+async function reportContentCallback() {
   if (isLoggedIn.value) {
     showReportDialog.value = true;
   } else {
-    showLoginDialog.value = true;
+    await router.push({
+      path: getConversationSurveyVerifyHardPath({
+        conversationSlugId: props.postSlugId,
+        routeContext: conversationRouteContext.value,
+      }),
+    });
   }
 }
 
@@ -445,7 +436,9 @@ async function clickedMoreIcon(): Promise<void> {
     targetAuthor: props.posterUserName,
     conversationCapabilities: props.conversationCapabilities,
     callbacks: {
-      reportPostCallback: reportContentCallback,
+      reportPostCallback: () => {
+        void reportContentCallback();
+      },
       openUserReportsCallback,
       muteUserCallback,
       moderatePostCallback,

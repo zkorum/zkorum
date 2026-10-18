@@ -119,7 +119,6 @@
         "
         :survey-gate="loadedConversationData.interaction.surveyGate"
         :is-composer-disabled="isVotingDisabled"
-        :conversation-route-context="conversationRouteContext"
         @edit-cancelled="finishEditOpinion"
         @edited-opinion="handleEditedOpinion"
         @submitted-comment="handleSubmittedComment"

@@ -1,4 +1,5 @@
 import {
+  getConversationLocation,
   getConversationRouteContextFromRoute,
   isConversationOnboardingRouteName,
 } from "src/utils/router/conversationRouteContext";
@@ -33,20 +34,10 @@ export function useOnboardingBackgroundRoute() {
     // Named routes encode parameters, so a decoded slash or dot segment cannot
     // turn a direct onboarding link into an arbitrary background page.
     return router.resolve(
-      context.kind === "project"
-        ? {
-            name: "/project/[projectSlug]/conversation/[postSlugId]/",
-            params: { postSlugId, projectSlug: context.projectSlug },
-          }
-        : context.kind === "embed"
-          ? {
-              name: "/conversation/[postSlugId].embed/",
-              params: { postSlugId },
-            }
-          : {
-              name: "/conversation/[postSlugId]/",
-              params: { postSlugId },
-            }
+      getConversationLocation({
+        conversationSlugId: postSlugId,
+        routeContext: context,
+      })
     ).fullPath;
   });
 

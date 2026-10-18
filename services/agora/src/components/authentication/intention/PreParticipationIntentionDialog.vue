@@ -26,10 +26,10 @@
 </template>
 
 <script setup lang="ts">
-import { useParticipationIntentionMessage } from "src/composables/conversation/useParticipationIntentionMessage";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import type { PossibleIntentions } from "src/stores/loginIntention";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 
 import DialogContainer from "./DialogContainer.vue";
@@ -51,8 +51,10 @@ const { t } = useComponentI18n<PreParticipationIntentionDialogTranslations>(
 
 const { setActiveUserIntention } = useLoginIntentionStore();
 
-const subMessage = useParticipationIntentionMessage(
-  () => props.activeIntention
+const subMessage = computed(() =>
+  props.activeIntention === "newConversation"
+    ? t("subMessageConversationDraft")
+    : undefined
 );
 
 const router = useRouter();

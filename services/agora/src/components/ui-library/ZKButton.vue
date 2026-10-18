@@ -73,6 +73,11 @@ const { buttonType, ...buttonProps } = defineProps<ZKBtnProps>();
   visibility: hidden;
 }
 
+.quasarBtn:focus-visible::after {
+  outline: 2px solid $primary;
+  outline-offset: 3px;
+}
+
 .quasarBtn {
   line-height: 0px;
   min-height: 0px;

@@ -1,17 +1,20 @@
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { useLoginIntentionStore } from "src/stores/loginIntention";
 import {
   getHistoryPosition,
   navigateToHistoryPositionOrReplace,
 } from "src/utils/nav/historyBack";
-import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
-import { getConversationPath } from "src/utils/survey/navigation";
+import {
+  type ConversationRouteContext,
+  getConversationLocation,
+  getConversationRouteContextFromRoute,
+  isConversationOnboardingRouteName,
+} from "src/utils/router/conversationRouteContext";
+import { getSingleRouteParam } from "src/utils/router/params";
 import { useRouter } from "vue-router";
 
 export function useConversationOnboardingExit() {
   const router = useRouter();
   const conversationOnboardingStore = useConversationOnboardingStore();
-  const loginIntentionStore = useLoginIntentionStore();
 
   async function exitToConversation({
     conversationSlugId,
@@ -20,33 +23,40 @@ export function useConversationOnboardingExit() {
     conversationSlugId: string;
     routeContext?: ConversationRouteContext;
   }): Promise<void> {
-    if (loginIntentionStore.activeUserIntention !== "none") {
-      conversationOnboardingStore.clearForConversation({ conversationSlugId });
-      await loginIntentionStore.routeUserAfterLogin();
+    const currentRoute = router.currentRoute.value;
+    if (
+      !isConversationOnboardingRouteName(currentRoute.name) ||
+      getSingleRouteParam(
+        "postSlugId" in currentRoute.params
+          ? currentRoute.params.postSlugId
+          : undefined
+      ) !== conversationSlugId
+    )
       return;
-    }
-
     const hasCurrentOnboardingState =
       conversationOnboardingStore.conversationSlugId === conversationSlugId;
     const fallbackPath =
-      hasCurrentOnboardingState && conversationOnboardingStore.returnTarget !== null
+      hasCurrentOnboardingState &&
+      conversationOnboardingStore.returnTarget !== null
         ? conversationOnboardingStore.returnTarget
-        : getConversationPath({
-            conversationSlugId,
-            routeContext: routeContext ?? conversationOnboardingStore.routeContext,
-          });
+        : router.resolve(
+            getConversationLocation({
+              conversationSlugId,
+              routeContext:
+                routeContext ??
+                getConversationRouteContextFromRoute(currentRoute),
+            })
+          ).fullPath;
     const targetHistoryPosition = hasCurrentOnboardingState
       ? conversationOnboardingStore.returnHistoryPosition
       : null;
 
-    conversationOnboardingStore.clearForConversation({ conversationSlugId });
-
     await navigateToHistoryPositionOrReplace({
       router,
-      fallbackRoute: { path: fallbackPath },
+      fallbackRoute: fallbackPath,
       targetHistoryPosition,
       currentHistoryPosition: getHistoryPosition({
-        historyState: window.history.state,
+        historyState: router.options.history.state,
       }),
     });
   }

@@ -3,6 +3,7 @@
     :dismissal="sheet"
     :allow-focus-outside="isVerifying"
     :label="t('dialogLabel')"
+    :return-target="returnTarget"
   >
     <router-view v-slot="{ Component }">
       <component :is="Component" :sheet="sheet" />
@@ -20,16 +21,15 @@ import {
   type ConversationOnboardingLayoutTranslations,
   conversationOnboardingLayoutTranslations,
 } from "src/layouts/ConversationOnboardingLayout.i18n";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
+import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { createDismissalController } from "src/utils/ui/dismissalController";
 
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
 const { exitToConversation } = useConversationOnboardingExit();
-const flowStore = onboardingFlowStore();
+const returnTarget = useConversationOnboardingStore().returnTarget ?? undefined;
 const sheet = createDismissalController({
   fallbackDismiss: async () => {
-    flowStore.credentialUpgradeTarget = null;
     await exitToConversation({
       conversationSlugId: routeConversationSlugId.value,
       routeContext: routeContext.value,

@@ -139,7 +139,6 @@ import type {
   ParticipationMode,
   SurveyGateSummary,
 } from "src/shared/types/zod";
-import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { useNewOpinionDraftsStore } from "src/stores/newOpinionDrafts";
 import { useUserStore } from "src/stores/user";
 import {
@@ -152,10 +151,8 @@ import {
   useRouteGuard,
 } from "src/utils/component/routing/routeGuard";
 import {
-  type ConversationRouteContext,
   isConversationOnboardingRoutePath,
   isConversationRoutePath,
-  normalConversationRouteContext,
 } from "src/utils/router/conversationRouteContext";
 import { useNotify } from "src/utils/ui/notify";
 import {
@@ -190,7 +187,6 @@ const props = defineProps<{
   requiresEventTicket?: EventSlug;
   surveyGate?: SurveyGateSummary;
   isComposerDisabled: boolean;
-  conversationRouteContext?: ConversationRouteContext;
   actionBarElement: HTMLElement | undefined;
 }>();
 
@@ -204,10 +200,6 @@ const emit = defineEmits<{
 }>();
 
 const editingOpinion = computed(() => props.editingTarget?.opinion);
-
-const conversationRouteContext = computed(
-  () => props.conversationRouteContext ?? normalConversationRouteContext
-);
 
 const Editor = defineAsyncComponent(
   () => import("src/components/editor/Editor.vue")
@@ -265,12 +257,6 @@ const { saveOpinionDraft, getOpinionDraft, deleteOpinionDraft } =
   useNewOpinionDraftsStore();
 const userStore = useUserStore();
 
-const {
-  createNewOpinionIntention,
-  clearNewOpinionIntention,
-  setActiveUserIntention,
-} = useLoginIntentionStore();
-
 const createCommentMutation = useCreateCommentMutation();
 const editMutation = useEditOpinionMutation(props.postSlugId);
 const { t: editT } = useComponentI18n(opinionEditingTranslations);
@@ -304,12 +290,7 @@ onClickOutside(target, () => {
   if (editingOpinion.value === undefined) innerFocus.value = false;
 });
 
-const newOpinionIntention = clearNewOpinionIntention();
-if (newOpinionIntention.enabled) {
-  innerFocus.value = true;
-}
-
-const opinionBody = ref(newOpinionIntention.opinionBody);
+const opinionBody = ref("");
 const opinionPlainText = ref("");
 const hasVisibleOpinionText = computed(() =>
   hasVisiblePlainText(opinionPlainText.value)
@@ -559,13 +540,6 @@ async function openOnboarding(): Promise<void> {
   // Save draft before any async operations
   saveOpinionDraft(props.postSlugId, opinionBody.value);
 
-  createNewOpinionIntention(
-    props.postSlugId,
-    opinionBody.value,
-    conversationRouteContext.value,
-    props.requiresEventTicket
-  );
-  setActiveUserIntention("newOpinion");
   unlockRoute();
   await openParticipationOnboarding();
 }

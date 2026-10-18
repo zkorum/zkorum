@@ -46,7 +46,6 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -57,8 +56,6 @@ import { useConversationSurveyState } from "src/composables/conversation/useConv
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useTicketVerificationFlow } from "src/composables/zupass/useTicketVerificationFlow";
 import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
-import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
 import {
   getConversationSurveyOnboardingPath,
@@ -77,24 +74,12 @@ defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const conversationOnboardingStore = useConversationOnboardingStore();
-const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { verifyTicket } = useTicketVerificationFlow();
 const { exitToConversation } = useConversationOnboardingExit();
 const { t } = useComponentI18n<ConversationSurveyOnboardingTranslations>(
   conversationSurveyOnboardingTranslations
 );
-
-if (
-  conversationOnboardingStore.conversationSlugId !==
-  routeConversationSlugId.value
-) {
-  conversationOnboardingStore.startManualEntry({
-    conversationSlugId: routeConversationSlugId.value,
-    routeContext: routeContext.value,
-  });
-}
 
 const {
   conversationSlugId,
@@ -112,7 +97,6 @@ watch(
   [isInitialLoading, requirementState],
   ([loading, requirements]) => {
     if (!loading && (requirements.needsAuth || !requirements.needsTicket)) {
-      credentialUpgradeTarget.value = null;
       void router.replace({
         path: getConversationSurveyVerifyPath({
           conversationSlugId: conversationSlugId.value,
@@ -134,7 +118,6 @@ async function handleBackToWelcome(): Promise<void> {
 }
 
 async function handleBackToConversation(): Promise<void> {
-  credentialUpgradeTarget.value = null;
   await exitToConversation({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
@@ -163,7 +146,6 @@ async function handlePrimaryAction(): Promise<void> {
       return;
     }
 
-    credentialUpgradeTarget.value = null;
     await refetchAll();
     await router.replace({
       path: getConversationSurveyVerifyPath({

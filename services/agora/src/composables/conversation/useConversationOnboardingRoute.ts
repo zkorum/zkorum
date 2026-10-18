@@ -12,10 +12,7 @@ export function useConversationOnboardingRoute() {
     )
   );
   const routeContext = computed(() =>
-    getConversationRouteContextFromRoute({
-      name: route.name,
-      params: route.params,
-    })
+    getConversationRouteContextFromRoute(route)
   );
 
   return {

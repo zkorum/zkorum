@@ -26,6 +26,35 @@ export const normalConversationRouteContext: NormalConversationRouteContext = {
   kind: "normal",
 };
 
+export function getConversationLocation({
+  conversationSlugId,
+  routeContext = normalConversationRouteContext,
+}: {
+  conversationSlugId: string;
+  routeContext?: ConversationRouteContext;
+}): RouteLocationRaw {
+  switch (routeContext.kind) {
+    case "project":
+      return {
+        name: "/project/[projectSlug]/conversation/[postSlugId]/",
+        params: {
+          postSlugId: conversationSlugId,
+          projectSlug: routeContext.projectSlug,
+        },
+      };
+    case "embed":
+      return {
+        name: "/conversation/[postSlugId].embed/",
+        params: { postSlugId: conversationSlugId },
+      };
+    case "normal":
+      return {
+        name: "/conversation/[postSlugId]/",
+        params: { postSlugId: conversationSlugId },
+      };
+  }
+}
+
 export function isConversationRoutePath(path: string): boolean {
   return (
     path.startsWith("/conversation/") ||
@@ -72,9 +101,11 @@ export function isProjectRouteName(name: unknown): boolean {
 export function getConversationRouteContextFromRoute({
   name,
   params,
+  path,
 }: {
   name: RouteRecordName | null | undefined;
   params: Record<string, unknown>;
+  path?: string;
 }): ConversationRouteContext {
   const projectSlugParam = params.projectSlug;
   if (typeof projectSlugParam === "string") {
@@ -91,7 +122,11 @@ export function getConversationRouteContextFromRoute({
     }
   }
 
-  if (typeof name === "string" && name.includes(".embed")) {
+  if (
+    (path !== undefined &&
+      /^\/conversation\/[^/]+\/embed\/onboarding(?:\/|$)/u.test(path)) ||
+    (typeof name === "string" && name.includes(".embed"))
+  ) {
     return { kind: "embed" };
   }
 

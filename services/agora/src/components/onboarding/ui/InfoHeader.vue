@@ -10,9 +10,9 @@
         class="coreText"
         :class="{ 'coreText--compact': props.density === 'compact' }"
       >
-        <div class="title">
+        <h1 class="title">
           {{ title }}
-        </div>
+        </h1>
 
         <div v-if="description.length > 0">
           {{ description }}
@@ -63,6 +63,9 @@ const iconSize = computed(() => {
 }
 
 .title {
+  margin: 0;
+  line-height: inherit;
+  letter-spacing: normal;
   font-size: 1.2rem;
   font-weight: var(--font-weight-bold);
 }

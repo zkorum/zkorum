@@ -35,7 +35,6 @@
               />
 
               <ZKButton
-                v-if="credentialUpgradeTarget !== 'strong'"
                 button-type="largeButton"
                 :label="t('preferEmailLogin')"
                 text-color="primary"
@@ -61,9 +60,7 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
-import {
-  usePhoneAuthAvailability,
-} from "src/utils/auth/phoneAuthMode";
+import { usePhoneAuthAvailability } from "src/utils/auth/phoneAuthMode";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 
@@ -79,9 +76,7 @@ const { t } = useComponentI18n<PassportOnboardingTranslations>(
 const router = useRouter();
 
 const { isLoggedIn } = storeToRefs(useAuthenticationStore());
-const { credentialUpgradeTarget, onboardingMode } = storeToRefs(
-  onboardingFlowStore()
-);
+const { onboardingMode } = storeToRefs(onboardingFlowStore());
 const phoneAuthPurpose = computed(() =>
   isLoggedIn.value
     ? "credential"

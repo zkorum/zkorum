@@ -75,7 +75,6 @@
 <script setup lang="ts">
 import { useQueryClient } from "@tanstack/vue-query";
 import VotingButton from "src/components/features/opinion/VotingButton.vue";
-import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
 import type {
   OpinionVoteParams,
@@ -125,7 +124,6 @@ onUnmounted(() => {
   latestVoteAction = undefined;
 });
 const hasVotedThisSession = ref(false);
-const { setOpinionAgreementIntention } = useConversationLoginIntentions();
 const { needsParticipationOnboarding, openParticipationOnboarding } =
   useParticipationGate({
     conversationSlugId: computed(() => props.postSlugId),
@@ -206,10 +204,6 @@ const relativeTotalPercentagePasses = computed(() => {
 });
 
 async function openOnboarding(): Promise<void> {
-  setOpinionAgreementIntention(
-    props.commentItem.opinionSlugId,
-    props.requiresEventTicket
-  );
   await openParticipationOnboarding();
 }
 

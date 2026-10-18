@@ -40,12 +40,11 @@ import { storeToRefs } from "pinia";
 import ZKGradientButton from "src/components/ui-library/ZKGradientButton.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { useAuthSetup } from "src/utils/auth/setup";
 import { useRouter } from "vue-router";
 
-import { type WelcomeTranslations,welcomeTranslations } from "./index.i18n";
+import { type WelcomeTranslations, welcomeTranslations } from "./index.i18n";
 
 const { t } = useComponentI18n<WelcomeTranslations>(welcomeTranslations);
 
@@ -57,71 +56,8 @@ const { isLoggedIn } = storeToRefs(useAuthenticationStore());
 
 const { logoutRequested } = useAuthSetup();
 
-const loginIntentionStore = useLoginIntentionStore();
-
 async function skipAuthentication() {
-  // Check if user came from an embed view and should be returned there
-  const hasEmbedIntention = checkForActiveEmbedIntention();
-
-  if (hasEmbedIntention.hasIntention && hasEmbedIntention.conversationSlugId) {
-    await router.push({
-      name: "/conversation/[postSlugId].embed/",
-      params: { postSlugId: hasEmbedIntention.conversationSlugId },
-      ...(hasEmbedIntention.opinionSlugId && {
-        query: { opinion: hasEmbedIntention.opinionSlugId },
-      }),
-    });
-  } else {
-    await router.push({ name: "/" });
-  }
-}
-
-function checkForActiveEmbedIntention(): {
-  hasIntention: boolean;
-  conversationSlugId?: string;
-  opinionSlugId?: string;
-} {
-  // Check voting intention
-  const votingIntention = loginIntentionStore.getCurrentVotingIntention();
-  if (
-    votingIntention.enabled &&
-    votingIntention.routeContext.kind === "embed"
-  ) {
-    return {
-      hasIntention: true,
-      conversationSlugId: votingIntention.conversationSlugId,
-    };
-  }
-
-  // Check opinion agreement intention
-  const agreementIntention =
-    loginIntentionStore.getCurrentOpinionAgreementIntention();
-  if (
-    agreementIntention.enabled &&
-    agreementIntention.routeContext.kind === "embed"
-  ) {
-    return {
-      hasIntention: true,
-      conversationSlugId: agreementIntention.conversationSlugId,
-      opinionSlugId: agreementIntention.opinionSlugId,
-    };
-  }
-
-  // Check report user content intention
-  const reportIntention =
-    loginIntentionStore.getCurrentReportUserContentIntention();
-  if (
-    reportIntention.enabled &&
-    reportIntention.routeContext.kind === "embed"
-  ) {
-    return {
-      hasIntention: true,
-      conversationSlugId: reportIntention.conversationSlugId,
-      opinionSlugId: reportIntention.opinionSlugId,
-    };
-  }
-
-  return { hasIntention: false };
+  await router.push({ name: "/" });
 }
 
 async function gotoNextRoute(isLogin: boolean) {

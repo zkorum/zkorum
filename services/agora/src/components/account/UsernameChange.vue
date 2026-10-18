@@ -15,6 +15,7 @@
         <ZKButton
           button-type="icon"
           icon="mdi-dice-6"
+          :aria-label="t('generateUsername')"
           color="black"
           flat
           :disable="isSubmitButtonLoading"

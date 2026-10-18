@@ -1,5 +1,6 @@
 <template>
   <q-dialog
+    v-bind="dialogKeyboardAttributes"
     :model-value="true"
     position="bottom"
     no-route-dismiss
@@ -17,10 +18,11 @@
 </template>
 
 <script setup lang="ts">
-import { defaultDocument } from "@vueuse/core";
+import { useRoutedDialogReturn } from "src/composables/ui/useRoutedDialogReturn";
 import { useVisibleViewport } from "src/utils/html/viewPort";
+import { loopDialogTabFocus } from "src/utils/ui/dialogKeyboard";
 import type { DismissalController } from "src/utils/ui/dismissalController";
-import { nextTick, onUnmounted } from "vue";
+import type { HTMLAttributes } from "vue";
 
 import ZKBottomDialogContainer from "./ZKBottomDialogContainer.vue";
 
@@ -28,25 +30,24 @@ const props = defineProps<{
   dismissal: DismissalController;
   label: string;
   allowFocusOutside: boolean;
+  returnTarget: string | undefined;
 }>();
 const { viewportStyle, viewport } = useVisibleViewport();
-const previousFocus = defaultDocument?.activeElement;
+useRoutedDialogReturn(props.returnTarget);
 
 async function handleModelChange(visible: boolean): Promise<void> {
   if (!visible) await props.dismissal.dismiss();
 }
 
-onUnmounted(async () => {
-  // The background becomes interactive after the route render clears inert.
-  await nextTick();
-  if (
-    previousFocus instanceof HTMLElement &&
-    previousFocus.isConnected &&
-    !previousFocus.closest("[inert]")
-  ) {
-    previousFocus.focus({ preventScroll: true });
-  }
-});
+function handleKeydown(event: KeyboardEvent): void {
+  if (!props.allowFocusOutside) loopDialogTabFocus(event);
+}
+
+// QDialog forwards native listeners to its dialog root. Its component props
+// omit keydown, so type this passthrough with Vue's native HTML attributes.
+const dialogKeyboardAttributes = {
+  onKeydown: handleKeydown,
+} satisfies HTMLAttributes;
 </script>
 
 <style lang="scss">

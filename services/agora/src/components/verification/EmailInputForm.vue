@@ -1,9 +1,10 @@
 <template>
   <div class="container">
-    <div>{{ t("emailDescription") }}</div>
+    <div :id="descriptionId">{{ t("emailDescription") }}</div>
 
     <q-input
       ref="emailInput"
+      v-bind="inputAccessibility"
       :model-value="emailData.email"
       type="email"
       name="email"
@@ -11,21 +12,16 @@
       outlined
       :autofocus="!$q.platform.is.mobile"
       :placeholder="t('emailPlaceholder')"
+      :error="emailData.hasBeenBlurred && emailData.hasError"
+      hide-bottom-space
       @focus="isFocused = true"
       @update:model-value="onEmailUpdate"
       @blur="onEmailBlur"
-    />
-
-    <div
-      v-if="
-        emailData.hasBeenBlurred && emailData.hasError && emailData.errorMessage
-      "
-      class="error-text"
-      role="alert"
-      aria-live="polite"
     >
-      {{ emailData.errorMessage }}
-    </div>
+      <template #error>
+        <span :id="errorId">{{ emailData.errorMessage }}</span>
+      </template>
+    </q-input>
   </div>
 </template>
 
@@ -36,7 +32,15 @@ import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useElementVisibility } from "src/composables/ui/useElementVisibility";
 import { normalizeEmail, zodEmail } from "src/shared/types/zod-email";
 import { emailVerificationStore } from "src/stores/onboarding/email";
-import { onMounted, reactive, ref, useTemplateRef } from "vue";
+import {
+  type AriaAttributes,
+  computed,
+  onMounted,
+  reactive,
+  ref,
+  useId,
+  useTemplateRef,
+} from "vue";
 
 import {
   type EmailInputFormTranslations,
@@ -52,6 +56,8 @@ const { t } = useComponentI18n<EmailInputFormTranslations>(
 );
 
 const $q = useQuasar();
+const descriptionId = useId();
+const errorId = useId();
 const emailInput = useTemplateRef<QInput>("emailInput");
 const isFocused = ref(false);
 const { reveal } = useElementVisibility({
@@ -74,6 +80,20 @@ const emailData = reactive({
   errorMessage: "",
   hasBeenBlurred: false,
 });
+
+// QInput forwards native attributes, but its props don't declare every ARIA
+// attribute. Check this passthrough against Vue's standard ARIA types.
+const inputAccessibility = computed(
+  () =>
+    ({
+      "aria-label": t("emailPlaceholder"),
+      "aria-invalid": emailData.hasBeenBlurred && emailData.hasError,
+      "aria-describedby":
+        emailData.hasBeenBlurred && emailData.hasError
+          ? `${descriptionId} ${errorId}`
+          : descriptionId,
+    }) satisfies AriaAttributes
+);
 
 const { verificationEmail } = storeToRefs(emailVerificationStore());
 
@@ -153,11 +173,5 @@ defineExpose({ submit, getIsValid });
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.error-text {
-  color: #dc2626;
-  font-size: 0.875rem;
-  margin-top: -0.75rem;
 }
 </style>

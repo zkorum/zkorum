@@ -13,8 +13,10 @@ import { resolveSurveyForm, shouldFetchSurveyForm } from "./surveyStateLogic";
 
 export function useConversationSurveyState({
   conversationSlugId,
+  requireAccount = false,
 }: {
   conversationSlugId: MaybeRefOrGetter<string>;
+  requireAccount?: boolean;
 }) {
   const conversationSlugIdValue = computed(() => toValue(conversationSlugId));
   const {
@@ -71,7 +73,12 @@ export function useConversationSurveyState({
     }
 
     return deriveSurveyRequirementState({
-      participationMode: conversation.metadata.participationMode,
+      // Explicit sign-in steps also serve account-only actions such as reports
+      // in conversations that otherwise allow guest participation.
+      participationMode:
+        requireAccount && conversation.metadata.participationMode === "guest"
+          ? "account_required"
+          : conversation.metadata.participationMode,
       requiresEventTicket: conversation.metadata.requiresEventTicket,
       isLoggedIn: isLoggedIn.value,
       hasStrongVerification: hasStrongVerification.value,

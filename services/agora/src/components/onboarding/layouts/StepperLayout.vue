@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="stepper"
     class="stepperLayout"
     :class="{
       'stepperLayout--compact': density === 'compact',
@@ -8,13 +9,17 @@
   >
     <div
       :key="currentStep"
+      ref="content"
       class="scrollContent"
-      :tabindex="fixedNavigation ? 0 : undefined"
+      :tabindex="fixedNavigation ? 0 : -1"
+      role="group"
+      :aria-label="progressLabel"
     >
       <OnboardStepper
         v-if="showStepper"
         :current-step="currentStep"
         :total-steps="totalSteps"
+        :label="progressLabel"
       />
 
       <slot name="header"></slot>
@@ -24,7 +29,7 @@
       </div>
     </div>
 
-    <div v-if="showNextButton" class="nextButton">
+    <div v-if="showNextButton" ref="nextButton" class="nextButton">
       <ZKButton
         button-type="standardButton"
         :icon="nextIcon"
@@ -44,14 +49,16 @@ import { useQuasar } from "quasar";
 import OnboardStepper from "src/components/onboarding/layouts/OnboardStepper.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import { computed } from "vue";
+import { useDefaultActionOnEnter } from "src/composables/ui/useDefaultActionOnEnter";
+import { isActiveKeyboardScope } from "src/utils/ui/keyboardScope";
+import { computed, useTemplateRef, watch } from "vue";
 
 import {
   type StepperLayoutTranslations,
   stepperLayoutTranslations,
 } from "./StepperLayout.i18n";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     submitCallBack: () => void;
     currentStep: number;
@@ -76,6 +83,44 @@ const { t } = useComponentI18n<StepperLayoutTranslations>(
 );
 const nextIcon = computed(() =>
   $q.lang.rtl ? "mdi-arrow-left" : "mdi-arrow-right"
+);
+// OTP screens use half-steps visually but still belong to the same named step.
+const progressLabel = computed(() =>
+  t("stepProgress", {
+    current: Math.floor(props.currentStep),
+    total: props.totalSteps,
+  })
+);
+const stepper = useTemplateRef<HTMLElement>("stepper");
+const content = useTemplateRef<HTMLElement>("content");
+const nextButton = useTemplateRef<HTMLElement>("nextButton");
+useDefaultActionOnEnter({
+  container: stepper,
+  button: () =>
+    nextButton.value?.querySelector<HTMLButtonElement>("button") ?? undefined,
+  enabled: () =>
+    props.showNextButton && props.enableNextButton && !props.showLoadingButton,
+});
+
+watch(
+  [() => props.currentStep, content],
+  ([step, element], [previousStep, previousElement]) => {
+    const root = stepper.value;
+    if (element === null || root === null || !isActiveKeyboardScope(root))
+      return;
+    const active = element.ownerDocument.activeElement;
+    const changedStep = previousElement !== null && previousStep !== step;
+    // Start reading the new step before tabbing into its fields. On first mount,
+    // keep any autofocus that an input or a popup already owns.
+    if (
+      changedStep ||
+      active === element.ownerDocument.body ||
+      (active instanceof Element && active.contains(element))
+    ) {
+      element.focus({ preventScroll: true });
+    }
+  },
+  { flush: "post" }
 );
 </script>
 
@@ -102,6 +147,11 @@ const nextIcon = computed(() =>
   display: flex;
   flex-direction: column;
   gap: var(--stepper-content-gap);
+}
+
+.scrollContent:focus-visible {
+  outline: 2px solid $primary;
+  outline-offset: -2px;
 }
 
 .stepperLayout--fixedNavigation {

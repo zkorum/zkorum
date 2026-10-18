@@ -2,6 +2,7 @@ import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 
 export interface UsernameChangeTranslations {
   usernameLabel: string;
+  generateUsername: string;
   updateButton: string;
   usernameChanged: string;
   usernameAlreadyInUse: string;
@@ -23,6 +24,7 @@ export const usernameChangeTranslations: Record<
 > = {
   en: {
     usernameLabel: "Username",
+    generateUsername: "Generate a random username",
     updateButton: "Update",
     usernameChanged: "Username changed",
     usernameAlreadyInUse: "Username is already in use",
@@ -42,6 +44,7 @@ export const usernameChangeTranslations: Record<
   },
   ar: {
     usernameLabel: "اسم المستخدم",
+    generateUsername: "إنشاء اسم مستخدم عشوائي",
     updateButton: "تحديث",
     usernameChanged: "تم تغيير اسم المستخدم",
     usernameAlreadyInUse: "اسم المستخدم مُستخدم بالفعل",
@@ -61,6 +64,7 @@ export const usernameChangeTranslations: Record<
   },
   es: {
     usernameLabel: "Nombre de usuario",
+    generateUsername: "Generar un nombre de usuario aleatorio",
     updateButton: "Actualizar",
     usernameChanged: "Nombre de usuario cambiado",
     usernameAlreadyInUse: "El nombre de usuario ya está en uso",
@@ -80,6 +84,7 @@ export const usernameChangeTranslations: Record<
   },
   fa: {
     usernameLabel: "نام کاربری",
+    generateUsername: "ساخت نام کاربری تصادفی",
     updateButton: "به‌روزرسانی",
     usernameChanged: "نام کاربری تغییر کرد",
     usernameAlreadyInUse: "این نام کاربری قبلاً استفاده شده است",
@@ -97,6 +102,7 @@ export const usernameChangeTranslations: Record<
   },
   fr: {
     usernameLabel: "Nom d'utilisateur",
+    generateUsername: "Générer un nom d'utilisateur aléatoire",
     updateButton: "Mettre à jour",
     usernameChanged: "Nom d'utilisateur modifié",
     usernameAlreadyInUse: "Le nom d'utilisateur est déjà utilisé",
@@ -117,6 +123,7 @@ export const usernameChangeTranslations: Record<
   },
   "zh-Hans": {
     usernameLabel: "用户名",
+    generateUsername: "生成随机用户名",
     updateButton: "更新",
     usernameChanged: "用户名已更改",
     usernameAlreadyInUse: "用户名已被使用",
@@ -133,6 +140,7 @@ export const usernameChangeTranslations: Record<
   },
   "zh-Hant": {
     usernameLabel: "用戶名",
+    generateUsername: "產生隨機用戶名",
     updateButton: "更新",
     usernameChanged: "用戶名已更改",
     usernameAlreadyInUse: "用戶名已被使用",
@@ -149,6 +157,7 @@ export const usernameChangeTranslations: Record<
   },
   he: {
     usernameLabel: "שם משתמש",
+    generateUsername: "יצירת שם משתמש אקראי",
     updateButton: "עדכון",
     usernameChanged: "שם המשתמש שונה",
     usernameAlreadyInUse: "שם המשתמש כבר בשימוש",
@@ -166,6 +175,7 @@ export const usernameChangeTranslations: Record<
   },
   ja: {
     usernameLabel: "ユーザー名",
+    generateUsername: "ランダムなユーザー名を生成",
     updateButton: "更新",
     usernameChanged: "ユーザー名が変更されました",
     usernameAlreadyInUse: "ユーザー名はすでに使用されています",
@@ -185,6 +195,7 @@ export const usernameChangeTranslations: Record<
   },
   ky: {
     usernameLabel: "Колдонуучу аты",
+    generateUsername: "Кокус колдонуучу атын түзүү",
     updateButton: "Жаңыртуу",
     usernameChanged: "Колдонуучу аты өзгөртүлдү",
     usernameAlreadyInUse: "Колдонуучу аты мурунтан эле колдонулууда",
@@ -204,6 +215,7 @@ export const usernameChangeTranslations: Record<
   },
   ru: {
     usernameLabel: "Имя пользователя",
+    generateUsername: "Сгенерировать случайное имя пользователя",
     updateButton: "Обновить",
     usernameChanged: "Имя пользователя изменено",
     usernameAlreadyInUse: "Имя пользователя уже используется",

@@ -101,7 +101,6 @@
         :requires-event-ticket="conversationData.metadata.requiresEventTicket"
         :survey-gate="conversationData.interaction.surveyGate"
         :is-composer-disabled="isVotingDisabled"
-        :conversation-route-context="conversationRouteContext"
         @edit-cancelled="finishEditOpinion"
         @edited-opinion="handleEditedOpinion"
         @submitted-comment="submittedComment"

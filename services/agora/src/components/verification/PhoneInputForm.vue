@@ -25,7 +25,11 @@
           required
           auto-format="blur"
           :validation-error="false"
-          aria-describedby="phone-error"
+          :aria-describedby="
+            phoneData.hasError && phoneData.hasAttemptedSubmission
+              ? phoneErrorId
+              : undefined
+          "
           :on-update="onPhoneUpdate"
           :on-country-code="onCountryCodeUpdate"
           :on-keydown-enter="submit"
@@ -39,7 +43,7 @@
           phoneData.errorMessage &&
           phoneData.hasAttemptedSubmission
         "
-        id="phone-error"
+        :id="phoneErrorId"
         class="error-message"
         role="alert"
         aria-live="polite"
@@ -93,7 +97,7 @@ import {
 import type { PhoneAuthPurpose } from "src/utils/auth/phoneAuthMode";
 import { parsePhoneNumberInput } from "src/utils/auth/phoneNumberInput";
 import { processEnv } from "src/utils/processEnv";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, useId } from "vue";
 
 import ZKGradientButton from "../ui-library/ZKGradientButton.vue";
 import ZKPhoneNumberInput from "../ui-library/ZKPhoneNumberInput.vue";
@@ -112,7 +116,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   submit: [phoneNumber: PhoneVerificationData];
 }>();
-
+const phoneErrorId = useId();
 const { t } = useComponentI18n<PhoneInputFormTranslations>(
   phoneInputFormTranslations
 );

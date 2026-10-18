@@ -16,10 +16,7 @@ export function useSurveyNavigation() {
   const route = useRoute();
   const { checkSurveyStatus } = useBackendSurveyApi();
   const currentRouteContext = computed(() =>
-    getConversationRouteContextFromRoute({
-      name: route.name,
-      params: route.params,
-    })
+    getConversationRouteContextFromRoute(route)
   );
 
   async function navigateToSurveyRoot({
@@ -30,7 +27,10 @@ export function useSurveyNavigation() {
     routeContext?: ConversationRouteContext;
   }): Promise<void> {
     await router.push({
-      path: getConversationSurveyOnboardingPath({ conversationSlugId, routeContext }),
+      path: getConversationSurveyOnboardingPath({
+        conversationSlugId,
+        routeContext,
+      }),
     });
   }
 
@@ -65,7 +65,10 @@ export function useSurveyNavigation() {
     routeContext?: ConversationRouteContext;
   }): Promise<void> {
     await router.push({
-      path: getConversationSurveySummaryPath({ conversationSlugId, routeContext }),
+      path: getConversationSurveySummaryPath({
+        conversationSlugId,
+        routeContext,
+      }),
     });
   }
 

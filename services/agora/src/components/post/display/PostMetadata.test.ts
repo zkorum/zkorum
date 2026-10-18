@@ -125,10 +125,6 @@ vi.mock("src/composables/share/useShareActions", () => ({
   }),
 }));
 
-vi.mock("src/composables/auth/useConversationLoginIntentions", () => ({
-  useConversationLoginIntentions: () => ({ setReportIntention: vi.fn() }),
-}));
-
 vi.mock("src/utils/ui/embedMode", () => ({
   useEmbedMode: () => ({ isEmbeddedMode: () => false }),
 }));
@@ -533,7 +529,10 @@ function mountMetadata(postSlugId = ref("conversation-one")): HTMLElement {
         participationMode: "account_required",
         isClosed: false,
         conversationTitle: "Conversation One",
-        conversationTypeConfig: { conversationType: "polis", votingPresentation: "list" },
+        conversationTypeConfig: {
+          conversationType: "polis",
+          votingPresentation: "list",
+        },
         externalSourceConfig: null,
         conversationCapabilities: {
           canEdit: false,

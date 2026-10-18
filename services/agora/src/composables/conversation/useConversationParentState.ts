@@ -3,7 +3,6 @@ import { getOpinionFilterSelection } from "src/composables/opinion/opinionLinkRo
 import { useOpinionEditTarget } from "src/composables/opinion/useOpinionEditTarget";
 import type { DisplayedOpinionItem } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { useBackendAuthApi } from "src/utils/api/auth";
 import { useInvalidateCommentQueries } from "src/utils/api/comment/useCommentQueries";
 import { useConversationQuery } from "src/utils/api/post/useConversationQuery";
@@ -81,12 +80,6 @@ export function useConversationParentState({
 
   const authStore = useAuthenticationStore();
   const { isAuthInitialized } = storeToRefs(authStore);
-
-  // Clear login intentions immediately (before query setup)
-  const loginIntentionStore = useLoginIntentionStore();
-  loginIntentionStore.clearVotingIntention();
-  loginIntentionStore.clearOpinionAgreementIntention();
-  loginIntentionStore.clearReportUserContentIntention();
 
   // Use TanStack Query for conversation data
   const conversationQuery = useConversationQuery({

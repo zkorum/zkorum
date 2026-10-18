@@ -64,13 +64,10 @@ import {
   verifyEmailTranslations,
 } from "src/pages/verify/email/index.i18n";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
 import {
-  getConversationSurveyOnboardingPath,
+  getConversationCredentialChoicePath,
   getConversationSurveyVerifyEmailCodePath,
-  getConversationSurveyVerifyHardPath,
   getConversationSurveyVerifyPath,
 } from "src/utils/survey/navigation";
 import type { DismissalController } from "src/utils/ui/dismissalController";
@@ -87,13 +84,11 @@ defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const conversationOnboardingStore = useConversationOnboardingStore();
 const { isLoggedIn, isAuthInitialized, credentials } = storeToRefs(
   useAuthenticationStore()
 );
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { exitToConversation } = useConversationOnboardingExit();
-const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const { completeVerification } = useVerificationComplete();
 const { showNotifyMessage } = useNotify();
 const { t } = useComponentI18n<VerifyEmailTranslations>(
@@ -104,16 +99,6 @@ const { t: tCommon } =
     conversationSurveyOnboardingTranslations
   );
 
-if (
-  conversationOnboardingStore.conversationSlugId !==
-  routeConversationSlugId.value
-) {
-  conversationOnboardingStore.startManualEntry({
-    conversationSlugId: routeConversationSlugId.value,
-    routeContext: routeContext.value,
-  });
-}
-
 const {
   conversationSlugId,
   conversationData,
@@ -122,24 +107,18 @@ const {
   isInitialLoading,
   hasLoadError,
   refetchAll,
-} = useConversationSurveyState({ conversationSlugId: routeConversationSlugId });
+} = useConversationSurveyState({
+  conversationSlugId: routeConversationSlugId,
+  requireAccount: true,
+});
 
-const backPath = computed(() => {
-  if (
-    credentialUpgradeTarget.value === "hard" ||
-    conversationData.value?.metadata.participationMode === "account_required"
-  ) {
-    return getConversationSurveyVerifyHardPath({
-      conversationSlugId: conversationSlugId.value,
-      routeContext: routeContext.value,
-    });
-  }
-
-  return getConversationSurveyOnboardingPath({
+const backPath = computed(() =>
+  getConversationCredentialChoicePath({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
-  });
-});
+    participationMode: conversationData.value?.metadata.participationMode,
+  })
+);
 
 const { isLoading, submitEmail, nextCodeWaitSeconds } = useEmailSubmit({
   onNavigateToOtp: () =>
@@ -210,11 +189,9 @@ async function handleBackToAuthChoice(): Promise<void> {
 }
 
 async function handleBackToConversation(): Promise<void> {
-  credentialUpgradeTarget.value = null;
   await exitToConversation({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
   });
 }
-
 </script>

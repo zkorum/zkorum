@@ -21,12 +21,13 @@
       :required="required"
       :auto-format="autoFormat"
       :validation-error="validationError"
-      :aria-describedby="ariaDescribedby"
       :phone-input-attributes="{
         name: 'phone',
         autocomplete: 'tel',
         inputmode: 'numeric',
         type: 'tel',
+        'aria-label': placeholder,
+        'aria-describedby': ariaDescribedby,
       }"
       @update:model-value="
         (v: string | null | undefined) => (phoneNumber = v ?? null)

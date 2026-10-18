@@ -1,6 +1,5 @@
 import { QueryClient, VueQueryPlugin } from "@tanstack/vue-query";
 import { createPinia, defineStore } from "pinia";
-import { useConversationLoginIntentions } from "src/composables/auth/useConversationLoginIntentions";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import {
   getOpinionFilterSelection,
@@ -15,6 +14,7 @@ import type {
   ExtendedConversationDisplayData,
 } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
+import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { useLanguageStore } from "src/stores/language";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import type { useBackendCommentApi } from "src/utils/api/comment/comment";
@@ -268,7 +268,8 @@ async function mountStatementLink({
         component: { template: "<div />" },
       },
       {
-        path: "/onboarding/",
+        path: "/conversation/:postSlugId/onboarding/",
+        name: "/conversation/[postSlugId].onboarding/",
         component: { template: "<div />" },
       },
     ],
@@ -357,7 +358,7 @@ async function mountStatementLink({
     auth: useAuthenticationStore(pinia),
     language: useLanguageStore(pinia),
     flow: onboardingFlowStore(pinia),
-    loginIntentions: app.runWithContext(useConversationLoginIntentions),
+    onboarding: useConversationOnboardingStore(pinia),
     onboardingExit: app.runWithContext(useConversationOnboardingExit),
   };
 }
@@ -379,21 +380,18 @@ describe("statement URL navigation", () => {
         "/project/project/conversation/conversa/",
       ])(`resumes ${presentation} after ${mode} at %s`, async (url) => {
         mocks.fetchTargets.mockResolvedValue([target({ isOwn: false })]);
-        const {
-          router,
-          auth,
-          flow,
-          loginIntentions,
-          onboardingExit,
-          container,
-        } = await mountStatementLink({
-          presentation,
-          url,
-        });
+        const { router, auth, flow, onboarding, onboardingExit, container } =
+          await mountStatementLink({
+            presentation,
+            url,
+          });
         auth.setLoginStatus({ isKnown: false });
-        loginIntentions.setOpinionAgreementIntention("statement");
+        onboarding.startResumeEntry({
+          conversationSlugId: "conversa",
+          returnTarget: router.currentRoute.value.fullPath,
+        });
         flow.onboardingMode = mode;
-        await router.push("/onboarding/");
+        await router.push("/conversation/conversa/onboarding/");
         expect(
           container.querySelector('[data-testid="one-at-a-time"]')
         ).toBeNull();
@@ -404,7 +402,7 @@ describe("statement URL navigation", () => {
         });
 
         expect(router.currentRoute.value.path).toBe(url);
-        expect(router.currentRoute.value.query.opinion).toBe("statement");
+        expect(router.currentRoute.value.query.opinion).toBeUndefined();
         if (presentation === "one_at_a_time") {
           expect(
             container.querySelector('[data-testid="one-at-a-time"]')
@@ -412,9 +410,7 @@ describe("statement URL navigation", () => {
           expect(mocks.fetchTargets).not.toHaveBeenCalled();
           expect(mocks.fetchPage).not.toHaveBeenCalled();
         } else {
-          await vi.waitFor(() =>
-            expect(highlighted(container)).toBe("statement")
-          );
+          expect(highlighted(container)).toBeFalsy();
           expect(
             container.querySelector('[data-testid="one-at-a-time"]')
           ).toBeNull();

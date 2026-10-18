@@ -1,5 +1,4 @@
 import { useAuthenticationStore } from "src/stores/authentication";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import type { Router, RouteRecordName } from "vue-router";
 import type { RouteNamedMap } from "vue-router/auto-routes";
 
@@ -151,13 +150,6 @@ export function useRouterGuard() {
       fromName == "/project/[projectSlug]/conversation/[postSlugId]" ||
       fromName == "/project/[projectSlug]/conversation/[postSlugId]/"
     ) {
-      // Allow navigation to onboarding when doing a credential upgrade
-      // (e.g., user needs email/phone verification to participate)
-      const flowStore = onboardingFlowStore();
-      if (flowStore.credentialUpgradeTarget !== null) {
-        return "ignore";
-      }
-
       if (
         routeNameMatches({ routeName: toName, routeNames: onboardingRoutes }) &&
         toName != "/"

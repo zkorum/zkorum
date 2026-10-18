@@ -76,8 +76,6 @@ import {
   verifyIdentityTranslations,
 } from "src/pages/verify/identity/index.i18n";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { usePhoneAuthAvailability } from "src/utils/auth/phoneAuthMode";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
 import {
@@ -99,7 +97,6 @@ defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const conversationOnboardingStore = useConversationOnboardingStore();
 const { isAuthInitialized, isLoggedIn } = storeToRefs(useAuthenticationStore());
 const phoneAuthPurpose = computed(() =>
   !isAuthInitialized.value || isLoggedIn.value ? "credential" : "login"
@@ -107,9 +104,6 @@ const phoneAuthPurpose = computed(() =>
 const phoneAuthAvailability = usePhoneAuthAvailability(phoneAuthPurpose);
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { exitToConversation } = useConversationOnboardingExit();
-const { onboardingMode, credentialUpgradeTarget } = storeToRefs(
-  onboardingFlowStore()
-);
 const { t } = useComponentI18n<VerifyIdentityTranslations>(
   verifyIdentityTranslations
 );
@@ -117,16 +111,6 @@ const { t: tCommon } =
   useComponentI18n<ConversationSurveyOnboardingTranslations>(
     conversationSurveyOnboardingTranslations
   );
-
-if (
-  conversationOnboardingStore.conversationSlugId !==
-  routeConversationSlugId.value
-) {
-  conversationOnboardingStore.startManualEntry({
-    conversationSlugId: routeConversationSlugId.value,
-    routeContext: routeContext.value,
-  });
-}
 
 const {
   conversationSlugId,
@@ -153,7 +137,6 @@ watch(
 );
 
 async function handleBackToWelcome(): Promise<void> {
-  credentialUpgradeTarget.value = null;
   await safeNavigateBack({
     path: getConversationSurveyOnboardingPath({
       conversationSlugId: conversationSlugId.value,
@@ -163,7 +146,6 @@ async function handleBackToWelcome(): Promise<void> {
 }
 
 async function handleBackToConversation(): Promise<void> {
-  credentialUpgradeTarget.value = null;
   await exitToConversation({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
@@ -171,8 +153,6 @@ async function handleBackToConversation(): Promise<void> {
 }
 
 async function goToPassport(): Promise<void> {
-  onboardingMode.value = "LOGIN";
-  credentialUpgradeTarget.value = "strong";
   await router.push({
     path: getConversationSurveyVerifyPassportPath({
       conversationSlugId: conversationSlugId.value,
@@ -182,8 +162,6 @@ async function goToPassport(): Promise<void> {
 }
 
 async function goToPhone(): Promise<void> {
-  onboardingMode.value = "LOGIN";
-  credentialUpgradeTarget.value = "strong";
   await router.push({
     path: getConversationSurveyVerifyPhonePath({
       conversationSlugId: conversationSlugId.value,

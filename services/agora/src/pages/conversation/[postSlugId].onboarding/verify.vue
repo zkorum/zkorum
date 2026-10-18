@@ -5,12 +5,10 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { useConversationEmailUpdateSummaryQuery } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
 import type { DismissalController } from "src/utils/ui/dismissalController";
 import { computed, watch } from "vue";
@@ -22,21 +20,8 @@ defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { route, routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const { onboardingMode, credentialUpgradeTarget } = storeToRefs(
-  onboardingFlowStore()
-);
 const conversationOnboardingStore = useConversationOnboardingStore();
 const { exitToConversation } = useConversationOnboardingExit();
-
-if (
-  conversationOnboardingStore.conversationSlugId !==
-  routeConversationSlugId.value
-) {
-  conversationOnboardingStore.startManualEntry({
-    conversationSlugId: routeConversationSlugId.value,
-    routeContext: routeContext.value,
-  });
-}
 
 const {
   conversationSlugId,
@@ -111,12 +96,6 @@ watch(
       emailUpdateResolution,
       routeContext: routeContext.value,
     });
-
-    if (decision.onboardingMode !== null) {
-      onboardingMode.value = decision.onboardingMode;
-    }
-
-    credentialUpgradeTarget.value = decision.credentialUpgradeTarget;
 
     if (decision.navigation.kind === "none") {
       return;

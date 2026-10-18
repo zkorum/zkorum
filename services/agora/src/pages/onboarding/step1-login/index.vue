@@ -39,7 +39,6 @@
           />
 
           <ZKGradientButton
-            v-if="credentialUpgradeTarget !== 'strong'"
             :label="t('loginWithEmail')"
             gradient-background="#E7E7FF"
             label-color="#6b4eff"
@@ -54,7 +53,6 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import ClusterImageExample from "src/components/onboarding/backgrounds/ClusterImageExample.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
@@ -63,7 +61,6 @@ import ZKGradientButton from "src/components/ui-library/ZKGradientButton.vue";
 import PhoneAuthUnavailableNotice from "src/components/verification/PhoneAuthUnavailableNotice.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import OnboardingLayout from "src/layouts/OnboardingLayout.vue";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { usePhoneAuthAvailability } from "src/utils/auth/phoneAuthMode";
 import { useRouter } from "vue-router";
 
@@ -76,7 +73,6 @@ const { t } = useComponentI18n<LoginOnboardingTranslations>(
   loginOnboardingTranslations
 );
 
-const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const phoneAuthAvailability = usePhoneAuthAvailability("login");
 
 const router = useRouter();

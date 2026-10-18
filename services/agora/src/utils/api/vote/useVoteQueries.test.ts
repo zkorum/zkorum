@@ -56,11 +56,6 @@ vi.mock("src/composables/conversation/useParticipationGate", () => ({
     openParticipationOnboarding: vi.fn(),
   }),
 }));
-vi.mock("src/composables/auth/useConversationLoginIntentions", () => ({
-  useConversationLoginIntentions: () => ({
-    setOpinionAgreementIntention: vi.fn(),
-  }),
-}));
 vi.mock("../post/useConversationQuery", () => ({
   useInvalidateConversationQuery: () => ({ invalidateConversation: vi.fn() }),
 }));

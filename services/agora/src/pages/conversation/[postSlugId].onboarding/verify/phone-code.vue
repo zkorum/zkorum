@@ -53,8 +53,6 @@ import {
   verifyPhoneCodeTranslations,
 } from "src/pages/verify/phone-code/index.i18n";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { onboardingFlowStore } from "src/stores/onboarding/flow";
 import { usePhoneAuthAvailability } from "src/utils/auth/phoneAuthMode";
 import {
   getConversationSurveyVerifyPath,
@@ -73,23 +71,11 @@ const { t } = useComponentI18n<VerifyPhoneCodeTranslations>(
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const conversationOnboardingStore = useConversationOnboardingStore();
 const { isAuthInitialized, isLoggedIn } = storeToRefs(useAuthenticationStore());
-const { credentialUpgradeTarget } = storeToRefs(onboardingFlowStore());
 const phoneAuthPurpose = computed(() =>
   !isAuthInitialized.value || isLoggedIn.value ? "credential" : "login"
 );
 const { exitToConversation } = useConversationOnboardingExit();
-
-if (
-  conversationOnboardingStore.conversationSlugId !==
-  routeConversationSlugId.value
-) {
-  conversationOnboardingStore.startManualEntry({
-    conversationSlugId: routeConversationSlugId.value,
-    routeContext: routeContext.value,
-  });
-}
 
 const { conversationSlugId, surveyStepTotal } = useConversationSurveyState({
   conversationSlugId: routeConversationSlugId,
@@ -127,13 +113,11 @@ async function changePhoneNumber() {
 }
 
 async function handleBackToConversation(): Promise<void> {
-  credentialUpgradeTarget.value = null;
   await exitToConversation({
     conversationSlugId: conversationSlugId.value,
     routeContext: routeContext.value,
   });
 }
-
 </script>
 
 <style scoped lang="scss">

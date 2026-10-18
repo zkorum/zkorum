@@ -45,7 +45,7 @@
 
     <PreParticipationIntentionDialog
       v-model="showLoginDialog"
-      :ok-callback="onLoginCallback"
+      :ok-callback="() => {}"
       active-intention="newConversation"
     />
   </NewConversationLayout>
@@ -65,7 +65,6 @@ import { useCreateSurveyAccess } from "src/composables/conversation/useCreateSur
 import { usePublishConversationDraft } from "src/composables/conversation/usePublishConversationDraft";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { useNewPostDraftsStore } from "src/stores/newConversationDrafts";
 import {
   isHistoryBackToPath,
@@ -95,7 +94,6 @@ const { validateForReview, isDraftModified, resetDraft, surveyConfig } =
   useConversationDraft({ syncToStore: true });
 const { conversationDraft } = storeToRefs(useNewPostDraftsStore());
 const { publishConversationDraft } = usePublishConversationDraft();
-const { createNewConversationIntention } = useLoginIntentionStore();
 
 const routeGuard = ref<{ unlockRoute: () => void } | undefined>(undefined);
 const showLoginDialog = ref(false);
@@ -152,10 +150,6 @@ function clearSurveyValidationError(): void {
 
 function showSurveyValidationError(): void {
   surveyValidationErrorMessage.value = t("surveyValidationError");
-}
-
-function onLoginCallback() {
-  createNewConversationIntention();
 }
 
 onMounted(async () => {
