@@ -124,6 +124,9 @@
               <CommentComposer
                 ref="commentComposerRef"
                 :editing-opinion="editingOpinion"
+                :action-bar-element="
+                  conversationScrollContext.actionBarElement ?? undefined
+                "
                 :post-slug-id="
                   loadedConversationData.metadata.conversationSlugId
                 "

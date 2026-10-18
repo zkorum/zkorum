@@ -3,13 +3,15 @@
     <div>{{ t("emailDescription") }}</div>
 
     <q-input
+      ref="emailInput"
       :model-value="emailData.email"
       type="email"
       name="email"
       autocomplete="email"
       outlined
-      autofocus
+      :autofocus="!$q.platform.is.mobile"
       :placeholder="t('emailPlaceholder')"
+      @focus="isFocused = true"
       @update:model-value="onEmailUpdate"
       @blur="onEmailBlur"
     />
@@ -29,10 +31,12 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { type QInput, useQuasar } from "quasar";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { useElementVisibility } from "src/composables/ui/useElementVisibility";
 import { normalizeEmail, zodEmail } from "src/shared/types/zod-email";
 import { emailVerificationStore } from "src/stores/onboarding/email";
-import { reactive } from "vue";
+import { onMounted, reactive, ref, useTemplateRef } from "vue";
 
 import {
   type EmailInputFormTranslations,
@@ -46,6 +50,22 @@ const emit = defineEmits<{
 const { t } = useComponentI18n<EmailInputFormTranslations>(
   emailInputFormTranslations
 );
+
+const $q = useQuasar();
+const emailInput = useTemplateRef<QInput>("emailInput");
+const isFocused = ref(false);
+const { reveal } = useElementVisibility({
+  target: () => {
+    const element = emailInput.value?.nativeEl;
+    return element instanceof HTMLElement ? element : undefined;
+  },
+  enabled: () => isFocused.value,
+});
+
+onMounted(() => {
+  // Show the field on arrival without opening a mobile keyboard unexpectedly.
+  if ($q.platform.is.mobile) reveal();
+});
 
 const emailData = reactive({
   email: "",
@@ -101,6 +121,7 @@ function onEmailUpdate(value: string | number | null) {
 }
 
 function onEmailBlur() {
+  isFocused.value = false;
   emailData.hasBeenBlurred = true;
   validateAndSetErrors();
 }

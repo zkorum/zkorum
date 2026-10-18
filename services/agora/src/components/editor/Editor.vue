@@ -407,6 +407,9 @@ defineExpose({
   focus: () => {
     editor.value?.chain().focus().run();
   },
+  scrollSelectionIntoView: () => {
+    if (editor.value?.isFocused) editor.value.commands.scrollIntoView();
+  },
 });
 
 // Watch for external changes to modelText

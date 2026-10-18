@@ -70,6 +70,9 @@
         <FloatingBottomContainer v-if="!isMaxDiffConversation">
           <CommentComposer
             :editing-opinion="undefined"
+            :action-bar-element="
+              conversationScrollContext.actionBarElement ?? undefined
+            "
             :post-slug-id="loadedConversationData.metadata.conversationSlugId"
             :participation-mode="
               loadedConversationData.metadata.participationMode

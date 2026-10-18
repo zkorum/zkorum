@@ -93,6 +93,9 @@
     <FloatingBottomContainer v-if="!compactMode">
       <CommentComposer
         :editing-opinion="editingOpinion"
+        :action-bar-element="
+          conversationScrollContext.actionBarElement ?? undefined
+        "
         :post-slug-id="conversationData.metadata.conversationSlugId"
         :participation-mode="conversationData.metadata.participationMode"
         :requires-event-ticket="conversationData.metadata.requiresEventTicket"

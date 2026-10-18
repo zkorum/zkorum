@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :style="viewportStyle">
     <q-layout view="hHh lpR fFf">
       <q-page-container>
         <div
@@ -55,6 +55,7 @@
 
 <script setup lang="ts">
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { useVisibleViewport } from "src/utils/html/viewPort";
 import { useRouter } from "vue-router";
 
 import {
@@ -82,6 +83,7 @@ const props = withDefaults(
 );
 
 const router = useRouter();
+const { viewportStyle } = useVisibleViewport();
 const { t } = useComponentI18n<OnboardingLayoutTranslations>(
   onboardingLayoutTranslations
 );
@@ -212,9 +214,9 @@ function handleClose() {
 }
 
 .topLayer--overBody {
-  position: absolute;
-  bottom: 0;
-  max-height: 70dvh;
+  position: fixed;
+  inset-block-end: var(--visible-viewport-bottom-inset, 0px);
+  max-height: calc(var(--visible-viewport-height, 100dvh) * 0.7);
   overflow: auto;
   scrollbar-width: none;
   margin-top: 0;

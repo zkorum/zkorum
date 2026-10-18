@@ -109,6 +109,9 @@
     >
       <CommentComposer
         :editing-opinion="editingOpinion"
+        :action-bar-element="
+          conversationScrollContext.actionBarElement ?? undefined
+        "
         :post-slug-id="loadedConversationData.metadata.conversationSlugId"
         :participation-mode="loadedConversationData.metadata.participationMode"
         :requires-event-ticket="
