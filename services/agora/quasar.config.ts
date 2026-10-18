@@ -265,6 +265,12 @@ export default defineConfig((ctx) => {
           // Vite does not read Browserslist for CSS syntax lowering.
           // Keep these engine floors aligned with .browserslistrc.
           cssTarget: ["chrome51", "edge15", "firefox54", "ios10", "safari10"],
+          terserOptions: {
+            ...viteConf.build?.terserOptions,
+            // Legacy minification otherwise starts one worker per CPU minus one,
+            // multiplying memory use inside shared Docker/Podman VMs.
+            maxWorkers: 2,
+          },
         };
 
         if (ctx.prod) {

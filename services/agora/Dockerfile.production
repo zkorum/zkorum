@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 
 # ---- Dependencies ----
-FROM node:24.14.1-alpine AS deps
+# The frontend output is architecture-independent; avoid emulating build tools.
+FROM --platform=$BUILDPLATFORM node:24.14.1-alpine AS deps
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@12.4.1 --activate
 ENV PATH=/app/node_modules/.bin:$PATH
