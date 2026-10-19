@@ -1,0 +1,6 @@
+.q-menu.zk-select-popup,
+.q-select__dialog > .zk-select-popup {
+  // Keep this in CSS: Quasar's menu positioning clears inline max-height.
+  max-height: min(20rem, var(--zk-select-popup-max-height));
+  overscroll-behavior: contain;
+}

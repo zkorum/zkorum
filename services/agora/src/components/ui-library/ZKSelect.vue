@@ -1,6 +1,7 @@
 <template>
   <q-select
     ref="select"
+    v-bind="selectPopup"
     :model-value="modelValue"
     outlined
     emit-value
@@ -47,6 +48,7 @@
 <script setup lang="ts">
 import type { QSelect } from "quasar";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import { computed, ref, useTemplateRef, watch } from "vue";
 
 import {
@@ -98,6 +100,7 @@ const emit = defineEmits<{
 }>();
 
 const select = useTemplateRef<QSelect>("select");
+const selectPopup = useSelectPopup();
 const popupActionsHeight = 56;
 const { t } = useComponentI18n<ZKSelectTranslations>(zkSelectTranslations);
 const filteredOptions = ref<readonly ZKSelectOption[]>(props.options);

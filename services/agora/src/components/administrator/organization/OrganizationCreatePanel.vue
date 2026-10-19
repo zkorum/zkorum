@@ -28,6 +28,7 @@
         "
       />
       <q-select
+        v-bind="selectPopup"
         :model-value="form.defaultLanguageCode"
         outlined
         :options="displayLanguageOptions"
@@ -85,6 +86,7 @@
 import AdminSectionHeader from "src/components/administrator/AdminSectionHeader.vue";
 import ZKButton from "src/components/ui-library/ZKButton.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import {
   type AdministratorOrganizationTranslations,
   administratorOrganizationTranslations,
@@ -122,6 +124,7 @@ const { t } = useComponentI18n<AdministratorOrganizationTranslations>(
   administratorOrganizationTranslations
 );
 const languageStore = useLanguageStore();
+const selectPopup = useSelectPopup();
 const { createOrganization } = useBackendAdministratorOrganizationApi();
 
 const form = reactive<OrganizationCreateFormState>({

@@ -9,6 +9,7 @@
 
       <div class="form-grid">
         <q-select
+          v-bind="selectPopup"
           v-model="subjectType"
           outlined
           emit-value
@@ -128,6 +129,7 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ZKSelect from "src/components/ui-library/ZKSelect.vue";
 import { usePageLayout } from "src/composables/layout/usePageLayout";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import type {
   AdminOrganizationOption,
   CreatePremiumFeatureEntitlementRequest,
@@ -157,6 +159,7 @@ interface SelectOption<T extends string> {
 type ZKSelectModel = string | string[] | null;
 
 const { isActive } = usePageLayout({ reducedWidth: true });
+const selectPopup = useSelectPopup();
 const { t } = useComponentI18n<AdministratorPremiumEntitlementsTranslations>(
   administratorPremiumEntitlementsTranslations
 );

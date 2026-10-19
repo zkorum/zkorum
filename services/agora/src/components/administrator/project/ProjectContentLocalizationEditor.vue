@@ -49,6 +49,7 @@
 
         <div class="form-grid">
           <q-select
+            v-bind="selectPopup"
             v-model="draftLanguageCode"
             outlined
             emit-value
@@ -147,6 +148,7 @@
 </template>
 
 <script setup lang="ts">
+import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 import { MAX_LENGTH_TITLE } from "src/shared/shared";
 import type { AdminProject } from "src/shared/types/dto";
@@ -194,6 +196,7 @@ const localizations = defineModel<ProjectContentLocalization[]>({
   required: true,
 });
 
+const selectPopup = useSelectPopup();
 const draftLanguageCode = ref<SupportedDisplayLanguageCodes>(
   props.displayLanguageOptions[0]?.value ?? "en"
 );
