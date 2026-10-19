@@ -25,7 +25,6 @@
     </div>
 
     <q-select
-      v-bind="selectPopup"
       v-model="moderationAction"
       :options="actionMapping"
       :label="t('action')"
@@ -34,7 +33,6 @@
     />
 
     <q-select
-      v-bind="selectPopup"
       v-model="moderationReason"
       :options="reasonMapping"
       :label="t('reason')"
@@ -70,7 +68,6 @@ import ZKGradientButton from "src/components/ui-library/ZKGradientButton.vue";
 import ZKHtmlContent from "src/components/ui-library/ZKHtmlContent.vue";
 import { usePageLayout } from "src/composables/layout/usePageLayout";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import type {
   ConversationModerationAction,
   ConversationModerationProperties,
@@ -94,7 +91,6 @@ import {
 } from "./index.i18n";
 
 const { isActive } = usePageLayout({ reducedWidth: true });
-const selectPopup = useSelectPopup();
 
 const {
   moderatePost,

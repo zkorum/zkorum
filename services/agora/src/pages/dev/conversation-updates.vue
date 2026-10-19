@@ -44,7 +44,6 @@
           </p>
         </div>
         <q-select
-          v-bind="selectPopup"
           v-model="source"
           label="Preview source"
           :options="sources"
@@ -123,7 +122,6 @@
             </p>
             <q-select
               v-if="simulateSubset"
-              v-bind="selectPopup"
               v-model="participantConversationSlugIds"
               label="Illustrative participant conversations (at least one)"
               :options="participantOptions"
@@ -146,7 +144,6 @@
 
         <div class="email-dev__controls">
           <q-select
-            v-bind="selectPopup"
             v-model="language"
             label="Email language"
             :options="ZodSupportedDisplayLanguageCodes.options"
@@ -270,7 +267,6 @@ import { StandardMenuBar } from "src/components/navigation/header/variants";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
 import SpaLink from "src/components/ui-library/SpaLink.vue";
 import { usePageLayout } from "src/composables/layout/usePageLayout";
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import type { ConversationEmailExample } from "src/shared/branding/emailExamples";
 import { ZodSupportedDisplayLanguageCodes } from "src/shared/languages";
 import { validateRichTextInput } from "src/shared/richText";
@@ -301,7 +297,6 @@ const { isActive } = usePageLayout({
   addBottomPadding: true,
 });
 const api = useBackendConversationEmailUpdatesApi();
-const selectPopup = useSelectPopup();
 const tool = ref<"compose" | "comparison">("compose");
 const auth = useAuthenticationStore();
 type ExampleRequest = ReturnType<

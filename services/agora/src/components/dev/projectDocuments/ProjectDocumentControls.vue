@@ -9,7 +9,6 @@
       :options="documentViewerOptions"
     />
     <q-select
-      v-bind="selectPopup"
       v-model="scenario"
       label="Document requests (dev simulation)"
       dense
@@ -33,7 +32,6 @@
 
 <script setup lang="ts">
 import ZKButton from "src/components/ui-library/ZKButton.vue";
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 
 import {
   type DocumentScenario,
@@ -45,7 +43,6 @@ import {
 
 defineProps<{ hasDocuments: boolean }>();
 const emit = defineEmits<{ jump: [] }>();
-const selectPopup = useSelectPopup();
 const viewer = defineModel<PreviewViewer>("viewer", { required: true });
 const scenario = defineModel<DocumentScenario>("scenario", { required: true });
 </script>

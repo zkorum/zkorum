@@ -9,7 +9,6 @@
         </p>
       </div>
       <q-select
-        v-bind="selectPopup"
         v-model="scenario"
         label="Composer state"
         :options="scenarios"
@@ -27,7 +26,6 @@
         full list.
       </p>
       <q-select
-        v-bind="selectPopup"
         v-model="language"
         label="Preview language"
         :options="ZodSupportedDisplayLanguageCodes.options"
@@ -104,7 +102,6 @@ import type {
   ConversationUpdateScopeSummary,
 } from "src/components/conversationUpdates/conversationUpdateTypes";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import {
   type ConversationEmailExample,
   conversationEmailExampleConversations,
@@ -128,7 +125,6 @@ type Scenario =
   | "unverified"
   | "preparing";
 const scenario = ref<Scenario>("ready");
-const selectPopup = useSelectPopup();
 const scenarios = [
   { label: "Ready to preview", value: "ready" },
   { label: "No eligible participants", value: "empty" },

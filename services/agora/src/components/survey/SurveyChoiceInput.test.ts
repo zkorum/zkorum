@@ -1,4 +1,4 @@
-import { QCheckbox, QSelect, Quasar } from "quasar";
+import { QBtn, QCheckbox, QSelect, Quasar } from "quasar";
 import type { SurveyOptionText } from "src/shared/surveyChoiceText";
 import type { SurveyChoiceDisplay } from "src/shared/types/zod";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -85,7 +85,7 @@ async function mountChoice({
       },
     })
   );
-  app.use(Quasar, { components: { QCheckbox, QSelect } });
+  app.use(Quasar, { components: { QBtn, QCheckbox, QSelect } });
   app.use(
     createI18n({
       legacy: false,

@@ -1,7 +1,7 @@
 <template>
   <q-select
     ref="select"
-    v-bind="selectPopup"
+    class="zk-select"
     :model-value="modelValue"
     outlined
     emit-value
@@ -18,29 +18,29 @@
     :loading="loading"
     :hide-bottom-space="hideBottomSpace"
     :use-input="searchable"
-    :hide-selected="searchable && !multiple"
-    :fill-input="searchable && !multiple"
     :input-debounce="searchable ? 0 : undefined"
-    :virtual-scroll-sticky-size-start="multiple ? popupActionsHeight : 0"
+    popup-content-class="zk-select-popup"
+    options-selected-class="zk-select-popup__option--selected"
+    :virtual-scroll-sticky-size-start="popupActionsHeight"
     @update:model-value="emit('update:modelValue', $event)"
     @filter="handleFilter"
     @popup-show="emit('popupShow')"
     @popup-hide="handlePopupHide"
   >
-    <template v-if="multiple" #before-options>
+    <template #before-options>
       <ZKSelectPopupActions
         :label="t('done')"
-        :min-height="popupActionsHeight"
         @close="closePopup"
+        @resize="popupActionsHeight = $event"
       />
     </template>
-    <template v-if="multiple" #no-option>
+    <template #no-option>
       <ZKSelectPopupActions
         :label="t('done')"
-        :min-height="popupActionsHeight"
         @close="closePopup"
+        @resize="popupActionsHeight = $event"
       />
-      <div class="q-pa-md text-grey-7">{{ t("noResults") }}</div>
+      <div class="zk-select__empty">{{ t("noResults") }}</div>
     </template>
   </q-select>
 </template>
@@ -48,7 +48,6 @@
 <script setup lang="ts">
 import type { QSelect } from "quasar";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import { computed, ref, useTemplateRef, watch } from "vue";
 
 import {
@@ -100,8 +99,7 @@ const emit = defineEmits<{
 }>();
 
 const select = useTemplateRef<QSelect>("select");
-const selectPopup = useSelectPopup();
-const popupActionsHeight = 56;
+const popupActionsHeight = ref(0);
 const { t } = useComponentI18n<ZKSelectTranslations>(zkSelectTranslations);
 const filteredOptions = ref<readonly ZKSelectOption[]>(props.options);
 
@@ -146,7 +144,7 @@ function handleFilter(
 
 function handlePopupHide(): void {
   filteredOptions.value = props.options;
-  if (props.multiple && props.searchable) {
+  if (props.searchable) {
     select.value?.updateInputValue("", true);
   }
   emit("popupHide");
@@ -157,3 +155,52 @@ function closePopup(): void {
   select.value?.blur();
 }
 </script>
+
+<style scoped lang="scss">
+.zk-select :deep(.q-field__control) {
+  border-radius: 16px;
+  background: $color-background-default;
+}
+
+.zk-select.q-field--outlined:not(.q-field--error):not(.q-field--disabled)
+  :deep(.q-field__control::before) {
+  border-color: rgba($primary, 0.38);
+}
+
+.zk-select :deep(.q-field__native) {
+  color: $ink-dark;
+}
+
+.zk-select :deep(.q-chip) {
+  background: $primary-lightest;
+  color: $primary-dark;
+}
+
+.zk-select__empty {
+  padding: 1rem;
+  color: $color-text-weak;
+  text-align: center;
+}
+</style>
+
+<style lang="scss">
+// Quasar teleports the popup outside the select's scoped DOM tree.
+.q-menu.zk-select-popup {
+  border: 1px solid $color-border-weak;
+  border-radius: 16px;
+  box-shadow: 0 0.5rem 1.5rem rgba($ink-darkest, 0.12);
+}
+
+.zk-select-popup .q-item {
+  min-height: 3rem;
+  padding-block: 0.75rem;
+  padding-inline: 1rem;
+  color: $ink-dark;
+}
+
+.zk-select-popup .q-item.zk-select-popup__option--selected {
+  background: $primary-lightest;
+  color: $primary-dark;
+  font-weight: var(--font-weight-medium);
+}
+</style>

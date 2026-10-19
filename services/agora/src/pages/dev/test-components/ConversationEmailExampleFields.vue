@@ -1,7 +1,6 @@
 <template>
   <div class="example-fields">
     <q-select
-      v-bind="selectPopup"
       v-model="fixture"
       label="Example branding"
       :options="fixtures"
@@ -17,7 +16,6 @@
         :disable="disabled"
       />
       <q-select
-        v-bind="selectPopup"
         v-model="example.attributions"
         label="Project credits"
         :options="roles"
@@ -44,12 +42,10 @@
 </template>
 
 <script setup lang="ts">
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import type { ConversationEmailExample } from "src/shared/branding/emailExamples";
 import { computed } from "vue";
 
 defineProps<{ disabled: boolean }>();
-const selectPopup = useSelectPopup();
 const example = defineModel<ConversationEmailExample>({ required: true });
 const fixtures = [
   { label: "Project", value: "project" },

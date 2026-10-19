@@ -7,7 +7,6 @@
     <div class="nested-form">
       <div class="form-grid">
         <q-select
-          v-bind="selectPopup"
           v-model="languageCode"
           outlined
           emit-value
@@ -85,7 +84,6 @@
 </template>
 
 <script setup lang="ts">
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 import {
   MAX_LENGTH_DESCRIPTION_CREATOR,
@@ -128,7 +126,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   "update:modelValue": [value: ExternalLocalization[]];
 }>();
-const selectPopup = useSelectPopup();
 const languageCode = ref<SupportedDisplayLanguageCodes>(
   props.defaultLanguageCode
 );

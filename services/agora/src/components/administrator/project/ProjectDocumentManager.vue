@@ -53,7 +53,6 @@
       />
       <div class="document-manager__details-grid">
         <q-select
-          v-bind="selectPopup"
           v-model="defaultLanguageCode"
           outlined
           emit-value
@@ -90,7 +89,6 @@
           class="document-manager__translation-row"
         >
           <q-select
-            v-bind="selectPopup"
             :model-value="localization.languageCode"
             outlined
             emit-value
@@ -243,7 +241,6 @@ import ProjectDocumentFilePicker from "src/components/administrator/project/Proj
 import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 import {
   getProjectDocumentContentTypeFromFileName,
@@ -282,7 +279,6 @@ const { t } = useComponentI18n<ProjectDocumentManagerTranslations>(
   projectDocumentManagerTranslations
 );
 const { showNotifyMessage } = useNotify();
-const selectPopup = useSelectPopup();
 const { deleteProjectDocument, listProjectDocuments, uploadProjectDocument } =
   useBackendAdministratorProjectApi();
 
