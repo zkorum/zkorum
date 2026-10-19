@@ -42,6 +42,7 @@
         </div>
 
         <q-select
+          v-bind="selectPopup"
           :model-value="selectedLanguageCode"
           outlined
           :options="localizedLanguageOptions"
@@ -287,6 +288,7 @@ import ZKCard from "src/components/ui-library/ZKCard.vue";
 import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
 import ZKSelect from "src/components/ui-library/ZKSelect.vue";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import {
   type AdministratorOrganizationTranslations,
   administratorOrganizationTranslations,
@@ -334,6 +336,7 @@ const { t } = useComponentI18n<AdministratorOrganizationTranslations>(
   administratorOrganizationTranslations
 );
 const languageStore = useLanguageStore();
+const selectPopup = useSelectPopup();
 const {
   addUserOrganizationMapping,
   deleteOrganization,
