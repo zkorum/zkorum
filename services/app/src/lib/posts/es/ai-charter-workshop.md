@@ -1,6 +1,6 @@
 ---
 title: "¿Pueden 30 personas acordar reglas para la IA en un día?"
-description: "Cómo una startup de ingeniería de 30 personas utilizó Agora para redactar conjuntamente una carta de uso de la IA y priorizar sus principios en una jornada facilitada."
+description: "Cómo Leviathan, una startup de tecnología profunda de 30 personas, utilizó Agora para redactar conjuntamente una carta de uso de la IA y priorizar sus principios en una jornada facilitada."
 author: "Equipo de Agora"
 date: "2026-09-01"
 type: "case-study"
@@ -8,7 +8,7 @@ thumbnail: "/images/resources/ai-charter-workshop.webp"
 image: "/images/resources/ai-charter-workshop.webp"
 ---
 
-¿Cómo debería utilizar la IA una startup de ingeniería de 30 personas y en qué casos debería descartarla? En septiembre de 2026, [Jean Lou Fourquet](https://www.linkedin.com/in/jean-lou-fourquet), facilitador experto de [Lyfe Catalyst](https://lyfe-catalyst.org/), dedicó una jornada completa a esta pregunta con todo el equipo.
+¿Cómo debería utilizar la IA una startup de 30 personas y en qué casos debería descartarla? En septiembre de 2026, [Jean Lou Fourquet](https://www.linkedin.com/in/jean-lou-fourquet), facilitador experto de [Lyfe Catalyst](https://lyfe-catalyst.org/), dedicó una jornada completa a esta pregunta con todo el equipo de [Leviathan](https://leviathan-dynamics.com/), una startup francesa de tecnología profunda especializada en refrigeración descarbonizada y tratamiento de aguas industriales.
 
 **La mayoría de los talleres de empresa terminan con buenas intenciones, pero sin nada concreto que llevar a la práctica. Este terminó con un borrador de una carta de uso de la IA: principios que el equipo acordó a pesar de sus diferencias y que después ordenó por prioridad.**
 
@@ -22,7 +22,7 @@ _El Modo Conversación muestra en qué coincide el grupo; el Modo Priorización 
 
 Una formación sobre IA suele seguir un guion conocido: charlas de expertos, una discusión animada y algunas notas adhesivas. Todos aprenden algo, pero no se decide nada. Las conclusiones se quedan en la sala, a menudo marcadas por quienes hablan más alto o tienen mayor rango.
 
-Para esta startup, lo que estaba en juego era concreto. Los integrantes utilizaban herramientas de IA de distintas maneras y con distinta frecuencia, sin reglas compartidas. Algunas preguntas tenían que ver con los riesgos: ¿se pueden introducir los planos y parámetros de las máquinas de la empresa en un asistente de IA externo? Otras afectaban a su identidad: si la empresa promueve una reducción del 30% del consumo energético de sus máquinas, ¿hasta qué punto es coherente utilizar una IA que consume mucha energía?
+Para Leviathan, lo que estaba en juego era concreto. Los integrantes utilizaban herramientas de IA de distintas maneras y con distinta frecuencia, sin reglas compartidas. Algunas preguntas tenían que ver con los riesgos: ¿se pueden introducir los planos y parámetros de las máquinas de la empresa en un asistente de IA externo? Otras afectaban a su identidad: si la empresa promueve una reducción del 30% del consumo energético de sus máquinas, ¿hasta qué punto es coherente utilizar una IA que consume mucha energía?
 
 El objetivo de la jornada era explícito: no solo sensibilizar, sino salir con un primer borrador de una carta de uso de la IA, escrita por el equipo y asumida como propia.
 
@@ -98,7 +98,7 @@ Entre las prioridades compartidas mejor clasificadas figuraban:
 2. Permitimos utilizar la IA para agilizar la vigilancia científica y técnica (resúmenes de artículos y patentes), siempre que volvamos a la fuente original antes de basarnos en la información.
 3. Cuando se utilice IA para investigar, la persona debe comprobar al menos algunas de las fuentes.
 
-A las 16:30, se leyó en voz alta el borrador de la carta que había surgido de la clasificación. El equipo lo adoptó como documento en evolución y un comité elegido por sorteo lo revisará cada tres meses.
+A las 16:30, se leyó en voz alta el borrador de la carta que había surgido de la clasificación. El equipo lo adoptó como documento en evolución y un comité elegido por sorteo lo revisaría cada tres meses.
 
 ## Por qué importa: comprensión colectiva, más allá de la lluvia de ideas
 
