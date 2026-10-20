@@ -130,7 +130,6 @@
         <p class="section-description">{{ t("attributionsDescription") }}</p>
         <div class="form-grid">
           <q-select
-            v-bind="selectPopup"
             v-model="attributionRole"
             outlined
             emit-value
@@ -139,7 +138,6 @@
             :options="roleOptions"
           />
           <q-select
-            v-bind="selectPopup"
             v-model="attributionSource"
             outlined
             emit-value
@@ -158,7 +156,6 @@
           />
           <template v-else>
             <q-select
-              v-bind="selectPopup"
               v-model="externalDefaultLanguage"
               outlined
               emit-value
@@ -504,7 +501,6 @@
           />
           <div class="form-grid">
             <q-select
-              v-bind="selectPopup"
               v-model="attributionRole"
               outlined
               emit-value
@@ -513,7 +509,6 @@
               :options="roleOptions"
             />
             <q-select
-              v-bind="selectPopup"
               v-model="attributionSource"
               outlined
               emit-value
@@ -532,7 +527,6 @@
             />
             <template v-else>
               <q-select
-                v-bind="selectPopup"
                 v-model="externalDefaultLanguage"
                 outlined
                 emit-value
@@ -835,7 +829,6 @@ import ZKInfoBanner from "src/components/ui-library/ZKInfoBanner.vue";
 import ZKSelect from "src/components/ui-library/ZKSelect.vue";
 import { usePageLayout } from "src/composables/layout/usePageLayout";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import { useSelectPopup } from "src/composables/ui/useSelectPopup";
 import type { SupportedDisplayLanguageCodes } from "src/shared/languages";
 import {
   MAX_LENGTH_DESCRIPTION_CREATOR,
@@ -907,7 +900,6 @@ type ProjectContentLocalization = AdminProject["contentLocalizations"][number];
 const noMachineContentLocalizations: ProjectContentLocalization[] = [];
 
 const { isActive } = usePageLayout({ reducedWidth: true });
-const selectPopup = useSelectPopup();
 const { t } = useComponentI18n<AdministratorProjectTranslations>(
   administratorProjectTranslations
 );

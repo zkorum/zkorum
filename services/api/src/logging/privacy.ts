@@ -107,6 +107,12 @@ export function createApiLogPrivacy(sourceRoot: URL) {
 }
 
 type ApiErrorEvent =
+    | { event: "event_ticket_verification_failed" }
+    | {
+          event: "survey_scoring_queue_failed";
+          conversationId: number;
+          conversationSlugId: string;
+      }
     | { event: "email_deliverability_check_failed"; provider: "reacher" }
     | { event: "application_error" }
     | {
@@ -120,6 +126,10 @@ type ApiErrorEvent =
       };
 
 const apiErrorMessages = {
+    event_ticket_verification_failed:
+        "[Zupass] Event ticket verification failed",
+    survey_scoring_queue_failed:
+        "[Survey] Failed to queue ranking recomputation",
     email_deliverability_check_failed: "Email deliverability check failed",
     application_error: "Application event",
     vote_buffer: "Vote buffer operation failed",

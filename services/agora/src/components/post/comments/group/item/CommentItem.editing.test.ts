@@ -85,8 +85,6 @@ it("attaches the exact native card and content refs to an edit request", () => {
       userVotes: [],
       castVote: () => Promise.resolve(undefined),
     },
-    participationMode: "guest",
-    surveyGate: undefined,
     onViewAnalysis: () => {},
     isVotingDisabled: false,
     showVoteResults: true,

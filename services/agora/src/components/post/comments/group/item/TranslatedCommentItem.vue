@@ -6,9 +6,6 @@
     :conversation-author-username="conversationAuthorUsername"
     :conversation-organization-name="conversationOrganizationName"
     :voting-utilities="votingUtilities"
-    :participation-mode="participationMode"
-    :requires-event-ticket="requiresEventTicket"
-    :survey-gate="surveyGate"
     :on-view-analysis="onViewAnalysis"
     :is-voting-disabled="isVotingDisabled"
     :show-vote-results="showVoteResults"
@@ -27,12 +24,7 @@ import type {
   OpinionEditRequest,
   OpinionVotingUtilities,
 } from "src/composables/opinion/types";
-import type {
-  DisplayedOpinionItem,
-  EventSlug,
-  ParticipationMode,
-  SurveyGateSummary,
-} from "src/shared/types/zod";
+import type { DisplayedOpinionItem } from "src/shared/types/zod";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import { useOpinionItemDisplayContent } from "src/utils/translation/useOpinionItemDisplayContent";
 import { computed } from "vue";
@@ -47,9 +39,6 @@ const props = defineProps<{
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
   votingUtilities: OpinionVotingUtilities;
-  participationMode: ParticipationMode;
-  requiresEventTicket?: EventSlug;
-  surveyGate: SurveyGateSummary | undefined;
   onViewAnalysis: () => void;
   isVotingDisabled: boolean;
   showVoteResults: boolean;

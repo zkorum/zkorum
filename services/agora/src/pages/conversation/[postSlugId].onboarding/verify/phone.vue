@@ -19,7 +19,7 @@
         fixed-navigation
         :submit-call-back="onSubmit"
         :current-step="2"
-        :total-steps="surveyStepTotal"
+        :total-steps="totalSteps"
         :enable-next-button="
           phoneAuthAvailability.available &&
           !isLoading &&
@@ -62,7 +62,7 @@ import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import PhoneInputForm from "src/components/verification/PhoneInputForm.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
-import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
+import { useConversationVerificationState } from "src/composables/conversation/useConversationVerificationState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { usePhoneSubmit } from "src/composables/verification/usePhoneSubmit";
 import { useSkipUnavailablePhoneRegistration } from "src/composables/verification/useSkipUnavailablePhoneRegistration";
@@ -74,14 +74,10 @@ import {
 } from "src/pages/verify/phone/index.i18n";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
-import {
-  getConversationCredentialChoicePath,
-  getConversationSurveyVerifyPath,
-  getConversationSurveyVerifyPhoneCodePath,
-} from "src/utils/survey/navigation";
+import { getConversationSurveyVerifyPhoneCodePath } from "src/utils/survey/navigation";
 import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, onMounted, ref, watch } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -93,16 +89,11 @@ defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const { isLoggedIn, isAuthInitialized, credentials } = storeToRefs(
-  useAuthenticationStore()
-);
+const { isLoggedIn, isAuthInitialized } = storeToRefs(useAuthenticationStore());
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { exitToConversation } = useConversationOnboardingExit();
 const { completeVerification } = useVerificationComplete();
 const { showNotifyMessage } = useNotify();
-const phoneAuthPurpose = computed(() =>
-  !isAuthInitialized.value || isLoggedIn.value ? "credential" : "login"
-);
 const phoneInputFormRef = ref<InstanceType<typeof PhoneInputForm>>();
 const { t } = useComponentI18n<VerifyPhoneTranslations>(
   verifyPhoneTranslations
@@ -114,25 +105,16 @@ const { t: tCommon } =
 
 const {
   conversationSlugId,
-  conversationData,
-  surveyStepTotal,
-  requirementState,
+  phoneAuthPurpose,
+  credentialChoicePath: backPath,
+  totalSteps,
   isInitialLoading,
   hasLoadError,
   refetchAll,
-} = useConversationSurveyState({
+} = useConversationVerificationState({
   conversationSlugId: routeConversationSlugId,
-  formLoadMode: "incomplete",
-  requireAccount: true,
+  routeContext,
 });
-
-const backPath = computed(() =>
-  getConversationCredentialChoicePath({
-    conversationSlugId: conversationSlugId.value,
-    routeContext: routeContext.value,
-    participationMode: conversationData.value?.metadata.participationMode,
-  })
-);
 
 const { isLoading, submitPhone, phoneAuthAvailability, nextCodeWaitSeconds } =
   usePhoneSubmit({
@@ -163,40 +145,6 @@ const skipPhoneRegistration = useSkipUnavailablePhoneRegistration({
   ready: isAuthInitialized,
   redirect: () => router.replace({ path: backPath.value }),
 });
-
-watch(
-  [isInitialLoading, requirementState],
-  ([loading, requirements]) => {
-    if (!loading && !requirements.needsAuth) {
-      void router.replace({
-        path: getConversationSurveyVerifyPath({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        }),
-      });
-    }
-  },
-  { immediate: true, deep: true }
-);
-
-onMounted(() => {
-  checkExistingCredential();
-});
-
-watch(isAuthInitialized, () => {
-  checkExistingCredential();
-});
-
-function checkExistingCredential() {
-  if (!isAuthInitialized.value) {
-    return;
-  }
-
-  if (credentials.value.phone !== null) {
-    showNotifyMessage(t("alreadyHasPhone"));
-    void completeVerification();
-  }
-}
 
 function onSubmit() {
   phoneInputFormRef.value?.submit();

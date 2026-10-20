@@ -4,10 +4,16 @@
     :back-callback="handleBackAction"
     :close-callback="handleCloseToConversation"
   >
-    <PageLoadingSpinner v-if="isInitialLoading" />
+    <PageLoadingSpinner
+      v-if="
+        isInitialLoading ||
+        (question === undefined && isRefreshingSurvey) ||
+        surveyStatus?.surveyGate.hasSurvey === false
+      "
+    />
 
     <ErrorRetryBlock
-      v-else-if="hasLoadError"
+      v-else-if="hasLoadError || question === undefined"
       :title="t('failedToLoadSurveyTitle')"
       :retry-label="t('tryAgainLabel')"
       @retry="refetchAll"
@@ -144,6 +150,7 @@
 </template>
 
 <script setup lang="ts">
+import { useQueryClient } from "@tanstack/vue-query";
 import { storeToRefs } from "pinia";
 import Editor from "src/components/editor/Editor.vue";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
@@ -180,6 +187,7 @@ import {
 } from "src/utils/survey/config";
 import {
   getConversationPath,
+  getConversationSurveyCompletePath,
   getConversationSurveyContinuePath,
   getConversationSurveyOnboardingPath,
   getConversationSurveyQuestionPath,
@@ -201,6 +209,7 @@ import {
 type SurveyFormQuestion = SurveyFormData["questions"][number];
 type SurveyDraftSaveResult =
   | { kind: "unchanged" }
+  | { kind: "cancelled" }
   | {
       kind: "saved";
       response: Extract<SurveyAnswerSaveResponse, { success: true }>;
@@ -210,6 +219,7 @@ type SurveyDraftSaveResult =
 
 defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
+const queryClient = useQueryClient();
 const { route, routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
 const { safeNavigateBack } = useGoBackButtonHandler();
@@ -229,13 +239,12 @@ const {
   surveyStatus,
   surveyForm,
   surveyStepTotal,
-  requirementState,
   isInitialLoading,
+  isRefreshingSurvey,
   hasLoadError,
   refetchAll,
 } = useConversationSurveyState({
   conversationSlugId: routeConversationSlugId,
-  formLoadMode: "all",
 });
 
 const saveMutation = useSurveyAnswerSaveMutation({ conversationSlugId });
@@ -613,26 +622,21 @@ const freeTextHelpText = computed(() => {
 });
 
 watch(
-  [isInitialLoading, requirementState],
-  ([loading, requirements]) => {
-    if (!loading && (requirements.needsAuth || requirements.needsTicket)) {
-      void router.replace({
-        path: getConversationSurveyOnboardingPath({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        }),
-      });
-    }
-  },
-  { immediate: true, deep: true }
-);
-
-watch(
-  [isInitialLoading, surveyForm, surveyStatus, question],
-  ([loading, formData, statusData, currentQuestion]) => {
-    if (loading || formData === undefined || statusData === undefined) {
+  [isInitialLoading, surveyForm, surveyStatus, question, isRefreshingSurvey],
+  ([loading, formData, statusData, currentQuestion, refreshing]) => {
+    if (loading || refreshing || statusData === undefined) {
       return;
     }
+    if (!statusData.surveyGate.hasSurvey) {
+      // Dismiss the obsolete screen, not claim eligibility from an absent form.
+      void queryClient.invalidateQueries(
+        { queryKey: ["participation-status", conversationSlugId.value] },
+        { cancelRefetch: false }
+      );
+      void handleBackToConversation();
+      return;
+    }
+    if (formData === undefined) return;
     if (!formData.surveyGate.hasSurvey) {
       void router.replace({
         path: getConversationPath({
@@ -725,7 +729,9 @@ async function handleCloseToConversation(): Promise<void> {
   await handleNavigation("close");
 }
 
-async function saveCurrentDraftIfNeeded(): Promise<SurveyDraftSaveResult> {
+async function saveCurrentDraftIfNeeded(
+  isCurrentView: () => boolean
+): Promise<SurveyDraftSaveResult> {
   const currentQuestion = question.value;
   if (currentQuestion?.questionSlugId === undefined) {
     return { kind: "failed" };
@@ -751,10 +757,12 @@ async function saveCurrentDraftIfNeeded(): Promise<SurveyDraftSaveResult> {
       questionSlugId: currentQuestion.questionSlugId,
       answer: answer ?? null,
     });
+    if (response === undefined) return { kind: "cancelled" };
     return response.success
       ? { kind: "saved", response }
       : { kind: "blocked", reason: response.reason };
   } catch {
+    if (!isCurrentView()) return { kind: "cancelled" };
     showNotifyMessage(t("failedToSaveAnswerMessage"));
     return { kind: "failed" };
   }
@@ -764,10 +772,13 @@ async function handleNavigation(
   action: "previous" | "next" | "close"
 ): Promise<void> {
   if (isBusy.value) return;
+  const originatingPath = route.fullPath;
+  const isCurrentView = () => route.fullPath === originatingPath;
   isBusy.value = true;
   try {
-    const result = await saveCurrentDraftIfNeeded();
-    if (result.kind === "failed") return;
+    const result = await saveCurrentDraftIfNeeded(isCurrentView);
+    if (!isCurrentView()) return;
+    if (result.kind === "failed" || result.kind === "cancelled") return;
     if (result.kind === "blocked") {
       await handleBlockedReason(result.reason);
       return;
@@ -784,6 +795,19 @@ async function handleNavigation(
       justCompleted ||
       (action === "next" && isLastQuestion && gate?.status === "complete_valid")
     ) {
+      if (
+        result.kind === "saved" &&
+        result.response.participationStatus.status === "onboarding_required" &&
+        result.response.participationStatus.nextStep.kind === "email_updates"
+      ) {
+        await router.push({
+          path: getConversationSurveyCompletePath({
+            conversationSlugId: conversationSlugId.value,
+            routeContext: routeContext.value,
+          }),
+        });
+        return;
+      }
       await completeOnboarding({
         conversationSlugId: conversationSlugId.value,
         routeContext: routeContext.value,

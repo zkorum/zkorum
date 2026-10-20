@@ -259,6 +259,14 @@ export async function scheduleConversationAnalysisRefresh({
 
     const schedule = await scheduleAnalysisUpdate({ db, conversationId, log });
     log.info(
-        `[ConversationCounters] Scheduled math work conversationId=${String(conversationId)} conversationSlugId=${schedule.conversationSlugId} generation=${String(schedule.dataGeneration)} specs=${String(schedule.scheduledSpecCount)} queueStrategy=${queueStrategy}`,
+        {
+            event: "analysis_schedule",
+            conversationId,
+            conversationSlugId: schedule.conversationSlugId,
+            dataGeneration: schedule.dataGeneration,
+            specCount: schedule.scheduledSpecCount,
+            queueStrategy,
+        },
+        "[ConversationCounters] Scheduled math work",
     );
 }

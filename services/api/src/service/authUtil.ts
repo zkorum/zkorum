@@ -33,7 +33,6 @@ export type DeviceLoginStatusInternal =
     | DeviceStatusKnownWithSession
     | Extract<DeviceLoginStatusExtended, { isKnown: false }>;
 import * as authService from "@/service/auth.js";
-import { log } from "@/app.js";
 import { hasConversationCapability } from "@/service/projectAccess.js";
 
 interface IsSiteModeratorParams {
@@ -293,7 +292,6 @@ export async function getDeviceStatus({
         .where(eq(deviceTable.didWrite, didWrite));
 
     if (resultDevice.length === 0) {
-        log.info(`[AuthUtil] Device not found in database for didWrite`);
         return {
             isKnown: false,
             isLoggedIn: false,
@@ -306,7 +304,6 @@ export async function getDeviceStatus({
 
     // If user is deleted, treat as unknown device (no recovery)
     if (device.isDeleted) {
-        log.info(`[AuthUtil] User is deleted - returning isKnown: false`);
         return {
             isKnown: false,
             isLoggedIn: false,

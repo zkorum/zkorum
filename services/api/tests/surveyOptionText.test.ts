@@ -48,9 +48,13 @@ process.env.TESTCONTAINERS_RYUK_DISABLED ??= "true";
 const { participationCheck } = vi.hoisted(() => ({
     participationCheck: vi.fn(),
 }));
-vi.mock("../src/service/participationGate.js", () => ({
-    checkConversationParticipation: participationCheck,
-}));
+vi.mock(
+    import("../src/service/participationGate.js"),
+    async (importOriginal) => ({
+        ...(await importOriginal()),
+        checkConversationParticipation: participationCheck,
+    }),
+);
 const surveyModulePromise = import("../src/service/survey.js");
 const exportModulePromise =
     import("../src/service/conversationExport/generators/surveyShared.js");
@@ -73,7 +77,9 @@ describe("optional choice text persistence", () => {
     const queries: string[] = [];
 
     beforeAll(async () => {
-        container = await new GenericContainer("postgres:16-alpine")
+        container = await new GenericContainer(
+            process.env.AGORA_TEST_POSTGRES_IMAGE ?? "postgres:16-alpine",
+        )
             .withEnvironment({
                 POSTGRES_USER: "postgres",
                 POSTGRES_PASSWORD: "postgres",
@@ -238,6 +244,8 @@ describe("optional choice text persistence", () => {
             userAgent: "Vitest",
             now,
             currentDisplayLanguage: "en",
+            skipEmailUpdateConsent: false,
+            getEmailUpdateOnboardingAction: async () => undefined,
         });
     }
 
@@ -964,6 +972,79 @@ describe("optional choice text persistence", () => {
             expect(selectReplica).not.toHaveBeenCalled();
         },
     );
+
+    it("returns eligibility from the existing answer transaction without a replica reread", async () => {
+        const { saveSurveyAnswer } = await surveyModulePromise;
+        await configure();
+        const { question, first } = await firstQuestion();
+        const selectReplica = vi.fn(() => db);
+        const getEmailUpdateOnboardingAction = vi.fn<
+            Parameters<
+                typeof saveSurveyAnswer
+            >[0]["getEmailUpdateOnboardingAction"]
+        >(async ({ database }) => {
+            const answers = await database
+                .select({ id: surveyAnswerTable.id })
+                .from(surveyAnswerTable)
+                .where(eq(surveyAnswerTable.surveyQuestionId, question.id));
+            expect(answers).toHaveLength(1);
+            return undefined;
+        });
+        const result = await saveSurveyAnswer({
+            db: withReplicas(db, [db], selectReplica),
+            conversationSlugId,
+            questionSlugId: question.slugId,
+            answer: { questionType: "choice", optionSlugIds: [first.slugId] },
+            didWrite: "did:test:survey",
+            userAgent: "Vitest",
+            now,
+            currentDisplayLanguage: "en",
+            skipEmailUpdateConsent: false,
+            getEmailUpdateOnboardingAction,
+        });
+        expect(result).toMatchObject({
+            success: true,
+            participationStatus: { status: "ready" },
+        });
+        expect(getEmailUpdateOnboardingAction).toHaveBeenCalledOnce();
+        expect(selectReplica).not.toHaveBeenCalled();
+    });
+
+    it("returns remaining email consent in the survey write result", async () => {
+        const { saveSurveyAnswer } = await surveyModulePromise;
+        await configure();
+        const { question, first } = await firstQuestion();
+        const result = await saveSurveyAnswer({
+            db,
+            conversationSlugId,
+            questionSlugId: question.slugId,
+            answer: { questionType: "choice", optionSlugIds: [first.slugId] },
+            didWrite: "did:test:survey",
+            userAgent: "Vitest",
+            now,
+            currentDisplayLanguage: "en",
+            skipEmailUpdateConsent: false,
+            getEmailUpdateOnboardingAction: async () => ({
+                operation: "set_conversation_preference",
+                conversationSlugId,
+                initialEnabled: true,
+            }),
+        });
+        expect(result).toMatchObject({
+            success: true,
+            participationStatus: {
+                status: "onboarding_required",
+                nextStep: {
+                    kind: "email_updates",
+                    action: {
+                        operation: "set_conversation_preference",
+                        conversationSlugId,
+                        initialEnabled: true,
+                    },
+                },
+            },
+        });
+    });
 
     it("returns restart routing from the writer when no response exists", async () => {
         const { withdrawSurveyResponse } = await surveyModulePromise;

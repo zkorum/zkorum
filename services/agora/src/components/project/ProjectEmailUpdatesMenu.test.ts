@@ -10,7 +10,7 @@ const showNotifyMessage = vi.hoisted(() => vi.fn());
 
 vi.mock(
   "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries",
-  () => ({ useRemoveConversationEmailUpdateSummaryQueries: () => () => {} })
+  () => ({ useInvalidateParticipationAfterPreference: () => () => {} })
 );
 
 vi.mock("pinia", () => ({

@@ -1,3 +1,4 @@
+import { DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
 import {
   type ConversationEmailUpdateAudienceEstimateRequest,
   type ConversationEmailUpdateAudienceEstimateResponse,
@@ -27,8 +28,11 @@ import {
   type ConversationEmailUpdateTestStatusResponse,
   type ConversationEmailUpdateWorkspaceRequest,
   type ConversationEmailUpdateWorkspaceResponse,
+  type ConversationOnboardingPreferenceSaveRequest,
+  type ConversationOnboardingPreferenceSaveResponse,
   Dto,
 } from "src/shared/types/dto";
+import type { ParticipationRequestResult } from "src/utils/api/participation/requestResult";
 
 import { api } from "../client";
 import { useCommonApi } from "../common";
@@ -258,6 +262,45 @@ export function useBackendConversationEmailUpdatesApi() {
     });
   }
 
+  async function saveOnboardingPreference({
+    request,
+    isCurrent,
+  }: {
+    request: ConversationOnboardingPreferenceSaveRequest;
+    isCurrent: () => boolean;
+  }): Promise<
+    ParticipationRequestResult<ConversationOnboardingPreferenceSaveResponse>
+  > {
+    try {
+      const params =
+        Dto.conversationOnboardingPreferenceSaveRequest.parse(request);
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1ConversationOnboardingPreferenceSavePost(
+          params
+        );
+      const encodedUcan = await buildEncodedUcan(url, options);
+      if (!isCurrent()) return { status: "cancelled" };
+      const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1ConversationOnboardingPreferenceSavePost(params, {
+        ...createRawAxiosRequestConfig({ encodedUcan }),
+        timeout: 15_000,
+      });
+      if (!isCurrent()) return { status: "cancelled" };
+      return {
+        status: "completed",
+        data: Dto.conversationOnboardingPreferenceSaveResponse.parse(
+          response.data
+        ),
+      };
+    } catch (error) {
+      if (!isCurrent()) return { status: "cancelled" };
+      throw error;
+    }
+  }
+
   function getConversationSummary(
     request: ConversationEmailUpdateConversationSummaryRequest
   ): Promise<ConversationEmailUpdateConversationSummaryResponse> {
@@ -282,6 +325,7 @@ export function useBackendConversationEmailUpdatesApi() {
   }
 
   return {
+    saveOnboardingPreference,
     prepareDraft,
     cancelDraft,
     getHistoryPreview,

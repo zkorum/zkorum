@@ -1,8 +1,14 @@
+import {
+  QueryClient,
+  QueryObserver,
+  VueQueryPlugin,
+} from "@tanstack/vue-query";
 import { createPinia, setActivePinia } from "pinia";
+import type { ConversationParticipationStatus } from "src/shared/types/dto";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { emailVerificationStore } from "src/stores/onboarding/email";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "vue";
 import {
   createMemoryHistory,
@@ -24,6 +30,10 @@ import { useVerificationComplete } from "./useVerificationComplete";
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+const clients: QueryClient[] = [];
+afterEach(() => {
+  for (const client of clients.splice(0)) client.clear();
 });
 
 async function setup(path: string) {
@@ -66,10 +76,14 @@ async function setup(path: string) {
   });
   await router.push(path);
   const app = createApp(component);
+  const queryClient = new QueryClient();
+  clients.push(queryClient);
   app.use(pinia);
+  app.use(VueQueryPlugin, { queryClient });
   app.use(router);
   return {
     router,
+    queryClient,
     flow: onboardingFlowStore(pinia),
     onboarding: useConversationOnboardingStore(pinia),
     ...app.runWithContext(useVerificationComplete),
@@ -77,6 +91,38 @@ async function setup(path: string) {
 }
 
 describe("verification completion navigation", () => {
+  it("refreshes an obsolete credential denial without deriving the next step from local flags", async () => {
+    const { queryClient, completeVerification, router } = await setup(
+      "/conversation/example/onboarding/verify/email-code"
+    );
+    const queryKey = ["participation-status", "example"];
+    const queryFn = vi
+      .fn<() => Promise<ConversationParticipationStatus>>()
+      .mockResolvedValue({ status: "ready" });
+    const observer = new QueryObserver<ConversationParticipationStatus>(
+      queryClient,
+      {
+        queryKey,
+        queryFn,
+        initialData: {
+          status: "onboarding_required",
+          nextStep: { kind: "email", purpose: "login" },
+        },
+        staleTime: Infinity,
+      }
+    );
+    const unsubscribe = observer.subscribe(() => {});
+    try {
+      await completeVerification();
+      expect(queryFn).toHaveBeenCalledOnce();
+      expect(queryClient.getQueryData(queryKey)).toEqual({ status: "ready" });
+      expect(router.currentRoute.value.path).toBe(
+        "/conversation/example/onboarding/verify"
+      );
+    } finally {
+      unsubscribe();
+    }
+  });
   it("allows retrying an authenticated handoff after a navigation guard blocks it", async () => {
     const { router, completeVerification, hasCompletionFailed } = await setup(
       "/conversation/example/onboarding/verify/email-code"

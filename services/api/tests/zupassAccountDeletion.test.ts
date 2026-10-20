@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { withReplicas } from "drizzle-orm/pg-core";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import {
@@ -27,7 +28,9 @@ vi.mock("@pcd/gpc", () => ({
     gpcVerify: () => Promise.resolve(true),
 }));
 
-const { verifyEventTicket } = await import("../src/service/zupass.js");
+const { verifyEventTicket, hasEventTicket } =
+    await import("../src/service/zupass.js");
+const { log } = await import("../src/app.js");
 const schema = await import("../src/shared-backend/schema.js");
 
 const {
@@ -104,7 +107,9 @@ describe("Zupass account deletion serialization", () => {
     let authBackendPid: number;
 
     beforeAll(async () => {
-        container = await new GenericContainer("postgres:16-alpine")
+        container = await new GenericContainer(
+            process.env.AGORA_TEST_POSTGRES_IMAGE ?? "postgres:16-alpine",
+        )
             .withEnvironment({
                 POSTGRES_USER: "postgres",
                 POSTGRES_PASSWORD: "postgres",
@@ -212,8 +217,93 @@ describe("Zupass account deletion serialization", () => {
             now: NOW,
             sessionLifetimeDays: 90,
             currentDisplayLanguage: "en",
+            afterVerified: () => Promise.resolve(undefined),
         });
     }
+
+    it("returns its continuation from the ticket write transaction before commit", async () => {
+        const didWrite = "did:test:zupass:continuation";
+        const userId = await createUser({ didWrite });
+        const selectReplica = vi.fn(() => db);
+        const result = await verifyEventTicket({
+            db: withReplicas(db, [db], selectReplica),
+            didWrite,
+            proofData: createProofData({ didWrite, nullifierHash: 17n }),
+            eventSlug: EVENT_SLUG,
+            userAgent: "test-agent",
+            now: NOW,
+            sessionLifetimeDays: 90,
+            currentDisplayLanguage: "en",
+            afterVerified: async ({ database, userId: verifiedUserId }) => {
+                expect(verifiedUserId).toBe(userId);
+                expect(
+                    await hasEventTicket({
+                        db: database,
+                        userId,
+                        eventSlug: EVENT_SLUG,
+                    }),
+                ).toBe(true);
+                const notCommitted = await drizzle(observerSql)
+                    .select({ id: eventTicketTable.id })
+                    .from(eventTicketTable)
+                    .where(eq(eventTicketTable.userId, userId));
+                expect(notCommitted).toEqual([]);
+                return { status: "ready" };
+            },
+        });
+        expect(result).toMatchObject({
+            success: true,
+            userId,
+            continuation: { status: "ready" },
+        });
+        expect(selectReplica).not.toHaveBeenCalled();
+    });
+
+    it("rolls ticket creation back if the required continuation fails", async () => {
+        const didWrite = "did:test:zupass:continuation-rollback";
+        const userId = await createUser({ didWrite });
+        const failureLog = vi.spyOn(log, "error").mockImplementation(() => {});
+        try {
+            await expect(
+                verifyEventTicket({
+                    db,
+                    didWrite,
+                    proofData: createProofData({
+                        didWrite,
+                        nullifierHash: 18n,
+                    }),
+                    eventSlug: EVENT_SLUG,
+                    userAgent: "test-agent",
+                    now: NOW,
+                    sessionLifetimeDays: 90,
+                    currentDisplayLanguage: "en",
+                    afterVerified: () =>
+                        Promise.reject(new Error("Continuation unavailable")),
+                }),
+            ).rejects.toThrow("Continuation unavailable");
+            expect(
+                await hasEventTicket({ db, userId, eventSlug: EVENT_SLUG }),
+            ).toBe(false);
+            expect(failureLog).toHaveBeenCalledOnce();
+        } finally {
+            failureLog.mockRestore();
+        }
+    });
+
+    it("does not accept a soft-deleted ticket belonging to an active user", async () => {
+        const userId = await createUser({});
+        await addTicket({ userId, nullifier: "0x19" });
+        expect(
+            await hasEventTicket({ db, userId, eventSlug: EVENT_SLUG }),
+        ).toBe(true);
+        await db
+            .update(eventTicketTable)
+            .set({ isDeleted: true })
+            .where(eq(eventTicketTable.userId, userId));
+        expect(
+            await hasEventTicket({ db, userId, eventSlug: EVENT_SLUG }),
+        ).toBe(false);
+    });
 
     async function waitForAuthUserLock(): Promise<void> {
         const deadline = Date.now() + 5000;

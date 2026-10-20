@@ -1,17 +1,34 @@
 <template>
-  <div class="select-popup-actions" :style="{ minHeight: `${minHeight}px` }">
-    <q-btn flat no-caps color="primary" :label="label" @click="emit('close')" />
+  <div ref="actions" class="select-popup-actions">
+    <ZKButton
+      class="select-popup-actions__button"
+      button-type="standardButton"
+      color="primary"
+      text-color="white"
+      :label="label"
+      @click="emit('close')"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { QBtn } from "quasar";
+import { useElementSize } from "@vueuse/core";
+import { useTemplateRef, watch } from "vue";
+
+import ZKButton from "./ZKButton.vue";
 
 defineProps<{
   label: string;
-  minHeight: number;
 }>();
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{
+  close: [];
+  resize: [height: number];
+}>();
+
+const actions = useTemplateRef<HTMLElement>("actions");
+const { height } = useElementSize(actions, undefined, { box: "border-box" });
+// Virtual scrolling needs the actual sticky height, including enlarged text.
+watch(height, (value) => emit("resize", value));
 </script>
 
 <style scoped lang="scss">
@@ -20,10 +37,16 @@ const emit = defineEmits<{ close: [] }>();
   inset-block-start: 0;
   z-index: 1;
   display: flex;
-  justify-content: flex-end;
   align-items: center;
-  padding-inline: 0.5rem;
-  background: white;
-  border-block-end: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  background: $app-background-color;
+  border-block-end: 1px solid $color-border-weak;
+}
+
+.select-popup-actions .select-popup-actions__button {
+  flex: 1;
+  min-height: 2.75rem;
+  line-height: 1.25;
+  font-weight: var(--font-weight-semibold);
 }
 </style>

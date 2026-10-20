@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { storeToRefs } from "pinia";
 import type {
+  ConversationParticipationRejection,
   MaxDiffItem,
   MaxDiffLoadResponse,
   MaxDiffSaveResponse,
   RankingStatsCheckpointsResponse,
 } from "src/shared/types/dto";
-import type { ParticipationBlockedReason } from "src/shared/types/zod";
 import type { MaxDiffComparison } from "src/shared/types/zod";
 import type { MaxDiffState } from "src/shared/utils/maxdiff";
 import { useLanguageStore } from "src/stores/language";
@@ -118,7 +118,12 @@ export function useMaxDiffLoadQuery({
   const viewerScope = useViewerQueryScope();
 
   return useQuery({
-    queryKey: computed(() => getMaxDiffLoadQueryKey({ conversationSlugId: toValue(conversationSlugId), viewerScope: viewerScope.value })),
+    queryKey: computed(() =>
+      getMaxDiffLoadQueryKey({
+        conversationSlugId: toValue(conversationSlugId),
+        viewerScope: viewerScope.value,
+      })
+    ),
     queryFn: async ({ signal }): Promise<MaxDiffLoadResponse> => {
       const response = await loadMaxDiffResult({
         conversationSlugId: toValue(conversationSlugId),
@@ -185,6 +190,7 @@ export interface MaxDiffSaveContext {
   previousState: MaxDiffState;
   previousCandidates: string[];
   isCurrent: () => boolean;
+  isParticipationCurrent: () => boolean;
 }
 
 interface MaxDiffSaveMutationParams {
@@ -202,7 +208,7 @@ export function useMaxDiffSaveMutation({
 }: {
   conversationSlugId: MaybeRefOrGetter<string>;
   onRollback: (context: MaxDiffSaveContext) => void;
-  onBlocked: (reason: ParticipationBlockedReason) => void;
+  onBlocked: (rejection: ConversationParticipationRejection) => void;
   onNetworkError: () => void;
 }) {
   const { saveMaxDiffResult } = useMaxDiffApi();
@@ -229,7 +235,7 @@ export function useMaxDiffSaveMutation({
       if (!variables.context.isCurrent()) return;
       if (!data.success) {
         onRollback(variables.context);
-        onBlocked(data.reason);
+        if (variables.context.isParticipationCurrent()) onBlocked(data);
         return;
       }
 
@@ -261,27 +267,30 @@ export function useMaxDiffSaveMutation({
         queryClient,
         conversationSlugId: slugId,
         updateConversation: (old) => ({
-            ...old,
-            metadata: {
-              ...old.metadata,
-              voteCount: old.metadata.voteCount + comparisonDelta,
-              totalVoteCount: old.metadata.totalVoteCount + comparisonDelta,
-              ...(participantDelta !== 0
-                ? {
-                    participantCount:
-                      old.metadata.participantCount + participantDelta,
-                    totalParticipantCount:
-                      old.metadata.totalParticipantCount + participantDelta,
-                  }
-                : {}),
-            },
-          }),
+          ...old,
+          metadata: {
+            ...old.metadata,
+            voteCount: old.metadata.voteCount + comparisonDelta,
+            totalVoteCount: old.metadata.totalVoteCount + comparisonDelta,
+            ...(participantDelta !== 0
+              ? {
+                  participantCount:
+                    old.metadata.participantCount + participantDelta,
+                  totalParticipantCount:
+                    old.metadata.totalParticipantCount + participantDelta,
+                }
+              : {}),
+          },
+        }),
       });
 
       // Write saved state directly to cache instead of invalidating
       // (avoids read replica lag returning stale data before buffer flushes)
       queryClient.setQueryData<MaxDiffLoadResponse>(
-        getMaxDiffLoadQueryKey({ conversationSlugId: slugId, viewerScope: viewerScope.value }),
+        getMaxDiffLoadQueryKey({
+          conversationSlugId: slugId,
+          viewerScope: viewerScope.value,
+        }),
         (old) => ({
           ranking: variables.ranking,
           comparisons: variables.comparisons.map((c) => ({

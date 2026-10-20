@@ -130,13 +130,6 @@
                 :post-slug-id="
                   loadedConversationData.metadata.conversationSlugId
                 "
-                :participation-mode="
-                  loadedConversationData.metadata.participationMode
-                "
-                :requires-event-ticket="
-                  loadedConversationData.metadata.requiresEventTicket
-                "
-                :survey-gate="loadedConversationData.interaction.surveyGate"
                 :is-composer-disabled="isVotingDisabled"
                 @edit-cancelled="finishEditOpinion"
                 @edited-opinion="handleEditedOpinion"

@@ -71,7 +71,6 @@ import {
     zodSurveyQuestionConstraints,
     type AnalysisView,
     type ConversationType,
-    type ParticipationBlockedReason,
     type RankingMode,
     type SurveyAnswerDraft,
     type SurveyAggregateRow,
@@ -89,8 +88,14 @@ import {
     type SurveyRouteResolution,
 } from "@/shared/types/zod.js";
 import type { SupportedDisplayLanguageCodes } from "@/shared/languages.js";
-import type { SurveyResponseWithdrawResponse } from "@/shared/types/dto.js";
+import type {
+    ConversationParticipationStatus,
+    ConversationEmailUpdateOnboardingAction,
+    SurveyAnswerSaveResponse,
+    SurveyResponseWithdrawResponse,
+} from "@/shared/types/dto.js";
 import { log } from "@/app.js";
+import { logApiError } from "@/logging/privacy.js";
 import type { GoogleCloudCredentials } from "@/shared-backend/googleCloudAuth.js";
 import { getConversationViewAccessLevelForConversation } from "@/service/conversationAccess.js";
 import { requireProjectCapability } from "@/service/projectAccess.js";
@@ -99,7 +104,10 @@ import {
     buildSurveyCompletionCounts,
     loadSurveyExportContext,
 } from "./conversationExport/generators/surveyShared.js";
-import { checkConversationParticipation } from "./participationGate.js";
+import {
+    checkConversationParticipation,
+    getParticipationBlockedReasonFromSurveyGateStatus,
+} from "./participationGate.js";
 import { queueConversationSurveyUpdatedEvent } from "./realtimeEventOutbox.js";
 import {
     getDescriptionTextsByGroupId,
@@ -258,10 +266,16 @@ async function markRankingConversationDirty({
             [member]: 0,
         });
     } catch (error: unknown) {
-        log.error(
+        logApiError({
+            logger: log,
+            level: "error",
+            event: {
+                event: "survey_scoring_queue_failed",
+                conversationId,
+                conversationSlugId,
+            },
             error,
-            `[Survey] Failed to ZADD scoring:dirty:solidago for ${member}`,
-        );
+        });
     }
 }
 
@@ -299,9 +313,6 @@ export async function scheduleConversationAnalysisForSurveyChange({
         conversationId: conversation.conversationId,
     });
     if (!hasActiveVotes && !hasSurveyResponses) {
-        log.info(
-            `[Survey] Skipping math work schedule for survey change without active inputs conversationId=${String(conversation.conversationId)} conversationSlugId=${conversation.slugId}`,
-        );
         return false;
     }
 
@@ -402,14 +413,10 @@ async function scheduleConversationAnalysisForParticipantSurveyTransition({
     db,
     conversation,
     participantId,
-    previousSurveyGateStatus,
-    nextSurveyGateStatus,
 }: {
     db: PostgresJsDatabase;
     conversation: SurveyAnalysisRefreshContext;
     participantId: string;
-    previousSurveyGateStatus: InternalSurveyGateStatus;
-    nextSurveyGateStatus: InternalSurveyGateStatus;
 }): Promise<boolean> {
     const hasAnalysisInput = await hasParticipantAnalysisInput({
         db,
@@ -418,15 +425,9 @@ async function scheduleConversationAnalysisForParticipantSurveyTransition({
     });
 
     if (!hasAnalysisInput) {
-        log.info(
-            `[Survey] Skipped analysis refresh for survey transition without participant input conversationId=${String(conversation.conversationId)} conversationSlugId=${conversation.slugId} conversationType=${conversation.conversationType} participantId=${participantId} previousSurveyGateStatus=${previousSurveyGateStatus} nextSurveyGateStatus=${nextSurveyGateStatus}`,
-        );
         return false;
     }
 
-    log.info(
-        `[Survey] Scheduling analysis refresh for participant survey transition conversationId=${String(conversation.conversationId)} conversationSlugId=${conversation.slugId} conversationType=${conversation.conversationType} participantId=${participantId} previousSurveyGateStatus=${previousSurveyGateStatus} nextSurveyGateStatus=${nextSurveyGateStatus}`,
-    );
     return await scheduleConversationAnalysisForSurveyChange({
         db,
         conversation,
@@ -2340,6 +2341,22 @@ export async function checkSurveyStatus({
         db,
         conversationSlugId,
     });
+    return await getSurveyParticipationStatus({
+        db,
+        conversationId,
+        participantId,
+    });
+}
+
+export async function getSurveyParticipationStatus({
+    db,
+    conversationId,
+    participantId,
+}: {
+    db: PostgresJsDatabase;
+    conversationId: number;
+    participantId: string | undefined;
+}) {
     const surveyState = await loadSurveyParticipantState({
         db,
         conversationId,
@@ -2993,6 +3010,8 @@ export async function saveSurveyAnswer({
     now,
     currentDisplayLanguage,
     valkey,
+    skipEmailUpdateConsent,
+    getEmailUpdateOnboardingAction,
 }: {
     db: PostgresJsDatabase;
     conversationSlugId: string;
@@ -3003,17 +3022,13 @@ export async function saveSurveyAnswer({
     now: Date;
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
     valkey?: Valkey;
-}): Promise<
-    | {
-          success: true;
-          surveyGate: SurveyGateSummary;
-          justCompleted: boolean;
-      }
-    | {
-          success: false;
-          reason: ParticipationBlockedReason;
-      }
-> {
+    skipEmailUpdateConsent: boolean;
+    getEmailUpdateOnboardingAction: (params: {
+        database: PostgresJsDatabase;
+        userId: string;
+        conversationSlugId: string;
+    }) => Promise<ConversationEmailUpdateOnboardingAction | undefined>;
+}): Promise<SurveyAnswerSaveResponse> {
     const participationCheck = await checkConversationParticipation({
         db,
         conversationSlugId,
@@ -3143,6 +3158,41 @@ export async function saveSurveyAnswer({
                 previousSurveyGate.status !== "complete_valid" &&
                 nextSurveyGate.status === "complete_valid";
 
+            const gate = toSurveyGateDto({ surveyGate: nextSurveyGate });
+            const reason = getParticipationBlockedReasonFromSurveyGateStatus({
+                surveyGateStatus: gate.status,
+                isOptional: gate.isOptional,
+            });
+            const emailUpdateAction =
+                reason === undefined &&
+                !skipEmailUpdateConsent &&
+                (await getEmailUpdateOnboardingAction({
+                    database: tx,
+                    userId: participantId,
+                    conversationSlugId,
+                }));
+            const participationStatus: ConversationParticipationStatus =
+                reason !== undefined
+                    ? {
+                          status: "onboarding_required",
+                          nextStep: {
+                              kind: "survey",
+                              routeResolution: deriveSurveyRouteResolution({
+                                  surveyState: nextSurveyState,
+                                  participantId,
+                              }),
+                          },
+                      }
+                    : emailUpdateAction
+                      ? {
+                            status: "onboarding_required",
+                            nextStep: {
+                                kind: "email_updates",
+                                action: emailUpdateAction,
+                            },
+                        }
+                      : { status: "ready" };
+
             if (justCompleted) {
                 await tx
                     .update(surveyResponseTable)
@@ -3167,15 +3217,13 @@ export async function saveSurveyAnswer({
                               db: tx,
                               conversation,
                               participantId,
-                              previousSurveyGateStatus:
-                                  previousSurveyGate.status,
-                              nextSurveyGateStatus: nextSurveyGate.status,
                           },
                       )
                     : false;
 
             return {
                 nextSurveyGate,
+                participationStatus,
                 analysisRefreshScheduled,
                 justCompleted,
             };
@@ -3212,8 +3260,12 @@ export async function saveSurveyAnswer({
         return await finalizeSurveyAnswerSave(nextAnswersByQuestionId);
     });
 
-    const { nextSurveyGate, analysisRefreshScheduled, justCompleted } =
-        surveyTransition;
+    const {
+        nextSurveyGate,
+        participationStatus,
+        analysisRefreshScheduled,
+        justCompleted,
+    } = surveyTransition;
 
     if (analysisRefreshScheduled) {
         await wakeScheduledConversationAnalysisForSurveyChange({
@@ -3226,6 +3278,7 @@ export async function saveSurveyAnswer({
         success: true,
         surveyGate: toSurveyGateDto({ surveyGate: nextSurveyGate }),
         justCompleted,
+        participationStatus,
     };
 }
 
@@ -3331,8 +3384,6 @@ export async function withdrawSurveyResponse({
                           db: tx,
                           conversation,
                           participantId,
-                          previousSurveyGateStatus: previousSurveyGate.status,
-                          nextSurveyGateStatus: nextSurveyGate.status,
                       },
                   )
                 : false;

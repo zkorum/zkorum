@@ -76,9 +76,6 @@
           :conversation-organization-name="
             conversationData.metadata.organization?.name ?? ''
           "
-          :participation-mode="conversationData.metadata.participationMode"
-          :requires-event-ticket="conversationData.metadata.requiresEventTicket"
-          :survey-gate="conversationData.interaction.surveyGate"
           :on-view-analysis="viewAnalysisTab"
           :is-voting-disabled="isVotingDisabled"
           :conversation-route-context="conversationRouteContext"
@@ -97,9 +94,6 @@
           conversationScrollContext.actionBarElement ?? undefined
         "
         :post-slug-id="conversationData.metadata.conversationSlugId"
-        :participation-mode="conversationData.metadata.participationMode"
-        :requires-event-ticket="conversationData.metadata.requiresEventTicket"
-        :survey-gate="conversationData.interaction.surveyGate"
         :is-composer-disabled="isVotingDisabled"
         @edit-cancelled="finishEditOpinion"
         @edited-opinion="handleEditedOpinion"

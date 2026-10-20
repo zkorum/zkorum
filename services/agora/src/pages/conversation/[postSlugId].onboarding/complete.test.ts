@@ -1,129 +1,107 @@
-import { QueryClient, VueQueryPlugin } from "@tanstack/vue-query";
+import { createPinia } from "pinia";
+import type {
+  ConversationOnboardingPreferenceSaveResponse,
+  ConversationParticipationStatus,
+} from "src/shared/types/dto";
+import { useAuthenticationStore } from "src/stores/authentication";
+import type { ParticipationStatus } from "src/utils/api/participation/useParticipationStatusQuery";
+import type { useSaveOnboardingPreference } from "src/utils/api/participation/useSaveOnboardingPreference";
 import { createDismissalController } from "src/utils/ui/dismissalController";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type App, computed, createApp, defineComponent, h, ref } from "vue";
+import {
+  type App,
+  createApp,
+  defineComponent,
+  h,
+  nextTick,
+  reactive,
+  ref,
+} from "vue";
 
-const emailUpdatesApi = vi.hoisted(() => ({
-  getConversationSummary: vi.fn(),
-  updatePreference: vi.fn(),
+const mocks = vi.hoisted(() => ({
+  save: vi.fn<
+    ReturnType<typeof useSaveOnboardingPreference>["savePreference"]
+  >(),
+  replace: vi.fn<() => Promise<void>>(),
+  exit: vi.fn(),
+  notify: vi.fn(),
+  skip: vi.fn(),
+  refetch: vi.fn(),
+  removeSummaries: vi.fn(),
 }));
-const exitToConversation = vi.hoisted(() => vi.fn());
-const showNotifyMessage = vi.hoisted(() => vi.fn());
-const navigateToNextSurveyStep = vi.hoisted(() => vi.fn());
-const surveyStatusAvailable = ref(true);
-const onboardingState = vi.hoisted(() => ({
-  emailUpdateConsentSkipped: false,
-  markEmailUpdateConsentSkipped: vi.fn(),
-}));
-const surveyGateState = vi.hoisted(() => ({
-  value: {
-    hasSurvey: false,
-    isOptional: false,
-    canParticipate: true,
-    status: "no_survey",
+const projectStatus = {
+  status: "onboarding_required",
+  nextStep: {
+    kind: "email_updates",
+    action: {
+      operation: "set_project_preference",
+      projectSlug: "project",
+      conversationSlugId: "example",
+      initialEnabled: true,
+    },
   },
-}));
+} satisfies ConversationParticipationStatus;
+const snapshot = ref<ParticipationStatus>(projectStatus);
+const route = reactive({
+  fullPath: "/conversation/example/onboarding/complete",
+});
 
-vi.mock("pinia", () => ({
-  storeToRefs: (store: object) => store,
-}));
-vi.mock("src/stores/authentication", () => ({
-  useAuthenticationStore: () => ({
-    isAuthInitialized: ref(true),
-    isLoggedIn: ref(true),
-    userId: ref("user-one"),
-    hasEmailVerification: ref(true),
-  }),
-}));
-vi.mock("src/stores/conversationOnboarding", () => ({
-  useConversationOnboardingStore: () => onboardingState,
-}));
-vi.mock("src/utils/api/conversationUpdates/conversationEmailUpdates", () => ({
-  useBackendConversationEmailUpdatesApi: () => emailUpdatesApi,
-}));
-vi.mock("src/composables/conversation/useConversationOnboardingExit", () => ({
-  useConversationOnboardingExit: () => ({ exitToConversation }),
+vi.mock("vue-router", () => ({
+  useRouter: () => ({ replace: mocks.replace }),
 }));
 vi.mock("src/composables/conversation/useConversationOnboardingRoute", () => ({
   useConversationOnboardingRoute: () => ({
-    routeConversationSlugId: ref("conversation-one"),
+    route,
+    routeConversationSlugId: ref("example"),
     routeContext: ref({ kind: "normal" }),
   }),
 }));
-vi.mock("src/composables/ui/useComponentI18n", () => ({
-  useComponentI18n: () => ({
-    t: (key: string) =>
-      key === "continueWithoutSavingLabel"
-        ? "Continue without saving an Email Update choice"
-        : key === "emailUpdatePreferenceSaveError"
-          ? "Your Email Update choice could not be saved. Please try again."
-          : key,
+vi.mock("src/composables/conversation/useConversationOnboardingExit", () => ({
+  useConversationOnboardingExit: () => ({ exitToConversation: mocks.exit }),
+}));
+vi.mock("src/stores/conversationOnboarding", () => ({
+  useConversationOnboardingStore: () => ({
+    markEmailUpdateConsentSkipped: mocks.skip,
   }),
 }));
-vi.mock("src/utils/api/post/useConversationQuery", () => ({
-  useConversationQuery: () => ({
-    data: ref({
-      conversationData: {
-        metadata: {
-          projectContext: { projectSlug: "project-one" },
-        },
-      },
-      displayContent: undefined,
-    }),
+vi.mock("src/utils/api/participation/useParticipationStatusQuery", () => ({
+  useParticipationStatusQuery: () => ({
+    participationStatus: snapshot,
+    refetch: mocks.refetch,
   }),
 }));
-vi.mock("src/composables/conversation/useConversationSurveyState", () => ({
-  useConversationSurveyState: () => ({
-    conversationData: ref({
-      metadata: { projectContext: { projectSlug: "project-one" } },
-    }),
-    conversationDisplayContent: ref(undefined),
-    surveyStatus: computed(() =>
-      surveyStatusAvailable.value
-        ? {
-            surveyGate: surveyGateState.value,
-            routeResolution: { kind: "none" },
-          }
-        : undefined
-    ),
-    hasLoadError: ref(false),
-    refetchAll: vi.fn(),
-  }),
+vi.mock("src/utils/api/participation/useSaveOnboardingPreference", () => ({
+  useSaveOnboardingPreference: () => ({ savePreference: mocks.save }),
 }));
-vi.mock("src/composables/conversation/useSurveyNavigation", () => ({
-  useSurveyNavigation: () => ({ navigateToNextSurveyStep }),
-}));
+vi.mock(
+  "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries",
+  () => ({
+    useInvalidateParticipationAfterPreference: () => mocks.removeSummaries,
+  })
+);
 vi.mock("src/utils/ui/notify", () => ({
-  useNotify: () => ({ showNotifyMessage }),
+  useNotify: () => ({ showNotifyMessage: mocks.notify }),
 }));
-vi.mock("src/components/ui/ErrorRetryBlock.vue", () => ({
-  default: defineComponent({
-    name: "ErrorRetryBlock",
-    emits: ["retry"],
-    setup(_props, { emit }) {
-      return () =>
-        h("div", { role: "alert" }, [
-          "Summary unavailable",
-          h("button", { onClick: () => emit("retry") }, "Try again"),
-        ]);
-    },
-  }),
+vi.mock("src/composables/ui/useComponentI18n", () => ({
+  useComponentI18n: () => ({ t: (key: string) => key }),
 }));
 vi.mock("src/layouts/ConversationOnboardingLayout.vue", () => ({
   default: defineComponent({
-    name: "OnboardingLayout",
-    props: {
-      backCallback: { type: Function, required: true },
-      closeCallback: { type: Function, required: true },
-    },
+    props: { closeCallback: { type: Function, required: true } },
     setup(props, { slots }) {
       return () =>
         h("main", [
-          h("button", { onClick: () => props.backCallback() }, "Back"),
           h("button", { onClick: () => props.closeCallback() }, "Close"),
-          slots.body?.(),
           slots.default?.(),
         ]);
+    },
+  }),
+}));
+vi.mock("src/components/ui/ErrorRetryBlock.vue", () => ({
+  default: defineComponent({
+    emits: ["retry"],
+    setup(_, { emit }) {
+      return () => h("button", { onClick: () => emit("retry") }, "Retry");
     },
   }),
 }));
@@ -131,14 +109,12 @@ vi.mock(
   "src/components/onboarding/ConversationEmailUpdateOnboardingStep.vue",
   () => ({
     default: defineComponent({
-      name: "ConversationEmailUpdateOnboardingStep",
       props: {
-        conversationUpdatesChecked: { type: Boolean, required: true },
-        showConversationUpdatesPreference: { type: Boolean, required: true },
+        conversationUpdatesChecked: Boolean,
+        showConversationUpdatesPreference: Boolean,
         scopeKind: { type: String, required: true },
-        isSaving: { type: Boolean, required: true },
+        isSaving: Boolean,
         continueWithoutSavingLabel: { type: String, default: undefined },
-        title: { type: String, required: true },
       },
       emits: [
         "continue",
@@ -150,34 +126,37 @@ vi.mock(
           h(
             "section",
             {
-              "data-testid": "complete-step",
-              "data-show-preference": String(
+              "data-preference": String(
                 props.showConversationUpdatesPreference
               ),
-              "data-scope-kind": props.scopeKind,
-              "data-saving": String(props.isSaving),
-              "data-title": props.title,
+              "data-scope": props.scopeKind,
+              "data-checked": String(props.conversationUpdatesChecked),
             },
             [
-              h("button", { onClick: () => emit("continue") }, "Continue"),
-              props.continueWithoutSavingLabel === undefined
-                ? null
-                : h(
-                    "button",
-                    { onClick: () => emit("continueWithoutSaving") },
-                    props.continueWithoutSavingLabel
-                  ),
+              h(
+                "button",
+                { disabled: props.isSaving, onClick: () => emit("continue") },
+                "Continue"
+              ),
               h(
                 "button",
                 {
+                  disabled: props.isSaving,
                   onClick: () =>
                     emit(
                       "update:conversationUpdatesChecked",
                       !props.conversationUpdatesChecked
                     ),
                 },
-                "Toggle consent"
+                "Toggle"
               ),
+              props.continueWithoutSavingLabel === undefined
+                ? undefined
+                : h(
+                    "button",
+                    { onClick: () => emit("continueWithoutSaving") },
+                    "Skip"
+                  ),
             ]
           );
       },
@@ -185,416 +164,251 @@ vi.mock(
   })
 );
 
-import ConversationOnboardingComplete from "./complete.vue";
+import Complete from "./complete.vue";
 
-const mountedApps: App[] = [];
-
-beforeEach(() => {
-  surveyStatusAvailable.value = true;
-  emailUpdatesApi.getConversationSummary.mockReset();
-  emailUpdatesApi.updatePreference.mockReset();
-  exitToConversation.mockReset();
-  showNotifyMessage.mockReset();
-  navigateToNextSurveyStep.mockReset();
-  onboardingState.emailUpdateConsentSkipped = false;
-  onboardingState.markEmailUpdateConsentSkipped.mockReset();
-  surveyGateState.value = {
-    hasSurvey: false,
-    isOptional: false,
-    canParticipate: true,
-    status: "no_survey",
+const apps: App[] = [];
+function successResponse(): Extract<
+  ConversationOnboardingPreferenceSaveResponse,
+  { success: true }
+> {
+  return {
+    success: true,
+    result: {
+      operation: "set_project_preference",
+      projectSlug: "project",
+      state: "enabled",
+      globalResumed: false,
+    },
+    participationStatus: { status: "ready" },
   };
-  exitToConversation.mockResolvedValue(true);
+}
+beforeEach(() => {
+  route.fullPath = "/conversation/example/onboarding/complete";
+  snapshot.value = projectStatus;
+  mocks.save.mockResolvedValue(successResponse());
+  mocks.replace.mockResolvedValue(undefined);
 });
-
 afterEach(() => {
-  for (const app of mountedApps.splice(0)) {
-    app.unmount();
-  }
+  for (const app of apps.splice(0)) app.unmount();
   document.body.replaceChildren();
+  vi.resetAllMocks();
 });
+function mountComplete() {
+  const pinia = createPinia();
+  const auth = useAuthenticationStore(pinia);
+  auth.setLoginStatus({ isKnown: true, isLoggedIn: true, userId: "viewer" });
+  const target = document.createElement("div");
+  document.body.append(target);
+  const app = createApp(Complete, {
+    sheet: createDismissalController({ fallbackDismiss: async () => {} }),
+  });
+  app.use(pinia);
+  apps.push(app);
+  app.mount(target);
+  async function click(label: string) {
+    const button = [...target.querySelectorAll("button")].find(
+      (candidate) => candidate.textContent === label
+    );
+    if (button === undefined) throw new Error(`Missing ${label} button`);
+    button.click();
+    await nextTick();
+  }
+  return { target, click, auth };
+}
 
-describe("conversation Email Update onboarding", () => {
-  it("waits for survey eligibility before announcing onboarding completion", async () => {
-    surveyStatusAvailable.value = false;
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: true,
-      authoringAction: "none",
-    });
-    const container = mountComponent();
-    await flushPromises();
-    getButton(container, "Continue").click();
-    await flushPromises();
-    expect(exitToConversation).not.toHaveBeenCalled();
-    expect(showNotifyMessage).not.toHaveBeenCalled();
+describe("backend-owned email preference step", () => {
+  it("does not navigate a newer view when an earlier preference save completes", async () => {
+    const pending =
+      Promise.withResolvers<ConversationOnboardingPreferenceSaveResponse>();
+    mocks.save.mockReturnValue(pending.promise);
+    const { click } = mountComplete();
+    await click("Continue");
+    route.fullPath = "/conversation/another/onboarding/complete";
+    pending.resolve(successResponse());
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(mocks.replace).not.toHaveBeenCalled();
+    expect(mocks.notify).not.toHaveBeenCalled();
+  });
+  it("renders the cached action without fetching a survey, form, conversation, or email summary", () => {
+    const { target } = mountComplete();
+    expect(target.querySelector("section")?.getAttribute("data-scope")).toBe(
+      "project"
+    );
+    expect(target.querySelector("section")?.getAttribute("data-checked")).toBe(
+      "true"
+    );
+    expect(mocks.save).not.toHaveBeenCalled();
   });
 
-  it("shows project consent and saves it before exiting", async () => {
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: true,
-      authoringAction: "none",
-      participantPreference: {
-        state: "undisclosed",
-        resolvedEnabled: false,
-        onboardingAction: {
-          operation: "set_project_preference",
-          projectSlug: "project-one",
-          conversationSlugId: "conversation-one",
-          initialEnabled: true,
+  it("saves the explicit choice and hands the returned snapshot to the common resolver", async () => {
+    const { click } = mountComplete();
+    await click("Toggle");
+    await click("Continue");
+    await vi.waitFor(() =>
+      expect(mocks.replace).toHaveBeenCalledExactlyOnceWith({
+        path: "/conversation/example/onboarding/verify",
+      })
+    );
+    expect(mocks.save).toHaveBeenCalledExactlyOnceWith({
+      operation: "set_project_preference",
+      projectSlug: "project",
+      conversationSlugId: "example",
+      enabled: false,
+    });
+    expect(mocks.removeSummaries).toHaveBeenCalledExactlyOnceWith({
+      result: successResponse().result,
+      preserveConversationSlugId: "example",
+    });
+  });
+
+  it("uses the same resolver when the backend says a survey still remains", async () => {
+    mocks.save.mockResolvedValue({
+      ...successResponse(),
+      participationStatus: {
+        status: "onboarding_required",
+        nextStep: {
+          kind: "survey",
+          routeResolution: { kind: "question", questionSlugId: "question" },
         },
       },
     });
-    emailUpdatesApi.updatePreference.mockResolvedValue({
-      success: true,
+    const { click } = mountComplete();
+    await click("Continue");
+    await vi.waitFor(() =>
+      expect(mocks.replace).toHaveBeenCalledExactlyOnceWith({
+        path: "/conversation/example/onboarding/verify",
+      })
+    );
+  });
+
+  it("does not overwrite a user's checkbox on an equivalent background snapshot", async () => {
+    const { click, target } = mountComplete();
+    await click("Toggle");
+    snapshot.value = {
+      ...projectStatus,
+      nextStep: {
+        ...projectStatus.nextStep,
+        action: { ...projectStatus.nextStep.action },
+      },
+    };
+    await nextTick();
+    expect(target.querySelector("section")?.getAttribute("data-checked")).toBe(
+      "false"
+    );
+  });
+
+  it("resets the choice after an account switch", async () => {
+    const { click, target, auth } = mountComplete();
+    await click("Toggle");
+    auth.setLoginStatus({ isKnown: true, isLoggedIn: true, userId: "another" });
+    await nextTick();
+    expect(target.querySelector("section")?.getAttribute("data-checked")).toBe(
+      "true"
+    );
+  });
+
+  it("does not submit or mark consent skipped when dismissed", async () => {
+    const { click } = mountComplete();
+    await click("Close");
+    expect(mocks.exit).toHaveBeenCalledOnce();
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.skip).not.toHaveBeenCalled();
+  });
+
+  it("prevents duplicate saves and dismissal while saving", async () => {
+    const pending =
+      Promise.withResolvers<ConversationOnboardingPreferenceSaveResponse>();
+    mocks.save.mockReturnValue(pending.promise);
+    const { click } = mountComplete();
+    await click("Continue");
+    await click("Continue");
+    await click("Close");
+    expect(mocks.save).toHaveBeenCalledOnce();
+    expect(mocks.exit).not.toHaveBeenCalled();
+    pending.resolve(successResponse());
+    await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalledOnce());
+  });
+
+  it("keeps a refused write retryable and permits explicit skipping", async () => {
+    mocks.save.mockResolvedValue({
+      success: false,
+      reason: "feature_not_available",
+    });
+    const { click } = mountComplete();
+    await click("Continue");
+    await vi.waitFor(() =>
+      expect(mocks.notify).toHaveBeenCalledExactlyOnceWith({
+        message: "emailUpdatePreferenceSaveError",
+        force: true,
+      })
+    );
+    expect(mocks.replace).not.toHaveBeenCalled();
+    await click("Skip");
+    expect(mocks.skip).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalledOnce());
+    expect(mocks.save).toHaveBeenCalledOnce();
+  });
+
+  it("reports a real request failure once", async () => {
+    mocks.save.mockRejectedValue(new Error("network failure"));
+    const { click } = mountComplete();
+    await click("Continue");
+    await vi.waitFor(() => expect(mocks.notify).toHaveBeenCalledOnce());
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it("silently ignores an expected cancellation", async () => {
+    mocks.save.mockResolvedValue(undefined);
+    const { click } = mountComplete();
+    await click("Continue");
+    expect(mocks.notify).not.toHaveBeenCalled();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it("does not invent completion while the backend snapshot is loading", async () => {
+    snapshot.value = { status: "checking" };
+    const { click } = mountComplete();
+    await click("Continue");
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it("can retry a failed snapshot or explicitly skip the optional choice", async () => {
+    snapshot.value = { status: "unavailable" };
+    const { click } = mountComplete();
+    await click("Retry");
+    expect(mocks.refetch).toHaveBeenCalledOnce();
+    await click("Skip");
+    expect(mocks.skip).toHaveBeenCalledOnce();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it("does not save again if the backend no longer offers the step", async () => {
+    snapshot.value = { status: "ready" };
+    const { click } = mountComplete();
+    await click("Continue");
+    await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalledOnce());
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it("preserves the global-resume notification from a successful write", async () => {
+    mocks.save.mockResolvedValue({
+      ...successResponse(),
       result: {
         operation: "set_project_preference",
-        projectSlug: "project-one",
+        projectSlug: "project",
         state: "enabled",
         globalResumed: true,
       },
     });
-    const container = mountComponent();
-    await flushPromises();
-
-    const step = getStep(container);
-    expect(step.dataset.showPreference).toBe("true");
-    expect(step.dataset.scopeKind).toBe("project");
-    expect(step.dataset.title).toBe("emailUpdateTitle");
-
-    getButton(container, "Continue").click();
-    await flushPromises();
-
-    expect(emailUpdatesApi.updatePreference).toHaveBeenCalledWith({
-      operation: "set_project_preference",
-      projectSlug: "project-one",
-      enabled: true,
-      source: {
-        kind: "onboarding",
-        conversationSlugId: "conversation-one",
-      },
-    });
-    expect(exitToConversation).toHaveBeenCalledAfter(
-      emailUpdatesApi.updatePreference
+    const { click } = mountComplete();
+    await click("Continue");
+    await vi.waitFor(() =>
+      expect(mocks.notify).toHaveBeenCalledExactlyOnceWith({
+        message: "preferenceSavedAndGlobalResumed",
+        force: true,
+      })
     );
-    expect(showNotifyMessage).toHaveBeenCalledWith({
-      message: "preferenceSavedAndGlobalResumed",
-      force: true,
-    });
-  });
-
-  it("does not exit when the preference save fails", async () => {
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: true,
-      authoringAction: "none",
-      participantPreference: {
-        state: "undisclosed",
-        resolvedEnabled: false,
-        onboardingAction: {
-          operation: "set_conversation_preference",
-          conversationSlugId: "conversation-one",
-          initialEnabled: true,
-        },
-      },
-    });
-    emailUpdatesApi.updatePreference.mockResolvedValue({
-      success: false,
-      reason: "feature_not_available",
-    });
-    const container = mountComponent();
-    await flushPromises();
-
-    expect(getStep(container).dataset.scopeKind).toBe("no-project");
-    getButton(container, "Continue").click();
-    await flushPromises();
-
-    expect(exitToConversation).not.toHaveBeenCalled();
-    expect(showNotifyMessage).toHaveBeenCalledWith({
-      message: "Your Email Update choice could not be saved. Please try again.",
-      force: true,
-    });
-
-    getButton(
-      container,
-      "Continue without saving an Email Update choice"
-    ).click();
-    await flushPromises();
-    expect(emailUpdatesApi.updatePreference).toHaveBeenCalledOnce();
-    expect(
-      onboardingState.markEmailUpdateConsentSkipped
-    ).toHaveBeenCalledOnce();
-    expect(exitToConversation).toHaveBeenCalledOnce();
-  });
-
-  it("records an unchecked one-time prompt as declined", async () => {
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: true,
-      authoringAction: "none",
-      participantPreference: {
-        state: "undisclosed",
-        resolvedEnabled: false,
-        onboardingAction: {
-          operation: "set_conversation_preference",
-          conversationSlugId: "conversation-one",
-          initialEnabled: true,
-        },
-      },
-    });
-    emailUpdatesApi.updatePreference.mockResolvedValue({
-      success: true,
-      result: {
-        operation: "set_conversation_preference",
-        globalResumed: false,
-        conversationPreferences: [
-          {
-            conversationSlugId: "conversation-one",
-            state: "disabled",
-            resolvedEnabled: false,
-          },
-        ],
-      },
-    });
-    const container = mountComponent();
-    await flushPromises();
-
-    getButton(container, "Toggle consent").click();
-    getButton(container, "Continue").click();
-    await flushPromises();
-
-    expect(emailUpdatesApi.updatePreference).toHaveBeenCalledWith({
-      operation: "set_conversation_preference",
-      conversationSlugId: "conversation-one",
-      enabled: false,
-      source: "onboarding",
-    });
-  });
-
-  it("leaves the preference undisclosed when onboarding is dismissed", async () => {
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: true,
-      authoringAction: "none",
-      participantPreference: {
-        state: "undisclosed",
-        resolvedEnabled: false,
-        onboardingAction: {
-          operation: "set_conversation_preference",
-          conversationSlugId: "conversation-one",
-          initialEnabled: true,
-        },
-      },
-    });
-    const container = mountComponent();
-    await flushPromises();
-
-    getButton(container, "Toggle consent").click();
-    getButton(container, "Close").click();
-    await flushPromises();
-
-    expect(emailUpdatesApi.updatePreference).not.toHaveBeenCalled();
-    expect(exitToConversation).toHaveBeenCalledOnce();
-  });
-
-  it("continues into a required survey after saving consent", async () => {
-    surveyGateState.value = {
-      hasSurvey: true,
-      isOptional: false,
-      canParticipate: false,
-      status: "not_started",
-    };
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: true,
-      authoringAction: "none",
-      participantPreference: {
-        state: "undisclosed",
-        resolvedEnabled: false,
-        onboardingAction: {
-          operation: "set_project_preference",
-          projectSlug: "project-one",
-          conversationSlugId: "conversation-one",
-          initialEnabled: true,
-        },
-      },
-    });
-    emailUpdatesApi.updatePreference.mockResolvedValue({
-      success: true,
-      result: {
-        operation: "set_project_preference",
-        projectSlug: "project-one",
-        state: "enabled",
-      },
-    });
-    const container = mountComponent();
-    await flushPromises();
-
-    getButton(container, "Continue").click();
-    await flushPromises();
-
-    expect(navigateToNextSurveyStep).toHaveBeenCalledWith({
-      conversationSlugId: "conversation-one",
-      routeContext: { kind: "normal" },
-    });
-    expect(navigateToNextSurveyStep).toHaveBeenCalledAfter(
-      emailUpdatesApi.updatePreference
-    );
-    expect(exitToConversation).not.toHaveBeenCalled();
-  });
-
-  it("does not repeat consent skipped during this onboarding flow", async () => {
-    onboardingState.emailUpdateConsentSkipped = true;
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: true,
-      authoringAction: "none",
-      participantPreference: {
-        state: "undisclosed",
-        resolvedEnabled: false,
-        onboardingAction: {
-          operation: "set_conversation_preference",
-          conversationSlugId: "conversation-one",
-          initialEnabled: true,
-        },
-      },
-    });
-    const container = mountComponent();
-    await flushPromises();
-
-    expect(getStep(container).dataset.showPreference).toBe("false");
-    getButton(container, "Continue").click();
-    await flushPromises();
-
-    expect(emailUpdatesApi.updatePreference).not.toHaveBeenCalled();
-    expect(exitToConversation).toHaveBeenCalledOnce();
-  });
-
-  it("offers retry or an explicit exit after a transient summary failure", async () => {
-    emailUpdatesApi.getConversationSummary
-      .mockRejectedValueOnce(new Error("Summary request failed"))
-      .mockResolvedValueOnce({
-        success: true,
-        authoringAction: "none",
-        participantPreference: {
-          state: "undisclosed",
-          resolvedEnabled: false,
-          onboardingAction: {
-            operation: "set_conversation_preference",
-            conversationSlugId: "conversation-one",
-            initialEnabled: true,
-          },
-        },
-      });
-    const container = mountComponent();
-    await flushPromises();
-
-    expect(getStep(container).dataset.saving).toBe("true");
-    getButton(container, "Continue").click();
-    await flushPromises();
-    expect(exitToConversation).not.toHaveBeenCalled();
-
-    getButton(
-      container,
-      "Continue without saving an Email Update choice"
-    ).click();
-    await flushPromises();
-    expect(emailUpdatesApi.updatePreference).not.toHaveBeenCalled();
-    expect(exitToConversation).toHaveBeenCalledOnce();
-
-    getButton(container, "Try again").click();
-    await flushPromises();
-    expect(getStep(container).dataset.saving).toBe("false");
-    expect(getStep(container).dataset.showPreference).toBe("true");
-  });
-
-  it("allows continuing when the feature is unavailable", async () => {
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: false,
-      reason: "feature_not_available",
-    });
-    const container = mountComponent();
-    await flushPromises();
-
-    expect(getStep(container).dataset.saving).toBe("false");
-    expect(getStep(container).dataset.showPreference).toBe("false");
-    getButton(container, "Continue").click();
-    await flushPromises();
-
-    expect(emailUpdatesApi.updatePreference).not.toHaveBeenCalled();
-    expect(exitToConversation).toHaveBeenCalledOnce();
-  });
-
-  it("allows continuing when the conversation no longer exists", async () => {
-    emailUpdatesApi.getConversationSummary.mockResolvedValue({
-      success: false,
-      reason: "conversation_not_found",
-    });
-    const container = mountComponent();
-    await flushPromises();
-
-    expect(getStep(container).dataset.saving).toBe("false");
-    expect(getStep(container).dataset.showPreference).toBe("false");
-    getButton(container, "Continue").click();
-    await flushPromises();
-
-    expect(emailUpdatesApi.updatePreference).not.toHaveBeenCalled();
-    expect(exitToConversation).toHaveBeenCalledOnce();
-  });
-
-  it("allows an explicit no-save exit after a network summary failure", async () => {
-    emailUpdatesApi.getConversationSummary.mockRejectedValue(
-      new Error("network unavailable")
-    );
-    const container = mountComponent();
-    await flushPromises();
-
-    expect(getStep(container).dataset.saving).toBe("true");
-    expect(getButton(container, "Try again")).toBeDefined();
-    getButton(container, "Continue").click();
-    await flushPromises();
-    expect(exitToConversation).not.toHaveBeenCalled();
-
-    getButton(
-      container,
-      "Continue without saving an Email Update choice"
-    ).click();
-    await flushPromises();
-    expect(
-      onboardingState.markEmailUpdateConsentSkipped
-    ).toHaveBeenCalledOnce();
-    expect(exitToConversation).toHaveBeenCalledOnce();
   });
 });
-
-function mountComponent(): HTMLElement {
-  const container = document.createElement("div");
-  document.body.append(container);
-  const app = createApp(ConversationOnboardingComplete, {
-    sheet: createDismissalController({
-      fallbackDismiss: () => Promise.resolve(),
-    }),
-  });
-  app.use(VueQueryPlugin, { queryClient: new QueryClient() });
-  mountedApps.push(app);
-  app.mount(container);
-  return container;
-}
-
-function getStep(container: HTMLElement): HTMLElement {
-  const step = container.querySelector<HTMLElement>(
-    '[data-testid="complete-step"]'
-  );
-  if (step === null) {
-    throw new Error("Completion step not found");
-  }
-  return step;
-}
-
-function getButton(container: HTMLElement, label: string): HTMLButtonElement {
-  const button = [...container.querySelectorAll("button")].find(
-    (candidate) => candidate.textContent === label
-  );
-  if (button === undefined) {
-    throw new Error(`Button not found: ${label}`);
-  }
-  return button;
-}
-
-async function flushPromises(): Promise<void> {
-  await new Promise((resolve) => window.setTimeout(resolve, 0));
-}

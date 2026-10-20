@@ -1,6 +1,6 @@
 ---
 title: "30 personnes peuvent-elles s’accorder sur des règles d’IA en une journée ?"
-description: "Comment une startup d’ingénierie de 30 personnes a utilisé Agora pour rédiger collectivement une charte d’IA et en hiérarchiser les principes lors d’une journée facilitée."
+description: "Comment Leviathan, une startup deep tech de 30 personnes, a utilisé Agora pour rédiger collectivement une charte d’IA et en hiérarchiser les principes lors d’une journée facilitée."
 author: "Équipe Agora"
 date: "2026-09-01"
 type: "case-study"
@@ -8,7 +8,7 @@ thumbnail: "/images/resources/ai-charter-workshop.webp"
 image: "/images/resources/ai-charter-workshop.webp"
 ---
 
-Comment une startup d’ingénierie de 30 personnes devrait-elle utiliser l’IA, et dans quels cas devrait-elle y renoncer ? En septembre 2026, [Jean Lou Fourquet](https://www.linkedin.com/in/jean-lou-fourquet), facilitateur expérimenté de [Lyfe Catalyst](https://lyfe-catalyst.org/), a consacré une journée entière à cette question avec toute l’équipe.
+Comment une startup de 30 personnes devrait-elle utiliser l’IA, et dans quels cas devrait-elle y renoncer ? En septembre 2026, [Jean Lou Fourquet](https://www.linkedin.com/in/jean-lou-fourquet), facilitateur expérimenté de [Lyfe Catalyst](https://lyfe-catalyst.org/), a consacré une journée entière à cette question avec toute l’équipe de [Leviathan](https://leviathan-dynamics.com/), une startup française deep tech spécialisée dans le refroidissement décarboné et le traitement des eaux industrielles.
 
 **La plupart des ateliers en entreprise se terminent avec de bonnes intentions, mais aucune suite concrète. Celui-ci a abouti à une première charte d’IA : des principes sur lesquels l’équipe s’est accordée malgré ses différences, puis qu’elle a elle-même classés par priorité.**
 
@@ -22,7 +22,7 @@ _Le Mode Conversation révèle les points d’accord du groupe ; le Mode Prioris
 
 Une journée de formation sur l’IA suit souvent un scénario familier : interventions d’experts, échanges animés, quelques notes adhésives. Tout le monde apprend quelque chose, mais rien n’est décidé. Les conclusions restent dans la salle, souvent influencées par les personnes qui parlent le plus fort ou occupent les postes les plus élevés.
 
-Pour cette startup, les enjeux étaient concrets. Les membres de l’équipe utilisaient les outils d’IA de façons et à des degrés différents, sans règles communes. Certaines questions concernaient les risques : peut-on transmettre les plans et les paramètres des machines de l’entreprise à un assistant d’IA externe ? D’autres touchaient à l’identité de l’entreprise : puisqu’elle met en avant une réduction de 30% de la consommation énergétique de ses machines, quelle place donner à une IA énergivore ?
+Pour Leviathan, les enjeux étaient concrets. Les membres de l’équipe utilisaient les outils d’IA de façons et à des degrés différents, sans règles communes. Certaines questions concernaient les risques : peut-on transmettre les plans et les paramètres des machines de l’entreprise à un assistant d’IA externe ? D’autres touchaient à l’identité de l’entreprise : puisqu’elle met en avant une réduction de 30% de la consommation énergétique de ses machines, quelle place donner à une IA énergivore ?
 
 L’objectif de la journée était clair : aller au-delà de la sensibilisation et repartir avec une première version d’une charte d’usage de l’IA, rédigée par l’équipe et dont elle se sente responsable.
 
@@ -98,7 +98,7 @@ Parmi les priorités communes les mieux classées :
 2. Nous autorisons l’IA pour accélérer la veille scientifique et technique (résumés d’articles et de brevets), à condition de toujours revenir à la source originale avant d’utiliser l’information.
 3. Lorsqu’on utilise l’IA pour la recherche, il faut vérifier au moins une partie des sources.
 
-À 16:30, le projet de charte issu du classement a été lu à voix haute. L’équipe l’a adopté comme document évolutif, qu’un comité tiré au sort réexaminera tous les trois mois.
+À 16:30, le projet de charte issu du classement a été lu à voix haute. L’équipe l’a adopté comme document évolutif, qu’un comité tiré au sort réexaminerait tous les trois mois.
 
 ## Pourquoi c’est important : comprendre collectivement, au-delà du brainstorming
 

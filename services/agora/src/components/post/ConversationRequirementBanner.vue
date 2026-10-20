@@ -1,5 +1,11 @@
 <template>
-  <q-banner v-if="shouldShowBanner" rounded inline-actions class="survey-banner" :class="bannerClass">
+  <q-banner
+    v-if="shouldShowBanner"
+    rounded
+    inline-actions
+    class="survey-banner"
+    :class="bannerClass"
+  >
     <template #avatar>
       <q-icon :name="bannerIcon" size="sm" />
     </template>
@@ -28,16 +34,9 @@
 import { storeToRefs } from "pinia";
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import type {
-  EventSlug,
-  ParticipationMode,
-  SurveyGateSummary,
-} from "src/shared/types/zod";
+import type { EventSlug, SurveyGateSummary } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
-import {
-  useSurveyFormQuery,
-  useSurveyStatusQuery,
-} from "src/utils/api/survey/useSurveyQueries";
+import { useSurveyStatusQuery } from "src/utils/api/survey/useSurveyQueries";
 import { computed, ref } from "vue";
 
 import {
@@ -48,7 +47,6 @@ import { resolveRequirementBannerCopy } from "./conversationRequirementBannerLog
 
 const props = defineProps<{
   conversationSlugId: string;
-  participationMode: ParticipationMode;
   requiresEventTicket?: EventSlug;
   surveyGate: SurveyGateSummary;
 }>();
@@ -58,22 +56,16 @@ const { t } = useComponentI18n<ConversationRequirementBannerTranslations>(
 );
 const { isAuthInitialized } = storeToRefs(useAuthenticationStore());
 
-const {
-  needsAuth,
-  needsTicket,
-  openParticipationOnboarding,
-} = useParticipationGate({
-  conversationSlugId: computed(() => props.conversationSlugId),
-  participationMode: computed(() => props.participationMode),
-  requiresEventTicket: computed(() => props.requiresEventTicket),
-  surveyGate: computed(() => props.surveyGate),
-});
+const { needsAuth, needsTicket, openParticipationOnboarding } =
+  useParticipationGate(() => props.conversationSlugId);
 
 const isNavigating = ref(false);
 
 const surveyStatusQuery = useSurveyStatusQuery({
   conversationSlugId: computed(() => props.conversationSlugId),
-  enabled: computed(() => isAuthInitialized.value && props.surveyGate.hasSurvey),
+  enabled: computed(
+    () => isAuthInitialized.value && props.surveyGate.hasSurvey
+  ),
 });
 
 const effectiveSurveyGate = computed(() => {
@@ -81,11 +73,6 @@ const effectiveSurveyGate = computed(() => {
 });
 
 const hasSurvey = computed(() => effectiveSurveyGate.value.hasSurvey);
-
-useSurveyFormQuery({
-  conversationSlugId: computed(() => props.conversationSlugId),
-  enabled: computed(() => isAuthInitialized.value && hasSurvey.value),
-});
 
 const shouldShowBanner = computed(() => {
   return hasSurvey.value || props.requiresEventTicket !== undefined;

@@ -19,6 +19,7 @@ import type { CredentialAuthState, AuthResult } from "./auth/core/types.js";
 import type { GPCProof, GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
 import type { JSONBoundConfig, JSONRevealedClaims } from "@pcd/gpc";
 import { log } from "@/app.js";
+import { logApiError } from "@/logging/privacy.js";
 import { getZupassEventId, getZupassSignerPublicKey } from "./zupassConfig.js";
 import * as authUtilService from "./authUtil.js";
 import { mergeGuestIntoVerifiedUser } from "./merge.js";
@@ -54,7 +55,7 @@ interface VerifyEventTicketProps {
  * Nullifiers are event-specific (via externalNullifier = `agora-${eventSlug}-v1`)
  * Follows castVote pattern: allows unauthenticated requests and creates guest accounts
  */
-export async function verifyEventTicket({
+export async function verifyEventTicket<Continuation>({
     db,
     didWrite,
     proofData,
@@ -63,11 +64,21 @@ export async function verifyEventTicket({
     now,
     sessionLifetimeDays,
     currentDisplayLanguage,
-}: VerifyEventTicketProps): Promise<VerifyEventTicket200> {
+    afterVerified,
+}: VerifyEventTicketProps & {
+    afterVerified: (context: {
+        database: PostgresDatabase;
+        userId: string;
+    }) => Promise<Continuation>;
+}): Promise<
+    | Extract<VerifyEventTicket200, { success: false }>
+    | (Extract<VerifyEventTicket200, { success: true }> & {
+          continuation: Continuation;
+      })
+> {
     try {
         const primaryDb = getPrimaryDatabase(db);
         // Step 0: Parse and validate proof data structure
-        log.info({ eventSlug }, "[Zupass] Parsing GPC proof data");
 
         if (!proofData || typeof proofData !== "object") {
             log.error("[Zupass] Proof data is not an object");
@@ -120,7 +131,6 @@ export async function verifyEventTicket({
         const proof = proofDataObj.proof as GPCProof;
 
         // Step 1: Verify GPC proof cryptographically
-        log.info({ eventSlug }, "[Zupass] Verifying GPC proof");
 
         // Use local artifacts package - resolve path dynamically
         // The @pcd/proto-pod-gpc-artifacts package contains the verification keys
@@ -147,8 +157,6 @@ export async function verifyEventTicket({
                 reason: "invalid_proof",
             };
         }
-
-        log.info("[Zupass] ✓ GPC proof cryptographically valid");
 
         // Step 2: Validate watermark matches didWrite (proof binding)
         // This prevents proof stealing - attacker can't use someone else's proof
@@ -177,11 +185,6 @@ export async function verifyEventTicket({
                 reason: "invalid_proof",
             };
         }
-
-        log.info(
-            { didWrite },
-            "[Zupass] ✓ Watermark validated - proof bound to correct DID",
-        );
 
         // Step 3: Validate boundConfig contains expected eventId and signerPublicKey
         // This prevents submitting valid proofs for wrong events
@@ -362,11 +365,6 @@ export async function verifyEventTicket({
             };
         }
 
-        log.info(
-            { didWrite, eventSlug, tuplesCount: allowlist.length },
-            "[Zupass] ✓ Validated: ALL tuples match expected eventId and signerPublicKey",
-        );
-
         // Step 3: Validate externalNullifier (salt) matches expected value
         // This ensures nullifiers are event-specific and prevents cross-event tracking
         const externalNullifier = revealedClaims.owner?.externalNullifier;
@@ -398,11 +396,6 @@ export async function verifyEventTicket({
             };
         }
 
-        log.info(
-            { didWrite, externalNullifier: externalNullifier.value },
-            "[Zupass] ✓ externalNullifier validated - nullifier is event-specific",
-        );
-
         // Step 4: Extract nullifier hash from proof
         // Nullifier is the actual unique hash (nullifierHashV4), not the externalNullifier
         // nullifierHashV4 is a bigint, not a PODValue object
@@ -422,11 +415,6 @@ export async function verifyEventTicket({
         // Convert bigint to hex string (0x-prefixed) for database storage
         // Using toString(16) with 0x prefix is the standard format for ZK nullifiers
         const nullifier = `0x${nullifierHashV4.toString(16)}`;
-
-        log.info(
-            { didWrite, nullifier },
-            "[Zupass] ✓ Nullifier extracted - replay protection via database uniqueness check",
-        );
 
         // Note on replay attack prevention:
         // We rely on nullifier uniqueness (enforced by database constraint) rather than
@@ -454,10 +442,6 @@ export async function verifyEventTicket({
 
         // Step 7: Handle rejection case
         if (authResult.type === "associated_with_another_user") {
-            log.info(
-                { didWrite, nullifier, eventSlug },
-                "[Zupass] Nullifier associated with another user",
-            );
             return {
                 success: false,
                 reason: "ticket_already_used",
@@ -476,7 +460,7 @@ export async function verifyEventTicket({
                   : [authResult.userId];
 
         // Step 9: Execute appropriate action
-        await primaryDb.transaction(async (tx) => {
+        const continuation = await primaryDb.transaction(async (tx) => {
             if (existingUserIds.length > 0) {
                 // Match deletion/merge ordering: lock parents before credentials or devices.
                 const lockedUsers = await tx
@@ -511,10 +495,6 @@ export async function verifyEventTicket({
                             pcdType: "gpc",
                             providerMetadata: null, // No metadata revealed with fieldsToReveal: {}
                         });
-                        log.info(
-                            { userId: authResult.userId, nullifier, eventSlug },
-                            "[Zupass] Added ticket to existing user",
-                        );
                     } else {
                         // Create new user + device + ticket
                         await registerWithZupass({
@@ -528,10 +508,6 @@ export async function verifyEventTicket({
                             currentDisplayLanguage,
                             now,
                         });
-                        log.info(
-                            { userId: authResult.userId, nullifier, eventSlug },
-                            "[Zupass] Registered new user with Zupass ticket",
-                        );
                     }
                     break;
 
@@ -545,18 +521,10 @@ export async function verifyEventTicket({
                         sessionExpiry,
                         now,
                     });
-                    log.info(
-                        { userId: authResult.userId, nullifier, eventSlug },
-                        "[Zupass] Logged in new device with Zupass ticket",
-                    );
                     break;
 
                 case "login_known_device":
                     // Device already owns this ticket - just confirm (soft login, no session update)
-                    log.info(
-                        { userId: authResult.userId, nullifier, eventSlug },
-                        "[Zupass] Confirmed existing ticket ownership",
-                    );
                     break;
 
                 case "merge":
@@ -578,15 +546,15 @@ export async function verifyEventTicket({
                             sessionExpiry,
                         });
                     }
-                    log.info(
-                        {
-                            toUserId: authResult.toUserId,
-                            fromUserId: authResult.fromUserId,
-                        },
-                        "[Zupass] Merged guest into target user and logged in device",
-                    );
                     break;
             }
+            return await afterVerified({
+                database: tx,
+                userId:
+                    authResult.type === "merge"
+                        ? authResult.toUserId
+                        : authResult.userId,
+            });
         });
 
         const userId =
@@ -594,25 +562,23 @@ export async function verifyEventTicket({
                 ? authResult.toUserId
                 : authResult.userId;
         log.info(
-            {
-                userId,
-                nullifier,
-                eventSlug,
-                type: authResult.type,
-            },
-            "[Zupass] Successfully verified ticket",
+            { event: "event_ticket_verified", userId },
+            "[Zupass] Event ticket verified",
         );
 
         return {
             success: true,
             accountMerged: authResult.type === "merge",
             userId,
+            continuation,
         };
     } catch (error) {
-        log.error(
-            { error, didWrite },
-            "[Zupass] Unexpected error during verification",
-        );
+        logApiError({
+            logger: log,
+            level: "error",
+            event: { event: "event_ticket_verification_failed" },
+            error,
+        });
         throw error;
     }
 }
@@ -631,16 +597,18 @@ export async function hasEventTicket({
     eventSlug: EventSlug;
 }): Promise<boolean> {
     const tickets = await db
-        .select()
+        .select({ id: eventTicketTable.id })
         .from(eventTicketTable)
         .innerJoin(userTable, eq(eventTicketTable.userId, userTable.id))
         .where(
             and(
                 eq(eventTicketTable.userId, userId),
                 eq(eventTicketTable.eventSlug, eventSlug),
+                eq(eventTicketTable.isDeleted, false),
                 eq(userTable.isDeleted, false),
             ),
-        );
+        )
+        .limit(1);
 
     return tickets.length > 0;
 }

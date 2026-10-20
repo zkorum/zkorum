@@ -10,9 +10,6 @@
       :conversation-organization-name="
         conversationData.metadata.organization?.name ?? ''
       "
-      :participation-mode="conversationData.metadata.participationMode"
-      :requires-event-ticket="conversationData.metadata.requiresEventTicket"
-      :survey-gate="conversationData.interaction.surveyGate"
       :on-view-analysis="props.onViewAnalysis"
       :is-voting-disabled="isVotingDisabled"
       :conversation-route-context="props.conversationRouteContext"
@@ -28,9 +25,6 @@
       :conversation-organization-name="
         conversationData.metadata.organization?.name ?? ''
       "
-      :participation-mode="conversationData.metadata.participationMode"
-      :requires-event-ticket="conversationData.metadata.requiresEventTicket"
-      :survey-gate="conversationData.interaction.surveyGate"
       :on-view-analysis="props.onViewAnalysis"
       :is-voting-disabled="isVotingDisabled"
       :conversation-route-context="props.conversationRouteContext"

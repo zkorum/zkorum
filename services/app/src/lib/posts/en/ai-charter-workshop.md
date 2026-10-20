@@ -1,6 +1,6 @@
 ---
 title: "Can 30 People Agree on AI Rules in a Day?"
-description: "How a 30-person engineering startup used Agora to co-write and prioritize an AI charter in one facilitated day."
+description: "How Leviathan, a 30-person deep tech startup, used Agora to co-write and prioritize an AI charter in one facilitated day."
 author: "Agora Team"
 date: "2026-09-01"
 type: "case-study"
@@ -8,7 +8,7 @@ thumbnail: "/images/resources/ai-charter-workshop.webp"
 image: "/images/resources/ai-charter-workshop.webp"
 ---
 
-How should a 30-person engineering startup use AI, and where should it refuse to? In September 2026, [Jean Lou Fourquet](https://www.linkedin.com/in/jean-lou-fourquet) of [Lyfe Catalyst](https://lyfe-catalyst.org/), an expert facilitator, spent a full day on that question with the startup's whole team.
+How should a 30-person startup use AI, and where should it refuse to? In September 2026, [Jean Lou Fourquet](https://www.linkedin.com/in/jean-lou-fourquet) of [Lyfe Catalyst](https://lyfe-catalyst.org/), an expert facilitator, spent a full day on that question with the whole team at [Leviathan](https://leviathan-dynamics.com/), a French deep tech startup specializing in decarbonized cooling and industrial water treatment.
 
 **Most company workshops end with good intentions and nothing to act on. This one ended with a draft AI charter: principles the team agreed on across their differences, then ranked themselves.**
 
@@ -22,7 +22,7 @@ _Conversation mode surfaces what the group agrees on; Prioritization mode decide
 
 A training day on AI usually follows a familiar script: expert talks, a lively discussion, a few sticky notes. Everyone learns something, but nothing is decided. The takeaways stay in the room, often shaped by the loudest or most senior voices.
 
-For the startup, the stakes were concrete. Team members used AI tools in different ways and to different degrees, with no shared rules. Some questions were about risk: can the plans and parameters of the company's machines go into an external AI assistant? Others touched on the company's identity: the company promotes a 30% cut in its machines' energy consumption, so how much energy-hungry AI use is consistent with that?
+For Leviathan, the stakes were concrete. Team members used AI tools in different ways and to different degrees, with no shared rules. Some questions were about risk: can the plans and parameters of the company's machines go into an external AI assistant? Others touched on the company's identity: the company promotes a 30% cut in its machines' energy consumption, so how much energy-hungry AI use is consistent with that?
 
 The goal of the day was explicit: not just to raise awareness, but to leave with a first draft of a charter on AI use, written and owned by the team.
 
@@ -98,7 +98,7 @@ The highest-ranked shared priorities included:
 2. We allow AI to speed up scientific and technical watch (summaries of articles and patents), provided we always go back to the original source before relying on the information.
 3. When AI is used for research, the user must check at least some of the sources.
 
-At 16:30, the draft charter was read aloud as it emerged from the ranking. The team adopted it as a living document, and every three months a committee drawn by lot will revisit it.
+At 16:30, the draft charter was read aloud as it emerged from the ranking. The team adopted it as a living document, and every three months a committee drawn by lot would revisit it.
 
 ## Why This Matters: Sensemaking, Not Brainstorming
 

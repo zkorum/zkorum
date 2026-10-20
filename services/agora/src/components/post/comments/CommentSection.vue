@@ -18,9 +18,6 @@
                 userVotes,
                 castVote,
               }"
-              :participation-mode="props.participationMode"
-              :requires-event-ticket="props.requiresEventTicket"
-              :survey-gate="props.surveyGate"
               :on-view-analysis="props.onViewAnalysis"
               :is-voting-disabled="props.isVotingDisabled"
               :show-vote-results="true"
@@ -57,9 +54,6 @@ import { useComputedPagination } from "src/composables/ui/useComputedPagination"
 import type {
   ConversationTypeConfig,
   DisplayedOpinionItem,
-  EventSlug,
-  ParticipationMode,
-  SurveyGateSummary,
 } from "src/shared/types/zod";
 import { useOpinionUpdatesStore } from "src/stores/opinionUpdates";
 import { useBackendCommentApi } from "src/utils/api/comment/comment";
@@ -80,9 +74,6 @@ const props = defineProps<{
   postSlugId: string;
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
-  participationMode: ParticipationMode;
-  requiresEventTicket?: EventSlug;
-  surveyGate: SurveyGateSummary | undefined;
   onViewAnalysis: () => void;
   isVotingDisabled: boolean;
   conversationRouteContext: ConversationRouteContext;

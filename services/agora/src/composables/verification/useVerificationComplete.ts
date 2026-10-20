@@ -1,3 +1,5 @@
+import { useQueryClient } from "@tanstack/vue-query";
+import type { ConversationParticipationStatus } from "src/shared/types/dto";
 import { useLoginIntentionStore } from "src/stores/loginIntention";
 import { emailVerificationStore } from "src/stores/onboarding/email";
 import { onboardingFlowStore } from "src/stores/onboarding/flow";
@@ -9,7 +11,7 @@ import {
 } from "src/utils/router/conversationRouteContext";
 import { getSingleRouteParam } from "src/utils/router/params";
 import { getConversationSurveyVerifyPath } from "src/utils/survey/navigation";
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import {
   isNavigationFailure,
   type RouteLocationRaw,
@@ -18,6 +20,7 @@ import {
 
 export function useVerificationComplete() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { updateAuthState, getDeviceLoginStatus } = useBackendAuthApi();
   const flowStore = onboardingFlowStore();
   const { routeUserAfterLogin } = useLoginIntentionStore();
@@ -57,13 +60,34 @@ export function useVerificationComplete() {
     // The route survives refresh and back/forward navigation; a leftover global
     // onboarding session must not redirect unrelated account verification.
     if (isConversationOnboardingRouteName(verificationRoute.name)) {
+      const conversationSlugId = getSingleRouteParam(
+        "postSlugId" in verificationRoute.params
+          ? verificationRoute.params.postSlugId
+          : undefined
+      );
+      // A provider can confirm an existing credential without changing the
+      // cache-key flags. Discard old credential denials, not infer a ready state.
+      await nextTick();
+      const cached =
+        queryClient.getQueriesData<ConversationParticipationStatus>({
+          queryKey: ["participation-status", conversationSlugId],
+          type: "active",
+        });
+      await Promise.all(
+        cached.map(async ([queryKey, status]) => {
+          if (
+            status?.status === "onboarding_required" &&
+            (status.nextStep.kind === "account" ||
+              status.nextStep.kind === "email" ||
+              status.nextStep.kind === "identity")
+          )
+            await queryClient.resetQueries({ queryKey, exact: true });
+        })
+      );
+      if (router.currentRoute.value !== verificationRoute) return;
       await replaceVerificationRoute({
         path: getConversationSurveyVerifyPath({
-          conversationSlugId: getSingleRouteParam(
-            "postSlugId" in verificationRoute.params
-              ? verificationRoute.params.postSlugId
-              : undefined
-          ),
+          conversationSlugId,
           routeContext: getConversationRouteContextFromRoute(verificationRoute),
         }),
       });

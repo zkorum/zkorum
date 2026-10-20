@@ -122,6 +122,7 @@ import type {
     ConversationEmailUpdateWorkspaceResponse,
 } from "@/shared/types/dto.js";
 import { Dto } from "@/shared/types/dto.js";
+import type { ConversationEmailUpdateOnboardingAction } from "@/shared/types/dto.js";
 import { imagePathToUrl } from "@/utils/organizationLogic.js";
 import {
     decideConversationEmailFinalSend,
@@ -233,6 +234,11 @@ export interface ConversationEmailUpdateService {
     getConversationSummary: (
         params: AuthenticatedRequest<ConversationEmailUpdateConversationSummaryRequest>,
     ) => Promise<ConversationEmailUpdateConversationSummaryResponse>;
+    getParticipationOnboardingAction: (params: {
+        database: PostgresJsDatabase;
+        userId: string;
+        conversationSlugId: string;
+    }) => Promise<ConversationEmailUpdateOnboardingAction | undefined>;
     getProjectSummary: (
         params: AuthenticatedRequest<ConversationEmailUpdateProjectSummaryRequest>,
     ) => Promise<ConversationEmailUpdateProjectSummaryResponse>;
@@ -7476,6 +7482,117 @@ export function createConversationEmailUpdateService({
                 return configuration.success
                     ? configuration
                     : { success: false, reason: "configuration_conflict" };
+            });
+        },
+
+        getParticipationOnboardingAction: async ({
+            database,
+            userId,
+            conversationSlugId,
+        }) => {
+            if (!sendingEnabled) return undefined;
+            const row = await getConversationConfigurationRow({
+                db: database,
+                conversationSlugId,
+                now: new Date(),
+            });
+            if (row === undefined) return undefined;
+            const availability = resolveConversationEmailSendingAvailability({
+                operationallyEnabled: sendingEnabled,
+                featureAvailable: row.feature_available,
+                safetyBlocked: row.safety_blocked,
+                configuredEnabled: row.override_enabled ?? row.default_enabled,
+                hasParticipantContactEmail:
+                    normalizeContactEmail(row.contact_email) !== undefined,
+            });
+            if (!availability.available) return undefined;
+            const preferenceScope =
+                resolveConversationEmailParticipantPreferenceScope({
+                    scopeKind: row.scope_kind,
+                    projectDefaultEnabled: row.default_enabled,
+                    conversationOverrideEnabled: row.override_enabled,
+                });
+            if (preferenceScope === undefined) return undefined;
+            // Consent needs only the existence of a verified primary email and
+            // the applicable choices, not addresses, history, or authoring rights.
+            const preferences = await database
+                .select({
+                    projectEnabled:
+                        conversationEmailUpdateUserProjectPreferenceTable.enabled,
+                    conversationEnabled:
+                        conversationEmailUpdateUserConversationPreferenceTable.enabled,
+                })
+                .from(emailTable)
+                .innerJoin(
+                    userTable,
+                    and(
+                        eq(userTable.id, emailTable.userId),
+                        eq(userTable.isDeleted, false),
+                    ),
+                )
+                .leftJoin(
+                    conversationEmailUpdateUserProjectPreferenceTable,
+                    and(
+                        eq(
+                            conversationEmailUpdateUserProjectPreferenceTable.userId,
+                            emailTable.userId,
+                        ),
+                        eq(
+                            conversationEmailUpdateUserProjectPreferenceTable.projectId,
+                            row.project_id,
+                        ),
+                    ),
+                )
+                .leftJoin(
+                    conversationEmailUpdateUserConversationPreferenceTable,
+                    and(
+                        eq(
+                            conversationEmailUpdateUserConversationPreferenceTable.userId,
+                            emailTable.userId,
+                        ),
+                        eq(
+                            conversationEmailUpdateUserConversationPreferenceTable.conversationId,
+                            row.conversation_id,
+                        ),
+                    ),
+                )
+                .where(
+                    and(
+                        eq(emailTable.userId, userId),
+                        eq(emailTable.type, "primary"),
+                        eq(emailTable.isDeleted, false),
+                    ),
+                )
+                .limit(1);
+            const preference = preferences.at(0);
+            if (
+                preference === undefined ||
+                resolveConversationEmailPreferenceChoice({
+                    projectEnabled: preference.projectEnabled ?? undefined,
+                    conversationEnabled:
+                        preference.conversationEnabled ?? undefined,
+                    scopeKind:
+                        preferenceScope === "project"
+                            ? "project"
+                            : "no_project",
+                }) !== undefined
+            )
+                return undefined;
+            return resolveConversationEmailOnboardingAction({
+                hasVerifiedEmail: true,
+                preferenceState: "undisclosed",
+                availability,
+                scope:
+                    preferenceScope === "project"
+                        ? {
+                              kind: "project",
+                              projectSlug: row.project_slug,
+                              conversationSlugId: row.conversation_slug_id,
+                          }
+                        : {
+                              kind: "conversation",
+                              conversationSlugId: row.conversation_slug_id,
+                          },
             });
         },
 

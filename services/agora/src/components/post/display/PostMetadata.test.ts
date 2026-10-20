@@ -17,7 +17,7 @@ const removeSummaryQueries = vi.hoisted(() => vi.fn());
 vi.mock(
   "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries",
   () => ({
-    useRemoveConversationEmailUpdateSummaryQueries: () => removeSummaryQueries,
+    useInvalidateParticipationAfterPreference: () => removeSummaryQueries,
   })
 );
 
@@ -406,15 +406,18 @@ describe("PostMetadata email update actions", () => {
       "preferenceSavedAndGlobalResumed"
     );
     expect(removeSummaryQueries).toHaveBeenCalledWith({
-      operation: "set_conversation_preference",
-      globalResumed: true,
-      conversationPreferences: [
-        {
-          conversationSlugId: "conversation-one",
-          state: "enabled",
-          resolvedEnabled: true,
-        },
-      ],
+      result: {
+        operation: "set_conversation_preference",
+        globalResumed: true,
+        conversationPreferences: [
+          {
+            conversationSlugId: "conversation-one",
+            state: "enabled",
+            resolvedEnabled: true,
+          },
+        ],
+      },
+      preserveConversationSlugId: undefined,
     });
   });
 

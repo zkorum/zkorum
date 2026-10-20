@@ -15,7 +15,7 @@ const showNotifyMessage = vi.hoisted(() => vi.fn());
 
 vi.mock(
   "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries",
-  () => ({ useRemoveConversationEmailUpdateSummaryQueries: () => () => {} })
+  () => ({ useInvalidateParticipationAfterPreference: () => () => {} })
 );
 
 vi.mock("src/utils/api/conversationUpdates/conversationEmailUpdates", () => ({
@@ -930,7 +930,10 @@ describe("ConversationUpdatePreferenceSettings", () => {
         success: true,
         globalPaused: false,
         groups: [
-          { ...projectGroup, conversationNextCursor: "stale-conversation-cursor" },
+          {
+            ...projectGroup,
+            conversationNextCursor: "stale-conversation-cursor",
+          },
         ],
         nextCursor: undefined,
       })

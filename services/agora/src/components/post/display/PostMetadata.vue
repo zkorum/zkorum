@@ -127,7 +127,7 @@ import { useAuthenticationStore } from "src/stores/authentication";
 import type { ContentAction } from "src/utils/actions/core/types";
 import { useContentActions } from "src/utils/actions/definitions/content-actions";
 import { useBackendConversationEmailUpdatesApi } from "src/utils/api/conversationUpdates/conversationEmailUpdates";
-import { useRemoveConversationEmailUpdateSummaryQueries } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
+import { useInvalidateParticipationAfterPreference } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
 import { useMaxDiffApi } from "src/utils/api/maxdiff/maxdiff";
 import { useBackendUserMuteApi } from "src/utils/api/muteUser";
 import {
@@ -190,8 +190,7 @@ const postActions = useContentActions();
 
 const { isLoggedIn } = storeToRefs(useAuthenticationStore());
 const conversationEmailUpdatesApi = useBackendConversationEmailUpdatesApi();
-const removeConversationEmailUpdateSummaryQueries =
-  useRemoveConversationEmailUpdateSummaryQueries();
+const invalidateParticipation = useInvalidateParticipationAfterPreference();
 
 const { muteUser } = useBackendUserMuteApi();
 const { invalidateFeed } = useInvalidateFeedQuery();
@@ -635,7 +634,10 @@ async function updateConversationUpdatePreference(
       await loadConversationUpdateActions();
       return;
     }
-    removeConversationEmailUpdateSummaryQueries(response.result);
+    invalidateParticipation({
+      result: response.result,
+      preserveConversationSlugId: undefined,
+    });
     const currentSummary = conversationEmailUpdateSummary.value;
     if (currentSummary?.participantPreference !== undefined) {
       conversationEmailUpdateSummary.value = {

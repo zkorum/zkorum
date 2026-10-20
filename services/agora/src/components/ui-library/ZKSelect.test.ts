@@ -1,6 +1,6 @@
-import { QSelect, Quasar } from "quasar";
+import { QBtn, QSelect, Quasar } from "quasar";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type App, createApp, defineComponent, h, ref } from "vue";
+import { type App, createApp, defineComponent, h, nextTick, ref } from "vue";
 import { createI18n } from "vue-i18n";
 
 import ZKSelect from "./ZKSelect.vue";
@@ -59,7 +59,7 @@ function mountSelect({
       },
     })
   );
-  app.use(Quasar);
+  app.use(Quasar, { components: { QBtn } });
   app.use(createI18n({ legacy: false, locale: "en", messages: {} }));
   const target = document.createElement("div");
   document.body.append(target);
@@ -127,43 +127,109 @@ describe("select popup dismissal", () => {
     }
   );
 
-  it("keeps Done available when a search has no matching options", async () => {
-    const { target, selected } = mountSelect();
-    const dialog = await openSelect({ target });
-    const input = dialog.querySelector("input");
-    if (input === null) throw new Error("Search input not found");
-    input.value = "no matching transport";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    await vi.waitFor(() => expect(dialog.textContent).toContain("No results"));
+  it.each([false, true])(
+    "keeps Done available for an empty search with multiple=%s",
+    async (multiple) => {
+      const { target, selected } = mountSelect({ multiple });
+      const dialog = await openSelect({ target });
+      const input = dialog.querySelector("input");
+      if (input === null) throw new Error("Search input not found");
+      input.value = "no matching transport";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      await vi.waitFor(() =>
+        expect(dialog.textContent).toContain("No results")
+      );
 
-    clickDone(dialog);
-    await vi.waitFor(() => {
-      expect(document.querySelector(".q-select__dialog")).toBeNull();
-    });
-    expect(selected.value).toEqual([]);
-    const reopenedDialog = await openSelect({ target });
-    await vi.waitFor(() =>
-      expect(reopenedDialog.textContent).toContain("Bicycle")
-    );
-  });
+      clickDone(dialog);
+      await vi.waitFor(() => {
+        expect(document.querySelector(".q-select__dialog")).toBeNull();
+      });
+      expect(selected.value).toEqual(multiple ? [] : null);
+      const reopenedDialog = await openSelect({ target });
+      await vi.waitFor(() =>
+        expect(reopenedDialog.textContent).toContain("Bicycle")
+      );
+    }
+  );
 
-  it("keeps single-select auto-dismissal without a Done button", async () => {
-    const { target, selected } = mountSelect({ multiple: false });
-    const dialog = await openSelect({ target });
-    await vi.waitFor(() =>
-      expect(dialog.querySelectorAll('[role="option"]')).toHaveLength(2)
-    );
-    expect(
-      [...dialog.querySelectorAll("button")].some(
-        (button) => button.textContent === "Done"
-      )
-    ).toBe(false);
-    const option = dialog.querySelector<HTMLElement>('[role="option"]');
-    if (option === null) throw new Error("Select option not found");
-    option.click();
-    await vi.waitFor(() =>
-      expect(document.querySelector(".q-select__dialog")).toBeNull()
-    );
-    expect(selected.value).toBe("bicycle");
-  });
+  it.each(["dialog", "menu"] satisfies ("dialog" | "menu")[])(
+    "closes a single-select %s with Done without choosing an option",
+    async (behavior) => {
+      const { target, selected } = mountSelect({ behavior, multiple: false });
+      const dialog = await openSelect({ target, behavior });
+      clickDone(dialog);
+      const selector = behavior === "dialog" ? ".q-select__dialog" : ".q-menu";
+      await vi.waitFor(() =>
+        expect(document.querySelector(selector)).toBeNull()
+      );
+      expect(selected.value).toBeNull();
+      expect(document.activeElement).not.toBeInstanceOf(HTMLInputElement);
+    }
+  );
+
+  it.each(["dialog", "menu"] satisfies ("dialog" | "menu")[])(
+    "restores the single-select label after dismissing an unsuccessful search in the %s",
+    async (behavior) => {
+      const { target, selected } = mountSelect({ behavior, multiple: false });
+      selected.value = "bicycle";
+      await nextTick();
+      const popup = await openSelect({ target, behavior });
+      const input = (behavior === "dialog" ? popup : target).querySelector(
+        "input"
+      );
+      if (input === null) throw new Error("Search input not found");
+      input.value = "no matching transport";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      await vi.waitFor(() => expect(popup.textContent).toContain("No results"));
+
+      clickDone(popup);
+      const selector = behavior === "dialog" ? ".q-select__dialog" : ".q-menu";
+      await vi.waitFor(() =>
+        expect(document.querySelector(selector)).toBeNull()
+      );
+      expect(selected.value).toBe("bicycle");
+      expect(target.querySelector("input")?.value).toBe("");
+      expect(target.querySelector(".q-field__native")?.textContent).toContain(
+        "Bicycle"
+      );
+
+      const reopened = await openSelect({ target, behavior });
+      await vi.waitFor(() => expect(reopened.textContent).toContain("Train"));
+    }
+  );
+
+  it.each(["dialog", "menu"] satisfies ("dialog" | "menu")[])(
+    "keeps single-select auto-dismissal in the %s and preserves its value after Done",
+    async (behavior) => {
+      const { target, selected } = mountSelect({ behavior, multiple: false });
+      const dialog = await openSelect({ target, behavior });
+      await vi.waitFor(() =>
+        expect(dialog.querySelectorAll('[role="option"]')).toHaveLength(2)
+      );
+      expect(
+        [...dialog.querySelectorAll("button")].some(
+          (button) => button.textContent === "Done"
+        )
+      ).toBe(true);
+      const option = dialog.querySelector<HTMLElement>('[role="option"]');
+      if (option === null) throw new Error("Select option not found");
+      option.click();
+      const selector = behavior === "dialog" ? ".q-select__dialog" : ".q-menu";
+      await vi.waitFor(() =>
+        expect(document.querySelector(selector)).toBeNull()
+      );
+      expect(selected.value).toBe("bicycle");
+
+      const reopened = await openSelect({ target, behavior });
+      clickDone(reopened);
+      await vi.waitFor(() =>
+        expect(document.querySelector(selector)).toBeNull()
+      );
+      expect(selected.value).toBe("bicycle");
+      expect(target.querySelector("input")?.value).toBe("");
+      expect(target.querySelector(".q-field__native")?.textContent).toContain(
+        "Bicycle"
+      );
+    }
+  );
 });

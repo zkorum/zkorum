@@ -64,9 +64,6 @@
             :source-version="commentItem.displayContent.sourceVersion"
             :post-slug-id="postSlugId"
             :voting-utilities="votingUtilities"
-            :participation-mode="participationMode"
-            :requires-event-ticket="props.requiresEventTicket"
-            :survey-gate="props.surveyGate"
             :on-view-analysis="props.onViewAnalysis"
             :is-voting-disabled="
               props.isVotingDisabled ||
@@ -89,10 +86,7 @@ import type {
 } from "src/composables/opinion/types";
 import type {
   DisplayedOpinionItem,
-  EventSlug,
   LocalizedContentTranslationStatus,
-  ParticipationMode,
-  SurveyGateSummary,
 } from "src/shared/types/zod";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import type { ContentTranslationDisplayMode } from "src/utils/translation/contentTranslation";
@@ -120,9 +114,6 @@ const props = defineProps<{
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
   votingUtilities: OpinionVotingUtilities;
-  participationMode: ParticipationMode;
-  requiresEventTicket?: EventSlug;
-  surveyGate: SurveyGateSummary | undefined;
   onViewAnalysis: () => void;
   isVotingDisabled: boolean;
   showVoteResults: boolean;

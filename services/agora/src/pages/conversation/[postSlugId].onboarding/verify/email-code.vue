@@ -9,7 +9,7 @@
         fixed-navigation
         :submit-call-back="onSubmit"
         :current-step="2.5"
-        :total-steps="surveyStepTotal"
+        :total-steps="totalSteps"
         :enable-next-button="emailOtpFormRef?.isCodeComplete?.() ?? false"
         :show-next-button="true"
         :show-loading-button="emailOtpFormRef?.isSubmitButtonLoading ?? false"
@@ -39,7 +39,7 @@ import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import EmailOtpForm from "src/components/verification/EmailOtpForm.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
-import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
+import { useConversationVerificationState } from "src/composables/conversation/useConversationVerificationState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import {
@@ -62,9 +62,9 @@ const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
 const { exitToConversation } = useConversationOnboardingExit();
 
-const { conversationSlugId, surveyStepTotal } = useConversationSurveyState({
+const { conversationSlugId, totalSteps } = useConversationVerificationState({
   conversationSlugId: routeConversationSlugId,
-  formLoadMode: "incomplete",
+  routeContext,
 });
 
 const emailOtpFormRef = ref<{

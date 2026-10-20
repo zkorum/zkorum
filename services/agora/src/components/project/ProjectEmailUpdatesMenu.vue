@@ -40,7 +40,7 @@ import type {
   ContentActionContext,
 } from "src/utils/actions/core/types";
 import { useBackendConversationEmailUpdatesApi } from "src/utils/api/conversationUpdates/conversationEmailUpdates";
-import { useRemoveConversationEmailUpdateSummaryQueries } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
+import { useInvalidateParticipationAfterPreference } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, ref, watch } from "vue";
 
@@ -63,8 +63,7 @@ const { t: tEmailUpdateResume } =
     emailUpdateResumeNotificationTranslations
   );
 const emailUpdatesApi = useBackendConversationEmailUpdatesApi();
-const removeConversationEmailUpdateSummaryQueries =
-  useRemoveConversationEmailUpdateSummaryQueries();
+const invalidateParticipation = useInvalidateParticipationAfterPreference();
 const authenticationStore = useAuthenticationStore();
 const { isLoggedIn } = storeToRefs(authenticationStore);
 const showDialog = ref(false);
@@ -212,7 +211,10 @@ async function updatePreference(enabled: boolean): Promise<void> {
       await loadSummary();
       return;
     }
-    removeConversationEmailUpdateSummaryQueries(response.result);
+    invalidateParticipation({
+      result: response.result,
+      preserveConversationSlugId: undefined,
+    });
     const currentSummary = summary.value;
     if (currentSummary?.participantPreference !== undefined) {
       summary.value = {

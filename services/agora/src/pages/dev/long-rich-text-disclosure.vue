@@ -84,7 +84,9 @@
             :extended-post-data="conversationPreview"
             :compact-mode="conversationMode === 'compact'"
             :content-translation="conversationTranslationPreview"
-            @update:content-translation-mode="conversationTranslationMode = $event"
+            @update:content-translation-mode="
+              conversationTranslationMode = $event
+            "
           />
 
           <PostActionBar
@@ -97,7 +99,9 @@
               conversationPreview.metadata.totalParticipantCount
             "
             :total-vote-count="conversationPreview.metadata.totalVoteCount"
-            :conversation-slug-id="conversationPreview.metadata.conversationSlugId"
+            :conversation-slug-id="
+              conversationPreview.metadata.conversationSlugId
+            "
             :conversation-title="conversationPreview.payload.title"
             :author-username="conversationPreview.metadata.authorUsername"
             :on-same-tab-click="noop"
@@ -117,13 +121,13 @@
               conversation-author-username="test-author"
               conversation-organization-name=""
               :voting-utilities="votingUtilities"
-              participation-mode="guest"
-              :survey-gate="undefined"
               :on-view-analysis="noop"
               :is-voting-disabled="true"
               :content-translation="statementTranslationPreview(statement)"
               :conversation-route-context="normalConversationRouteContext"
-              @update:content-translation-mode="statementTranslationMode = $event"
+              @update:content-translation-mode="
+                statementTranslationMode = $event
+              "
             />
           </div>
 
@@ -132,7 +136,9 @@
             <ContentTranslationControl
               v-if="surveyTranslationPreview.isAvailable"
               :model-value="surveyTranslationMode"
-              :source-language-label="surveyTranslationPreview.sourceLanguageLabel"
+              :source-language-label="
+                surveyTranslationPreview.sourceLanguageLabel
+              "
               :translation-status="surveyTranslationPreview.translationStatus"
               class="survey-preview-card__translation-control"
               @update:model-value="surveyTranslationMode = $event"
@@ -233,7 +239,8 @@ const conversationMode = ref<ConversationMode>("full");
 const statementMode = ref<StatementMode>("mixed");
 const translationScenario = ref<TranslationScenario>("not-spoken");
 const currentTab = ref<"comment" | "analysis">("comment");
-const conversationTranslationMode = ref<ContentTranslationDisplayMode>("original");
+const conversationTranslationMode =
+  ref<ContentTranslationDisplayMode>("original");
 const statementTranslationMode = ref<ContentTranslationDisplayMode>("original");
 const surveyTranslationMode = ref<ContentTranslationDisplayMode>("original");
 
@@ -272,18 +279,20 @@ const translationScenarioOptions: Array<SelectOption<TranslationScenario>> = [
 
 function noop(): void {}
 
-function paragraphs({ prefix, count }: { prefix: string; count: number }): string {
+function paragraphs({
+  prefix,
+  count,
+}: {
+  prefix: string;
+  count: number;
+}): string {
   return Array.from({ length: count }, (_value, index) => {
     const paragraphNumber = index + 1;
     return `<p>${prefix} paragraph ${paragraphNumber.toString()} with enough text to wrap across multiple lines on mobile and desktop layouts.</p>`;
   }).join("");
 }
 
-function createConversation({
-  body,
-}: {
-  body: string;
-}): ExtendedConversation {
+function createConversation({ body }: { body: string }): ExtendedConversation {
   return {
     metadata: {
       conversationSlugId: "longtxt1",
@@ -484,46 +493,44 @@ const translationInputs = computed<
   };
 });
 
-const translationState = computed(() =>
-  {
-    if (translationScenario.value === "pending") {
-      return {
-        isAvailable: true,
-        initialMode: "original" as const,
-        sourceLanguageLabel: "Japanese",
-        translationStatus: "pending" as const,
-      };
-    }
-    if (translationScenario.value === "dto-original") {
-      return {
-        isAvailable: true,
-        initialMode: "original" as const,
-        sourceLanguageLabel: "Japanese",
-        translationStatus: "completed" as const,
-      };
-    }
-    if (translationScenario.value === "dto-translated") {
-      return {
-        isAvailable: true,
-        initialMode: "translated" as const,
-        sourceLanguageLabel: "Japanese",
-        translationStatus: "completed" as const,
-      };
-    }
-    if (translationScenario.value === "dto-pending") {
-      return {
-        isAvailable: true,
-        initialMode: "original" as const,
-        sourceLanguageLabel: "Japanese",
-        translationStatus: "pending" as const,
-      };
-    }
-    return resolveContentTranslationState({
-      ...translationInputs.value,
-      hasTranslatedContent: true,
-    });
+const translationState = computed(() => {
+  if (translationScenario.value === "pending") {
+    return {
+      isAvailable: true,
+      initialMode: "original" as const,
+      sourceLanguageLabel: "Japanese",
+      translationStatus: "pending" as const,
+    };
   }
-);
+  if (translationScenario.value === "dto-original") {
+    return {
+      isAvailable: true,
+      initialMode: "original" as const,
+      sourceLanguageLabel: "Japanese",
+      translationStatus: "completed" as const,
+    };
+  }
+  if (translationScenario.value === "dto-translated") {
+    return {
+      isAvailable: true,
+      initialMode: "translated" as const,
+      sourceLanguageLabel: "Japanese",
+      translationStatus: "completed" as const,
+    };
+  }
+  if (translationScenario.value === "dto-pending") {
+    return {
+      isAvailable: true,
+      initialMode: "original" as const,
+      sourceLanguageLabel: "Japanese",
+      translationStatus: "pending" as const,
+    };
+  }
+  return resolveContentTranslationState({
+    ...translationInputs.value,
+    hasTranslatedContent: true,
+  });
+});
 
 watch(
   translationState,
@@ -635,7 +642,8 @@ function statementTranslationPreview(statement: DisplayedOpinionItem) {
     sourceLanguageLabel: translationControl?.sourceLanguageLabel,
     translationStatus: translationControl?.status ?? "not_requested",
     translatedOpinion:
-      displayContent.status === "available" && displayContent.mode === "translated"
+      displayContent.status === "available" &&
+      displayContent.mode === "translated"
         ? displayContent.content.content
         : getTranslatedStatementOpinion(statement),
   };
@@ -656,14 +664,16 @@ const displayedSurveyOptions = computed(() =>
 );
 
 const displayedStatements = computed((): DisplayedOpinionItem[] => {
-  if (statementMode.value === "short") return [toDisplayedStatement(shortStatement)];
+  if (statementMode.value === "short")
+    return [toDisplayedStatement(shortStatement)];
   if (statementMode.value === "single-empty-line") {
     return [toDisplayedStatement(singleEmptyLineStatement)];
   }
   if (statementMode.value === "multiple-empty-lines") {
     return [toDisplayedStatement(multipleEmptyLinesStatement)];
   }
-  if (statementMode.value === "long") return [toDisplayedStatement(longStatement)];
+  if (statementMode.value === "long")
+    return [toDisplayedStatement(longStatement)];
   return [
     shortStatement,
     singleEmptyLineStatement,
@@ -675,7 +685,11 @@ const displayedStatements = computed((): DisplayedOpinionItem[] => {
 const votingUtilities: OpinionVotingUtilities = {
   userVotes: [],
   castVote: (): Promise<CastVoteResponse> => {
-    return Promise.resolve({ success: false, reason: "conversation_closed" });
+    return Promise.resolve({
+      success: false,
+      reason: "conversation_closed",
+      participationStatus: { status: "blocked", reason: "conversation_closed" },
+    });
   },
 };
 </script>

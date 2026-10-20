@@ -4,6 +4,7 @@ import type {
   SurveyStatusCheckResponse,
 } from "src/shared/types/dto";
 import type { SurveyGateSummary } from "src/shared/types/zod";
+import { participationRejectionFixture } from "src/utils/api/participation/participationTestFixtures";
 import {
   getSurveyFormQueryKey,
   getSurveyStatusQueryKey,
@@ -459,13 +460,12 @@ describe("survey withdrawal cache", () => {
     const { queryClient, withdraw } = mountWithdrawal();
     api.withdrawSurveyResponse.mockResolvedValue({
       status: "success",
-      data: { success: false, reason: "conversation_closed" },
+      data: participationRejectionFixture("conversation_closed"),
     });
 
-    await expect(withdraw()).resolves.toEqual({
-      success: false,
-      reason: "conversation_closed",
-    });
+    await expect(withdraw()).resolves.toEqual(
+      participationRejectionFixture("conversation_closed")
+    );
 
     expect(queryClient.getQueryData(statusKey)).toEqual(completedStatus);
     expect(queryClient.getQueryData(formKey)).toEqual(completedForm);

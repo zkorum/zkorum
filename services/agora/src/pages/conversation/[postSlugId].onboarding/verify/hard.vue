@@ -18,7 +18,7 @@
       fixed-navigation
       :submit-call-back="() => {}"
       :current-step="2"
-      :total-steps="surveyStepTotal"
+      :total-steps="totalSteps"
       :enable-next-button="true"
       :show-next-button="false"
       :show-loading-button="false"
@@ -75,7 +75,7 @@ import ZKGradientButton from "src/components/ui-library/ZKGradientButton.vue";
 import PhoneAuthUnavailableNotice from "src/components/verification/PhoneAuthUnavailableNotice.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
-import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
+import { useConversationVerificationState } from "src/composables/conversation/useConversationVerificationState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import {
@@ -89,11 +89,9 @@ import {
   getConversationSurveyOnboardingPath,
   getConversationSurveyVerifyEmailPath,
   getConversationSurveyVerifyPassportPath,
-  getConversationSurveyVerifyPath,
   getConversationSurveyVerifyPhonePath,
 } from "src/utils/survey/navigation";
 import type { DismissalController } from "src/utils/ui/dismissalController";
-import { computed, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -105,11 +103,7 @@ defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const { isAuthInitialized, isLoggedIn } = storeToRefs(useAuthenticationStore());
-const phoneAuthPurpose = computed(() =>
-  !isAuthInitialized.value || isLoggedIn.value ? "credential" : "login"
-);
-const phoneAuthAvailability = usePhoneAuthAvailability(phoneAuthPurpose);
+const { isLoggedIn } = storeToRefs(useAuthenticationStore());
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { exitToConversation } = useConversationOnboardingExit();
 const { t } = useComponentI18n<VerifyHardTranslations>(verifyHardTranslations);
@@ -120,31 +114,16 @@ const { t: tCommon } =
 
 const {
   conversationSlugId,
-  surveyStepTotal,
-  requirementState,
+  phoneAuthPurpose,
+  totalSteps,
   isInitialLoading,
   hasLoadError,
   refetchAll,
-} = useConversationSurveyState({
+} = useConversationVerificationState({
   conversationSlugId: routeConversationSlugId,
-  formLoadMode: "incomplete",
-  requireAccount: true,
+  routeContext,
 });
-
-watch(
-  [isInitialLoading, requirementState],
-  ([loading, requirements]) => {
-    if (!loading && !requirements.needsAuth) {
-      void router.replace({
-        path: getConversationSurveyVerifyPath({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        }),
-      });
-    }
-  },
-  { immediate: true, deep: true }
-);
+const phoneAuthAvailability = usePhoneAuthAvailability(phoneAuthPurpose);
 
 async function handleBackToWelcome(): Promise<void> {
   await safeNavigateBack({
