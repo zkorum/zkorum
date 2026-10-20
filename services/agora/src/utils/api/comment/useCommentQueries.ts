@@ -32,6 +32,7 @@ import {
   buildAnalysisFreshnessRequest,
   LIVE_ANALYSIS_CATCH_UP_INTERVAL_MS,
 } from "src/utils/analysis/analysisFreshness";
+import { useParticipationViewerLifetime } from "src/utils/api/participation/useParticipationViewerLifetime";
 import {
   useViewerQueryScope,
   type ViewerQueryScope,
@@ -856,21 +857,27 @@ export function useCreateCommentMutation() {
   );
   const { markAnalysisAsStale, markCommentsAsStale } =
     useInvalidateCommentQueries();
+  const lifetime = useParticipationViewerLifetime();
 
-  return useMutation({
-    mutationFn: ({
+  const mutation = useMutation({
+    mutationFn: async ({
       commentBody,
       conversationSlugId,
+      isCurrent,
     }: {
       commentBody: string;
       conversationSlugId: string;
-    }) =>
-      createNewComment({
+      isCurrent: () => boolean;
+    }) => {
+      const result = await createNewComment({
         commentBody,
         postSlugId: conversationSlugId,
-      }),
+        isCurrent,
+      });
+      return result.status === "cancelled" ? undefined : result.data;
+    },
     onSuccess: async (data, variables) => {
-      // Only proceed if the comment creation was successful
+      if (data === undefined || !variables.isCurrent()) return;
       if (data.success) {
         await cacheCreatedOpinion({
           queryClient,
@@ -882,16 +889,10 @@ export function useCreateCommentMutation() {
         // Mark analysis as stale without immediate refetch
         // Let the refetchInterval handle updates based on conversation activity
         markAnalysisAsStale(variables.conversationSlugId);
-      } else {
-        // Handle business logic failures (like conversation_locked)
-        showNotifyMessage(
-          t("failedToCreateCommentWithReason", {
-            reason: data.reason ?? "unknown",
-          })
-        );
       }
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, variables) => {
+      if (!variables.isCurrent()) return;
       // Handle technical errors (network, server errors, etc.)
       const apiError = classifyApiError(error);
       if (apiError.kind === "transport") {
@@ -902,6 +903,15 @@ export function useCreateCommentMutation() {
     },
     retry: false, // Disable auto-retry
   });
+  async function mutateAsync(params: {
+    commentBody: string;
+    conversationSlugId: string;
+  }) {
+    const isCurrent = lifetime.capture();
+    const result = await mutation.mutateAsync({ ...params, isCurrent });
+    return isCurrent() ? result : undefined;
+  }
+  return { ...mutation, mutateAsync };
 }
 
 export function useDeleteCommentMutation() {

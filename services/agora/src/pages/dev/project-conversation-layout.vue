@@ -99,7 +99,10 @@
             :conversation-title="conversation.title"
             author-username="project-team"
             :on-same-tab-click="scrollToActionBar"
-            :conversation-type-config="{ conversationType: 'polis', votingPresentation: 'list' }"
+            :conversation-type-config="{
+              conversationType: 'polis',
+              votingPresentation: 'list',
+            }"
             :enable-route-navigation="false"
           />
         </ConversationStickyActionBar>
@@ -141,8 +144,6 @@
                 conversation-author-username="project-team"
                 conversation-organization-name=""
                 :voting-utilities="votingUtilities"
-                :participation-mode="participationMode"
-                :survey-gate="undefined"
                 :on-view-analysis="showAnalysisTab"
                 :is-voting-disabled="false"
                 :conversation-route-context="projectConversationRouteContext"
@@ -185,7 +186,10 @@
 <script setup lang="ts">
 import { useQuery } from "@tanstack/vue-query";
 import ProjectDocumentControls from "src/components/dev/projectDocuments/ProjectDocumentControls.vue";
-import { scrollToProjectDocuments, useProjectDocumentDemo } from "src/components/dev/projectDocuments/useProjectDocumentDemo";
+import {
+  scrollToProjectDocuments,
+  useProjectDocumentDemo,
+} from "src/components/dev/projectDocuments/useProjectDocumentDemo";
 import AnalysisPage from "src/components/post/analysis/AnalysisPage.vue";
 import CommentSortingSelector from "src/components/post/comments/group/CommentSortingSelector.vue";
 import TranslatedCommentItem from "src/components/post/comments/group/item/TranslatedCommentItem.vue";
@@ -674,7 +678,10 @@ function getRouteTab(): "comment" | "analysis" {
   return route.query.tab === "analysis" ? "analysis" : "comment";
 }
 
-function castVote({ opinionSlugId, voteAction }: {
+function castVote({
+  opinionSlugId,
+  voteAction,
+}: {
   opinionSlugId: string;
   voteAction: VotingAction;
 }): Promise<CastVoteResponse> {

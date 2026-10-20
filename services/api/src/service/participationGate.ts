@@ -1,6 +1,12 @@
 import { httpErrors } from "@fastify/sensible";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type {
+    ConversationEmailUpdateOnboardingAction,
+    ConversationOnboardingStep,
+    ConversationParticipationRejection,
+    ConversationParticipationStatus,
+} from "@/shared/types/dto.js";
+import type {
     ConversationType,
     DeviceLoginStatusExtended,
     EventSlug,
@@ -13,7 +19,7 @@ import type { SupportedDisplayLanguageCodes } from "@/shared/languages.js";
 import { useCommonPost } from "./common.js";
 import * as authUtilService from "./authUtil.js";
 import * as zupassService from "./zupass.js";
-import { getSurveyGateSummary } from "./survey.js";
+import { getSurveyParticipationStatus } from "./survey.js";
 
 interface ResolveParticipantIdentityResultSuccess {
     success: true;
@@ -22,7 +28,12 @@ interface ResolveParticipantIdentityResultSuccess {
 
 interface ResolveParticipantIdentityResultFailure {
     success: false;
-    reason: ParticipationBlockedReason;
+    reason: Extract<
+        ParticipationBlockedReason,
+        | "account_required"
+        | "email_verification_required"
+        | "strong_verification_required"
+    >;
 }
 
 type ResolveParticipantIdentityResult =
@@ -47,9 +58,64 @@ export interface CheckConversationParticipationSuccess {
     requiresEventTicket: EventSlug | null;
 }
 
-export interface CheckConversationParticipationFailure {
-    success: false;
-    reason: ParticipationBlockedReason;
+export type CheckConversationParticipationFailure =
+    ConversationParticipationRejection;
+
+const verificationStepKinds = {
+    account_required: "account",
+    email_verification_required: "email",
+    strong_verification_required: "identity",
+} satisfies Record<
+    Exclude<
+        ParticipationBlockedReason,
+        | "survey_required"
+        | "survey_outdated"
+        | "conversation_closed"
+        | "conversation_locked"
+        | "event_ticket_required"
+    >,
+    Exclude<ConversationOnboardingStep["kind"], "survey">
+>;
+
+function rejectParticipation({
+    reason,
+    deviceStatus,
+}: {
+    reason: Exclude<
+        ParticipationBlockedReason,
+        "survey_required" | "survey_outdated" | "event_ticket_required"
+    >;
+    deviceStatus: DeviceLoginStatusExtended;
+}): CheckConversationParticipationFailure {
+    return {
+        success: false,
+        reason,
+        participationStatus:
+            reason === "conversation_closed" || reason === "conversation_locked"
+                ? { status: "blocked", reason }
+                : {
+                      status: "onboarding_required",
+                      nextStep: {
+                          kind: verificationStepKinds[reason],
+                          purpose: deviceStatus.isLoggedIn
+                              ? "credential"
+                              : "login",
+                      },
+                  },
+    };
+}
+
+function rejectEventTicket(
+    eventSlug: EventSlug,
+): CheckConversationParticipationFailure {
+    return {
+        success: false,
+        reason: "event_ticket_required",
+        participationStatus: {
+            status: "onboarding_required",
+            nextStep: { kind: "ticket", eventSlug },
+        },
+    };
 }
 
 export type CheckConversationParticipationResult =
@@ -70,7 +136,9 @@ export function getParticipationBlockedReasonFromSurveyGateStatus({
 }: {
     surveyGateStatus: SurveyGateStatus;
     isOptional?: boolean;
-}): ParticipationBlockedReason | undefined {
+}):
+    | Extract<ParticipationBlockedReason, "survey_required" | "survey_outdated">
+    | undefined {
     if (isOptional) {
         return undefined;
     }
@@ -162,7 +230,12 @@ async function resolveParticipantIdentity({
     deviceStatus: DeviceLoginStatusExtended;
     participationMode: ParticipationMode;
 }): Promise<ResolveParticipantIdentityResult> {
-    if (participationMode === "guest") {
+    if (
+        participationMode === "guest" ||
+        !deviceStatus.isKnown ||
+        !deviceStatus.isRegistered ||
+        !deviceStatus.isLoggedIn
+    ) {
         return resolveParticipantIdentityFromDeviceStatus({
             deviceStatus,
             participationMode,
@@ -172,18 +245,21 @@ async function resolveParticipantIdentity({
     }
 
     const hasStrongVerification =
-        deviceStatus.isKnown && participationMode === "strong_verification"
-            ? await authUtilService.hasStrongVerification({
+        participationMode === "strong_verification"
+            ? deviceStatus.credentials.phone !== null ||
+              deviceStatus.credentials.rarimo !== null ||
+              (await authUtilService.hasStrongVerification({
                   db,
                   userId: deviceStatus.userId,
-              })
+              }))
             : false;
     const hasEmailVerification =
-        deviceStatus.isKnown && participationMode === "email_verification"
-            ? await authUtilService.hasEmailVerification({
+        participationMode === "email_verification"
+            ? deviceStatus.credentials.email !== null ||
+              (await authUtilService.hasEmailVerification({
                   db,
                   userId: deviceStatus.userId,
-              })
+              }))
             : false;
 
     return resolveParticipantIdentityFromDeviceStatus({
@@ -192,6 +268,174 @@ async function resolveParticipantIdentity({
         hasStrongVerification,
         hasEmailVerification,
     });
+}
+
+type ParticipationEligibility =
+    | (Omit<CheckConversationParticipationSuccess, "participantId"> & {
+          participantId: string | undefined;
+      })
+    | CheckConversationParticipationFailure;
+
+async function resolveConversationParticipation({
+    db,
+    conversationSlugId,
+    deviceStatus,
+    requireCompletedSurvey = true,
+    skipLockCheck = false,
+    skipClosedCheck = false,
+}: {
+    db: PostgresJsDatabase;
+    conversationSlugId: string;
+    deviceStatus: DeviceLoginStatusExtended;
+    requireCompletedSurvey?: boolean;
+    skipLockCheck?: boolean;
+    skipClosedCheck?: boolean;
+}): Promise<ParticipationEligibility> {
+    const { getPostParticipationMetadataFromSlugId, isConversationIdLocked } =
+        useCommonPost();
+    const metadata = await getPostParticipationMetadataFromSlugId({
+        db,
+        conversationSlugId,
+    });
+
+    if (metadata.contentId === null) {
+        throw httpErrors.gone("Cannot participate in a deleted conversation");
+    }
+
+    if (!skipLockCheck) {
+        const isLocked = await isConversationIdLocked({
+            db,
+            conversationId: metadata.id,
+        });
+        if (isLocked) {
+            return rejectParticipation({
+                reason: "conversation_locked",
+                deviceStatus,
+            });
+        }
+    }
+
+    if (!skipClosedCheck && metadata.isClosed) {
+        return rejectParticipation({
+            reason: "conversation_closed",
+            deviceStatus,
+        });
+    }
+
+    const identityResolution = await resolveParticipantIdentity({
+        db,
+        deviceStatus,
+        participationMode: metadata.participationMode,
+    });
+    if (!identityResolution.success) {
+        return rejectParticipation({
+            reason: identityResolution.reason,
+            deviceStatus,
+        });
+    }
+
+    const participantId = identityResolution.participantId;
+
+    if (metadata.requiresEventTicket !== null) {
+        if (participantId === undefined) {
+            return rejectEventTicket(metadata.requiresEventTicket);
+        }
+
+        const hasEventTicket = await zupassService.hasEventTicket({
+            db,
+            userId: participantId,
+            eventSlug: metadata.requiresEventTicket,
+        });
+        if (!hasEventTicket) {
+            return rejectEventTicket(metadata.requiresEventTicket);
+        }
+    }
+
+    const surveyStatus = requireCompletedSurvey
+        ? await getSurveyParticipationStatus({
+              db,
+              conversationId: metadata.id,
+              participantId,
+          })
+        : undefined;
+    if (surveyStatus !== undefined) {
+        const { surveyGate } = surveyStatus;
+        const surveyBlockedReason =
+            getParticipationBlockedReasonFromSurveyGateStatus({
+                surveyGateStatus: surveyGate.status,
+                isOptional: surveyGate.isOptional,
+            });
+        if (surveyBlockedReason !== undefined) {
+            return {
+                success: false,
+                reason: surveyBlockedReason,
+                participationStatus: {
+                    status: "onboarding_required",
+                    nextStep: {
+                        kind: "survey",
+                        routeResolution: surveyStatus.routeResolution,
+                    },
+                },
+            };
+        }
+    }
+
+    return {
+        success: true,
+        conversationId: metadata.id,
+        conversationContentId: metadata.contentId,
+        conversationType: metadata.conversationType,
+        rankingMode: metadata.rankingMode,
+        participantId,
+        participationMode: metadata.participationMode,
+        requiresEventTicket: metadata.requiresEventTicket,
+    };
+}
+
+export async function getConversationParticipationStatus({
+    db,
+    conversationSlugId,
+    deviceStatus,
+    getEmailUpdateOnboardingAction,
+    skipEmailUpdateConsent,
+}: {
+    db: PostgresJsDatabase;
+    conversationSlugId: string;
+    deviceStatus: DeviceLoginStatusExtended;
+    getEmailUpdateOnboardingAction: (params: {
+        userId: string;
+        conversationSlugId: string;
+    }) => Promise<ConversationEmailUpdateOnboardingAction | undefined>;
+    skipEmailUpdateConsent: boolean;
+}): Promise<ConversationParticipationStatus> {
+    const eligibility = await resolveConversationParticipation({
+        db,
+        conversationSlugId,
+        deviceStatus,
+    });
+    if (
+        !eligibility.success &&
+        eligibility.reason !== "survey_required" &&
+        eligibility.reason !== "survey_outdated"
+    )
+        return eligibility.participationStatus;
+    const emailUpdateAction =
+        !skipEmailUpdateConsent &&
+        deviceStatus.isKnown &&
+        deviceStatus.isRegistered &&
+        deviceStatus.isLoggedIn &&
+        deviceStatus.credentials.email !== null &&
+        (await getEmailUpdateOnboardingAction({
+            userId: deviceStatus.userId,
+            conversationSlugId,
+        }));
+    if (emailUpdateAction)
+        return {
+            status: "onboarding_required",
+            nextStep: { kind: "email_updates", action: emailUpdateAction },
+        };
+    if (!eligibility.success) return eligibility.participationStatus;
+    return { status: "ready" };
 }
 
 export async function checkConversationParticipation({
@@ -215,104 +459,32 @@ export async function checkConversationParticipation({
     skipLockCheck?: boolean;
     skipClosedCheck?: boolean;
 }): Promise<CheckConversationParticipationResult> {
-    const { getPostMetadataFromSlugId, isConversationIdLocked } =
-        useCommonPost();
-    const metadata = await getPostMetadataFromSlugId({
-        db,
-        conversationSlugId,
-    });
-
-    if (metadata.contentId === null) {
-        throw httpErrors.gone("Cannot participate in a deleted conversation");
-    }
-
-    if (!skipLockCheck) {
-        const isLocked = await isConversationIdLocked({
-            db,
-            conversationId: metadata.id,
-        });
-        if (isLocked) {
-            return {
-                success: false,
-                reason: "conversation_locked",
-            };
-        }
-    }
-
-    if (!skipClosedCheck && metadata.isClosed) {
-        return {
-            success: false,
-            reason: "conversation_closed",
-        };
-    }
-
     const deviceStatus = await authUtilService.getDeviceStatus({
         db,
         didWrite,
         now,
     });
-    const identityResolution = await resolveParticipantIdentity({
+    const eligibility = await resolveConversationParticipation({
         db,
+        conversationSlugId,
         deviceStatus,
-        participationMode: metadata.participationMode,
+        requireCompletedSurvey,
+        skipLockCheck,
+        skipClosedCheck,
     });
-    if (!identityResolution.success) {
-        return identityResolution;
-    }
-
-    let participantId = identityResolution.participantId;
-
-    if (metadata.requiresEventTicket !== null) {
-        if (participantId === undefined) {
-            return {
-                success: false,
-                reason: "event_ticket_required",
-            };
-        }
-
-        const hasEventTicket = await zupassService.hasEventTicket({
-            db,
-            userId: participantId,
-            eventSlug: metadata.requiresEventTicket,
-        });
-        if (!hasEventTicket) {
-            return {
-                success: false,
-                reason: "event_ticket_required",
-            };
-        }
-    }
-
-    if (requireCompletedSurvey) {
-        const surveyGate = await getSurveyGateSummary({
-            db,
-            conversationId: metadata.id,
-            participantId,
-        });
-        const surveyBlockedReason =
-            getParticipationBlockedReasonFromSurveyGateStatus({
-                surveyGateStatus: surveyGate.status,
-                isOptional: surveyGate.isOptional,
-            });
-        if (surveyBlockedReason !== undefined) {
-            return {
-                success: false,
-                reason: surveyBlockedReason,
-            };
-        }
-    }
-
+    if (!eligibility.success) return eligibility;
+    let participantId = eligibility.participantId;
     if (participantId === undefined) {
         if (
             !requiresRegisteredLoggedInUser({
-                participationMode: metadata.participationMode,
+                participationMode: eligibility.participationMode,
             })
         ) {
             participantId =
                 await authUtilService.getOrRegisterUserIdFromDeviceStatus({
                     db,
                     didWrite,
-                    participationMode: metadata.participationMode,
+                    participationMode: eligibility.participationMode,
                     userAgent,
                     now,
                     currentDisplayLanguage,
@@ -325,13 +497,7 @@ export async function checkConversationParticipation({
     }
 
     return {
-        success: true,
-        conversationId: metadata.id,
-        conversationContentId: metadata.contentId,
-        conversationType: metadata.conversationType,
-        rankingMode: metadata.rankingMode,
+        ...eligibility,
         participantId,
-        participationMode: metadata.participationMode,
-        requiresEventTicket: metadata.requiresEventTicket,
     };
 }

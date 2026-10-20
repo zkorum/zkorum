@@ -1,235 +1,97 @@
-import { storeToRefs } from "pinia";
-import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavigation";
-import type {
-  EventSlug,
-  ParticipationBlockedReason,
-  ParticipationMode,
-  SurveyGateSummary,
-} from "src/shared/types/zod";
-import { useAuthenticationStore } from "src/stores/authentication";
+import { useQueryClient } from "@tanstack/vue-query";
+import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import type { ConversationParticipationRejection } from "src/shared/types/dto";
 import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
-import { useUserStore } from "src/stores/user";
-import { useConversationEmailUpdateSummaryQuery } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
-import { useSurveyStatusQuery } from "src/utils/api/survey/useSurveyQueries";
+import { useParticipationStatusQuery } from "src/utils/api/participation/useParticipationStatusQuery";
 import { getHistoryPosition } from "src/utils/nav/historyBack";
-import { getConversationRouteContextFromRoute } from "src/utils/router/conversationRouteContext";
-import { deriveSurveyRequirementState } from "src/utils/survey/requirements";
 import {
-  computed,
-  type ComputedRef,
-  type MaybeRefOrGetter,
-  ref,
-  toValue,
-} from "vue";
+  getConversationRouteContextFromRoute,
+  isConversationOnboardingRouteName,
+} from "src/utils/router/conversationRouteContext";
+import { useNotify } from "src/utils/ui/notify";
+import { computed, type MaybeRefOrGetter, toValue } from "vue";
 import { useRoute } from "vue-router";
 
-export interface ParticipationGateState {
-  needsAuth: ComputedRef<boolean>;
-  needsTicket: ComputedRef<boolean>;
-  hasSurvey: ComputedRef<boolean>;
-  isSurveyBlocked: ComputedRef<boolean>;
-  isBlockedBeforeParticipation: ComputedRef<boolean>;
-}
+import { participationGateTranslations } from "./useParticipationGate.i18n";
+import { useSurveyNavigation } from "./useSurveyNavigation";
 
-function deriveSurveyBlocked({
-  surveyGate,
-  needsAuth,
-  needsTicket,
-}: {
-  surveyGate: SurveyGateSummary | undefined;
-  needsAuth: boolean;
-  needsTicket: boolean;
-}): boolean {
-  return (
-    surveyGate?.hasSurvey === true &&
-    surveyGate.isOptional !== true &&
-    !surveyGate.canParticipate &&
-    !needsAuth &&
-    !needsTicket
-  );
-}
-
-function deriveBlockedBeforeParticipation({
-  needsAuth,
-  needsTicket,
-  isSurveyBlocked,
-}: {
-  needsAuth: boolean;
-  needsTicket: boolean;
-  isSurveyBlocked: boolean;
-}): boolean {
-  return needsAuth || needsTicket || isSurveyBlocked;
-}
-
-export function useParticipationGate({
-  conversationSlugId,
-  participationMode,
-  requiresEventTicket,
-  surveyGate,
-}: {
-  conversationSlugId: MaybeRefOrGetter<string>;
-  participationMode: MaybeRefOrGetter<ParticipationMode>;
-  requiresEventTicket: MaybeRefOrGetter<EventSlug | undefined>;
-  surveyGate: MaybeRefOrGetter<SurveyGateSummary | undefined>;
-}) {
+export function useParticipationGate(
+  conversationSlugId: MaybeRefOrGetter<string>
+) {
   const route = useRoute();
-  const {
-    isAuthInitialized,
-    isLoggedIn,
-    hasStrongVerification,
-    hasEmailVerification,
-  } = storeToRefs(useAuthenticationStore());
-  const { verifiedEventTickets } = storeToRefs(useUserStore());
-  const conversationOnboardingStore = useConversationOnboardingStore();
-  const { navigateToSurveyRoot, navigateToNextSurveyStep } =
-    useSurveyNavigation();
-  const surveyStatusQuery = useSurveyStatusQuery({
-    conversationSlugId: computed(() => toValue(conversationSlugId)),
-    enabled: computed(() => isAuthInitialized.value),
-  });
-  const requirementState = computed(() => {
-    return deriveSurveyRequirementState({
-      participationMode: toValue(participationMode),
-      requiresEventTicket: toValue(requiresEventTicket),
-      isLoggedIn: isLoggedIn.value,
-      hasStrongVerification: hasStrongVerification.value,
-      hasEmailVerification: hasEmailVerification.value,
-      verifiedEventTicketList: Array.from(verifiedEventTickets.value),
-    });
-  });
-  const resolveEmailUpdates = ref(false);
-  const emailUpdateSummaryQuery = useConversationEmailUpdateSummaryQuery({
-    conversationSlugId: computed(() => toValue(conversationSlugId)),
-    enabled: computed(
-      () =>
-        !requirementState.value.needsAuth &&
-        !requirementState.value.needsTicket &&
-        resolveEmailUpdates.value
-    ),
-  });
+  const queryClient = useQueryClient();
+  const { showNotifyMessage } = useNotify();
+  const { t } = useComponentI18n(participationGateTranslations);
+  const onboarding = useConversationOnboardingStore();
+  const { navigateToSurveyRoot } = useSurveyNavigation();
+  const { participationStatus, recordRejection } =
+    useParticipationStatusQuery(conversationSlugId);
 
-  const effectiveSurveyGate = computed(() => {
-    return surveyStatusQuery.data.value?.surveyGate ?? toValue(surveyGate);
-  });
-
-  const hasSurvey = computed(() => {
-    return effectiveSurveyGate.value?.hasSurvey === true;
-  });
-
-  const isSurveyBlocked = computed(() => {
-    return deriveSurveyBlocked({
-      surveyGate: effectiveSurveyGate.value,
-      needsAuth: requirementState.value.needsAuth,
-      needsTicket: requirementState.value.needsTicket,
-    });
-  });
-
-  const isBlockedBeforeParticipation = computed(() => {
-    return deriveBlockedBeforeParticipation({
-      needsAuth: requirementState.value.needsAuth,
-      needsTicket: requirementState.value.needsTicket,
-      isSurveyBlocked: isSurveyBlocked.value,
-    });
-  });
-
-  function startResumeEntry(): void {
-    conversationOnboardingStore.startResumeEntry({
+  async function navigateToOnboarding(): Promise<void> {
+    if (isConversationOnboardingRouteName(route.name)) return;
+    // Routing uses the snapshot; actual questionnaire data refreshes on entry.
+    for (const resource of ["survey-status", "survey-form"]) {
+      void queryClient.invalidateQueries({
+        queryKey: [resource, toValue(conversationSlugId)],
+        refetchType: "none",
+      });
+    }
+    onboarding.startResumeEntry({
       conversationSlugId: toValue(conversationSlugId),
       returnTarget: route.fullPath,
       returnHistoryPosition: getHistoryPosition({
         historyState: window.history.state,
       }),
-      routeContext: getConversationRouteContextFromRoute({
-        name: route.name,
-        params: route.params,
-      }),
+      routeContext: getConversationRouteContextFromRoute(route),
     });
-  }
-
-  async function needsParticipationOnboarding(): Promise<boolean> {
-    if (
-      requirementState.value.needsAuth ||
-      requirementState.value.needsTicket
-    ) {
-      return true;
-    }
-
-    resolveEmailUpdates.value = true;
-    const emailUpdateStatus = (
-      await emailUpdateSummaryQuery.resolveOnboarding()
-    ).status;
-    if (
-      emailUpdateStatus === "required" ||
-      emailUpdateStatus === "transient_error"
-    ) {
-      return true;
-    }
-
-    if (surveyStatusQuery.data.value === undefined && isAuthInitialized.value) {
-      await surveyStatusQuery.refetch();
-    }
-
-    return deriveSurveyBlocked({
-      surveyGate: effectiveSurveyGate.value,
-      needsAuth: requirementState.value.needsAuth,
-      needsTicket: requirementState.value.needsTicket,
-    });
-  }
-
-  async function openParticipationOnboarding(): Promise<void> {
-    startResumeEntry();
     await navigateToSurveyRoot({
       conversationSlugId: toValue(conversationSlugId),
     });
   }
 
-  async function openNextSurveyStep(): Promise<void> {
-    startResumeEntry();
-    await navigateToNextSurveyStep({
-      conversationSlugId: toValue(conversationSlugId),
-    });
+  async function openParticipationOnboarding(): Promise<void> {
+    if (participationStatus.value.status === "blocked") {
+      showNotifyMessage(t("participationUnavailable"));
+      return;
+    }
+    await navigateToOnboarding();
   }
 
-  async function handleBlockedReason({
-    reason,
-  }: {
-    reason: ParticipationBlockedReason;
-  }): Promise<"handled"> {
-    switch (reason) {
-      case "survey_required":
-      case "survey_outdated":
-        await openParticipationOnboarding();
-        return "handled";
-      case "account_required":
-      case "strong_verification_required":
-      case "email_verification_required":
-      case "event_ticket_required":
-        await openParticipationOnboarding();
-        return "handled";
-      case "conversation_closed":
-      case "conversation_locked":
-        return "handled";
+  function captureParticipationAction() {
+    const isCurrent = onboarding.captureSession();
+    async function handleBlockedReason({
+      participationStatus: status,
+    }: ConversationParticipationRejection): Promise<void> {
+      // A rejection from before this onboarding session must not rewind it.
+      if (!isCurrent()) return;
+      recordRejection(status);
+      if (status.status === "blocked") return;
+      showNotifyMessage(t("participationNeedsOnboarding"));
+      await navigateToOnboarding();
     }
+    return { isCurrent, handleBlockedReason };
   }
+
+  const needsAuth = computed(() => {
+    const status = participationStatus.value;
+    return (
+      status.status === "onboarding_required" &&
+      (status.nextStep.kind === "account" ||
+        status.nextStep.kind === "email" ||
+        status.nextStep.kind === "identity")
+    );
+  });
+  const needsTicket = computed(
+    () =>
+      participationStatus.value.status === "onboarding_required" &&
+      participationStatus.value.nextStep.kind === "ticket"
+  );
 
   return {
-    needsAuth: computed(() => requirementState.value.needsAuth),
-    needsTicket: computed(() => requirementState.value.needsTicket),
-    hasSurvey,
-    isSurveyBlocked,
-    isBlockedBeforeParticipation,
+    participationStatus,
+    needsAuth,
+    needsTicket,
     openParticipationOnboarding,
-    openNextSurveyStep,
-    handleBlockedReason,
-    needsParticipationOnboarding,
-  } satisfies ParticipationGateState & {
-    openParticipationOnboarding: () => Promise<void>;
-    openNextSurveyStep: () => Promise<void>;
-    handleBlockedReason: ({
-      reason,
-    }: {
-      reason: ParticipationBlockedReason;
-    }) => Promise<"handled">;
-    needsParticipationOnboarding: () => Promise<boolean>;
+    captureParticipationAction,
   };
 }

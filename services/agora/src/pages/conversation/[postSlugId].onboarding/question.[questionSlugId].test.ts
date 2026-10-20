@@ -1,15 +1,17 @@
+import { QueryClient, VueQueryPlugin } from "@tanstack/vue-query";
 import type {
   SurveyAnswerSaveResponse,
   SurveyStatusCheckResponse,
 } from "src/shared/types/dto";
 import type { SurveyGateSummary } from "src/shared/types/zod";
+import { participationRejectionFixture } from "src/utils/api/participation/participationTestFixtures";
 import type {
   SurveyFormData,
   useSurveyAnswerSaveMutation,
 } from "src/utils/api/survey/useSurveyQueries";
 import { createDismissalController } from "src/utils/ui/dismissalController";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type App, createApp, defineComponent, h, ref } from "vue";
+import { type App, createApp, defineComponent, h, reactive, ref } from "vue";
 
 const saveAnswer = vi.hoisted(() =>
   vi.fn<ReturnType<typeof useSurveyAnswerSaveMutation>["mutateAsync"]>()
@@ -23,7 +25,14 @@ const state = vi.hoisted(() => ({
   optional: false,
   completed: false,
   hasNextQuestion: false,
+  surveyRemoved: false,
+  surveyRefreshing: false,
 }));
+const route = reactive({
+  params: { questionSlugId: "question-one" },
+  fullPath:
+    "/project/project-one/conversation/conversation-one/onboarding/question/question-one",
+});
 
 vi.mock("pinia", () => ({ storeToRefs: (store: object) => store }));
 vi.mock("src/stores/language", () => ({
@@ -34,7 +43,7 @@ vi.mock("vue-router", () => ({
 }));
 vi.mock("src/composables/conversation/useConversationOnboardingRoute", () => ({
   useConversationOnboardingRoute: () => ({
-    route: { params: { questionSlugId: "question-one" } },
+    route,
     routeConversationSlugId: ref("conversation-one"),
     routeContext: ref({ kind: "project", projectSlug: "project-one" }),
   }),
@@ -78,24 +87,28 @@ vi.mock("src/composables/conversation/useConversationSurveyState", () => ({
       surveyGate: createSurveyGate(),
       routeResolution: { kind: "question", questionSlugId: "question-one" },
     }),
-    surveyForm: ref<SurveyFormData>({
-      success: true,
-      currentRevision: 1,
-      surveyGate: createSurveyGate(),
-      questions: state.hasNextQuestion
-        ? [
-            createQuestion(),
-            {
-              ...createQuestion(),
-              questionSlugId: "question-two",
-              displayOrder: 1,
-            },
-          ]
-        : [createQuestion()],
-    }),
+    surveyForm: ref<SurveyFormData | undefined>(
+      state.surveyRemoved
+        ? undefined
+        : {
+            success: true,
+            currentRevision: 1,
+            surveyGate: createSurveyGate(),
+            questions: state.hasNextQuestion
+              ? [
+                  createQuestion(),
+                  {
+                    ...createQuestion(),
+                    questionSlugId: "question-two",
+                    displayOrder: 1,
+                  },
+                ]
+              : [createQuestion()],
+          }
+    ),
     surveyStepTotal: ref(state.hasNextQuestion ? 4 : 3),
-    requirementState: ref({ needsAuth: false, needsTicket: false }),
     isInitialLoading: ref(false),
+    isRefreshingSurvey: ref(state.surveyRefreshing),
     hasLoadError: ref(false),
     refetchAll: vi.fn(),
   }),
@@ -191,6 +204,13 @@ function createQuestion(): Extract<
 }
 
 function createSurveyGate(): SurveyGateSummary {
+  if (state.surveyRemoved)
+    return {
+      hasSurvey: false,
+      isOptional: false,
+      canParticipate: true,
+      status: "no_survey",
+    };
   return {
     hasSurvey: true,
     isOptional: state.optional,
@@ -209,6 +229,7 @@ function createSaveResponse({
   return {
     success: true,
     justCompleted,
+    participationStatus: { status: "ready" },
     surveyGate: {
       ...createSurveyGate(),
       status,
@@ -218,16 +239,22 @@ function createSaveResponse({
 }
 
 const apps: App[] = [];
+const clients: QueryClient[] = [];
 beforeEach(() => {
+  route.fullPath =
+    "/project/project-one/conversation/conversation-one/onboarding/question/question-one";
   vi.resetAllMocks();
   state.optional = false;
   state.completed = false;
   state.hasNextQuestion = false;
+  state.surveyRemoved = false;
+  state.surveyRefreshing = false;
   saveAnswer.mockResolvedValue(createSaveResponse());
   exitToConversation.mockResolvedValue(true);
 });
 afterEach(() => {
   for (const app of apps.splice(0)) app.unmount();
+  for (const client of clients.splice(0)) client.clear();
   document.body.replaceChildren();
 });
 
@@ -240,6 +267,9 @@ function mountQuestion(): HTMLElement {
     }),
   });
   app.config.errorHandler = handleVueError;
+  const queryClient = new QueryClient();
+  clients.push(queryClient);
+  app.use(VueQueryPlugin, { queryClient });
   app.component("QChip", (props: { label: string }) => h("span", props.label));
   apps.push(app);
   app.mount(target);
@@ -262,6 +292,43 @@ async function clickButton({
 }
 
 describe("questionnaire completion", () => {
+  it("waits for a stale cached no-survey response to refresh before dismissing", async () => {
+    state.surveyRemoved = true;
+    state.surveyRefreshing = true;
+    mountQuestion();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(exitToConversation).not.toHaveBeenCalled();
+    expect(saveAnswer).not.toHaveBeenCalled();
+  });
+  it("dismisses a removed questionnaire without loading its form or claiming completion", async () => {
+    state.surveyRemoved = true;
+    mountQuestion();
+    await vi.waitFor(() => expect(exitToConversation).toHaveBeenCalledOnce());
+    expect(saveAnswer).not.toHaveBeenCalled();
+    expect(showNotifyMessage).not.toHaveBeenCalled();
+  });
+  it("does not announce completion or leave a newer question navigation", async () => {
+    const pending =
+      Promise.withResolvers<Awaited<ReturnType<typeof saveAnswer>>>();
+    saveAnswer.mockReturnValue(pending.promise);
+    const target = mountQuestion();
+    await clickButton({ target, label: "Bicycle" });
+    await clickButton({ target, label: "Next" });
+    route.fullPath += "?review=1";
+    pending.resolve(createSaveResponse());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(exitToConversation).not.toHaveBeenCalled();
+    expect(showNotifyMessage).not.toHaveBeenCalled();
+  });
+  it("silently stops a cancelled participation request", async () => {
+    saveAnswer.mockResolvedValue(undefined);
+    const target = mountQuestion();
+    await clickButton({ target, label: "Bicycle" });
+    await clickButton({ target, label: "Next" });
+    expect(showNotifyMessage).not.toHaveBeenCalled();
+    expect(exitToConversation).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
   it("does not announce completion when the onboarding exit is ignored", async () => {
     exitToConversation.mockResolvedValueOnce(false);
     state.completed = true;
@@ -370,10 +437,9 @@ describe("questionnaire completion", () => {
   });
 
   it("routes a backend verification block back to onboarding without announcing completion", async () => {
-    saveAnswer.mockResolvedValue({
-      success: false,
-      reason: "email_verification_required",
-    });
+    saveAnswer.mockResolvedValue(
+      participationRejectionFixture("email_verification_required")
+    );
     const target = mountQuestion();
     await clickButton({ target, label: "Bicycle" });
     await clickButton({ target, label: "Next" });

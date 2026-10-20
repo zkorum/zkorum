@@ -179,6 +179,9 @@ export const logContextSchema = z.object({
     voteCount: counter.optional(),
     dataGeneration: counter.optional(),
     specCount: counter.optional(),
+    queueStrategy: z
+        .enum(["caller_will_enqueue", "db_reconciliation_only"])
+        .optional(),
     transactionIndex: counter.optional(),
     transactionCount: counter.optional(),
     newVoteCount: counter.optional(),
@@ -215,6 +218,9 @@ export const logContextSchema = z.object({
             "vote_buffer",
             "analysis_schedule",
             "math_queue",
+            "survey_scoring_queue_failed",
+            "event_ticket_verified",
+            "event_ticket_verification_failed",
             "log_sanitization_failed",
         ])
         .optional(),

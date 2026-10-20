@@ -270,10 +270,10 @@ import type { RegisterChildRefreshHandler } from "src/composables/conversation/u
 import { useParticipationGate } from "src/composables/conversation/useParticipationGate";
 import { useVotingActionGuard } from "src/composables/opinion/useVotingActionGuard";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import type { ConversationParticipationRejection } from "src/shared/types/dto";
 import type {
   ExtendedConversationDisplayData,
   MaxDiffComparison,
-  ParticipationBlockedReason,
   RankingItemDisplayedContent,
 } from "src/shared/types/zod";
 import {
@@ -354,17 +354,11 @@ const isParticipationDisabled = computed(() => {
     (moderation.status === "moderated" && moderation.action === "lock")
   );
 });
-const { needsParticipationOnboarding, openParticipationOnboarding } =
-  useParticipationGate({
-    conversationSlugId,
-    participationMode: computed(
-      () => props.conversationData.metadata.participationMode
-    ),
-    requiresEventTicket: computed(
-      () => props.conversationData.metadata.requiresEventTicket
-    ),
-    surveyGate: computed(() => props.conversationData.interaction.surveyGate),
-  });
+const {
+  participationStatus,
+  openParticipationOnboarding,
+  captureParticipationAction,
+} = useParticipationGate(conversationSlugId);
 
 // Inject parent refresh handler (same pattern as ConversationCommentTab)
 const registerChildRefreshHandler = inject<RegisterChildRefreshHandler>(
@@ -382,23 +376,12 @@ async function openOnboarding(): Promise<void> {
   await openParticipationOnboarding();
 }
 
-function handleBlockedSave(reason: ParticipationBlockedReason): void {
-  if (
-    reason === "event_ticket_required" ||
-    reason === "account_required" ||
-    reason === "strong_verification_required" ||
-    reason === "email_verification_required"
-  ) {
-    void openOnboarding();
-    return;
-  }
-
-  if (reason === "survey_required" || reason === "survey_outdated") {
-    void openOnboarding();
-    return;
-  }
-
-  showNotifyMessage(t("savingError"));
+function handleBlockedSave(
+  rejection: ConversationParticipationRejection
+): void {
+  if (rejection.participationStatus.status === "blocked")
+    showNotifyMessage(t("savingError"));
+  void captureParticipationAction().handleBlockedReason(rejection);
 }
 
 // TanStack queries for items and saved state
@@ -916,7 +899,7 @@ async function handleCandidateAction({
       !candidates.value.includes(slugId)
     )
       return;
-    if (await needsParticipationOnboarding()) {
+    if (participationStatus.value.status !== "ready") {
       if (isCurrent()) await openOnboarding();
       return;
     }
@@ -969,6 +952,7 @@ function captureSaveContext({
     previousState: engine.exportState(),
     previousCandidates: [...candidates.value],
     isCurrent,
+    isParticipationCurrent: captureParticipationAction().isCurrent,
   };
 }
 
@@ -1090,7 +1074,7 @@ async function undoLastVote(isCurrent: () => boolean): Promise<void> {
 async function handleUndoClick(): Promise<void> {
   await actionGuard.run(async (isCurrent) => {
     if (isParticipationDisabled.value || !canUndo.value) return;
-    if (await needsParticipationOnboarding()) {
+    if (participationStatus.value.status !== "ready") {
       if (isCurrent()) await openOnboarding();
       return;
     }
@@ -1101,7 +1085,7 @@ async function handleUndoClick(): Promise<void> {
 async function handleRedoRanking(): Promise<void> {
   await actionGuard.run(async (isCurrent) => {
     if (isParticipationDisabled.value || instance.value === undefined) return;
-    if (await needsParticipationOnboarding()) {
+    if (participationStatus.value.status !== "ready") {
       if (isCurrent()) await openOnboarding();
       return;
     }

@@ -23,12 +23,9 @@ import type {
   GetOpinionBySlugIdListResponse,
 } from "src/shared/types/dto";
 import { Dto } from "src/shared/types/dto";
-import type {
-  AnalysisView,
-  DisplayedOpinionItem,
-  OpinionItem,
-} from "src/shared/types/zod";
+import type { AnalysisView } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
+import type { ParticipationRequestResult } from "src/utils/api/participation/requestResult";
 import { waitForAuthInitialization } from "src/utils/auth/waitForAuthInitialization";
 import type { z } from "zod";
 
@@ -50,18 +47,11 @@ export {
 } from "./analysisData";
 
 type CreateNewCommentResult =
-  | {
-      success: true;
-      opinionSlugId: string;
-      opinionItem: OpinionItem;
-      displayedOpinionItem: DisplayedOpinionItem;
+  | (Extract<CreateCommentResponse, { success: true }> & {
       authStateChanged: boolean;
       needsCacheRefresh: boolean;
-    }
-  | {
-      success: false;
-      reason?: Extract<CreateCommentResponse, { success: false }>["reason"];
-    };
+    })
+  | Extract<CreateCommentResponse, { success: false }>;
 
 export function useBackendCommentApi() {
   const { buildEncodedUcan, createRawAxiosRequestConfig } = useCommonApi();
@@ -181,46 +171,52 @@ export function useBackendCommentApi() {
   async function createNewComment({
     commentBody,
     postSlugId,
+    isCurrent,
   }: {
     commentBody: string;
     postSlugId: string;
-  }): Promise<CreateNewCommentResult> {
-    const params: CreateOpinionRequest = {
-      opinionBody: commentBody,
-      conversationSlugId: postSlugId,
-    };
-
-    const { url, options } =
-      await DefaultApiAxiosParamCreator().apiV1OpinionCreatePost(params);
-    const encodedUcan = await buildEncodedUcan(url, options);
-    const response = await DefaultApiFactory(
-      undefined,
-      undefined,
-      api
-    ).apiV1OpinionCreatePost(
-      params,
-      createRawAxiosRequestConfig({ encodedUcan: encodedUcan })
-    );
-
-    const data = Dto.createOpinionResponse.parse(response.data);
-
-    if (data.success) {
-      // TODO: properly manage errors in backend and return login status to update to
-      const { authStateChanged, needsCacheRefresh } =
-        await ensureParticipationAuthState();
-      return {
-        success: true,
-        opinionSlugId: data.opinionSlugId,
-        opinionItem: data.opinionItem,
-        displayedOpinionItem: data.displayedOpinionItem,
-        authStateChanged,
-        needsCacheRefresh,
+    isCurrent: () => boolean;
+  }): Promise<ParticipationRequestResult<CreateNewCommentResult>> {
+    try {
+      const params: CreateOpinionRequest = {
+        opinionBody: commentBody,
+        conversationSlugId: postSlugId,
       };
-    } else {
-      return {
-        success: false,
-        reason: data.reason,
-      };
+
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1OpinionCreatePost(params);
+      const encodedUcan = await buildEncodedUcan(url, options);
+      if (!isCurrent()) return { status: "cancelled" };
+      const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1OpinionCreatePost(
+        params,
+        createRawAxiosRequestConfig({ encodedUcan: encodedUcan })
+      );
+      if (!isCurrent()) return { status: "cancelled" };
+
+      const data = Dto.createOpinionResponse.parse(response.data);
+
+      if (data.success) {
+        const { authStateChanged, needsCacheRefresh } =
+          await ensureParticipationAuthState();
+        if (!isCurrent()) return { status: "cancelled" };
+        return {
+          status: "completed",
+          data: {
+            ...data,
+            authStateChanged,
+            needsCacheRefresh,
+          },
+        };
+      } else {
+        return { status: "completed", data };
+      }
+    } catch (error) {
+      if (!isCurrent()) return { status: "cancelled" };
+      throw error;
     }
   }
 

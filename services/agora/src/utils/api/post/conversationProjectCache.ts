@@ -79,8 +79,8 @@ export async function applyConversationProjectAssignment({
         predicate: (query) => query.queryKey[2] === conversationSlugId,
       }),
       queryClient.invalidateQueries({
-        queryKey: ["conversationEmailUpdateSummary"],
-        predicate: (query) => query.queryKey[3] === conversationSlugId,
+        queryKey: ["participation-status", conversationSlugId],
+        refetchType: "none",
       }),
       queryClient.invalidateQueries({ queryKey: ["feed"] }),
       queryClient.invalidateQueries({

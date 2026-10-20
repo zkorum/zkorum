@@ -36,6 +36,76 @@ function captureServer() {
 }
 
 describe("API logging privacy", () => {
+    it("retains a useful ticket-verification event without proof details", async () => {
+        const capture = captureServer();
+        try {
+            capture.server.log.info(
+                {
+                    event: "event_ticket_verified",
+                    userId: "00000000-0000-4000-8000-000000000001",
+                    nullifier: "private-nullifier",
+                    proof: "private-proof",
+                },
+                "[Zupass] Event ticket verified",
+            );
+            expect(capture.records()[0]).toMatchObject({
+                event: "event_ticket_verified",
+                userId: "00000000-0000-4000-8000-000000000001",
+                msg: "[Zupass] Event ticket verified",
+            });
+            expect(capture.lines.join("")).not.toContain("private-");
+        } finally {
+            await capture.server.close();
+        }
+    });
+
+    it("labels unexpected ticket failures without exposing provider messages", async () => {
+        const capture = captureServer();
+        try {
+            logApiError({
+                logger: capture.server.log,
+                level: "error",
+                event: { event: "event_ticket_verification_failed" },
+                error: new Error("private-proof-provider-error"),
+            });
+            expect(capture.records()[0]).toMatchObject({
+                level: 50,
+                event: "event_ticket_verification_failed",
+                msg: "[Zupass] Event ticket verification failed",
+            });
+            expect(capture.lines.join("")).not.toContain("private-");
+        } finally {
+            await capture.server.close();
+        }
+    });
+    it("emits an actionable survey queue failure without provider details", async () => {
+        const capture = captureServer();
+        try {
+            logApiError({
+                logger: capture.server.log,
+                level: "error",
+                event: {
+                    event: "survey_scoring_queue_failed",
+                    conversationId: 42,
+                    conversationSlugId: "abcd1234",
+                },
+                error: new Error("private-provider-response"),
+            });
+            expect(capture.records()).toHaveLength(1);
+            expect(capture.records()[0]).toMatchObject({
+                level: 50,
+                event: "survey_scoring_queue_failed",
+                conversationId: 42,
+                conversationSlugId: "abcd1234",
+                msg: "[Survey] Failed to queue ranking recomputation",
+            });
+            expect(capture.lines.join("")).not.toContain(
+                "private-provider-response",
+            );
+        } finally {
+            await capture.server.close();
+        }
+    });
     it.each([false, true])(
         "retains actual math queue completion diagnostics (failure=%s)",
         async (fails) => {

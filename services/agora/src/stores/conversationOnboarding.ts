@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { useAuthenticationStore } from "src/stores/authentication";
 import {
   type ConversationRouteContext,
   normalConversationRouteContext,
@@ -9,6 +10,12 @@ import { ref } from "vue";
 export const useConversationOnboardingStore = defineStore(
   "conversationOnboarding",
   () => {
+    const auth = useAuthenticationStore();
+    let sessionGeneration = 0;
+    function captureSession(): () => boolean {
+      const generation = sessionGeneration;
+      return () => generation === sessionGeneration;
+    }
     const conversationSlugId = ref<string | null>(null);
     const returnTarget = ref<string | null>(null);
     const returnHistoryPosition = ref<number | null>(null);
@@ -17,6 +24,13 @@ export const useConversationOnboardingStore = defineStore(
     );
     const isResumeMode = ref(false);
     const emailUpdateConsentSkipped = ref(false);
+    const skippedEmailUpdateConsents = ref(new Set<string>());
+
+    function hasSkippedEmailUpdateConsent(slugId: string): boolean {
+      return skippedEmailUpdateConsents.value.has(
+        JSON.stringify([slugId, auth.userId])
+      );
+    }
 
     function startManualEntry({
       conversationSlugId: nextConversationSlugId,
@@ -29,6 +43,7 @@ export const useConversationOnboardingStore = defineStore(
       returnHistoryPosition?: number | null;
       routeContext?: ConversationRouteContext;
     }): void {
+      sessionGeneration++;
       conversationSlugId.value = nextConversationSlugId;
       routeContext.value = nextRouteContext;
       returnTarget.value =
@@ -53,6 +68,7 @@ export const useConversationOnboardingStore = defineStore(
       returnHistoryPosition?: number | null;
       routeContext?: ConversationRouteContext;
     }): void {
+      sessionGeneration++;
       conversationSlugId.value = nextConversationSlugId;
       routeContext.value = nextRouteContext;
       returnTarget.value =
@@ -68,6 +84,11 @@ export const useConversationOnboardingStore = defineStore(
 
     function markEmailUpdateConsentSkipped(): void {
       emailUpdateConsentSkipped.value = true;
+      if (conversationSlugId.value !== null) {
+        skippedEmailUpdateConsents.value.add(
+          JSON.stringify([conversationSlugId.value, auth.userId])
+        );
+      }
     }
 
     function clearForConversation({
@@ -78,6 +99,7 @@ export const useConversationOnboardingStore = defineStore(
       if (conversationSlugId.value !== currentConversationSlugId) {
         return;
       }
+      sessionGeneration++;
 
       conversationSlugId.value = null;
       returnTarget.value = null;
@@ -88,12 +110,14 @@ export const useConversationOnboardingStore = defineStore(
     }
 
     return {
+      captureSession,
       conversationSlugId,
       returnTarget,
       returnHistoryPosition,
       routeContext,
       isResumeMode,
       emailUpdateConsentSkipped,
+      hasSkippedEmailUpdateConsent,
       startManualEntry,
       startResumeEntry,
       markEmailUpdateConsentSkipped,

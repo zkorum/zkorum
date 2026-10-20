@@ -5,7 +5,7 @@ import {
   type ConversationEmailUpdatePreferenceGroup,
 } from "src/shared/types/dto";
 import { useBackendConversationEmailUpdatesApi } from "src/utils/api/conversationUpdates/conversationEmailUpdates";
-import { useRemoveConversationEmailUpdateSummaryQueries } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
+import { useInvalidateParticipationAfterPreference } from "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, onMounted, ref, watch } from "vue";
 
@@ -41,8 +41,7 @@ export function useConversationUpdatePreferences({
   initialSearch: () => string | undefined;
 }) {
   const emailUpdatesApi = useBackendConversationEmailUpdatesApi();
-  const removeConversationEmailUpdateSummaryQueries =
-    useRemoveConversationEmailUpdateSummaryQueries();
+  const invalidateParticipation = useInvalidateParticipationAfterPreference();
   const { t } =
     useComponentI18n<ConversationUpdatePreferenceSettingsTranslations>(
       conversationUpdatePreferenceSettingsTranslations
@@ -105,9 +104,7 @@ export function useConversationUpdatePreferences({
   );
   const groups = computed(() => preferenceState.value.groups);
   const globalEnabled = computed(() => !preferenceState.value.globalPaused);
-  const isPreferenceSaving = computed(
-    () => pendingOverrides.value.size > 0
-  );
+  const isPreferenceSaving = computed(() => pendingOverrides.value.size > 0);
 
   watch([initialSearch, initialFocus], ([searchValue, focusValue]) => {
     focus.value = focusValue;
@@ -358,7 +355,10 @@ export function useConversationUpdatePreferences({
         return;
       }
       confirmMutation({ result: response.result, revision });
-      removeConversationEmailUpdateSummaryQueries(response.result);
+      invalidateParticipation({
+        result: response.result,
+        preserveConversationSlugId: undefined,
+      });
       showNotifyMessage(t("savePreferenceSuccess"));
     } catch (error) {
       console.error("Failed to update the Email Updates global pause", error);
@@ -407,7 +407,10 @@ export function useConversationUpdatePreferences({
         return;
       }
       confirmMutation({ result: response.result, revision });
-      removeConversationEmailUpdateSummaryQueries(response.result);
+      invalidateParticipation({
+        result: response.result,
+        preserveConversationSlugId: undefined,
+      });
       showPreferenceSaved(response.result.globalResumed);
     } catch (error) {
       console.error(
@@ -460,7 +463,10 @@ export function useConversationUpdatePreferences({
         return;
       }
       confirmMutation({ result: savedResult, revision });
-      removeConversationEmailUpdateSummaryQueries(savedResult);
+      invalidateParticipation({
+        result: savedResult,
+        preserveConversationSlugId: undefined,
+      });
       showPreferenceSaved(savedResult.globalResumed);
     } catch (error) {
       console.error(
@@ -622,10 +628,9 @@ export function useConversationUpdatePreferences({
 }
 
 function normalizeSearch(value: string | undefined): string {
-  return (value ?? "").trim().slice(
-    0,
-    CONVERSATION_EMAIL_UPDATE_PREFERENCE_SEARCH_MAX_LENGTH
-  );
+  return (value ?? "")
+    .trim()
+    .slice(0, CONVERSATION_EMAIL_UPDATE_PREFERENCE_SEARCH_MAX_LENGTH);
 }
 
 function getPreferenceQueryKey({

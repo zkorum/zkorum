@@ -9,10 +9,11 @@ import { useOpinionVoting } from "src/composables/opinion/useOpinionVoting";
 import type { CastVoteResponse } from "src/shared/types/dto";
 import type { DisplayedOpinionItem, VotingAction } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
+import { participationRejectionFixture } from "src/utils/api/participation/participationTestFixtures";
 import { getUserVotesQueryKey } from "src/utils/query/conversationQueryKeys";
 import { seedNewGuestQueries } from "src/utils/query/guestQueryCache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createApp, h } from "vue";
+import { createApp, h, ref } from "vue";
 
 const mocks = vi.hoisted(() => ({
   castVote:
@@ -24,6 +25,7 @@ const mocks = vi.hoisted(() => ({
     >(),
   ensureAuth: vi.fn<() => Promise<void>>(),
   notify: vi.fn(),
+  handleBlockedReason: vi.fn(),
 }));
 vi.mock("../vote", () => ({
   useBackendVoteApi: () => ({ castVoteForComment: mocks.castVote }),
@@ -51,9 +53,12 @@ vi.mock(
 );
 vi.mock("src/composables/conversation/useParticipationGate", () => ({
   useParticipationGate: () => ({
-    needsAuth: false,
-    needsParticipationOnboarding: () => Promise.resolve(false),
+    participationStatus: ref({ status: "ready" }),
     openParticipationOnboarding: vi.fn(),
+    captureParticipationAction: () => ({
+      isCurrent: () => true,
+      handleBlockedReason: mocks.handleBlockedReason,
+    }),
   }),
 }));
 vi.mock("../post/useConversationQuery", () => ({
@@ -201,8 +206,6 @@ function mountActionBar() {
             userVotes: voting.userVotes.value,
             castVote: voting.castVote,
           },
-          participationMode: "guest",
-          surveyGate: undefined,
           onViewAnalysis: () => undefined,
           isVotingDisabled: false,
           showVoteResults: true,
@@ -229,6 +232,35 @@ function mountActionBar() {
 }
 
 describe("immediate last-choice-wins voting", () => {
+  it.each([
+    "survey_required",
+    "survey_outdated",
+    "account_required",
+    "strong_verification_required",
+    "email_verification_required",
+    "event_ticket_required",
+  ] as const)(
+    "rolls back a backend %s rejection before opening onboarding",
+    async (reason) => {
+      const response = Promise.withResolvers<CastVoteResponse>();
+      mocks.castVote.mockReturnValue(response.promise);
+      const { agree } = mountActionBar();
+      mocks.handleBlockedReason.mockImplementation(() => {
+        expect(agree.getAttribute("aria-pressed")).toBe("false");
+      });
+      agree.click();
+      await vi.waitFor(() =>
+        expect(agree.getAttribute("aria-pressed")).toBe("true")
+      );
+      response.resolve(participationRejectionFixture(reason));
+      await vi.waitFor(() =>
+        expect(mocks.handleBlockedReason).toHaveBeenCalledExactlyOnceWith(
+          participationRejectionFixture(reason)
+        )
+      );
+    }
+  );
+
   it("keeps the actual buttons enabled, accepts a new choice, and notifies once on rollback", async () => {
     const first = Promise.withResolvers<CastVoteResponse>();
     mocks.castVote
@@ -522,7 +554,7 @@ describe("immediate last-choice-wins voting", () => {
     const first = Promise.withResolvers<CastVoteResponse>();
     mocks.castVote
       .mockReturnValueOnce(first.promise)
-      .mockResolvedValue({ success: false, reason: "conversation_closed" });
+      .mockResolvedValue(participationRejectionFixture("conversation_closed"));
     const { vote, votes, counts } = mountVoting();
     const disagree = vote({ action: "disagree" });
     await vi.waitFor(() => expect(mocks.castVote).toHaveBeenCalledTimes(1));

@@ -1,6 +1,12 @@
 import { DefaultApiAxiosParamCreator, DefaultApiFactory } from "src/api";
-import { Dto, type VerifyEventTicket200 } from "src/shared/types/dto";
+import {
+  type ConversationOnboardingTicketVerifyRequest,
+  type ConversationOnboardingTicketVerifyResponse,
+  Dto,
+  type VerifyEventTicket200,
+} from "src/shared/types/dto";
 import type { EventSlug } from "src/shared/types/zod";
+import type { ParticipationRequestResult } from "src/utils/api/participation/requestResult";
 
 import { buildAuthorizationHeader } from "../crypto/ucan/operation";
 import { api } from "./client";
@@ -43,5 +49,43 @@ export function useBackendZupassApi() {
     return Dto.verifyEventTicket200.parse(response.data);
   }
 
-  return { verifyEventTicket };
+  async function verifyConversationEventTicket({
+    request,
+    isCurrent,
+  }: {
+    request: ConversationOnboardingTicketVerifyRequest;
+    isCurrent: () => boolean;
+  }): Promise<
+    ParticipationRequestResult<ConversationOnboardingTicketVerifyResponse>
+  > {
+    try {
+      const params =
+        Dto.conversationOnboardingTicketVerifyRequest.parse(request);
+      const { url, options } =
+        await DefaultApiAxiosParamCreator().apiV1ConversationOnboardingTicketVerifyPost(
+          params
+        );
+      const encodedUcan = await buildEncodedUcan(url, options);
+      if (!isCurrent()) return { status: "cancelled" };
+      const response = await DefaultApiFactory(
+        undefined,
+        undefined,
+        api
+      ).apiV1ConversationOnboardingTicketVerifyPost(params, {
+        headers: buildAuthorizationHeader(encodedUcan),
+      });
+      if (!isCurrent()) return { status: "cancelled" };
+      return {
+        status: "completed",
+        data: Dto.conversationOnboardingTicketVerifyResponse.parse(
+          response.data
+        ),
+      };
+    } catch (error) {
+      if (!isCurrent()) return { status: "cancelled" };
+      throw error;
+    }
+  }
+
+  return { verifyEventTicket, verifyConversationEventTicket };
 }

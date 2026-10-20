@@ -81,12 +81,7 @@ import type {
   OpinionVotingUtilities,
 } from "src/composables/opinion/types";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import {
-  type EventSlug,
-  type OpinionItem,
-  type ParticipationMode,
-  type SurveyGateSummary,
-} from "src/shared/types/zod";
+import type { OpinionItem } from "src/shared/types/zod";
 import { calculatePercentage } from "src/shared/util";
 import type { AnalysisData } from "src/utils/api/comment/analysisData";
 import { useInvalidateConversationQuery } from "src/utils/api/post/useConversationQuery";
@@ -111,9 +106,6 @@ const props = defineProps<{
   sourceVersion: string;
   postSlugId: string;
   votingUtilities: OpinionVotingUtilities;
-  participationMode: ParticipationMode;
-  requiresEventTicket?: EventSlug;
-  surveyGate: SurveyGateSummary | undefined;
   onViewAnalysis: () => void;
   isVotingDisabled: boolean;
   showVoteResults: boolean;
@@ -124,13 +116,11 @@ onUnmounted(() => {
   latestVoteAction = undefined;
 });
 const hasVotedThisSession = ref(false);
-const { needsParticipationOnboarding, openParticipationOnboarding } =
-  useParticipationGate({
-    conversationSlugId: computed(() => props.postSlugId),
-    participationMode: computed(() => props.participationMode),
-    requiresEventTicket: computed(() => props.requiresEventTicket),
-    surveyGate: computed(() => props.surveyGate),
-  });
+const {
+  participationStatus,
+  openParticipationOnboarding,
+  captureParticipationAction,
+} = useParticipationGate(() => props.postSlugId);
 
 const { showNotifyMessage } = useNotify();
 const { invalidateConversation } = useInvalidateConversationQuery();
@@ -215,8 +205,9 @@ async function castPersonalVote({
   const action = Symbol();
   latestVoteAction = action;
   const isCurrent = () => latestVoteAction === action;
+  const participation = captureParticipationAction();
   if (props.isVotingDisabled) return;
-  if (await needsParticipationOnboarding()) {
+  if (participationStatus.value.status !== "ready") {
     if (isCurrent()) await openOnboarding();
     return;
   }
@@ -244,23 +235,24 @@ async function castPersonalVote({
       }
     } else {
       hasVotedThisSession.value = userCastedVote.value;
+      if (!participation.isCurrent()) return;
       // Show specific error message based on reason
       if (result.reason === "conversation_closed") {
-        showNotifyMessage(t("conversationClosed"));
+        await participation.handleBlockedReason(result);
+        if (participation.isCurrent())
+          showNotifyMessage(t("conversationClosed"));
       } else if (result.reason === "conversation_locked") {
-        showNotifyMessage(t("voteFailed"));
+        await participation.handleBlockedReason(result);
+        if (participation.isCurrent()) showNotifyMessage(t("voteFailed"));
       } else if (
         result.reason === "event_ticket_required" ||
         result.reason === "account_required" ||
         result.reason === "strong_verification_required" ||
-        result.reason === "email_verification_required"
-      ) {
-        await openOnboarding();
-      } else if (
+        result.reason === "email_verification_required" ||
         result.reason === "survey_required" ||
         result.reason === "survey_outdated"
       ) {
-        await openOnboarding();
+        await participation.handleBlockedReason(result);
       } else {
         showNotifyMessage(t("voteFailed"));
       }

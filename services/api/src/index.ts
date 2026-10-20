@@ -88,7 +88,14 @@ import * as projectDocumentService from "@/service/projectDocument.js";
 import * as projectPageService from "@/service/projectPage.js";
 import * as postService from "@/service/post.js";
 import * as postEditService from "@/service/postEdit.js";
-import { checkConversationParticipation } from "@/service/participationGate.js";
+import {
+    checkConversationParticipation,
+    getConversationParticipationStatus,
+} from "@/service/participationGate.js";
+import {
+    saveConversationOnboardingPreference,
+    verifyConversationOnboardingTicket,
+} from "@/service/conversationOnboarding.js";
 import * as premiumEntitlementService from "@/service/premiumEntitlement.js";
 import * as surveyService from "@/service/survey.js";
 import { useCommonPost } from "@/service/common.js";
@@ -743,8 +750,7 @@ if (config.API_RANKING_PERFORMANCE_ENABLED) {
         return Promise.resolve();
     });
 }
-const conversationEmailUpdateService = createConversationEmailUpdateService({
-    db,
+const conversationEmailUpdateOptions = {
     baseImageServiceUrl: config.IMAGES_SERVICE_BASE_URL,
     siteBaseUrl: z
         .url()
@@ -759,6 +765,10 @@ const conversationEmailUpdateService = createConversationEmailUpdateService({
     sendingEnabled:
         config.CONVERSATION_EMAIL_UPDATES_ENABLED &&
         !config.CONVERSATION_EMAIL_UPDATES_KILL_SWITCH,
+};
+const conversationEmailUpdateService = createConversationEmailUpdateService({
+    db,
+    ...conversationEmailUpdateOptions,
 });
 const conversationEmailUpdateActionService =
     createConversationEmailUpdateActionService({ db });
@@ -5505,6 +5515,27 @@ server.after(() => {
     });
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
+        url: `/api/${apiVersion}/conversation/participation/status`,
+        schema: {
+            body: Dto.conversationParticipationStatusRequest,
+            response: { 200: Dto.conversationParticipationStatusResponse },
+        },
+        handler: async (request) => {
+            const { deviceStatus } = await verifyUcanOptionalAuth(db, request);
+            return await getConversationParticipationStatus({
+                db,
+                conversationSlugId: request.body.conversationSlugId,
+                deviceStatus,
+                getEmailUpdateOnboardingAction: (params) =>
+                    conversationEmailUpdateService.getParticipationOnboardingAction(
+                        { database: db, ...params },
+                    ),
+                skipEmailUpdateConsent: request.body.skipEmailUpdateConsent,
+            });
+        },
+    });
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
         url: `/api/${apiVersion}/survey/status/check`,
         schema: {
             body: Dto.surveyStatusCheckRequest,
@@ -5544,6 +5575,9 @@ server.after(() => {
                 now: nowZeroMs(),
                 currentDisplayLanguage: getRequestDisplayLanguage({ request }),
                 valkey: queueValkeyRef.current,
+                skipEmailUpdateConsent: request.body.skipEmailUpdateConsent,
+                getEmailUpdateOnboardingAction:
+                    conversationEmailUpdateService.getParticipationOnboardingAction,
             });
         },
     });
@@ -5783,7 +5817,7 @@ server.after(() => {
         handler: async (request) => {
             const { didWrite } = await verifyUcan(request);
             const now = nowZeroMs();
-            return await verifyEventTicket({
+            const result = await verifyEventTicket({
                 db,
                 didWrite,
                 proofData: request.body.proof,
@@ -5792,6 +5826,40 @@ server.after(() => {
                 now,
                 sessionLifetimeDays: config.SESSION_LIFETIME_DAYS,
                 currentDisplayLanguage: getRequestDisplayLanguage({ request }),
+                afterVerified: () => Promise.resolve(undefined),
+            });
+            if (!result.success) return result;
+            return {
+                success: true as const,
+                userId: result.userId,
+                accountMerged: result.accountMerged,
+            };
+        },
+    });
+
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/conversation/onboarding/ticket/verify`,
+        schema: {
+            body: Dto.conversationOnboardingTicketVerifyRequest,
+            response: { 200: Dto.conversationOnboardingTicketVerifyResponse },
+        },
+        handler: async (request) => {
+            const { didWrite } = await verifyUcan(request);
+            return await verifyConversationOnboardingTicket({
+                db,
+                request: request.body,
+                emailUpdateOptions: conversationEmailUpdateOptions,
+                verification: {
+                    didWrite,
+                    now: nowZeroMs(),
+                    userAgent:
+                        request.headers["user-agent"] ?? "Unknown device",
+                    sessionLifetimeDays: config.SESSION_LIFETIME_DAYS,
+                    currentDisplayLanguage: getRequestDisplayLanguage({
+                        request,
+                    }),
+                },
             });
         },
     });
@@ -7761,6 +7829,32 @@ server.after(() => {
         },
     });
 
+    server.withTypeProvider<ZodTypeProvider>().route({
+        method: "POST",
+        url: `/api/${apiVersion}/conversation/onboarding/preference/save`,
+        schema: {
+            body: Dto.conversationOnboardingPreferenceSaveRequest,
+            response: { 200: Dto.conversationOnboardingPreferenceSaveResponse },
+        },
+        handler: async (request) => {
+            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
+                db,
+                request,
+                {
+                    expectedKnownDeviceStatus: {
+                        isLoggedIn: true,
+                        isRegistered: true,
+                    },
+                },
+            );
+            return await saveConversationOnboardingPreference({
+                db,
+                deviceStatus,
+                request: request.body,
+                emailUpdateOptions: conversationEmailUpdateOptions,
+            });
+        },
+    });
     server.withTypeProvider<ZodTypeProvider>().route({
         method: "POST",
         url: `/api/${apiVersion}/conversation/email-update/preferences/update`,

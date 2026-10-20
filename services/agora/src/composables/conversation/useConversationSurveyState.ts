@@ -1,37 +1,21 @@
 import { storeToRefs } from "pinia";
 import { useAuthenticationStore } from "src/stores/authentication";
-import { useUserStore } from "src/stores/user";
 import { useConversationQuery } from "src/utils/api/post/useConversationQuery";
 import {
   useSurveyFormQuery,
   useSurveyStatusQuery,
 } from "src/utils/api/survey/useSurveyQueries";
-import { deriveSurveyRequirementState } from "src/utils/survey/requirements";
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
 
-import {
-  resolveSurveyForm,
-  shouldFetchSurveyForm,
-  type SurveyFormLoadMode,
-} from "./surveyStateLogic";
+import { resolveSurveyForm, shouldFetchSurveyForm } from "./surveyStateLogic";
 
 export function useConversationSurveyState({
   conversationSlugId,
-  requireAccount = false,
-  formLoadMode,
 }: {
   conversationSlugId: MaybeRefOrGetter<string>;
-  requireAccount?: boolean;
-  formLoadMode: SurveyFormLoadMode;
 }) {
   const conversationSlugIdValue = computed(() => toValue(conversationSlugId));
-  const {
-    isAuthInitialized,
-    isLoggedIn,
-    hasStrongVerification,
-    hasEmailVerification,
-  } = storeToRefs(useAuthenticationStore());
-  const { verifiedEventTickets } = storeToRefs(useUserStore());
+  const { isAuthInitialized } = storeToRefs(useAuthenticationStore());
 
   const conversationQuery = useConversationQuery({
     conversationSlugId: conversationSlugIdValue,
@@ -45,7 +29,6 @@ export function useConversationSurveyState({
   const shouldLoadSurveyForm = computed(() =>
     shouldFetchSurveyForm({
       surveyStatus: surveyStatus.value,
-      mode: formLoadMode,
     })
   );
   const surveyFormQuery = useSurveyFormQuery({
@@ -85,31 +68,6 @@ export function useConversationSurveyState({
   }));
   const surveyStepTotal = computed(() => surveyProgress.value.total);
 
-  const requirementState = computed(() => {
-    const conversation = conversationData.value;
-
-    if (conversation === undefined) {
-      return {
-        needsAuth: false,
-        needsTicket: false,
-      };
-    }
-
-    return deriveSurveyRequirementState({
-      // Explicit sign-in steps also serve account-only actions such as reports
-      // in conversations that otherwise allow guest participation.
-      participationMode:
-        requireAccount && conversation.metadata.participationMode === "guest"
-          ? "account_required"
-          : conversation.metadata.participationMode,
-      requiresEventTicket: conversation.metadata.requiresEventTicket,
-      isLoggedIn: isLoggedIn.value,
-      hasStrongVerification: hasStrongVerification.value,
-      hasEmailVerification: hasEmailVerification.value,
-      verifiedEventTicketList: Array.from(verifiedEventTickets.value),
-    });
-  });
-
   const isInitialLoading = computed(() => {
     return (
       (conversationQuery.isPending.value &&
@@ -120,12 +78,21 @@ export function useConversationSurveyState({
         surveyForm.value === undefined)
     );
   });
+  const isRefreshingSurvey = computed(
+    () =>
+      surveyStatusQuery.fetchStatus.value !== "idle" ||
+      (shouldLoadSurveyForm.value &&
+        surveyFormQuery.fetchStatus.value !== "idle")
+  );
 
   const hasLoadError = computed(() => {
     return (
-      conversationQuery.isError.value ||
-      surveyStatusQuery.isError.value ||
-      (shouldLoadSurveyForm.value && surveyFormQuery.isError.value)
+      (conversationQuery.isError.value &&
+        conversationData.value === undefined) ||
+      (surveyStatusQuery.isError.value && surveyStatus.value === undefined) ||
+      (shouldLoadSurveyForm.value &&
+        surveyFormQuery.isError.value &&
+        surveyForm.value === undefined)
     );
   });
 
@@ -138,7 +105,6 @@ export function useConversationSurveyState({
     if (
       shouldFetchSurveyForm({
         surveyStatus: surveyStatusResult.data,
-        mode: formLoadMode,
       })
     ) {
       await surveyFormQuery.refetch();
@@ -155,8 +121,8 @@ export function useConversationSurveyState({
     surveyStatus,
     surveyForm,
     surveyStepTotal,
-    requirementState,
     isInitialLoading,
+    isRefreshingSurvey,
     hasLoadError,
     refetchAll,
   };

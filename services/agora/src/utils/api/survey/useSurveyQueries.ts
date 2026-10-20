@@ -18,8 +18,11 @@ import {
   type SurveyGateSummary,
   type SurveyRouteResolution,
 } from "src/shared/types/zod";
+import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { useLanguageStore } from "src/stores/language";
 import { useBackendAuthApi } from "src/utils/api/auth";
+import { useParticipationStatusCache } from "src/utils/api/participation/useParticipationStatusQuery";
+import { useParticipationViewerLifetime } from "src/utils/api/participation/useParticipationViewerLifetime";
 import {
   getSurveyFormQueryKey,
   getSurveyStatusQueryKey,
@@ -532,47 +535,81 @@ export function useSurveyAnswerSaveMutation({
   const { ensureParticipationAuthState } = useBackendAuthApi();
   const queryClient = useQueryClient();
   const viewerScope = useViewerQueryScope();
+  const onboarding = useConversationOnboardingStore();
+  const participationCache = useParticipationStatusCache();
+  const lifetime = useParticipationViewerLifetime();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       questionSlugId,
       answer,
+      conversationSlugId: slugId,
+      isCurrent,
     }: {
       questionSlugId: string;
       answer: SurveyAnswerDraft | null;
+      conversationSlugId: string;
+      isCurrent: () => boolean;
     }) => {
       const response = await saveSurveyAnswer({
-        conversationSlugId: toValue(conversationSlugId),
+        conversationSlugId: slugId,
         questionSlugId,
         answer: answer === null ? null : buildSurveyAnswerSubmission(answer),
+        skipEmailUpdateConsent: onboarding.hasSkippedEmailUpdateConsent(slugId),
+        isCurrent,
       });
+      if (response.status === "cancelled") return undefined;
       if (response.status !== "success") {
         throw new Error("Failed to save survey answer");
       }
       return response.data;
     },
     onSuccess: async (data, variables) => {
+      if (!variables.isCurrent() || data === undefined) return;
       if (!data.success) {
+        participationCache.setStatus({
+          conversationSlugId: variables.conversationSlugId,
+          status: data.participationStatus,
+        });
         return;
       }
 
       await ensureParticipationAuthState();
+      if (!variables.isCurrent()) return;
 
-      const slugId = toValue(conversationSlugId);
+      const slugId = variables.conversationSlugId;
+      const ownerScope = viewerScope.value;
+      participationCache.setStatus({
+        conversationSlugId: slugId,
+        status: data.participationStatus,
+      });
+      await Promise.all(
+        ["survey-form", "survey-status"].map((resource) =>
+          queryClient.cancelQueries({
+            queryKey: [resource, slugId],
+            predicate: (query) =>
+              isQueryForViewerScope({
+                queryKey: query.queryKey,
+                viewerScope: ownerScope,
+              }),
+          })
+        )
+      );
+      if (!variables.isCurrent()) return;
       updateSurveyFormAnswerCaches({
         queryClient,
         conversationSlugId: slugId,
         questionSlugId: variables.questionSlugId,
         answer: variables.answer,
         surveyGate: data.surveyGate,
-        viewerScope: viewerScope.value,
+        viewerScope: ownerScope,
       });
       updateSurveyGateViewerCaches({
         queryClient,
         conversationSlugId: slugId,
         surveyGate: data.surveyGate,
         routeResolution: undefined,
-        viewerScope: viewerScope.value,
+        viewerScope: ownerScope,
       });
       await markSurveyQueriesStale({
         queryClient,
@@ -581,6 +618,18 @@ export function useSurveyAnswerSaveMutation({
     },
     retry: false,
   });
+
+  function mutateAsync(params: {
+    questionSlugId: string;
+    answer: SurveyAnswerDraft | null;
+  }) {
+    return mutation.mutateAsync({
+      ...params,
+      conversationSlugId: toValue(conversationSlugId),
+      isCurrent: lifetime.capture(),
+    });
+  }
+  return { ...mutation, mutateAsync };
 }
 
 export function useSurveyWithdrawMutation({

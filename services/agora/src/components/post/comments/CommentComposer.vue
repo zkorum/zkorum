@@ -133,14 +133,8 @@ import { useOpinionComposerViewport } from "src/composables/opinion/useOpinionCo
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useIdleMount } from "src/composables/ui/useIdleMount";
 import { hasVisiblePlainText, MAX_LENGTH_OPINION } from "src/shared/shared";
-import type {
-  DisplayedOpinionItem,
-  EventSlug,
-  ParticipationMode,
-  SurveyGateSummary,
-} from "src/shared/types/zod";
+import type { DisplayedOpinionItem } from "src/shared/types/zod";
 import { useNewOpinionDraftsStore } from "src/stores/newOpinionDrafts";
-import { useUserStore } from "src/stores/user";
 import {
   useCreateCommentMutation,
   useEditOpinionMutation,
@@ -183,9 +177,6 @@ defineOptions({
 const props = defineProps<{
   editingTarget: OpinionEditRequest | undefined;
   postSlugId: string;
-  participationMode: ParticipationMode;
-  requiresEventTicket?: EventSlug;
-  surveyGate?: SurveyGateSummary;
   isComposerDisabled: boolean;
   actionBarElement: HTMLElement | undefined;
 }>();
@@ -255,20 +246,17 @@ const dummyInput = ref<HTMLInputElement>();
 
 const { saveOpinionDraft, getOpinionDraft, deleteOpinionDraft } =
   useNewOpinionDraftsStore();
-const userStore = useUserStore();
 
 const createCommentMutation = useCreateCommentMutation();
 const editMutation = useEditOpinionMutation(props.postSlugId);
 const { t: editT } = useComponentI18n(opinionEditingTranslations);
 
 const { showNotifyMessage } = useNotify();
-const { needsParticipationOnboarding, openParticipationOnboarding } =
-  useParticipationGate({
-    conversationSlugId: computed(() => props.postSlugId),
-    participationMode: computed(() => props.participationMode),
-    requiresEventTicket: computed(() => props.requiresEventTicket),
-    surveyGate: computed(() => props.surveyGate),
-  });
+const {
+  participationStatus,
+  openParticipationOnboarding,
+  captureParticipationAction,
+} = useParticipationGate(() => props.postSlugId);
 
 const { invalidateConversation } = useInvalidateConversationQuery();
 
@@ -603,7 +591,8 @@ function onCharacterCountUpdate(count: number) {
 }
 
 async function submitPostClicked() {
-  if (await needsParticipationOnboarding()) {
+  const participation = captureParticipationAction();
+  if (participationStatus.value.status !== "ready") {
     await openOnboarding();
     return;
   }
@@ -615,6 +604,10 @@ async function submitPostClicked() {
       commentBody: opinionBody.value,
       conversationSlugId: props.postSlugId,
     });
+    if (response === undefined) {
+      isSubmissionLoading.value = false;
+      return;
+    }
 
     if (response.success) {
       emit("submittedComment", {
@@ -630,41 +623,32 @@ async function submitPostClicked() {
       deleteOpinionDraft(props.postSlugId);
     } else {
       isSubmissionLoading.value = false;
+      if (!participation.isCurrent()) return;
       // Business logic failure
-      if (response.reason) {
-        switch (response.reason) {
-          case "conversation_locked":
-            showNotifyMessage(t("conversationLockedError"));
-            break;
-          case "conversation_closed":
-            // Show error message but keep text so user can copy it
-            showNotifyMessage(t("conversationClosedError"));
-            // Invalidate conversation to refresh UI and show disabled state
-            invalidateConversation(props.postSlugId);
-            // Don't clear opinionBody or unlock route - preserve the text
-            break;
-          case "event_ticket_required":
-            // Backend says ticket required, but our local state might be stale
-            // Refresh user profile to get latest verified tickets, then show dialog
-            await userStore.loadUserProfile();
-            await openOnboarding();
-            break;
-          case "account_required":
-          case "strong_verification_required":
-          case "email_verification_required":
-            // User lacks required verification for this conversation
-            await openOnboarding();
-            break;
-          case "survey_required":
-          case "survey_outdated":
-            await openOnboarding();
-            break;
-          case "plain_text_empty":
-          case "plain_text_too_long":
-          case "html_too_long":
-            showNotifyMessage(t("createOpinionError"));
-            break;
-        }
+      switch (response.reason) {
+        case "conversation_locked":
+          showNotifyMessage(t("conversationLockedError"));
+          break;
+        case "conversation_closed":
+          // Show error message but keep text so user can copy it
+          showNotifyMessage(t("conversationClosedError"));
+          // Invalidate conversation to refresh UI and show disabled state
+          invalidateConversation(props.postSlugId);
+          // Don't clear opinionBody or unlock route - preserve the text
+          break;
+        case "event_ticket_required":
+        case "account_required":
+        case "strong_verification_required":
+        case "email_verification_required":
+        case "survey_required":
+        case "survey_outdated":
+          await participation.handleBlockedReason(response);
+          break;
+        case "plain_text_empty":
+        case "plain_text_too_long":
+        case "html_too_long":
+          showNotifyMessage(t("createOpinionError"));
+          break;
       }
     }
   } catch {

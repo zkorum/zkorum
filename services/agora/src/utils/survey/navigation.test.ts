@@ -1,26 +1,28 @@
-import type { ParticipationMode } from "src/shared/types/zod";
+import type { ConversationOnboardingStep } from "src/shared/types/dto";
 import { describe, expect, it } from "vitest";
 
 import { getConversationCredentialChoicePath } from "./navigation";
 
 describe("credential choice navigation", () => {
   it.each([
-    { participationMode: "strong_verification", suffix: "verify/identity" },
-    { participationMode: "account_required", suffix: "verify/hard" },
-    { participationMode: "guest", suffix: "verify/hard" },
-    { participationMode: "email_verification", suffix: "" },
-    { participationMode: undefined, suffix: "" },
+    {
+      nextStep: { kind: "identity", purpose: "credential" },
+      suffix: "verify/identity",
+    },
+    { nextStep: { kind: "account", purpose: "login" }, suffix: "verify/hard" },
+    { nextStep: { kind: "email", purpose: "login" }, suffix: "" },
+    { nextStep: undefined, suffix: "verify/hard" },
   ] satisfies Array<{
-    participationMode: ParticipationMode | undefined;
+    nextStep: ConversationOnboardingStep | undefined;
     suffix: string;
   }>)(
-    "returns to the $participationMode credential choices without stored upgrade flags",
-    ({ participationMode, suffix }) => {
+    "maps a backend step to the project-scoped $suffix parent",
+    ({ nextStep, suffix }) => {
       expect(
         getConversationCredentialChoicePath({
           conversationSlugId: "example",
           routeContext: { kind: "project", projectSlug: "test" },
-          participationMode,
+          nextStep,
         })
       ).toBe(`/project/test/conversation/example/onboarding/${suffix}`);
     }

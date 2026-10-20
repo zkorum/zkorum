@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { resolveSurveyForm, shouldFetchSurveyForm } from "./surveyStateLogic";
 
 describe("shouldFetchSurveyForm", () => {
-  it("does not load completed answers just to finish verification", () => {
+  it("loads completed answers when an answer or review page requests the form", () => {
     const surveyStatus: SurveyStatusCheckResponse = {
       surveyGate: {
         hasSurvey: true,
@@ -15,9 +15,6 @@ describe("shouldFetchSurveyForm", () => {
       },
       routeResolution: { kind: "summary" },
     };
-    expect(shouldFetchSurveyForm({ surveyStatus, mode: "incomplete" })).toBe(
-      false
-    );
     expect(shouldFetchSurveyForm({ surveyStatus })).toBe(true);
   });
 

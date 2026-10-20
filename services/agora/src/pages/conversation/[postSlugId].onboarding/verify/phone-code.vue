@@ -10,7 +10,7 @@
         fixed-navigation
         :submit-call-back="onSubmit"
         :current-step="2.5"
-        :total-steps="surveyStepTotal"
+        :total-steps="totalSteps"
         :enable-next-button="phoneOtpFormRef?.isCodeComplete?.() ?? false"
         :show-next-button="phoneOtpFormRef?.isAvailable ?? false"
         :show-loading-button="phoneOtpFormRef?.isSubmitButtonLoading ?? false"
@@ -44,7 +44,7 @@ import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import PhoneOtpForm from "src/components/verification/PhoneOtpForm.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
-import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
+import { useConversationVerificationState } from "src/composables/conversation/useConversationVerificationState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useSkipUnavailablePhoneRegistration } from "src/composables/verification/useSkipUnavailablePhoneRegistration";
 import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
@@ -77,9 +77,9 @@ const phoneAuthPurpose = computed(() =>
 );
 const { exitToConversation } = useConversationOnboardingExit();
 
-const { conversationSlugId, surveyStepTotal } = useConversationSurveyState({
+const { conversationSlugId, totalSteps } = useConversationVerificationState({
   conversationSlugId: routeConversationSlugId,
-  formLoadMode: "incomplete",
+  routeContext,
 });
 const skipPhoneRegistration = useSkipUnavailablePhoneRegistration({
   availability: usePhoneAuthAvailability(phoneAuthPurpose),

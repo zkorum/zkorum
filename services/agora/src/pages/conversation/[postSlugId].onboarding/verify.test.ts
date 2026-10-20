@@ -1,4 +1,4 @@
-import type { SurveyStatusCheckResponse } from "src/shared/types/dto";
+import type { ParticipationStatus } from "src/utils/api/participation/useParticipationStatusQuery";
 import { createDismissalController } from "src/utils/ui/dismissalController";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -13,12 +13,11 @@ import {
 import { createMemoryHistory, createRouter, RouterView } from "vue-router";
 
 const completeOnboarding = vi.hoisted(() => vi.fn().mockResolvedValue(true));
+const exitToConversation = vi.hoisted(() => vi.fn().mockResolvedValue(true));
 const otpUnmounted = vi.hoisted(() => vi.fn());
-const refetchAll = vi.hoisted(() => vi.fn());
-const loading = ref(true);
-const loadError = ref(false);
-const surveyStatus = ref<SurveyStatusCheckResponse>();
-
+const refetch = vi.hoisted(() => vi.fn());
+const notify = vi.hoisted(() => vi.fn());
+const participationStatus = ref<ParticipationStatus>({ status: "checking" });
 vi.mock(
   "src/composables/conversation/useConversationOnboardingCompletion",
   () => ({
@@ -26,36 +25,17 @@ vi.mock(
   })
 );
 vi.mock("src/composables/conversation/useConversationOnboardingExit", () => ({
-  useConversationOnboardingExit: () => ({ exitToConversation: vi.fn() }),
+  useConversationOnboardingExit: () => ({ exitToConversation }),
 }));
-vi.mock("src/stores/conversationOnboarding", () => ({
-  useConversationOnboardingStore: () => ({
-    emailUpdateConsentSkipped: false,
-    isResumeMode: false,
-  }),
+vi.mock("src/utils/api/participation/useParticipationStatusQuery", () => ({
+  useParticipationStatusQuery: () => ({ participationStatus, refetch }),
 }));
-vi.mock("src/composables/conversation/useConversationSurveyState", () => ({
-  useConversationSurveyState: () => ({
-    conversationSlugId: ref("example"),
-    conversationData: ref({
-      metadata: { participationMode: "account_required" },
-    }),
-    surveyStatus,
-    surveyForm: ref(undefined),
-    requirementState: ref({ needsAuth: false, needsTicket: false }),
-    isInitialLoading: loading,
-    hasLoadError: loadError,
-    refetchAll,
-  }),
+vi.mock("src/utils/ui/notify", () => ({
+  useNotify: () => ({ showNotifyMessage: notify }),
 }));
-vi.mock(
-  "src/utils/api/conversationUpdates/useConversationEmailUpdateQueries",
-  () => ({
-    useConversationEmailUpdateSummaryQuery: () => ({
-      onboardingResolution: ref({ status: "not_required" }),
-    }),
-  })
-);
+vi.mock("src/composables/ui/useComponentI18n", () => ({
+  useComponentI18n: () => ({ t: (key: string) => key }),
+}));
 vi.mock("src/layouts/ConversationOnboardingLayout.vue", () => ({
   default: defineComponent(
     (_props, { slots }) =>
@@ -65,9 +45,6 @@ vi.mock("src/layouts/ConversationOnboardingLayout.vue", () => ({
 }));
 vi.mock("src/components/ui/PageLoadingSpinner.vue", () => ({
   default: defineComponent(() => () => h("div", { "data-testid": "loading" })),
-}));
-vi.mock("src/composables/ui/useComponentI18n", () => ({
-  useComponentI18n: () => ({ t: (key: string) => key }),
 }));
 vi.mock("src/components/ui/ErrorRetryBlock.vue", () => ({
   default: defineComponent({
@@ -84,18 +61,16 @@ const apps: App[] = [];
 afterEach(() => {
   for (const app of apps.splice(0)) app.unmount();
   document.body.replaceChildren();
-  completeOnboarding.mockReset().mockResolvedValue(true);
-  otpUnmounted.mockReset();
-  refetchAll.mockReset();
-  loading.value = true;
-  loadError.value = false;
-  surveyStatus.value = undefined;
+  vi.clearAllMocks();
+  completeOnboarding.mockResolvedValue(true);
+  exitToConversation.mockResolvedValue(true);
+  participationStatus.value = { status: "checking" };
 });
 
-async function mountVerification(path: string) {
-  const sheet = createDismissalController({
-    fallbackDismiss: () => Promise.resolve(),
-  });
+async function mountVerification(
+  path = "/conversation/example/onboarding/verify"
+) {
+  const sheet = createDismissalController({ fallbackDismiss: async () => {} });
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -113,6 +88,10 @@ async function mountVerification(path: string) {
               return () => h("p", { "data-testid": "otp" }, "Enter code");
             }),
           },
+          {
+            path: "hard",
+            component: defineComponent(() => () => h("p", "Sign in")),
+          },
         ],
       },
     ],
@@ -127,22 +106,11 @@ async function mountVerification(path: string) {
   return { target, router };
 }
 
-describe("verification handoff", () => {
+describe("single-snapshot verification handoff", () => {
   it("makes a blocked automatic exit retryable", async () => {
     completeOnboarding.mockResolvedValueOnce(false);
-    surveyStatus.value = {
-      surveyGate: {
-        hasSurvey: false,
-        isOptional: false,
-        canParticipate: true,
-        status: "no_survey",
-      },
-      routeResolution: { kind: "none" },
-    };
-    loading.value = false;
-    const { target } = await mountVerification(
-      "/conversation/example/onboarding/verify"
-    );
+    participationStatus.value = { status: "ready" };
+    const { target } = await mountVerification();
     await vi.waitFor(() =>
       expect(target.querySelector("button")).not.toBeNull()
     );
@@ -150,28 +118,17 @@ describe("verification handoff", () => {
     await vi.waitFor(() => expect(completeOnboarding).toHaveBeenCalledTimes(2));
   });
 
-  it("unmounts the old OTP form while resolving fresh account data", async () => {
+  it("unmounts the OTP form while awaiting the next backend-owned step", async () => {
     const { target, router } = await mountVerification(
       "/conversation/example/onboarding/verify/email-code"
     );
-    const originalStep = target.querySelector('[data-testid="otp"]');
-    expect(originalStep).not.toBeNull();
+    expect(target.querySelector('[data-testid="otp"]')).not.toBeNull();
     await router.replace("/conversation/example/onboarding/verify");
     await nextTick();
     expect(target.querySelector('[data-testid="otp"]')).toBeNull();
     expect(otpUnmounted).toHaveBeenCalledOnce();
     expect(target.querySelector('[data-testid="loading"]')).not.toBeNull();
-
-    surveyStatus.value = {
-      surveyGate: {
-        hasSurvey: true,
-        isOptional: false,
-        canParticipate: true,
-        status: "complete_valid",
-      },
-      routeResolution: { kind: "summary" },
-    };
-    loading.value = false;
+    participationStatus.value = { status: "ready" };
     await nextTick();
     expect(completeOnboarding).toHaveBeenCalledExactlyOnceWith({
       conversationSlugId: "example",
@@ -179,23 +136,39 @@ describe("verification handoff", () => {
     });
   });
 
-  it("shows a loading state rather than a blank sheet on a direct verification link", async () => {
-    const { target } = await mountVerification(
-      "/conversation/example/onboarding/verify"
-    );
+  it("shows loading on a direct link until the snapshot arrives", async () => {
+    const { target } = await mountVerification();
     expect(target.querySelector('[data-testid="loading"]')).not.toBeNull();
+    expect(completeOnboarding).not.toHaveBeenCalled();
   });
 
-  it("keeps a failed account refresh retryable without completing onboarding", async () => {
-    const { target } = await mountVerification(
-      "/conversation/example/onboarding/verify"
-    );
-    loading.value = false;
-    loadError.value = true;
+  it("keeps failed status loading retryable without claiming completion", async () => {
+    const { target } = await mountVerification();
+    participationStatus.value = { status: "unavailable" };
     await nextTick();
-    expect(target.querySelector('[data-testid="loading"]')).toBeNull();
     target.querySelector("button")?.click();
-    expect(refetchAll).toHaveBeenCalledOnce();
+    expect(refetch).toHaveBeenCalledOnce();
     expect(completeOnboarding).not.toHaveBeenCalled();
+  });
+
+  it("follows a sign-in decision without conversation metadata or survey queries", async () => {
+    participationStatus.value = {
+      status: "onboarding_required",
+      nextStep: { kind: "account", purpose: "login" },
+    };
+    const { target } = await mountVerification();
+    await vi.waitFor(() => expect(target.textContent).toContain("Sign in"));
+    expect(completeOnboarding).not.toHaveBeenCalled();
+  });
+
+  it("does not announce completion when participation became unavailable", async () => {
+    participationStatus.value = {
+      status: "blocked",
+      reason: "conversation_closed",
+    };
+    await mountVerification();
+    await vi.waitFor(() => expect(exitToConversation).toHaveBeenCalledOnce());
+    expect(completeOnboarding).not.toHaveBeenCalled();
+    expect(notify).toHaveBeenCalledExactlyOnceWith("participationUnavailable");
   });
 });

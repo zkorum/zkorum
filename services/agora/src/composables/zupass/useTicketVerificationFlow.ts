@@ -1,184 +1,175 @@
-import {
-  type EventTicketRequirementBannerTranslations,
-  eventTicketRequirementBannerTranslations,
-} from "src/components/post/EventTicketRequirementBanner.i18n";
+import { eventTicketRequirementBannerTranslations } from "src/components/post/EventTicketRequirementBanner.i18n";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
+import type {
+  ConversationOnboardingTicketVerifyResponse,
+  VerifyEventTicket200,
+} from "src/shared/types/dto";
 import type { EventSlug } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
+import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
 import { useUserStore } from "src/stores/user";
 import { useBackendAuthApi } from "src/utils/api/auth";
+import { useParticipationStatusCache } from "src/utils/api/participation/useParticipationStatusQuery";
+import { useParticipationViewerLifetime } from "src/utils/api/participation/useParticipationViewerLifetime";
 import { useBackendZupassApi } from "src/utils/api/zupass";
 import { useNotify } from "src/utils/ui/notify";
+import { onScopeDispose } from "vue";
 
 import { useZupassVerification } from "./useZupassVerification";
 
+let activeVerification: symbol | undefined;
+
 export type TicketVerificationResult =
-  | {
-      success: true;
-      userIdChanged: boolean;
-      needsCacheRefresh: boolean;
-    }
-  | {
-      success: false;
-      error: string;
-    };
+  | { success: true; userIdChanged: boolean; needsCacheRefresh: boolean }
+  | { success: false; error: string };
 
 export interface TicketVerificationOptions {
   eventSlug: EventSlug;
+  conversationSlugId?: string;
   successMessage?: string;
   onSuccess?: (result: TicketVerificationResult) => void | Promise<void>;
   onIframeReady?: () => void;
 }
 
-/**
- * Composable that provides a reusable ticket verification flow
- * Handles the full flow: request proof -> verify backend -> update state
- */
 export function useTicketVerificationFlow() {
-  const { requestTicketProof, setOnIframeReady, isVerifying } = useZupassVerification();
-  const { verifyEventTicket } = useBackendZupassApi();
+  const { requestTicketProof, setOnIframeReady, isVerifying } =
+    useZupassVerification();
+  const backend = useBackendZupassApi();
   const { updateAuthState } = useBackendAuthApi();
   const { showNotifyMessage } = useNotify();
-  const authStore = useAuthenticationStore();
-  const userStore = useUserStore();
+  const auth = useAuthenticationStore();
+  const user = useUserStore();
+  const onboarding = useConversationOnboardingStore();
+  const cache = useParticipationStatusCache();
+  const lifetime = useParticipationViewerLifetime();
+  const { t } = useComponentI18n(eventTicketRequirementBannerTranslations);
+  let disposed = false;
+  onScopeDispose(() => {
+    disposed = true;
+  });
 
-  // Translations for error messages
-  const { t } = useComponentI18n<EventTicketRequirementBannerTranslations>(
-    eventTicketRequirementBannerTranslations
-  );
-
-  // Map error codes to user-friendly messages
-  function getErrorMessage(errorCode: string): string {
-    const errorMessages: Record<string, string> = {
+  function getErrorMessage(code: string): string {
+    const messages: Record<string, string> = {
       deserialization_error: t("errorDeserialization"),
       invalid_proof: t("errorInvalidProof"),
       invalid_signer: t("errorInvalidSigner"),
       wrong_event: t("errorWrongEvent"),
       ticket_already_used: t("errorTicketAlreadyUsed"),
-      unknown: t("errorUnknown"),
     };
-    return errorMessages[errorCode] || errorMessages.unknown;
+    return messages[code] ?? t("errorUnknown");
   }
 
   async function verifyTicket({
     eventSlug,
+    conversationSlugId,
     successMessage,
     onSuccess,
     onIframeReady,
   }: TicketVerificationOptions): Promise<TicketVerificationResult> {
-    // Set verifying state in store immediately
-    userStore.setTicketVerifying(eventSlug);
+    if (isVerifying.value) return { success: false, error: "cancelled" };
+    const attempt = Symbol();
+    activeVerification = attempt;
+    const initialViewer = lifetime.capture();
+    let phase: { kind: "proof" } | { kind: "auth_refresh"; userId: string } = {
+      kind: "proof",
+    };
+    const isCurrent = () =>
+      activeVerification === attempt &&
+      !disposed &&
+      (phase.kind === "proof" ? initialViewer() : auth.userId === phase.userId);
+    user.setTicketVerifying(eventSlug);
     isVerifying.value = true;
-
     try {
-
-      // Set callback to close dialog when iframe is ready
-      if (onIframeReady) {
-        setOnIframeReady(onIframeReady);
-      }
-
-      // Request proof from Zupass (Parcnet creates its own dialog)
-      const proofResult = await requestTicketProof({
-        eventSlug,
+      setOnIframeReady(() => {
+        if (isCurrent()) onIframeReady?.();
       });
-
-      if (!proofResult.success) {
-        // Handle cancellation gracefully - don't show error
-        if (proofResult.error === "cancelled") {
-          userStore.clearTicketState(eventSlug);
+      const proof = await requestTicketProof({ eventSlug });
+      if (!isCurrent()) return { success: false, error: "cancelled" };
+      if (!proof.success) {
+        if (proof.error === "cancelled") {
+          user.clearTicketState(eventSlug);
           return { success: false, error: "cancelled" };
         }
-
-        const errorReason = proofResult.error || "unknown";
-        const errorMessage = getErrorMessage(errorReason);
-        userStore.setTicketError(eventSlug, errorMessage);
-        showNotifyMessage(errorMessage);
-        return { success: false, error: errorReason };
+        const reason = proof.error ?? "unknown";
+        const message = getErrorMessage(reason);
+        user.setTicketError(eventSlug, message);
+        showNotifyMessage(message);
+        return { success: false, error: reason };
       }
 
-      // Send GPC proof to backend for verification
-      console.log("[TicketVerificationFlow] Sending proof to backend...");
-      let verifyResult;
-      try {
-        verifyResult = await verifyEventTicket({
-          proof: proofResult.proof!,
+      let result:
+        | VerifyEventTicket200
+        | ConversationOnboardingTicketVerifyResponse;
+      if (conversationSlugId === undefined) {
+        result = await backend.verifyEventTicket({
+          proof: proof.proof,
           eventSlug,
         });
-        console.log("[TicketVerificationFlow] Backend response:", verifyResult);
-      } catch (backendError) {
-        console.error("[TicketVerificationFlow] Backend call threw exception:", backendError);
-        throw backendError;
+      } else {
+        const response = await backend.verifyConversationEventTicket({
+          request: {
+            proof: proof.proof,
+            eventSlug,
+            conversationSlugId,
+            skipEmailUpdateConsent:
+              onboarding.hasSkippedEmailUpdateConsent(conversationSlugId),
+          },
+          isCurrent,
+        });
+        if (response.status === "cancelled")
+          return { success: false, error: "cancelled" };
+        result = response.data;
+      }
+      if (!isCurrent()) return { success: false, error: "cancelled" };
+      if (!result.success) {
+        const message = getErrorMessage(result.reason);
+        user.setTicketError(eventSlug, message);
+        showNotifyMessage(message);
+        return { success: false, error: result.reason };
       }
 
-      if (!verifyResult.success) {
-        const errorReason = verifyResult.reason || "unknown";
-        console.log(
-          "[TicketVerificationFlow] Verification failed with reason:",
-          errorReason
-        );
-        const errorMessage = getErrorMessage(errorReason);
-        userStore.setTicketError(eventSlug, errorMessage);
-        showNotifyMessage(errorMessage);
-        return { success: false, error: errorReason };
-      }
-
-      // Check if userId changed (account merge)
-      const currentUserId = authStore.userId;
-      const newUserId = verifyResult.userId;
-      const userIdChanged = currentUserId !== newUserId;
-
-      // Update auth state with deferred cache operations
+      const userIdChanged = auth.userId !== result.userId;
+      // Verification can deliberately create or merge into the server-returned
+      // account. Only that account may receive its continuation snapshot.
+      phase = { kind: "auth_refresh", userId: result.userId };
       const { needsCacheRefresh } = await updateAuthState({
-        partialLoginStatus: { isKnown: true, userId: newUserId },
+        partialLoginStatus: { isKnown: true, userId: result.userId },
         deferCacheOperations: true,
       });
-
-      // Add verified ticket to user store immediately to unlock gated content
-      // This also clears the transient "verifying" state since getTicketVerificationState
-      // will now return "verified"
-      userStore.addVerifiedTicket(eventSlug);
-      userStore.clearTicketState(eventSlug);
-      console.log(
-        "[TicketVerificationFlow] Ticket verified and state cleared for",
-        eventSlug
+      if (!isCurrent()) return { success: false, error: "cancelled" };
+      user.addVerifiedTicket(eventSlug);
+      user.clearTicketState(eventSlug);
+      if (conversationSlugId !== undefined && "participationStatus" in result)
+        cache.setStatus({
+          conversationSlugId,
+          status: result.participationStatus,
+        });
+      showNotifyMessage(
+        successMessage ??
+          (result.accountMerged
+            ? t("accountMergedSuccessfully")
+            : t("eventTicketVerifiedSuccessfully"))
       );
-
-      // Show success message
-      if (successMessage !== undefined) {
-        showNotifyMessage(successMessage);
-      } else {
-        if (verifyResult.accountMerged) {
-          showNotifyMessage(t("accountMergedSuccessfully"));
-        } else {
-          showNotifyMessage(t("eventTicketVerifiedSuccessfully"));
-        }
-      }
-
-      const result: TicketVerificationResult = {
+      const verified: TicketVerificationResult = {
         success: true,
         userIdChanged,
         needsCacheRefresh,
       };
-
-      // Call success callback if provided
-      if (onSuccess !== undefined) {
-        await onSuccess(result);
-      }
-
-      return result;
-    } catch (err) {
-      console.error("[TicketVerificationFlow] Error:", err);
-      const errorMessage = getErrorMessage("unknown");
-      userStore.setTicketError(eventSlug, errorMessage);
-      showNotifyMessage(errorMessage);
+      if (onSuccess !== undefined) await onSuccess(verified);
+      return verified;
+    } catch {
+      if (!isCurrent()) return { success: false, error: "cancelled" };
+      const message = getErrorMessage("unknown");
+      user.setTicketError(eventSlug, message);
+      showNotifyMessage(message);
       return { success: false, error: "unknown" };
     } finally {
-      // Reset loading state after entire verification flow completes
-      isVerifying.value = false;
+      if (activeVerification === attempt) {
+        if (!isCurrent()) user.clearTicketState(eventSlug);
+        isVerifying.value = false;
+        activeVerification = undefined;
+      }
     }
   }
-
-  return {
-    verifyTicket,
-  };
+  return { verifyTicket };
 }

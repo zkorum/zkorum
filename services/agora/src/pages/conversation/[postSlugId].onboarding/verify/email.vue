@@ -18,7 +18,7 @@
         fixed-navigation
         :submit-call-back="onSubmit"
         :current-step="2"
-        :total-steps="surveyStepTotal"
+        :total-steps="totalSteps"
         :enable-next-button="
           (emailInputFormRef?.getIsValid() ?? true) &&
           !isLoading &&
@@ -54,7 +54,7 @@ import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import EmailInputForm from "src/components/verification/EmailInputForm.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
-import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
+import { useConversationVerificationState } from "src/composables/conversation/useConversationVerificationState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import { useEmailSubmit } from "src/composables/verification/useEmailSubmit";
 import { useVerificationComplete } from "src/composables/verification/useVerificationComplete";
@@ -65,14 +65,10 @@ import {
 } from "src/pages/verify/email/index.i18n";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
-import {
-  getConversationCredentialChoicePath,
-  getConversationSurveyVerifyEmailCodePath,
-  getConversationSurveyVerifyPath,
-} from "src/utils/survey/navigation";
+import { getConversationSurveyVerifyEmailCodePath } from "src/utils/survey/navigation";
 import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
-import { computed, onMounted, ref, watch } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -84,9 +80,7 @@ defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
-const { isLoggedIn, isAuthInitialized, credentials } = storeToRefs(
-  useAuthenticationStore()
-);
+const { isLoggedIn } = storeToRefs(useAuthenticationStore());
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { exitToConversation } = useConversationOnboardingExit();
 const { completeVerification } = useVerificationComplete();
@@ -101,25 +95,15 @@ const { t: tCommon } =
 
 const {
   conversationSlugId,
-  conversationData,
-  surveyStepTotal,
-  requirementState,
+  credentialChoicePath: backPath,
+  totalSteps,
   isInitialLoading,
   hasLoadError,
   refetchAll,
-} = useConversationSurveyState({
+} = useConversationVerificationState({
   conversationSlugId: routeConversationSlugId,
-  formLoadMode: "incomplete",
-  requireAccount: true,
+  routeContext,
 });
-
-const backPath = computed(() =>
-  getConversationCredentialChoicePath({
-    conversationSlugId: conversationSlugId.value,
-    routeContext: routeContext.value,
-    participationMode: conversationData.value?.metadata.participationMode,
-  })
-);
 
 const { isLoading, submitEmail, nextCodeWaitSeconds } = useEmailSubmit({
   onNavigateToOtp: () =>
@@ -141,40 +125,6 @@ const { isLoading, submitEmail, nextCodeWaitSeconds } = useEmailSubmit({
     somethingWrong: t("somethingWrong"),
   },
 });
-
-watch(
-  [isInitialLoading, requirementState],
-  ([loading, requirements]) => {
-    if (!loading && !requirements.needsAuth) {
-      void router.replace({
-        path: getConversationSurveyVerifyPath({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        }),
-      });
-    }
-  },
-  { immediate: true, deep: true }
-);
-
-onMounted(() => {
-  checkExistingCredential();
-});
-
-watch(isAuthInitialized, () => {
-  checkExistingCredential();
-});
-
-function checkExistingCredential() {
-  if (!isAuthInitialized.value) {
-    return;
-  }
-
-  if (credentials.value.email !== null) {
-    showNotifyMessage(t("alreadyHasEmail"));
-    void completeVerification();
-  }
-}
 
 const emailInputFormRef = ref<{
   submit: () => boolean;

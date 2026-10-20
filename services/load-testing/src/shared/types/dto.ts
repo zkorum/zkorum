@@ -2219,6 +2219,88 @@ export class Dto {
             })
             .strict(),
     ]);
+    static conversationParticipationStatusRequest = z
+        .object({
+            conversationSlugId: zodSlugId,
+            skipEmailUpdateConsent: z.boolean().optional().default(false),
+        })
+        .strict();
+    static conversationEmailUpdateOnboardingAction = z.discriminatedUnion(
+        "operation",
+        [
+            z
+                .object({
+                    operation: z.literal("set_project_preference"),
+                    projectSlug: zodProjectSlug,
+                    conversationSlugId: zodSlugId,
+                    initialEnabled: z.boolean(),
+                })
+                .strict(),
+            z
+                .object({
+                    operation: z.literal("set_conversation_preference"),
+                    conversationSlugId: zodSlugId,
+                    initialEnabled: z.boolean(),
+                })
+                .strict(),
+        ],
+    );
+    static conversationOnboardingStep = z.discriminatedUnion("kind", [
+        z
+            .object({
+                kind: z.enum(["account", "email", "identity"]),
+                purpose: z.enum(["login", "credential"]),
+            })
+            .strict(),
+        z
+            .object({ kind: z.literal("ticket"), eventSlug: zodEventSlug })
+            .strict(),
+        z
+            .object({
+                kind: z.literal("email_updates"),
+                action: Dto.conversationEmailUpdateOnboardingAction,
+            })
+            .strict(),
+        z
+            .object({
+                kind: z.literal("survey"),
+                routeResolution: zodSurveyRouteResolution,
+            })
+            .strict(),
+    ]);
+    static conversationOnboardingRequiredStatus = z
+        .object({
+            status: z.literal("onboarding_required"),
+            nextStep: Dto.conversationOnboardingStep,
+        })
+        .strict();
+    static conversationParticipationBlockedStatus = z
+        .object({
+            status: z.literal("blocked"),
+            reason: zodParticipationBlockedReason.extract([
+                "conversation_closed",
+                "conversation_locked",
+            ]),
+        })
+        .strict();
+    static conversationParticipationStatusResponse = z.discriminatedUnion(
+        "status",
+        [
+            z.object({ status: z.literal("ready") }).strict(),
+            Dto.conversationOnboardingRequiredStatus,
+            Dto.conversationParticipationBlockedStatus,
+        ],
+    );
+    static conversationParticipationRejection = z
+        .object({
+            success: z.literal(false),
+            reason: zodParticipationBlockedReason,
+            participationStatus: z.discriminatedUnion("status", [
+                Dto.conversationOnboardingRequiredStatus,
+                Dto.conversationParticipationBlockedStatus,
+            ]),
+        })
+        .strict();
     static surveyStatusCheckRequest = z
         .object({
             conversationSlugId: zodSlugId,
@@ -2235,6 +2317,7 @@ export class Dto {
             conversationSlugId: zodSlugId,
             questionSlugId: zodSlugId,
             answer: zodSurveyAnswerSubmission.nullable(),
+            skipEmailUpdateConsent: z.boolean().optional().default(false),
         })
         .strict();
     static surveyAnswerSaveResponse = z.discriminatedUnion("success", [
@@ -2243,14 +2326,11 @@ export class Dto {
                 success: z.literal(true),
                 surveyGate: zodSurveyGateSummary,
                 justCompleted: z.boolean(),
+                participationStatus:
+                    Dto.conversationParticipationStatusResponse,
             })
             .strict(),
-        z
-            .object({
-                success: z.literal(false),
-                reason: zodParticipationBlockedReason,
-            })
-            .strict(),
+        Dto.conversationParticipationRejection,
     ]);
     static surveyResponseWithdrawRequest = z
         .object({
@@ -2259,12 +2339,7 @@ export class Dto {
         .strict();
     static surveyResponseWithdrawResponse = z.discriminatedUnion("success", [
         Dto.surveyStatusCheckResponse.extend({ success: z.literal(true) }),
-        z
-            .object({
-                success: z.literal(false),
-                reason: zodParticipationBlockedReason,
-            })
-            .strict(),
+        Dto.conversationParticipationRejection,
     ]);
     static surveyResultsAggregatedRequest = z
         .object({
@@ -2334,15 +2409,15 @@ export class Dto {
                 displayedOpinionItem: zodDisplayedOpinionItem,
             })
             .strict(),
-        z
-            .object({
-                success: z.literal(false),
-                reason: z.union([
-                    zodParticipationBlockedReason,
-                    zodRichTextValidationFailureReason,
-                ]),
-            })
-            .strict(),
+        z.discriminatedUnion("reason", [
+            Dto.conversationParticipationRejection,
+            z
+                .object({
+                    success: z.literal(false),
+                    reason: zodRichTextValidationFailureReason,
+                })
+                .strict(),
+        ]),
     ]);
     static editOpinionRequest = z
         .object({
@@ -2402,15 +2477,15 @@ export class Dto {
                 userIsClustered: z.boolean().optional(),
             })
             .strict(),
-        z
-            .object({
-                success: z.literal(false),
-                reason: z.union([
-                    zodParticipationBlockedReason,
-                    z.literal("statement_changed"),
-                ]),
-            })
-            .strict(),
+        z.discriminatedUnion("reason", [
+            Dto.conversationParticipationRejection,
+            z
+                .object({
+                    success: z.literal(false),
+                    reason: z.literal("statement_changed"),
+                })
+                .strict(),
+        ]),
     ]);
     static getUserProfileResponse = z
         .object({
@@ -3281,6 +3356,21 @@ export class Dto {
         }),
     ]);
 
+    static conversationOnboardingTicketVerifyRequest =
+        Dto.verifyEventTicketRequest.extend({
+            conversationSlugId: zodSlugId,
+            skipEmailUpdateConsent: z.boolean().optional().default(false),
+        });
+    static conversationOnboardingTicketVerifyResponse = z.discriminatedUnion(
+        "success",
+        [
+            Dto.verifyEventTicket200.options[0].extend({
+                participationStatus:
+                    Dto.conversationParticipationStatusResponse,
+            }),
+            Dto.verifyEventTicket200.options[1],
+        ],
+    );
     static zodGetMathRequest = z.object({
         conversation_slug_id: z.string(),
         conversation_id: z.number(),
@@ -3454,12 +3544,7 @@ export class Dto {
                 candidateSets: z.array(z.array(z.string())),
             })
             .strict(),
-        z
-            .object({
-                success: z.literal(false),
-                reason: zodParticipationBlockedReason,
-            })
-            .strict(),
+        Dto.conversationParticipationRejection,
     ]);
     static maxdiffLoadRequest = z
         .object({
@@ -4338,6 +4423,38 @@ export class Dto {
                 })
                 .strict(),
         ]);
+    static conversationOnboardingPreferenceSaveRequest = z.discriminatedUnion(
+        "operation",
+        [
+            z
+                .object({
+                    operation: z.literal("set_project_preference"),
+                    projectSlug: zodProjectSlug,
+                    conversationSlugId: zodSlugId,
+                    enabled: z.boolean(),
+                })
+                .strict(),
+            z
+                .object({
+                    operation: z.literal("set_conversation_preference"),
+                    conversationSlugId: zodSlugId,
+                    enabled: z.boolean(),
+                })
+                .strict(),
+        ],
+    );
+    static conversationOnboardingPreferenceSaveResponse = z.discriminatedUnion(
+        "success",
+        [
+            Dto.conversationEmailUpdatePreferenceUpdateResponse.options[0].extend(
+                {
+                    participationStatus:
+                        Dto.conversationParticipationStatusResponse,
+                },
+            ),
+            Dto.conversationEmailUpdatePreferenceUpdateResponse.options[1],
+        ],
+    );
     static conversationEmailUpdateConfigurationRequest = z.discriminatedUnion(
         "target",
         [
@@ -4428,29 +4545,8 @@ export class Dto {
                         .object({
                             state: zodConversationEmailUpdatePreferenceState,
                             resolvedEnabled: z.boolean(),
-                            onboardingAction: z
-                                .discriminatedUnion("operation", [
-                                    z
-                                        .object({
-                                            operation: z.literal(
-                                                "set_project_preference",
-                                            ),
-                                            projectSlug: zodProjectSlug,
-                                            conversationSlugId: zodSlugId,
-                                            initialEnabled: z.boolean(),
-                                        })
-                                        .strict(),
-                                    z
-                                        .object({
-                                            operation: z.literal(
-                                                "set_conversation_preference",
-                                            ),
-                                            conversationSlugId: zodSlugId,
-                                            initialEnabled: z.boolean(),
-                                        })
-                                        .strict(),
-                                ])
-                                .optional(),
+                            onboardingAction:
+                                Dto.conversationEmailUpdateOnboardingAction.optional(),
                         })
                         .strict()
                         .optional(),
@@ -5026,6 +5122,30 @@ export type FetchAnalysisCheckpointsResponse = z.infer<
     typeof Dto.fetchAnalysisCheckpointsResponse
 >;
 export type CastVoteResponse = z.infer<typeof Dto.castVoteResponse>;
+export type ConversationOnboardingTicketVerifyRequest = z.infer<
+    typeof Dto.conversationOnboardingTicketVerifyRequest
+>;
+export type ConversationOnboardingTicketVerifyResponse = z.infer<
+    typeof Dto.conversationOnboardingTicketVerifyResponse
+>;
+export type ConversationOnboardingStep = z.infer<
+    typeof Dto.conversationOnboardingStep
+>;
+export type ConversationOnboardingPreferenceSaveRequest = z.infer<
+    typeof Dto.conversationOnboardingPreferenceSaveRequest
+>;
+export type ConversationOnboardingPreferenceSaveResponse = z.infer<
+    typeof Dto.conversationOnboardingPreferenceSaveResponse
+>;
+export type ConversationEmailUpdateOnboardingAction = z.infer<
+    typeof Dto.conversationEmailUpdateOnboardingAction
+>;
+export type ConversationParticipationRejection = z.infer<
+    typeof Dto.conversationParticipationRejection
+>;
+export type ConversationParticipationStatus = z.infer<
+    typeof Dto.conversationParticipationStatusResponse
+>;
 export type CloseConversationResponse = z.infer<
     typeof Dto.closeConversationResponse
 >;

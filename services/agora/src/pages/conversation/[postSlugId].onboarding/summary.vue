@@ -4,7 +4,13 @@
     :back-callback="handleBackToLastAnsweredQuestion"
     :close-callback="handleBackToConversation"
   >
-    <PageLoadingSpinner v-if="isInitialLoading" />
+    <PageLoadingSpinner
+      v-if="
+        isInitialLoading ||
+        (surveyForm === undefined && isRefreshingSurvey) ||
+        surveyStatus?.surveyGate.hasSurvey === false
+      "
+    />
 
     <ErrorRetryBlock
       v-else-if="hasLoadError"
@@ -103,6 +109,7 @@
 </template>
 
 <script setup lang="ts">
+import { useQueryClient } from "@tanstack/vue-query";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
@@ -143,6 +150,7 @@ import {
 
 defineProps<{ sheet: DismissalController }>();
 const router = useRouter();
+const queryClient = useQueryClient();
 const { routeConversationSlugId, routeContext } =
   useConversationOnboardingRoute();
 const { safeNavigateBack } = useGoBackButtonHandler();
@@ -158,13 +166,12 @@ const {
   conversationSlugId,
   surveyStatus,
   surveyForm,
-  requirementState,
   isInitialLoading,
+  isRefreshingSurvey,
   hasLoadError,
   refetchAll,
 } = useConversationSurveyState({
   conversationSlugId: routeConversationSlugId,
-  formLoadMode: "all",
 });
 
 const withdrawMutation = useSurveyWithdrawMutation({ conversationSlugId });
@@ -209,26 +216,20 @@ const surveyQuestionEntries = computed(() => {
 });
 
 watch(
-  [isInitialLoading, requirementState],
-  ([loading, requirements]) => {
-    if (!loading && (requirements.needsAuth || requirements.needsTicket)) {
-      void router.replace({
-        path: getConversationSurveyOnboardingPath({
-          conversationSlugId: conversationSlugId.value,
-          routeContext: routeContext.value,
-        }),
-      });
-    }
-  },
-  { immediate: true, deep: true }
-);
-
-watch(
-  [isInitialLoading, surveyForm, surveyStatus],
-  ([loading, formData, statusData]) => {
-    if (loading || formData === undefined || statusData === undefined) {
+  [isInitialLoading, surveyForm, surveyStatus, isRefreshingSurvey],
+  ([loading, formData, statusData, refreshing]) => {
+    if (loading || refreshing || statusData === undefined) {
       return;
     }
+    if (!statusData.surveyGate.hasSurvey) {
+      void queryClient.invalidateQueries(
+        { queryKey: ["participation-status", conversationSlugId.value] },
+        { cancelRefetch: false }
+      );
+      void handleBackToConversation();
+      return;
+    }
+    if (formData === undefined) return;
 
     if (!formData.surveyGate.hasSurvey) {
       void router.replace({

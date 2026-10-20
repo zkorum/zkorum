@@ -23,9 +23,6 @@
       :highlighted-opinion="editingOpinion ?? null"
       :editing-opinion-slug-id="editingOpinion?.opinionSlugId"
       :voting-utilities="{ userVotes, castVote }"
-      :participation-mode="props.participationMode"
-      :requires-event-ticket="props.requiresEventTicket"
-      :survey-gate="props.surveyGate"
       :on-view-analysis="props.onViewAnalysis"
       :is-voting-disabled="
         props.isVotingDisabled ||
@@ -73,12 +70,7 @@ import { usePolisVotingSession } from "src/composables/opinion/usePolisVotingSes
 import { useVoteReconciliation } from "src/composables/opinion/useVoteReconciliation";
 import { useVotingActionGuard } from "src/composables/opinion/useVotingActionGuard";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import type {
-  DisplayedOpinionItem,
-  EventSlug,
-  ParticipationMode,
-  SurveyGateSummary,
-} from "src/shared/types/zod";
+import type { DisplayedOpinionItem } from "src/shared/types/zod";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useLanguageStore } from "src/stores/language";
 import { useOpinionUpdatesStore } from "src/stores/opinionUpdates";
@@ -108,9 +100,6 @@ const props = defineProps<{
   order: "discover" | "new";
   conversationAuthorUsername: string;
   conversationOrganizationName: string;
-  participationMode: ParticipationMode;
-  requiresEventTicket: EventSlug | undefined;
-  surveyGate: SurveyGateSummary | undefined;
   onViewAnalysis: () => void;
   isVotingDisabled: boolean;
   conversationRouteContext: ConversationRouteContext;
@@ -123,13 +112,11 @@ const actionGuard = useVotingActionGuard();
 const session = usePolisVotingSession();
 const { currentOpinion, remainingCount, fetchExcludedOpinionSlugIds, canUndo } =
   session;
-const { needsParticipationOnboarding, openParticipationOnboarding } =
-  useParticipationGate({
-    conversationSlugId: computed(() => props.postSlugId),
-    participationMode: computed(() => props.participationMode),
-    requiresEventTicket: computed(() => props.requiresEventTicket),
-    surveyGate: computed(() => props.surveyGate),
-  });
+const {
+  participationStatus,
+  openParticipationOnboarding,
+  captureParticipationAction,
+} = useParticipationGate(() => props.postSlugId);
 const { fetchUserVotesForPostSlugIds } = useBackendVoteApi();
 const { displayLanguage, spokenLanguages } = storeToRefs(useLanguageStore());
 const authStore = useAuthenticationStore();
@@ -300,8 +287,9 @@ async function castVote({
 async function undoVote(): Promise<void> {
   try {
     await actionGuard.run(async (isCurrent) => {
+      const participation = captureParticipationAction();
       if (!canUndo.value || props.isVotingDisabled) return;
-      if (await needsParticipationOnboarding()) {
+      if (participationStatus.value.status !== "ready") {
         if (isCurrent()) await openParticipationOnboarding();
         return;
       }
@@ -313,7 +301,17 @@ async function undoVote(): Promise<void> {
         if (!isCurrent()) return;
         if (!response?.success) {
           undo.rollback();
-          showNotifyMessage(t("undoFailed"));
+          if (!participation.isCurrent()) return;
+          if (
+            response === undefined ||
+            response.reason === "statement_changed" ||
+            response.reason === "conversation_closed" ||
+            response.reason === "conversation_locked"
+          ) {
+            showNotifyMessage(t("undoFailed"));
+          } else {
+            await participation.handleBlockedReason(response);
+          }
         } else {
           reconciliation.restart();
         }

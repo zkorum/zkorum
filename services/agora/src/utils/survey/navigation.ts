@@ -1,7 +1,5 @@
-import type {
-  ParticipationMode,
-  SurveyRouteResolution,
-} from "src/shared/types/zod";
+import type { ConversationOnboardingStep } from "src/shared/types/dto";
+import type { SurveyRouteResolution } from "src/shared/types/zod";
 import {
   type ConversationRouteContext,
   getConversationPath as getScopedConversationPath,
@@ -32,26 +30,28 @@ export function getConversationSurveyOnboardingPath({
 export function getConversationCredentialChoicePath({
   conversationSlugId,
   routeContext,
-  participationMode,
+  nextStep,
 }: {
   conversationSlugId: string;
   routeContext: ConversationRouteContext;
-  participationMode: ParticipationMode | undefined;
+  nextStep: ConversationOnboardingStep | undefined;
 }): string {
-  switch (participationMode) {
-    case "strong_verification":
+  switch (nextStep?.kind) {
+    case "identity":
       return getConversationSurveyVerifyIdentityPath({
         conversationSlugId,
         routeContext,
       });
-    case "account_required":
-    case "guest":
+    case "account":
+    case undefined:
       return getConversationSurveyVerifyHardPath({
         conversationSlugId,
         routeContext,
       });
-    case "email_verification":
-    case undefined:
+    case "email":
+    case "survey":
+    case "ticket":
+    case "email_updates":
       return getConversationSurveyOnboardingPath({
         conversationSlugId,
         routeContext,

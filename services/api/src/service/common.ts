@@ -621,10 +621,10 @@ export function useCommonPost() {
         lastReactedAt?: Date;
     }
 
-    async function getPostMetadataFromSlugId({
+    async function getPostParticipationMetadataFromSlugId({
         db,
         conversationSlugId,
-    }: GetPostMetadataFromSlugIdProps): Promise<PostMetadata> {
+    }: GetPostMetadataFromSlugIdProps) {
         const postTableResponse = await db
             .select({
                 id: conversationTable.id,
@@ -651,11 +651,12 @@ export function useCommonPost() {
                     eq(conversationTable.isImporting, false),
                     isNotNull(conversationTable.currentContentId),
                 ),
-            );
-        if (postTableResponse.length === 0) {
+            )
+            .limit(1);
+        const post = postTableResponse.at(0);
+        if (post === undefined) {
             throw httpErrors.notFound("Conversation slugId not found");
         }
-        const post = postTableResponse[0];
         const rankingMode =
             post.conversationType === "ranking"
                 ? requireJoinedRankingMode({
@@ -663,27 +664,9 @@ export function useCommonPost() {
                       rankingMode: post.rankingMode,
                   })
                 : null;
-        const latestViewSnapshotCountsByConversationId =
-            await fetchConversationDisplayCountsByConversationId({
-                db,
-                conversationIds: [post.id],
-            });
-        const displayCounts = requireConversationDisplayCounts({
-            countsByConversationId: latestViewSnapshotCountsByConversationId,
-            conversationId: post.id,
-        });
-
         return {
             contentId: post.currentContentId,
             id: post.id,
-            participantCount: displayCounts.participantCount,
-            voteCount: displayCounts.voteCount,
-            opinionCount: displayCounts.opinionCount,
-            totalParticipantCount: displayCounts.totalParticipantCount,
-            totalVoteCount: displayCounts.totalVoteCount,
-            totalOpinionCount: displayCounts.totalOpinionCount,
-            moderatedOpinionCount: displayCounts.moderatedOpinionCount,
-            hiddenOpinionCount: displayCounts.hiddenOpinionCount,
             isIndexed: post.isIndexed,
             participationMode: post.participationMode,
             conversationType: post.conversationType,
@@ -693,9 +676,37 @@ export function useCommonPost() {
         };
     }
 
+    async function getPostMetadataFromSlugId(
+        params: GetPostMetadataFromSlugIdProps,
+    ): Promise<PostMetadata> {
+        const post = await getPostParticipationMetadataFromSlugId(params);
+        const latestViewSnapshotCountsByConversationId =
+            await fetchConversationDisplayCountsByConversationId({
+                db: params.db,
+                conversationIds: [post.id],
+            });
+        const displayCounts = requireConversationDisplayCounts({
+            countsByConversationId: latestViewSnapshotCountsByConversationId,
+            conversationId: post.id,
+        });
+
+        return {
+            ...post,
+            participantCount: displayCounts.participantCount,
+            voteCount: displayCounts.voteCount,
+            opinionCount: displayCounts.opinionCount,
+            totalParticipantCount: displayCounts.totalParticipantCount,
+            totalVoteCount: displayCounts.totalVoteCount,
+            totalOpinionCount: displayCounts.totalOpinionCount,
+            moderatedOpinionCount: displayCounts.moderatedOpinionCount,
+            hiddenOpinionCount: displayCounts.hiddenOpinionCount,
+        };
+    }
+
     return {
         fetchPostItems,
         getPostMetadataFromSlugId,
+        getPostParticipationMetadataFromSlugId,
         isConversationIdLocked,
         isPostSlugIdLocked,
         createCompactHtmlBody,

@@ -12,6 +12,7 @@ import { useLanguageStore } from "src/stores/language";
 import { useOpinionUpdatesStore } from "src/stores/opinionUpdates";
 import type { useBackendAuthApi } from "src/utils/api/auth";
 import type { useBackendCommentApi } from "src/utils/api/comment/comment";
+import { participationRejectionFixture } from "src/utils/api/participation/participationTestFixtures";
 import type { useBackendVoteApi } from "src/utils/api/vote";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp, defineComponent, h, KeepAlive, nextTick, ref } from "vue";
@@ -52,8 +53,12 @@ vi.mock("src/utils/api/common", () => ({
 }));
 vi.mock("src/composables/conversation/useParticipationGate", () => ({
   useParticipationGate: () => ({
-    needsParticipationOnboarding: () => Promise.resolve(false),
+    participationStatus: ref({ status: "ready" }),
     openParticipationOnboarding: vi.fn(),
+    captureParticipationAction: () => ({
+      isCurrent: () => true,
+      handleBlockedReason: vi.fn(),
+    }),
   }),
 }));
 vi.mock("src/utils/ui/notify", () => ({
@@ -291,9 +296,6 @@ beforeEach(async () => {
                   order: "discover",
                   conversationAuthorUsername: "author",
                   conversationOrganizationName: "",
-                  participationMode: "guest",
-                  requiresEventTicket: undefined,
-                  surveyGate: undefined,
                   onViewAnalysis: vi.fn(),
                   isVotingDisabled: false,
                   conversationRouteContext: { kind: "normal" },
@@ -628,10 +630,9 @@ describe("one-at-a-time prefetching", () => {
   });
 
   it("keeps the current and prefetched statements when a vote is rejected", async () => {
-    mocks.castVote.mockResolvedValueOnce({
-      success: false,
-      reason: "conversation_closed",
-    });
+    mocks.castVote.mockResolvedValueOnce(
+      participationRejectionFixture("conversation_closed")
+    );
     await click("agree");
     expect(
       container.querySelector('[data-testid="statement"]')?.textContent
@@ -776,7 +777,7 @@ describe("one-at-a-time prefetching", () => {
     availableOpinions.push(opinion("fourth"));
     useOpinionUpdatesStore().markNewOpinion("conversation");
     await settle();
-    cancellation.resolve({ success: false, reason: "conversation_locked" });
+    cancellation.resolve(participationRejectionFixture("conversation_locked"));
     await settle();
     expect(
       container.querySelector('[data-testid="statement"]')?.textContent

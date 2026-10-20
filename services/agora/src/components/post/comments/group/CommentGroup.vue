@@ -53,9 +53,6 @@
         :conversation-author-username="conversationAuthorUsername"
         :conversation-organization-name="conversationOrganizationName"
         :voting-utilities="votingUtilities"
-        :participation-mode="participationMode"
-        :requires-event-ticket="props.requiresEventTicket"
-        :survey-gate="props.surveyGate"
         :on-view-analysis="props.onViewAnalysis"
         :is-voting-disabled="props.isVotingDisabled"
         :show-vote-results="props.showVoteResults"
@@ -80,13 +77,7 @@ import {
   localizedDateTimeFormatOptions,
   useLocalizedDateTimeFormatter,
 } from "src/composables/ui/useLocalizedDateTime";
-import type {
-  DisplayedOpinionItem,
-  EventSlug,
-  OpinionItem,
-  ParticipationMode,
-  SurveyGateSummary,
-} from "src/shared/types/zod";
+import type { DisplayedOpinionItem, OpinionItem } from "src/shared/types/zod";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import { computed, nextTick } from "vue";
 
@@ -104,9 +95,6 @@ const props = defineProps<{
   conversationOrganizationName: string;
   highlightedOpinion?: DisplayedOpinionItem | null;
   votingUtilities: OpinionVotingUtilities;
-  participationMode: ParticipationMode;
-  requiresEventTicket?: EventSlug;
-  surveyGate: SurveyGateSummary | undefined;
   onViewAnalysis: () => void;
   isVotingDisabled: boolean;
   showVoteResults: boolean;

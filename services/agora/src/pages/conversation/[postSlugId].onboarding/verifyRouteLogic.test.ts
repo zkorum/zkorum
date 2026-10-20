@@ -1,272 +1,139 @@
-import type { SurveyStatusCheckResponse } from "src/shared/types/dto";
-import type { SurveyFormData } from "src/utils/api/survey/useSurveyQueries";
+import { type ConversationOnboardingStep, Dto } from "src/shared/types/dto";
+import { emailUpdateActionFixture } from "src/utils/api/participation/participationTestFixtures";
+import type { ParticipationStatus } from "src/utils/api/participation/useParticipationStatusQuery";
+import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
 import { describe, expect, it } from "vitest";
 
 import { resolveVerifyRouteDecision } from "./verifyRouteLogic";
 
-function createNoSurveyStatus(): SurveyStatusCheckResponse {
-  return {
-    surveyGate: {
-      hasSurvey: false,
-      isOptional: false,
-      canParticipate: true,
-      status: "no_survey",
+const steps = [
+  { step: { kind: "account", purpose: "login" }, suffix: "verify/hard" },
+  { step: { kind: "email", purpose: "login" }, suffix: "verify/email" },
+  {
+    step: { kind: "identity", purpose: "credential" },
+    suffix: "verify/identity",
+  },
+  {
+    step: { kind: "ticket", eventSlug: "devconnect-2025" },
+    suffix: "verify/ticket",
+  },
+  {
+    step: { kind: "email_updates", action: emailUpdateActionFixture },
+    suffix: "complete",
+  },
+  {
+    step: {
+      kind: "survey",
+      routeResolution: { kind: "question", questionSlugId: "question" },
     },
-    routeResolution: {
-      kind: "none",
-    },
-  };
-}
+    suffix: "question/question",
+  },
+  {
+    step: { kind: "survey", routeResolution: { kind: "summary" } },
+    suffix: "summary",
+  },
+] satisfies Array<{ step: ConversationOnboardingStep; suffix: string }>;
+const contexts = [
+  { context: { kind: "normal" }, prefix: "/conversation/example" },
+  { context: { kind: "embed" }, prefix: "/conversation/example/embed" },
+  {
+    context: { kind: "project", projectSlug: "project" },
+    prefix: "/project/project/conversation/example",
+  },
+] satisfies Array<{ context: ConversationRouteContext; prefix: string }>;
 
-function createSurveyStatus(): SurveyStatusCheckResponse {
-  return {
-    surveyGate: {
-      hasSurvey: true,
-      isOptional: false,
-      canParticipate: false,
-      status: "not_started",
-    },
-    routeResolution: {
-      kind: "none",
-    },
-  };
-}
+describe("backend-owned onboarding route", () => {
+  for (const { context, prefix } of contexts) {
+    it.each(steps)(
+      `maps the backend step to ${context.kind} /$suffix without other query data`,
+      ({ step, suffix }) => {
+        expect(
+          resolveVerifyRouteDecision({
+            exactVerifyRoute: true,
+            participationStatus: {
+              status: "onboarding_required",
+              nextStep: step,
+            },
+            conversationSlugId: "example",
+            routeContext: context,
+          })
+        ).toEqual({ kind: "redirect", path: `${prefix}/onboarding/${suffix}` });
+      }
+    );
+  }
 
-describe("resolveVerifyRouteDecision", () => {
-  it("routes ticket-only conversations to the ticket step without waiting for a survey form", () => {
-    const decision = resolveVerifyRouteDecision({
-      exactVerifyRoute: true,
-      isInitialLoading: false,
-      hasLoadError: false,
-      conversationSlugId: "qlWQFzY",
-      conversation: {
-        participationMode: "guest",
-      },
-      surveyStatus: createNoSurveyStatus(),
-      surveyForm: undefined,
-      requirementState: {
-        needsAuth: false,
-        needsTicket: true,
-      },
-      emailUpdateResolution: { status: "not_required" },
-    });
-
-    expect(decision.navigation).toEqual({
-      kind: "redirect",
-      path: "/conversation/qlWQFzY/onboarding/verify/ticket",
-    });
-  });
-
-  it("waits for the survey form only when a survey actually exists", () => {
-    const decision = resolveVerifyRouteDecision({
-      exactVerifyRoute: true,
-      isInitialLoading: false,
-      hasLoadError: false,
-      conversationSlugId: "qlWQFzY",
-      conversation: {
-        participationMode: "guest",
-      },
-      surveyStatus: createSurveyStatus(),
-      surveyForm: undefined,
-      requirementState: {
-        needsAuth: false,
-        needsTicket: false,
-      },
-      emailUpdateResolution: { status: "not_required" },
-    });
-
-    expect(decision.navigation).toEqual({ kind: "none" });
-  });
-
-  it("exits through the intention-aware path once ticket-only verification is already satisfied", () => {
-    const decision = resolveVerifyRouteDecision({
-      exactVerifyRoute: true,
-      isInitialLoading: false,
-      hasLoadError: false,
-      conversationSlugId: "qlWQFzY",
-      conversation: {
-        participationMode: "guest",
-      },
-      surveyStatus: createNoSurveyStatus(),
-      surveyForm: undefined,
-      requirementState: {
-        needsAuth: false,
-        needsTicket: false,
-      },
-      emailUpdateResolution: { status: "not_required" },
-    });
-
-    expect(decision.navigation).toEqual({ kind: "exitToConversation" });
-  });
-
-  it.each(["none", "summary"] as const)(
-    "exits for current saved responses even when the backend route is %s",
-    (kind) => {
-      const surveyForm: SurveyFormData = {
-        success: true,
-        currentRevision: 1,
-        questions: [],
-        surveyGate: {
-          hasSurvey: true,
-          isOptional: false,
-          canParticipate: true,
-          status: "complete_valid",
-        },
-      };
-
-      const decision = resolveVerifyRouteDecision({
-        exactVerifyRoute: true,
-        isInitialLoading: false,
-        hasLoadError: false,
-        conversationSlugId: "qlWQFzY",
-        conversation: {
-          participationMode: "guest",
-        },
-        surveyStatus: {
-          surveyGate: surveyForm.surveyGate,
-          routeResolution: {
-            kind,
-          },
-        },
-        surveyForm,
-        requirementState: {
-          needsAuth: false,
-          needsTicket: false,
-        },
-        emailUpdateResolution: { status: "not_required" },
-      });
-
-      expect(decision.navigation).toEqual({ kind: "exitToConversation" });
+  it.each([
+    { status: "checking" },
+    { status: "unavailable" },
+  ] satisfies ParticipationStatus[])(
+    "does not navigate with $status status",
+    (participationStatus) => {
+      expect(
+        resolveVerifyRouteDecision({
+          exactVerifyRoute: true,
+          participationStatus,
+          conversationSlugId: "example",
+          routeContext: { kind: "normal" },
+        })
+      ).toEqual({ kind: "none" });
     }
   );
 
-  it("does not skip an outdated survey after login", () => {
-    const surveyStatus: SurveyStatusCheckResponse = {
-      surveyGate: {
-        hasSurvey: true,
-        isOptional: false,
-        canParticipate: false,
-        status: "needs_update",
-      },
-      routeResolution: { kind: "question", questionSlugId: "changed-question" },
-    };
-    const decision = resolveVerifyRouteDecision({
-      exactVerifyRoute: true,
-      isInitialLoading: false,
-      hasLoadError: false,
-      conversationSlugId: "qlWQFzY",
-      conversation: { participationMode: "email_verification" },
-      surveyStatus,
-      surveyForm: {
-        success: true,
-        currentRevision: 2,
-        questions: [],
-        surveyGate: surveyStatus.surveyGate,
-      },
-      requirementState: { needsAuth: false, needsTicket: false },
-      emailUpdateResolution: { status: "not_required" },
-    });
-    expect(decision.navigation).toEqual({
-      kind: "redirect",
-      path: "/conversation/qlWQFzY/onboarding/question/changed-question",
-    });
+  it("finishes directly when the backend reports nothing remains", () => {
+    expect(
+      resolveVerifyRouteDecision({
+        exactVerifyRoute: true,
+        participationStatus: { status: "ready" },
+        conversationSlugId: "example",
+        routeContext: { kind: "normal" },
+      })
+    ).toEqual({ kind: "complete" });
   });
 
-  it("routes auth-gated conversations before checking ticket or survey completion", () => {
-    const surveyForm: SurveyFormData = {
-      success: true,
-      currentRevision: 1,
-      questions: [],
-      surveyGate: {
-        hasSurvey: false,
-        isOptional: false,
-        canParticipate: true,
-        status: "no_survey",
-      },
-    };
-
-    const decision = resolveVerifyRouteDecision({
-      exactVerifyRoute: true,
-      isInitialLoading: false,
-      hasLoadError: false,
-      conversationSlugId: "qlWQFzY",
-      conversation: {
-        participationMode: "account_required",
-      },
-      surveyStatus: createNoSurveyStatus(),
-      surveyForm,
-      requirementState: {
-        needsAuth: true,
-        needsTicket: true,
-      },
-      emailUpdateResolution: { status: "not_required" },
-    });
-
-    expect(decision.navigation).toEqual({
-      kind: "redirect",
-      path: "/conversation/qlWQFzY/onboarding/verify/hard",
-    });
-  });
-
-  it("routes backend-authored email consent before starting a required survey", () => {
-    const decision = resolveVerifyRouteDecision({
-      exactVerifyRoute: true,
-      isInitialLoading: false,
-      hasLoadError: false,
-      conversationSlugId: "qlWQFzY",
-      conversation: { participationMode: "email_verification" },
-      surveyStatus: createSurveyStatus(),
-      surveyForm: {
-        success: true,
-        currentRevision: 1,
-        questions: [],
-        surveyGate: createSurveyStatus().surveyGate,
-      },
-      requirementState: { needsAuth: false, needsTicket: false },
-      emailUpdateResolution: {
-        status: "required",
-        action: {
-          operation: "set_project_preference",
-          projectSlug: "public-plan",
-          conversationSlugId: "qlWQFzY",
-          initialEnabled: true,
+  it("dismisses a closed conversation without announcing successful onboarding", () => {
+    expect(
+      resolveVerifyRouteDecision({
+        exactVerifyRoute: true,
+        participationStatus: {
+          status: "blocked",
+          reason: "conversation_closed",
         },
-      },
-      routeContext: {
-        kind: "project",
-        projectSlug: "public-plan",
-      },
-    });
-
-    expect(decision.navigation).toEqual({
-      kind: "redirect",
-      path: "/project/public-plan/conversation/qlWQFzY/onboarding/complete",
-    });
+        conversationSlugId: "example",
+        routeContext: { kind: "normal" },
+      })
+    ).toEqual({ kind: "dismiss" });
   });
 
-  it("keeps authentication ahead of an already cached email consent action", () => {
-    const decision = resolveVerifyRouteDecision({
-      exactVerifyRoute: true,
-      isInitialLoading: false,
-      hasLoadError: false,
-      conversationSlugId: "qlWQFzY",
-      conversation: { participationMode: "account_required" },
-      surveyStatus: createNoSurveyStatus(),
-      surveyForm: undefined,
-      requirementState: { needsAuth: true, needsTicket: false },
-      emailUpdateResolution: {
-        status: "required",
-        action: {
-          operation: "set_conversation_preference",
-          conversationSlugId: "qlWQFzY",
-          initialEnabled: true,
-        },
-      },
-    });
+  it("leaves an active credential form alone", () => {
+    expect(
+      resolveVerifyRouteDecision({
+        exactVerifyRoute: false,
+        participationStatus: { status: "ready" },
+        conversationSlugId: "example",
+        routeContext: { kind: "normal" },
+      })
+    ).toEqual({ kind: "none" });
+  });
 
-    expect(decision.navigation).toEqual({
-      kind: "redirect",
-      path: "/conversation/qlWQFzY/onboarding/verify/hard",
-    });
+  it("requires the backend snapshot on participation rejection, but not a changed statement", () => {
+    expect(
+      Dto.castVoteResponse.safeParse({
+        success: false,
+        reason: "survey_required",
+      }).success
+    ).toBe(false);
+    expect(
+      Dto.castVoteResponse.safeParse({
+        success: false,
+        reason: "statement_changed",
+      }).success
+    ).toBe(true);
+    expect(
+      Dto.conversationParticipationRejection.safeParse({
+        success: false,
+        reason: "survey_required",
+        participationStatus: { status: "ready" },
+      }).success
+    ).toBe(false);
   });
 });
