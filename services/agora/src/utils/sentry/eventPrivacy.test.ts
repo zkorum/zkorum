@@ -360,6 +360,100 @@ describe("injected document stack overflow detection", () => {
 
 describe("ignored Sentry events", () => {
   it.each([
+    "../node_modules/.pnpm/@sentry+browser@10.52.0/node_modules/@sentry/browser/build/npm/esm/prod/helpers.js",
+    "https://www.agoracitizen.app/assets/sentry-abc123.js",
+  ])(
+    "ignores the anonymous injected postEvent bridge error wrapped by %s",
+    (filename) => {
+      expect(
+        shouldIgnoreSentryEvent({
+          exception: {
+            values: [
+              {
+                type: "Error",
+                value: "Error invoking postEvent: Method not found",
+                stacktrace: {
+                  frames: [
+                    { filename, function: "r", lineno: 93, colno: 17 },
+                    {
+                      filename: "<anonymous>",
+                      function: "?",
+                      lineno: 233,
+                      colno: 41,
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        })
+      ).toBe(true);
+    }
+  );
+
+  it.each([
+    undefined,
+    {
+      frames: [
+        { filename: "/assets/sentry-abc123.js", function: "r" },
+        { function: "?" },
+      ],
+    },
+    { frames: [{ filename: "<anonymous>", function: "?" }] },
+    {
+      frames: [
+        { filename: "/assets/application.js", function: "r" },
+        { filename: "<anonymous>", function: "?" },
+      ],
+    },
+    {
+      frames: [
+        { filename: "/assets/sentry-abc123.js", function: "r" },
+        { filename: "/assets/application.js", function: "postEvent" },
+      ],
+    },
+  ])(
+    "retains postEvent errors without the injected stack signature (%j)",
+    (stacktrace) => {
+      expect(
+        shouldIgnoreSentryEvent({
+          exception: {
+            values: [
+              {
+                type: "Error",
+                value: "Error invoking postEvent: Method not found",
+                stacktrace,
+              },
+            ],
+          },
+        })
+      ).toBe(false);
+    }
+  );
+
+  it("retains mixed injected postEvent and application errors", () => {
+    expect(
+      shouldIgnoreSentryEvent({
+        exception: {
+          values: [
+            {
+              type: "Error",
+              value: "Error invoking postEvent: Method not found",
+              stacktrace: {
+                frames: [
+                  { filename: "/assets/sentry-abc123.js", function: "r" },
+                  { filename: "<anonymous>", function: "?" },
+                ],
+              },
+            },
+            { type: "Error", value: "Application failure" },
+          ],
+        },
+      })
+    ).toBe(false);
+  });
+
+  it.each([
     "ResizeObserver loop limit exceeded",
     "ResizeObserver loop completed with undelivered notifications.",
   ])("ignores known benign error: %s", (value) => {

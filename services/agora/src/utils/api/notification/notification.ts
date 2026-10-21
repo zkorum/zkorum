@@ -13,6 +13,10 @@ import {
   notificationApiTranslations,
 } from "./notification.i18n";
 
+// Responses may gain fields before a long-lived client updates. Validate known
+// fields while discarding additive fields from newer API deployments.
+const notificationResponseSchema = Dto.fetchNotificationsResponse.strip();
+
 export function useNotificationApi() {
   const { buildEncodedUcan } = useCommonApi();
 
@@ -40,7 +44,7 @@ export function useNotificationApi() {
       },
     });
 
-    return Dto.fetchNotificationsResponse.parse(response.data);
+    return notificationResponseSchema.parse(response.data);
   }
 
   async function markAllNotificationsAsRead() {
