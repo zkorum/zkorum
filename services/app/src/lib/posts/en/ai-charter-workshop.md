@@ -98,7 +98,7 @@ The highest-ranked shared priorities included:
 2. We allow AI to speed up scientific and technical watch (summaries of articles and patents), provided we always go back to the original source before relying on the information.
 3. When AI is used for research, the user must check at least some of the sources.
 
-At 16:30, the draft charter was read aloud as it emerged from the ranking. The team adopted it as a living document, and every three months a committee drawn by lot would revisit it.
+At 16:30, the draft charter based on the ranking was read aloud. The team adopted it as a living document. The idea of a randomly selected committee reviewing it every three months was discussed.
 
 ## Why This Matters: Sensemaking, Not Brainstorming
 
@@ -113,7 +113,7 @@ Together, they turn a day of talks into an outcome the team owns. The rules were
 
 ## Looking Forward
 
-The charter is designed to evolve. The quarterly committee drawn by lot keeps it alive as tools, uses and the team itself change.
+The charter is designed to evolve as tools, the ways they are used and the team itself change. One idea discussed for keeping it relevant was a randomly selected committee tasked with reviewing it every three months.
 
 The format travels well beyond AI: any organization facing a shared decision can follow the same path.
 

@@ -98,7 +98,7 @@ Entre las prioridades compartidas mejor clasificadas figuraban:
 2. Permitimos utilizar la IA para agilizar la vigilancia científica y técnica (resúmenes de artículos y patentes), siempre que volvamos a la fuente original antes de basarnos en la información.
 3. Cuando se utilice IA para investigar, la persona debe comprobar al menos algunas de las fuentes.
 
-A las 16:30, se leyó en voz alta el borrador de la carta que había surgido de la clasificación. El equipo lo adoptó como documento en evolución y un comité elegido por sorteo lo revisaría cada tres meses.
+A las 16:30, se leyó en voz alta el borrador de la carta que había surgido de la clasificación. El equipo lo adoptó como documento vivo. Se planteó la idea de que un comité elegido por sorteo lo revisara cada tres meses.
 
 ## Por qué importa: comprensión colectiva, más allá de la lluvia de ideas
 
@@ -113,7 +113,7 @@ Juntos convierten una jornada de charlas en un resultado que el equipo siente su
 
 ## Mirando al futuro
 
-La carta está diseñada para evolucionar. El comité trimestral elegido por sorteo la mantiene vigente a medida que cambian las herramientas, los usos y el propio equipo.
+La carta está diseñada para evolucionar a medida que cambian las herramientas, los usos y el propio equipo. Entre las ideas planteadas para mantenerla vigente estaba la de un comité elegido por sorteo que la revisara cada tres meses.
 
 El formato funciona mucho más allá de la IA: cualquier organización que deba tomar una decisión compartida puede seguir el mismo camino.
 

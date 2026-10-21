@@ -98,7 +98,7 @@ Parmi les priorités communes les mieux classées :
 2. Nous autorisons l’IA pour accélérer la veille scientifique et technique (résumés d’articles et de brevets), à condition de toujours revenir à la source originale avant d’utiliser l’information.
 3. Lorsqu’on utilise l’IA pour la recherche, il faut vérifier au moins une partie des sources.
 
-À 16:30, le projet de charte issu du classement a été lu à voix haute. L’équipe l’a adopté comme document évolutif, qu’un comité tiré au sort réexaminerait tous les trois mois.
+À 16:30, le projet de charte issu du classement a été lu à voix haute. L’équipe l’a adopté comme document évolutif. L’idée d’un comité tiré au sort pour le réexaminer tous les trois mois a été évoquée.
 
 ## Pourquoi c’est important : comprendre collectivement, au-delà du brainstorming
 
@@ -113,7 +113,7 @@ Ensemble, ils transforment une journée d’interventions en un résultat que l�
 
 ## Et ensuite ?
 
-La charte est conçue pour évoluer. Le comité trimestriel tiré au sort la fait vivre à mesure que les outils, les usages et l’équipe changent.
+La charte est conçue pour évoluer à mesure que les outils, les usages et l’équipe changent. Parmi les pistes évoquées pour la faire vivre : un comité tiré au sort, chargé de la réexaminer tous les trois mois.
 
 Ce format dépasse largement le sujet de l’IA : toute organisation confrontée à une décision collective peut suivre le même chemin.
 
